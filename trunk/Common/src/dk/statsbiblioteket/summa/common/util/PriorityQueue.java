@@ -60,7 +60,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
 
     private int maxCapacity;
     private static final int DEFAULT_INITIAL_CAPACITY = 1000;
-    private Comparator<T> comparator; // Optional
+    private final Comparator<T> comparator; // Optional
 
     public PriorityQueue() {
         this(Integer.MAX_VALUE);
@@ -86,7 +86,19 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         //noinspection unchecked
         heap = (T[])new Comparable[initialCapacity];
         this.maxCapacity = maxCapacity;
-        this.comparator = comparator;
+        this.comparator = fixComparator(comparator);
+    }
+
+    // Ensures that there is a Comparator (defaults to narutal order)
+    private Comparator<T> fixComparator(Comparator<T> comparator) {
+        if (comparator != null) {
+            return comparator;
+        }
+        return new Comparator<T>() {
+            public final int compare(final T o1, final T o2) {
+                return o1.compareTo(o2);
+            }
+        };
     }
 
     /**
@@ -135,12 +147,11 @@ public class PriorityQueue<T extends Comparable<? super T>> {
      * @param value the value to insert in the queue.
      * @return the old value, if the new value pushes one out. Else null
      */
-    public T insert(T value) {
+    public T insert(final T value) {
         if (size == maxCapacity) { // Heap is full
             //noinspection unchecked
-            T heapZero = heap[0];
-            if ((comparator != null ? comparator.compare(heapZero, value)
-                 : heapZero.compareTo(value)) > 0) {
+            final T heapZero = heap[0];
+            if (comparator.compare(heapZero, value) > 0) {
                 heap[0] = value;
                 siftDown();
                 return heapZero;
@@ -164,7 +175,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
      * @return the smallest value on the queue.
      */
     public T removeMin() {
-        T result = getMin();
+        final T result = getMin();
         heap[0] = heap[size-1];
         size--;
         siftDown();
@@ -198,12 +209,9 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     protected void siftUp() {
         int position = size-1;
         while (position > 0) {
-            int parentPosition = parent(position);
+            final int parentPosition = parent(position);
             //noinspection unchecked
-            if ((comparator != null
-                 ? comparator.compare(heap[parentPosition],
-                                      heap[position])
-                 : (heap[parentPosition]).compareTo(heap[position])) < 0) {
+            if (comparator.compare(heap[parentPosition], heap[position]) < 0) {
                 swap(parentPosition, position);
             } else {
                 break;
@@ -219,21 +227,17 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     protected void siftDown() {
         siftDown(0);
     }
-    protected void siftDown(int startPosition) {
+    protected void siftDown(final int startPosition) {
         int position = startPosition;
         while (firstChild(position) < size) {
             int kid = firstChild(position);
             //noinspection unchecked
             if (kid < size-1 &&
-                (comparator != null
-                 ? comparator.compare(heap[kid], heap[kid+1])
-                 : (heap[kid]).compareTo(heap[kid+1])) < 0) {
+                comparator.compare(heap[kid], heap[kid+1]) < 0) {
                 kid++;
             }
             //noinspection unchecked
-            if ((comparator != null
-                 ? comparator.compare(heap[position], heap[kid])
-                 : (heap[position]).compareTo(heap[kid])) > 0) {
+            if (comparator.compare(heap[position], heap[kid]) > 0) {
                 break;
             } else {
                 swap(kid, position);
@@ -260,8 +264,16 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     }
 
     private void swap(int element1, int element2) {
-        T temp = heap[element1];
+        final T temp = heap[element1];
         heap[element1] = heap[element2];
         heap[element2] = temp;
+    }
+
+    /**
+     * @return the comparator used for this queue. If no explicit Comparator is
+     * given on creation time, this will use natural ordering.
+     */
+    public Comparator<T> getComparator() {
+        return comparator;
     }
 }

@@ -67,7 +67,7 @@ public class PriorityQueueTest extends TestCase {
             for (long element: expected) {
                 //noinspection DuplicateStringLiteralInspection
                 assertEquals("The order of the output should be as expected "
-                             + "by using setValues",
+                             + "by using set",
                              element, queue.removeMin());
             }
         }
