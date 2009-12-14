@@ -53,9 +53,9 @@ public class WindowQueue<T extends Comparable<? super T>>
      * If no comparator is given, a default comparator is created, which will
      * use the elements natural order.
      */
-    private Comparator<T> comparator;
+    private final Comparator<T> comparator;
 
-    private ResourceTracker<T> resourceTracker;
+    private final ResourceTracker<T> resourceTracker;
 
     /**
      * Create a queue with the given constraints.
@@ -74,18 +74,11 @@ public class WindowQueue<T extends Comparable<? super T>>
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.resourceTracker = resourceTracker;
-        this.comparator = comparator;
-        if (comparator == null) {
-            this.comparator = new Comparator<T>() {
-                public int compare(T o1, T o2) {
-                    return o1.compareTo(o2);
-                }
-            };
-        }
+        this.comparator = getComparator();
     }
 
     @Override
-    public T insert(T value) {
+    public T insert(final T value) {
         if (lowerBound != null && comparator.compare(lowerBound, value) >= 0) {
             return null;
         }
@@ -94,19 +87,19 @@ public class WindowQueue<T extends Comparable<? super T>>
         }
         resourceTracker.add(value);
         T bumped = super.insert(value);
-        if (bumped != null) {
+        if (bumped != null) { // Normally null as resourceTracker handles limits
             resourceTracker.remove(bumped);
         }
         // Trim
         while (getSize() > 0 && resourceTracker.isOverflowing()) {
-            removeMin(); // Lost without a trace
+            bumped = removeMin(); // Reuse the last one
         }
         return bumped;
     }
 
     @Override
     public T removeMin() {
-        T min = super.removeMin();
+        final T min = super.removeMin();
         if (min != null) {
             resourceTracker.remove(min);
         }
