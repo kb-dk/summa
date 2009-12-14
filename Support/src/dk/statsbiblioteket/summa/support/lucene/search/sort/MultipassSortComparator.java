@@ -363,6 +363,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
         int loopCount = 1;
         int termPos;
+        long charCount = 0;
         while (true) {
             log.trace("Starting sort-loop #" + loopCount
                       + " with lower bound '" + base + "'");
@@ -370,10 +371,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
             long enumLoopStart = System.currentTimeMillis();
             termPos = 0;
             final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+            OrderedString reusable = null;
             try {
                 do {
                     final Term term = termEnum.term();
-                    if (term==null || !term.field().equals(fieldname)) {
+                    if (!fieldname.equals(term.field())) {
                         break;
                     }
                     if (loopCount == 1) { // Collect docIDs for terms
@@ -381,10 +383,14 @@ public class MultipassSortComparator extends ReusableSortComparator {
                         while (termDocs.next()) {
                             t2d.append(termPos, termDocs.doc());
                         }
+                        charCount += term.text().length();
                     }
                     // TODO: Consider first-letter check optimization
                     if (!t2d.isCleared(termPos)) { // Insert if unhandled
-                        slider.insert(new OrderedString(term.text(), termPos));
+                        reusable = slider.insert(
+                                reusable == null ?
+                                new OrderedString(term.text(), termPos) :
+                                reusable.set(term.text(), termPos));
                     }
                     termPos++;
                 } while (termEnum.next());
@@ -396,18 +402,17 @@ public class MultipassSortComparator extends ReusableSortComparator {
                       + " in "
                       + (System.currentTimeMillis() - enumLoopStart) / 1000
                       + " seconds. Got " + slider.getSize() + "/" + termPos
-                      + " terms");
+                      + " terms. Assigning docIDs...");
 
             // 5. If the heap is empty, goto 9.<br />
             if (slider.getSize() == 0) {
+                log.trace("No terms extracted. Exiting loop #" + loopCount);
                 break;
             }
 
             // Assign orders from the slider to docOrders
 
             int sliderSize = slider.getSize();
-            log.trace("Assigning docIDs for " + sliderSize
-                      + " terms above base '" + base + "'");
             OrderedString oldBase = base;
             base = slider.getMin();
             logicalPos += slider.getSize(); // For later
@@ -420,13 +425,17 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 for (int docID: docIDs) {
                     docOrders.set(docID, reverseLogicalPos);
                 }
+                t2d.dirtyClear(term.getOrder()); // No further use
                 // 6.2 increment logicalPos.
                 // As the slider delivers in reverse order, we reverse too
                 reverseLogicalPos--;
             }
             log.trace("DocID assignment for " + sliderSize
-                      + " terms above base '" + oldBase + "' took "
+                      + " terms above '" + oldBase + "' and up to '" + base
+                      + "' took "
                       + (System.currentTimeMillis() - collectorStart) / 1000
+                      + " seconds. Total loop time was "
+                      + (System.currentTimeMillis() - enumLoopStart) / 1000
                       + " seconds");
 
             // 7. Set base to the last extracted term from the heap.
@@ -458,12 +467,13 @@ public class MultipassSortComparator extends ReusableSortComparator {
         termDocs.close();
 
         orders.put(fieldname, docOrders);
-        log.debug(String.format(
-                "Got %d unique positions in the order-array for %d terms in "
+        log.info(String.format(
+                "Got %d unique positions in the order-array for %d terms with "
+                + "a total of %d characters in "
                 + "the field %s using language %s with Collator %s for %d "
                 + "documents in %s performing %d loops through the terms",
-                logicalPos-1, termPos, fieldname, language, collator,
-                reader.maxDoc(), profiler.getSpendTime(), loopCount-2));
+                logicalPos-1, termPos, charCount, fieldname, language, collator,
+                reader.maxDoc(), profiler.getSpendTime(), loopCount-1));
         return docOrders;
     }
 
@@ -488,6 +498,19 @@ public class MultipassSortComparator extends ReusableSortComparator {
         @Override
         public String toString() {
             return s + "(" + order + ")";
+        }
+
+        /**
+         * Setter for both values that returns this. Meant for reuse of the
+         * object in order to avoid object allocations.
+         * @param s     the String.
+         * @param order the order of the String.
+         * @return this.
+         */
+        public OrderedString set(String s, int order) {
+            this.s = s;
+            this.order = order;
+            return this;
         }
     }
     
