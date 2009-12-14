@@ -140,7 +140,7 @@ public class MultipassSortComparatorTest extends TestCase {
                      Strings.join(expected, ", "), Strings.join(actual, ", "));
     }
 
-    public void testMemoryConsumption() throws Exception {
+    public void testCompareMemoryConsumption() throws Exception {
         int TERM_COUNT = 10000;
         int TERM_MAX_LENGTH = 20;
         int RUNS = 3;
@@ -208,15 +208,28 @@ public class MultipassSortComparatorTest extends TestCase {
                 + " KB in " + profiler.getSpendTime());
     }
 
+    public void testDualRepeat() throws Exception {
+        testSortLuceneRepeat();
+        testSortMultipassRepeat();
+    }
+
     public void testSortLuceneRepeat() throws Exception {
         int REPEATS = 5;
 
         File index = new File(System.getProperty("java.io.tmpdir"));
+        Profiler profiler = new Profiler();
+        long lucene = SortHelper.performSortedSearch(
+                index, "all:all", 10, getLuceneFactory(
+                SortHelper.SORT_FIELD));
+        System.out.println(
+                "Lucene initial sort search performed, using " + lucene / 1024
+                + " KB in " + profiler.getSpendTime());
+
         long searchTime = SortHelper.timeSortedSearch(
                 index, "all:all", 10, getLuceneFactory(
                 SortHelper.SORT_FIELD), REPEATS);
         System.out.println(
-                "Lucene sorted search #" + REPEATS + " took "
+                "Lucene sort search #" + REPEATS + " took "
                 + searchTime + " ms");
     }
 
@@ -224,11 +237,20 @@ public class MultipassSortComparatorTest extends TestCase {
         int REPEATS = 5;
 
         File index = new File(System.getProperty("java.io.tmpdir"));
+
+        Profiler profiler = new Profiler();
+        long multipass = SortHelper.performSortedSearch(
+                index, "all:all", 10, getMultipassFactory(
+                SortHelper.SORT_FIELD, 20 * 1024 * 1024));
+        System.out.println(
+                "Multipass initial sort search performed, using "
+                + multipass / 1024 + " KB in " + profiler.getSpendTime());
+
         long searchTime = SortHelper.timeSortedSearch(
                 index, "all:all", 10, getMultipassFactory(
                 SortHelper.SORT_FIELD, 100 * 1024 * 1024), REPEATS);
         System.out.println(
-                "Multipass sorted search #" + REPEATS + " took "
+                "Multipass sort search #" + REPEATS + " took "
                 + searchTime + " ms");
     }
 
