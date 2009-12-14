@@ -2278,7 +2278,7 @@ getco     */
         Statement stmt;
 
         String createRelationsQuery =
-                "CREATE TABLE " + RELATIONS + " ("
+                "CREATE TABLE IF NOT EXISTS " + RELATIONS + " ("
                 + PARENT_ID_COLUMN     + " VARCHAR(" + ID_LIMIT + "), "
                 + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
         log.debug("Creating table "+RELATIONS+" with query: '"
@@ -2289,7 +2289,7 @@ getco     */
 
         /* RELATIONS INDEXES */
         String createRelationsPCIndexQuery =
-                "CREATE UNIQUE INDEX pc ON "
+                "CREATE UNIQUE INDEX IF NOT EXISTS pc ON "
                 + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
         log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
                   + createRelationsPCIndexQuery + "'");
@@ -2298,7 +2298,7 @@ getco     */
         stmt.close();
 
         String createRelationsCIndexQuery =
-                "CREATE INDEX c ON "
+                "CREATE INDEX IF NOT EXISTS c ON "
                 + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
         log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
                   + createRelationsCIndexQuery + "'");
@@ -2310,7 +2310,7 @@ getco     */
     private void doCreateSummaRecordsTable(Connection conn)
                                                            throws SQLException {
         String createRecordsQuery =
-                "CREATE TABLE " + RECORDS + " ("
+                "CREATE TABLE IF NOT EXISTS " + RECORDS + " ("
                 + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
                 + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
                 + DELETED_COLUMN   + " INTEGER, "
@@ -2330,7 +2330,7 @@ getco     */
 
         /* RECORDS INDEXES */
         String createRecordsIdIndexQuery =
-                "CREATE UNIQUE INDEX i ON " + RECORDS + "("+ID_COLUMN+")";
+                "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "("+ID_COLUMN+")";
         log.debug("Creating index 'i' on table "+RECORDS+" with query: '"
                   + createRecordsIdIndexQuery + "'");
         stmt = conn.createStatement();
@@ -2342,12 +2342,24 @@ getco     */
         // sets for getRecordsModifiedAfter. To make selects by mtime and base
         // faster we use a covering index on (mtime,base)
         String createRecordsMTimeIndexQuery =
-                "CREATE UNIQUE INDEX mb ON "
+                "CREATE UNIQUE INDEX IF NOT EXISTS mb ON "
                                + RECORDS + "("+MTIME_COLUMN+","+BASE_COLUMN+")";
         log.debug("Creating index 'mb' on table "+RECORDS+" with query: '"
                   + createRecordsMTimeIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsMTimeIndexQuery);
+        stmt.close();
+
+        // This index is used to speed up record counts segregated by base,
+        // deleted- and indexable flags.
+        String createRecordsBaseIndexQuery =
+                "CREATE INDEX IF NOT EXISTS bdi ON "
+                + RECORDS +"("
+                + BASE_COLUMN + ","+DELETED_COLUMN+","+INDEXABLE_COLUMN+")";
+        log.debug("Creating index 'bdi' on table "+RECORDS+" with query: '"
+                  + createRecordsBaseIndexQuery + "'");
+        stmt = conn.createStatement();
+        stmt.execute(createRecordsBaseIndexQuery);
         stmt.close();
     }
 
@@ -2655,6 +2667,81 @@ getco     */
         iteratorReaper.stop();
 
         log.info("Closed");
+    }
+
+    // FIXME: In Summa 2.0 we might want to make this public API
+    public List<BaseStats> getStats() throws IOException {
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            return getStatsWithConnection(conn);
+        } catch (SQLException e) {
+            throw new IOException("Could not get datbase stats", e);
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                log.warn("Failed to close connection database: "
+                         + e.getMessage(), e);
+            }
+        }
+    }
+
+    private List<BaseStats> getStatsWithConnection(Connection conn)
+                                                           throws SQLException {
+        List<BaseStats> stats = new LinkedList<BaseStats>();
+        String query =
+                "SELECT base, deleted, indexable, count(base) "
+              + "FROM summa_records "
+              + "GROUP BY base,deleted,indexable";
+
+        Statement stmt = conn.createStatement();
+        ResultSet result = stmt.executeQuery(query);
+
+        try {
+            result.next();
+            while (!result.isAfterLast()) {
+                String base = result.getString(1);
+                String lastBase = base;
+                long deletedIndexables = 0;
+                long nonDeletedIndexables = 0;
+                long deletedNonIndexables = 0;
+                long nonDeletedNonIndexables = 0;
+
+                // Collect all stats for the current base and append it
+                // to the stats list
+                while (lastBase.equals(base)) {
+                    base = result.getString(1);
+                    boolean deleted = intToBool(result.getInt(2));
+                    boolean indexable = intToBool(result.getInt(3));
+                    long count = result.getLong(4);
+
+                    // These boolean cases could be simplified, but we list
+                    // them all explicitely to help the (human) reader
+                    if (deleted && indexable) {
+                        deletedIndexables = count;
+                    } else if (deleted && !indexable) {
+                        deletedNonIndexables = count;
+                    } else  if (!deleted && indexable) {
+                        nonDeletedIndexables = count;
+                    } else if (!deleted && !indexable) {
+                        nonDeletedNonIndexables = count;
+                    }
+
+                    result.next();
+                }
+                stats.add(new BaseStats(
+                        lastBase, deletedIndexables, nonDeletedIndexables,
+                        deletedNonIndexables, nonDeletedNonIndexables));
+            }
+        } finally {
+            result.close();
+        }
+
+        return stats;
     }
 
 }
