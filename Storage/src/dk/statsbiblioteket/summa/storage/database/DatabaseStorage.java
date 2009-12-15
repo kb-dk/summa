@@ -2773,7 +2773,7 @@ getco     */
                     }
                 }
                 stats.add(new BaseStats(
-                        lastBase, getModificationTime(lastBase),
+                        lastBase, getModificationTime(lastBase), startTime,
                         deletedIndexables, nonDeletedIndexables,
                         deletedNonIndexables, nonDeletedNonIndexables));
             }

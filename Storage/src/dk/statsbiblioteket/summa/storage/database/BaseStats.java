@@ -28,6 +28,7 @@ public class BaseStats implements Serializable {
 
     private String baseName;
     private long lastModified;
+    private long generationTime;
     private long deletedIndexables;
     private long nonDeletedIndexables;
     private long deletedNonIndexables;
@@ -36,12 +37,14 @@ public class BaseStats implements Serializable {
 
     public BaseStats(String baseName,
                      long lastModified,
+                     long generationTime,
                      long deletedIndexables,
                      long nonDeletedIndexables,
                      long deletedNonIndexables,
                      long nonDeletedNonIndexables) {
         this.baseName = baseName;
         this.lastModified = lastModified;
+        this.generationTime = generationTime;
         this.deletedIndexables = deletedIndexables;
         this.nonDeletedIndexables = nonDeletedIndexables;
         this.deletedNonIndexables = deletedNonIndexables;
@@ -114,6 +117,10 @@ public class BaseStats implements Serializable {
         return lastModified;
     }
 
+    public long getGenerationTime() {
+        return generationTime;
+    }
+
     /**
      * Return whether or not these statistics has additional metadata
      * associated with them
@@ -161,9 +168,14 @@ public class BaseStats implements Serializable {
     }
 
     public static void toXML(List<BaseStats> stats, Writer out) {
+        long[] times = findMaxGenerationAndModificationTimes(stats);
         DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         PrintWriter w = new PrintWriter(out);
-        w.append("<holdings>\n");
+        w.append("<holdings date=\"")
+         .append(date.format(new Date(times[0])))
+         .append("\" mtime=\"")
+         .append(date.format(new Date(times[1])))
+         .append("\">\n");
         for (BaseStats b : stats) {
             w.append("  <base name=\"")
              .append(XMLUtil.encode(b.getBaseName()))
@@ -180,7 +192,7 @@ public class BaseStats implements Serializable {
             w.append(" total=\"")
              .append(Long.toString(b.getTotalCount()))
              .append("\"");
-            w.append(" modificationTime=\"")
+            w.append(" mtime=\"")
              .append(date.format(new Date(b.getModificationTime())))
              .append("\"");
 
@@ -200,5 +212,18 @@ public class BaseStats implements Serializable {
         }
         w.append("</holdings>");
         w.flush();
+    }
+
+    private static long[] findMaxGenerationAndModificationTimes(
+                                                        List<BaseStats> stats) {
+        long[] times = new long[2];
+        times[0] = 0; times[1] = 0;
+
+        for (BaseStats b : stats) {
+            times[0] = Math.max(b.getGenerationTime(), times[0]);
+            times[1] = Math.max(b.getModificationTime(), times[1]);
+        }
+
+        return times;
     }
 }
