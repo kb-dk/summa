@@ -195,5 +195,6 @@ public class BaseStats implements Serializable {
             }
         }
         w.append("</holdings>");
+        w.flush();
     }
 }
