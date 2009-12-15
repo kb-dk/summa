@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.util.*;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,9 +38,7 @@ import org.apache.lucene.search.FieldCache;
 
 import java.io.IOException;
 import java.text.Collator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Comparator;
+import java.util.*;
 
 /**
  * A SortComparator that utilized multipass-scans of the corpus in order to
@@ -204,7 +203,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
 
         int loopCount = 1;
-        long termCount = 0;
+        long termCount;
         while (true) {
             log.trace("Starting sort-loop #" + loopCount++
                       + " with lower bound '" + base + "'");
@@ -380,6 +379,9 @@ public class MultipassSortComparator extends ReusableSortComparator {
                         break;
                     }
                     final String termText = term.text();
+                    if (loopCount == 2 && "mB2".equals(termText)) {
+                        log.debug("Entering problematic term");
+                    }
                     // TODO: Consider first-letter check optimization
                     if (loopCount == 1) { // Collect docIDs for terms
                         termDocs.seek(termEnum);
@@ -406,8 +408,8 @@ public class MultipassSortComparator extends ReusableSortComparator {
                       + " in "
                       + (System.currentTimeMillis() - enumLoopStart) / 1000
                       + " seconds. Got " + slider.getSize() + "/" + termPos
-                      + " terms (encountered " + clearedCount + " cleared). "
-                      + "Assigning docIDs...");
+                      + " terms (encountered " + clearedCount + "/" + t2d.size() 
+                      + " cleared). Assigning docIDs...");
 
             // 5. If the heap is empty, goto 9.<br />
             if (slider.getSize() == 0) {
@@ -444,10 +446,14 @@ public class MultipassSortComparator extends ReusableSortComparator {
                       + " seconds");
 
             // 7. Set base to the last extracted term from the heap.
-            slider.setLowerBound(base);
+            // Important! Create a new OrderedString object as they are mutable
+//            slider.setLowerBound(new OrderedString(base));
             profiler.beat();
             // 8. Goto 4.
             loopCount++;
+        }
+        if (log.isDebugEnabled()) {
+            dumpCheck(t2d, reader, fieldname);
         }
 
         // 9. docOrders now contain relative docOrders for all documents in the
@@ -459,6 +465,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             docOrders.set(reader.maxDoc()-1, 0);
         }
 
+        int uniques = logicalPos-1;
         // Depending on wanted behaviour, these can be left or set to
         // logicalPos+1.
         if (nullComesLast) {
@@ -477,9 +484,53 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 + "a total of %d characters in "
                 + "the field %s using language %s with Collator %s for %d "
                 + "documents in %s performing %d loops through the terms",
-                logicalPos-1, termPos, charCount, fieldname, language, collator,
+                uniques, termPos, charCount, fieldname, language, collator,
                 reader.maxDoc(), profiler.getSpendTime(), loopCount-1));
         return docOrders;
+    }
+
+    private void dumpCheck(
+            IntArray2D t2d, IndexReader reader, String fieldname)
+                                                            throws IOException {
+        final int MAX_DUMPS = 20;
+
+        List<Integer> nonCleared = new ArrayList<Integer>(MAX_DUMPS);
+        int cleared = 0;
+        for (int i = 0 ; i < t2d.size() ; i++) {
+            if (t2d.isCleared(i)) {
+                cleared++;
+            } else {
+                if (nonCleared.size() < MAX_DUMPS) {
+                    nonCleared.add(i);
+                }
+            }
+        }
+        if (cleared == t2d.size()) {
+            log.trace("All termPos2docID-entries are marked cleared. All OK");
+            return;
+        }
+        List<String> nonClearedStrings = new ArrayList<String>(MAX_DUMPS);
+        final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+        int pos = 0;
+        do {
+            if (nonCleared.size() == 0) {
+                break;
+            }
+            if (nonCleared.get(0) == pos) {
+                nonClearedStrings.add(
+                        "'" + termEnum.term().text() + "'(" + pos + ")");
+                nonCleared.remove(0);
+            }
+            pos++;
+        } while (termEnum.next());
+        termEnum.close();
+
+        log.debug(String.format(
+                "Only %d/%d termPos2docID-entries marked as cleared "
+                + "(missing %d). The first %d non-handled terms was %s",
+                cleared, t2d.size(), t2d.size() - cleared, 
+                nonClearedStrings.size(),
+                Strings.join(nonClearedStrings, ", ")));
     }
 
     public static class OrderedString implements Comparable<OrderedString> {
@@ -488,6 +539,10 @@ public class MultipassSortComparator extends ReusableSortComparator {
         public OrderedString(String s, int order) {
             this.s = s;
             this.order = order;
+        }
+        public OrderedString(OrderedString os) {
+            this.s = os.getString();
+            this.order = os.getOrder();
         }
 
         public int compareTo(OrderedString o) {
@@ -502,7 +557,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
         }
         @Override
         public String toString() {
-            return s + "(" + order + ")";
+            return s;// + "(" + order + ")";
         }
 
         /**
@@ -518,7 +573,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             return this;
         }
     }
-    
+
     private static class OrderedStringComparator implements
                                                  Comparator<OrderedString> {
         private Collator collator;
@@ -547,5 +602,10 @@ public class MultipassSortComparator extends ReusableSortComparator {
                    : element.getString().length() * 2 + SINGLE_ENTRY_OVERHEAD;
         }
 
+    }
+
+    // Uses the generated or given collator.
+    int compare(String o1, String o2) {
+        return collator.compare(o1, o2);
     }
 }
