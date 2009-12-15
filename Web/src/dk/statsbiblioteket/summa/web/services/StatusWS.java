@@ -20,11 +20,16 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
@@ -171,13 +176,20 @@ public class StatusWS {
 
     private void collectStorageStats(Status status) {
         try {
+            ReadableStorage storage = getStorageClient();
+            StringMap meta = new StringMap();
+            meta.put("ALLOW_PRIVATE", "true");
+            QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+
             long responseTime = System.currentTimeMillis();
-            long timestamp = getStorageClient().getModificationTime(null);
+            long timestamp = storage.getModificationTime(null);
+            Record holdings = storage.getRecord("__holdings__", opts);
             responseTime = System.currentTimeMillis() - responseTime;
             String datetime = dateFormat.format(new Date(timestamp));
             status.put("storage", "lastUpdate", datetime);
             status.put("storage", "status", "OK");
             status.put("storage", "responseTime", Long.toString(responseTime));
+            status.put("storage", "holdings", holdings.getContentAsUTF8());
         } catch (IOException e) {
             status.put("storage", "status", "ERROR: " + e.getMessage());
         }
