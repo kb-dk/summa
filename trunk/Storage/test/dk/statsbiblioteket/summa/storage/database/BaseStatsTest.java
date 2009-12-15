@@ -3,6 +3,10 @@ package dk.statsbiblioteket.summa.storage.database;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
+import java.util.List;
+import java.util.Arrays;
+import java.io.StringWriter;
+
 /**
  * Test suite for {@link BaseStats}
  *
@@ -32,5 +36,22 @@ public class BaseStatsTest extends TestCase {
         assertSame(b, b.meta("foo", "bar"));
         assertEquals("bar", b.meta("foo"));
         assertTrue(b.hasMeta());
+    }
+
+    public void testXML() {
+        BaseStats b1 = new BaseStats("base1", 27, 1, 2, 4, 8);
+        BaseStats b2 = new BaseStats("base2", 28, 1, 2, 4, 8).meta("foo", "bar");
+        List<BaseStats> stats = Arrays.asList(b1, b2);
+        StringWriter w = new StringWriter();
+        BaseStats.toXML(stats, w);
+        String xml = w.toString();
+        String expected =
+        "<holdings>\n"+
+        "  <base name=\"base1\" deleted=\"5\" indexable=\"3\" live=\"2\" total=\"15\" modificationTime=\"27\"/>\n"+
+        "  <base name=\"base2\" deleted=\"5\" indexable=\"3\" live=\"2\" total=\"15\" modificationTime=\"28\">\n"+
+        "    <meta key=\"foo\" value=\"bar\"/>\n"+
+        "  </base>\n"+
+        "</holdings>";
+        assertEquals(expected, xml);
     }
 }
