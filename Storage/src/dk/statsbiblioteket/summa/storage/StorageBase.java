@@ -24,6 +24,8 @@ package dk.statsbiblioteket.summa.storage;
 
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -49,12 +51,20 @@ import org.apache.commons.logging.LogFactory;
 public abstract class StorageBase implements Storage {
     private static Log log = LogFactory.getLog(StorageBase.class);
 
+    /**
+     * Meta flag used on {@link QueryOptions} allowing access to
+     * "private" records in the storage service if set to {@code "true"}.
+     */
+    protected static final String ALLOW_PRIVATE = "ALLOW_PRIVATE";
+
     private long storageStartTime;
     private HashMap<String,Long> lastFlushTimes;
+    private Matcher privateIdMatcher;
 
     public StorageBase(Configuration conf) {
         storageStartTime = System.currentTimeMillis();
-        lastFlushTimes = new HashMap<String,Long>(10);        
+        lastFlushTimes = new HashMap<String,Long>(10);
+        privateIdMatcher = Pattern.compile("__.+__").matcher("");
     }
 
     /**
@@ -288,8 +298,35 @@ public abstract class StorageBase implements Storage {
 
         return result;
     }
-    
-}
 
+    /**
+     * Returns {@code true} if {@code id} matches the regular expression
+     * {@code __.+__}, indicating that the id belongs to a private
+     * record.
+     * <p/>
+     * Private records may only be retrieved if the {@code ALLOW_PRIVATE}
+     * meta field is set on the query options passed to the storage when
+     * calling {@link #getRecord}(s).
+     * @param id
+     * @return
+     */
+    protected boolean isPrivateId(String id) {
+        return privateIdMatcher.reset(id).matches();
+    }
+
+    /**
+     * Returns {@code true} if and only if the {@code ALLOW_PRIVATE} meta
+     * field is set to the string {@code "true"} in {@code opts}.
+     * @param opts the query options to check
+     * @return {@code true} if {@code ALLOW_PRIVATE} is set to {@code "true"}
+     *         in {@code opts}
+     */
+    protected boolean allowsPrivate(QueryOptions opts) {
+        if (opts != null) {
+            return "true".equals(opts.meta(ALLOW_PRIVATE));
+        }
+        return false;
+    }
+}
 
 

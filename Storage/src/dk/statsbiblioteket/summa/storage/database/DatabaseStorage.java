@@ -47,6 +47,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
 import java.sql.*;
 import java.util.*;
 
@@ -1208,6 +1210,17 @@ getco     */
                                               throws IOException, SQLException {
         log.trace("getRecord('" + id + "', " + options + ")");
 
+        if (isPrivateId(id)) {
+            if (!allowsPrivate(options)) {
+                log.debug(String.format(
+                        "Request for private record '%s' denied", id));
+                throw new IllegalArgumentException(
+                        "Private record requested, but ALLOW_PRIVATE flag "
+                        + "not set in query options");
+            }
+            return getPrivateRecord(id);
+        }
+
         PreparedStatement stmt = conn.prepareStatement(stmtGetRecord.getSql());
 
         Record record = null;
@@ -1259,6 +1272,26 @@ getco     */
         }
 
         return record;
+    }
+
+    /**
+     * Return a private record, such as __holdings__ or __statistics__
+     * @param id the id of the private record to retrieve
+     * @return the matching record or {@code null} in case of an unknown id
+     */
+    private Record getPrivateRecord(String id) throws IOException {
+        log.debug(String.format("Fetching private record '%s'", id));
+
+        if ("__holdings__".equals(id)) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            OutputStreamWriter writer = new OutputStreamWriter(bytes);
+            BaseStats.toXML(getStats(), writer);
+            return new Record(
+                    "__holdings__", "__private__", bytes.toByteArray());
+        } else {
+            log.debug(String.format("No such private record '%s'", id));
+            return null;
+        }
     }
 
     /* Expand child records if we need to and there indeed

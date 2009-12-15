@@ -4,8 +4,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 
 import java.io.File;
@@ -191,4 +193,28 @@ public class DatabaseStorageTest extends TestCase {
         assertEquals(1, base.getLiveCount());
     }
 
+    public void testIllegalPrivateAccess() throws Exception {
+        try {
+            storage.getRecord("__holdings__", null);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // Good
+        }
+    }
+
+    public void testGetHoldings() throws Exception {
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        storage.flush(new Record(testId2, testBase2, testContent1));
+
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        Record holdings = storage.getRecord("__holdings__", opts);
+        String xml = holdings.getContentAsUTF8();
+
+        assertTrue(xml.startsWith("<holdings"));
+        assertTrue(xml.endsWith("</holdings>"));
+
+        System.out.println(xml);
+    }
 }
