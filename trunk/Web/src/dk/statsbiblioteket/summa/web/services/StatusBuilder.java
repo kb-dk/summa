@@ -5,6 +5,7 @@ import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.NamedNodeMap;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -210,9 +211,37 @@ public class StatusBuilder {
                .append("<tt>")
                .append(prop.getValue())
                .append("</tt>")
-               .append("</li>");
+               .append("</li>\n");
         }
-        buf.append("</ul>");
+        buf.append("</ul>\n");
+        buf.append("<p/>\n");
+
+        Node holdings = DOM.selectNode(statusDom,
+          "/status/group[@name='storage']/property[@name='holdings']/holdings");
+        
+        if (holdings != null) {
+            NodeList bases = holdings.getChildNodes();
+            buf.append("<b>Storage holdings:</b>");
+            buf.append("<ul>\n");
+            for (int i = 0; i < bases.getLength(); i++) {
+                if (bases.item(i).getNodeType() != Node.ELEMENT_NODE) {
+                    continue;
+                }
+                NamedNodeMap base = bases.item(i).getAttributes();
+                buf.append("<li><tt>")
+                   .append(base.getNamedItem("name").getTextContent())
+                   .append("</tt><br/>")
+                   .append("Live: ")
+                   .append(base.getNamedItem("live").getTextContent())
+                   .append(", total: ")
+                   .append(base.getNamedItem("total").getTextContent())
+                   .append(". Updated: ")
+                   .append(base.getNamedItem("mtime").getTextContent())
+                   .append("</li>\n");
+            }
+            buf.append("</ul>\n");
+        }
+
 
         return buf;
     }
