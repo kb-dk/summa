@@ -366,14 +366,17 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             log.trace("readValue: Retrieving value of length " + length 
                       + " from file at position " + valPos);
         }
-        reader.seek(valPos);
-        if (BUFFER.length < length) {
-            BUFFER = new byte[length];
+        synchronized (this) {
+            reader.seek(valPos);
+            if (BUFFER.length < length) {
+                BUFFER = new byte[length];
+            }
+            reader.readFully(BUFFER, 0, length);
         }
-        reader.readFully(BUFFER, 0, length);
 /*        for (int i = 0 ; i < length ; i++) {
             System.out.println(BUFFER[i]);
-        }                                                       */
+        }
+                                          */
         return getValueConverter().bytesToValue(BUFFER, length);
     }
 
