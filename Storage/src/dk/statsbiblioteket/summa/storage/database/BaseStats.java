@@ -10,6 +10,9 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * Encapsulation of storage statistics for a given base in the
@@ -158,6 +161,7 @@ public class BaseStats implements Serializable {
     }
 
     public static void toXML(List<BaseStats> stats, Writer out) {
+        DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         PrintWriter w = new PrintWriter(out);
         w.append("<holdings>\n");
         for (BaseStats b : stats) {
@@ -177,7 +181,7 @@ public class BaseStats implements Serializable {
              .append(Long.toString(b.getTotalCount()))
              .append("\"");
             w.append(" modificationTime=\"")
-             .append(Long.toString(b.getModificationTime()))
+             .append(date.format(new Date(b.getModificationTime())))
              .append("\"");
 
             if (!b.hasMeta()) {
