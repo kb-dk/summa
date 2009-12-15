@@ -3,19 +3,19 @@ package dk.statsbiblioteket.summa.support.lucene.search.sort;
 import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.CachedCollator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.IndexSearcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
+import java.text.Collator;
 
 /**
  * Tests multiple sort-implementations for Lucene for correctness.
@@ -174,12 +174,24 @@ public class MultipassSortComparatorTest extends TestCase {
 
     // Manual test activation with tweaked Xmx
     public void testCreateIndex() throws Exception {
-        int TERM_COUNT = 500000;
+        int TERM_COUNT = 50000;
         int TERM_MAX_LENGTH = 20;
         Profiler profiler = new Profiler();
         SortHelper.createIndex(makeTerms(TERM_COUNT, TERM_MAX_LENGTH));
         System.out.println("Build index with " + TERM_COUNT + " documents in "
                            + profiler.getSpendTime());
+    }
+
+    public void testCollator() throws Exception {
+        MultipassSortComparator sc = new MultipassSortComparator("da", 1000);
+        assertTrue("Comparing a with b should work",
+                   sc.compare("a", "b") < 0);
+        assertTrue("Comparing bkNTeMbjØfUs with mB2 should work",
+                   sc.compare("bkNTeMbjØfUs", "mB2") < 0);
+        assertTrue("Comparing mB2 with mÆju12Q should work",
+                   sc.compare("mB2", "mÆju12Q") < 0);
+        assertTrue("Comparing m9Yi)o3Kq with mB2 should work",
+                   sc.compare("m9Yi)o3Kq", "mB2") < 0);
     }
 
     // Manual test activation with tweaked Xmx
@@ -202,10 +214,48 @@ public class MultipassSortComparatorTest extends TestCase {
         Profiler profiler = new Profiler();
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, getMultipassFactory(
-                SortHelper.SORT_FIELD, 20 * 1024 * 1024));
+                SortHelper.SORT_FIELD,  1000 * 1024));
         System.out.println(
                 "Multipass sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
+    }
+
+    public void testMultipassLoops() throws Exception {
+        int TERM_COUNT = 45;
+        int TERM_MAX_LENGTH = 20;
+        int BUFFER = 800;
+        String[] terms = makeTerms(TERM_COUNT, TERM_MAX_LENGTH);
+
+        Profiler profiler = new Profiler();
+        SortHelper.createIndex(terms);
+        System.out.println("Build index with " + TERM_COUNT + " documents in "
+                           + profiler.getSpendTime());
+
+        File index = new File(System.getProperty("java.io.tmpdir"));
+        profiler = new Profiler();
+        SortHelper.SortFactory sf = getMultipassFactory(
+                SortHelper.SORT_FIELD,  BUFFER);
+        long lucene = SortHelper.performSortedSearch(index, "all:all", 10, sf);
+
+        System.out.println(
+                "Multipass sort search performed, using " + lucene / 1024
+                + " KB in " + profiler.getSpendTime());
+                                /*
+        IndexSearcher searcher = new IndexSearcher(index.toString());
+        Sort multipassSort = sf.getSort(searcher.getIndexReader());
+        MultipassSortComparator multipass =
+                (MultipassSortComparator)multipassSort.getSort()[0].
+                        getFactory().newComparator(
+                        searcher.getIndexReader(), SortHelper.SORT_FIELD);
+        List<MultipassSortComparator.OrderedString> multiSorted =
+               new ArrayList<MultipassSortComparator.OrderedString>(TERM_COUNT);
+        int counter = 0;
+        for (String term: terms) {
+            multiSorted.add(new MultipassSortComparator.OrderedString(
+                    term, counter++));
+        }
+        Collections.sort(multipassSort, multipass.))
+        searcher.close();         */
     }
 
     public void testDualRepeat() throws Exception {

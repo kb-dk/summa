@@ -6,8 +6,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class WindowQueueTest extends TestCase {
     public WindowQueueTest(String name) {
@@ -43,7 +42,47 @@ public class WindowQueueTest extends TestCase {
         queue.insert("k");
         assertEquals("k should be outside bounds", 2, queue.getSize());
     }
-    
+
+    public void testMonkey() throws Exception {
+        int TERMS = 50000;
+        String ALPHABET =
+                "abcdefghijklmnopqrstuvexyzæøå ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ "
+                + "1234567890 !#¤%&/()=@£$";
+        int MAX_TERM_LENGTH = 40;
+
+        WindowQueue<String> queue = new WindowQueue<String>(
+                null, null, null, new StringTracker(100, 500));
+        Random random = new Random(87);
+        List<String> raw = new ArrayList<String>(TERMS);
+        for (int i = 0 ; i < TERMS ; i++) {
+            String term = getString(ALPHABET, MAX_TERM_LENGTH, random);
+            queue.insert(term);
+            raw.add(term);
+        }
+        assertTrue("There should be more than 2 terms collected", 
+                   queue.getSize() > 2);
+
+        Collections.sort(raw, queue.getComparator());
+        ArrayList<String> ql = new ArrayList<String>(queue.getSize());
+        while (queue.getSize() > 0) {
+            ql.add(queue.removeMin());
+        }
+        Collections.reverse(ql);
+        raw = raw.subList(0, ql.size());
+        assertEquals("The queue should sort correctly",
+                     Strings.join(raw, ", "),
+                     Strings.join(ql, ", "));
+    }
+
+    private String getString(String alphabet, int maxLength, Random random) {
+        int length = random.nextInt(maxLength)+1;
+        char[] chars = new char[length];
+        for (int i = 0 ; i < length ; i++) {
+            chars[i] = alphabet.charAt(random.nextInt(alphabet.length()));
+        }
+        return new String(chars);
+    }
+
     public void testLimits() throws Exception {
         WindowQueue<String> queue = new WindowQueue<String>(
                 null, "b", "k", new StringTracker(2, 500));

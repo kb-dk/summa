@@ -79,6 +79,9 @@ public class WindowQueue<T extends Comparable<? super T>>
 
     @Override
     public T insert(final T value) {
+/*        if ("mB2".equals(value.toString())) {
+            System.out.println("Inserting problematic term " + value);
+        }*/
         if (lowerBound != null && comparator.compare(lowerBound, value) >= 0) {
             return null;
         }
@@ -129,4 +132,5 @@ public class WindowQueue<T extends Comparable<? super T>>
     public void setUpperBound(T upperBound) {
         this.upperBound = upperBound;
     }
+
 }

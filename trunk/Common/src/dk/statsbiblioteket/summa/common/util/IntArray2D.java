@@ -221,4 +221,11 @@ public class IntArray2D {
                     + "position was %d", size, position));
         }
     }
+
+    /**
+     * @return the length of the primary array.
+     */
+    public int size() {
+        return size;
+    }
 }
