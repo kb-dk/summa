@@ -10,6 +10,7 @@ import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 
 import java.io.File;
 import java.util.List;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -154,6 +155,32 @@ public class DatabaseStorageTest extends TestCase {
         assertEquals(1, base.getIndexableCount());
         assertEquals(0, base.getDeletedCount());
         assertEquals(1, base.getTotalCount());
+        assertEquals(1, base.getLiveCount());
+    }
+
+    public void testStatsWithMixedStates() throws Exception {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setDeleted(true);
+
+        Record r3 = new Record(testId3, testBase1, testContent1);
+        r3.setIndexable(false);
+
+        Record r4 = new Record(testId4, testBase1, testContent1);
+        r4.setDeleted(true);
+        r4.setIndexable(false);
+
+        storage.flushAll(Arrays.asList(r1,r2,r3,r4));
+        List<BaseStats> stats = storage.getStats();
+
+        assertEquals(1, stats.size());
+
+        BaseStats base = stats.get(0);
+        assertEquals(testBase1, base.getBaseName());
+        assertEquals(2, base.getIndexableCount());
+        assertEquals(2, base.getDeletedCount());
+        assertEquals(4, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
     }
 
