@@ -94,7 +94,13 @@ public interface ReadableStorage extends Configurable {
 
     /**
      * Get the records with the given ids. Child records will be expanded
-     * recursively to a depth of {@code expansionDepth}
+     * recursively to a depth of {@code expansionDepth}.
+     * <p/>
+     * Note that record ids matching the regular expression {@code __.+__}
+     * are considered private records of the storage and can only be retrieved
+     * if the query options has the {©code ALLOW_PRIVATE} meta field set to
+     * the string {@code "true"}.
+     * 
      * @param ids list of ids to fetch
      * @param options a possible {@code null} set of options to apply to the
      *                query. Please see the documentation for
@@ -103,6 +109,9 @@ public interface ReadableStorage extends Configurable {
      *         arcording to the {@code ids} parameter. If one or more records
      *         can not be found they will be omitted from the list.
      * @throws IOException on communication errors with the storage
+     * @throws IllegalArgumentException if passed a private id, but
+     *                                  ALLOW_PRIVATE is not set to
+     *                                  {@code "true"} in {@code options}
      */
     List<Record> getRecords(List<String> ids, QueryOptions options)
                                                              throws IOException;
@@ -113,6 +122,12 @@ public interface ReadableStorage extends Configurable {
      * <p/>
      * If {@code expansionDepth == 0} no child expansion will occur, and a
      * depth of {@code -1} will do recursive expansion of all children.
+     * <p/>
+     * Note that record ids matching the regular expression {@code __.+__}
+     * are considered private records of the storage and can only be retrieved
+     * if the query options has the {©code ALLOW_PRIVATE} meta field set to
+     * the string {@code "true"}.
+     *
      * @param id the id of the record to retrieve
      * @param options a possible {@code null} set of options to apply to the
      *                query. Please see the documentation for
@@ -120,6 +135,9 @@ public interface ReadableStorage extends Configurable {
      * @return the requested record or {@code null} if it wasn't found. Expanded
      *         child records can be retrieved with {@link Record#getChildren}
      * @throws IOException on communication errors
+     * @throws IllegalArgumentException if passed a private id, but
+     *                                  ALLOW_PRIVATE is not set to
+     *                                  {@code "true"} in {@code options}
      */
     Record getRecord (String id, QueryOptions options) throws IOException;
 

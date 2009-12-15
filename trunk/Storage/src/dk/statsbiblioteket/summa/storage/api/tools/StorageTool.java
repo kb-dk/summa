@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
 import dk.statsbiblioteket.summa.storage.api.*;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -219,6 +220,19 @@ public class StorageTool {
 
     }
 
+    private static void actionHoldings(
+                String[] argv, StorageReaderClient storage) throws IOException {
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        long start = System.currentTimeMillis();
+        Record holdings = storage.getRecord("__holdings__", opts);
+        String xml = holdings.getContentAsUTF8();
+        System.out.println(xml);
+        System.err.println(String.format("Retrieved holdings in %sms",
+                                         (System.currentTimeMillis() - start)));
+    }
+
     private static void actionXslt (String[] argv, StorageReaderClient storage)
                                                              throws IOException{
         if (argv.length <= 2) {
@@ -296,7 +310,8 @@ public class StorageTool {
                             + "\tpeek [base] [max_count=5]\n"
                             + "\ttouch <record_id> [record_id...]\n"
                             + "\txslt <record_id> <xslt_url>\n"
-                            + "\tdump [base]     (dump storage on stdout)\n");
+                            + "\tdump [base]     (dump storage on stdout)\n"
+                            + "\tholdings");
     }
 
     public static void main (String[] args) throws Exception {
@@ -349,6 +364,8 @@ public class StorageTool {
             actionXslt(args, reader);
         } else if ("dump".equals(action)){
             actionDump(args, reader);
+        } else if ("holdings".equals(action)) {
+            actionHoldings(args, reader);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
