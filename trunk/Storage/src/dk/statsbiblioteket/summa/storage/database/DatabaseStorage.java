@@ -2692,7 +2692,7 @@ getco     */
     }
 
     private List<BaseStats> getStatsWithConnection(Connection conn)
-                                                           throws SQLException {
+                                              throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<BaseStats>();
         String query =
@@ -2740,7 +2740,8 @@ getco     */
                     }
                 }
                 stats.add(new BaseStats(
-                        lastBase, deletedIndexables, nonDeletedIndexables,
+                        lastBase, getModificationTime(lastBase),
+                        deletedIndexables, nonDeletedIndexables,
                         deletedNonIndexables, nonDeletedNonIndexables));
             }
         } finally {

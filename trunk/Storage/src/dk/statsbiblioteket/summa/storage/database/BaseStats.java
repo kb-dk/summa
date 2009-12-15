@@ -1,6 +1,11 @@
 package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulation of storage statistics for a given base in the
@@ -12,24 +17,29 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class BaseStats {
+public class BaseStats implements Serializable {
 
     private String baseName;
+    private long lastModified;
     private long deletedIndexables;
     private long nonDeletedIndexables;
     private long deletedNonIndexables;
     private long nonDeletedNonIndexables;
+    private StringMap meta;
 
     public BaseStats(String baseName,
+                     long lastModified,
                      long deletedIndexables,
                      long nonDeletedIndexables,
                      long deletedNonIndexables,
                      long nonDeletedNonIndexables) {
         this.baseName = baseName;
+        this.lastModified = lastModified;
         this.deletedIndexables = deletedIndexables;
         this.nonDeletedIndexables = nonDeletedIndexables;
         this.deletedNonIndexables = deletedNonIndexables;
         this.nonDeletedNonIndexables = nonDeletedNonIndexables;
+        this.meta = null;
     }
 
     /**
@@ -79,7 +89,67 @@ public class BaseStats {
                + nonDeletedNonIndexables + deletedNonIndexables;
     }
 
+    /**
+     * The name of the base these statistics were generated for
+     * @return The name of the base these statistics were generated for
+     */
     public String getBaseName() {
         return baseName;
+    }
+
+    /**
+     * Get the timestamp for the last update on the base represented by these
+     * statistics
+     * @return the timestamp for when {@code flush()}, {@code flushAll()}, or
+     * {@code clearBase()} was called on the base in question
+     */
+    public long getModificationTime() {
+        return lastModified;
+    }
+
+    /**
+     * Return whether or not these statistics has additional metadata
+     * associated with them
+     * @return {@code true}
+     */
+    public boolean hasMeta() {
+        return meta != null && !meta.isEmpty();
+    }
+
+    /**
+     * Return the additional metadata associated with these statistics.
+     * Possibly {@code null} if no additional metadata has been recorded.
+     * @return a key/value map of strings for the additional metadata or
+     *         {@code null} if no metatdata is recorded
+     */
+    public StringMap meta() {
+        return meta;
+    }
+
+    /**
+     * Return the metadata associated with the given {@code key}, returning
+     * {@code null} if no data exists for the key or no metadata is associated
+     * with the statistics
+     * @param key the name of the metadata field to look up
+     * @return the value corresponding to {@code key} or {@code null}
+     */
+    public String meta(String key) {
+        return meta == null ? null : meta.get(key);
+    }
+
+    /**
+     * Set a key/value pair as additional metadata carried with these
+     * statistics. If a field already exists under the given name it will
+     * be replaced with the supplied value
+     * @param key the unique name for the metadata field
+     * @param value the value to set for the field
+     * @return always returns {@code this}
+     */
+    public BaseStats meta(String key, String value) {
+        if (meta == null) {
+            meta = new StringMap();
+        }
+        meta.put(key,value);
+        return this;
     }
 }

@@ -123,6 +123,8 @@ public class DatabaseStorageTest extends TestCase {
     }
 
     public void testStatsOnSingleRecord() throws Exception {
+        long storageStart = storage.getModificationTime(null);
+        Thread.sleep(2); // To make sure we have a timestamp delta
         storage.flush(new Record(testId1, testBase1, testContent1));
         List<BaseStats> stats = storage.getStats();
 
@@ -134,6 +136,11 @@ public class DatabaseStorageTest extends TestCase {
         assertEquals(0, base.getDeletedCount());
         assertEquals(1, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
+        assertTrue("Base mtime must be updated, but " +
+                   "base.getModificationTime() <= storageStart: " +
+                   base.getModificationTime() + " <= " +
+                   storageStart,
+                   base.getModificationTime() > storageStart);
     }
 
     public void testStatsOnTwoRecordsInTwoBases() throws Exception {
