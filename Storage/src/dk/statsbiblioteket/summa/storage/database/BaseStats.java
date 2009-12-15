@@ -1,11 +1,15 @@
 package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 
 import java.io.Serializable;
+import java.io.Writer;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 /**
  * Encapsulation of storage statistics for a given base in the
@@ -151,5 +155,45 @@ public class BaseStats implements Serializable {
         }
         meta.put(key,value);
         return this;
+    }
+
+    public static void toXML(List<BaseStats> stats, Writer out) {
+        PrintWriter w = new PrintWriter(out);
+        w.append("<holdings>\n");
+        for (BaseStats b : stats) {
+            w.append("  <base name=\"")
+             .append(XMLUtil.encode(b.getBaseName()))
+             .append("\"");
+            w.append(" deleted=\"")
+             .append(Long.toString(b.getDeletedCount()))
+             .append("\"");
+            w.append(" indexable=\"")
+             .append(Long.toString(b.getIndexableCount()))
+             .append("\"");
+            w.append(" live=\"")
+             .append(Long.toString(b.getLiveCount()))
+             .append("\"");
+            w.append(" total=\"")
+             .append(Long.toString(b.getTotalCount()))
+             .append("\"");
+            w.append(" modificationTime=\"")
+             .append(Long.toString(b.getModificationTime()))
+             .append("\"");
+
+            if (!b.hasMeta()) {
+                w.append("/>\n");
+            } else {
+                w.append(">\n");
+                for (Map.Entry<String,String> meta : b.meta().entrySet()) {
+                    w.append("    <meta key=\"")
+                     .append(XMLUtil.encode(meta.getKey()))
+                     .append("\" value=\"")
+                     .append(XMLUtil.encode(meta.getValue()))
+                     .append("\"/>\n");
+                }
+                w.append("  </base>\n");
+            }
+        }
+        w.append("</holdings>");
     }
 }
