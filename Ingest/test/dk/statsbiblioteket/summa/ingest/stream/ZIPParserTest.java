@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
@@ -65,6 +66,59 @@ public class ZIPParserTest extends TestCase {
         for (int i = 0 ; i < 10 ; i++) {
             testBasics();
         }
+    }
+
+    public void testArrayBlockingQueue() throws Exception {
+        final ArrayBlockingQueue<String> queue =
+                new ArrayBlockingQueue<String>(2048);
+        Thread feeder = new Thread() {
+            @Override
+            public void run() {
+                for (int i = 0 ; i < 220 ; i++) {
+                    try {
+                        queue.put(Integer.toString(i));
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted");
+                    }
+                }
+                System.out.println("Finished feeding");
+            }
+        };
+
+        Thread sucker = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    //noinspection InfiniteLoopStatement
+                    while (true) {
+                        System.out.println(queue.take());
+                    }
+                } catch (InterruptedException e) {
+                    System.out.println("Interrupted while taking");
+                }
+            }
+        };
+
+        Thread feeder2 = new Thread() {
+            @Override
+            public void run() {
+                for (int i = 0 ; i < 20 ; i++) {
+                    try {
+                        queue.put("Take 2;" + Integer.toString(i));
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted");
+                    }
+                }
+                System.out.println("Finished feeding");
+            }
+        };
+
+        feeder.start();
+        feeder.join();
+        sucker.start();
+        System.out.println("Activating feeder 2");
+        feeder2.start();
+        Thread.sleep(1000);
     }
 
     public void testBasics() throws Exception {
