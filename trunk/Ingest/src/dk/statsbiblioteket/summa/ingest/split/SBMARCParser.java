@@ -209,11 +209,15 @@ public class SBMARCParser extends MARCParser {
         if (ID_FIELD.equals(dataFieldTag) &&
             ID_FIELD_SUBFIELD.equals(subFieldCode)) {
             setID(expandID(subFieldContent), 0); // Lowest priority
+/*            log.trace("Setting id from " + ID_FIELD_SUBFIELD + " to '"
+                      + subFieldContent + "' gave processed id '" + id + "'");*/
             return;
         }
         if (SBID_FIELD.equals(dataFieldTag) &&
             SBID_FIELD_SUBFIELD.equals(subFieldCode)) {
             setID(expandID(subFieldContent), 1); // Highest priority
+            log.trace("Setting id from " + SBID_FIELD_SUBFIELD + " to '"
+                      + subFieldContent + "' gave processed id '" + id + "'");
             return;
         }
 
