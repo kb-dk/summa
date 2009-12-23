@@ -24,6 +24,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.summa.ingest.split.MARCParser;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
@@ -32,9 +34,7 @@ import junit.framework.TestSuite;
 import org.marc4j.*;
 import org.marc4j.marc.Record;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -154,10 +154,11 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     public void testXMLDump2() throws Exception {
 //        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
-        File SAMPLE = Resolver.getFile(
+//        File SAMPLE = Resolver.getFile(
 //                "/home/te/projects/data/dpb/dpb20091109");
-        "/home/te/projects/data/dpb/dpb20091130.data");
+//        "/home/te/projects/data/dpb/dpb20091130.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
         assertNotNull("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
@@ -165,7 +166,9 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
                 new Payload(sampleIn)));
         ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
                 Configuration.newMemoryBased(
-                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "iso-8859-1"));
+                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850",
+//                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
+                        ISO2709ToMARCXMLFilter.CONF_FIX_CONTROLFIELDS, true));
         isoFilter.setSource(feeder);
         ArrayList<Payload> processed = new ArrayList<Payload>(3);
 
@@ -180,9 +183,59 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         assertTrue("Stream should contain something",
                    xmlPayload.getStream().read(head) > 0);
         System.out.println("First 4000 UTF8:\n" + new String(head, "utf8"));
+        System.out.println("\nCounting lines with '<record>'");
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(
+                xmlPayload.getStream(), "utf-8"));
+        String line;
+        int recordCount = 0;
+        try {
+            while ((line = br.readLine()) != null) {
+                if (line.contains("<record>")) {
+                    recordCount++;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Got an Exception while counting:");
+            e.printStackTrace();
+        }
+        System.out.println("Found " + recordCount + " '<record>' after the "
+                           + "first 4000 bytes");
+        xmlPayload.close();
         /*
         String xml = Strings.flush(xmlPayload.getStream());
         System.out.println("Dumping Produced content:\n" + xml);*/
+    }
+
+    public void testChain() throws Exception {
+        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
+        assertNotNull("The sample file " + SAMPLE + " should exist",
+                   SAMPLE.exists());
+        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+                new Payload(sampleIn)));
+        ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
+                Configuration.newMemoryBased(
+//                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
+                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850",
+                        ISO2709ToMARCXMLFilter.CONF_FIX_CONTROLFIELDS, true));
+        isoFilter.setSource(feeder);
+        StreamController streamer = new StreamController(
+                Configuration.newMemoryBased(
+                        StreamController.CONF_PARSER, 
+                        "dk.statsbiblioteket.summa.ingest.split.SBMARCParser",
+                        MARCParser.CONF_BASE, "sb_dpb",
+                        MARCParser.CONF_ID_PREFIX, "dpb"
+                ));
+
+        streamer.setSource(isoFilter);
+
+        ArrayList<Payload> processed = new ArrayList<Payload>(3);
+
+        while (streamer.hasNext()) {
+            processed.add(streamer.next());
+        }
+        System.out.println("Got a total of " + processed.size() + " Payloads");
     }
 
 }

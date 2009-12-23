@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.marc4j.MarcReader;
 import org.marc4j.MarcWriter;
+import org.marc4j.MarcPermissiveStreamReader;
 import org.marc4j.marc.ControlField;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
@@ -56,13 +57,32 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(ISO2709ToMARCXMLFilter.class);
 
     /**
-     * The charset to use when reading the InputStream. Supported values are
-     * {@code utf-8}}}, {{{iso-8859-1}}} and {{{marc-8}}}.
+     * The charset to use when reading the InputStream. Directly supported by
+     * marc4j {@code utf-8}}}, {{{iso-8859-1}}} and {{{marc-8}}} but all
+     * Java-known charsets are legal ({@code cp850} is often found in files from
+     * Windoes).
+     * </p><p>
+     * Note: If {@link #CONF_USE_PERMISSIVE} is true, the number of legal
+     * charsets are restricted. See CONF_USE_PERMISSIVE for details. 
      * </p><p>
      * Optional. If not defined, the charset is inferred by marc4j.
      */
     public static final String CONF_INPUT_CHARSET =
             "summa.iso2709.input.charset";
+
+    /**
+     * If true, the {@link MarcPermissiveStreamReader} is used instead of
+     * {@link FlexibleMarcStreamReader}. The permissive stream reader is capable
+     * of some error-handling for bad input, but limits the available charsets
+     * to {@code UTF-8}, {@code MARC-8} and {@code ISO-8859-1} all of which
+     * are stated case-sensitive.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_USE_PERMISSIVE =
+            "summa.iso2709.input.permissive";
+    public static final boolean DEFAULT_USE_PERMISSIVE = false;
+
 
     /**
      * If true, controlfields are converted to datafields. This should be done
@@ -112,6 +132,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
 
     private boolean fixControlfields = DEFAULT_FIX_CONTROLFIELDS;
     private String controlfieldsDelimiter = DEFAULT_CONTROLFIELDS_DELIMITER;
+    private boolean usePermissive = DEFAULT_USE_PERMISSIVE;
 
 
     private String inputcharset = null; // null = let marc4j handle this
@@ -129,12 +150,14 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                 CONF_FIX_CONTROLFIELDS, fixControlfields);
         controlfieldsDelimiter = conf.getString(
                 CONF_CONTROLFIELDS_DELIMITER, controlfieldsDelimiter);
+        usePermissive = conf.getBoolean(CONF_USE_PERMISSIVE, usePermissive);
         log.debug(String.format(
                 "Constructed ISO 2709 filter with charset '%s', "
-                + "fixControlFields=%b and controlfieldDelimiter='%s'",
+                + "fixControlFields=%b, controlfieldDelimiter='%s' and "
+                + "usePermissive=%b",
                 inputcharset == null ?
                 "inferred from the InputStream" : inputcharset,
-                fixControlfields, controlfieldsDelimiter));
+                fixControlfields, controlfieldsDelimiter, usePermissive));
     }
 
     @Override
@@ -187,9 +210,16 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
         ISO2MARCInputStream(InputStream stream,
                             boolean convertControlfieldsToDatafields,
                             String controlfieldDelimiter) {
-            source = inputcharset == null
-                     ? new FlexibleMarcStreamReader(stream)
-                     : new FlexibleMarcStreamReader(stream, inputcharset);
+            if (usePermissive) {
+                source = inputcharset == null
+                         ? new MarcPermissiveStreamReader(stream, true, true)
+                         : new MarcPermissiveStreamReader(
+                                              stream, true, true, inputcharset);
+            } else {
+                source = inputcharset == null
+                         ? new FlexibleMarcStreamReader(stream)
+                         : new FlexibleMarcStreamReader(stream, inputcharset);
+            }
             log.trace("Constructed reader");
             sourceStream = stream;
             this.convertControlfieldsToDatafields =
@@ -290,8 +320,8 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                         continue; // leading or trailing delimiter
                     } else if (token.length() == 1) {
                         log.debug(String.format(
-                                "Encountered subfield definition of "
-                                + "unsufficient length %d in garbled "
+                                "Ignoring subfield definition of "
+                                + "insufficient length %d in garbled "
                                 + "controlfield."
                                 + " tag='%s', content='%s', token='%s'",
                                 token.length(), cf.getTag(), content, token));
