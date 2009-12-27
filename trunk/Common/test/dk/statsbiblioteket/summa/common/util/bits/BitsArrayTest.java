@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.common.util.bits;
 
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,6 +34,7 @@ public class BitsArrayTest extends TestCase {
         return new TestSuite(BitsArrayTest.class);
     }
 
+    @SuppressWarnings({"PointlessBitwiseExpression"})
     public void testBitCalc() throws Exception {
         int[][] TESTS = new int[][]{ // maxValue, bits
                 {1, 1}, {2, 2}, {3, 2}, {4, 3}, {7, 3}, {8, 4},
@@ -42,59 +44,79 @@ public class BitsArrayTest extends TestCase {
             assertEquals("The calculated number of bits needed for " + test[0]
                          + " should be correct", test[1], bits);
         }
+        int es = 87;
+        if (es != 67) {
+            es = 87;
+        }
+        assertEquals("SHL 0 should not change anything", es, es << 0);
+        assertEquals("SHR 0 should not change anything", es, es >>> 0);
     }
 
     public void testAssignPrevious() throws Exception {
         BitsArray ba = new BitsArrayPacked(100, 10);
         ba.set(1, 1);
         ba.set(0, 1);
-        assertEquals("The value at position 1 should be unchanged when the " 
+        assertEquals("The value at position 1 should be unchanged when the "
                      + "value at position 0 is modified", 1, ba.getAtomic(1));
+    }
+
+    public void testReadZero() throws Exception {
+        BitsArray ba = new BitsArrayPacked(100, 10);
+        ba.set(10, 1);
+        ba.set(5, 1);
+        for (int i = 0 ; i < 10 ; i++) {
+            if (i == 5) {
+                continue;
+            }
+            assertEquals(String.format(
+                    "The value at position %d should be the initial value", i),
+                    0, ba.getAtomic(i));
+        }
     }
 
 /*    public void testBitSetMath() {
         int elementBits = 3;
         int index = 0;
-        int[] elements = new int[2];
+        int[] blocks = new int[2];
 
         // Trivial
         int value = 7; // 111
         int[] expected = new int[2];
         expected[0] = (value) << (BitsArrayPacked.BLOCK_SIZE-3);
 
-        testBitSetMath(elementBits, index, elements, value, expected);
+        testBitSetMath(elementBits, index, blocks, value, expected);
 
-        elements = new int[2];
+        blocks = new int[2];
         value = 7; // 111
         index = 20;
         expected = new int[2];
         expected[0] = ((int)value) << (1);
-        testBitSetMath(elementBits, index, elements, value, expected);
+        testBitSetMath(elementBits, index, blocks, value, expected);
 
-        elements = new int[2];
+        blocks = new int[2];
         value = 7; // 111
         index = 20;
         expected = new int[2];
         expected[0] = ((int)value) << (1);
-        testBitSetMath(elementBits, index, elements, value, expected);
+        testBitSetMath(elementBits, index, blocks, value, expected);
 
-        elements = new int[2];
+        blocks = new int[2];
         value = 7; // 111
         index = 21;
         expected = new int[2];
         expected[0] = ((int)value) >>> (2);
         expected[1] = ((int)value) << (BitsArrayPacked.BLOCK_SIZE - 2);
-        testBitSetMath(elementBits, index, elements, value, expected);
+        testBitSetMath(elementBits, index, blocks, value, expected);
 
-        elements = new int[2];
-        elements[0] = 1730000;
-        elements[1] = 8787;
+        blocks = new int[2];
+        blocks[0] = 1730000;
+        blocks[1] = 8787;
         value = 7; // 111
         index = 21;
         expected = new int[2];
-        expected[0] = ((int)value) >>> (2) | elements[0];
-        expected[1] = ((int)value) << (BitsArrayPacked.BLOCK_SIZE - 2) | elements[1];
-        testBitSetMath(elementBits, index, elements, value, expected);
+        expected[0] = ((int)value) >>> (2) | blocks[0];
+        expected[1] = ((int)value) << (BitsArrayPacked.BLOCK_SIZE - 2) | blocks[1];
+        testBitSetMath(elementBits, index, blocks, value, expected);
     }
   */
     public void testBitSetMath(int elementBits, int index, int[] elements,
@@ -114,7 +136,7 @@ public class BitsArrayTest extends TestCase {
         // Case A: -2, Case B: 2
         log.debug("subRemainingBits=" + subRemainingBits);
         if (subRemainingBits > 0) {
-            log.debug("Modifying elements[" + bytePos + "] and next ="
+            log.debug("Modifying blocks[" + bytePos + "] and next ="
                       + toBinary(elements[bytePos]) + " "
                       + toBinary(elements[bytePos+1]));
             // Case B: ???????A BC??????
@@ -126,7 +148,7 @@ public class BitsArrayTest extends TestCase {
                     | ((int)value << (BitsArrayPacked.BLOCK_SIZE - subRemainingBits));
         } else {
             // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
-            log.debug("Modifying elements[" + bytePos + "]="
+            log.debug("Modifying blocks[" + bytePos + "]="
                       + toBinary(elements[bytePos]));
             elements[bytePos] =
                     (elements[bytePos]
@@ -171,12 +193,21 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testSpanningGetSet() throws Exception {
-        BitsArrayPacked ba = new BitsArrayPacked();
+        BitsArrayPacked ba = new BitsArrayPacked(100, 10);
         ba.set(0, 256);
+        log.debug("After set(0,256): " + Strings.join(ba, ", "));
         ba.set(7, 287);
+        log.debug("After set(7,288): " + Strings.join(ba, ", "));
         ba.set(8, 288);
         assertContains("Spanning ints",
                        ba, Arrays.asList(256, 0, 0, 0, 0, 0, 0, 287, 288));
+    }
+
+    public void testSingleSPanning() throws Exception {
+        BitsArrayPacked ba = new BitsArrayPacked(100, 10);
+        ba.set(7, 256);
+        assertContains("Spanning ints",
+                       ba, Arrays.asList(0, 0, 0, 0, 0, 0, 0, 256));
     }
 
     public void testSpanningGetSetSingle() throws Exception {
@@ -215,7 +246,7 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testWritePerformance() {
-        int MAX = 100000;
+        int MAX = 1000000;
         int INITIAL_MAX_VALUE = MAX;
         int INITIAL_MAX_LENGTH = MAX;
         int WARMUP = 2;
@@ -230,14 +261,16 @@ public class BitsArrayTest extends TestCase {
             long baiTime = testPerformanceBAI(
                     MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
             long plainTime = testPerformancePlain(MAX);
+            long calibrateTime = testPerformanceCalibrate(MAX);
             System.out.println(String.format(
-                    "Write %d: BAP=%dms, BAI=%dms, int[]=%dms",
-                    MAX, baTime, baiTime, plainTime));
+                    "Write %d: BAP=%dms, BAI=%dms, int[]=%dms. null=%dms",
+                    MAX, baTime-calibrateTime, baiTime-calibrateTime,
+                    plainTime-calibrateTime, calibrateTime));
         }
     }
 
     public void testReadPerformance() {
-        int MAX = 1000000;
+        int MAX = 100000;
         int READS = MAX * 100;
         int INITIAL_MAX_LENGTH = MAX;
         int INITIAL_MAX_VALUE = 240;
@@ -270,6 +303,19 @@ public class BitsArrayTest extends TestCase {
                     plainTime-baseTime, baseTime));
         }
 
+    }
+
+    public void testMonkey() throws Exception {
+        int LENGTH = 1000;
+        int MAX = 1000;
+        int[] plain = makePlain(LENGTH, MAX);
+        BitsArray ba = makeBA(LENGTH, LENGTH, MAX);
+        int[] baArray = new int[ba.size()];
+        for (int i = 0 ; i < ba.size() ; i++) {
+            baArray[i] = ba.get(i);
+        }
+        ExtraAsserts.assertEqualsNoSort(
+                "The BitsArrayPacked should match", plain, baArray);
     }
 
     private long testReadPlain(int[] a, int reads) {
@@ -371,8 +417,24 @@ public class BitsArrayTest extends TestCase {
         Random random = new Random(87);
         int[] a = new int[length];
         for (int i = 0 ; i < length ; i++) {
-            a[random.nextInt(max)] = i;
+            a[i] = random.nextInt(max);
         }
         return a;
     }
+
+    public long testPerformanceCalibrate(int max) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        Random random = new Random(87);
+        int t = 0;
+        for (int i = 0 ; i < max ; i++) {
+            t = random.nextInt(max);
+        }
+        if (t == max+1) {
+            System.err.println("Failed JIT-tricking sanity check");
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+
 }

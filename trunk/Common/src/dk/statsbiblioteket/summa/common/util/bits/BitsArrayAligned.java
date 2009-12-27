@@ -28,7 +28,7 @@ import java.util.Arrays;
 
 /**
  * A map from positive int positions to positive int values. The internal
- * representation is akin to {@link BitsArrayAligned} with the notable
+ * representation is that of {@link BitsArrayAligned} with the notable
  * difference that the amount of bits allocated for values are always 1, 2, 4,
  * 8, 16 or 32 so that the values always fit inside a single integer.
  * </p><p>
@@ -37,83 +37,50 @@ import java.util.Arrays;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class BitsArrayAligned extends AbstractList<Integer> implements BitsArray{
+public class BitsArrayAligned extends BitsArrayImpl {
     private static Log log = LogFactory.getLog(BitsArrayAligned.class);
 
-    /**
-     * The factor to multiply to the position when a {@link #set} triggers a
-     * growth of the underlying structure.
-     */
-    public static final double LENGTH_GROWTH_FACTOR = 1.2;
+    private static final int ENTRY_SIZE = BLOCK_SIZE + 1;
+    private static final int FAC_ELEBITS = ENTRY_SIZE * 4;
+    private static final int FAC_BITPOS = 4;
 
-    static final int BLOCK_SIZE = 32; // 32 = int, 64 = long
-    static final int BLOCK_BITS = 6; // The #bits representing BLOCK_SIZE
-
-    static final int ENTRY_SIZE = BLOCK_SIZE + 1;
-    static final int FAC_ELEBITS = ENTRY_SIZE * 4;
-    static final int FAC_BITPOS = 4;
-
-    /**
-     * Algorithm for efficient bit-gets without conditionals: {@code
+    /*
+      * In order to make an efficient value-getter, conditionals should be
+      * avoided. For this BitsArray, values are always aligned so that they fit
+      * inside of a single block. Extraction of a value thus requires a single
+      * SHR followed by a mask.
+      * </p><p>
+      * In code, this is {@code
        elementPos = index * BLOCK_SIZE / elementBits
        bitPos  =    index * BLOCK_SIZE % elementBits
        value =
-       (elements[elementPos] <<    SHIFTS[elementBits][bitPos][0] |
-        elements[elementPos] >>>   SHIFTS[elementBits][bitPos][1] |
-        elements[elementPos+1] >>> SHIFTS[elementBits][bitPos][2]) &
+       (blocks[elementPos] >> SHIFTS[elementBits][bitPos]) &
        MASKS[elementBits]}
      */
-    private static final int[] SHIFTS = new int[ENTRY_SIZE * ENTRY_SIZE * 4];
-            //new int[BLOCK_SIZE+1][BLOCK_SIZE][BLOCK_SIZE+1];
+    private static final int[] SHIFTS = new int[ENTRY_SIZE * ENTRY_SIZE];
     private static final int[] MASKS = new int[BLOCK_SIZE+1];
 
     { // Generate shifts
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
-            MASKS[elementBits] = ~(~0 << elementBits);
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
-                // ?????xxx : elementBits=3, bitPos=5
-                if (bitPos <= BLOCK_SIZE - elementBits) { // Single block
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS] =
-                            BLOCK_SIZE; // Ignore
-                    // ?????xxx : elementBits=3, bitPos=5
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS + 1] =
-                            BLOCK_SIZE - elementBits - bitPos;
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS + 2] =
-                            BLOCK_SIZE; // Ignore
-                } else { // Two blocks
-                    // ??????xx x??????? : elementBits=3, bitPos=6
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS] =
-                            bitPos + elementBits - BLOCK_SIZE;
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS + 1] =
-                            BLOCK_SIZE; // Ignore
-                    SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS + 2] =
-                            BLOCK_SIZE -
-                         SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS];
-                }
-                // To handle shifting into oblivion, shifts of BLOCK_SIZE are
-                // adjusted to shift further (see the getAtomic method).
-                for (int i = 0 ; i < 3 ; i++) {
-                    if (SHIFTS[elementBits* FAC_ELEBITS
-                               + bitPos * FAC_BITPOS + i] == BLOCK_SIZE) {
-                        SHIFTS[elementBits* FAC_ELEBITS
-                               + bitPos * FAC_BITPOS + i] =
-                                BLOCK_SIZE | (BLOCK_SIZE - 1);
-                    }
-                }
+                int base = elementBits* FAC_ELEBITS + bitPos;
+                SHIFTS[base] = BLOCK_SIZE + bitPos - elementBits;
+                MASKS[base]  = elementBits;
             }
         }
     }
 
+
     /* The number of bits representing an element */
     private int elementBits;
-    /* The number of elements. */
+    /* The number of blocks. */
     private int size;
     /* The bits */
     private int[] elements;
 
     // Cached calculations
     private int maxValue;    // Math.pow(alementBits, 2)
-    private int maxPos;      // elements.length * BLOCK_SIZE / elementBits - 1
+    private int maxPos;      // blocks.length * BLOCK_SIZE / elementBits - 1
     private int elementMask; // The mask for the bits for an element
 
     /**
@@ -165,13 +132,13 @@ public class BitsArrayAligned extends AbstractList<Integer> implements BitsArray
         final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // * BLOCK_SIZE);
         //int bitPos =     (int)(majorBitPos % BLOCK_SIZE);
 
-/*        long element0 = ((long)(0x7FFFFFFF & elements[elementPos])) |
-                        (((long)(elements[elementPos] >>> 1)) << 1);
-        long element1 = ((long)(0x7FFFFFFF & elements[elementPos+1])) |
-                        (((long)(elements[elementPos+1] >>> 1)) << 1);
+/*        long element0 = ((long)(0x7FFFFFFF & blocks[elementPos])) |
+                        (((long)(blocks[elementPos] >>> 1)) << 1);
+        long element1 = ((long)(0x7FFFFFFF & blocks[elementPos+1])) |
+                        (((long)(blocks[elementPos+1] >>> 1)) << 1);
   */
-//        long element0 = ((long)elements[elementPos])   & 0x00000000FFFFFFFFL;
-//        long element1 = ((long)elements[elementPos+1]) & 0x00000000FFFFFFFFL;
+//        long element0 = ((long)blocks[elementPos])   & 0x00000000FFFFFFFFL;
+//        long element1 = ((long)blocks[elementPos+1]) & 0x00000000FFFFFFFFL;
 
 //        return (int)(element0 + element1);
 
@@ -234,8 +201,8 @@ public class BitsArrayAligned extends AbstractList<Integer> implements BitsArray
                     | (value << (BLOCK_SIZE - subPosLeft - elementBits));
 /*            if (log.isTraceEnabled()) {
                 log.trace(String.format(
-                        "unsafeSet(index=%d, value=%d) -> elements[%d] bits %s",
-                index, value, bytePos, Long.toBinaryString(elements[bytePos])));
+                        "unsafeSet(index=%d, value=%d) -> blocks[%d] bits %s",
+                index, value, bytePos, Long.toBinaryString(blocks[bytePos])));
             }*/
         }
         size = Math.max(size, index+1);
