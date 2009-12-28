@@ -27,6 +27,9 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
     static final int BLOCK_SIZE = 32; // 32 = int, 64 = long
     static final int BLOCK_BITS = 6; // The #bits representing BLOCK_SIZE
 
+//    static final int BLOCK_SIZE = 64; // 32 = int, 64 = long
+//    static final int BLOCK_BITS = 7; // The #bits representing BLOCK_SIZE
+
     /* The number of bits representing an element */
     int elementBits;
     /* The number of blocks. */
@@ -35,7 +38,37 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
     int[] blocks;
 
 
-    public abstract void set(int index, int value);
+    /**
+     * Set the element at the given index.
+     * @param index the position for the value.
+     * @param value the value to assign.
+     */
+    public void set(int index, int value) {
+        ensureSpace(index, value);
+        try {
+            unsafeSet(index, value);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            String message = String.format(
+                    "Internal array inconsistency for %s, setting %d at "
+                    + "position %d", this, value, index);
+            throw new IllegalStateException(message, e);
+        }
+    }
+
+    /**
+     * Set the element at the given index, without checks for boundaries.
+     * @param index the position for the value.
+     * @param value the value to assign.
+     */
+    protected abstract void unsafeSet(int index, int value);
+
+    /**
+     * Ensure that the internal structure can accept the given value at the
+     * given index.
+     * @param index where to set the value.
+     * @param value the value to set.
+     */
+    protected abstract void ensureSpace(int index, int value);
 
     /**
      * Clears the array of values but maintains the internal buffers.
@@ -52,9 +85,9 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
      * {@link #set(int, int)} is recommended.
      */
     @Override
-    public Integer set(int index, Integer element) {
+    public Integer set(int index, Integer value) {
         Integer oldVal = index <= size ? get(index) : null;
-        set(index, element.intValue());
+        set(index, value.intValue());
         return oldVal;
     }
 

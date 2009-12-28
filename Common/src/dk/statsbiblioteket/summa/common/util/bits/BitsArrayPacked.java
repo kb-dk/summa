@@ -24,14 +24,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A map from positive int positions to positive int values. The internal
+ * A map from positive int index to positive int values. The internal
  * representation is {@code (max_position + 1) * ceil(log2(max_value))} bits
  * plus overhead.
  * </p><p>
  * Example: The array contains the values {@code [120, 7, 8, 8, 0, 122]}.
  *          ceil(log2(122)) == 7, so 6 * 7 == 42 bits are used for storage.
  * </p><p>
- * The map auto-expands to accomodate given values at given positions.
+ * The map auto-expands to accomodate given values at given index.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -85,8 +85,8 @@ public class BitsArrayPacked extends BitsArrayImpl {
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
             int elementPosMask = ~(~0 << elementBits);
             int[] currentShifts = SHIFTS[elementBits];
+            int[] currentMasks = WRITE_MASKS[elementBits];
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
-                int[] currentMasks = WRITE_MASKS[elementBits];
                 int base = bitPos * FAC_BITPOS;
                 currentMasks[base  ] =~((elementPosMask
                                    << currentShifts[base + 1])
@@ -96,7 +96,6 @@ public class BitsArrayPacked extends BitsArrayImpl {
                 currentMasks[base+2] = currentShifts[base + 2] == 0 ? 0 : ~0;
             }
         }
-
     }
 
     // Cached calculations
@@ -146,7 +145,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
 
     /**
      * @param index the position of the value.
-     * @return the value at the given position.
+     * @return the value at the given index.
      */
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
@@ -160,7 +159,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
         final long majorBitPos = index * elementBits;
 
         final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // * BLOCK_SIZE);
+        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
 
         final int base = bitPos * FAC_BITPOS;
 
@@ -169,12 +168,12 @@ public class BitsArrayPacked extends BitsArrayImpl {
                 & readMasks[bitPos]);
     }
 
-    /* No checks for capacity or maxValue */
-    private void unsafeSet(int index, int value) {
+    @Override
+    protected void unsafeSet(int index, int value) {
         final long majorBitPos = index * elementBits;
 
         final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // * BLOCK_SIZE);
+        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
         final int base = bitPos * FAC_BITPOS;
 
         blocks[elementPos  ] = (blocks[elementPos  ] & writeMasks[base])
@@ -185,33 +184,15 @@ public class BitsArrayPacked extends BitsArrayImpl {
         size = Math.max(size, index+1);
     }
 
-    /**
-     * Set the element at the given position. The least significant elementSize
-     * bits from value will be used.
-     * @param position the position for the value.
-     * @param value    the value to assign.
-     */
+    /* Make sure we have room for value at index */
     @Override
-    public void set(int position, int value) {
-        ensureSpace(position, value);
-        try {
-            unsafeSet(position, value);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            String message = String.format(
-                    "Internal array inconsistency for %s, setting %d at "
-                    + "position %d", this, value, position);
-            throw new IllegalStateException(message, e);
-        }
-    }
-
-    /* Make sure we have room for value at position */
-    private void ensureSpace(int position, int value) {
-        if (position > maxPos || value > maxValue) {
+    protected void ensureSpace(int index, int value) {
+        if (index > maxPos || value > maxValue) {
             //noinspection MismatchedQueryAndUpdateOfCollection
             BitsArrayPacked array;
-            if (position > maxPos) {
+            if (index > maxPos) {
                 array = new BitsArrayPacked(
-                        (int)((position + 1) * LENGTH_GROWTH_FACTOR),
+                        (int)((index + 1) * LENGTH_GROWTH_FACTOR),
                         Math.max(maxValue, value));
             } else {
                 array = new BitsArrayPacked(maxPos, Math.max(maxValue, value));
