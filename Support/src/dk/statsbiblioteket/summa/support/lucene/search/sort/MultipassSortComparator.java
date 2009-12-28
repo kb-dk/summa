@@ -200,7 +200,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
         int logicalPos = 1;
         // 3. Create a BitsArray positions of length maxDocs.
         BitsArray positions = BitsArrayFactory.createArray(
-                reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
+                reader.maxDoc(), 1, BitsArray.PRIORITY.speed);
 
         int loopCount = 1;
         long termCount;
@@ -289,9 +289,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
         log.debug(String.format(
                 "Got %d unique positions in the order-array for %d terms in "
                 + "the field %s using language %s with Collator %s for %d "
-                + "documents in %s performing %d loops through the terms",
+                + "documents in %s performing %d loops through the terms "
+                + "(buffer size: %d MB). Order-array memory usage is %d KB",
                 logicalPos-1, termCount, fieldname, language, collator,
-                reader.maxDoc(), profiler.getSpendTime(), loopCount-2));
+                reader.maxDoc(), profiler.getSpendTime(), loopCount-2,
+                sortBufferSize / 1048576, positions.getMemSize() / 1024));
         return positions;
     }
 
