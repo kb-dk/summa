@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.io.StringWriter;
 
+@SuppressWarnings({"UnnecessaryLocalVariable"})
 public class BitsArrayTest extends TestCase {
     private static Log log = LogFactory.getLog(BitsArrayTest.class);
 
@@ -72,99 +74,6 @@ public class BitsArrayTest extends TestCase {
                     "The value at position %d should be the initial value", i),
                     0, ba.getAtomic(i));
         }
-    }
-
-/*    public void testBitSetMath() {
-        int elementBits = 3;
-        int index = 0;
-        int[] blocks = new int[2];
-
-        // Trivial
-        int value = 7; // 111
-        int[] expected = new int[2];
-        expected[0] = (value) << (BitsArrayPacked.BLOCK_SIZE-3);
-
-        testBitSetMath(elementBits, index, blocks, value, expected);
-
-        blocks = new int[2];
-        value = 7; // 111
-        index = 20;
-        expected = new int[2];
-        expected[0] = ((int)value) << (1);
-        testBitSetMath(elementBits, index, blocks, value, expected);
-
-        blocks = new int[2];
-        value = 7; // 111
-        index = 20;
-        expected = new int[2];
-        expected[0] = ((int)value) << (1);
-        testBitSetMath(elementBits, index, blocks, value, expected);
-
-        blocks = new int[2];
-        value = 7; // 111
-        index = 21;
-        expected = new int[2];
-        expected[0] = ((int)value) >>> (2);
-        expected[1] = ((int)value) << (BitsArrayPacked.BLOCK_SIZE - 2);
-        testBitSetMath(elementBits, index, blocks, value, expected);
-
-        blocks = new int[2];
-        blocks[0] = 1730000;
-        blocks[1] = 8787;
-        value = 7; // 111
-        index = 21;
-        expected = new int[2];
-        expected[0] = ((int)value) >>> (2) | blocks[0];
-        expected[1] = ((int)value) << (BitsArrayPacked.BLOCK_SIZE - 2) | blocks[1];
-        testBitSetMath(elementBits, index, blocks, value, expected);
-    }
-  */
-    public void testBitSetMath(int elementBits, int index, int[] elements,
-                               int value, int[] expected) {
-        int bitPos = index * elementBits;
-
-        // Samples: 3 bits/value (A, B and C) stored in bytes
-        // Case A: ???ABC??
-        // Case B: ???????A BC??????
-
-        int bytePos = (int)(bitPos / BitsArrayPacked.BLOCK_SIZE);    // Position in bytes
-        int subPosLeft = (int)(bitPos % BitsArrayPacked.BLOCK_SIZE); // Position in the bits at bytePos
-        // Case A: subPosLeft == 3, Case B: subPosLeft == 7
-
-        // The number of remaining bits at bytePos+1
-        int subRemainingBits = elementBits - (BitsArrayPacked.BLOCK_SIZE - subPosLeft);
-        // Case A: -2, Case B: 2
-        log.debug("subRemainingBits=" + subRemainingBits);
-        if (subRemainingBits > 0) {
-            log.debug("Modifying blocks[" + bytePos + "] and next ="
-                      + toBinary(elements[bytePos]) + " "
-                      + toBinary(elements[bytePos+1]));
-            // Case B: ???????A BC??????
-            elements[bytePos] =
-                    ((elements[bytePos] & (~0 << (elementBits - subPosLeft))))
-                    | ((int)value >>> subRemainingBits);
-            elements[bytePos+1] =
-                    ((elements[bytePos+1] & (~0 >>> subRemainingBits)))
-                    | ((int)value << (BitsArrayPacked.BLOCK_SIZE - subRemainingBits));
-        } else {
-            // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
-            log.debug("Modifying blocks[" + bytePos + "]="
-                      + toBinary(elements[bytePos]));
-            elements[bytePos] =
-                    (elements[bytePos]
-                     & ((subPosLeft == 0 ? 0
-                         : ~0 << (BitsArrayPacked.BLOCK_SIZE - subPosLeft))
-                        | (~0 >>> (elementBits - -subRemainingBits))))
-                    | ((int)value <<
-                       (BitsArrayPacked.BLOCK_SIZE - subPosLeft - elementBits));
-        }
-
-        String message = String.format(
-                "elementBits=%d, index=%d, value=%d, expected, actual:\n%s\n%s",
-                elementBits, index, value, Strings.join(toList(expected), ", "), 
-                Strings.join(toList(elements), ", "));
-        assertTrue(message, Arrays.equals(elements, expected));
-        log.debug(message);
     }
 
     @SuppressWarnings({"unchecked"})
@@ -246,61 +155,108 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testWritePerformance() {
-        int MAX = 1000000;
-        int INITIAL_MAX_VALUE = MAX;
-        int INITIAL_MAX_LENGTH = MAX;
+        int LENGTH = 10000000;
+        int MAX_VALUE = 240;
+        int INITIAL_MAX_LENGTH = LENGTH;
         int WARMUP = 2;
         int RUNS = 3;
+        List<BitsArrayGenerator> bags = getGenerators();
         for (int i = 0 ; i < WARMUP ; i++) {
-            testPerformanceBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-            testPerformancePlain(MAX);
+            for (BitsArrayGenerator bag: bags) {
+                testPerformanceBA(bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE);
+            }
+            testPerformancePlain(LENGTH);
         }
-        for (int i = 0 ; i < RUNS ; i++) {
-            long baTime = testPerformanceBA(
-                    MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-            long baiTime = testPerformanceBAI(
-                    MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-            long plainTime = testPerformancePlain(MAX);
-            long calibrateTime = testPerformanceCalibrate(MAX);
-            System.out.println(String.format(
-                    "Write %d: BAP=%dms, BAI=%dms, int[]=%dms. null=%dms",
-                    MAX, baTime-calibrateTime, baiTime-calibrateTime,
-                    plainTime-calibrateTime, calibrateTime));
+        
+        System.out.println(String.format(
+                "Measuring write-performance calibrated with null-speed "
+                + "for %d random[0-%d] value assignments",
+                LENGTH,  MAX_VALUE));
+        List<Long> timings = new ArrayList<Long>(bags.size());
+        for (int run = 0 ; run < RUNS ; run++) {
+            for (BitsArrayGenerator bag: bags) {
+                timings.add(testPerformanceBA(
+                        bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
+            }
+            long plainTime = testPerformancePlain(LENGTH);
+            long baseTime = testPerformanceCalibrate(LENGTH);
+
+            StringWriter sw = new StringWriter(1000);
+            sw.append(String.format(
+                    "Write %d (of %d values): ", LENGTH, LENGTH));
+            sw.append("int[]=").append(Long.toString(plainTime-baseTime));
+            sw.append("ms, null=").append(Long.toString(baseTime));
+            sw.append("ms");
+            for (int i = 0 ; i < bags.size() ; i++) {
+                sw.append(", ");
+                sw.append(bags.get(i).create(1, 1).getClass().getSimpleName());
+                sw.append("=").append(Long.toString(timings.get(i)-baseTime));
+                sw.append("ms");
+            }
+            System.out.println(sw.toString());
         }
     }
 
     public void testReadPerformance() {
-        int MAX = 100000;
-        int READS = MAX * 100;
-        int INITIAL_MAX_LENGTH = MAX;
-        int INITIAL_MAX_VALUE = 240;
+        int LENGTH = 100000;
+        int READS = LENGTH * 100;
+        int INITIAL_MAX_LENGTH = LENGTH;
+        int MAX_VALUE = 240;
         int WARMUP = 2;
         int RUNS = 5;
 
-        BitsArrayPacked ba = makeBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-        BitsArrayInt bai = makeBAI(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-        log.debug("Created " + ba);
-        int[] a = makePlain(MAX, INITIAL_MAX_VALUE);
+        List<BitsArray> bas = new ArrayList<BitsArray>();
+        for (BitsArrayGenerator generator: getGenerators()) {
+            bas.add(makeBA(generator, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
+        }
+        log.debug("Created " + bas.size() + " BitsArrays");
+        int[] a = makePlain(LENGTH, MAX_VALUE);
+
         System.out.println(String.format(
-                "Memory usage: BAP~=%dKB, BAI~=%dKB, int[]~=%dKB -> %s",
-                ba.getMemSize() / 1024, bai.getMemSize() / 1024,
-                a.length*4 / 1024, ba));
+                "Measuring read-performance calibrated with null-speed "
+                + "for %d value reads from %d random[0-%d] values",
+                READS, LENGTH, MAX_VALUE));
+
+        StringWriter sw = new StringWriter(1000);
+        sw.append("Memory usage: int[]=");
+        sw.append(Integer.toString(a.length*4 / 1024));
+        sw.append("KB");
+        for (BitsArray ba: bas) {
+            sw.append(", ");
+            sw.append(ba.getClass().getSimpleName());
+            sw.append("~=").append(Integer.toString(ba.getMemSize() / 1024));
+            sw.append("KB");
+        }
+
+        System.out.println(sw.toString());
 
         for (int i = 0 ; i < WARMUP ; i++) {
-            testReadBA(ba, READS);
-            testReadBA(bai, READS);
+            for (BitsArray ba: bas) {
+                testReadBA(ba, READS);
+            }
             testReadPlain(a, READS);
         }
-        for (int i = 0 ; i < RUNS ; i++) {
-            long baTime = testReadBA(ba, READS);
-            long baiTime = testReadBA(bai, READS);
+
+        List<Long> timings = new ArrayList<Long>(bas.size());
+        for (int run = 0 ; run < RUNS ; run++) {
+            for (BitsArray ba: bas) {
+                timings.add(testReadBA(ba, READS));
+            }
             long plainTime = testReadPlain(a, READS);
             long baseTime = testReadCalibrate(a, READS);
-            System.out.println(String.format(
-                    "read %d (of %d max): "
-                    + "BAP=%dms, BAI=%dms, int[]=%dms, null=%dms",
-                    READS, MAX, baTime-baseTime, baiTime-baseTime,
-                    plainTime-baseTime, baseTime));
+
+            sw = new StringWriter(1000);
+            sw.append(String.format("Read %d (of %d values): ", READS, LENGTH));
+            sw.append("int[]=").append(Long.toString(plainTime-baseTime));
+            sw.append("ms, null=").append(Long.toString(baseTime));
+            sw.append("ms");
+            for (int i = 0 ; i < bas.size() ; i++) {
+                sw.append(", ");
+                sw.append(bas.get(i).getClass().getSimpleName());
+                sw.append("=").append(Long.toString(timings.get(i)-baseTime));
+                sw.append("ms");
+            }
+            System.out.println(sw.toString());
         }
 
     }
@@ -308,14 +264,23 @@ public class BitsArrayTest extends TestCase {
     public void testMonkey() throws Exception {
         int LENGTH = 1000;
         int MAX = 1000;
-        int[] plain = makePlain(LENGTH, MAX);
-        BitsArray ba = makeBA(LENGTH, LENGTH, MAX);
-        int[] baArray = new int[ba.size()];
-        for (int i = 0 ; i < ba.size() ; i++) {
-            baArray[i] = ba.get(i);
+
+        List<BitsArrayGenerator> bags = getGenerators();
+        List<BitsArray> bas = new ArrayList<BitsArray>(bags.size());
+        for (BitsArrayGenerator bag: bags) {
+            bas.add(makeBA(bag, LENGTH, LENGTH, MAX));
         }
-        ExtraAsserts.assertEqualsNoSort(
-                "The BitsArrayPacked should match", plain, baArray);
+        int[] plain = makePlain(LENGTH, MAX);
+
+        for (BitsArray ba: bas) {
+            int[] baArray = new int[ba.size()];
+            for (int i = 0 ; i < ba.size() ; i++) {
+                baArray[i] = ba.get(i);
+            }
+            ExtraAsserts.assertEqualsNoSort(String.format(
+                    "The %s should match", ba.getClass().getSimpleName()),
+                                            plain, baArray);
+        }
     }
 
     private long testReadPlain(int[] a, int reads) {
@@ -340,7 +305,10 @@ public class BitsArrayTest extends TestCase {
         Random random = new Random(88);
         int dummy = 0;
         for (int i = 0 ; i < reads ; i++) {
-            random.nextInt(MAX);
+            dummy = random.nextInt(MAX);
+        }
+        if (dummy == -1) {
+            throw new IllegalStateException("Dummy JIT-tricker was -1");
         }
         return System.currentTimeMillis() - startTime;
     }
@@ -354,53 +322,6 @@ public class BitsArrayTest extends TestCase {
             ba.getAtomic(random.nextInt(MAX));
         }
         return System.currentTimeMillis() - startTime;
-    }
-
-/*    private long testReadBAI(final BitsArrayInt ba, final int reads) {
-        System.gc();
-        final int MAX = ba.size();
-        long startTime = System.currentTimeMillis();
-        Random random = new Random(88);
-        for (int i = 0 ; i < reads ; i++) {
-            ba.getAtomic(random.nextInt(MAX));
-        }
-        return System.currentTimeMillis() - startTime;
-    }*/
-
-    public long testPerformanceBA(
-            int max, int initialMaxLength, int initialMaxValue) {
-        System.gc();
-        long startTime = System.currentTimeMillis();
-        makeBA(max, initialMaxLength, initialMaxValue);
-        return System.currentTimeMillis() - startTime;
-    }
-
-    public long testPerformanceBAI(
-            int max, int initialMaxLength, int initialMaxValue) {
-        System.gc();
-        long startTime = System.currentTimeMillis();
-        makeBAI(max, initialMaxLength, initialMaxValue);
-        return System.currentTimeMillis() - startTime;
-    }
-
-    private BitsArrayPacked makeBA(
-            int elements, int initialMaxLength, int initialMaxValue) {
-        Random random = new Random(87);
-        BitsArrayPacked ba = new BitsArrayPacked(initialMaxLength, initialMaxValue);
-        for (int i = 0 ; i < elements ; i++) {
-            ba.set(i, random.nextInt(initialMaxValue));
-        }
-        return ba;
-    }
-
-    private BitsArrayInt makeBAI(
-            int elements, int initialMaxLength, int initialMaxValue) {
-        Random random = new Random(87);
-        BitsArrayInt ba = new BitsArrayInt(initialMaxLength);
-        for (int i = 0 ; i < elements ; i++) {
-            ba.set(i, random.nextInt(initialMaxValue));
-        }
-        return ba;
     }
 
     public long testPerformancePlain(int max) {
@@ -436,5 +357,46 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
+    public long testPerformanceBA(BitsArrayGenerator generator,
+            int assignments, int constructorLength, int maxValue) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        makeBA(generator, assignments, constructorLength, maxValue);
+        return System.currentTimeMillis() - startTime;
+    }
 
+    private BitsArray makeBA(BitsArrayGenerator generator,
+            int assignments, int constructorLength, int maxValue) {
+        Random random = new Random(87);
+        BitsArray ba = generator.create(constructorLength, maxValue);
+        for (int i = 0 ; i < assignments ; i++) {
+            ba.set(i, random.nextInt(maxValue));
+        }
+        return ba;
+    }
+
+    /* Helpers for generic testing */
+
+    private static interface BitsArrayGenerator {
+        BitsArray create(int length, int maxValue);
+    }
+    private static class PackedGenerator implements BitsArrayGenerator {
+        public BitsArray create(int length, int maxValue) {
+            return new BitsArrayPacked(length, maxValue);
+        }
+    }
+    private static class AlignedGenerator implements BitsArrayGenerator {
+        public BitsArray create(int length, int maxValue) {
+            return new BitsArrayAligned(length, maxValue);
+        }
+    }
+    private static class IntGenerator implements BitsArrayGenerator {
+        public BitsArray create(int length, int maxValue) {
+            return new BitsArrayInt(length);
+        }
+    }
+    private static List<BitsArrayGenerator> getGenerators() {
+        return Arrays.asList(new PackedGenerator(), new AlignedGenerator(),
+                             new IntGenerator());
+    }
 }
