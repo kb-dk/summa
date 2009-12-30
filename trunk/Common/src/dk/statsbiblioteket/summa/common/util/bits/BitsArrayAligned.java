@@ -40,8 +40,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
     private static final int ENTRY_SIZE = BLOCK_SIZE + 1;
 
     /*
-      * In order to make an efficient value-getter, conditionals should be
-      * avoided. For this BitsArray, values are always aligned so that they fit
+      * For this BitsArray, values are always aligned so that they fit
       * inside of a single block. Extraction of a value thus requires a single
       * SHR followed by a mask.
       * </p><p>
@@ -49,7 +48,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
        elementPos = index * BLOCK_SIZE / elementBits
        bitPos  =    index * BLOCK_SIZE % elementBits
        value =
-       (blocks[elementPos] >> SHIFTS[elementBits][bitPos]) &
+       (blocks[elementPos] >>> SHIFTS[elementBits][bitPos]) &
        READ_MASKS[elementBits]}
      */
     private static final int[][] SHIFTS = new int[ENTRY_SIZE][ENTRY_SIZE];
@@ -65,6 +64,19 @@ public class BitsArrayAligned extends BitsArrayImpl {
         }
     }
 
+    /*
+     * For setting a value, a clear-mask must be applied to the relevant part
+      * of the block. After that, the elementBits can be shifted into place
+      * by using the SHIFTS from above. In code this is {@code
+        majorBitPos = index * elementBits;
+        elementPos = index * BLOCK_SIZE / elementBits
+        bitPos  =    index * BLOCK_SIZE % elementBits
+
+        blocks[elementPos] =
+          (blocks[elementPos] & writeMasks[elementBits][bitPos])
+          | (value << shifts[elementBits][bitPos]);
+       }
+     */
     private static final int[][] WRITE_MASKS = new int[ENTRY_SIZE][ENTRY_SIZE];
     {
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
@@ -95,7 +107,16 @@ public class BitsArrayAligned extends BitsArrayImpl {
      * @param maxValue the expected maximum value for an element.
      */
     public BitsArrayAligned(int length, int maxValue) {
-        int bits = BitsArrayFactory.bits(maxValue);
+        int bits = calculateBits(maxValue);
+        log.trace("Creating BitsArrayAligned of length " + length
+                  + " with element bit size " + bits + " for max value "
+                  + maxValue);
+        setAttributes(bits, 0, new int[length * bits / BLOCK_SIZE + 2]);
+    }
+
+    @Override
+    protected int calculateBits(int maxValue) {
+        int bits = super.calculateBits(maxValue);
         if (bits > 16) {
             bits = 32;
         } else if (bits > 8) {
@@ -105,10 +126,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
         } else if (bits > 2) {
             bits = 4;
         }
-        log.trace("Creating BitsArrayAligned of length " + length
-                  + " with element bit size " + bits + " for max value "
-                  + maxValue);
-        setAttributes(bits, 0, new int[length * bits / BLOCK_SIZE + 2]);
+        return bits;
     }
 
     private void setAttributes(int elementBits, int size, int[] blocks) {
@@ -140,18 +158,20 @@ public class BitsArrayAligned extends BitsArrayImpl {
                     index, size()));
         }
         final long majorBitPos = index * elementBits;
-
+        // Division is expensive, so we shift the bits instead
         final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
+        // Modulo is expensive, so we avoid it be using elementPos from above
         final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
 
         return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
     }
 
     @Override
-    protected void unsafeSet(int index, int value) {
+    protected void unsafeSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
-
+        // Division is expensive, so we shift the bits instead
         final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
+        // Modulo is expensive, so we avoid it be using elementPos from above
         final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
 
         blocks[elementPos] = (blocks[elementPos] & writeMasks[bitPos])
@@ -162,7 +182,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
 
     /* Make sure we have room for value at position */
     @Override
-    protected void ensureSpace(int position, int value) {
+    protected void ensureSpace(final int position, final int value) {
         if (position > maxPos || value > maxValue) {
             //noinspection MismatchedQueryAndUpdateOfCollection
             BitsArrayAligned array;
@@ -183,7 +203,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
      * will be cleared.
      * @param other the source of new values.
      */
-    public void assign(BitsArray other) {
+    public void assign(final BitsArray other) {
         if (!(other instanceof BitsArrayAligned)) {
             throw new UnsupportedOperationException(String.format(
                     "Unable to assign from other types of BitsArray. Got %s",

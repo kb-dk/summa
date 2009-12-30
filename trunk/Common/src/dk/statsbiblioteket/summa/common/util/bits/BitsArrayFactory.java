@@ -62,15 +62,6 @@ public class BitsArrayFactory {
         }
     }
 
-    /**
-     * Calculate the number of bits needed to represent the given value.
-     * @param value a positive integer.
-     * @return the bits needed to represent this value.
-     */
-    static int bits(int value) {
-        return (int)Math.ceil(Math.log(value +1)/Math.log(2));
-    }
-
     private static BAS selectArray(int maxValue, BitsArray.PRIORITY priority) {
         if (priority == null) {
             priority = BitsArray.DEFAULT_PRIORITY;

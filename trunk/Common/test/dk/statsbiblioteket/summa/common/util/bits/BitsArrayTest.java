@@ -201,7 +201,7 @@ public class BitsArrayTest extends TestCase {
         int LENGTH = 100000;
         int READS = LENGTH * 100;
         int INITIAL_MAX_LENGTH = LENGTH;
-        int MAX_VALUE = 240;
+        int MAX_VALUE = 255;
         int WARMUP = 2;
         int RUNS = 5;
 
@@ -377,7 +377,7 @@ public class BitsArrayTest extends TestCase {
 
     /* Helpers for generic testing */
 
-    private static interface BitsArrayGenerator {
+    public static interface BitsArrayGenerator {
         BitsArray create(int length, int maxValue);
     }
     private static class PackedGenerator implements BitsArrayGenerator {
@@ -395,8 +395,13 @@ public class BitsArrayTest extends TestCase {
             return new BitsArrayInt(length);
         }
     }
-    private static List<BitsArrayGenerator> getGenerators() {
+    private static class DummyGenerator implements BitsArrayGenerator {
+        public BitsArray create(int length, int maxValue) {
+            return new BitsArrayConstant();
+        }
+    }
+    public static List<BitsArrayGenerator> getGenerators() {
         return Arrays.asList(new PackedGenerator(), new AlignedGenerator(),
-                             new IntGenerator());
+                             new IntGenerator(), new DummyGenerator());
     }
 }
