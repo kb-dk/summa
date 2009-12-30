@@ -71,6 +71,14 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
     protected abstract void ensureSpace(int index, int value);
 
     /**
+     * @param maxValue a value.
+     * @return the number of bits needed to represent the given value.
+     */
+    protected int calculateBits(int maxValue) {
+        return (int)Math.ceil(Math.log(((long)maxValue)+1)/Math.log(2));
+    }
+
+    /**
      * Clears the array of values but maintains the internal buffers.
      * This does not free any resources.
      */

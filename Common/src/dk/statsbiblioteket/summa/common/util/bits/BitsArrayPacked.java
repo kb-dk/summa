@@ -120,7 +120,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
      * @param maxValue the expected maximum value for an element.
      */
     public BitsArrayPacked(int length, int maxValue) {
-        int bits = (int)Math.ceil(Math.log(maxValue+1)/Math.log(2));
+        int bits = calculateBits(maxValue);
         log.trace("Creating BitsArrayPacked of length " + length
                   + " with element bit size " + bits + " for max value "
                   + maxValue);
@@ -169,7 +169,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
     }
 
     @Override
-    protected void unsafeSet(int index, int value) {
+    protected void unsafeSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
 
         final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
@@ -186,7 +186,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
 
     /* Make sure we have room for value at index */
     @Override
-    protected void ensureSpace(int index, int value) {
+    protected void ensureSpace(final int index, final int value) {
         if (index > maxPos || value > maxValue) {
             //noinspection MismatchedQueryAndUpdateOfCollection
             BitsArrayPacked array;
@@ -207,7 +207,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
      * will be cleared.
      * @param other the source of new values.
      */
-    public void assign(BitsArray other) {
+    public void assign(final BitsArray other) {
         if (!(other instanceof BitsArrayPacked)) {
             throw new UnsupportedOperationException(String.format(
                     "Unable to assign from other types of BitsArray. Got %s",
