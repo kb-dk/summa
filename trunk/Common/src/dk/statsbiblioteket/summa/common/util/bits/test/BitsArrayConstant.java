@@ -2,7 +2,9 @@
  * Created: te 29-12-2009 14:56:59
  * CVS:     $Id$
  */
-package dk.statsbiblioteket.summa.common.util.bits;
+package dk.statsbiblioteket.summa.common.util.bits.test;
+
+import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 
 import java.util.AbstractList;
 
