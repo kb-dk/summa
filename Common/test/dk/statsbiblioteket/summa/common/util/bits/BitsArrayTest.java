@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.common.util.bits;
 
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -160,9 +161,9 @@ public class BitsArrayTest extends TestCase {
         int INITIAL_MAX_LENGTH = LENGTH;
         int WARMUP = 2;
         int RUNS = 3;
-        List<BitsArrayGenerator> bags = getGenerators();
+        List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
         for (int i = 0 ; i < WARMUP ; i++) {
-            for (BitsArrayGenerator bag: bags) {
+            for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
                 testPerformanceBA(bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE);
             }
             testPerformancePlain(LENGTH);
@@ -174,7 +175,7 @@ public class BitsArrayTest extends TestCase {
                 LENGTH,  MAX_VALUE));
         List<Long> timings = new ArrayList<Long>(bags.size());
         for (int run = 0 ; run < RUNS ; run++) {
-            for (BitsArrayGenerator bag: bags) {
+            for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
                 timings.add(testPerformanceBA(
                         bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
             }
@@ -206,7 +207,7 @@ public class BitsArrayTest extends TestCase {
         int RUNS = 5;
 
         List<BitsArray> bas = new ArrayList<BitsArray>();
-        for (BitsArrayGenerator generator: getGenerators()) {
+        for (BitsArrayPerformance.BitsArrayGenerator generator: BitsArrayPerformance.getGenerators()) {
             bas.add(makeBA(generator, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
         }
         log.debug("Created " + bas.size() + " BitsArrays");
@@ -265,9 +266,9 @@ public class BitsArrayTest extends TestCase {
         int LENGTH = 1000;
         int MAX = 1000;
 
-        List<BitsArrayGenerator> bags = getGenerators();
+        List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
         List<BitsArray> bas = new ArrayList<BitsArray>(bags.size());
-        for (BitsArrayGenerator bag: bags) {
+        for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
             bas.add(makeBA(bag, LENGTH, LENGTH, MAX));
         }
         int[] plain = makePlain(LENGTH, MAX);
@@ -357,7 +358,7 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
-    public long testPerformanceBA(BitsArrayGenerator generator,
+    public long testPerformanceBA(BitsArrayPerformance.BitsArrayGenerator generator,
             int assignments, int constructorLength, int maxValue) {
         System.gc();
         long startTime = System.currentTimeMillis();
@@ -365,7 +366,7 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
-    private BitsArray makeBA(BitsArrayGenerator generator,
+    private BitsArray makeBA(BitsArrayPerformance.BitsArrayGenerator generator,
             int assignments, int constructorLength, int maxValue) {
         Random random = new Random(87);
         BitsArray ba = generator.create(constructorLength, maxValue);
@@ -373,35 +374,5 @@ public class BitsArrayTest extends TestCase {
             ba.set(i, random.nextInt(maxValue));
         }
         return ba;
-    }
-
-    /* Helpers for generic testing */
-
-    public static interface BitsArrayGenerator {
-        BitsArray create(int length, int maxValue);
-    }
-    private static class PackedGenerator implements BitsArrayGenerator {
-        public BitsArray create(int length, int maxValue) {
-            return new BitsArrayPacked(length, maxValue);
-        }
-    }
-    private static class AlignedGenerator implements BitsArrayGenerator {
-        public BitsArray create(int length, int maxValue) {
-            return new BitsArrayAligned(length, maxValue);
-        }
-    }
-    private static class IntGenerator implements BitsArrayGenerator {
-        public BitsArray create(int length, int maxValue) {
-            return new BitsArrayInt(length);
-        }
-    }
-    private static class DummyGenerator implements BitsArrayGenerator {
-        public BitsArray create(int length, int maxValue) {
-            return new BitsArrayConstant();
-        }
-    }
-    public static List<BitsArrayGenerator> getGenerators() {
-        return Arrays.asList(new PackedGenerator(), new AlignedGenerator(),
-                             new IntGenerator(), new DummyGenerator());
     }
 }
