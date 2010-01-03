@@ -26,7 +26,8 @@ public abstract class BitsArray64Impl extends AbstractList<Integer>
     public static final double LENGTH_GROWTH_FACTOR = 1.2;
 
     static final int BLOCK_SIZE = 64; // 32 = int, 64 = long
-    static final int BLOCK_BITS = 7; // The #bits representing BLOCK_SIZE
+    static final int BLOCK_BITS = 6; // The #bits representing BLOCK_SIZE
+    static final int MOD_MASK = BLOCK_SIZE - 1; // x % BLOCK_SIZE
 
 //    static final int BLOCK_SIZE = 64; // 32 = int, 64 = long
 //    static final int BLOCK_BITS = 7; // The #bits representing BLOCK_SIZE
@@ -122,5 +123,4 @@ public abstract class BitsArray64Impl extends AbstractList<Integer>
     public int getMemSize() {
         return blocks.length * BLOCK_SIZE / 8;
     }
-
 }

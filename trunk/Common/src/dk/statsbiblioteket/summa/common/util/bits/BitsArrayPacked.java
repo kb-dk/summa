@@ -157,9 +157,8 @@ public class BitsArrayPacked extends BitsArrayImpl {
                     index, size()));
         }
         final long majorBitPos = index * elementBits;
-
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         final int base = bitPos * FAC_BITPOS;
 
@@ -171,9 +170,8 @@ public class BitsArrayPacked extends BitsArrayImpl {
     @Override
     protected void unsafeSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
-
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
         final int base = bitPos * FAC_BITPOS;
 
         blocks[elementPos  ] = (blocks[elementPos  ] & writeMasks[base])

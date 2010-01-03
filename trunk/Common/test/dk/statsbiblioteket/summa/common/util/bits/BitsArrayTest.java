@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.common.util.bits;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
+import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayConstant;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -35,6 +36,31 @@ public class BitsArrayTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(BitsArrayTest.class);
+    }
+
+    public void testBitMultiplicationOptimization() throws Exception {
+        int[][] TESTS = new int[][]{{1, 0}, {2, 1}, {4, 2}, {16, 4}, {256, 8}};
+        for (int[] test: TESTS) {
+            int source = test[0];
+            int expected = test[1];
+            assertEquals("The bits for " + source + " should be correct",
+                         expected, (int)Math.ceil(
+                    Math.log(((long)source))/Math.log(2)));
+        }
+    }
+
+    public void test64Packed() throws Exception {
+        BitsArray bas = new BitsArray64Packed(10, 10);
+        bas.set(0, 1);
+        assertEquals("Simple set & get should return the right value",
+                     1, bas.getAtomic(0));
+    }
+
+    public void test64Aligned() throws Exception {
+        BitsArray bas = new BitsArray64Aligned(10, 10);
+        bas.set(0, 1);
+        assertEquals("Simple set & get should return the right value",
+                     1, bas.getAtomic(0));
     }
 
     @SuppressWarnings({"PointlessBitwiseExpression"})
@@ -266,7 +292,8 @@ public class BitsArrayTest extends TestCase {
         int LENGTH = 1000;
         int MAX = 1000;
 
-        List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
+        List<BitsArrayPerformance.BitsArrayGenerator> bags =
+                BitsArrayPerformance.getGenerators();
         List<BitsArray> bas = new ArrayList<BitsArray>(bags.size());
         for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
             bas.add(makeBA(bag, LENGTH, LENGTH, MAX));
@@ -274,6 +301,10 @@ public class BitsArrayTest extends TestCase {
         int[] plain = makePlain(LENGTH, MAX);
 
         for (BitsArray ba: bas) {
+            if (ba.getClass() == BitsArrayConstant.class) {
+                continue;
+            }
+            log.debug("testing " + ba.getClass().getSimpleName());
             int[] baArray = new int[ba.size()];
             for (int i = 0 ; i < ba.size() ; i++) {
                 baArray[i] = ba.get(i);

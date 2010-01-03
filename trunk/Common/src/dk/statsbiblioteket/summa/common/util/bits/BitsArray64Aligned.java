@@ -52,14 +52,14 @@ public class BitsArray64Aligned extends BitsArray64Impl {
        READ_MASKS[elementBits]}
      */
     private static final int[][] SHIFTS = new int[ENTRY_SIZE][ENTRY_SIZE];
-    private static final int[] READ_MASKS = new int[ENTRY_SIZE];
+    private static final long[] READ_MASKS = new long[ENTRY_SIZE];
 
     { // Generate shifts
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
             int[] currentShifts = SHIFTS[elementBits];
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
                 currentShifts[bitPos] = BLOCK_SIZE + bitPos - elementBits;
-                READ_MASKS[elementBits]  = ~(~0 << elementBits);
+                READ_MASKS[elementBits]  = ~(~0L << elementBits);
             }
         }
     }
@@ -77,12 +77,13 @@ public class BitsArray64Aligned extends BitsArray64Impl {
           | (value << shifts[elementBits][bitPos]);
        }
      */
-    private static final int[][] WRITE_MASKS = new int[ENTRY_SIZE][ENTRY_SIZE];
+    private static final long[][] WRITE_MASKS =
+            new long[ENTRY_SIZE][ENTRY_SIZE];
     {
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
-            int elementPosMask = ~(~0 << elementBits);
+            long elementPosMask = ~(~0L << elementBits);
             int[] currentShifts = SHIFTS[elementBits];
-            int[] currentMasks = WRITE_MASKS[elementBits];
+            long[] currentMasks = WRITE_MASKS[elementBits];
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
                 currentMasks[bitPos] = ~(elementPosMask
                                          << currentShifts[bitPos]);
@@ -94,8 +95,9 @@ public class BitsArray64Aligned extends BitsArray64Impl {
     private int maxValue;    // Math.pow(elementBits, 2)-1
     private int maxPos;      // blocks.length * BLOCK_SIZE / elementBits - 1
     private int[] shifts;
-    private int readMask;
-    private int[] writeMasks;
+    private long readMask;
+    private long[] writeMasks;
+    private int majorPosShift;
 
     /**
      * Creates a BitsArray with the internal structures optimized for the given
@@ -142,6 +144,7 @@ public class BitsArray64Aligned extends BitsArray64Impl {
         writeMasks = WRITE_MASKS[elementBits];
         maxValue = (int)Math.pow(2, elementBits)-1;
         maxPos = (blocks.length * BLOCK_SIZE / elementBits) - 2;
+        majorPosShift = super.calculateBits(elementBits-1);
     }
 
     /**
@@ -157,25 +160,23 @@ public class BitsArray64Aligned extends BitsArray64Impl {
                     "The index %d was requested in an array of size %s",
                     index, size()));
         }
-        final long majorBitPos = index * elementBits;
-        // Division is expensive, so we shift the bits instead
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        // Modulo is expensive, so we avoid it be using elementPos from above
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         return (int)((blocks[elementPos] >>> shifts[bitPos]) & readMask);
     }
 
     @Override
     protected void unsafeSet(final int index, final int value) {
-        final long majorBitPos = index * elementBits;
-        // Division is expensive, so we shift the bits instead
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        // Modulo is expensive, so we avoid it be using elementPos from above
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
+        //noinspection UnnecessaryLocalVariable
+        final long lValue = value; // We need to promote in order to shift
 
         blocks[elementPos] = (blocks[elementPos] & writeMasks[bitPos])
-                             | (value << shifts[bitPos]);
+                             | (lValue << shifts[bitPos]);
         size = Math.max(size, index+1);
     }
 

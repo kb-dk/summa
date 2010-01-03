@@ -93,8 +93,10 @@ public class BitsArrayAligned extends BitsArrayImpl {
     // Cached calculations
     private int maxValue;    // Math.pow(elementBits, 2)-1
     private int maxPos;      // blocks.length * BLOCK_SIZE / elementBits - 1
+
     private int[] shifts;
     private int readMask;
+    private int majorPosShift;
     private int[] writeMasks;
 
     /**
@@ -136,12 +138,14 @@ public class BitsArrayAligned extends BitsArrayImpl {
         updateCached();
     }
 
+    // Updated when the number of bits/value changes
     private void updateCached() {
         shifts = SHIFTS[elementBits];
         readMask = READ_MASKS[elementBits];
         writeMasks = WRITE_MASKS[elementBits];
         maxValue = (int)Math.pow(2, elementBits)-1;
         maxPos = (blocks.length * BLOCK_SIZE / elementBits) - 2;
+        majorPosShift = super.calculateBits(elementBits-1);
     }
 
     /**
@@ -157,28 +161,23 @@ public class BitsArrayAligned extends BitsArrayImpl {
                     "The index %d was requested in an array of size %s",
                     index, size()));
         }
-        final long majorBitPos = index * elementBits;
-        // Division is expensive, so we shift the bits instead
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        // Modulo is expensive, so we avoid it be using elementPos from above
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
     }
 
     @Override
     protected void unsafeSet(final int index, final int value) {
-        final long majorBitPos = index * elementBits;
-        // Division is expensive, so we shift the bits instead
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        // Modulo is expensive, so we avoid it be using elementPos from above
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         blocks[elementPos] = (blocks[elementPos] & writeMasks[bitPos])
                              | (value << shifts[bitPos]);
         size = Math.max(size, index+1);
     }
-
 
     /* Make sure we have room for value at position */
     @Override
