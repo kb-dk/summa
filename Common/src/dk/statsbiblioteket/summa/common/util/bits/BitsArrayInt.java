@@ -70,6 +70,10 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         return values[index];
     }
 
+    public int fastGetAtomic(final int index) {
+        return values[index];
+    }
+
     public void set(int position, int value) {
         if (position >= values.length) {
             int[] newValues = new int[(int)(
@@ -79,6 +83,10 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         }
         values[position] = value;
         size = Math.max(size, position + 1);
+    }
+
+    public void fastSet(int position, int value) {
+        values[position] = value;
     }
 
     public void assign(BitsArray other) {

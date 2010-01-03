@@ -181,7 +181,15 @@ public class BitsArrayTest extends TestCase {
                      Strings.join(expected, ", "), Strings.join(ba, ", "));
     }
 
-    public void testWritePerformance() {
+    public void testWritePerformanceUnsafe() {
+        testWritePerformance(true);
+    }
+    
+    public void testWritePerformanceSafe() {
+        testWritePerformance(false);
+    }
+
+    public void testWritePerformance(boolean unsafe) {
         int LENGTH = 10000000;
         int MAX_VALUE = 240;
         int INITIAL_MAX_LENGTH = LENGTH;
@@ -190,7 +198,8 @@ public class BitsArrayTest extends TestCase {
         List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
         for (int i = 0 ; i < WARMUP ; i++) {
             for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
-                testPerformanceBA(bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE);
+                testPerformanceBA(
+                        bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe);
             }
             testPerformancePlain(LENGTH);
         }
@@ -203,7 +212,7 @@ public class BitsArrayTest extends TestCase {
         for (int run = 0 ; run < RUNS ; run++) {
             for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
                 timings.add(testPerformanceBA(
-                        bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
+                        bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe));
             }
             long plainTime = testPerformancePlain(LENGTH);
             long baseTime = testPerformanceCalibrate(LENGTH);
@@ -224,7 +233,15 @@ public class BitsArrayTest extends TestCase {
         }
     }
 
-    public void testReadPerformance() {
+    public void testReadPerformanceUnsafe() {
+        testReadPerformance(true);
+    }
+
+    public void testReadPerformanceSafe() {
+        testReadPerformance(false);
+    }
+
+    public void testReadPerformance(boolean unsafe) {
         int LENGTH = 100000;
         int READS = LENGTH * 100;
         int INITIAL_MAX_LENGTH = LENGTH;
@@ -233,8 +250,11 @@ public class BitsArrayTest extends TestCase {
         int RUNS = 5;
 
         List<BitsArray> bas = new ArrayList<BitsArray>();
-        for (BitsArrayPerformance.BitsArrayGenerator generator: BitsArrayPerformance.getGenerators()) {
-            bas.add(makeBA(generator, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE));
+        for (BitsArrayPerformance.BitsArrayGenerator generator:
+                BitsArrayPerformance.getGenerators()) {
+            bas.add(makeBA(
+                    generator, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe));
+            bas.get(bas.size()-1).set(LENGTH-1, 87); // Ensure size is max
         }
         log.debug("Created " + bas.size() + " BitsArrays");
         int[] a = makePlain(LENGTH, MAX_VALUE);
@@ -259,7 +279,7 @@ public class BitsArrayTest extends TestCase {
 
         for (int i = 0 ; i < WARMUP ; i++) {
             for (BitsArray ba: bas) {
-                testReadBA(ba, READS);
+                testReadBA(ba, READS, unsafe);
             }
             testReadPlain(a, READS);
         }
@@ -267,7 +287,7 @@ public class BitsArrayTest extends TestCase {
         List<Long> timings = new ArrayList<Long>(bas.size());
         for (int run = 0 ; run < RUNS ; run++) {
             for (BitsArray ba: bas) {
-                timings.add(testReadBA(ba, READS));
+                timings.add(testReadBA(ba, READS, unsafe));
             }
             long plainTime = testReadPlain(a, READS);
             long baseTime = testReadCalibrate(a, READS);
@@ -289,6 +309,10 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testMonkey() throws Exception {
+        testMonkey(false);
+        testMonkey(true);
+    }
+    public void testMonkey(boolean unsafe) throws Exception {
         int LENGTH = 1000;
         int MAX = 1000;
 
@@ -296,7 +320,10 @@ public class BitsArrayTest extends TestCase {
                 BitsArrayPerformance.getGenerators();
         List<BitsArray> bas = new ArrayList<BitsArray>(bags.size());
         for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
-            bas.add(makeBA(bag, LENGTH, LENGTH, MAX));
+            BitsArray ba = makeBA(bag, LENGTH, LENGTH, MAX, unsafe);
+            ba.set(LENGTH-1, ba.fastGetAtomic(LENGTH-1)); // Fix size
+            bas.add(ba);
+            
         }
         int[] plain = makePlain(LENGTH, MAX);
 
@@ -345,13 +372,19 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
-    private long testReadBA(BitsArray ba, int reads) {
+    private long testReadBA(BitsArray ba, int reads, boolean unsafe) {
         System.gc();
         int MAX = ba.size();
         long startTime = System.currentTimeMillis();
         Random random = new Random(88);
-        for (int i = 0 ; i < reads ; i++) {
-            ba.getAtomic(random.nextInt(MAX));
+        if (unsafe) {
+            for (int i = 0 ; i < reads ; i++) {
+                ba.fastGetAtomic(random.nextInt(MAX));
+            }
+        } else {
+            for (int i = 0 ; i < reads ; i++) {
+                ba.getAtomic(random.nextInt(MAX));
+            }
         }
         return System.currentTimeMillis() - startTime;
     }
@@ -389,20 +422,29 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
-    public long testPerformanceBA(BitsArrayPerformance.BitsArrayGenerator generator,
-            int assignments, int constructorLength, int maxValue) {
+    public long testPerformanceBA(
+            BitsArrayPerformance.BitsArrayGenerator generator,
+            int assignments, int constructorLength, int maxValue,
+            boolean unsafe) {
         System.gc();
         long startTime = System.currentTimeMillis();
-        makeBA(generator, assignments, constructorLength, maxValue);
+        makeBA(generator, assignments, constructorLength, maxValue, unsafe);
         return System.currentTimeMillis() - startTime;
     }
 
     private BitsArray makeBA(BitsArrayPerformance.BitsArrayGenerator generator,
-            int assignments, int constructorLength, int maxValue) {
+            int assignments, int constructorLength, int maxValue,
+            boolean unsafe) {
         Random random = new Random(87);
         BitsArray ba = generator.create(constructorLength, maxValue);
-        for (int i = 0 ; i < assignments ; i++) {
-            ba.set(i, random.nextInt(maxValue));
+        if (unsafe) {
+            for (int i = 0 ; i < assignments ; i++) {
+                ba.fastSet(i, random.nextInt(maxValue));
+            }
+        } else {
+            for (int i = 0 ; i < assignments ; i++) {
+                ba.set(i, random.nextInt(maxValue));
+            }
         }
         return ba;
     }

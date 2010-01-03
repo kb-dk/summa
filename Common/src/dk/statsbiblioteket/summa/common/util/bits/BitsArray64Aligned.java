@@ -167,8 +167,16 @@ public class BitsArray64Aligned extends BitsArray64Impl {
         return (int)((blocks[elementPos] >>> shifts[bitPos]) & readMask);
     }
 
+    public int fastGetAtomic(final int index) {
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
+
+        return (int)((blocks[elementPos] >>> shifts[bitPos]) & readMask);
+    }
+
     @Override
-    protected void unsafeSet(final int index, final int value) {
+    public void fastSet(final int index, final int value) {
         final long majorBitPos = index << majorPosShift; // * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
         final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
@@ -177,6 +185,11 @@ public class BitsArray64Aligned extends BitsArray64Impl {
 
         blocks[elementPos] = (blocks[elementPos] & writeMasks[bitPos])
                              | (lValue << shifts[bitPos]);
+    }
+
+    @Override
+    public void set(int index, int value) {
+        super.set(index, value);
         size = Math.max(size, index+1);
     }
 

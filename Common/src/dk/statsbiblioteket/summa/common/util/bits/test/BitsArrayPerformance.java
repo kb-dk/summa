@@ -21,18 +21,33 @@ import java.util.Arrays;
         author = "te")
 public class BitsArrayPerformance {
     public static void main(String[] args) throws Exception {
-        if (args != null && args.length > 0 && "-h".equals(args[0])) {
-            System.out.println("Usage: BitsArrayPerformance");
-            System.out.println("");
-            System.out.println("No arguments as the test itself iterates "
-                               + "through cases. This might change later.");
-            return;
+        if (args != null && args.length > 0) {
+            if ("-h".equals(args[0])) {
+                usage();
+                return;
+            } else if ("-s".equals(args[1])) {
+                new BitsArrayPerformance().testPerformance(false);
+                return;
+            } else {
+                System.err.println("Unknown argument: " + args[0]);
+                usage();
+                return;
+            }
         }
-        new BitsArrayPerformance().testPerformance();
+        new BitsArrayPerformance().testPerformance(true);
+    }
+
+    public static void usage() {
+        System.out.println("Usage: BitsArrayPerformance [-s]");
+        System.out.println("");
+        System.out.println(
+                "-s: Test using safe mode with range-checking and "
+                + "auto-adjustment of length and bits/value");
+
     }
 
     /* No exansion-testing */
-    public void testPerformance() throws Exception {
+    public void testPerformance(boolean unsafe) throws Exception {
         int[] actionCounts = new int[]{
                 10*1000*1000};
         int[] lengths =      new int[]{
@@ -50,7 +65,7 @@ public class BitsArrayPerformance {
             for (int l: lengths) {
                 for (ACTION action: actions) {
                     for (int vm: valueMaxs) {
-                        testPerformance(bags, action, l, vm, ac, l, vm);
+                        testPerformance(bags, action, l, vm, ac, l, vm, unsafe);
                     }
                 }
             }
@@ -108,7 +123,8 @@ public class BitsArrayPerformance {
     public void testPerformance(
             List<BitsArrayGenerator> bags, ACTION action,
             int initialLength, int initialValueMax,
-            int mutatorActions, int mutatorIndexMax, int writeValueMax)
+            int mutatorActions, int mutatorIndexMax, int writeValueMax,
+            boolean unsafe)
                                                               throws Exception {
         final int WARMUP = 1;
         final int TESTS = 3;
@@ -117,7 +133,8 @@ public class BitsArrayPerformance {
             for (BitsArrayGenerator bag: bags) {
                 measureActionPerformance(
                         bag, action, initialLength, initialValueMax,
-                        mutatorActions, mutatorIndexMax, writeValueMax);
+                        mutatorActions, mutatorIndexMax, writeValueMax,
+                        unsafe);
             }
         }
 
@@ -137,7 +154,8 @@ public class BitsArrayPerformance {
                 time += measureActionPerformance(
                         bag, action, initialLength, initialValueMax,
                         mutatorActions,
-                        mutatorIndexMax, writeValueMax);
+                        mutatorIndexMax, writeValueMax,
+                        unsafe);
             }
             sw.append(String.format("%12d", Math.max(0, time-base) / TESTS));
         }
@@ -147,8 +165,8 @@ public class BitsArrayPerformance {
     public long measureActionPerformance(
             BitsArrayGenerator bag, ACTION action,
             int initialLength, int initialValueMax,
-            int numberOfActions, int writeIndexMax, int writeValueMax)
-                                                              throws Exception {
+            int numberOfActions, int writeIndexMax, int writeValueMax,
+            boolean unsafe) throws Exception {
         BitsArray testBA = bag.create(1, 1);
         if (testBA == ARRAYSIGNAL) {
             return measureActionPerformanceArray(
@@ -161,12 +179,12 @@ public class BitsArrayPerformance {
         long startTime = System.currentTimeMillis();
         BitsArray ba = createAndFillBitsArray(
                 bag, initialLength, initialValueMax, numberOfActions,
-                writeIndexMax, writeValueMax);
+                writeIndexMax, writeValueMax, unsafe);
         if (action == ACTION.write) {
             return System.currentTimeMillis() - startTime;
         }
         ba.set(writeIndexMax-1, 0); // Ensure filled
-        return measureReadPerformance(ba, numberOfActions);
+        return measureReadPerformance(ba, numberOfActions, unsafe);
     }
 
     private long measureActionPerformanceArray(
@@ -197,13 +215,20 @@ public class BitsArrayPerformance {
         return measureReadNullPerformance(writeIndexMax, numberOfActions);
     }
 
-    private long measureReadPerformance(BitsArray ba, int numberOfReads) {
+    private long measureReadPerformance(BitsArray ba, int numberOfReads,
+                                        boolean unsafe) {
         int max = ba.size();
         long startTime = System.currentTimeMillis();
         Random random = new Random(87);
         int lastVal = 0;
-        for (int read = 0 ; read < numberOfReads ; read++) {
-            lastVal = ba.get(random.nextInt(max));
+        if (unsafe) {
+            for (int read = 0 ; read < numberOfReads ; read++) {
+                lastVal = ba.fastGetAtomic(random.nextInt(max));
+            }
+        } else {
+            for (int read = 0 ; read < numberOfReads ; read++) {
+                lastVal = ba.getAtomic(random.nextInt(max));
+            }
         }
         if (lastVal < 0) {
             throw new IllegalStateException(
@@ -239,14 +264,23 @@ public class BitsArrayPerformance {
     public BitsArray createAndFillBitsArray(
             BitsArrayGenerator bag,
             int initialLength, int initialValueMax,
-            int numberOfWrites, int writeIndexMax, int writeValueMax)
-                                                              throws Exception {
+            int numberOfWrites, int writeIndexMax, int writeValueMax,
+            boolean unsafe) throws Exception {
         Random random = new Random(87);
         BitsArray ba = bag.create(initialLength, initialValueMax);
-        for (int write = 0 ; write < numberOfWrites ; write++) {
-            ba.set(random.nextInt(writeIndexMax),
-                   random.nextInt(writeValueMax+1));
+        if (unsafe) {
+            for (int write = 0 ; write < numberOfWrites ; write++) {
+                ba.fastSet(random.nextInt(writeIndexMax),
+                           random.nextInt(writeValueMax+1));
+            }
+        } else {
+            for (int write = 0 ; write < numberOfWrites ; write++) {
+                ba.set(random.nextInt(writeIndexMax),
+                       random.nextInt(writeValueMax+1));
+            }
         }
+        int top = Math.max(initialLength, writeIndexMax)-1;
+        ba.set(top, ba.fastGetAtomic(top)); // Fix size
         return ba;
     }
 
@@ -302,7 +336,7 @@ public class BitsArrayPerformance {
     // Use int[]
     public static final BitsArray ARRAYSIGNAL = new BitsArrayImpl() {
         @Override
-        protected void unsafeSet(int index, int value) {
+        public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
         @Override
@@ -310,6 +344,9 @@ public class BitsArrayPerformance {
             throw new UnsupportedOperationException("Not supported");
         }
         public int getAtomic(int index) {
+            throw new UnsupportedOperationException("Not supported");
+        }
+        public int fastGetAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
         public void assign(BitsArray other) {
@@ -323,7 +360,7 @@ public class BitsArrayPerformance {
     // No read or write, only random values
     public static final BitsArray NULLSIGNAL = new BitsArrayImpl() {
         @Override
-        protected void unsafeSet(int index, int value) {
+        public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
         @Override
@@ -331,6 +368,9 @@ public class BitsArrayPerformance {
             throw new UnsupportedOperationException("Not supported");
         }
         public int getAtomic(int index) {
+            throw new UnsupportedOperationException("Not supported");
+        }
+        public int fastGetAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
         public void assign(BitsArray other) {

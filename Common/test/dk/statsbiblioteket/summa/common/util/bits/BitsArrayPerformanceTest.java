@@ -15,8 +15,12 @@ import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
 
 public class BitsArrayPerformanceTest extends TestCase {
 
-    public void testPerformance() throws Exception {
-        new BitsArrayPerformance().testPerformance();
+    public void testPerformanceSafe() throws Exception {
+        new BitsArrayPerformance().testPerformance(false);
+    }
+
+    public void testPerformanceFast() throws Exception {
+        new BitsArrayPerformance().testPerformance(true);
     }
 }
 
