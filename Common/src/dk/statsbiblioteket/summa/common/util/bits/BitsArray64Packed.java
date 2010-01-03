@@ -55,7 +55,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
     private static final int[][] SHIFTS =
             new int[ENTRY_SIZE][ENTRY_SIZE * FAC_BITPOS];
             //new int[BLOCK_SIZE+1][BLOCK_SIZE][BLOCK_SIZE+1];
-    private static final int[][] MASKS = new int[ENTRY_SIZE][ENTRY_SIZE];
+    private static final long[][] MASKS = new long[ENTRY_SIZE][ENTRY_SIZE];
 
     { // Generate shifts
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
@@ -70,7 +70,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
                 } else { // Two blocks
                     int rBits = elementBits - (BLOCK_SIZE - bitPos);
                     currentShifts[base + 2] = BLOCK_SIZE - rBits;
-                    MASKS[elementBits][bitPos] = ~(~0 << rBits);
+                    MASKS[elementBits][bitPos] = ~(~0L << rBits);
                 }
             }
         }
@@ -79,13 +79,13 @@ public class BitsArray64Packed extends BitsArray64Impl {
     /*
       * The setter requires more masking than the getter.
      */
-    private static final int[][] WRITE_MASKS =
-            new int[ENTRY_SIZE][ENTRY_SIZE * FAC_BITPOS];
+    private static final long[][] WRITE_MASKS =
+            new long[ENTRY_SIZE][ENTRY_SIZE * FAC_BITPOS];
     {
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
-            int elementPosMask = ~(~0 << elementBits);
+            long elementPosMask = ~(~0L << elementBits);
             int[] currentShifts = SHIFTS[elementBits];
-            int[] currentMasks = WRITE_MASKS[elementBits];
+            long[] currentMasks = WRITE_MASKS[elementBits];
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
                 int base = bitPos * FAC_BITPOS;
                 currentMasks[base  ] =~((elementPosMask
@@ -102,8 +102,8 @@ public class BitsArray64Packed extends BitsArray64Impl {
     private int maxValue;    // Math.pow(elementBits, 2)-1
     private int maxPos;      // blocks.length * BLOCK_SIZE / elementBits - 1
     private int[] shifts;    // The shifts for the current elementBits
-    private int[] readMasks;
-    private int[] writeMasks;
+    private long[] readMasks;
+    private long[] writeMasks;
 
     /**
      * Creates a BitsArray of minimal size. If there is knowledge of expected
@@ -158,9 +158,8 @@ public class BitsArray64Packed extends BitsArray64Impl {
                     index, size()));
         }
         final long majorBitPos = index * elementBits;
-
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         final int base = bitPos * FAC_BITPOS;
 
@@ -172,15 +171,16 @@ public class BitsArray64Packed extends BitsArray64Impl {
     @Override
     protected void unsafeSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
-
-        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
-        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // % BLOCK_SIZE);
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
         final int base = bitPos * FAC_BITPOS;
-
+        //noinspection UnnecessaryLocalVariable
+        final long lValue = value; // We need to promote in order to shift
+        
         blocks[elementPos  ] = (blocks[elementPos  ] & writeMasks[base])
-                               | (value << shifts[base + 1] >>> shifts[base]);
+                               | (lValue << shifts[base + 1] >>> shifts[base]);
         blocks[elementPos+1] = (blocks[elementPos+1] & writeMasks[base+1])
-                               | ((value << shifts[base + 2])
+                               | ((lValue << shifts[base + 2])
                                   & writeMasks[base+2]);
         size = Math.max(size, index+1);
     }
