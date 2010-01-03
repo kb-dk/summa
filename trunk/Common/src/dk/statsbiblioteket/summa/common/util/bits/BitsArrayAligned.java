@@ -148,10 +148,6 @@ public class BitsArrayAligned extends BitsArrayImpl {
         majorPosShift = super.calculateBits(elementBits-1);
     }
 
-    /**
-     * @param index the position of the value.
-     * @return the value at the given position.
-     */
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
@@ -168,14 +164,26 @@ public class BitsArrayAligned extends BitsArrayImpl {
         return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
     }
 
-    @Override
-    protected void unsafeSet(final int index, final int value) {
+    public int fastGetAtomic(int index) {
+        final long majorBitPos = index << majorPosShift; // * elementBits;
+        final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
+        final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
+
+        return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
+    }
+
+    public void fastSet(final int index, final int value) {
         final long majorBitPos = index << majorPosShift; // * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
         final int bitPos =     (int)(majorBitPos & MOD_MASK); // % BLOCK_SIZE);
 
         blocks[elementPos] = (blocks[elementPos] & writeMasks[bitPos])
                              | (value << shifts[bitPos]);
+    }
+
+    @Override
+    public void set(int index, int value) {
+        super.set(index, value);
         size = Math.max(size, index+1);
     }
 

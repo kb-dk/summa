@@ -22,8 +22,13 @@ public class BitsArrayConstant extends AbstractList<Integer> implements BitsArra
     public int getAtomic(final int index) {
         return 89;
     }
+    public int fastGetAtomic(final int index) {
+        return 89;
+    }
 
     public void set(final int position, final int value) {}
+
+    public void fastSet(int index, int value) {}
 
     public void assign(final BitsArray other) {}
 

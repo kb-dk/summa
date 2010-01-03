@@ -48,7 +48,7 @@ public abstract class BitsArray64Impl extends AbstractList<Integer>
     public void set(int index, int value) {
         ensureSpace(index, value);
         try {
-            unsafeSet(index, value);
+            fastSet(index, value);
         } catch (ArrayIndexOutOfBoundsException e) {
             String message = String.format(
                     "Internal array inconsistency for %s, setting %d at "
@@ -56,13 +56,6 @@ public abstract class BitsArray64Impl extends AbstractList<Integer>
             throw new IllegalStateException(message, e);
         }
     }
-
-    /**
-     * Set the element at the given index, without checks for boundaries.
-     * @param index the position for the value.
-     * @param value the value to assign.
-     */
-    protected abstract void unsafeSet(int index, int value);
 
     /**
      * Ensure that the internal structure can accept the given value at the
