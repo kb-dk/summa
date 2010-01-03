@@ -25,7 +25,7 @@ public class BitsArrayPerformance {
             if ("-h".equals(args[0])) {
                 usage();
                 return;
-            } else if ("-s".equals(args[1])) {
+            } else if ("-s".equals(args[0])) {
                 new BitsArrayPerformance().testPerformance(false);
                 return;
             } else {

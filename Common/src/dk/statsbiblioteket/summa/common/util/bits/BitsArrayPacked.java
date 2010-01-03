@@ -124,6 +124,7 @@ public class BitsArrayPacked extends BitsArrayImpl {
         log.trace("Creating BitsArrayPacked of length " + length
                   + " with element bit size " + bits + " for max value "
                   + maxValue);
+        // TODO: Calculate length with long instead of int, then cast to int
         setAttributes(
                 bits, 0, new int[length * bits / BLOCK_SIZE + 2]);
     }

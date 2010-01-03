@@ -13,7 +13,7 @@ popd
 
 set MAINCLASS=dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance
 set MAINJAR=%DEPLOY%\summa-common-1.4.15.jar
-set JVMOPTS=-Xmx512m -server
+set JVM_OPTS=-Xmx512m -server
 
 if "%LIBDIRS%."=="." (
     set LIBDIRS="%DEPLOY%\lib\*"
