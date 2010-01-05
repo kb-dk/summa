@@ -17,7 +17,6 @@
     <orderEntry type="library" name="sbutil" level="project" />
     <orderEntry type="library" name="log4j-1.2.14" level="project" />
     <orderEntry type="module" module-name="Ingest" />
-    <orderEntryProperties />
   </component>
 </module>
 
