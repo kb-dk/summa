@@ -185,7 +185,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             patternReplacement = conf.getString(CONF_PATTERN_REPLACEMENT);
             log.debug(String.format(
                     "Added pattern with regexp '%s' and replacement '%s'",
-                    CONF_PATTERN_REGEXP, CONF_PATTERN_REPLACEMENT));
+                    pattern.pattern(), patternReplacement));
         }
 
         if (conf.valueExists(CONF_RULES)) {
