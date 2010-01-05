@@ -57,7 +57,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
             //new int[BLOCK_SIZE+1][BLOCK_SIZE][BLOCK_SIZE+1];
     private static final long[][] MASKS = new long[ENTRY_SIZE][ENTRY_SIZE];
 
-    { // Generate shifts
+    static { // Generate shifts
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
             for (int bitPos = 0 ; bitPos < BLOCK_SIZE ; bitPos++) {
                 int[] currentShifts = SHIFTS[elementBits];
@@ -81,7 +81,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
      */
     private static final long[][] WRITE_MASKS =
             new long[ENTRY_SIZE][ENTRY_SIZE * FAC_BITPOS];
-    {
+    static {
         for (int elementBits = 1 ; elementBits <= BLOCK_SIZE ; elementBits++) {
             long elementPosMask = ~(~0L << elementBits);
             int[] currentShifts = SHIFTS[elementBits];
@@ -180,7 +180,6 @@ public class BitsArray64Packed extends BitsArray64Impl {
                       & readMasks[bitPos]));
     }
 
-    @Override
     public void fastSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
