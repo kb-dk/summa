@@ -51,7 +51,8 @@ public class BitsArrayPerformance {
         int[] actionCounts = new int[]{
                 10*1000*1000};
         int[] lengths =      new int[]{
-                1000, 100*1000, 1000*1000, 10*1000*1000, 50*1000*1000};
+                1000, 100*1000, 1000*1000, 5*1000*1000, 10*1000*1000,
+                50*1000*1000};
         int[] valueMaxs =    new int[]{
                 1, 15, 255, 256, 65535, 65536, 2097151, 2147483646};
         // 2^31-2 is Random.nextInt(x)-limit
@@ -335,7 +336,6 @@ public class BitsArrayPerformance {
 
     // Use int[]
     public static final BitsArray ARRAYSIGNAL = new BitsArrayImpl() {
-        @Override
         public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
@@ -359,7 +359,6 @@ public class BitsArrayPerformance {
 
     // No read or write, only random values
     public static final BitsArray NULLSIGNAL = new BitsArrayImpl() {
-        @Override
         public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
