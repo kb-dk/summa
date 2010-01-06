@@ -345,7 +345,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     protected String getTagString(String facet, T tag) {
         log.trace("Default-implementation of getTagString called with Tag " 
                   + tag);
-        return urlEntityEscape(String.valueOf(tag));
+        return String.valueOf(tag);
     }
     /**
      * This should be overridet when subclassing, if the tags does not resolve
