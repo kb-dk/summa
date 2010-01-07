@@ -53,4 +53,10 @@ public class VoidStorage extends StorageBase {
     public void clearBase(String base) throws IOException {
         log.info("Clearing base: " + base);
     }
+
+    public String batchJob(String jobName, String base,
+                           long minMtime, long maxMtime, QueryOptions options) {
+        log.info("Batch job: " + jobName +" on base " + base);
+        return "";
+    }
 }

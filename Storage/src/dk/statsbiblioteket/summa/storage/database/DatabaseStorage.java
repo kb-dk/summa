@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
+import dk.statsbiblioteket.summa.storage.BatchJob;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
@@ -45,6 +46,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
@@ -314,6 +319,7 @@ getco     */
     private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
+    private String allColumns;
 
     private Map<Long, Cursor> iterators =
                                          new HashMap<Long, Cursor>(10);
@@ -720,16 +726,16 @@ getco     */
         }
 
 
-        String allCells = RECORDS + "." + ID_COLUMN + ","
-                          + RECORDS + "." + BASE_COLUMN + ","
-                          + RECORDS + "." + DELETED_COLUMN + ","
-                          + RECORDS + "." + INDEXABLE_COLUMN + ","
-                          + RECORDS + "." + HAS_RELATIONS_COLUMN + ", "
-                          + RECORDS + "." + DATA_COLUMN + ","
-                          + RECORDS + "." + CTIME_COLUMN + ","
-                          + RECORDS + "." + MTIME_COLUMN + ","
-                          + RECORDS + "." + META_COLUMN + ","
-                          + allCellsRelationsCols;
+        allColumns = RECORDS + "." + ID_COLUMN + ","
+                     + RECORDS + "." + BASE_COLUMN + ","
+                     + RECORDS + "." + DELETED_COLUMN + ","
+                     + RECORDS + "." + INDEXABLE_COLUMN + ","
+                     + RECORDS + "." + HAS_RELATIONS_COLUMN + ", "
+                     + RECORDS + "." + DATA_COLUMN + ","
+                     + RECORDS + "." + CTIME_COLUMN + ","
+                     + RECORDS + "." + MTIME_COLUMN + ","
+                     + RECORDS + "." + META_COLUMN + ","
+                     + allCellsRelationsCols;
 
         String relationsClause = RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + PARENT_ID_COLUMN
@@ -740,13 +746,13 @@ getco     */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterQuery;
         if (useLazyRelations) {
-            modifiedAfterQuery = "SELECT " + allCells
+            modifiedAfterQuery = "SELECT " + allColumns
                                  + " FROM " + RECORDS
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
         } else {
-            modifiedAfterQuery = "SELECT " + allCells
+            modifiedAfterQuery = "SELECT " + allColumns
                                  + " FROM " + RECORDS
                                  + " LEFT JOIN " + RELATIONS
                                  + " ON " + relationsClause
@@ -766,12 +772,12 @@ getco     */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterAllQuery;
         if (useLazyRelations){
-            modifiedAfterAllQuery = "SELECT " + allCells
+            modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
         } else {
-            modifiedAfterAllQuery = "SELECT " + allCells
+            modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
                                     + " LEFT JOIN " + RELATIONS
                                     + " ON " + relationsClause
@@ -789,7 +795,7 @@ getco     */
         /* getRecord */
         // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
         // Fetching single records using a LEFT JOIN is generally not a problem 
-        String getRecordQuery = "SELECT " + allCells
+        String getRecordQuery = "SELECT " + allColumns
                                 + " FROM " + RECORDS
                                 + " LEFT JOIN " + RELATIONS
                                 + " ON " + relationsClause
@@ -804,7 +810,7 @@ getco     */
                 statements with IN clauses in them . See fx:
                 http://forum.springframework.org/archive/index.php/t-16001.html
 
-        String getRecordsQuery = "SELECT " + allCells
+        String getRecordsQuery = "SELECT " + allColumns
                                 + " FROM " + RECORDS
                                 + " WHERE " + ID_COLUMN + " IN ?";
         log.debug("Preparing query recordsQuery with '" + getRecordsQuery + "'");
@@ -874,7 +880,7 @@ getco     */
         log.debug("touchParents handle: " + stmtTouchParents);
 
         /* getChildren */
-        String getChildrenQuery = "SELECT " + allCells
+        String getChildrenQuery = "SELECT " + allColumns
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
@@ -888,7 +894,7 @@ getco     */
         log.debug("getChildren handle: " + stmtGetChildren);
 
         /* getParents */
-        String getParentsQuery = "SELECT " + allCells
+        String getParentsQuery = "SELECT " + allColumns
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
@@ -1982,6 +1988,195 @@ getco     */
         }
     }
 
+    public synchronized String batchJob (String jobName,
+            String base, long minMtime, long maxMtime, QueryOptions options)
+                                                            throws IOException {
+        log.info(String.format(
+                "\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  "
+                + "Max mtime: %s\n  Query options: %s",
+                jobName, base, minMtime, maxMtime, options));
+        Connection conn = null;
+
+        long start = System.currentTimeMillis();
+        try {
+            conn = getDefaultConnection();
+            String result = batchJobWithConnection(
+                    jobName, base, minMtime, maxMtime, options, conn);
+            log.info("Batch job completed in " +
+                     (System.currentTimeMillis() - start)/1000 + "s");
+            return result;
+        } catch (SQLException e) {
+            String msg = "Error running batch job: " + e.getMessage();
+            log.error(msg, e);
+            throw new IOException(msg, e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    private String batchJobWithConnection (String jobName,
+                                      String base, long minMtime, long maxMtime,
+                                      QueryOptions options, Connection conn)
+                                              throws IOException, SQLException {
+        // Make sure options is always != null to ease logic later
+        options = options != null ? options : new QueryOptions();
+
+        String sql = "SELECT " + allColumns
+                + " FROM " + RECORDS
+                + " WHERE ( mtime<? AND mtime>? )";
+
+        if (base != null) {
+            sql += " AND base=?";
+        }
+
+        sql += " ORDER BY " + MTIME_COLUMN;
+
+        if (usePagingModel) {
+            sql = getPagingStatement(sql);
+        }
+
+        PreparedStatement stmt = conn.prepareStatement(
+                                                 sql,
+                                                 ResultSet.TYPE_FORWARD_ONLY,
+                                                 ResultSet.CONCUR_UPDATABLE);
+
+        // Set the statement up for fetching of large result sets, see fx.
+        // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
+        // This prevents an OOM for backends like Postgres
+        try {
+            conn.setAutoCommit(false);
+            conn.setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
+            conn.setReadOnly(false);
+            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+
+            if (usePagingModel) {
+                stmt.setFetchSize(pageSize);
+            } else {
+                stmt.setFetchSize(FETCH_SIZE);
+            }
+        } catch (SQLException e) {
+            closeStatement(stmt);
+            throw new IOException("Error preparing connection for "
+                                  + "batch job : " + e.getMessage(), e);
+        }
+
+        // Prepare a script engine, compiling our script if it supports this
+        BatchJob job;
+        try {
+            job = new BatchJob(jobName, log, base, minMtime, maxMtime, options);
+        } catch (ScriptException e) {
+            throw new IOException("Error creating batch job '"
+                                  + jobName + "' : " + e.getMessage(), e);
+        }
+
+        // Convert time to the internal binary format used by DatabaseStorage
+        long maxTimestamp = timestampGenerator.baseTimestamp(
+                maxMtime > UniqueTimestampGenerator.MAX_TIME ?
+                                UniqueTimestampGenerator.MAX_TIME : maxMtime);
+        long minTimestamp = timestampGenerator.baseTimestamp(
+                minMtime > UniqueTimestampGenerator.MAX_TIME ?
+                                UniqueTimestampGenerator.MAX_TIME : minMtime);
+        long totalCount = 0;
+        long pageCount = pageSize;
+        try {
+            // Page through all records in the result set in one transaction
+            while (pageCount >= pageSize) {
+                pageCount = 0;
+                stmt.setLong(1, maxTimestamp);
+                stmt.setLong(2, minTimestamp);
+                if (base != null) stmt.setString(3, base);
+                stmt.execute();
+                ResultSet cursor = stmt.getResultSet();
+
+                // Step into the result set if there are any results
+                if (!cursor.next()) {
+                    return "";
+                }
+
+                // Read the current page
+                while (!cursor.isAfterLast()) {                    
+                    minTimestamp = cursor.getLong(MTIME_COLUMN);
+                    Record record = scanRecord(cursor);
+                    if (!options.allowsRecord(record)) {
+                        continue;
+                    }
+
+                    // Set up the batch job context and run it
+                    log.debug(String.format(
+                            "Running batch job '%s' on '%s' (%s)",
+                            job, record.getId(), totalCount));
+                    job.setContext(
+                            record, totalCount == 0, cursor.isAfterLast());
+                    try {
+                        job.eval();
+                    } catch (ScriptException e) {
+                        throw new IOException(String.format(
+                                "Error running batch job '%s': %s",
+                                 job, e.getMessage()), e);
+                    }
+                    if (job.shouldCommit()) {
+                        updateRecordForRow(cursor, record);
+                    }
+                    totalCount++;
+                    pageCount++;
+                }
+                cursor.close();
+            }
+
+            // Commit the full transaction
+            // FIXME: It would probably save memory to do incremental commits
+            stmt.getConnection().commit();
+        } catch (SQLException e) {
+            String msg = String.format(
+                    "Error running batch job '%s': %s", job, e.getMessage());
+            log.error(msg, e);
+            stmt.getConnection().rollback();
+            throw new IOException(msg, e);
+        } finally {
+            closeStatement(stmt);
+        }
+
+        // We must update the base here because the updated records might have
+        // changed their bases!
+        if (totalCount > 0 && base != null) {
+            updateModificationTime(base);
+        }
+
+        return job.getOutput();
+    }
+
+    private void updateRecordForRow(ResultSet cursor, Record record) throws SQLException {
+        log.debug("Updating '" + record.getId() +"'");
+        boolean hasRelations =
+                record.hasParents() || record.hasChildren();
+
+        // Make sure we store compressed record content
+        record.compressContent();
+        byte[] compressedContent = record.getContent(false);
+
+        cursor.updateString(ID_COLUMN, record.getId());
+        cursor.updateString(BASE_COLUMN, record.getBase());
+        cursor.updateInt(
+                DELETED_COLUMN, boolToInt(record.isDeleted()));
+        cursor.updateInt(
+                INDEXABLE_COLUMN, boolToInt(record.isIndexable()));
+        cursor.updateInt(
+                HAS_RELATIONS_COLUMN, boolToInt(hasRelations));
+        cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
+        cursor.updateBytes(DATA_COLUMN, compressedContent);
+        cursor.updateBytes(META_COLUMN, record.hasMeta() ?
+                                        record.getMeta().toFormalBytes() :
+                                        new byte[0]);
+        cursor.updateRow();
+
+        // Set last update time for the record's base () note that the
+        // base of the record might have changed!
+        updateModificationTime(record.getBase());
+
+        // FIXME: Update relations - but which semantics to use?
+    }
+
     /* Create parent/child and child/parent relations for the given record */
     private void createRelations (Record rec, Connection conn)
                                                            throws SQLException {
@@ -2662,35 +2857,6 @@ getco     */
     }
     private static boolean intToBool(int anInt) {
         return anInt != 0;
-    }
-
-    /**
-     * Queries the connection for information on the currently connected
-     * database. This can be used as a ping, as it will throw an exception if
-     * the info could not be retrieved.
-     * @return some info on the underlying database. The only guarantee is that
-     *         this will not be an empty string, if a connection to a database
-     *         is established.
-     * @throws IOException if the info could not be retireved.
-     */
-    public String getDatabaseInfo() throws IOException {
-        Connection conn = null;
-
-        try {
-            conn = getConnection();
-            return conn.getMetaData().getDatabaseProductName();
-        } catch (SQLException e) {
-            throw new IOException("Could not get catalog info", e);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                log.warn("Failed to close connection database: "
-                         + e.getMessage(), e);
-            }
-        }
     }
 
     @Override

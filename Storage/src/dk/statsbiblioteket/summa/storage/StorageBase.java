@@ -38,6 +38,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
 /**
  * StorageBase is an abstract class to facilitate implementations of the
  * {@link Storage} interface.

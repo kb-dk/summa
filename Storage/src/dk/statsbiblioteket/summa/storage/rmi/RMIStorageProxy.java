@@ -286,4 +286,21 @@ public class RMIStorageProxy extends UnicastRemoteObject
             RemoteHelper.exitOnThrowable(log, CALL, t);
         }
     }
+
+    @Override
+    public String batchJob(String jobName, String base,
+                           long minMtime, long maxMtime, QueryOptions options)
+                                                            throws IOException {
+        final String CALL = String.format(
+                "batchJob(%s, %s) for %d:%s",
+                jobName, base, registryPort, serviceName);
+        //noinspection DuplicateStringLiteralInspection
+        log.debug(CALL + " called");
+        try {
+            return backend.batchJob(jobName, base, minMtime, maxMtime, options);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, CALL, t);
+            return "ERROR: " + t.getMessage();
+        }
+    }
 }

@@ -100,6 +100,27 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
     }
 
+    @Override
+    public String batchJob(String jobName, String base,
+                           long minMtime, long maxMtime, QueryOptions options)
+                                                            throws IOException {
+        WritableStorage storage = getConnection();
+
+        if (storage == null) {
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
+        }
+        try {
+            return storage.batchJob(jobName, base, minMtime, maxMtime, options);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException(String.format(
+                    "batchJob(%s, %s) failed: %s",
+                    jobName, base, t.getMessage()), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+
     public void close() throws IOException {
         WritableStorage storage = getConnection();
 

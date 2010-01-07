@@ -1,5 +1,6 @@
 package dk.statsbiblioteket.summa.storage.rmi;
 
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.summa.common.Record;
 
@@ -21,6 +22,10 @@ public interface RemoteWritableStorage extends WritableStorage, Remote {
     void close() throws RemoteException;
 
     void clearBase (String base) throws RemoteException;
+
+    String batchJob(String jobName, String base,
+                    long minMtime, long maxMtime, QueryOptions options)
+                                                         throws RemoteException;
 }
 
 

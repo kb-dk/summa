@@ -652,6 +652,39 @@ public class AggregatingStorage extends StorageBase {
         writer.clearBase(base);
     }
 
+    @Override
+    public String batchJob(String jobName, String base,
+                    long minMtime, long maxMtime, QueryOptions options)
+                                                            throws IOException {
+        log.debug(String.format("Batch job '%s' on '%s", jobName, base));
+
+        if (base != null) {
+            StorageWriterClient writer = getSubStorageWriter(base);
+
+            if (writer == null) {
+                log.warn("No sub storage configured for base '"
+                         + base + "'");
+                return "";
+            }
+
+            return writer.batchJob(jobName, base, minMtime, maxMtime, options);
+        } else {
+            List<String> results = new LinkedList<String>();
+            for (StorageWriterClient sub : writers.values()) {
+                String result;
+                try {
+                    result = sub.batchJob(
+                            jobName, base, minMtime, maxMtime, options);
+                } catch (Throwable t) {
+                    result = String.format(
+                            "ERROR(%s): %s", sub.getVendorId(), t.getMessage());
+                }
+                results.add(result);
+            }
+            return Strings.join(results, "\n");
+        }
+    }
+
     protected StorageReaderClient getSubStorageReader (String base) {
         return readers.get(base);
     }
