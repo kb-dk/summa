@@ -75,6 +75,13 @@ public interface WritableStorage extends Configurable {
      * @throws IOException on communication errors with the storage
      */
     void clearBase (String base) throws IOException;
+
+    /**
+     * Run a scripted batch job across a subset of the storage.
+     */
+    String batchJob(String jobName, String base,
+                    long minMtime, long maxMtime, QueryOptions options)
+                                                             throws IOException;
 }
 
 

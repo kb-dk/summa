@@ -128,15 +128,11 @@ public class QueryOptions implements Serializable {
      */
     public boolean allowsRecord (Record r) {
         if (hasDeletedFilter()) {
-            if (r.isDeleted() != deletedFilter()) {
-                return false;
-            }
+            return r.isDeleted() == deletedFilter().booleanValue();
         }
 
         if (hasIndexableFilter()) {
-            if (r.isIndexable() != indexableFilter()) {
-                return false;
-            }
+            return r.isIndexable() == indexableFilter().booleanValue();
         }
 
         return true;
