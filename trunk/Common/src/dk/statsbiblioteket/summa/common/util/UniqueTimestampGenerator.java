@@ -38,7 +38,7 @@ public class UniqueTimestampGenerator {
     /**
      * The maximal system time at which this class will function correctly.
      */
-    public static final long MAX_TIME = (~MAX_SALT) >>> SALT_BITS; //
+    public static final long MAX_TIME = (~MAX_SALT) >>> (SALT_BITS + 1);
 
     private long salt;
     private long last;

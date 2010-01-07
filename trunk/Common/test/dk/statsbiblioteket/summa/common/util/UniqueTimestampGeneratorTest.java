@@ -101,6 +101,18 @@ public class UniqueTimestampGeneratorTest extends TestCase {
                      gen.formatTimestamp(gen.baseTimestamp(testTime)));
     }
 
+    public void testMaxTimestamp() {
+        long i1 = UniqueTimestampGenerator.MAX_TIME;
+        long i2 = i1 - 1;
+        long i3 = i1 - 100;
+        long i0 = 0;
+        System.out.println(" " + gen.next());
+        System.out.println(gen.baseTimestamp(i0) + " " + gen.baseTimestamp(i1) + " " + gen.baseTimestamp(i2) + " " + gen.baseTimestamp(i3));
+        assertTrue(gen.baseTimestamp(i1) > gen.baseTimestamp(i2));
+        assertTrue(gen.baseTimestamp(i2) > gen.baseTimestamp(i3));
+        assertTrue(gen.baseTimestamp(i3) > gen.baseTimestamp(i0));
+    }
+
     static double log2(double d) {
         return Math.log10(d)/ Math.log10(2);
     }
