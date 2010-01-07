@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -301,10 +302,16 @@ public class LuceneManipulator implements IndexManipulator {
         try {
             writer.addDocument(document, descriptor.getIndexAnalyzer());
         } catch (IOException e) {
-            // TODO: Bomb all the way out
-            log.fatal("Encountered IOException during addition of document to "
-                      + "index. Offending payload was " + payload, e);
-            throw new IOException("IOException adding document " + payload, e);
+            String message = String.format(
+                    "Encountered IOException '%s' during addition of document "
+                    + "'%s' to index. Offending payload was %s. The index "
+                    + "location was '%s'. JVM shutdown in %d seconds",
+                    e.getMessage(), id, indexDirectory.getFile(), payload, 5);
+            log.fatal(message, e);
+            System.err.println(message);
+            e.printStackTrace(System.err);
+            new DeferredSystemExit(1, 5);
+            throw new IOException(message, e);
         }
         //noinspection DuplicateStringLiteralInspection
         Logging.logProcess("LuceneManipulator", "Added Lucene document",
@@ -347,11 +354,16 @@ public class LuceneManipulator implements IndexManipulator {
                 // the deltions are stored in a HashMap
             writer.commit();
         } catch (IOException e) {
-            // TODO: Bomb all the way out
-            log.fatal("Encountered IOException during deletion of document. "
-                      + "Offending payload was " + payload, e);
-            throw new IOException(
-                    "IOException deleting document " + payload, e);
+                String message = String.format(
+                     "Encountered IOException '%s' during deletion of document "
+                     + "'%s' to index. Offending payload was %s. The index "
+                     + "location was '%s'. JVM shutdown in %d seconds",
+                     e.getMessage(), id, indexDirectory.getFile(), payload, 5);
+                log.fatal(message, e);
+                System.err.println(message);
+                e.printStackTrace(System.err);
+                new DeferredSystemExit(1, 5);
+                throw new IOException(message, e);
         }
         } else {
             //noinspection DuplicateStringLiteralInspection

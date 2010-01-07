@@ -1,12 +1,17 @@
 package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * Helper class to launch a search engine from the command line.
@@ -52,9 +57,13 @@ public class SummaSearcherRunner {
                 }
             }
         } catch (Throwable t) {
-            log.fatal("Caught toplevel exception: " + t.getMessage(), t);
-            t.printStackTrace();
-            System.exit(1);
+            String message = String.format(
+                    "Caught toplevel throwable in SummaSearcherRunner.main " 
+                    + "with arguments %s", Strings.join(args, ", "));
+            log.fatal(message, t);
+            System.err.println(message);
+            t.printStackTrace(System.err);
+            new DeferredSystemExit(1, 5);
         }
     }
 
