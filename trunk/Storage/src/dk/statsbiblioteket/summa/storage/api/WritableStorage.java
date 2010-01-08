@@ -78,6 +78,60 @@ public interface WritableStorage extends Configurable {
 
     /**
      * Run a scripted batch job across a subset of the storage.
+     * Any {@link javax.script.ScriptEngine} supported by the JVM can be used
+     * as a scripting backend. See
+     * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>
+     * for a full list of scripting engines for the Java platform. The script
+     * code itself must be available as a resource on the classpath of the
+     * storage process.
+     * <p/>
+     * The script environment will have a number of variables loaded on
+     * execution time. These are
+     * <ul>
+     *   <li><tt>record</tt> - The {@link Record} object to operate on</li>
+     *   <li><tt>log</tt> - A Commons-Logging
+     *                      {@link org.apache.commons.logging.Log} object</li>
+     *   <li><tt>base</tt> - The name of the base being operated on
+     *                       - possibly {@code null} when iterating over all
+     *                         bases</li>
+     *   <li><tt>minMtime</tt> - The minimum modification time for the records
+     *                           in the batch</li>
+     *   <li><tt>maxMtime</tt> - The maximum modification time for the records
+     *                           in the batch</li>
+     *   <li><tt>options</tt> - A {@link QueryOptions} instance</li>
+     *   <li><tt>state</tt> - A private variable to be used by the script to hold
+     *                        arbitrary state in between invocations. This variable
+     *                        is initialized to {@code null} by the runtime</li>
+     *   <li><tt>out</tt> - A {@link StringBuilder} collecting any output to return
+     *                      from the script</li>
+     *   <li><tt>commit</tt> - A boolean flag that must be set to {@code true}
+     *                         if the script wants to commit any changes it has
+     *                         done to {@code record}. This variable will be set to
+     *                         {@code false} prior to each evaluation of the script
+     *                         </li>
+     *   <li><tt>first</tt> - A boolean flag which is {@code true} on the first
+     *                        invocation of the script. Always {@code false}
+     *                        otherwise</li>
+     *   <li><tt>last</tt> - A boolean flag which is {@code true} when the last
+     *                       record in the batch is reached. Always {@code false}
+     *                       otherwise</li>
+     * </ul>
+     *
+     * @param jobName The name of the job to instantiate.
+     *                The job name must match the regular expression
+     *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
+     *                resource in the classpath of the storage process
+     * @param base Restrict the batch jobs to records in this base. If
+     *             {@code base} is {@code null} the records from all bases will
+     *             be included in the batch job
+     * @param minMtime Only records with modification times greater than
+     *                 {@code minMtime} will be included in the batch job
+     * @param maxMtime Only records with modification times less than
+     *                 {@code maxMtime} will be included in the batch job
+     * @param options Restrict to records for which
+     *                {@link QueryOptions#allowsRecord} returns true
+     * @throws IOException if there is an error loading the script source code,
+     *                     parsing, or evaluating the script
      */
     String batchJob(String jobName, String base,
                     long minMtime, long maxMtime, QueryOptions options)
