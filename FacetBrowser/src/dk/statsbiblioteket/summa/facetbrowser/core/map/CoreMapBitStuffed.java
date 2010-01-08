@@ -433,7 +433,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
             log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
                       + " => " + endPos + " from " + docIDs);
         }
-        OpenBitSet ids = docIDs.getBits();
+        final OpenBitSet ids = docIDs.getBits();
         int hitID = startPos;
         boolean outOfBoundsHandled = false;
 
@@ -443,10 +443,11 @@ public class CoreMapBitStuffed extends CoreMap32 {
                 final int to = index[hitID+1];
                 for (int i = index[hitID] ; i < to ; i++) {
                     try {
-                      tags[values[i] >>> FACETSHIFT][values[i] & TAG_MASK]++;
+                        final int v = values[i]; // Performance: Keep inside try
+                        tags[v >>> FACETSHIFT][v & TAG_MASK]++;
                     } catch (Exception e) {
-                        tagCounter.increment(values[i] >>> FACETSHIFT,
-                                             values[i] & TAG_MASK);
+                        final int v = values[i]; // Performance: Keep inside try
+                        tagCounter.increment(v >>> FACETSHIFT, v & TAG_MASK);
                         tags = tagCounter.getTags();
                     }
                 }
