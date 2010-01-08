@@ -36,6 +36,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.map;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -385,37 +386,27 @@ public class CoreMapBitStuffed extends CoreMap32 {
         return highestDocID + 1;
     }
 
-    public void markCounterLists(TagCounter tagCounter, DocIDCollector docIDs,
-                                 int startPos, int endPos) {
+    public void markCounterLists(
+            final TagCounter tagCounter, final DocIDCollector docIDs,
+            final int startPos, final int endPos) {
+        if (tagCounter instanceof TagCounterArray) {
+            markCounterListsOptimized(
+                    (TagCounterArray)tagCounter, docIDs, startPos, endPos);
+            return;
+        }
         if (log.isTraceEnabled()) {
-            //noinspection DuplicateStringLiteralInspection
             log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
                       + " => " + endPos + " from " + docIDs);
         }
-//        System.out.println("*** " + docIDs);
         OpenBitSet ids = docIDs.getBits();
         int hitID = startPos;
-        int to;
         boolean outOfBoundsHandled = false;
         while ((hitID = ids.nextSetBit(hitID)) != -1 && hitID <= endPos) {
-//            System.out.println("- Get hitID " + hitID + "/" + docIDs.getDocCount());
             try {
-  //              System.out.println("- Getting to at " + (hitID + 1) + "/" + index.length);
-                to = index[hitID+1];
-/*                System.out.println("\nHitID: " + hitID +
-                                   "resolved to values (" + index[hitID] +
-                                   " to " + to +
-                                   ") = " + (to - index[hitID]));*/
+                final int to = index[hitID+1];
                 for (int i = index[hitID] ; i < to ; i++) {
-//                    System.out.println("- Fetching value " + i + "/" + values.length);
-//                    value = values[i]; // Seems slower than 2 * direct access
-//                    System.out.println("Marking " + (values[i] >>> FACETSHIFT) +
-//                                       " to " + (values[i] & TAG_MASK));
                     tagCounter.increment(values[i] >>> FACETSHIFT,
                                          values[i] & TAG_MASK);
-//                    System.out.println("Marked");
-//                    counterLists[value >>> FACETSHIFT]
-//                                [value &  TAG_MASK]++;
                 }
             } catch (ArrayIndexOutOfBoundsException ex) {
                 if (log.isTraceEnabled() && !outOfBoundsHandled) {
@@ -428,18 +419,55 @@ public class CoreMapBitStuffed extends CoreMap32 {
                             values == null ? "null" : values.length), ex);
                     outOfBoundsHandled = true;
                 }
-/*                System.out.println("Exception for hitID " + hitID);
-                ex.printStackTrace();
-                System.out.println("");*/
-                // Don't do anything else, as discussed with Hans and Mads.
-                // We throw an error upon open, if the index is larger than
-                // the map, so we'll live
             }
             hitID++;
         }
-        //noinspection DuplicateStringLiteralInspection
         log.trace("Marking finished");
     }
+
+
+    public void markCounterListsOptimized(
+            final TagCounterArray tagCounter, final DocIDCollector docIDs,
+            final int startPos, final int endPos) {
+        if (log.isTraceEnabled()) {
+            log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
+                      + " => " + endPos + " from " + docIDs);
+        }
+        OpenBitSet ids = docIDs.getBits();
+        int hitID = startPos;
+        boolean outOfBoundsHandled = false;
+
+        int[][] tags = tagCounter.getTags();
+        while ((hitID = ids.nextSetBit(hitID)) != -1 && hitID <= endPos) {
+            try {
+                final int to = index[hitID+1];
+                for (int i = index[hitID] ; i < to ; i++) {
+                    try {
+                      tags[values[i] >>> FACETSHIFT][values[i] & TAG_MASK]++;
+                    } catch (Exception e) {
+                        tagCounter.increment(values[i] >>> FACETSHIFT,
+                                             values[i] & TAG_MASK);
+                        tags = tagCounter.getTags();
+                    }
+                }
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                if (log.isTraceEnabled() && !outOfBoundsHandled) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.debug(String.format(
+                            "Index out of bounds for doc %d with "
+                            + "index.length=%s, values.length=%s. Ignoring "
+                            + "subsequent out-of-bounds for this search",
+                            hitID, index == null ? "null" : index.length,
+                            values == null ? "null" : values.length), ex);
+                    outOfBoundsHandled = true;
+                }
+            }
+            hitID++;
+        }
+        log.trace("Marking finished");
+    }
+
+
 
     public void adjustPositions(int facetID, int position, int delta) {
         //noinspection DuplicateStringLiteralInspection
