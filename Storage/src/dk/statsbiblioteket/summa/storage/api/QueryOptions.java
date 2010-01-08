@@ -4,6 +4,7 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.Record;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 /**
  * {@code QueryFilter} is an immutable filter that is passed into the methods
@@ -109,15 +110,39 @@ public class QueryOptions implements Serializable {
     }
 
     public boolean hasMeta () {
-        return meta != null;
+        return meta != null && !meta.isEmpty();
     }
 
+    /**
+     * Return the underlying {@link StringMap} used to store the meta values
+     * for these query options
+     * @return the underlying StringMap or {@code null} if the options does
+     *         not have any meta values associated with them
+     */
     public StringMap meta() {
         return meta;
     }
 
+    /**
+     * Get a meta-value on these query options
+     * @param key the meta key to look up
+     * @return the meta value or {@code null} if no value corresponds to
+     *         {@code key}
+     */
     public String meta(String key) {
         return meta == null ? null : meta.get(key);
+    }
+
+    /**
+     * Set a meta-value on these query options
+     * @param key the key to store the value under
+     * @param value the value to associate with {@code key}
+     */
+    public void meta(String key, String value) {
+        if (meta == null) {
+            meta = new StringMap();
+        }
+        meta.put(key, value);
     }
 
     /**
