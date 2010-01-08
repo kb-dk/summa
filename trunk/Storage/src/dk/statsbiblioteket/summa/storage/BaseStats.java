@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.storage.database;
+package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -7,7 +7,6 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import java.io.Serializable;
 import java.io.Writer;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Date;

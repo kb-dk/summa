@@ -1,5 +1,6 @@
 package dk.statsbiblioteket.summa.storage.database;
 
+import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
