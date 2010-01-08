@@ -1,7 +1,11 @@
-package dk.statsbiblioteket.summa.storage.api;
+package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
@@ -16,7 +20,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 /**
- * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.api.BatchJobTest
+ * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.BatchJobTest
  *
  * @author mke
  * @since Jan 7, 2010
