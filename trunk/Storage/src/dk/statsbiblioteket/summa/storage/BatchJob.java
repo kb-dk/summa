@@ -101,6 +101,13 @@ public class BatchJob {
         extension = jobName.substring(jobName.lastIndexOf('.')+1);
         scriptMan = new ScriptEngineManager();
         engine = scriptMan.getEngineByExtension(extension);
+
+        if (engine == null) {
+            throw new ScriptException(String.format(
+                    "No scripting engine for extension '%s' found for '%s'",
+                    extension, jobName));
+        }
+
         outBuffer = new StringWriter();
         outWriter = new PrintWriter(outBuffer);
 
