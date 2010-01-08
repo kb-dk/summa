@@ -16,6 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -229,6 +230,26 @@ public class BatchJobTest extends TestCase {
         Record newRec3 = storage.getRecord("foo" + rec3.getId(), null);
         rec3.setId("foo" + testId3);
         assertEquals(rec3, newRec3);
+    }
+
+    public void testInvalidJobName() throws Exception {
+        try {
+            storage.batchJob("../../im_in_your_root_eating_your_files.job.js",
+                             null, 0, Long.MAX_VALUE, null);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Success
+        }
+    }
+
+    public void testUnknownJobName() throws Exception {
+        try {
+            storage.batchJob("nosuch.job.js",
+                             null, 0, Long.MAX_VALUE, null);
+            fail("Expected FileNotFoundException");
+        } catch (FileNotFoundException e) {
+            // Success
+        }
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
