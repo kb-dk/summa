@@ -177,21 +177,54 @@ public class BatchJobTest extends TestCase {
         assertBaseCount(testBase1, 2);
         assertBaseCount(testBase2, 1);
 
+        // Delete all record in testBase1
         String ids = storage.batchJob(
                 "delete.job.js", testBase1, 0, Long.MAX_VALUE, null);
         assertEquals(Strings.join(
                 Arrays.asList(testId1, testId3), "|") + "|", ids);
 
+        // Assert that testId2 is the only non-deleted record
+        // in the entire storage
         QueryOptions nonDeleted = new QueryOptions(false, null, 0, 0);
         ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, nonDeleted);
         assertEquals(testId2 + "|", ids);
 
+        // Assert that testId1 and testId3 constitues all deleted records
+        // in the entire storage
         QueryOptions deleted = new QueryOptions(true, null, 0, 0);
         ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, deleted);
         assertEquals(Strings.join(
                 Arrays.asList(testId1, testId3), "|") + "|", ids);
+    }
+
+    public void testRenameByBaseAndMtime() throws Exception {
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        Thread.sleep(100);
+        storage.flush(new Record(testId2, testBase2, testContent1));
+        long stamp3 = System.currentTimeMillis();
+        Record rec3 = new Record(testId3, testBase1, testContent1);
+        Thread.sleep(100);
+        storage.flush(rec3);
+        Thread.sleep(100);
+        assertBaseCount(testBase1, 2);
+        assertBaseCount(testBase2, 1);
+
+        // Prepend "foo" to records updated after stamp3 in base testBase1
+        // This should be the signle record with testId3
+        String ids = storage.batchJob(
+                "prepend_foo_id.job.js", testBase1, stamp3, Long.MAX_VALUE, null);
+        assertEquals("foo" + testId3 + "|", ids);
+
+        // Assert that testId1 is no longer in the storage
+        Record gone = storage.getRecord(testId3, null);
+        assertNull(gone);
+
+        // Assert that rec3 has been renamed to "foo" + testId3
+        Record newRec3 = storage.getRecord("foo" + rec3.getId(), null);
+        rec3.setId("foo" + testId3);
+        assertEquals(rec3, newRec3);
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
