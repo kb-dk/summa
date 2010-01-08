@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
 import java.util.Random;
+import java.util.zip.Deflater;
 
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
@@ -440,5 +441,19 @@ public class CoreMapBitStuffedTest extends TestCase {
     }*/
     public static Test suite() {
         return new TestSuite(CoreMapBitStuffedTest.class);
+    }
+
+    // TODO: Move this or delete it as it is just general compression tests
+    public void testCompress() throws Exception {
+        String input = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
+        byte[] inputBytes = input.getBytes("UTF-8");
+
+        System.out.println("Original size in bytes: " + inputBytes.length);
+        byte[] output = new byte[inputBytes.length * 2];
+        Deflater compresser = new Deflater();
+        compresser.setInput(inputBytes);
+        compresser.finish();
+        System.out.println("Packed size in bytes: " + compresser.deflate(output));
+
     }
 }
