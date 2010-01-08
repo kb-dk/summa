@@ -24,6 +24,9 @@ package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
 import java.util.Random;
 
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
@@ -330,6 +333,63 @@ public class CoreMapBitStuffedTest extends TestCase {
                  + " updates without crashing in "
                  + profiler.getSpendTime() + " at " + profiler.getBps(false)
                  + " updates/second");
+    }
+
+    public void testMarkPerformance() throws Exception {
+        int RUNS = 5;
+        int REDOS = 100;
+        CoreMap map = getCoreMap();
+
+        TagCounter tagCounter = bo.getTagCounter();
+        tagCounter.verify();
+        DocIDCollector docIDs = new DocIDCollector();
+        for (int i = 0 ; i < map.getDocCount() ; i++) {
+            docIDs.collect(i, 1.0f);
+        }
+        Profiler profiler = new Profiler();
+        for (int run = 0 ; run < RUNS ; run++) {
+            tagCounter.reset();
+            tagCounter.increment(0, 0); // Wait for clean to finish
+            profiler.reset();
+            for (int redo = 0 ; redo < REDOS ; redo++) {
+                map.markCounterLists(tagCounter, docIDs, 0, map.getDocCount());
+            }
+            System.out.println(String.format(
+                    "Marked tags for %d documents %d times in %s",
+                    map.getDocCount(), REDOS, profiler.getSpendTime()));
+        }
+    }
+    public CoreMap getCoreMap() throws Exception {
+        int MAX_DOC = 100000;
+        int MAX_TAG_ID = 10000;
+        int MAX_TAG_ADDITIONS = 10;
+        int runs = MAX_DOC;
+
+        int maxFacet = bo.getStructure().getFacets().size();
+        CoreMap map = bo.getCoreMap();
+
+        map.clear();
+        Random random = new Random(87);
+
+        int feedback = Math.max(1, runs / 100);
+        long additions = 0;
+        Profiler profiler = new Profiler();
+        for (int i = 0 ; i< runs ; i++) {
+            int[] tagIDs = new int[random.nextInt(MAX_TAG_ADDITIONS)];
+            additions += tagIDs.length;
+            for (int j = 0 ; j < tagIDs.length ; j++) {
+                tagIDs[j] = random.nextInt(MAX_TAG_ID);
+            }
+            map.add(random.nextInt(MAX_DOC), random.nextInt(maxFacet), tagIDs);
+            if (i % feedback == 0) {
+                System.out.print(".");
+            }
+        }
+        System.out.println(String.format(
+                "\nGenerated core map with length %d and approximate %d entries"
+                + " in %s",
+                map.getDocCount(), additions, profiler.getSpendTime()));
+        return map;
     }
 
     public void testAdjustPositions() throws Exception {

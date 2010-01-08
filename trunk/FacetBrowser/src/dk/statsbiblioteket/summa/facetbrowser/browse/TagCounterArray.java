@@ -451,6 +451,11 @@ public class TagCounterArray implements TagCounter, Runnable {
         result.assignTags(facetName, alphaResult);
     }
 
+    /**
+     * This reset-implementation spawns a cleaning-thread and exits immediately.
+     * Further actions on TagCounterArray will be blocked until the cleaning is 
+     * finished.
+     */
     public synchronized void reset() {
         lock.lock();
         new Thread(this, "TagCounterArray-reset").run();
@@ -494,6 +499,31 @@ public class TagCounterArray implements TagCounter, Runnable {
             sw.append(" ");
         }
         return sw.toString();
+    }
+
+
+    /**
+     * Exposes the internal tag counter structure. This makes it possible to
+     * implement a faster version of {@link #increment(int, int)} by skipping
+     * a method call. The recommended code is {@code
+  ...
+    int[][] tags = myTagCounterArray.getTags();
+    for (int facetID: facetIDs) {
+      for (int tagID: tagIDs) {
+        try {
+          tags[facetID][tagID]++;
+        } catch (Exception e) {
+          myTagCounterArray.increment(facetID, tagID);
+        }
+      }
+    }
+}
+     * </p><p>
+     * Warning: This violates encapsulation. Use with extreme care!
+     * @return the internal tag counter structure.
+     */
+    public int[][] getTags() {
+        return tags;
     }
 }
 
