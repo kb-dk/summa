@@ -403,6 +403,10 @@ public class LuceneManipulator implements IndexManipulator {
         /**
         log.trace("consolidate(): Removing deletions");
         writer.expungeDeletes(true);*/
+        log.debug(String.format(
+                "Optimizing index at %s to a maximum of %d segments. "
+                + "This might take a while",
+                indexDirectory.getFile(), maxMergeOnConsolidate));
         writer.optimize(maxMergeOnConsolidate, true);
         log.trace("Closing writer");
         closeWriter(); // Is this still necessary?
