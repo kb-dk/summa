@@ -71,7 +71,7 @@ public class BatchJob {
      * @param jobName The name of the job to instantiate.
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
-     *                resource in the classpath
+     *                resource in the classpath. Fx {@code count.job.js}
      * @param log Inserted into the namespace of the batch script as {@code log}
      * @param base Inserted into the namespace of the batch script
      *             as {@code base}
@@ -86,6 +86,8 @@ public class BatchJob {
      *                         the script
      * @throws IllegalArgumentException if {@code jobName} doesn't match
      *                                  the required regular expression
+     * @throws FileNotFoundException if the resource {@code jobName} was not
+     *                               found in the classpath
      */
     public BatchJob(String jobName, Log log,
               String base, long minMtime, long maxMtime, QueryOptions options)

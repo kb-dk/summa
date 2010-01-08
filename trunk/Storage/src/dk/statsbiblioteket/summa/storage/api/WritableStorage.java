@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -120,7 +121,8 @@ public interface WritableStorage extends Configurable {
      * @param jobName The name of the job to instantiate.
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
-     *                resource in the classpath of the storage process
+     *                resource in the classpath of the storage process.
+     *                Fx {@code count.job.js}
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
@@ -132,6 +134,10 @@ public interface WritableStorage extends Configurable {
      *                {@link QueryOptions#allowsRecord} returns true
      * @throws IOException if there is an error loading the script source code,
      *                     parsing, or evaluating the script
+     * @throws FileNotFoundException if the resource {@code jobName} was not
+     *                               found in the classpath
+     * @throws IllegalArgumentException if {@code jobName} does not match the
+     *                                  required regular expression
      */
     String batchJob(String jobName, String base,
                     long minMtime, long maxMtime, QueryOptions options)
