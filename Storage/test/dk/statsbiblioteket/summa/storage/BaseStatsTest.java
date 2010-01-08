@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.storage.database;
+package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.util.qa.QAInfo;
