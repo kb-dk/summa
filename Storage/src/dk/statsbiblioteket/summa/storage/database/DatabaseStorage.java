@@ -2038,7 +2038,7 @@ getco     */
         PreparedStatement stmt = conn.prepareStatement(
                                                  sql,
                                                  ResultSet.TYPE_FORWARD_ONLY,
-                                                 ResultSet.CONCUR_UPDATABLE);
+                                                 ResultSet.CONCUR_READ_ONLY);
 
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
@@ -2061,7 +2061,6 @@ getco     */
                                   + "batch job : " + e.getMessage(), e);
         }
 
-        // Prepare a script engine, compiling our script if it supports this
         BatchJob job;
         try {
             job = new BatchJob(jobName, log, base, minMtime, maxMtime, options);
@@ -2094,10 +2093,13 @@ getco     */
                     return "";
                 }
 
-                // Read the current page
+                // Read the current page. Note that we must track
+                // the record id since it's in effect a new record
+                // if it's changed (we must purge the old one)
                 while (!cursor.isAfterLast()) {                    
                     minTimestamp = cursor.getLong(MTIME_COLUMN);
                     Record record = scanRecord(cursor);
+                    String oldId = record.getId();
                     if (!options.allowsRecord(record)) {
                         continue;
                     }
@@ -2116,7 +2118,22 @@ getco     */
                                  job, e.getMessage()), e);
                     }
                     if (job.shouldCommit()) {
-                        updateRecordForRow(cursor, record);
+                        // If the record id has changed we must flush() the
+                        // new record (in order to insert/update it) and then
+                        // delete the old one from the db
+                        if (oldId.equals(record.getId())) {
+                            updateRecordWithConnection(record, conn);
+                        } else {
+                            log.debug(String.format(
+                                    "Record renamed '%s' -> '%s'",
+                                    oldId, record.getId()));
+                            flushWithConnection(record, conn);
+                            PreparedStatement delete = conn.prepareStatement(
+                                                   "DELETE FROM " + RECORDS
+                                                + " WHERE " + ID_COLUMN + "=?");
+                            delete.setString(1, oldId);
+                            delete.executeUpdate();
+                        }
                     }
                     totalCount++;
                     pageCount++;
