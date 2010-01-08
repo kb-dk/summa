@@ -1,3 +1,4 @@
 commit=true;
 record.setDeleted(true);
-out.append(record.getId()).append("|");
+out.print(record.getId());
+out.print("|");

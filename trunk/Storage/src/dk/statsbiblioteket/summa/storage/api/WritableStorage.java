@@ -28,6 +28,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -103,8 +104,9 @@ public interface WritableStorage extends Configurable {
      *   <li><tt>state</tt> - A private variable to be used by the script to hold
      *                        arbitrary state in between invocations. This variable
      *                        is initialized to {@code null} by the runtime</li>
-     *   <li><tt>out</tt> - A {@link StringBuilder} collecting any output to return
-     *                      from the script</li>
+     *   <li><tt>out</tt> - A {@link PrintWriter} collecting any output to return
+     *                      from the script. Notably methods {@code out.print()}
+     *                      and {@code out.println()} are available</li>
      *   <li><tt>commit</tt> - A boolean flag that must be set to {@code true}
      *                         if the script wants to commit any changes it has
      *                         done to {@code record}. This variable will be set to
