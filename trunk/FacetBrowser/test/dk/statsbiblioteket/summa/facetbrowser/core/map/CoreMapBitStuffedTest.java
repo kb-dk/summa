@@ -337,7 +337,7 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testMarkPerformance() throws Exception {
         int RUNS = 5;
-        int REDOS = 100;
+        int REDOS = 10;
         CoreMap map = getCoreMap();
 
         TagCounter tagCounter = bo.getTagCounter();
@@ -360,10 +360,9 @@ public class CoreMapBitStuffedTest extends TestCase {
         }
     }
     public CoreMap getCoreMap() throws Exception {
-        int MAX_DOC = 100000;
+        int MAX_DOC = 1000000;
         int MAX_TAG_ID = 10000;
         int MAX_TAG_ADDITIONS = 10;
-        int runs = MAX_DOC;
 
         int maxFacet = bo.getStructure().getFacets().size();
         CoreMap map = bo.getCoreMap();
@@ -371,16 +370,16 @@ public class CoreMapBitStuffedTest extends TestCase {
         map.clear();
         Random random = new Random(87);
 
-        int feedback = Math.max(1, runs / 100);
+        int feedback = Math.max(1, MAX_DOC / 100);
         long additions = 0;
         Profiler profiler = new Profiler();
-        for (int i = 0 ; i< runs ; i++) {
+        for (int i = 0 ; i< MAX_DOC; i++) {
             int[] tagIDs = new int[random.nextInt(MAX_TAG_ADDITIONS)];
             additions += tagIDs.length;
             for (int j = 0 ; j < tagIDs.length ; j++) {
                 tagIDs[j] = random.nextInt(MAX_TAG_ID);
             }
-            map.add(random.nextInt(MAX_DOC), random.nextInt(maxFacet), tagIDs);
+            map.add(i, random.nextInt(maxFacet), tagIDs);
             if (i % feedback == 0) {
                 System.out.print(".");
             }
