@@ -33,8 +33,9 @@ import java.io.*;
  *   <li><tt>state</tt> - A private variable to be used by the script to hold
  *                        arbitrary state in between invocations. This variable
  *                        is initialized to {@code null} by the runtime</li>
- *   <li><tt>out</tt> - A {@link StringBuilder} collecting any output to return
- *                      from the script</li>
+ *   <li><tt>out</tt> - A {@link PrintWriter} collecting any output to return
+ *                      from the script. Notably methods {@code out.print()}
+ *                      and {@code out.println()} are available</li>
  *   <li><tt>commit</tt> - A boolean flag that must be set to {@code true}
  *                         if the script wants to commit any changes it has
  *                         done to {@code record}. This variable will be set to
@@ -62,6 +63,8 @@ public class BatchJob {
     private ScriptEngineManager scriptMan;
     private ScriptEngine engine;
     private CompiledScript compiledScript;
+    private StringWriter outBuffer;
+    private PrintWriter outWriter;
 
     /**
      * Create a new batch job. Before running the job with {@link #eval()}
@@ -98,6 +101,8 @@ public class BatchJob {
         extension = jobName.substring(jobName.lastIndexOf('.')+1);
         scriptMan = new ScriptEngineManager();
         engine = scriptMan.getEngineByExtension(extension);
+        outBuffer = new StringWriter();
+        outWriter = new PrintWriter(outBuffer);
 
         engine.put("log", log);
         engine.put("base", base);
@@ -105,7 +110,7 @@ public class BatchJob {
         engine.put("maxMtime", maxMtime);
         engine.put("options", options);
         engine.put("state", null);
-        engine.put("out", new StringBuilder());
+        engine.put("out", outWriter);
         engine.put("commit", new StringBuilder());
 
         InputStream _script = ClassLoader.getSystemResourceAsStream(jobName);
@@ -214,6 +219,7 @@ public class BatchJob {
      * @return the script output as a string
      */
     public String getOutput() {
-        return engine.get("out").toString();
+        outWriter.flush();
+        return outBuffer.toString();
     }
 }

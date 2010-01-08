@@ -2,4 +2,4 @@ if (state == null)
     state = 0;
 state++;
 if (last)
-    out.append(state);
+    out.print(state);
