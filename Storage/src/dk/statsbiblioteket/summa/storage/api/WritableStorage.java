@@ -37,13 +37,22 @@ import java.util.List;
 public interface WritableStorage extends Configurable {
 
     /**
-     * Flush a record to the storage. In other words write it.
+     * Flush a record to the storage taking any flags set in {@code options}
+     * into consideration.
      * <p/>
      * Any nested child records (added via {@link Record#setChildren}) will
      * be added recursively to the storage.
      *
      * @param record The record to store or update
+     * @param options A set of arguments to modify how the record is inserted
+     *                or updated
      * @throws IOException on comminication errors
+     */
+    void flush(Record record, QueryOptions options) throws IOException;
+
+    /**
+     * Call {@link #flush(Record, QueryOptions)} with a {@code null} options
+     * argument
      */
     void flush(Record record) throws IOException;
 
@@ -57,7 +66,15 @@ public interface WritableStorage extends Configurable {
      *
      * @param records a list of records to store or update. On duplicate ids
      *                only the last of the duplicated records are stored
+     * @param options A set of arguments to modify how records are inserted
+     *                or updated
      * @throws IOException on communication errors
+     */
+    void flushAll(List<Record> records, QueryOptions options) throws IOException;
+
+    /**
+     * Call {@link #flushAll(List<Record>, QueryOptions)} with a {@code null}
+     * options argument
      */
     void flushAll(List<Record> records) throws IOException;
 

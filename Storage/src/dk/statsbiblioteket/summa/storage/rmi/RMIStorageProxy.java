@@ -226,24 +226,37 @@ public class RMIStorageProxy extends UnicastRemoteObject
     }
 
     @Override
-    public void flush(Record record) throws RemoteException {
+    public void flush(Record record, QueryOptions options)
+                                                        throws RemoteException {
         try {
-            backend.flush(record);
+            backend.flush(record, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flush(%s) for %d:%s",
                     record, registryPort, serviceName), t);
         }
     }
+
     @Override
-    public void flushAll(List<Record> records) throws RemoteException {
+    public void flush(Record record) throws RemoteException {
+        flush(record, null);
+    }
+
+    @Override
+    public void flushAll(List<Record> records, QueryOptions options)
+                                                        throws RemoteException {
         try {
-            backend.flushAll(records);
+            backend.flushAll(records, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flushAll(%s) for %d:%s",
                     Logs.expand(records, 5), registryPort, serviceName), t);
         }
+    }
+
+    @Override
+    public void flushAll(List<Record> records) throws RemoteException {
+        flushAll(records, null);
     }
 
     @Override

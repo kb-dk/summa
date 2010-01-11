@@ -41,9 +41,9 @@ public class VoidStorage extends StorageBase {
         throw new NoSuchElementException("VoidStorage contains no elements");
     }
 
-    public void flush(Record record) throws IOException {
+    public void flush(Record record, QueryOptions options) throws IOException {
         updateModificationTime(record.getBase());
-        log.debug("Flushed: " + record);
+        log.debug("Flushed: " + record + ", with options " + options);
     }
 
     public void close() throws IOException {
