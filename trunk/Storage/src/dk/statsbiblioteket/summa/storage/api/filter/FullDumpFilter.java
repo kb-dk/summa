@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -148,10 +148,19 @@ public class FullDumpFilter extends ObjectFilterImpl {
             try {
                 String result =
                        writer.batchJob(script, base, 0, startupTimestamp, null);
-                log.info(String.format(
-                        "Script '%s' successfully executed with output '%s'",
-                        script, result));
-            } catch (IOException e) {
+                if (log.isTraceEnabled()) {
+                    log.info(String.format(
+                            "Script '%s' successfully executed with output"
+                            + " '%s'",
+                            script, result));
+                } else {
+                    log.info(String.format(
+                            "Script '%s' successfully executed with %d lines "
+                            + "in the output",
+                            script, countLines(result)));
+
+                }
+                } catch (IOException e) {
                 String message = String.format(
                         "Exception while calling script '%s' on base '%s' with"
                         + " endTime %s",
@@ -162,6 +171,21 @@ public class FullDumpFilter extends ObjectFilterImpl {
             }
         }
     }
+
+    private long countLines(String result) {
+        if (result == null || "".equals(result)) {
+            return 0;
+        }
+        long nls = 0;
+        final char NL = "\n".charAt(0); // We cheat a bit
+        for (int i = 0 ; i < result.length() ; i++) {
+            if (NL == result.charAt(i)) {
+                nls++;
+            }
+        }
+        return nls;
+    }
+
     private static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
 
 }
