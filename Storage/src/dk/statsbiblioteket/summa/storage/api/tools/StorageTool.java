@@ -80,6 +80,10 @@ public class StorageTool {
             return;
         }
 
+        // Allow this call to access private storage records, like __holdings__
+        QueryOptions options = new QueryOptions();
+        options.meta("ALLOW_PRIVATE", "true");
+
         List<String> ids = new ArrayList<String>(argv.length - 1);
         for (int i = 1; i < argv.length; i++) {
             ids.add(argv[i]);
@@ -87,7 +91,7 @@ public class StorageTool {
 
         System.err.println("Getting record(s): " + Strings.join(ids, ", "));
         long startTime = System.currentTimeMillis();
-        List<Record> recs = storage.getRecords (ids, null);
+        List<Record> recs = storage.getRecords (ids, options);
         System.err.println("Got " + recs.size() + " records in "
                            + (System.currentTimeMillis() - startTime) + " ms");
 
