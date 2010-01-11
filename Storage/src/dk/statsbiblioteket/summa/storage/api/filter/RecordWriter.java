@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.Profiler;
@@ -118,6 +119,18 @@ public class RecordWriter extends ObjectFilterImpl {
      */
     public static final int DEFAULT_BATCH_TIMEOUT = 1000;
 
+    /**
+     * Boolean property for controlling the {@code TRY_UPDATE} flag on the
+     * {@link QueryOptions} passed to {@code storage.flushAll()}. If this
+     * property is {@code true} records that are already up to date in storage
+     * will not be updated. Specifically the storage checks if the record
+     * exists in the database with the exact same fields as the incoming record.
+     */
+    public static final String CONF_TRY_UPDATE =
+                                      "summa.storage.recordwriter.tryupdate";
+
+    public static final boolean DEFAULT_TRY_UPDATE = false;
+
     private static class Batcher implements Runnable {
         /* CAVEAT: We log under the name of the RecordWriter !! */
         private static final Log log = LogFactory.getLog(RecordWriter.class);
@@ -131,11 +144,12 @@ public class RecordWriter extends ObjectFilterImpl {
         private List<Record> records;
         private Thread watcher;
         private WritableStorage storage;
+        private QueryOptions qOptions;
 
         private long byteSize = 0;
 
         public Batcher (int batchSize, int batchMaxMemory, int batchTimeout,
-                        WritableStorage storage) {
+                        WritableStorage storage, QueryOptions qOptions) {
             mayRun = true;
             records = new ArrayList<Record>(batchSize);
             this.batchSize = batchSize;
@@ -144,6 +158,7 @@ public class RecordWriter extends ObjectFilterImpl {
             lastUpdate = System.currentTimeMillis();
             lastCommit = System.nanoTime();
             this.storage = storage;
+            this.qOptions = qOptions;
 
             log.debug("Starting batch job watcher");
             watcher = new Thread(this, "RecordBatcher");
@@ -218,7 +233,7 @@ public class RecordWriter extends ObjectFilterImpl {
                          + " size " + byteSize/1024 + "KB";
                 log.debug(String.format("Committing %s.", stats));
                 long start = System.nanoTime();
-                storage.flushAll(records);
+                storage.flushAll(records, qOptions);
                 log.info(String.format(
                         "Committed %s in %sms. Last commit was %sms ago",
                         stats, (System.nanoTime() - start)/1000000D,
@@ -298,12 +313,21 @@ public class RecordWriter extends ObjectFilterImpl {
                                    ConnectionConsumer.CONF_RPC_TARGET));
         }
 
+        QueryOptions qOptions;
+        if (conf.getBoolean(CONF_TRY_UPDATE, false)) {
+            qOptions = new QueryOptions();
+            qOptions.meta("TRY_UPDATE", "true");
+        } else {
+            qOptions = null;
+        }
+
         storage = new StorageWriterClient(conf);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         batchMaxMemory = conf.getInt(
                 CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
-        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage);
+        batcher = new Batcher(
+                     batchSize, batchMaxMemory, batchTimeout, storage, qOptions);        
 
         // TODO: Perform a check to see if the Storage is alive
     }
@@ -320,7 +344,8 @@ public class RecordWriter extends ObjectFilterImpl {
         this.batchSize = batchSize;
         this.batchMaxMemory = batchMaxMemory;
         this.batchTimeout = batchTimeout;
-        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage);
+        batcher = new Batcher(
+                        batchSize, batchMaxMemory, batchTimeout, storage, null);
     }
 
     /**
