@@ -63,13 +63,14 @@
           indexBoost: the index-time boost for this field (default: 1.0)
           queryBoost: the query-time boost for this field (default: 1.0)
           sortLocale: the locale (see Java Locale) used for sorting the Field
+          sortCache:  active or lazy (default). If active, the sort-structure is initialized at index open. If lazy, the initialization takes place upon first sorted call
           inFreeText: true/false. If true, the tokens in this field are added to the freetext field
           required: true/false: Should be present - used for validation of documents prior to indexing
 
           parents must be specified before their children.
         -->
 
-        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" inFreeText="true" required="true">
+        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" sortCache="active" inFreeText="true" required="true">
             <alias name="forfatter" lang="da"/>
         </field>
 

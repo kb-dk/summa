@@ -193,6 +193,7 @@
                 indexBoost:  the index-time boost for this field (default: 1.0).
                 queryBoost:  the query-time boost for this field (default: 1.0).
                 sortLocale:  the locale (see Java Locale) used for sorting the Field.
+                sortCache:   active or lazy (default). If active, the sort-structure is initialized at index open. If lazy, the initialization takes place upon first sorted call
                 inFreeText:  if true, the tokens in this field are automatically
                              added to the freetext field.
                 required:    the field must be present in the record-XML. This is used
@@ -216,6 +217,7 @@
         <xsd:attribute name="indexBoost" type="xsd:float" use="optional"/>
         <xsd:attribute name="queryBoost" type="xsd:float" use="optional"/>
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
+        <xsd:attribute name="sortCache" type="xsd:string" use="optional"/>
         <xsd:attribute name="inFreeText" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
         <!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>

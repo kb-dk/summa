@@ -72,6 +72,23 @@ public class IndexField<A, T, F> {
      */
     public static Float DEFAULT_BOOST = 1.0F;
 
+    /**
+     * If the field is to be used as a sort field, it can either be lazy or
+     * active. If active, the sort-structure is generated upon index open.
+     * </p><p>
+     * Default is lazy.
+     */
+    public enum SORT_CACHE {lazy, active;
+        public static SORT_CACHE defaultCache() {
+            return lazy;
+        }
+        public static SORT_CACHE parse(String cache) {
+            if (active.toString().equals(cache)) {
+                return active;
+            }
+            return lazy;
+        }
+    }
 
     /**
      * The name of the field is used verbatim as the field in generated indexes.
@@ -167,6 +184,8 @@ public class IndexField<A, T, F> {
      * @see [http://www.loc.gov/standards/iso639-2/php/code_list.php]
      */
     private String sortLocale = null;
+
+    private SORT_CACHE sortCache = SORT_CACHE.defaultCache();
 
     /**
      * The content of this field should be duplicated in the freetext-field
@@ -308,6 +327,7 @@ public class IndexField<A, T, F> {
         queryBoost = parent.getQueryBoost();
         indexBoost = parent.getIndexBoost();
         sortLocale = parent.getSortLocale();
+        sortCache = parent.sortCache;
         inFreetext = parent.isInFreetext();
         required = parent.isRequired();
         aliases = new ArrayList<IndexAlias>(parent.getAliases());
@@ -332,11 +352,11 @@ public class IndexField<A, T, F> {
                 "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" "
                 + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
                 + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
-                + "sortLocale=\"%s\" " + "inFreeText=\"%s\" required=\"%s\" "
-                + "tokenized=\"%s\">\n",
+                + "sortLocale=\"%s\" sortCache=\"%s\" inFreeText=\"%s\""
+                + " required=\"%s\" tokenized=\"%s\">\n",
                 name, parent == null ? "" : parent.getName(), doIndex,
                 analyze, doStore, doCompress,
-                multiValued, queryBoost, indexBoost, sortLocale,
+                multiValued, queryBoost, indexBoost, sortLocale, sortCache,
                 inFreetext, required, analyze));
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
@@ -429,6 +449,8 @@ public class IndexField<A, T, F> {
                                          doCompress); 
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
                                          sortLocale);
+        sortCache =  SORT_CACHE.parse(ParseUtil.getValue(
+                xPath, node, "@sortCache", sortCache.toString()));
         inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
                                          inFreetext);
         required =    ParseUtil.getValue(xPath, node, "@required",
@@ -669,6 +691,7 @@ public class IndexField<A, T, F> {
                && queryBoost == other.getQueryBoost() // Consider window
                && indexBoost == other.getIndexBoost() // Consider window
                && nullCompare(sortLocale, other.getSortLocale())
+               && sortCache == other.getSortCache()
                && inFreetext == other.isInFreetext()
                && required == other.isRequired()
                && nullCompare(indexTokenizer, other.getIndexTokenizer())
@@ -735,6 +758,10 @@ public class IndexField<A, T, F> {
 
     public String getSortLocale() {
         return sortLocale;
+    }
+
+    public SORT_CACHE getSortCache() {
+        return sortCache;
     }
 
     public boolean isInFreetext() {
@@ -809,6 +836,10 @@ public class IndexField<A, T, F> {
 
     public void setSortLocale(String sortLocale) {
         this.sortLocale = sortLocale;
+    }
+
+    public void setSortCache(SORT_CACHE sortCache) {
+        this.sortCache = sortCache;
     }
 
     public void setInFreetext(boolean inFreetext) {

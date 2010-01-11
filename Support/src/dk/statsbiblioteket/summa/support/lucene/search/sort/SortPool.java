@@ -99,6 +99,8 @@ public class SortPool {
                          + "' overrides old sort locale '"
                          + oldFactory.getSortLanguage()
                          + "' for Field '" + field.getName() + "'");
+                sortFactories.remove(field.getName());
+                updateField(field);
             }
         }
     }
