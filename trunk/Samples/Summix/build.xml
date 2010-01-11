@@ -60,6 +60,7 @@
             
             <!-- Config -->
             <zipfileset dir="${basedir}/config" includes="*.xml" prefix="${root}/config"/>
+            <zipfileset dir="${basedir}/../../Storage/test" includes="*.job.js" prefix="${root}/config"/>
             <zipfileset dir="${basedir}/config" includes="policy" prefix="${root}/config"/>
             
             <!-- Sample setup -->
