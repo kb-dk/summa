@@ -41,6 +41,23 @@ import java.util.HashMap;
  * is {@code null} it indicates a fully permisive option.
  * A {@code QueryOptions} set to {@code null} will allow all records and do no
  * expansion of children or parents.
+ *
+ * <h3>Meta flags</h3>
+ * Query options can host an arbitrary map of key/value pairs known as meta
+ * flags. These flags can be used to alter the behaviour of queries a to pass
+ * sepcial information to batch jobs.
+ * <p/>
+ * Pre defined meta flags:
+ * <ul>
+ *   <li><tt>ALLOW_PRIVATE</tt> - Set this to {@code "true"} to allow
+ *       {@code getRecord()} requests to access storage private records,
+ *       like {@code __holdings__}</li>
+ *   <li><tt>TRY_UPDATE</tt> - If this flag is set this to {@code "true"} any
+ *       calls to {@code flush()} or {@code flushAll()} will not update
+ *       the record if it already exists with the exact same fields. This also
+ *       means that the record modication time will not be updated if it is
+ *       already known</li>
+ * </ul>
  */
 public class QueryOptions implements Serializable {
 

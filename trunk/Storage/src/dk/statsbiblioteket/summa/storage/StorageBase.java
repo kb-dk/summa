@@ -60,6 +60,14 @@ public abstract class StorageBase implements Storage {
      */
     protected static final String ALLOW_PRIVATE = "ALLOW_PRIVATE";
 
+    /**
+     * Meta flag used on {@link QueryOptions} to indicate to {@code flush()}
+     * or {@code flushAll()} that if the record already exists with the exact
+     * same fields then nothing should be done (and consequently the record's
+     * modification in storage will not be updated).
+     */
+    protected static final String TRY_UPDATE = "TRY_UPDATE";
+
     private long storageStartTime;
     private HashMap<String,Long> lastFlushTimes;
     private Matcher privateIdMatcher;
@@ -262,6 +270,17 @@ public abstract class StorageBase implements Storage {
     }
 
     /**
+     * Convenience implementation of calling
+     * {@link #flush(Record, QueryOptions)} with query options set to
+     * {@code null}
+     * @param record the record to flush
+     * @throws IOException
+     */
+    public void flush(Record record) throws IOException {
+        flush(record, null);
+    }
+
+    /**
      * <p>Convenience implementation of {@link WritableStorage#flushAll}
      * simply iterating through the list and calling
      * {@link WritableStorage#flush} on each record.</p>
@@ -270,12 +289,25 @@ public abstract class StorageBase implements Storage {
      * for optimization purposes.</p>
      *
      * @param records the records to store or update
-     * @throws RemoteException on comminication errors
+     * @param options the options to pass to {@link #flush}
+     * @throws IOException on comminication errors
      */
-    public void flushAll (List<Record> records) throws IOException {
+    public void flushAll (List<Record> records, QueryOptions options)
+                                                            throws IOException {
         for (Record rec : records) {
-            flush(rec);
+            flush(rec, options);
         }
+    }
+
+    /**
+     * Convenience implementation of calling
+     * {@link #flushAll(List<Record>, QueryOptions)} with query options set to
+     * {@code null}
+     * @param records the records to flush
+     * @throws IOException
+     */
+    public void flushAll(List<Record> records) throws IOException {
+        flushAll(records, null);
     }
 
     /**

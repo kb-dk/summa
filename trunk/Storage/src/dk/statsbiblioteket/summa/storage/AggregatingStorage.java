@@ -579,7 +579,7 @@ public class AggregatingStorage extends StorageBase {
     }
 
     @Override
-    public void flush(Record record) throws IOException {
+    public void flush(Record record, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
             log.trace ("flush("+record+")");
@@ -593,7 +593,7 @@ public class AggregatingStorage extends StorageBase {
             return;
         }
 
-        writer.flush(record);
+        writer.flush(record, options);
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Flushed " + record + " in "

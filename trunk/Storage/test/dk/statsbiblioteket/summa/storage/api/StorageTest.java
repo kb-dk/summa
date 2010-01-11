@@ -40,57 +40,12 @@ public class StorageTest extends StorageTestBase {
         assertBaseEmpty (testBase1);
     }
 
-    public void assertBaseEmpty (String base) throws Exception {
-        assertBaseEmpty(base, -1);
-    }
-
-    public void assertBaseEmpty (String base, long count) throws Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
-        Iterator<Record> iter = new StorageIterator(storage, iterKey);
-        long nonDeletedCount = 0;
-        long fullCount = 0;
-        while (iter.hasNext()) {
-            Record r = iter.next();
-            fullCount++;
-            if (!r.isDeleted()) {
-                nonDeletedCount++;
-            }
-        }
-
-        if (nonDeletedCount != 0) {
-            fail ("Base '" + base + "' should be empty, but found " + nonDeletedCount
-                  + " records");
-        }
-
-        if (count != -1) {
-            if (count != fullCount) {
-                fail("Expected " + count
-                      + " records in base, found " + fullCount);
-            }
-        }
-    }
-
     public void testIteration() throws Exception {
         storage.clearBase (testBase1);
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase1, testContent1));
         assertBaseCount(testBase1, 2);
-    }
-
-    public void assertBaseCount (String base, long expected) throws Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
-        Iterator<Record> iter = new StorageIterator(storage, iterKey);
-        long actual = 0;
-        while (iter.hasNext()) {
-            iter.next();
-            actual++;
-        }
-
-        if (actual != expected) {
-            fail("Base '" + base + "' should contain " + expected
-                 + " records, but found " + actual);
-        }
-    }
+    }    
 
     public void testAddOne () throws Exception {
         Record rec = new Record (testId1, testBase1, testContent1);
@@ -144,6 +99,28 @@ public class StorageTest extends StorageTestBase {
         assertTrue(upd.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
         assertFalse(_orig.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
         assertTrue(_upd.getContentAsUTF8().equals(new String(testContent2)));
+    }
+
+    /* Assert that the TRY_UPDATE meta flag works - ie. that we don't update
+     * records that are already up to date */
+    public void testTryUpdate() throws Exception {
+        Record orig = new Record(testId1, testBase1, testContent1);
+        storage.flush(orig);
+        long mtime = storage.getRecord(testId1, null).getModificationTime();
+
+        Thread.sleep(50); // Make sure system time is updated
+
+        QueryOptions options = new QueryOptions();
+        options.meta("TRY_UPDATE", "true");
+        storage.flush(orig, options);
+        long newMtime = storage.getRecord(testId1, null).getModificationTime();
+
+        assertEquals(mtime, newMtime); // Record already up to date
+
+        // Make sure that we indeed update it without the TRY_UPDATE
+        storage.flush(orig);
+        newMtime = storage.getRecord(testId1, null).getModificationTime();
+        assertTrue(newMtime > mtime);
     }
 
     /* Test that record content is indeed updated when calling the flushAll() */

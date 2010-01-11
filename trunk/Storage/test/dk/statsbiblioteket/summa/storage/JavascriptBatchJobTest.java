@@ -153,19 +153,4 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         }
     }
 
-    public void assertBaseCount (String base, long expected) throws Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
-        Iterator<Record> iter = new StorageIterator(storage, iterKey);
-        long actual = 0;
-        while (iter.hasNext()) {
-            iter.next();
-            actual++;
-        }
-
-        if (actual != expected) {
-            fail("Base '" + base + "' should contain " + expected
-                 + " records, but found " + actual);
-        }
-    }
-
 }

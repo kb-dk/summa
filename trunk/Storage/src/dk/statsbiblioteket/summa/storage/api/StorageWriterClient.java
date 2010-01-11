@@ -46,7 +46,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         super(conf, "//localhost:28000/summa-storage");
     }
 
-    public void flush(Record record) throws IOException {
+    public void flush(Record record, QueryOptions options) throws IOException {
         WritableStorage storage = getConnection();
 
         if (storage == null) {
@@ -54,7 +54,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
 
         try {
-            storage.flush (record);
+            storage.flush (record, options);
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException(String.format(
@@ -64,7 +64,12 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
     }
 
-    public void flushAll(List<Record> records) throws IOException {
+    public void flush(Record record) throws IOException {
+        flush(record, null);
+    }
+
+    public void flushAll(List<Record> records, QueryOptions options)
+                                                            throws IOException {
         WritableStorage storage = getConnection();
 
         if (storage == null) {
@@ -72,7 +77,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
         
         try {
-            storage.flushAll (records);
+            storage.flushAll (records, options);
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException(String.format(
@@ -80,6 +85,10 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         } finally {
             releaseConnection();
         }
+    }
+
+    public void flushAll(List<Record> records) throws IOException {
+        flushAll(records, null);
     }
 
     public void clearBase(String base) throws IOException {

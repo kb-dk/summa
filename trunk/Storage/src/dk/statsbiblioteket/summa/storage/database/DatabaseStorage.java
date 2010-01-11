@@ -1446,7 +1446,8 @@ getco     */
      * Connection.TRANSACTION_READ_UNCOMMITTED
      */
     @Override
-    public synchronized void flush(Record record) throws IOException {
+    public synchronized void flush(Record record, QueryOptions options)
+                                                            throws IOException {
         long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
 
@@ -1455,7 +1456,7 @@ getco     */
         String error = null;
         try {
             conn.setReadOnly(false);
-            flushWithConnection(record, conn);
+            flushWithConnection(record, options, conn);
         } catch (SQLException e) {
             // This error is logged in the finally clause below
             error = e.getMessage() + '\n' + Strings.getStackTrace(e);
@@ -1499,7 +1500,8 @@ getco     */
      * Connection.TRANSACTION_READ_UNCOMMITTED
      */
     @Override
-    public synchronized void flushAll(List<Record> recs) throws IOException {
+    public synchronized void flushAll(List<Record> recs, QueryOptions options)
+                                                            throws IOException {
         Connection conn = getTransactionalConnection();
         try {
             conn.setReadOnly(false);
@@ -1525,7 +1527,7 @@ getco     */
                     log.debug("Flushing: " + r.getId());
                 }
                 lastRecord = r;
-                flushWithConnection(r, conn);
+                flushWithConnection(r, options, conn);
             }
             // TODO: Introduce time-based logging on info
             log.debug("Flushed " + recs.size() + " in "
@@ -1580,7 +1582,8 @@ getco     */
         }
     }
 
-    protected void flushWithConnection(Record r, Connection conn)
+    protected void flushWithConnection(
+                          Record r, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
@@ -1592,12 +1595,12 @@ getco     */
         updateModificationTime (r.getBase());
 
         try{
-            createNewRecordWithConnection(r, conn);
+            createNewRecordWithConnection(r, options, conn);
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
                 // We already had the record stored, so fire an update instead
                 // Note that this will also handle deleted records
-                updateRecordWithConnection(r, conn);
+                updateRecordWithConnection(r, options, conn);
             } else {
                 throw new IOException(String.format(
                         "flushWithConnection: Internal error in "
@@ -1612,7 +1615,7 @@ getco     */
             log.debug ("Flushing " + children.size()
                        + " nested child records of '" + r.getId() + "'");
             for (Record child : children) {
-                flushWithConnection(child, conn);
+                flushWithConnection(child, options, conn);
             }
         }
 
@@ -2120,12 +2123,12 @@ getco     */
                         // new record (in order to insert/update it) and then
                         // delete the old one from the db
                         if (oldId.equals(record.getId())) {
-                            updateRecordWithConnection(record, conn);
+                            updateRecordWithConnection(record, options, conn);
                         } else {
                             log.debug(String.format(
                                     "Record renamed '%s' -> '%s'",
                                     oldId, record.getId()));
-                            flushWithConnection(record, conn);
+                            flushWithConnection(record, options, conn);
                             PreparedStatement delete = conn.prepareStatement(
                                                    "DELETE FROM " + RECORDS
                                                 + " WHERE " + ID_COLUMN + "=?");
@@ -2352,8 +2355,8 @@ getco     */
         }
     }
 
-    private void createNewRecordWithConnection(Record record,
-                                               Connection conn)
+    private void createNewRecordWithConnection(
+                     Record record, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.debug("Creating: " + record.getId());
@@ -2396,9 +2399,20 @@ getco     */
     }
 
     /* Note that creationTime isn't touched */
-    private void updateRecordWithConnection(Record record, Connection conn)
+    private void updateRecordWithConnection(
+                  Record record, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
         log.debug("Updating: " + record.getId());
+
+        // Respect the TRY_UPDATE meta flag. See docs for QueryOptions
+        if (options != null &&
+            "true".equals(options.meta(TRY_UPDATE))) {
+            Record old = getRecordWithConnection(record.getId(), options, conn);
+            if (record.equals(old)) {
+                log.debug("Record '%s' already up to date, skipping update");
+                return;
+            }
+        }
 
         long nowStamp = timestampGenerator.next();
         boolean hasRelations = record.hasParents() || record.hasChildren();

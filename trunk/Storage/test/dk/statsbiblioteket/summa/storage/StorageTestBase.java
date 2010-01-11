@@ -1,8 +1,10 @@
 package dk.statsbiblioteket.summa.storage;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
@@ -12,6 +14,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.util.Iterator;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.StorageTestBase
@@ -114,4 +117,48 @@ public class StorageTestBase extends TestCase {
         Thread.sleep(200);
     }
 
+    public void assertBaseEmpty (String base) throws Exception {
+        assertBaseEmpty(base, -1);
+    }
+
+    public void assertBaseEmpty (String base, long count) throws Exception {
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
+        long nonDeletedCount = 0;
+        long fullCount = 0;
+        while (iter.hasNext()) {
+            Record r = iter.next();
+            fullCount++;
+            if (!r.isDeleted()) {
+                nonDeletedCount++;
+            }
+        }
+
+        if (nonDeletedCount != 0) {
+            fail ("Base '" + base + "' should be empty, but found " + nonDeletedCount
+                  + " records");
+        }
+
+        if (count != -1) {
+            if (count != fullCount) {
+                fail("Expected " + count
+                      + " records in base, found " + fullCount);
+            }
+        }
+    }
+
+    public void assertBaseCount (String base, long expected) throws Exception {
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
+        long actual = 0;
+        while (iter.hasNext()) {
+            iter.next();
+            actual++;
+        }
+
+        if (actual != expected) {
+            fail("Base '" + base + "' should contain " + expected
+                 + " records, but found " + actual);
+        }
+    }
 }
