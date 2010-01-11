@@ -1,6 +1,5 @@
 /*
- * This batch job collects all record ids and returns them in a |-separated
- * list
+ * This batch job collects all record ids and returns them in a
+ * newline-separated list
  */
-out.print(record.getId())
-out.print("|");
+out.println(record.getId())
