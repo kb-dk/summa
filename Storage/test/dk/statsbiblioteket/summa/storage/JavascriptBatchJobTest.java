@@ -62,11 +62,11 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         String ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, null);
         assertEquals(Strings.join(
-                Arrays.asList(testId1, testId2, testId3), "|") + "|", ids);
+                Arrays.asList(testId1, testId2, testId3), "\n") + "\n", ids);
 
         ids = storage.batchJob(
                 "collect_ids.job.js", null, stamp3, Long.MAX_VALUE, null);
-        assertEquals(testId3 + "|", ids);
+        assertEquals(testId3 + "\n", ids);
 
         ids = storage.batchJob(
                 "collect_ids.job.js", null, Long.MAX_VALUE, Long.MAX_VALUE, null);
@@ -87,14 +87,14 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         String ids = storage.batchJob(
                 "delete.job.js", testBase1, 0, Long.MAX_VALUE, null);
         assertEquals(Strings.join(
-                Arrays.asList(testId1, testId3), "|") + "|", ids);
+                Arrays.asList(testId1, testId3), "\n") + "\n", ids);
 
         // Assert that testId2 is the only non-deleted record
         // in the entire storage
         QueryOptions nonDeleted = new QueryOptions(false, null, 0, 0);
         ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, nonDeleted);
-        assertEquals(testId2 + "|", ids);
+        assertEquals(testId2 + "\n", ids);
 
         // Assert that testId1 and testId3 constitues all deleted records
         // in the entire storage
@@ -102,7 +102,7 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, deleted);
         assertEquals(Strings.join(
-                Arrays.asList(testId1, testId3), "|") + "|", ids);
+                Arrays.asList(testId1, testId3), "\n") + "\n", ids);
     }
 
     public void testRenameByBaseAndMtime() throws Exception {
@@ -121,7 +121,7 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         // This should be the signle record with testId3
         String ids = storage.batchJob(
                 "prepend_foo_id.job.js", testBase1, stamp3, Long.MAX_VALUE, null);
-        assertEquals("foo" + testId3 + "|", ids);
+        assertEquals("foo" + testId3 + "\n", ids);
 
         // Assert that testId1 is no longer in the storage
         Record gone = storage.getRecord(testId3, null);
