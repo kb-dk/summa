@@ -562,6 +562,11 @@ public class IndexControllerImpl extends StateThread implements
             }
             manipulatorPosition++;
         }
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Indexed update finished with deleted=" + 
+                           (payload.getRecord() == null ? "N/A" :
+                            payload.getRecord().isDeleted()),
+                           Logging.LogLevel.DEBUG, payload);
         // TODO: Keep received Payloads and close them on commit?
         profiler.beat();
         if (requestCommit) {

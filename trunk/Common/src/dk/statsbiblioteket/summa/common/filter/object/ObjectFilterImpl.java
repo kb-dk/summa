@@ -50,6 +50,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     private String name;
     private Payload processedPayload = null;
+    // If true, process-time statistics are logged after processPayload-calls
+    protected boolean feedback = true;
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getName());
@@ -119,13 +121,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Processed " + processedPayload + ", #" + payloadCount
                           + ", in " + ms + " ms using " + this);
-            } else if (log.isDebugEnabled()) {
+            } else if (log.isDebugEnabled() && feedback) {
                 log.debug("Processed " + processedPayload + ", #" + payloadCount
                           + ", in " + ms + " ms");
             }
             Logging.logProcess(name,
                                "processPayload #" + payloadCount
-                               + " finished in " + ms + "ms",
+                               + " finished in " + ms + "ms for " + name,
                                Logging.LogLevel.TRACE, processedPayload);
             break;
         }
