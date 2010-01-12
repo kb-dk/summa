@@ -147,6 +147,7 @@ public class DumpFilter extends ObjectFilterImpl {
         maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
         resetReceivedDumpsMS =
                 conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
+        feedback = false; // No timestats on dump
         log.info(String.format(
                 "Created DumpFilter with base='%s', id='%s', dumpNonRecords=%b,"
                 + " maxDumps=%d, resetMaxDumpsMS=%d",
