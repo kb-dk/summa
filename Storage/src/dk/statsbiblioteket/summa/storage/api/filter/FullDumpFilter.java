@@ -146,8 +146,9 @@ public class FullDumpFilter extends ObjectFilterImpl {
                     received, script, base,
                     String.format(ISO_TIME, startupTimestamp)));
             try {
-                String result =
-                       writer.batchJob(script, base, 0, startupTimestamp, null);
+                // +1 as batch maxMTime is <, not <=
+                String result = writer.batchJob(
+                               script, base, 0, startupTimestamp+1, null);
                 if (log.isTraceEnabled()) {
                     log.info(String.format(
                             "Script '%s' successfully executed with output"
