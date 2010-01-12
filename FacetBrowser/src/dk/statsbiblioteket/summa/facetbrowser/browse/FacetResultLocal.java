@@ -26,7 +26,6 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
@@ -85,7 +84,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         }
 
         // TODO: Should # be excaped too?
-        String cleanTag = ParseUtil.encode(resolveTagString(fc, tag));
+        String cleanTag = XMLUtil.encode(resolveTagString(fc, tag));
         StringWriter sw = new StringWriter(100);
         if (fc.getFields().length > 1) {
             sw.append("(");
