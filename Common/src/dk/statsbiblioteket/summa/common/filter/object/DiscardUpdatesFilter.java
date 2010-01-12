@@ -48,6 +48,7 @@ public class DiscardUpdatesFilter extends AbstractDiscardFilter {
     @SuppressWarnings({"UnusedDeclaration"})
     public DiscardUpdatesFilter(Configuration conf) {
         super(conf);
+        feedback = false;
         // No configuration for this filter
     }
 

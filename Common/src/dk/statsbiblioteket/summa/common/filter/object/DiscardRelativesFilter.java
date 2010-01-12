@@ -63,6 +63,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
 
     public DiscardRelativesFilter(Configuration conf) {
         super(conf);
+        feedback = false;
         discardHasParent =
                 conf.getBoolean(CONF_DISCARD_HASPARENT, discardHasParent);
         discardHasChildren =
