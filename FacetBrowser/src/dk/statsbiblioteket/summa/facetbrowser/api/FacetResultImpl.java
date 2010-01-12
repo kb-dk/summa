@@ -56,6 +56,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -113,7 +114,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 map.entrySet()) {
             if (facet.getValue().size() > 0) {
                 sw.write("  <facet name=\"");
-                sw.write(urlEntityEscape(facet.getKey()));
+                sw.write(XMLUtil.encode(facet.getKey()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
@@ -128,8 +129,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
                     if (tagCount++ < maxTags) {
                         sw.write("    <tag name=\"");
-                        sw.write(urlEntityEscape(getTagString(facet.getKey(),
-                                                              tag.getKey())));
+                        sw.write(XMLUtil.encode(getTagString(
+                                facet.getKey(), tag.getKey())));
         /*                if (!Element.NOSCORE.equals(tag.getScore())) {
                             sw.write("\" score=\"");
                             sw.write(Float.toString(tag.getScore()));
@@ -324,7 +325,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     /**
-     * This should be overridet when subclassing, if the tags order is not
+     * This should be overridden when subclassing, if the tags order is not
      * natural.
      * @param o1 the first object to compare.
      * @param o2 the second object to compare.
@@ -355,8 +356,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @return a query for the tag in the facet.
      */
     protected String getQueryString(String facet, T tag) {
-        return facet + ":\"" +
-               urlEntityEscape(String.valueOf(tag)) + "\"";
+        return facet + ":\""
+               + XMLUtil.encode(queryEscapeTag(String.valueOf(tag))) + "\"";
     }
 
     /**
@@ -442,11 +443,11 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     public static String urlEntityEscape(String text) {
-        return text.replaceAll("&",  "&amp;").
-                    replaceAll("<",  "&lt;").
-                    replaceAll(">",  "&gt;").
-                    replaceAll("#",  "%23"). // Escaping for URL
-                    replaceAll("\"", "&quot;");
+        return text.replace("&",  "&amp;").
+                    replace("<",  "&lt;").
+                    replace(">",  "&gt;").
+                    replace("#",  "%23"). // Escaping for URL
+                    replace("\"", "&quot;");
     }
 
     /**

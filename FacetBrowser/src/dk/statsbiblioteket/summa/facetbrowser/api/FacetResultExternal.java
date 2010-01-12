@@ -31,6 +31,7 @@ import java.io.StringWriter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 
 /**
  * This facet structure representation is suitable for serializing and other
@@ -76,7 +77,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         for (int i = 0 ; i < fields.length ; i++) {
             sw.append(fields[i]);
             sw.append(":\"");
-            sw.append(queryEscapeTag(cleanTag));
+            sw.append(XMLUtil.encode(queryEscapeTag(cleanTag)));
             sw.append("\"");
             if (i < fields.length - 1) {
                 sw.append(" OR ");

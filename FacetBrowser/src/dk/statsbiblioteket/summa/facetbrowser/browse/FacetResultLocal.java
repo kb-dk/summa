@@ -40,6 +40,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.log4j.Logger;
 
 /**
@@ -92,7 +93,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         for (int i = 0 ; i < fc.getFields().length ; i++) {
             sw.append(fc.getFields()[i]);
             sw.append(":\"");
-            sw.append(queryEscapeTag(cleanTag));
+            sw.append(XMLUtil.encode(queryEscapeTag(cleanTag)));
             sw.append("\"");
             if (i < fc.getFields().length - 1) {
                 sw.append(" OR ");
