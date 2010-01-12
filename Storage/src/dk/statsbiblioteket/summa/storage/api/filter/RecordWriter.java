@@ -307,14 +307,15 @@ public class RecordWriter extends ObjectFilterImpl {
         super(conf);
         log.trace("Constructing RecordWriter");
         if (conf.valueExists(DEPRECATED_CONF_STORAGE)) {
-            log.warn(String.format("Old Storage address configuration detected."
-                                   + " The key %s has been replaced by %s",
-                                   DEPRECATED_CONF_STORAGE,
-                                   ConnectionConsumer.CONF_RPC_TARGET));
+            log.warn(String.format(
+                    "Old Storage address configuration detected."
+                    + " The key %s has been replaced by %s",
+                    DEPRECATED_CONF_STORAGE,
+                    ConnectionConsumer.CONF_RPC_TARGET));
         }
 
         QueryOptions qOptions;
-        if (conf.getBoolean(CONF_TRY_UPDATE, false)) {
+        if (conf.getBoolean(CONF_TRY_UPDATE, DEFAULT_TRY_UPDATE)) {
             qOptions = new QueryOptions();
             qOptions.meta("TRY_UPDATE", "true");
         } else {
@@ -327,7 +328,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
         batcher = new Batcher(
-                     batchSize, batchMaxMemory, batchTimeout, storage, qOptions);        
+                    batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
 
         // TODO: Perform a check to see if the Storage is alive
     }

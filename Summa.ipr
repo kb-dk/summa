@@ -460,6 +460,12 @@
         <w>timestamp</w>
       </words>
     </dictionary>
+    <dictionary name="te">
+      <words>
+        <w>freetext</w>
+        <w>summa</w>
+      </words>
+    </dictionary>
   </component>
   <component name="ProjectKey">
     <option name="state" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk/Summa.ipr" />
