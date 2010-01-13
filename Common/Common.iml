@@ -8,6 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/data" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/doc" />
       <excludeFolder url="file://$MODULE_DIR$/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -21,7 +23,6 @@
     <orderEntry type="library" name="lucene-backports" level="project" />
     <orderEntry type="library" name="jline" level="project" />
     <orderEntry type="library" name="tika" level="project" />
-    <orderEntry type="library" name="jsr166" level="project" />
   </component>
 </module>
 

@@ -102,6 +102,14 @@
       <maximumStackSize value="32" />
       <properties />
     </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/Common/build.xml">
+      <additionalClassPath />
+      <antReference projectDefault="true" />
+      <customJdkName value="" />
+      <maximumHeapSize value="128" />
+      <maximumStackSize value="2" />
+      <properties />
+    </buildFile>
   </component>
   <component name="BuildJarProjectSettings">
     <option name="BUILD_JARS_ON_MAKE" value="false" />
@@ -454,16 +462,16 @@
     <option name="projectName" value="Summa" />
   </component>
   <component name="ProjectDictionaryState">
-    <dictionary name="mke">
-      <words>
-        <w>datetime</w>
-        <w>timestamp</w>
-      </words>
-    </dictionary>
     <dictionary name="te">
       <words>
         <w>freetext</w>
         <w>summa</w>
+      </words>
+    </dictionary>
+    <dictionary name="mke">
+      <words>
+        <w>datetime</w>
+        <w>timestamp</w>
       </words>
     </dictionary>
   </component>
