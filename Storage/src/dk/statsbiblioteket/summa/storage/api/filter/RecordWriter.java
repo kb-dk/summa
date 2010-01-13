@@ -125,6 +125,10 @@ public class RecordWriter extends ObjectFilterImpl {
      * property is {@code true} records that are already up to date in storage
      * will not be updated. Specifically the storage checks if the record
      * exists in the database with the exact same fields as the incoming record.
+     * </p><p>
+     * Warning: Do not use this with a deleting {@link FullDumpFilter} as the
+     * combined effect is that all records for the base that are not changed
+     * during ingest will be marked as deleted when the ingest has completed. 
      */
     public static final String CONF_TRY_UPDATE =
                                       "summa.storage.recordwriter.tryupdate";
@@ -296,6 +300,7 @@ public class RecordWriter extends ObjectFilterImpl {
     private int batchTimeout;
     private Batcher batcher;
     private Profiler profiler = new Profiler();
+    private boolean eofReached = false; // Set to true if hasNext() == false
 
     /**
      * Established an RMI connection to the Storage specified in configuration.
@@ -367,15 +372,39 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     @Override
+    public boolean hasNext() {
+        if (!super.hasNext()) {
+            eofReached = true;
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public void close(boolean success) {
+        log.debug(String.format("close(%s) with eofReached==%b called",
+                                success, eofReached));
+        boolean initialEofReached = eofReached;
+        if (initialEofReached && success) {
+            log.debug("close(true) with eofReached == true: Flushing and "
+                      + "closing batcher before calling close on source");
+            try {
+                batcher.stop();
+            } catch (Exception e) {
+                log.warn("Exception while closing down batcher", e);
+            }
+        }
         try {
-            log.debug(String.format("close(%s): Closing super", success));
+            log.debug(String.format(
+                    "close(%s): Closing super (which closes source)", success));
             super.close(success);
         } finally {
-            log.info("Waiting for batch jobs to be committed");
-            batcher.stop();
-            log.info("Closed down RecordWriter. " + getProcessStats()
-                     + ". Total time: " + profiler.getSpendTime());
+            if (!(initialEofReached && success)) {
+                log.info("Waiting for batch jobs to be committed");
+                batcher.stop();
+                log.info("Closed down RecordWriter. " + getProcessStats()
+                         + ". Total time: " + profiler.getSpendTime());
+            }
         }
     }
 
