@@ -107,6 +107,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
                     conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")));
         }
         writer = new StorageWriterClient(conf);
+        feedback = false;
     }
 
     private long getStartupTimestamp(Configuration conf) throws IOException {
