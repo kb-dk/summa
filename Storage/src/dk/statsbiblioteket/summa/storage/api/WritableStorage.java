@@ -145,9 +145,9 @@ public interface WritableStorage extends Configurable {
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
-     * @param minMtime Only records with modification times greater than
-     *                 {@code minMtime} will be included in the batch job
-     * @param maxMtime Only records with modification times less than
+     * @param minMtime Only records with modification times strictly greater
+     *                 than {@code minMtime} will be included in the batch job
+     * @param maxMtime Only records with modification times strictly less than
      *                 {@code maxMtime} will be included in the batch job
      * @param options Restrict to records for which
      *                {@link QueryOptions#allowsRecord} returns true
