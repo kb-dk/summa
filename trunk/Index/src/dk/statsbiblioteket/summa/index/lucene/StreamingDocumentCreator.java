@@ -114,7 +114,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
     @Override
     public boolean processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("processPayload(" + payload + ") called");
+        log.trace("processPayload(" + payload + ") called");
         long startTime = System.nanoTime();
         if (payload.getRecord() == null) {
             //noinspection DuplicateStringLiteralInspection
