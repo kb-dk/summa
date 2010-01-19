@@ -172,7 +172,7 @@ public class ScriptFilter extends ObjectFilterImpl {
 
     public ScriptFilter(Configuration conf) throws ScriptException, IOException {
         this(readScript(conf),
-             conf.getBoolean(CONF_COMPILE, true),
+             conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE),
              getScriptExtension(conf));
     }
 
