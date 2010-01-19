@@ -139,7 +139,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             + "expands children";
     private String getMergedOrNull(Record record) {
         if (!record.hasChildren()) {
-            log.debug("No children for " + record.getId());
+            log.trace("No children for " + record.getId());
             return null;
         } else if (record.getChildren() == null) {
             log.debug("Can not expand unresolved children of "
