@@ -1,8 +1,1153 @@
-2009-12-02 14:00  mkamstrup
+2010-01-18 09:58  toke-sb
 
-	* [r1973] build.properties, ChangeLog, NEWS:
+	* [r2083]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Logging: Made the logger for StreamingDocumentCreator less chatty
+	  on DEBUG
 
-	Release Summa 1.4.15
+2010-01-14 11:43  mkamstrup
+
+	* [r2082]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java:
+	  
+	  Document that minMtime abd maxMtime in batchJob() use strict <
+	  and > comparisons
+
+2010-01-13 11:38  toke-sb
+
+	* [r2081]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/FullDumpFilter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Behaviour adjustment: Improved the logic of RecordWriter to flush
+	  received Records immediately on close if EOF has been reached and
+	  close is true.
+
+2010-01-13 08:59  toke-sb
+
+	* [r2080] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml, Index/Index.iml,
+	  Ingest/Ingest.iml, Search/Search.iml, Storage/Storage.iml,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Web/Web.iml,
+	  Workflow/Workflow.iml:
+	  
+	  Meta: The settings for the Idea-project coupled to the Summa code
+	  was upgraded to Idea 9.0 and ignore was activated om mist
+	  folders, reducing re-scan time on changed files (ant builds
+	  typically) to near zero
+
+2010-01-12 15:10  toke-sb
+
+	* [r2079]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetResultLocal.java:
+	  
+	  Cleanup: Changed deprecated call to ParseUtil with call to
+	  XMLUtil in sbutil
+
+2010-01-12 15:04  toke-sb
+
+	* [r2078]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardRelativesFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilter.java:
+	  
+	  Logging: The DiscardRelativesFilter and DiscardUpdatesFilter no
+	  longer outputs processing time on DEBUG as the time is always
+	  trivial (sub-ms)
+
+2010-01-12 14:17  toke-sb
+
+	* [r2077]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Summa.ipr:
+	  
+	  Code style:The field with the default value for the TRY_UPDATE
+	  option in RecordWriter was not used
+
+2010-01-12 13:53  toke-sb
+
+	* [r2076]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultExternal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetResultLocal.java:
+	  
+	  Bugfix: The FacetResults did not perform entity escaping
+	  correctly
+
+2010-01-12 13:20  toke-sb
+
+	* [r2075]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/FullDumpFilter.java:
+	  
+	  Bugfix: The FullDumpFilter did not process the last of the old
+	  Records in Storage
+
+2010-01-12 09:59  toke-sb
+
+	* [r2074]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Logging: Made the dump filter less chatty and made
+	  IndexControllerImpl log on debug when an index update occurs
+
+2010-01-11 14:12  toke-sb
+
+	* [r2073]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.xsd,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptorSample.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/test/dk/statsbiblioteket/summa/common/index/IndexDescriptorTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortPool.java:
+	  
+	  Pending: Halfwar through an upgrade of Lucene bases sorting to
+	  perform optional warmup of specified fields for sorting
+
+2010-01-11 13:42  mkamstrup
+
+	* [r2072]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  New boolean property on RecordWriter:
+	  "summa.storage.recordwriter.tryupdate" to pass TRY_UPDATE=true in
+	  the QueryOptions to flushAll()
+
+2010-01-11 13:18  mkamstrup
+
+	* [r2071]
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/VoidStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageWriterClient.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/JavascriptBatchJobTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageTestBase.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Storage ABI break (source compatibility preserved): Add variants
+	  of flush() and flushAll() that takes an extra QueryOptions
+	  parameter.
+	  
+	  Define a meta flag "TRY_UPDATE" that will alter the behaviour of
+	  flush() and flushAll() to not update records if they are already
+	  up to date, ie. exist in the db with the exact same fields as the
+	  incoming record
+
+2010-01-11 12:47  toke-sb
+
+	* [r2070]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/FullDumpFilter.java:
+	  
+	  Logging: Changed logging for FullDumpFilter to be concise when
+	  debug level is > trace and verbose when debug level is trace
+
+2010-01-11 12:27  toke-sb
+
+	* [r2069]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/FullDumpFilter.java[ADD]:
+	  
+	  Feature: Added filter for post-processing in ingest workflows
+	  involving full dumps. The primary usage is clearing of old data
+	  from Storage
+
+2010-01-11 12:02  mkamstrup
+
+	* [r2068] Storage/test/collect_ids.job.js,
+	  Storage/test/delete.job.js,
+	  Storage/test/dk/statsbiblioteket/summa/storage/JavascriptBatchJobTest.java,
+	  Storage/test/prepend_foo_id.job.js:
+	  
+	  Use newline as separator between collected record ids in the
+	  bundled batch jobs
+
+2010-01-11 11:52  mkamstrup
+
+	* [r2067]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/tools/StorageTool.java:
+	  
+	  Allow StorageTool to access private records like __holdings__.
+	  The holdings can also be looked up with the "holdings" action in
+	  storage-tool.sh
+
+2010-01-11 11:21  mkamstrup
+
+	* [r2066] Samples/Summix/build.xml:
+	  
+	  Bundle batch jobs collect_ids.job.js, delete.job.js, and
+	  count.job.js with Summix
+
+2010-01-11 10:53  mkamstrup
+
+	* [r2065] Storage/test/collect_ids.job.js,
+	  Storage/test/count.job.js, Storage/test/delete.job.js:
+	  
+	  Add comment headers to all .js batch jobs
+
+2010-01-11 10:23  mkamstrup
+
+	* [r2064]
+	  Storage/test/dk/statsbiblioteket/summa/storage/BatchJobTest.java[DEL],
+	  Storage/test/dk/statsbiblioteket/summa/storage/JavascriptBatchJobTest.java[CPY],
+	  Storage/test/dk/statsbiblioteket/summa/storage/PythonBatchJobTest.java[ADD],
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageTestBase.java[ADD],
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Refactor all Storage tests to use a common base class
+	  StorageTestBase. Also add a small test suite for Python based
+	  batch jobs
+
+2010-01-08 15:01  mkamstrup
+
+	* [r2063]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BatchJob.java:
+	  
+	  Throw a sensible error if we can not find a suitable script
+	  engine for a batch job
+
+2010-01-08 14:52  mkamstrup
+
+	* [r2062]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BatchJob.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/test/collect_ids.job.js, Storage/test/count.job.js,
+	  Storage/test/delete.job.js, Storage/test/prepend_foo_id.job.js:
+	  
+	  Change the 'out' variable in batch jobs to be a PrintWriter. This
+	  means that it also has .print() and .println() methods available.
+	  Update all sample batch scripts to use out.print()
+
+2010-01-08 13:22  toke-sb
+
+	* [r2061]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java:
+	  
+	  Logging: Added DEBUG-level notification of index merging as this
+	  can take a fair amount of time
+
+2010-01-08 12:20  toke-sb
+
+	* [r2060]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffedTest.java:
+	  
+	  Testing: Added small ad-hoc test code for testing Java
+	  Deflate-compression
+
+2010-01-08 12:06  toke-sb
+
+	* [r2059]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffedTest.java:
+	  
+	  Testing: Lowered execution time of the tagCounterArray-using
+	  performance test in CoreMapBitStuffedTest
+	  Performance: Minor tweak of the
+	  CoreMapBitStuffed.markCounter*-methods, yielding ~1% performance
+	  improvement at no cost
+
+2010-01-08 11:55  mkamstrup
+
+	* [r2058]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BatchJob.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/BatchJobTest.java:
+	  
+	  Javadoc and test updates to the batch job infrastructure
+
+2010-01-08 11:53  toke-sb
+
+	* [r2057]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffedTest.java:
+	  
+	  Performance: Increased the speed of tag counting in FacetBrowser
+	  with ~25% (very approximate: Smaller increase for small result
+	  sets, larger increase for larger result sets). The price of this
+	  is violation of encapsulation in TagCounterArray, but the tweak
+	  checks for implementing class, so other implementations of the
+	  TagCounter interface will not be affected
+	  Testing: Added performance test of counter list marking in
+	  CoreMapBitStuffedTest
+
+2010-01-08 11:46  mkamstrup
+
+	* [r2056]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BatchJob.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java:
+	  
+	  Javadoc
+
+2010-01-08 10:18  mkamstrup
+
+	* [r2055]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/QueryOptionsTest.java[ADD]:
+	  
+	  ABI break: Add setter methods for QueryOptions.meta(). We alreay
+	  broke the Storage binary protocol so it's no biggie.
+	  
+	  Implement some unit tests for QueryOptions
+
+2010-01-08 09:58  mkamstrup
+
+	* [r2054]
+	  Storage/test/dk/statsbiblioteket/summa/storage/BaseStatsTest.java[CPY],
+	  Storage/test/dk/statsbiblioteket/summa/storage/BatchJobTest.java[CPY],
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/BatchJobTest.java[DEL],
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/BaseStatsTest.java[DEL]:
+	  
+	  Refactor unit tests: Move BaseStateTest and BatchJobTest to the
+	  right package
+
+2010-01-08 09:54  mkamstrup
+
+	* [r2053]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BaseStats.java[CPY],
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java[DEL],
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/BaseStatsTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Refactor: Move BaseState to the root of the
+	  dk.statsbiblioteket.summa.storage package to make it usable by
+	  other storage backends
+
+2010-01-08 08:55  mkamstrup
+
+	* [r2052]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/BatchJobTest.java,
+	  Storage/test/prepend_foo_id.job.js[ADD]:
+	  
+	  Batch jobs: Updating and renaming of records works and is tested
+	  now
+
+2010-01-07 14:09  mkamstrup
+
+	* [r2051] Summa.ipr:
+	  
+	  Change Idea Java langauge level to Java 6 - to allow @Override on
+	  interface methods
+
+2010-01-07 14:08  mkamstrup
+
+	* [r2050]
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/BatchJob.java[ADD],
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/VoidStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageWriterClient.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/rmi/RemoteWritableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java,
+	  Storage/test/collect_ids.job.js[ADD],
+	  Storage/test/count.job.js[ADD], Storage/test/delete.job.js[ADD],
+	  Storage/test/dk/statsbiblioteket/summa/storage/FakeAccess.java[DEL],
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/BatchJobTest.java[ADD]:
+	  
+	  WARNING: RMI wire compatibility of Storage interface broken with
+	  this commit
+	  
+	  Feature: Initial work to enable running scripted batch jobs
+	  inside the storage process. Write support is still not working (I
+	  have a failing unit test) and I need to validate the job name
+	  pattern.
+
+2010-01-07 13:07  mkamstrup
+
+	* [r2049]
+	  Common/src/dk/statsbiblioteket/summa/common/util/UniqueTimestampGenerator.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/UniqueTimestampGeneratorTest.java:
+	  
+	  Bugfix: UniqueTimestampGenerator.MAX_TIME was not constructed
+	  correctly and was in fact negative!
+
+2010-01-07 12:25  toke-sb
+
+	* [r2048]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java:
+	  
+	  Bugfix: LuceneManipulator kept running in the event of out of
+	  disk space
+
+2010-01-06 11:25  toke-sb
+
+	* [r2047]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java:
+	  
+	  BugFix: Tag-representations were double entity-encoded
+
+2010-01-05 14:31  toke-sb
+
+	* [r2046]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayPerformance.java:
+	  
+	  Testing: Added value-array-length 5M to BitsArrayPerformance
+
+2010-01-05 13:32  toke-sb
+
+	* [r2045] Common/Common.iml,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  FacetBrowser/FacetBrowser.iml:
+	  
+	  Logging: The parameters for regexp-based replacement in
+	  ReplaceFilter was not logged properly
+
+2010-01-05 13:30  toke-sb
+
+	* [r2044]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Packed.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Control/Control.iml, Index/Index.iml, Ingest/Ingest.iml,
+	  Search/Search.iml, Storage/Storage.iml, Summa.iml, Summa.ipr,
+	  Support/Support.iml, Web/Web.iml, Workflow/Workflow.iml:
+	  
+	  Tweak: Made the initializers in BitsArrayPacked static
+
+2010-01-03 09:50  toke-sb
+
+	* [r2043] Common/scripts/BitsArrayPerformance.bat,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayPerformance.java:
+	  
+	  Bugfix: The AT-script for BitsArrayPerformance failed to specify
+	  -Xmx512m and -server
+	  Bugfix: The main-method for BitsArrayPerformance failed when -s
+	  was given as argument
+
+2010-01-03 04:52  toke-sb
+
+	* [r2042]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Aligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Impl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Packed.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayInt.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayConstant.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayPerformance.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPerformanceTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Feature: Added fast get and set to BitsArray which bypasses
+	  range-checking and auto-adjustment of internal structures
+
+2010-01-03 03:43  toke-sb
+
+	* [r2041]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Aligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Impl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Packed.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Bugfix: The 64-bit versions of BitsArray did not work at all
+
+2010-01-02 19:04  toke-sb
+
+	* [r2040] Common/scripts/BitsArrayPerformance.bat[ADD]:
+	  
+	  Testing: Added BAT-file for testing BitsArrayPerformance
+
+2010-01-02 18:54  toke-sb
+
+	* [r2039] Common/scripts/BitsArrayPerformance.sh[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Aligned.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Impl.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray64Packed.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayConstant.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/test/BitsArrayPerformance.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayConstant.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPerformanceTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Testing: Refactored the performance test to be easily runnable
+	  with a main-method
+	  Feature: Created 64-bit versions of BitsArrayPacked and
+	  BitsArrayAligned
+
+2009-12-30 02:17  toke-sb
+
+	* [r2038]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayFactory.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayConstant.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPerformanceTest.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Testing: Added extended performance test of
+	  BitsArray-implementations
+	  JavaDoc: Added verbose description of the idea behind
+	  BitsArrayAligned
+
+2009-12-28 01:02  toke-sb
+
+	* [r2037]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Tweak: Changed the default BitsArray to speed-oriented
+	  (BitsArrayAligned) for MultipassSortComparator
+	  Logging: Added memory usage for the BitsArray to the log-output
+	  for MultipassSortComparator
+
+2009-12-28 00:44  toke-sb
+
+	* [r2036]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayFactory.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Bugfix: BitsArrayAligned did not work, BitsArrayFactory did not
+	  work
+	  Testing: Generified BitsArrayTest so that testing of a new
+	  BitsArrayImplementation is easy
+
+2009-12-27 19:27  toke-sb
+
+	* [r2035]
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayImpl.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java:
+	  
+	  Refactoring: Extracted superclass for BitsArrayPacked and
+	  BitaArrayAligned
+	  Bugfix: The BitsArrayPack did not work correctly
+	  Testing: Added several unit-tests for BitsArrayPacked
+
+2009-12-23 03:26  toke-sb
+
+	* [r2034]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilterTest.java:
+	  
+	  Feature: Provided an option for enabling lenient marc-parsing in
+	  ISO2709ToMARCXMLFilter
+
+2009-12-21 10:12  mkamstrup
+
+	* [r2033] Summa.ipr, build.properties, lib/h2-1.2.125.jar[DEL],
+	  lib/h2-1.2.126.jar[ADD]:
+	  
+	  Update H2 dep. to 1.2.126
+
+2009-12-21 09:18  toke-sb
+
+	* [r2032]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/SBMARCParser.java:
+	  
+	  Logging: Minor tweaks at trace level
+
+2009-12-18 16:03  toke-sb
+
+	* [r2031]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ZIPParserTest.java:
+	  
+	  Added some unit-tests for ArrayBlockingQueue to the ZIPParserTest
+
+2009-12-15 15:20  toke-sb
+
+	* [r2030]
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPoolImpl.java:
+	  
+	  Bugfix: The SortedPoolImpl was not thread-safe for reads
+
+2009-12-15 14:17  mkamstrup
+
+	* [r2029]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Show storage __holdings__ in status page and feed
+
+2009-12-15 13:03  toke-sb
+
+	* [r2028]
+	  Common/src/dk/statsbiblioteket/summa/common/util/IntArray2D.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueue.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueueTest.java,
+	  Support/test/log4j.xml:
+	  
+	  Bugfix: the MultipassSortcomparator skipped some terms in most
+	  cases when performing multiple loops
+
+2009-12-15 12:23  mkamstrup
+
+	* [r2027]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/BaseStatsTest.java:
+	  
+	  Tweak the XML format used in the __holdings__ report to be less
+	  verbose. Also include the generation and maximal mtime of all
+	  bases in the <holdings> root element
+
+2009-12-15 10:21  mkamstrup
+
+	* [r2026]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/ReadableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/tools/StorageTool.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java:
+	  
+	  Add a 'holdings' command to storage-tool
+	  
+	  Document private records in ReadableStorage
+	  
+	  Make modificationTime in BaseStats.toXML write the timestamp in
+	  ISO 8601
+
+2009-12-15 09:49  mkamstrup
+
+	* [r2025]
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Allow fetching a "private" __holdings__ record from Storage that
+	  includes an overview of which records are in which bases for the
+	  whole storage. The feature is described in bug #38: "Storage
+	  diagnostics method"
+
+2009-12-15 09:32  mkamstrup
+
+	* [r2024]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/BaseStatsTest.java:
+	  
+	  Implement a method BaseStats.toXML(List<BaseStats>,Writer) that
+	  serializes a list of BaseStats object to XML
+
+2009-12-15 07:25  mkamstrup
+
+	* [r2023]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/BaseStatsTest.java[ADD],
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Add the possibility to store additional metadata with a BaseStats
+	  instance
+	  
+	  Also store the base mtime in a BaseStats instance
+	  
+	  More testing of the stats extraction in DatabaseStorage
+
+2009-12-15 06:25  mkamstrup
+
+	* [r2022]
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Test: More testing of DatabaseStorage.getStats()
+
+2009-12-14 23:45  toke-sb
+
+	* [r2021]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PriorityQueue.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/PriorityQueueTest.java:
+	  
+	  Cleanup: The Comparator vs. Comparable in PriorityQueue has now
+	  been collapsed to always use a Comparator
+
+2009-12-14 23:39  toke-sb
+
+	* [r2020]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueue.java:
+	  
+	  Performance: Upped the chance of the WindowQueue returning a
+	  bumped value for reuse from 0 to something
+	  Logging: More statistics for MultipassSortComparator
+
+2009-12-14 22:26  toke-sb
+
+	* [r2019]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Feedback: Made the MultipassSortComparator output a more verbose
+	  log
+	  Optimization: MultipassSortComparator now reused OrderedStrings
+	  whene possible
+
+2009-12-14 20:48  toke-sb
+
+	* [r2018]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  BugFix: Sort failed with an ArrayIndexOutOfBoundsException if
+	  certain documents did not contain a term for the sort field
+
+2009-12-14 15:42  mkamstrup
+
+	* [r2017]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java[ADD]:
+	  
+	  Start writing some unit tests for the new stats extraction in
+	  storage and fix any bugs it turned out. Still lots more testing
+	  needed.
+
+2009-12-14 15:20  mkamstrup
+
+	* [r2016]
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/derby[DEL]:
+	  
+	  Delete obsolete tests
+
+2009-12-14 15:11  mkamstrup
+
+	* [r2015]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/BaseStats.java[ADD],
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Feature: Preliminary implementation of a "holdings report"
+	  listing how many records are in which state for each base.
+	  Untested!
+
+2009-12-14 14:18  toke-sb
+
+	* [r2014]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/log4j.xml:
+	  
+	  Tweaks to MultipassSortComparator
+
+2009-12-11 10:53  toke-sb
+
+	* [r2013]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java:
+	  
+	  Feedback: Detailed feedback on trace for MultipassSortcomparator
+
+2009-12-11 10:01  toke-sb
+
+	* [r2012]
+	  Common/src/dk/statsbiblioteket/summa/common/util/IntArray2D.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceTrackerImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/StringTracker.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/IntArray2DTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Feature: Method for appending to arrays in Intarray2D, including
+	  unit-test
+
+2009-12-11 09:57  mkamstrup
+
+	* [r2011]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Another test case for the Storage API asserting that record
+	  content is indeed updated when flushing batches of records via
+	  flushAll()
+
+2009-12-11 09:49  mkamstrup
+
+	* [r2010]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Fix a minor thinko
+
+2009-12-11 09:47  mkamstrup
+
+	* [r2009]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Add a test case thoroughly checking that record contents are
+	  indeed updated. - Rest assured that they are :-)
+
+2009-12-11 00:59  toke-sb
+
+	* [r2008]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java:
+	  
+	  Work in progress: Speed-efficient implementation of a multipass
+	  sorter
+
+2009-12-10 23:29  toke-sb
+
+	* [r2007]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/ExtraAsserts.java:
+	  
+	  Testing: Added an array-based assertEquals
+
+2009-12-10 23:25  toke-sb
+
+	* [r2006]
+	  Common/src/dk/statsbiblioteket/summa/common/util/IntArray2D.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/IntArray2DTest.java[ADD]:
+	  
+	  Feature: Finished IntArray2D, a memory-efficient flexible size
+	  two-dimensional int array
+
+2009-12-10 14:43  toke-sb
+
+	* [r2005]
+	  Common/src/dk/statsbiblioteket/summa/common/util/IntArray2D.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java,
+	  Summa.ipr,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Started work on improving MultipassSortComparator performance
+
+2009-12-09 14:47  mkamstrup
+
+	* [r2004] Samples/Summix/bin/all.sh:
+	  
+	  Woopsie. Removed the invocation of the subcommand in await() in
+	  Summix' all.sh script
+
+2009-12-09 14:23  mkamstrup
+
+	* [r2003] Samples/Summix/bin/all.sh:
+	  
+	  Fix Summix' bin/all.sh after I changed the logic of the other
+	  scripts to exec into child processes instead of spawning nested
+	  processes
+
+2009-12-09 14:15  mkamstrup
+
+	* [r2002]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Make StorageRunner.main(), SummaSearcherRunner.main(), and
+	  FilterControl.main() do a System.exit(1) if they encounter a top
+	  level exception
+
+2009-12-09 13:26  mkamstrup
+
+	* [r2001] Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh,
+	  Samples/Summix/bin/suggest-tool.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Use 'set -e' in all Summix .sh script to have them bail out on
+	  any uncaught errors
+
+2009-12-09 13:23  mkamstrup
+
+	* [r2000] Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh,
+	  Samples/Summix/bin/suggest-tool.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Make all Summix .sh shell scripts use 'exec' when launching their
+	  primary child process. This way we don't litter 3 processes for
+	  each service - we have one process/service and that is that of
+	  the JVM.
+	  
+	  Disabled the debug statements in the *.sh scripts for Summix
+
+2009-12-09 12:57  mkamstrup
+
+	* [r1999] Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh,
+	  Samples/Summix/config/indexer.log4j.xml[CPY],
+	  Samples/Summix/config/ingest.log4j.xml[CPY],
+	  Samples/Summix/config/searcher.log4j.xml[CPY],
+	  Samples/Summix/config/storage.log4j.xml[CPY],
+	  Samples/Summix/config/suggest.log4j.xml[CPY],
+	  Samples/Summix/config/tools.log4j.xml[CPY]:
+	  
+	  Logging for Summix: Services now log to log/<service-type>.log
+	  and log/<service-type>.fatal.log. All *-tool.sh log to
+	  log/tools.log.
+	  
+	  FIXME: Update the .bat scripts to set up logging like the .sh
+	  script now does
+
+2009-12-09 12:53  mkamstrup
+
+	* [r1998]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Disable the H2 level 2 cache by default for SuggestStorageH2
+
+2009-12-09 12:29  toke-sb
+
+	* [r1997]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Tiny bugfix: The loop count for MultipassSortcomparator was 1 off
+
+2009-12-09 12:06  toke-sb
+
+	* [r1996] Summa.ipr, Web/website_resources/index.jsp,
+	  Web/website_resources/xslt/short_records.xsl:
+	  
+	  Bugfix: The sample website did not support sorted search or
+	  paging
+
+2009-12-09 10:50  toke-sb
+
+	* [r1995]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java:
+	  
+	  Testing: Added performance tests for sorted search
+	  Feedback: Better log-based feedback on MultipassSortcomparator
+	  build
+
+2009-12-09 08:46  toke-sb
+
+	* [r1994]
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java,
+	  Support/test/log4j.xml:
+	  
+	  Feedback: Added running stats for MultipassSortComparatorTest and
+	  SortHelper
+
+2009-12-09 00:26  toke-sb
+
+	* [r1993]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortFactory.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortPool.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java:
+	  
+	  Feature: Made it possible to specify the sort comparators used by
+	  a LuceneSearchNode, making it possible to choose between memory
+	  usage and speed when sorting fields with many terms. Still in the
+	  experimental phase
+
+2009-12-08 23:12  toke-sb
+
+	* [r1992]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java:
+	  
+	  Cleanup: Moved methods from ReusableSortComparator to
+	  LocalStaticSortComparator
+
+2009-12-08 23:00  toke-sb
+
+	* [r1991]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java:
+	  
+	  Bugfix: The MultipassSortComparator did not catch all terms in
+	  the sort fiels
+	  Feedback: Added logging of stats for building order-lists in the
+	  MultipassSortComparator
+	  Testing: Added performance tests for MultipassSortComparator
+
+2009-12-08 13:42  toke-sb
+
+	* [r1990]
+	  Common/src/dk/statsbiblioteket/summa/common/MarcAnnotations.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/StreamCopyFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PushFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermEntry.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermValueConverter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/strings/LowercaseMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/TermStatPerformance.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitUtil.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/FactoryPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/LoggingReader.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/SimplePair.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayFactory.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/RebuildFacetsTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/StoringIndexDescriptor.java,
+	  Index/test/dk/statsbiblioteket/summa/index/TransformCallbackTest.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCParserLight.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCRecordStream.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCRecordStreamIterator.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterReceiver.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ContentToStreamFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FlexibleMarcStreamReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MarcXmlWriterFixed.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherAggregator.java,
+	  Support/Support.iml,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/test/data/arc/ARC-SAMPLE-20060928223931-00000-gojoblack.arc.gz,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java:
+	  
+	  Bugfix: The MultipassSortcomparator works now, but used the
+	  memory-inefficient BitsArrayInts
+	  Testing: A bug has been discovered in BitsArrayPacked, where
+	  assigning to a value nullifies the subsequent value
+
+2009-12-08 07:22  mkamstrup
+
+	* [r1989] Summa.ipr, build.properties, lib/h2-1.2.124.jar[DEL],
+	  lib/h2-1.2.125.jar[ADD]:
+	  
+	  Bump H2 libs to 1.2.125 which among other fixes includes: "The
+	  database is now closed after an out of memory exception, because
+	  the database could get corrupt otherwise."
+
+2009-12-07 13:19  toke-sb
+
+	* [r1988]
+	  Common/src/dk/statsbiblioteket/summa/common/util/CollatorFactory.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayFactory.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueue.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueueTest.java:
+	  
+	  Unfinished: Created all basic code for MultipassSortcomparator -
+	  not working yet though
+
+2009-12-06 20:59  toke-sb
+
+	* [r1987]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueue.java[ADD],
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/WindowQueueTest.java[ADD]:
+	  
+	  Added WindowQueue implementation of PriorityQueue
+
+2009-12-06 20:52  toke-sb
+
+	* [r1986]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Refactoring: Moved String-size calculations out of
+	  MultipassSortComparator
+
+2009-12-06 20:50  toke-sb
+
+	* [r1985]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PriorityQueue.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceTracker.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceTrackerImpl.java:
+	  
+	  Bugfix: The array creation in PriorityQueue was broken
+	  Feature: Added isOverflowing() check to ResourceTracker
+
+2009-12-06 15:32  toke-sb
+
+	* [r1984]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceTracker.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceTrackerImpl.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/StringTracker.java[ADD]:
+	  
+	  Feature: Added interface and implementation of resource tracking
+
+2009-12-06 12:10  toke-sb
+
+	* [r1983]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PriorityQueue.java:
+	  
+	  Feature: Added optional Comparator to PriorityQueue
+	  Cleanup: Removed most casts from PriorityQueue at the cost of
+	  using ArrayUtil's hack for creating arrays of generics
+
+2009-12-06 11:34  toke-sb
+
+	* [r1982]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  JacaDoc: Added detailed decription with pseudo-code for how the
+	  MultipassSortComparator should work
+
+2009-12-06 11:33  toke-sb
+
+	* [r1981] Support/Support.iml,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java:
+	  
+	  Added constructor for ReusableSortcomparator that tahes a
+	  Collator
+
+2009-12-06 11:26  toke-sb
+
+	* [r1980]
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort[ADD],
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java[ADD],
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java[ADD]:
+	  
+	  Testing: Added unit-tests for Lucene sorting
+
+2009-12-04 15:37  toke-sb
+
+	* [r1979]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java[ADD],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java[ADD]:
+	  
+	  Refactoring: Extracted general processing from
+	  LocalStaticSortComparator
+	  Unfinished: Created the class for MultipassSortComparator
+
+2009-12-04 11:10  toke-sb
+
+	* [r1978]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java:
+	  
+	  Javadoc: Added note about sort order for
+	  LocalStaticSortComparator
+
+2009-12-04 10:09  toke-sb
+
+	* [r1977]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PipedStream.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/SBMARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MARC21SlimTweaker.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MarcXmlWriterFixed.java[ADD],
+	  Ingest/test/data/iso2709/dpu20091109_sample.data,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/SBMARCParserTest.java:
+	  
+	  Implementation: added enough hacks to get support for the danish
+	  variant of ISO2709. Generated IDs needs checking
+
+2009-12-03 10:36  mkamstrup
+
+	* [r1976]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java:
+	  
+	  Butify HTML in case of errors. This affects both index.jsp and
+	  rss.jsp
+
+2009-12-03 10:21  mkamstrup
+
+	* [r1975]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageReaderClient.java:
+	  
+	  Fix type in exception string for getModificationTime()
+
+2009-12-02 12:47  mkamstrup
+
+	* [r1973] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.4.15
 
 2009-12-02 12:03  toke-sb
 
