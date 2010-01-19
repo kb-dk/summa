@@ -465,6 +465,7 @@
     <dictionary name="te">
       <words>
         <w>freetext</w>
+        <w>lucene</w>
         <w>summa</w>
       </words>
     </dictionary>
