@@ -218,9 +218,6 @@ public class MUXFilter implements ObjectFilter, Runnable {
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Adding " + nextPayload + " to " + feeder);
-            } else if (log.isDebugEnabled()) {
-                log.debug("Processing Payload with id "
-                          + nextPayload.getId());
             }
             feeder.queuePayload(nextPayload);
         }
