@@ -141,4 +141,14 @@ public class DescriptorManipulator implements IndexManipulator {
             descriptor = null;
         }
     }
+
+    @Override
+    public void orderChangedSinceLastCommit() {
+        // Don't care
+    }
+
+    @Override
+    public boolean isOrderChangedSinceLastCommit() {
+        return false;
+    }
 }

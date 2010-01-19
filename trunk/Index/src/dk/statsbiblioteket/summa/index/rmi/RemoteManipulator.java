@@ -32,4 +32,9 @@ public interface RemoteManipulator extends IndexManipulator, Remote {
     @Override
     public void close() throws RemoteException;
 
+    @Override
+    void orderChangedSinceLastCommit() throws RemoteException;
+
+    @Override
+    boolean isOrderChangedSinceLastCommit() throws RemoteException;
 }
