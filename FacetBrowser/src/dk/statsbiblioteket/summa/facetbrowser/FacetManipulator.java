@@ -123,6 +123,7 @@ public class FacetManipulator implements IndexManipulator {
      * facet/tags. The FacetManipulator is just a wrapper.
      */
     protected Builder builder;
+    private boolean orderChanged = false; // Since last commit
 
     public FacetManipulator(Configuration conf) throws RemoteException {
         log.info("Constructing FacetManipulator");
@@ -157,12 +158,15 @@ public class FacetManipulator implements IndexManipulator {
     }
 
     public void commit() throws IOException {
-        if (skipFacetOnUpdate) {
-            log.debug("Rebuilding facet structure as "
-                      + CONF_SKIP_FACET_ON_UPDATE + " is true");
+        if (skipFacetOnUpdate || orderChanged) {
+            log.debug(String.format(
+                    "skipFacetOnUpdate == %b, orderChanged == %b. "
+                    + "Rebuilding facet structure",
+                    skipFacetOnUpdate, orderChanged));
             builder.build(!clearTagsOnCommit);
         }
         builder.store();
+        orderChanged = false;
     }
 
     public void consolidate() throws IOException {
@@ -185,7 +189,7 @@ public class FacetManipulator implements IndexManipulator {
         log.trace("open(" + indexRoot + ") finished");
     }
 
-    public boolean update(Payload payload) throws IOException {
+    public synchronized boolean update(Payload payload) throws IOException {
         if (skipFacetOnUpdate) {
             if (log.isTraceEnabled()) {
                 log.trace("Skipping facet update as "
@@ -194,10 +198,33 @@ public class FacetManipulator implements IndexManipulator {
             }
             return false;
         }
+        if (orderChanged) {
+            if (log.isTraceEnabled()) {
+                log.trace("Skipping facet update as orderChangedSinceLastConso"
+                          + "lidate == true. Payload skipped is " + payload);
+            }
+            return false;
+        }
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace("Adding " + payload + " to Facet structure");
         }
         return !builder.update(payload);
+    }
+
+    @Override
+    public void orderChangedSinceLastCommit() {
+        orderChanged = true;
+    }
+
+    /**
+     * The FacetManipulator never sets orderChanged to true by itself. It only
+     * reacts on external messages.
+     * @return true if the order has been marked as changed since last commit
+     *              or consolidate.
+     */
+    @Override
+    public boolean isOrderChangedSinceLastCommit() {
+        return orderChanged;
     }
 }

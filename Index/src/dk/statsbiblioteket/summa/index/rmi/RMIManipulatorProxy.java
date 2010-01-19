@@ -213,4 +213,27 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
                     "close() for %d:%s", registryPort, serviceName), t);
         }
     }
+
+    @Override
+    public void orderChangedSinceLastCommit() throws RemoteException {
+        try {
+            backend.orderChangedSinceLastCommit();
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "orderChangedSinceLastCommit() for %d:%s",
+                    registryPort, serviceName), t);
+        }
+    }
+
+    @Override
+    public boolean isOrderChangedSinceLastCommit() throws RemoteException {
+        try {
+            return backend.isOrderChangedSinceLastCommit();
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "isOrderChangedSinceLastCommit() for %d:%s",
+                    registryPort, serviceName), t);
+            return true; // We bomb out in a few seconds, so the value is random
+        }
+    }
 }

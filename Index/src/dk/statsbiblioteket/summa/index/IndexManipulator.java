@@ -128,4 +128,21 @@ public interface IndexManipulator extends Configurable {
      * @throws IOException in case of I/O problems.
      */
     public void close() throws IOException;
+
+    /**
+     * Notifies the manipulator that the order of indexed Records might have
+     * changed since last commit. This might be caused by e.x. a delete of
+     * an existing Lucene document, followed by a merge. 
+     * @throws IOException in case of I/O problems.
+     */
+    public void orderChangedSinceLastCommit() throws IOException;
+
+    /**
+     * This method is used for signalling other manipulators. It will normally
+     * be called once for each Record. Consolidates always imply a commit.
+     * @return true if this manipulator might have changed the order of indexed 
+     * Records since last commit.
+     * @throws IOException in case of I/O problems.
+     */
+    public boolean isOrderChangedSinceLastCommit() throws IOException;
 }

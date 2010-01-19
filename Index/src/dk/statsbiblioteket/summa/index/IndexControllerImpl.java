@@ -221,6 +221,8 @@ public class IndexControllerImpl extends StateThread implements
     private long updatesSinceLastConsolidate = 0;
     private long commitsSinceLastConsolidate = 0;
 
+    private boolean orderChangedSinceLastCommit = false;
+
     private Profiler profiler;
 
     private boolean indexIsOpen = false;
@@ -529,10 +531,14 @@ public class IndexControllerImpl extends StateThread implements
         updatesSinceLastConsolidate++;
         boolean requestCommit = false;
         int manipulatorPosition = 0;
+        boolean oldOrderChanged = isOrderChangedSinceLastCommit();
+        boolean newOrderChanged = false;
         for (IndexManipulator manipulator: manipulators) {
             //noinspection OverlyBroadCatchBlock
             try {
                 requestCommit = requestCommit | manipulator.update(payload);
+                newOrderChanged = newOrderChanged ||
+                                  manipulator.isOrderChangedSinceLastCommit();
             } catch (Exception e) {
                 Logging.logProcess(this.getClass().getSimpleName(),
                                    "Failed indexing",
@@ -561,6 +567,9 @@ public class IndexControllerImpl extends StateThread implements
                 break;
             }
             manipulatorPosition++;
+        }
+        if (newOrderChanged && !oldOrderChanged) {
+            orderChangedSinceLastCommit();
         }
         Logging.logProcess(this.getClass().getSimpleName(),
                            "Indexed update finished with deleted=" + 
@@ -604,6 +613,7 @@ public class IndexControllerImpl extends StateThread implements
         lastCommit = System.currentTimeMillis();
         markAsUpdated(lastCommit);
         updatesSinceLastCommit = 0;
+        orderChangedSinceLastCommit = false;
         log.trace("commit() finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
@@ -627,6 +637,7 @@ public class IndexControllerImpl extends StateThread implements
         lastConsolidate =             System.currentTimeMillis();
         updatesSinceLastConsolidate = 0;
         commitsSinceLastConsolidate = 0;
+        orderChangedSinceLastCommit = false;
         log.info(String.format("consolidate() finished in %d ms",
                                System.currentTimeMillis() - startTime));
     }
@@ -791,5 +802,18 @@ public class IndexControllerImpl extends StateThread implements
     public synchronized boolean removeManipulator(IndexManipulator
             manipulator) {
         return manipulators.remove(manipulator);
+    }
+
+    @Override
+    public void orderChangedSinceLastCommit() throws IOException {
+        orderChangedSinceLastCommit = true;
+        for (IndexManipulator manipulator: manipulators) {
+            manipulator.orderChangedSinceLastCommit();
+        }
+    }
+
+    @Override
+    public boolean isOrderChangedSinceLastCommit() {
+        return orderChangedSinceLastCommit;
     }
 }
