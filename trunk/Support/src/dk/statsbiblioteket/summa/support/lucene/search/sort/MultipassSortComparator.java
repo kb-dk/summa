@@ -265,7 +265,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
             // 7. Set base to the last extracted term from the heap.
             collector.setLowerBound(base);
-            profiler.beat();
+//            profiler.beat();
             // 8. Goto 4.
         }
 
