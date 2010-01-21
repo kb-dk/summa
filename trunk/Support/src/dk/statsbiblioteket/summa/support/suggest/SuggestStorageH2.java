@@ -175,7 +175,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
             createNew = true;
         } else {
-            if (new File(location, DB_FILE + ".data.db").isFile()) {
+            if (new File(location, DB_FILE + ".h2.db").isFile()) {
                 /* Database location exists*/
                 log.debug(String.format(
                         "Reusing old database found at '%s'", location));
