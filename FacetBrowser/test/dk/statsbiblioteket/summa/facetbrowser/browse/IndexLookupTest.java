@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
@@ -32,6 +33,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.Test;
@@ -67,6 +69,59 @@ public class IndexLookupTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(IndexLookupTest.class);
+    }
+
+    public void testLTI() throws Exception {
+        Configuration structureConf = Configuration.newMemoryBased();
+        //noinspection deprecation
+        Configuration testFacetConf = structureConf.
+                createSubConfigurations(Structure.CONF_FACETS, 1).get(0);
+        testFacetConf.set(FacetStructure.CONF_FACET_NAME, "lti");
+        testFacetConf.set(FacetStructure.CONF_FACET_LOCALE, "da");
+        Structure structure = new Structure(structureConf);
+
+        Configuration tagHandlerConf = Configuration.newMemoryBased();
+        tagHandlerConf.set(TagHandler.CONF_USE_MEMORY, false);
+
+        TagHandler tagHandler = new TagHandlerImpl(
+                tagHandlerConf, structure, false);
+        System.out.println("Opening lti facet data");
+        Profiler profiler = new Profiler();
+        tagHandler.open(Resolver.getFile("data/lti.dat").getParentFile());
+        System.out.println(String.format(
+                "Open of %d tags finished in %s",
+                tagHandler.getTagCount("lti"), profiler.getSpendTime()));
+
+        //testTagOrderConsistency(tagHandler);
+
+
+        System.out.println("Dumping index lookup samples");
+        int facetID = tagHandler.getFacetID("lti");
+        for (String lookup: Arrays.asList("a", "b", "t", "to", "æ", "ø", "å")) {
+            System.out.println(lookup + " -direct-> "
+                               + tagHandler.getTagName(
+                    facetID, 
+                    Math.abs(tagHandler.getNearestTagID(facetID, lookup))));
+            System.out.println(lookup + " -index-> " + getLookupResult(
+                    "lti", lookup, -2, 4, tagHandler));
+        }
+        tagHandler.close();
+    }
+
+    private void testTagOrderConsistency(TagHandler tagHandler) {
+        Facet ltiFacet = tagHandler.getFacets().get(0);
+        Collator ltiCollator = ltiFacet.getCollator();
+        System.out.println("Testing tag-order consistency");
+        String last = null;
+        for (int i = 0 ; i < ltiFacet.size() ; i++) {
+            String current = ltiFacet.get(i);
+            if (last != null) {
+                assertTrue(String.format(
+                        "At position %d, %s should be < %s", i, last, current),
+                           ltiCollator.compare(last, current) < 0);
+            }
+            last = current;
+        }
     }
 
     // A tag handler with a single empty facet "test" with locale "da"
@@ -190,7 +245,7 @@ public class IndexLookupTest extends TestCase {
                 IndexRequest.CONF_INDEX_DELTA, -5,
                 IndexRequest.CONF_INDEX_LENGTH, 10
         );
-        String xml = getLookupXML("b", indexConf, tagHandler);
+        String xml = getLookupXML("test", "b", indexConf, tagHandler);
         System.out.println("Got XML:\n" + xml);
         Document domIndex = DOM.stringToDOM(xml);
         NodeList nl = DOM.selectNodeList(domIndex, "//term");
@@ -211,13 +266,13 @@ public class IndexLookupTest extends TestCase {
     private void assertEquals(String term, int delta, int length,
                               TagHandler tagHandler, String expected)
                                                         throws RemoteException {
-        Configuration indexConf = Configuration.newMemoryBased(
-                IndexRequest.CONF_INDEX_DELTA, delta,
-                IndexRequest.CONF_INDEX_LENGTH, length
-        );
-        String actual = Strings.join(
-                getTerms(term, indexConf, tagHandler), ", ");
+        String actual = getLookupResult(
+                "test", term, delta, length, tagHandler);
         if (!actual.equals(expected)) {
+            Configuration indexConf = Configuration.newMemoryBased(
+                    IndexRequest.CONF_INDEX_DELTA, delta,
+                    IndexRequest.CONF_INDEX_LENGTH, length
+            );
             IndexRequest requestFactory = new IndexRequest(indexConf);
             Request request = new Request();
             request.put(IndexKeys.SEARCH_INDEX_FIELD, "test");
@@ -233,9 +288,20 @@ public class IndexLookupTest extends TestCase {
         }
     }
 
-    private List<String> getTerms(String term, Configuration indexConf,
+    private String getLookupResult(String field, String term, int delta,
+                                   int length, TagHandler tagHandler)
+                                                        throws RemoteException {
+        Configuration indexConf = Configuration.newMemoryBased(
+                IndexRequest.CONF_INDEX_DELTA, delta,
+                IndexRequest.CONF_INDEX_LENGTH, length
+        );
+        return Strings.join(getTerms(field, term, indexConf, tagHandler), ", ");
+    }
+
+    private List<String> getTerms(String field, String term,
+                                  Configuration indexConf,
                                   TagHandler tagHandler) throws RemoteException{
-        String responseXML = getLookupXML(term, indexConf, tagHandler);
+        String responseXML = getLookupXML(field, term, indexConf, tagHandler);
         Document dom = DOM.stringToDOM(responseXML);
         NodeList nodes = DOM.selectNodeList(dom, "indexresponse/index/term");
         List<String> terms = new ArrayList<String>(nodes.getLength());
@@ -245,11 +311,12 @@ public class IndexLookupTest extends TestCase {
         return terms;
     }
 
-    private String getLookupXML(String term, Configuration indexConf,
+    private String getLookupXML(String field, String term,
+                                Configuration indexConf,
                                 TagHandler tagHandler) throws RemoteException {
         IndexLookup lookup = new IndexLookup(indexConf);
         Request request = new Request();
-        request.put(IndexKeys.SEARCH_INDEX_FIELD, "test");
+        request.put(IndexKeys.SEARCH_INDEX_FIELD, field);
         request.put(IndexKeys.SEARCH_INDEX_TERM, term);
         ResponseCollection responses = new ResponseCollection();
         lookup.lookup(request, responses, tagHandler);
