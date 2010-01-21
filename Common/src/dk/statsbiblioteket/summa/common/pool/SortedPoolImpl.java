@@ -180,7 +180,6 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
                 }
             }
             indexData[i] = index.readLong();
-            profiler.beat();
         }
         log.trace("loadIndex: Closing streams");
         index.close();
