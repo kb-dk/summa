@@ -164,7 +164,7 @@ public class LuceneManipulator implements IndexManipulator {
         for (int i = 0 ; i < writerThreads ; i++) {
             available.add(new WriterCallable(available));
         }
-        executor = createExecutorService();
+        executor = null;
         log.info(String.format(
                 "LuceneManipulator created. bufferSizePayloads is %d"
                 + ", bufferSizeMB is %f"
@@ -331,6 +331,8 @@ public class LuceneManipulator implements IndexManipulator {
         }
         writerCallable.init(writer, payload, descriptor.getIndexAnalyzer());
         log.trace("Submitting writerCallable");
+
+        checkExecutor();
         Future<Long> writerFuture = executor.submit(writerCallable);
         if (writerThreads == 1) {
             waitForJob(writerFuture, payload);
@@ -468,11 +470,13 @@ public class LuceneManipulator implements IndexManipulator {
                 writer.maxDoc()));
     }
 
+    /* Note: Sets executor = null */
     private void flushPending() {
-        if (available.size() == writerThreads) {
-            log.debug("flushPending(): No pending jobs");
+        if (executor == null) {
+            log.debug("Nothing to flush");
             return;
         }
+
         log.debug("Waiting for " + available.size()
                   + " pending jobs to finish");
         try {
@@ -482,12 +486,15 @@ public class LuceneManipulator implements IndexManipulator {
             log.warn("flushPending(): Interrupted while waiting for pending "
                      + "jobs to finish. Some Payloads might not be indexed");
         }
-        executor = createExecutorService();
+        executor = null;
     }
 
-
-    private ExecutorService createExecutorService() {
-        return Executors.newFixedThreadPool(writerThreads);
+    /* Create a new executor unless we already have one */
+    private void checkExecutor() {
+        if (executor == null) {
+            log.debug("Creating new thread pool");
+            executor = Executors.newFixedThreadPool(writerThreads);
+        }
     }
 
     public synchronized void consolidate() throws IOException {
