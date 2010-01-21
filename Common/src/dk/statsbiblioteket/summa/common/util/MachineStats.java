@@ -131,7 +131,7 @@ public class MachineStats implements Runnable {
             return;
         }
         profiler = new Profiler(500);
-        watcher = new Thread(this);
+        watcher = new Thread(this, "MachineStats");
         watcher.setDaemon(true);
         watcher.start();
     }
@@ -153,6 +153,7 @@ public class MachineStats implements Runnable {
         }
     }
 
+    @Override
     public void run() {
         while (running) {
             if ((logIntervalPings > 0
