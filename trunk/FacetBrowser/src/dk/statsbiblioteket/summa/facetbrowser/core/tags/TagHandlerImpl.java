@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.Collator;
 import java.util.*;
 
 /**
@@ -113,6 +114,10 @@ public class TagHandlerImpl implements TagHandler {
     public int getNearestTagID(int facetID, String tagName) {
         failIfDirty();
         log.trace("getNearestTagId(" + facetID + ", '" + tagName + "')");
+        Collator collator = facets[facetID].getCollator();
+        if (collator != null) {
+            return Collections.binarySearch(facets[facetID], tagName, collator);
+        }
         return Collections.binarySearch(facets[facetID], tagName);
     }
 
