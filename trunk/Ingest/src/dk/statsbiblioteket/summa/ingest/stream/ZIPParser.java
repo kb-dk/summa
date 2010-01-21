@@ -27,9 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
@@ -45,9 +43,9 @@ import java.util.zip.ZipInputStream;
  * // TODO: Consider adding a timeout or similar to guard against streams not
  *          being closed.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+@QAInfo(level = QAInfo.Level.PEDANTIC,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, mke")
 public class ZIPParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(ZIPParser.class);
 
@@ -104,53 +102,28 @@ public class ZIPParser extends ThreadedStreamParser {
             /* Prepare a stream that we'll fill asynchronously while the
              * payload consumer reads from it */
             matching++;
-            QueuedInputStream payloadStream = new QueuedInputStream();
-            Payload payload = new Payload(payloadStream);
+            MonitoredPipedInputStream payloadIn =
+                                            new MonitoredPipedInputStream();
+            PipedOutputStream payloadPipe = new PipedOutputStream();
+            payloadPipe.connect(payloadIn);
+            Payload payload = new Payload(payloadIn);
             payload.getData().put(
                     Payload.ORIGIN,
                     sourcePayload.getData(Payload.ORIGIN) + "!"
                     + entry.getName());
             addToQueue(payload);
 
-            /* Fill the stream we gave to the payload. There is no race here
-             * because all reads on the payloadStream are blocking until
-             * we start filling the queue */
+            /* Pipe the stream we gave to the payload */
             try {
                 byte[] buf = new byte[2048];
                 int numRead;
                 while ((numRead = zip.read(buf)) != -1 && running &&
-                       !payloadStream.closed) {
-                    for (int i = 0; i < numRead; i++) {
-                        while (running && !payloadStream.closed) {
-                            try {
-                                payloadStream.enqueue(buf[i]);
-                                break;
-                            } catch (InterruptedException e) {
-                                //noinspection DuplicateStringLiteralInspection
-                                log.trace("Interrupted while sending bytes. "
-                                          + "Retrying");
-                                // Continue as we do have checks for running
-                            }
-                        }
-                        if (!running) {
-                            log.warn(String.format(
-                                    "running == false while processing %s into "
-                                    + "%s. The content of the entry was not "
-                                    + "completely uncompressed",
-                                    sourcePayload, payload));
-                        }
-                    }
+                       !payloadIn.isClosed()) {
+                    payloadPipe.write(buf, 0, numRead);
                 }
             } finally {
-                while (true) {
-                    try {
-                        payloadStream.enqueueEOF();
-                        break;
-                    } catch (InterruptedException e) {
-                        log.trace("Interrupted while sending EOF. Retrying");
-                        // Just go on - we really need this signal
-                    }
-                }
+                payloadPipe.flush();
+                payloadPipe.close();
             }
         }
         log.debug("Ending processing of " + sourcePayload + " with running="
@@ -162,149 +135,19 @@ public class ZIPParser extends ThreadedStreamParser {
     }
 
     /**
-     * And input stream that reads data from an underlying blocking queue.
-     * This facilitates decoupling of IO operations from producer
-     * and consumer threads.
-     *
-     * FIXME: This implementation uses byte autoboxing madness.
-     *        An approach based on a structure similar to SBUtil's
-     *        CircularCharBuffer, but for bytes instead of chars, would
-     *        likely perform a lot better...
+     * A piped input stream where you can check if it has been closed
      */
-    private static class QueuedInputStream extends InputStream {
+    private static class MonitoredPipedInputStream extends PipedInputStream {
+        private boolean closed = false;
 
-        BlockingQueue<Object> readQueue;
-        private boolean eof;
-        private boolean closed;
-        private Object eofMarker;
-
-        public QueuedInputStream() {
-            readQueue = new ArrayBlockingQueue<Object>(2048);
-            eof = false;
-            closed = false;
-            eofMarker = new Object();
+        public synchronized boolean isClosed() {
+            return closed;
         }
 
         @Override
-        public int read() throws IOException {
-            if (eof) {
-                return -1;
-            }
-            checkClosed();
-
-            while (true) {
-                try {
-                    Object b = readQueue.take();
-                    if (b == eofMarker) {
-                        eof = true;
-                        return -1;
-                    }
-                    return (Byte)b;
-                } catch (InterruptedException e) {
-                    // Ignored, we retry
-                }
-            }
-        }
-
-        @Override
-        public int read(byte[] b) throws IOException {
-            return read(b, 0, b.length);
-        }
-
-        @Override
-        public int read(byte[] buf, int off, int len) throws IOException {
-            if (eof) {
-                return -1;
-            }
-            checkClosed();
-
-            int count = 0;
-            while (count < len) {
-                int b = read();
-                if (b == -1) {
-                    return count;
-                }
-
-                buf[off + count] = (byte)b;
-                count++;
-            }
-
-            return count;
-        }
-
-        @Override
-        public long skip(long n) throws IOException {
-            checkClosed();
-            int count = 0;
-            while (count < n) {
-                //noinspection ResultOfMethodCallIgnored
-                read();
-                count++;
-            }
-            return count;
-        }
-
-        @Override
-        public int available() throws IOException {
-            checkClosed();
-            return readQueue.size();
-        }
-
-        /**
-         * In order to guard against locks upon premature close, the queue is
-         * drained when this method is called.
-         * @throws IOException
-         */
-        @Override
-        public void close() throws IOException {
+        public synchronized void close() throws IOException {
             closed = true;
-            readQueue.clear();
-//            readQueue = null;
-        }
-
-        @Override
-        public void mark(int readlimit) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void reset() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean markSupported() {
-            return false;
-        }
-
-        public void enqueue(byte b) throws InterruptedException {
-            if (!closed) {
-                readQueue.put(b);
-            }
-        }
-
-        public void enqueue(byte[] buf) throws InterruptedException {
-            if (closed) return;
-            for (byte b : buf) {
-                enqueue(b);
-            }
-        }
-
-        public void enqueue(Iterable<Byte> bytes) throws InterruptedException {
-            if (closed) return;
-            for (byte b : bytes) {
-                enqueue(b);
-            }
-        }
-
-        public void enqueueEOF() throws InterruptedException {
-            readQueue.put(eofMarker);
-        }
-
-        private void checkClosed() throws IOException {
-            if (closed) {
-                throw new IOException("Stream closed");
-            }
+            super.close();
         }
     }
 }
