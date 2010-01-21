@@ -71,6 +71,7 @@ public class IndexLookupTest extends TestCase {
         return new TestSuite(IndexLookupTest.class);
     }
 
+/*  Used to test a specific problem. Code kept as we should make a proper test  
     public void testLTI() throws Exception {
         Configuration structureConf = Configuration.newMemoryBased();
         //noinspection deprecation
@@ -107,7 +108,7 @@ public class IndexLookupTest extends TestCase {
         }
         tagHandler.close();
     }
-
+  */
     private void testTagOrderConsistency(TagHandler tagHandler) {
         Facet ltiFacet = tagHandler.getFacets().get(0);
         Collator ltiCollator = ltiFacet.getCollator();
