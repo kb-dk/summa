@@ -24,7 +24,7 @@ if content.startswith("/*"):
 	end_decl = content.find("*/")
 	
 	if end_decl == -1:
-		print >> sys.stderr, "No matching end declaration"
+		#print >> sys.stderr, "No matching end declaration"
 		raise SystemExit		
 	
 	end_decl += 2
@@ -33,7 +33,7 @@ else:
 	end_decl = 0
 	
 if end_decl != 0 and not "GNU" in content[0:end_decl]:
-		print >> sys.stderr, "File header does not look like an LGPL header"
+		#print >> sys.stderr, "File header does not look like an LGPL header"
 		raise SystemExit		
 
 patched_content = content[end_decl + 1:]
