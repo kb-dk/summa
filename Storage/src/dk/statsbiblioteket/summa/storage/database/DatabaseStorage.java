@@ -331,6 +331,8 @@ getco     */
     private boolean useLazyRelations;
     private boolean usePagingModel;
     private int pageSize;
+    private List<BaseStats> cachedStats;
+    private final Object cachedStatsLock = new Object();
 
     /**
      * A variation of {@link QueryOptions} used to keep track
@@ -1593,6 +1595,7 @@ getco     */
 
         /* Update the timestamp we check agaist in getRecordsModifiedAfter */
         updateModificationTime (r.getBase());
+        invalidateCachedStats();
 
         try{
             createNewRecordWithConnection(r, options, conn);
@@ -1633,6 +1636,7 @@ getco     */
          * getRecordsModifiedAfter. This is also done in the end of the flush()
          * because the operation is non-instantaneous  */
         updateModificationTime (r.getBase());
+        invalidateCachedStats();
     }
 
     /**
@@ -1972,7 +1976,7 @@ getco     */
             // Commit the full transaction
             // FIXME: It would probably save memory to do incremental commits
             stmt.getConnection().commit();
-
+            invalidateCachedStats();
             updateModificationTime(base);
             log.info("Cleared base '" + base + "' in "
                     + (System.currentTimeMillis() - start)
@@ -2135,6 +2139,16 @@ getco     */
                             delete.setString(1, oldId);
                             delete.executeUpdate();
                         }
+
+                        // Mark all caches as dirty
+                        invalidateCachedStats();
+                        updateModificationTime(record.getBase());
+                        if (base != null && !base.equals(record.getBase())) {
+                            // The record base was changed by the batch job
+                            updateModificationTime(base);
+                        }
+
+
                     }
                     totalCount++;
                     pageCount++;
@@ -2155,44 +2169,7 @@ getco     */
             closeStatement(stmt);
         }
 
-        // We must update the base here because the updated records might have
-        // changed their bases!
-        if (totalCount > 0 && base != null) {
-            updateModificationTime(base);
-        }
-
         return job.getOutput();
-    }
-
-    private void updateRecordForRow(ResultSet cursor, Record record) throws SQLException {
-        log.debug("Updating '" + record.getId() +"'");
-        boolean hasRelations =
-                record.hasParents() || record.hasChildren();
-
-        // Make sure we store compressed record content
-        record.compressContent();
-        byte[] compressedContent = record.getContent(false);
-
-        cursor.updateString(ID_COLUMN, record.getId());
-        cursor.updateString(BASE_COLUMN, record.getBase());
-        cursor.updateInt(
-                DELETED_COLUMN, boolToInt(record.isDeleted()));
-        cursor.updateInt(
-                INDEXABLE_COLUMN, boolToInt(record.isIndexable()));
-        cursor.updateInt(
-                HAS_RELATIONS_COLUMN, boolToInt(hasRelations));
-        cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
-        cursor.updateBytes(DATA_COLUMN, compressedContent);
-        cursor.updateBytes(META_COLUMN, record.hasMeta() ?
-                                        record.getMeta().toFormalBytes() :
-                                        new byte[0]);
-        cursor.updateRow();
-
-        // Set last update time for the record's base () note that the
-        // base of the record might have changed!
-        updateModificationTime(record.getBase());
-
-        // FIXME: Update relations - but which semantics to use?
     }
 
     /* Create parent/child and child/parent relations for the given record */
@@ -2461,6 +2438,8 @@ getco     */
         PreparedStatement stmt =
                                 conn.prepareStatement(stmtTouchRecord.getSql());
         log.debug("Touching: " + id);
+
+        invalidateCachedStats();
 
         try {
             stmt.setLong(1, timestampGenerator.next());
@@ -2901,21 +2880,35 @@ getco     */
     public List<BaseStats> getStats() throws IOException {
         log.trace("getStats()");
 
-        Connection conn = null;
-        try {
-            conn = getConnection();
-            return getStatsWithConnection(conn);
-        } catch (SQLException e) {
-            throw new IOException("Could not get database stats", e);
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                log.warn("Failed to close connection database: "
-                         + e.getMessage(), e);
+        synchronized (cachedStatsLock) {
+            if (cachedStats != null) {
+                log.debug("Retrieving stats from cache");
+                return cachedStats;
             }
+
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                cachedStats = getStatsWithConnection(conn);
+                return cachedStats;
+            } catch (SQLException e) {
+                throw new IOException("Could not get database stats", e);
+            } finally {
+                try {
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    log.warn("Failed to close connection database: "
+                             + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    private void invalidateCachedStats() {
+        synchronized (cachedStatsLock) {
+            cachedStats = null;
         }
     }
 
