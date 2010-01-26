@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.storage.BaseStats;
+import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -30,94 +31,13 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class DatabaseStorageTest extends TestCase {
-    private static Log log = LogFactory.getLog(DatabaseStorageTest.class);
+public class DatabaseStorageTest extends StorageTestBase {
 
     DatabaseStorage storage;
 
-    static String testDBRoot = "test_db";
-    static String dbPrefix = "db";
-    static String testBase1 = "foobar";
-    static String testBase2 = "frobnibar";
-    static String testId1 = "testId1";
-    static String testId2 = "testId2";
-    static String testId3 = "testId3";
-    static String testId4 = "testId4";
-    static int storageCounter = 0;
-    static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
-    static byte[] testContent2 = new byte[] {'b', '0', 'r', 'k'};
-    long testStartTime;
-
-    private static String lastStorageLocation = null;
-
-    public static Configuration createConf () throws Exception {
-
-        lastStorageLocation =
-                testDBRoot + File.separator + dbPrefix + (storageCounter++);
-        // H2 Config
-        Configuration conf = Configuration.newMemoryBased(
-                Storage.CONF_CLASS, H2Storage.class,
-                DatabaseStorage.CONF_LOCATION, lastStorageLocation
-        );
-
-        // Derby Config
-        /*Configuration conf = Configuration.newMemoryBased(
-                Storage.CONF_CLASS,
-                DerbyStorage.class,
-                DatabaseStorage.CONF_LOCATION,
-                testDBRoot + File.separator + dbPrefix + (storageCounter++)
-        );*/
-
-        // Postgres Config
-        /*Configuration conf = Configuration.newMemoryBased(
-                Storage.CONF_CLASS,
-                PostgresStorage.class,
-                DatabaseStorage.CONF_LOCATION,
-                testDBRoot + File.separator + dbPrefix + (storageCounter++),
-                DatabaseStorage.CONF_FORCENEW,
-                true,
-                DatabaseStorage.CONF_DATABASE,
-                "summa",
-                DatabaseStorage.CONF_USERNAME,
-                "${user.name}",
-                DatabaseStorage.CONF_PASSWORD,
-                "",
-                DatabaseStorage.CONF_HOST,
-                ""
-        );*/
-
-        return conf;
-    }
-
-    public void setUp () throws Exception {
-        File dbRoot = new File(testDBRoot);
-
-        if (dbRoot.exists()) {
-            Files.delete (dbRoot);
-        }
-
-        storage = (DatabaseStorage)StorageFactory.createStorage(createConf());
-
-        /* We get spurious errors where the connection to the db isn't ready
-         * when running the unit tests in batch mode */
-        Thread.sleep(200);
-
-        testStartTime = System.currentTimeMillis();
-    }
-
-    public void tearDown () throws Exception {
-        log.info("Test case tear down commencing");
-
-        storage.destroyDatabase();
-
-        /* We get spurious errors where the connection to the db isn't ready
-         * when running the unit tests in batch mode */
-        Thread.sleep(200);
-
-        storage.close();
-        /* We get spurious errors where the connection to the db isn't ready
-         * when running the unit tests in batch mode */
-        Thread.sleep(200);
+    public void setUp() throws Exception {
+        super.setUp();
+        this.storage = (DatabaseStorage)super.storage;
     }
 
     public void testStatsOnEmptyStorage() throws Exception {
