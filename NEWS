@@ -1,4 +1,111 @@
 ========================
+2010-01-27: Summa 1.5.00
+========================
+	  
+ * NOTICE: Convert entire Summa source tree to Apache 2 license
+
+ * Storage ABI break (source compatibility preserved): Add variants
+	  of flush() and flushAll() that takes an extra QueryOptions
+	  parameter.
+
+ * ABI break: Add setter methods for QueryOptions.meta(). We alreay
+	  broke the Storage binary protocol so it's no biggie.
+
+ * Update H2 dep. to 1.2.126, which among other fixes includes: "The
+	  database is now closed after an out of memory exception, because
+	  the database could get corrupt otherwise.". and disable the H2 
+    level 2 cache by default for SuggestStorageH2.
+
+ * New API Storage.batchJob for running predefined batch jobs in any 
+ 	  scripting language accrose of subsets of the storage.
+	  Bundled sample batch jobs with Summix: 
+		collect_ids.job.js, delete.job.js, and count.job.js 
+ 
+ * Add a 'holdings' command to storage-tool
+
+ * Add a __holdings__ record to storage containing detailed storage 
+ 	  statistic. Show storage __holdings__ in status page and feed
+	  The holdings can also be looked up with the "holdings" action in
+	  storage-tool.sh
+
+ * Define a meta flag "TRY_UPDATE", which alter default behaviour of 
+    Storage.flush() and Storage.flushAll() to not update records if they 
+		already are up to date.
+	
+ * New boolean property on RecordWriter:
+	  "summa.storage.recordwriter.tryupdate" to pass TRY_UPDATE=true in
+	  the QueryOptions to flushAll()
+
+ * Bugfix: Allow both old and new H2 file formats in H2Storage and
+	  SuggestStorageH2 (ie. allow both .data.db and .h2.db)
+
+ * Bugfix: There was an elusive deadlock in QueuedInputStream used
+	  by the ZipParser class. It both involved a missing 'synchronized'
+	  statement and a bad cast of byte to int. We have replaced the
+	  entire implementation with Java's native Piped{In,Out}putStream.
+
+ * Bugfix: The result of an IndexLookup was scrabled when a
+	  sortLocale was defined for the facet
+
+ * Bugfix: The FacetResults did not perform entity escaping
+	  correctly
+
+ * Bugfix: UniqueTimestampGenerator.MAX_TIME was not constructed
+	  correctly and was in fact negative!
+
+ * Bugfix: LuceneManipulator kept running in the event of out of
+	  disk space
+
+ * BugFix: Tag-representations were double entity-encoded
+
+ * Bugfix: The SortedPoolImpl was not thread-safe for reads
+
+ * BugFix: Sort failed with an ArrayIndexOutOfBoundsException if
+	  certain documents did not contain a term for the sort field
+
+ * Bugfix: The sample website did not support sorted search or
+	  paging
+
+ * Bugfix: The MultipassSortcomparator works now, but used the
+	  memory-inefficient BitsArrayInts
+	  Testing: A bug has been discovered in BitsArrayPacked, where
+	  assigning to a value nullifies the subsequent value
+
+ * Feature: Made the LuceneManipulator optionally multi threaded
+	  (deafult is 1 thread, which mimicks the old behaviour). As par of
+	  this, the IndexManipulator-interface was extended with support
+	  for signalling if the order of documents gets unreliable
+
+ * Feature: Added filter for post-processing in ingest workflows
+	  involving full dumps. The primary usage is clearing of old data
+	  from Storage
+
+ * Feature: Provided an option for enabling lenient marc-parsing in
+	  ISO2709ToMARCXMLFilter
+
+ * Feature: Made it possible to specify the sort comparators used by
+	  a LuceneSearchNode, making it possible to choose between memory
+	  usage and speed when sorting fields with many terms. Still in the
+	  experimental phase
+
+ * Make StorageRunner.main(), SummaSearcherRunner.main(), and
+	  FilterControl.main() do a System.exit(1) if they encounter a fatal 
+		top level exception
+
+ * Use 'set -e' in all Summix .sh script to have them bail out on
+	  any uncaught errors
+
+ * Make all Summix .sh shell scripts use 'exec' when launching their
+	  primary child process. This way we don't litter 3 processes for
+	  each service - we have one process/service and that is that of
+	  the JVM.
+
+ * Logging for Summix: Services now log to log/<service-type>.log
+	  and log/<service-type>.fatal.log. All *-tool.sh log to
+	  log/tools.log. Here <service-type> is derived from the basename of
+		the config file
+
+========================
 2009-12-02: Summa 1.4.15
 ========================
 
