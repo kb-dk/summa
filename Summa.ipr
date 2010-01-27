@@ -476,9 +476,6 @@
       </words>
     </dictionary>
   </component>
-  <component name="ProjectKey">
-    <option name="state" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk/Summa.ipr" />
-  </component>
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Common/Common.iml" filepath="$PROJECT_DIR$/Common/Common.iml" />
@@ -518,50 +515,17 @@
             <SvnBranchConfiguration>
               <option name="branchMap">
                 <map>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/1337">
+                  <entry key="https://summa.svn.sourceforge.net/svnroot/summa/branches">
                     <value>
                       <list />
                     </value>
                   </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/branches">
+                  <entry key="https://summa.svn.sourceforge.net/svnroot/summa/projects">
                     <value>
                       <list />
                     </value>
                   </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/tags">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                </map>
-              </option>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/1337" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-        <entry key="$PROJECT_DIR$/Control">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchMap">
-                <map>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/771">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/branches">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/tags">
+                  <entry key="https://summa.svn.sourceforge.net/svnroot/summa/tags">
                     <value>
                       <list />
                     </value>
@@ -570,117 +534,17 @@
               </option>
               <option name="branchUrls">
                 <list>
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/771" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
+                  <option value="https://summa.svn.sourceforge.net/svnroot/summa/branches" />
+                  <option value="https://summa.svn.sourceforge.net/svnroot/summa/projects" />
+                  <option value="https://summa.svn.sourceforge.net/svnroot/summa/tags" />
                 </list>
               </option>
-              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-        <entry key="$PROJECT_DIR$/Index">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchMap">
-                <map>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/771">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/branches">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/tags">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                </map>
-              </option>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/771" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-        <entry key="$PROJECT_DIR$/Storage">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchMap">
-                <map>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/622">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/branches">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/tags">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                </map>
-              </option>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/622" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
-            </SvnBranchConfiguration>
-          </value>
-        </entry>
-        <entry key="$PROJECT_DIR$/Web">
-          <value>
-            <SvnBranchConfiguration>
-              <option name="branchMap">
-                <map>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/1337">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/branches">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://gforge.statsbiblioteket.dk/svn/summa/tags">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                </map>
-              </option>
-              <option name="branchUrls">
-                <list>
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/1337" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
-                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
-                </list>
-              </option>
-              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
+              <option name="trunkUrl" value="https://summa.svn.sourceforge.net/svnroot/summa/trunk" />
             </SvnBranchConfiguration>
           </value>
         </entry>
       </map>
     </option>
-    <option name="myVersion" value="123" />
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">

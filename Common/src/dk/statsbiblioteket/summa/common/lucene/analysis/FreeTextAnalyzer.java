@@ -36,7 +36,7 @@ public class FreeTextAnalyzer extends SummaAnalyzer {
      * @see SummaAnalyzer#SummaAnalyzer(String, boolean, String, boolean, boolean)
      */
     public FreeTextAnalyzer(){
-        super(Rules.RELAXED_REPLACE_RULES, true, "", true, true);
+        super("", true, Rules.RELAXED_REPLACE_RULES, true, true);
     }
 
 }
