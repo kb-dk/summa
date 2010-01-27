@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!--
+   Log4J configuration for the summa-workflow.jar
+ -->
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+    <!-- Default appender -->
+
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <!-- The full log appender uses a extremely slow pattern,
+         on production systems use only this appender with a
+         threshold of fatal -->
+    <appender name="FULL_LOG" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="FATAL"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="dk.statsbiblioteket">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    
+    <root>
+        <level value="FATAL" />
+        <appender-ref ref="FULL_LOG" />
+    </root>
+
+</log4j:configuration>
+
+
