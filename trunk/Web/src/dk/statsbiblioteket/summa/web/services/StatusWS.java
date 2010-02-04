@@ -293,14 +293,14 @@ public class StatusWS {
                 List<Pair<String,String>> group = groups.get(groupName);
                 Collections.sort(group);
                 buf.append("  <group name=\"")
-                   .append(groupName)
+                   .append(XMLUtil.encode(groupName))
                    .append("\">\n");
                 for (Pair<String,String> prop : group) {
                     buf.append("    <property name=\"")
-                       .append(prop.getKey())
+                       .append(XMLUtil.encode(prop.getKey()))
                        .append("\">\n")
                        .append("      ")
-                       .append(prop.getValue())
+                       .append(XMLUtil.encode(prop.getValue()))
                        .append("\n    </property>\n");
                 }
                 buf.append("  </group>\n");
