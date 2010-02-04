@@ -232,10 +232,10 @@ public class StatusBuilder {
 
         Node holdings = DOM.selectNode(statusDom,
           "/status/group[@name='storage']/property[@name='holdings']/holdings");
-        
+
+        buf.append("<b>Storage holdings:</b>");
         if (holdings != null) {
             NodeList bases = holdings.getChildNodes();
-            buf.append("<b>Storage holdings:</b>");
             buf.append("<ul>\n");
             for (int i = 0; i < bases.getLength(); i++) {
                 if (bases.item(i).getNodeType() != Node.ELEMENT_NODE) {
@@ -254,6 +254,8 @@ public class StatusBuilder {
                    .append("</li>\n");
             }
             buf.append("</ul>\n");
+        } else {
+            buf.append(" Not available");
         }
 
 

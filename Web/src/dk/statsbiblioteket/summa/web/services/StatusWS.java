@@ -296,11 +296,14 @@ public class StatusWS {
                    .append(XMLUtil.encode(groupName))
                    .append("\">\n");
                 for (Pair<String,String> prop : group) {
+                    // Note: In order to allow services to return rich
+                    //       status messages the body of the response is assumed
+                    //       to be valid XML, thus is not escaped
                     buf.append("    <property name=\"")
                        .append(XMLUtil.encode(prop.getKey()))
                        .append("\">\n")
                        .append("      ")
-                       .append(XMLUtil.encode(prop.getValue()))
+                       .append(prop.getValue()) //Body is XML - don't escaped it
                        .append("\n    </property>\n");
                 }
                 buf.append("  </group>\n");
