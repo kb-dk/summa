@@ -1,3 +1,53 @@
+2010-02-04 07:39  mkamstrup
+
+	* [r2109]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Bugfix of previous bugfix: Relax overly zealous XML escaping. The
+	  body of the status messages from each service is assumed to be
+	  valid XML - in order to allow them to return rich status
+	  messages. The last bugfix inadvertedly escaped the status body
+
+2010-02-04 07:28  mkamstrup
+
+	* [r2108]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Bugfix: Entity encode results from the RMI services we pull
+	  status from. This fixes the issue we've been seeing with
+	  Silkeborg's SummaRise setup where the status page threw a NPE
+
+2010-02-02 12:32  hkirk
+
+	* [r2107] Ingest/test/UnzipThread.java:
+	  
+	  Test Error: Fixed import statement in test file.
+
+2010-01-27 13:01  hkirk
+
+	* [r2105] ChangeLog, NEWS, build.properties:
+	  
+	  Updated NEWS, ChangeLog and build.properties
+
+2010-01-27 12:45  toke-sb
+
+	* [r2104]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/FreeTextAnalyzer.java,
+	  Summa.ipr:
+	  
+	  Meta: Removed references to statsbiblioteket gforge from Idea
+	  setup file
+	  Tweak: Changes rule-position in FreeTextAnalyzer - no performance
+	  effect with the current implementation, but potentially a fair
+	  gain in indexing speed
+
+2010-01-27 10:48  toke-sb
+
+	* [r2103] NOTICE:
+	  
+	  meta: Added Refind S.M.B.A. as contributor
+
 2010-01-26 14:17  mkamstrup
 
 	* [r2102] COPYING[DEL],

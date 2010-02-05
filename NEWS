@@ -1,4 +1,13 @@
 ========================
+2010-02-05: Summa 1.5.1
+========================
+
+ * Bugfix: Proper escaping of messages from sub-services in the status web
+           service. The status web service would return invalid XML if any
+           of the monitored services returned properties with names that
+           was not valid XML.
+
+========================
 2010-01-27: Summa 1.5.00
 ========================
 	  
