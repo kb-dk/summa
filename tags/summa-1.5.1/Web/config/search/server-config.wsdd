@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+    <globalConfiguration>
+        <parameter name="sendXsiTypes" value="true"/>
+        <parameter name="sendMultiRefs" value="true"/>
+        <parameter name="axis.enableListQuery" value="true" />
+        <parameter name="sendXMLDeclaration" value="true"/>
+        <parameter name="axis.sendMinimizedElements" value="true"/>
+        <requestFlow>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="session"/>
+            </handler>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="request"/>
+                <parameter name="extension" value=".jwr"/>
+            </handler>
+        </requestFlow>
+    </globalConfiguration>
+
+    <handler name="LocalResponder" type="java:org.apache.axis.transport.local.LocalResponder"/>
+    <handler name="URLMapper" type="java:org.apache.axis.handlers.http.URLMapper"/>
+    <handler name="Authenticate" type="java:org.apache.axis.handlers.SimpleAuthenticationHandler"/>
+    <!--
+    <service name="AdminService" provider="java:MSG">
+        <parameter name="allowedMethods" value="AdminService"/>
+        <parameter name="enableRemoteAdmin" value="false"/>
+        <parameter name="className" value="org.apache.axis.utils.Admin"/>
+        <namespace>http://xml.apache.org/axis/wsdd/</namespace>
+    </service>
+    -->
+    <!--
+    <service name="Version" provider="java:RPC">
+        <parameter name="allowedMethods" value="getVersion"/>
+        <parameter name="className" value="org.apache.axis.Version"/>
+    </service>
+    -->
+
+    <service name="SearchWS" provider="java:RPC" style="wrapped" use="literal">
+        <parameter name="typeMappingVersion" value="1.2"/>
+
+        <documentation>Search web service for the Summa system</documentation>
+        <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
+
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery"/>
+        <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="getSuggestions">
+            <documentation>
+                Given a prefix this method returns other queries that start with the same prefix.
+             </documentation>
+            <parameter name="prefix" type="tns:string">
+                <documentation>The prefix that the returned queries must start with.</documentation>
+            </parameter>
+            <parameter name="maxSuggestions" type="tns:int">
+                <documentation>The maximum number of queries to be returned.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="getRecentSuggestions">
+            <documentation>
+                Get the most recently added or updated suggestions within a given timeframe
+             </documentation>
+            <parameter name="ageSeconds" type="tns:int">
+                <documentation>Number of seconds to look back in time.</documentation>
+            </parameter>
+            <parameter name="maxSuggestions" type="tns:int">
+                <documentation>The maximum number of queries to be returned.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="commitQuery">
+            <documentation>
+                Commits a query to the Suggestion database. This enables this query to be returned in the result from getSuggestions. It is recommended that only query that the user actually enters are committed - ie. it might not be a good idea to commit queries that come from the user clicking facets, etc.             </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query to commit to the database.</documentation>
+            </parameter>
+            <parameter name="hitCount" type="tns:int">
+                <documentation>The number of hits that resulted from the query. If this is 0 then the query is removed from the Suggestion database.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="getField">
+            <documentation>
+                Returns a given field from the search index for a specific recordId. This could for instance be used to get the shortformat for a specific record.
+            </documentation>
+            <parameter name="id" type="tns:string">
+                <documentation>The recordID to look up.</documentation>
+            </parameter>
+            <parameter name="fieldName" type="tns:string">
+                <documentation>The name of the field to return.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="getMoreLikeThis">
+            <documentation>
+                Gives a search result of records that "are similar to" a given record.
+            </documentation>
+            <parameter name="id" type="tns:string">
+                <documentation>The recordID of the record that should be used as base for the MoreLikeThis query.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="indexLookup">
+            <documentation>
+                Perform a lookup for a given term on a given field and returns a list of terms surrounding it.
+            </documentation>
+            <parameter name="field" type="tns:string">
+                <documentation>The field to perform lookup on. Valid fields are all defined facets.</documentation>
+            </parameter>
+            <parameter name="term" type="tns:string">
+                <documentation>The term to perform lookup for. Terms can be single or multiple words.</documentation>
+            </parameter>
+            <parameter name="delta" type="tns:int">
+                <documentation>The offset from the term position in the field for the start of the list of terms.</documentation>
+            </parameter>
+            <parameter name="length" type="tns:int">
+                <documentation>The manimum number of terms to return.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="simpleSearch">
+            <documentation>
+                This method executes the given query and returns a search result ranked by relevancy.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="simpleSearchSorted">
+            <documentation>
+                This method executes the given query and returns a search result ranked by the given sort key.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+            <parameter name="sortKey" type="tns:string">
+                <documentation>The key to sort by.</documentation>
+            </parameter>
+            <parameter name="reverse" type="tns:boolean">
+                <documentation>A boolean indication whether or not to sort in reverse.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="filterSearchSorted">
+            <documentation>
+                This method executes the given query on the documents defined by the filter and returns a search result ranked by the given sort key.
+            </documentation>
+            <parameter name="filter" type="tns:string">
+                <documentation>The filter string (standard query syntax).</documentation>
+            </parameter>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+            <parameter name="sortKey" type="tns:string">
+                <documentation>The key to sort by.</documentation>
+            </parameter>
+            <parameter name="reverse" type="tns:boolean">
+                <documentation>A boolean indication whether or not to sort in reverse.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="simpleFacet">
+            <documentation>
+                This method executes the given query and returns a facet result.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="advancedFacet">
+            <documentation>
+                A more advanced way to query the facet browser giving the caller control over the individual facets and tags.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="facetKeys" type="tns:string">
+                <documentation>
+                    A comma-separeted list with the names of the wanted Facets.
+                    Optionally, the maximum Tag-count for a given Facet can be specified in parenthesis after the name.
+
+                    Example: "Title, Author (5), City (10), Year".
+
+                    If no maximum Tag-count is specified, the number is taken from the defaults.
+                    Optionally, the sort-type for a given Facet can be specified in the same parenthesis. Valid values are POPULARITY and ALPHA. If no sort-type is specified, the number is taken from the defaults.
+
+                    Example: "Title (ALPHA), Author (5 POPULARITY), City"
+
+                    This is all optional. If no facets are specified, the default facets are requested.
+                </documentation>
+            </parameter>
+        </operation>
+    </service>
+    <transport name="http">
+        <requestFlow>
+            <handler type="URLMapper"/>
+            <handler type="java:org.apache.axis.handlers.http.HTTPAuthHandler"/>
+        </requestFlow>
+    </transport>
+    <transport name="local">
+        <responseFlow>
+            <handler type="LocalResponder"/>
+        </responseFlow>
+    </transport>
+</deployment>
