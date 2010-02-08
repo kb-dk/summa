@@ -74,8 +74,12 @@ public class CopyingInputStream extends InputStream {
     public void close() throws IOException {
         log.debug("Closing input- and output-stream");
         if (flushOnClose) {
-            log.debug("Flushing remaining content from in to out");
+            long startTime = System.nanoTime();
+            log.debug(
+                    "Flushing remaining content from in stream to out stream");
             Streams.pipe(in, out);
+            log.debug("Finished flushing in "
+                      + (System.nanoTime() - startTime / 1000000.0) + "ms");
         }
         in.close();
         out.close();

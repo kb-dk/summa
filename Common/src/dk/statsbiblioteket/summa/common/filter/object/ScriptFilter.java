@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * language supported by the Java runtime. The prime example here would be
  * Javascript.
  * <p/>
- * The scripting environment has four global varibles injected into the global
+ * The scripting environment has four global variables injected into the global
  * scope. These are;
  * {@code payload}, {@code allowPayload}, {@code feedbackMessage},
  * and {@code log}.
