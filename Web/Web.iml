@@ -54,6 +54,29 @@
     <orderEntry type="module" module-name="Support" />
     <orderEntry type="library" name="sbutil" level="project" />
     <orderEntry type="module" module-name="FacetBrowser" />
+    <orderEntry type="module-library">
+      <library name="servlet-api">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/servlet-api-2.5.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="axis">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/axis/axis-ant-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/saaj-axis-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/wsdl4j-1.5.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/jaxrpc-axis-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/commons-discovery-0.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/axis-1.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 
