@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import dk.statsbiblioteket.util.reader.ReplaceReader;
 import junit.framework.TestCase;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
@@ -56,6 +58,14 @@ public class SummaAnalyzerTest extends TestCase {
         return new LowerCaseFilter(
                 new WhitespaceTokenizer(
                         new StringReader(text)));
+    }
+
+    public void testCharToCharArray() throws Exception {
+        ReplaceFactory factory = new ReplaceFactory(
+                RuleParser.parse(RuleParser.sanitize(
+                        "", true, Rules.ALL_TRANSLITERATIONS)));
+        ReplaceReader replacer = factory.getReplacer();
+        System.out.println("Got Replacer " + replacer);
     }
 
     public void testFooCaseFold() throws Exception {
