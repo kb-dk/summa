@@ -749,6 +749,13 @@
         <root url="jar://$PROJECT_DIR$/lib/src/marc4j-2.4-src.zip!/src" />
       </SOURCES>
     </library>
+    <library name="lucene-didyoumean">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/lucene-didyoumean-2.4.0.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
 </project>
 

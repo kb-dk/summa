@@ -37,6 +37,7 @@
     <orderEntry type="library" name="commons-httpclient" level="project" />
     <orderEntry type="module" module-name="FacetBrowser" />
     <orderEntry type="library" name="tika" level="project" />
+    <orderEntry type="library" name="lucene-didyoumean" level="project" />
   </component>
 </module>
 
