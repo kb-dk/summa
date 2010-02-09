@@ -113,6 +113,7 @@
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.lucene.queries}"/>
+                <available file="${summa.lib.lucene.didyoumean}"/>
                 <available file="${summa.lib.h2}"/>
                 <available file="${summa.lib.sbutil}"/>
             </and>
@@ -189,6 +190,7 @@
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
         <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
+        <copy file="${basedir}/../${summa.lib.lucene.didyoumean}" tofile="${summa.lib.lucene.didyoumean}"/>
         <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <!--<copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
