@@ -5,7 +5,10 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.support.api.DidYouMeanResponse
@@ -36,12 +39,12 @@ public class DidYouMeanResponse implements Response {
     private static XMLOutputFactory xmlOutputFactory =
                                                 XMLOutputFactory.newInstance();
 
-    private String result = null;
     private String query = null;
+    private LinkedList<ResultTuple> resultTuples = null;
 
-    public DidYouMeanResponse(String query, String result) {
-        this.result = result;
+    public DidYouMeanResponse(String query) {
         this.query = query;
+        resultTuples = new LinkedList<ResultTuple>();
     }
 
     @Override
@@ -72,11 +75,15 @@ public class DidYouMeanResponse implements Response {
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
             writer.writeCharacters("\n");
-            writer.writeCharacters("    ");
-            writer.writeStartElement(DIDYOUMEAN);
-            writer.writeCharacters(result);
-            writer.writeEndElement();
-            writer.writeCharacters("\n");
+            for(ResultTuple tuple: resultTuples) {
+                writer.writeCharacters("    ");
+                writer.writeStartElement(DIDYOUMEAN);
+                writer.writeAttribute("score", String.valueOf(tuple.getScore()));
+                //writer.writeAttribute("corpusqueryresults", String.valueOf(tuple.corpusQueryResults));
+                writer.writeCharacters(tuple.getResult());
+                writer.writeEndElement();
+                writer.writeCharacters("\n");
+            }
             writer.writeEndElement();
             writer.writeCharacters("\n");
             writer.writeEndDocument();
@@ -89,4 +96,33 @@ public class DidYouMeanResponse implements Response {
         }
         return sw.toString();
     }
+
+    public void addResult(String result, double score, int corpusQueryResults) {
+        resultTuples.addFirst(new ResultTuple(result, score, corpusQueryResults));
+    }
+
+    private static class ResultTuple implements Serializable {
+        private String result = null;
+        private double score = 0d;
+        private int corpusQueryResults = 0;
+
+        public ResultTuple(String result, double score, int corpusQueryResults) {
+            this.result = result;
+            this.score = score;
+            this.corpusQueryResults = corpusQueryResults;
+        }         
+
+        public String getResult() {
+            return result;
+        }
+
+        public double getScore() {
+            return score;
+        }
+
+        public int getCorpusQueryResults() {
+            return corpusQueryResults;
+        }
+    }
+
 }
