@@ -13,6 +13,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.facade.DirectoryIndexFacade;
 import org.apache.lucene.index.facade.IndexFacade;
+import org.apache.lucene.search.didyoumean.Suggestion;
+import org.apache.lucene.search.didyoumean.SuggestionPriorityQueue;
 import org.apache.lucene.search.didyoumean.secondlevel.token.MultiTokenSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.TokenPhraseSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.ngram.NgramTokenSuggester;
@@ -120,12 +122,27 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
-        if(request.containsKey(DidYouMeanKeys.SEARCH_KEY)) {
-            String query = request.getString(DidYouMeanKeys.SEARCH_KEY);
-            String result = phraseSuggester.didYouMean(query);
-            if(result != null) {
-                log.debug("Did-you-mean '" + query + "' -> '" + result + "'");
-                responses.add(new DidYouMeanResponse(query, result));
+        int numSuggestions = 1;
+        if (request.containsKey(DidYouMeanKeys.SEARCH_MAX_RESULTS)) {
+            numSuggestions = request.getInt(DidYouMeanKeys.SEARCH_MAX_RESULTS);
+        }
+
+        if(request.containsKey(DidYouMeanKeys.SEARCH_QUERY)) {
+            String query = request.getString(DidYouMeanKeys.SEARCH_QUERY);
+            SuggestionPriorityQueue spq =
+                                phraseSuggester.suggest(query, numSuggestions);
+
+            if(spq.size() > 0) {
+                log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
+                          + "' results.");
+                DidYouMeanResponse response = new DidYouMeanResponse(query);
+                responses.add(response);
+                for(Suggestion suggestion: spq.toArray()) {
+                    response.addResult(suggestion.getSuggested(),
+                                       suggestion.getScore(),
+                                       suggestion.getCorpusQueryResults());
+                }
+
             } else {
                 log.debug("No did-you-mean result for '" + query + "'");
             }
