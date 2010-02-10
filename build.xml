@@ -225,17 +225,32 @@
 
     <!-- Wrap up a tarball ready for distribution -->
     <target name="release" depends="depends, distclean, all, doc">
-        <property name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
-        <property name="release.file" value="${dist.dir}/summa-${summa.version}.zip" />
-        
+        <antcall target="tarball">
+            <param name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
+            <param name="release.file" value="${dist.dir}/summa-${summa.version}.zip" />
+            <param name="tarball" value="true" />
+        </antcall>
+    </target>
+
+    <!-- Wrap up a tarball ready for test -->
+    <target name="test" depends="depends, distclean, all">
+        <antcall target="tarball">
+            <param name="release.tmp.dir" value="${dist.dir}/summa-test-${summa.version}.tmp" />
+            <param name="release.file" value="${dist.dir}/summa-test-${summa.version}.zip" />
+            <param name="tarball" value="true" />
+        </antcall>
+    </target>
+
+    <!-- Delete old and create new tarball, used by test/release target -->
+    <target name="tarball" if="tarball">
         <delete file="${release.file}" />
         <delete dir="${release.tmp.dir}" />
-        
+
         <mkdir dir="${release.tmp.dir}"/>
         <copy todir="${release.tmp.dir}" flatten="true">
             <fileset dir="${basedir}">
                 <include name="**/dist/*.tgz"/>
-                <include name="**/dist/*.tar.gz"/>
+                <include name="**/dist*.tar.gz"/>
                 <include name="**/dist/*.zip"/>
                 <include name="**/dist/*.jar"/>
                 <include name="**/dist/*.war"/>
@@ -250,11 +265,10 @@
          <replaceregexp match="\$Id[^\$]*\$" replace="${summa.version} - ${build.time}">
             <fileset dir="${release.tmp.dir}/doc" includes="**/*"/>
          </replaceregexp>
-         
+
          <zip destfile="${release.file}">
             <zipfileset dir="${release.tmp.dir}" includes="**/*" prefix="summa-${summa.version}"/>
         </zip>
-        <delete dir="${release.tmp.dir}" />
+        <!--<delete dir="${release.tmp.dir}" />-->
     </target>
-
 </project>
