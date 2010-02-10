@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -50,6 +51,7 @@ public class SearchWS {
 
     static SearchClient searcher;
     static SearchClient suggester;
+    static SearchClient didyoumean;
     Configuration conf;
 
     public SearchWS() {
@@ -87,6 +89,22 @@ public class SearchWS {
     }
 
     /**
+     * Get a single DidYouMeanClient for Did-you-Mean service, based on the
+     * system configuration.
+     * @return A DidYouMeanClient which can be used for Did-You-Mean services.
+     */
+    private synchronized SearchClient getDidYouMeanClient() {
+        if (didyoumean == null) {
+            try {
+                didyoumean = new SearchClient(getConfiguration().getSubConfiguration("summa.web.didyoumean"));
+            } catch (IOException e) {
+                log.error("Failed to load subConfiguration for didYouMean.", e);
+            }
+        }
+        return didyoumean;
+    }
+
+    /**
      * Get the a Configuration object. First trying to load the configuration from the location
      * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
@@ -108,6 +126,51 @@ public class SearchWS {
         }
 
         return conf;
+    }
+
+    /**
+     * Given search query and maximum number of result, this method returns a
+     * XML block containing the suggetions given by the did-you-mean service.
+     * @param query user given search query.
+     * @param maxSuggestions maxium number of returned suggestions.
+     * @return XML block containing the suggestions given the did-you-mean
+     * services.
+     */
+    public String didYouMean(String query, int maxSuggestions) {
+        log.trace("didYouMean('" + query + "', " + maxSuggestions + ")");
+        long startTime = System.currentTimeMillis();
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(DidYouMeanKeys.SEARCH_QUERY, query);
+        req.put(DidYouMeanKeys.SEARCH_MAX_RESULTS, maxSuggestions);
+
+        try {
+            res = getDidYouMeanClient().search(req);
+            Document dom = DOM.stringToDOM(res.toXML());
+            Node subDom = DOM.selectNode(dom,
+                    "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
+            retXML = DOM.domToString(subDom);
+        } catch (IOException e) {
+            log.warn("Error executing didYouMean: '" + query + "', " +
+                    maxSuggestions +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing didYouMean</error>";
+        } catch (TransformerException e) {
+            log.warn("Error executing didYouMean: '" + query + "', " +
+                    maxSuggestions +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing didYouMean</error>";
+        }
+
+        log.debug("didYouMean('" + query + "', " + maxSuggestions
+                  + ") finished in " + (System.currentTimeMillis() - startTime)
+                  + "ms");
+        return retXML;
     }
 
     /**
