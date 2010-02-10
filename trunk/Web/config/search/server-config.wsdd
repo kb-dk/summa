@@ -41,8 +41,20 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="didYouMean">
+            <documentation>
+                Given a search query, this method returns one or more alternatives queries. The suggestions are based on an apriori index.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The user provided query string.</documentation>
+            </parameter>
+            <parameter name="maxSuggestions" type="tns:int">
+                <documentation>The maximum number of alternatives queries to return.</documentation>
+            </parameter>
+        </operation>
 
         <operation name="getSuggestions">
             <documentation>
