@@ -54,21 +54,17 @@
         Bad ordering may prolong compilation (but not break it)
     -->
     <target name="all" depends="depends, .standalone.jar">
-        <ant dir="Common" inheritall="false"/>
-        <ant dir="Storage" inheritall="false"/>
-        <ant dir="Ingest" inheritall="false"/>
-        <ant dir="Index" inheritall="false"/>
-        <ant dir="Search" inheritall="false"/>
-        <ant dir="Support" inheritall="false"/>
-        <ant dir="FacetBrowser" inheritall="false"/>
-        <ant dir="Control" inheritall="false"/>
-        <ant dir="Web" inheritall="false"/>
-        <ant dir="Workflow" inheritall="false"/>
-        <ant dir="Samples" inheritall="false"/>
-        
-        <!-- Legacy modules not build : -->
-        <!-- <ant dir="Dice" inheritall="false"/> -->
-        <!-- <ant dir="ClusterExtractor" inheritall="false "/> -->
+        <ant dir="Common" inheritall="false" />
+        <ant dir="Storage" inheritall="false" />
+        <ant dir="Ingest" inheritall="false" />
+        <ant dir="Index" inheritall="false" />
+        <ant dir="Search" inheritall="false" />
+        <ant dir="Support" inheritall="false" />
+        <ant dir="FacetBrowser" inheritall="false" />
+        <ant dir="Control" inheritall="false" />
+        <ant dir="Web" inheritall="false" />
+        <ant dir="Workflow" inheritall="false" />
+        <ant dir="Samples" inheritall="false" />
     </target>
 
     <!-- Build documentation for all modules -->  
@@ -121,6 +117,14 @@
                 <include name="dk/statsbiblioteket/**/*"/>
             </packageset>-->
         </javadoc>
+        <!-- Copy schema files and sample results to schema documentation directory. -->
+        <mkdir dir="${basedir}/${summa.schema.doc.dir}" />
+        <copy todir="${basedir}/${summa.schema.doc.dir}" flatten="true">
+            <fileset dir="${basedir}">
+                <include name="**/*Sample.xml" />
+                <include name="**/*.xsd" />
+            </fileset>
+        </copy>
     </target>
 
     <!-- Delete all files not in CVS -->
@@ -138,7 +142,7 @@
         <ant dir="Workflow" inheritall="false" target="clean"/>
         <ant dir="Samples" inheritall="false" target="clean"/>
         <delete dir="${dist.dir}" />
-
+        <delete dir="${basedir}/${summa.schema.doc.dir}" />
         <!-- Legacy modules not built: -->
         <!-- <ant dir="Dice" inheritall="false" target="clean"/> -->
         <!-- <ant dir="ClusterExtractor" inheritall="false" target="clean"/>-->        
@@ -269,6 +273,6 @@
          <zip destfile="${release.file}">
             <zipfileset dir="${release.tmp.dir}" includes="**/*" prefix="summa-${summa.version}"/>
         </zip>
-        <!--<delete dir="${release.tmp.dir}" />-->
+        <delete dir="${release.tmp.dir}" />
     </target>
 </project>
