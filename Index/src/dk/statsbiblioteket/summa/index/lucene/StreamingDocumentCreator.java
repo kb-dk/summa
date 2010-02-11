@@ -40,7 +40,7 @@ import java.text.ParseException;
  * The generated Document is added to the Payload's data under the key
  * {@link Payload#LUCENE_DOCUMENT}.
  * </p><p>
- * see SummaDocumentXMLSample.xml.
+ * see SummaDocumentSample.xml.
  * </p><p>
  * Note: The DocumentCreator needs an index-description. The setup for
  * retrieving the description must be stored in the sub-property
