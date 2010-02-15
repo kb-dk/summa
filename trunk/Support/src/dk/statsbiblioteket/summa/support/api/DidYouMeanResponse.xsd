@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse"
+            elementFormDefault="qualified"
+            xmlns:didyoumean="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the DidYouMean Response. Simple list of did-you-mean responses where each suggestion holds
+            the score as an attribute.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="DidYouMeanResponse">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="didyoumean" type="didyoumean:didyoumeanType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="optional"/>
+            <xsd:attribute name="query" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        The id-attribute is highly recommended for ease of
+                        debugging, but the authoritative id is taken from the
+                        Record object.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="didyoumeanType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="score" type="xsd:float" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
