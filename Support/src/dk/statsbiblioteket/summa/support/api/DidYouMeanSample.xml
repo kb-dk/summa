@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0">
+    <didyoumean score="0.6666666666666667">koobas</didyoumean>
+    <didyoumean score="0.6666666666666667">boobar</didyoumean>
+</DidYouMeanResponse>
