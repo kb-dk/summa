@@ -213,7 +213,7 @@
 
 
 
-    <target name="all" depends="release"/>
+    <target name="all" depends="release" />
 
 </project>
 
