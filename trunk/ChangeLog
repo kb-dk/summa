@@ -1,3 +1,157 @@
+2010-02-16 08:22  mkamstrup
+
+	* [r2130]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Remove obsolete fixme
+
+2010-02-15 13:20  hkirk
+
+	* [r2129] Common/build.xml:
+	  
+	  added space before closing target tag.
+
+2010-02-15 13:19  hkirk
+
+	* [r2128] build.properties:
+	  
+	  Feature: added summa.schema.doc.dir for holding xsd files for
+	  documentation
+
+2010-02-15 13:11  hkirk
+
+	* [r2127] Search/Search.iml, Summa.iml, Summa.ipr,
+	  Support/Support.iml, Web/Web.iml:
+	  
+	  Idea: updated project files, so we are not depended on
+	  java2ee.jar
+
+2010-02-15 08:18  hkirk
+
+	* [r2126]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.xsd[ADD],
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanSample.xml[ADD]:
+	  
+	  Feature: Added Schema and sample file for the xml document
+	  resturned by the Did-You-Mean service
+
+2010-02-11 14:37  hkirk
+
+	* [r2125] build.xml:
+	  
+	  Feature: ant release now moves xml schemas (XSD) and sample xml
+	  files to release package documentaion.
+
+2010-02-11 14:36  hkirk
+
+	* [r2124] doc/schema[DEL]:
+	  
+	  delete schema directory.
+
+2010-02-11 14:23  hkirk
+
+	* [r2123]
+	  Common/src/dk/statsbiblioteket/summa/common/index/SummaDocumentSample.xml[CPY],
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Bugfix: Updated sample xml response, to be consisted in naming
+	  with schemas
+
+2010-02-11 13:33  hkirk
+
+	* [r2122] doc/schema[ADD]:
+	  
+	  added schema directory to global doc
+
+2010-02-10 11:49  hkirk
+
+	* [r2121] build.xml:
+	  
+	  Feature: added test target to summa build file, this target
+	  doesn't create javadoc, save 30-40 seconds on build.
+
+2010-02-10 09:15  mkamstrup
+
+	* [r2120] Web/config/search/configuration.xml,
+	  Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Feature: Expose a didYouMean webservice under the standard
+	  SearchWS
+
+2010-02-09 15:20  mkamstrup
+
+	* [r2119]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Support returning more than one did-you-mean suggestion,
+	  configurable at query time, defaulting to 1
+
+2010-02-09 15:19  mkamstrup
+
+	* [r2118]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanKeys.java:
+	  
+	  Bring search keys in DidYouMeanKeys more in line with
+	  SuggestSearchKeys
+
+2010-02-09 13:55  mkamstrup
+
+	* [r2117] Samples/Summix/config/didyoumean.log4j.xml[CPY],
+	  Samples/Summix/config/didyoumean.xml[ADD]:
+	  
+	  Summix config and log4j magic to support new DYM service
+
+2010-02-09 13:54  mkamstrup
+
+	* [r2116]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanKeys.java[ADD],
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java[ADD],
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean[ADD],
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java[ADD]:
+	  
+	  Feature: Initial stab at a did-you-mean SearchNode
+
+2010-02-09 10:52  mkamstrup
+
+	* [r2115] Summa.ipr, Support/Support.iml, Support/build.xml,
+	  build.properties, lib/lucene-didyoumean-2.4.0.jar[CPY],
+	  lib/lucene-didyoumean-2.4.jar[DEL]:
+	  
+	  Build: Rename lucene-didyoumean-2.4 to lucene-didyoumean-2.4.0
+	  and fix refs in Ant and Idea
+
+2010-02-08 14:52  mkamstrup
+
+	* [r2114] lib/lucene-didyoumean-2.4.jar[ADD]:
+	  
+	  Import Lucene didyoumean libs from
+	  http://github.com/mkamstrup/lucene-didyoumean/downloads
+
+2010-02-08 10:12  toke-sb
+
+	* [r2113]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CopyingInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPerformanceTest.java:
+	  
+	  Disabled heavy performance tests
+
+2010-02-08 10:01  hkirk
+
+	* [r2112] Web/Web.iml:
+	  
+	  updated project libs in IDEA web module file
+
+2010-02-05 10:40  mkamstrup
+
+	* [r2110] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.5.1
+
 2010-02-04 07:39  mkamstrup
 
 	* [r2109]
