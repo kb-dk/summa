@@ -2074,10 +2074,16 @@ getco     */
                 minMtime > UniqueTimestampGenerator.MAX_TIME ?
                                 UniqueTimestampGenerator.MAX_TIME : minMtime);
         long totalCount = 0;
-        long pageCount = pageSize;
+        long pageCount = getPageSize();
+        String previousRecordId = null;
+        Record previousRecord = null;
         try {
             // Page through all records in the result set in one transaction
-            while (pageCount >= pageSize) {
+            // We apply the job to the previous record so that we can detect
+            // when we are at the last record and set 'last' variable in
+            // the batch job context correctly upon the last iteration. This
+            // is also why we need the odd -1 in the while-condition below
+            while (pageCount >= getPageSize() - 1) {
                 pageCount = 0;
                 stmt.setLong(1, maxTimestamp);
                 stmt.setLong(2, minTimestamp);
@@ -2086,66 +2092,32 @@ getco     */
                 ResultSet cursor = stmt.getResultSet();
 
                 // Step into the result set if there are any results
-                if (!cursor.next()) {
-                    return "";
-                }
+                cursor.next();
 
                 // Read the current page. Note that we must track
                 // the record id since it's in effect a new record
-                // if it's changed (we must purge the old one)
+                // if it's changed (we must purge the old one).
                 while (!cursor.isAfterLast()) {                    
                     minTimestamp = cursor.getLong(MTIME_COLUMN);
-                    Record record = scanRecord(cursor);
-                    String oldId = record.getId();
-                    if (!options.allowsRecord(record)) {
-                        continue;
+                    Record record = scanRecord(cursor); // advances cursor
+                    if (previousRecord != null &&
+                        applyJobtoRecord(job, previousRecord, previousRecordId,
+                                         base, options, totalCount == 0, false,
+                                         conn)) {
+                        totalCount++;
+                        pageCount++;
                     }
-
-                    // Set up the batch job context and run it
-                    log.debug(String.format(
-                            "Running batch job '%s' on '%s' (%s)",
-                            job, record.getId(), totalCount));
-                    job.setContext(
-                            record, totalCount == 0, cursor.isAfterLast());
-                    try {
-                        job.eval();
-                    } catch (ScriptException e) {
-                        throw new IOException(String.format(
-                                "Error running batch job '%s': %s",
-                                 job, e.getMessage()), e);
-                    }
-                    if (job.shouldCommit()) {
-                        // If the record id has changed we must flush() the
-                        // new record (in order to insert/update it) and then
-                        // delete the old one from the db
-                        if (oldId.equals(record.getId())) {
-                            updateRecordWithConnection(record, options, conn);
-                        } else {
-                            log.debug(String.format(
-                                    "Record renamed '%s' -> '%s'",
-                                    oldId, record.getId()));
-                            flushWithConnection(record, options, conn);
-                            PreparedStatement delete = conn.prepareStatement(
-                                                   "DELETE FROM " + RECORDS
-                                                + " WHERE " + ID_COLUMN + "=?");
-                            delete.setString(1, oldId);
-                            delete.executeUpdate();
-                        }
-
-                        // Mark all caches as dirty
-                        invalidateCachedStats();
-                        updateModificationTime(record.getBase());
-                        if (base != null && !base.equals(record.getBase())) {
-                            // The record base was changed by the batch job
-                            updateModificationTime(base);
-                        }
-
-
-                    }
-                    totalCount++;
-                    pageCount++;
+                    previousRecord = record;
+                    previousRecordId = record.getId();
                 }
                 cursor.close();
+            }
+
+            // The last iteration, now with last=true
+            if (previousRecord != null) {
+                applyJobtoRecord(job, previousRecord, previousRecordId, base,
+                                 options, totalCount == 0, true,
+                                 conn);
             }
 
             // Commit the full transaction
@@ -2162,6 +2134,57 @@ getco     */
         }
 
         return job.getOutput();
+    }
+
+    /* Run a BatchJob on a given record. Returns false if the job was not
+     * run because the record was filtered by the query options. */
+    private boolean applyJobtoRecord(
+                BatchJob job, Record record, String oldRecordId, String jobBase,
+                QueryOptions options, boolean isFirst, boolean isLast,
+                Connection conn)             throws SQLException, IOException {
+
+        if (!options.allowsRecord(record)) {
+            return false;
+        }
+
+        // Set up the batch job context and run it
+        log.debug(String.format(
+                "Running batch job '%s' on '%s'", job, record.getId()));
+        job.setContext(record, isFirst, isLast);
+        try {
+            job.eval();
+        } catch (ScriptException e) {
+            throw new IOException(String.format(
+                    "Error running batch job '%s': %s",
+                     job, e.getMessage()), e);
+        }
+        if (job.shouldCommit()) {
+            // If the record id has changed we must flush() the
+            // new record (in order to insert/update it) and then
+            // delete the old one from the db
+            if (oldRecordId.equals(record.getId())) {
+                updateRecordWithConnection(record, options, conn);
+            } else {
+                log.debug(String.format(
+                        "Record renamed '%s' -> '%s'",
+                        oldRecordId, record.getId()));
+                flushWithConnection(record, options, conn);
+                PreparedStatement delete = conn.prepareStatement(
+                                       "DELETE FROM " + RECORDS
+                                    + " WHERE " + ID_COLUMN + "=?");
+                delete.setString(1, oldRecordId);
+                delete.executeUpdate();
+            }
+
+            // Mark all caches as dirty
+            invalidateCachedStats();
+            updateModificationTime(record.getBase());
+            if (jobBase != null && !jobBase.equals(record.getBase())) {
+                // The record base was changed by the batch job
+                updateModificationTime(jobBase);
+            }
+        }
+        return true;
     }
 
     /* Create parent/child and child/parent relations for the given record */
