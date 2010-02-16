@@ -181,6 +181,7 @@
         <echo message="Deleting dist files"/>
         <delete dir="${dist.dir}" />
         <delete dir="${summa.apidocs.dir}" />
+        <delete dir="${summa.schema.doc.dir}" />
     </target>
 
     <!-- Compile all project jar files -->
