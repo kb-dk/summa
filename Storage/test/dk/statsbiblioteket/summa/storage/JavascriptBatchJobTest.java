@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -60,6 +61,17 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         count = storage.batchJob(
                 "count.job.js", "nosuchbase", 0, Long.MAX_VALUE, null);
         assertEquals("", count);
+
+        // Now add DatabaseStorage.getPageSize() to the storage, so we can
+        // check counting across page boundaries
+        int pageSize = ((DatabaseStorage)storage).getPageSize();
+        for (int i = 0; i < pageSize; i++) {
+            storage.flush(new Record("paged_" + i, testBase1, testContent1));
+        }
+        assertBaseCount(testBase1, 2 + pageSize);
+        count = storage.batchJob(
+                "count.job.js", testBase1, 0, Long.MAX_VALUE, null);
+        assertEquals((2 + pageSize) + ".0", count);
     }
 
     public void testCollectIdsByTimestampJob() throws Exception {
