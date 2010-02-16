@@ -229,6 +229,37 @@ public class StorageTool {
                                          (System.currentTimeMillis() - start)));
     }
 
+    private static void actionBatchJob(
+          String[] argv, StorageReaderClient reader, StorageWriterClient writer)
+                                                            throws IOException {
+
+        if (argv.length < 2) {
+            System.err.println("You must provide exactly one job name to run");
+            return;
+        }
+
+        String jobName = argv[1];
+        String base = argv.length > 2 ?
+                          (argv[2].length() == 0 ? null : argv[2]) : null;
+        long minMtime = argv.length > 3 ?
+                                   Long.parseLong(argv[3]) : 0;
+        long maxMtime = argv.length > 4 ?
+                                   Long.parseLong(argv[4]) : Long.MAX_VALUE;
+
+        long start = System.currentTimeMillis();
+        String result =
+                writer.batchJob(jobName, base, minMtime, maxMtime, null);
+
+        // We flush() the streams in order not to interweave the output
+        System.err.println("Result:\n----------");
+        System.err.flush();
+        System.out.println(result);
+        System.out.flush();
+        System.err.println(String.format(
+                           "----------\nRan job '%s' in %sms",
+                           jobName, (System.currentTimeMillis() - start)));
+    }
+
     private static void actionXslt (String[] argv, StorageReaderClient storage)
                                                              throws IOException{
         if (argv.length <= 2) {
@@ -307,7 +338,8 @@ public class StorageTool {
                             + "\ttouch <record_id> [record_id...]\n"
                             + "\txslt <record_id> <xslt_url>\n"
                             + "\tdump [base]     (dump storage on stdout)\n"
-                            + "\tholdings");
+                            + "\tholdings\n"
+                            + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)");
     }
 
     public static void main (String[] args) throws Exception {
@@ -362,6 +394,8 @@ public class StorageTool {
             actionDump(args, reader);
         } else if ("holdings".equals(action)) {
             actionHoldings(args, reader);
+        } else if ("batchjob".equals(action)) {
+            actionBatchJob(args, reader, writer);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
