@@ -25,7 +25,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- *
+ * A cursor type that starts from a {@link ResultSetCursor} and transparently
+ * fetch the following data when the initial result set cursor has been
+ * depleted. Each fetched result set is called a <i>page</i> hence the name
+ * of the class.
+ * <p/>
+ * Fetching huge results via a paging cursor can offer a lower memory footprint
+ * and also speed up the database in general because the database never
+ * needs to create temporary tables or hold locks for long periods of time.  
  */
 public class PagingCursor implements Cursor {
 

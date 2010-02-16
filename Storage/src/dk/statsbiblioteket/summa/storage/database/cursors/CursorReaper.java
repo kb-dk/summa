@@ -25,7 +25,10 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Helper class to clean up unused iterators. It should be started
- * via the runInThread() method
+ * via the runInThread() method.
+ * <p/>
+ * Monitoring is done by periodically scanning a map of {@code (key,cursor)}
+ * pairs and checking {@link Cursor#getLastAccess()}. 
  */
 public class CursorReaper implements Runnable {
 
