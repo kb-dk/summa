@@ -46,12 +46,21 @@ public class WebServices {
         return ourInstance;
     }
 
+    /**
+     * Constructor, if serivces container is empty, services are created.
+     */
     public WebServices() {
         if (servicehash.isEmpty()) {
             createServices();
         }
     }
 
+    /**
+     * Create a service with the given name.
+     * 
+     * @param name the name of the service to create.
+     * @return true if services are created without error. False otherwise.
+     */
     private boolean createService(String name) {
         boolean success = false;
         if (!servicehash.containsKey(name.toLowerCase())) {
@@ -80,13 +89,13 @@ public class WebServices {
                     success = true;
                 }
             } catch (ParserConfigurationException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.warn("Exception while parsing configuration for service: '" + name + "': "  + e.getMessage(), e);
             } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.warn("IOException while creating service: '" + name + "': " + e.getMessage(), e);
             } catch (SAXException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.warn("SAXException while creating services: '" + name + "': "  + e.getMessage(), e);
             } catch (Exception e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                log.warn("Exception while creating service: '" + name + "': "  + e.getMessage(), e);
             }
         }
         return success;
@@ -112,6 +121,12 @@ public class WebServices {
         }
     }
 
+
+    /**
+     * Create services described in service.xml.
+     *
+     * @return true if any services is created, false is non is created.
+     */
     private boolean createServices() {
         //parsing service.xml + wsdls creating serviceobjects
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -126,25 +141,29 @@ public class WebServices {
             NodeList nl = DOM.selectNodeList(doc,"properties/service");
             for (int i = 0; i < nl.getLength(); i++) {
                 ServiceObj service = getServiceObj(nl.item(i));
-                if (service != null && service.getName() != null && !service.getName().equals("") && !servicehash.containsKey(service.getName().toLowerCase())) {
+                if (service != null && service.getName() != null && !service.getName().equals("")
+                        && !servicehash.containsKey(service.getName().toLowerCase())) {
                     servicehash.put(service.getName().toLowerCase(),service);
                 }            }
         } catch (ParserConfigurationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.warn("Exception while parsing configuration: "  + e.getMessage(), e);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.warn("IOException while creating service: " + e.getMessage(), e);
         } catch (SAXException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.warn("SAXException while creating services: "  + e.getMessage(), e);
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.warn("Exception while parsing configuration: "  + e.getMessage(), e);
         }
-        if (!servicehash.isEmpty()) {
-            return true;
-        } else {
-            return false;
-        }
+        // TODO: return true if the first services (or more) is created.
+        return !servicehash.isEmpty();
     }
 
+    /**
+     *
+     * @param nn DOM 'properties/services' node.
+     * @return the service Object defined from input node.
+     * @throws Exception
+     */
     private ServiceObj getServiceObj(Node nn) throws Exception {
         ServiceObj service = null;
         String name = "";
@@ -154,7 +173,7 @@ public class WebServices {
             if (checkUrl(new URL(wsdlurl))) {
                 service = new ServiceObj(nn.getAttributes().getNamedItem("type").getNodeValue());
                 name = nn.getAttributes().getNamedItem("name").getNodeValue();
-                System.out.println(name);
+                log.info("Node '" + nn + "' has Iteme 'name' with value: '" + name + "'");
                 String servicename = DOM.selectNode(nn,"servicename/text()").getNodeValue();
                 String operationname = DOM.selectNode(nn,"operationname/text()").getNodeValue();
                 String wsdl = postData(DOM.selectNode(nn,"wsdl/text()").getNodeValue(),"");
@@ -183,7 +202,7 @@ public class WebServices {
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setParameters(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
-                                    } else {
+                                    } else if (nl2 != null) {
                                         for (int k = 0; k < nl2.getLength(); k++) {
                                             service.setParameters(nl2.item(k).getAttributes().getNamedItem("name").getNodeValue(), nl2.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -194,7 +213,7 @@ public class WebServices {
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setReturnvalue(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
-                                    } else {
+                                    } else if (nl2 != null) {
                                         for (int k = 0; k < nl2.getLength(); k++) {
                                             service.setReturnvalue(nl2.item(k).getAttributes().getNamedItem("name").getNodeValue(), nl2.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -205,19 +224,19 @@ public class WebServices {
                         }
                     }
                 }
-            } else{
-                //System.out.println("??????????????");
+            } else {
+                log.warn("CheckULR for URL: '" + wsdlurl + "' returned false.");
             }
             if (ok) {
-                log.info("Soap-Service: " + wsdlurl + " started!");
+                log.info("Soap-Service: '" + wsdlurl + "' started!");
             } else {
-                log.info("Soap-Service: " + wsdlurl + " not available!");
+                log.info("Soap-Service: '" + wsdlurl + "' not available!");
             }
         } else if (nn.getAttributes().getNamedItem("type").getNodeValue().equals("rest")) {
             String url = DOM.selectNode(nn,"url/text()").getNodeValue();
             service = new ServiceObj(nn.getAttributes().getNamedItem("type").getNodeValue());
             name = nn.getAttributes().getNamedItem("name").getNodeValue();
-            System.out.println(name);
+            log.info("Node '" + nn + "' has item 'name' with value '" + name + "'.");
             service.setName(name);
             service.createCallObj(DOM.selectNode(nn,"url/text()").getNodeValue());
             NodeList nl1 = DOM.selectNodeList(nn,"parameters/parameter");
@@ -227,14 +246,23 @@ public class WebServices {
             ok = true;
             log.info("Rest-Service: " + url + " started!");
         } else {
-            System.out.println("Problemer: ??????????????????");
+            log.warn("Service Object is not of type soap or REST.");
         }
+        // TODO shouldn't this be the first check?
         if (!ok) {
             service = null;
         }
         return service;
     }
 
+
+    /**
+     *
+     * @param name service name.
+     * @param arguments arguements.
+     * @return null if no service with the given name exists, otherwise return the result of executing the service with
+     * the given arguements.
+     */
     public Object execute(String name, Object... arguments) {
         Object obj = null;
         ServiceObj so = getService(name);
@@ -254,6 +282,12 @@ public class WebServices {
         return obj;
     }
 
+    /**
+     * Return service object pin-pointed by input name. If services isn't started, it is tried started.
+     *
+     * @param name of service. 
+     * @return the services object pin-pointed by the input name.
+     */
     public ServiceObj getService(String name) {
         if (this.servicehash.containsKey(name)) {
             return this.servicehash.get(name);
@@ -279,6 +313,12 @@ public class WebServices {
         return retstr;
     }
 
+    /**
+     * Check if an URL is alive and answers with HTTP status ok.
+     *  
+     * @param url URL to check.
+     * @return true if HTTP response is okay, false otherwise.
+     */
     private boolean checkUrl(URL url){
         try {
             HttpURLConnection.setFollowRedirects(false);
@@ -289,11 +329,20 @@ public class WebServices {
             return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.warn("HTTP connection failed in some way for URL: '" + url + "'.", e);
             return false;
         }
     }
 
+
+    /**
+     * Posting content via HTTP post to a given target (URL).
+     * 
+     * @param target URL target.
+     * @param content content to post.
+     * @return response from URL after posting content.
+     * @throws Exception
+     */
     private String postData(String target, String content) throws Exception {
         System.setProperty("java.protocol.handler.pkgs","com.sun.net.ssl.internal.www.protocol");
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
@@ -324,7 +373,6 @@ public class WebServices {
         while ((temp = in.readLine()) != null){
             response += temp + "\n";
         }
-        temp = null;
         in.close ();
         return response;
     }
