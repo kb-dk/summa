@@ -2868,7 +2868,6 @@ getco     */
         log.info("Closed");
     }
 
-    // FIXME: In Summa 2.0 we might want to make this public API
     public List<BaseStats> getStats() throws IOException {
         log.trace("getStats()");
 
