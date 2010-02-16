@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
- *
+ * Wraps a ResultSet and the context in was created in as a {@link Cursor}
  */
 public class ResultSetCursor implements Cursor {
     private Log log = LogFactory.getLog(ResultSetCursor.class);
@@ -89,7 +89,8 @@ public class ResultSetCursor implements Cursor {
      * @param base the Record base the cursor is iterating over. Possibly
      *             {@code null} if the base is undefined
      * @param options any query options the records must match
-     * @param anonymous anonymous cursors does less logging
+     * @param anonymous anonymous cursors does less logging. They are suitable
+     *                  for short lived, and intermediate, result sets
      * @throws SQLException on any SQLException reading the result set
      * @throws IOException on any IOExceptions reading records
      */
