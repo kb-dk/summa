@@ -132,11 +132,11 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             SuggestionPriorityQueue spq =
                                 phraseSuggester.suggest(query, numSuggestions);
 
+            DidYouMeanResponse response = new DidYouMeanResponse(query);
+            responses.add(response);
             if(spq.size() > 0) {
                 log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
                           + "' results.");
-                DidYouMeanResponse response = new DidYouMeanResponse(query);
-                responses.add(response);
                 for(Suggestion suggestion: spq.toArray()) {
                     response.addResult(suggestion.getSuggested(),
                                        suggestion.getScore(),
