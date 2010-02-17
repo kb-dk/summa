@@ -14,19 +14,18 @@
  */
 package dk.statsbiblioteket.summa.workflow;
 
-import dk.statsbiblioteket.summa.control.api.Monitorable;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.control.api.Monitorable;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.Strings;
-
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A {@link WorkflowStep} that blocks until the {@link Monitorable#getStatus}
@@ -98,6 +97,17 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
     public static final boolean DEFAULT_FAILURE_TOLERANT = true;
 
     /**
+     * Property defining the sleep time for the Wait for status thread.
+     */
+    public static final String CONF_SLEEP_TIME_IN_MS =
+                                       "summa.workflow.waitforstatus.sleeptime";
+
+    /**
+     * Deafult value for {@link #CONF_SLEEP_TIME_IN_MS} property.
+     */
+    public static final int DEFAULT_SLEEP_TIME_IN_MS = 5000;
+
+    /**
      * Exception throw when encountering a state defined in
      * {@link WaitForStatusStep#CONF_BAD_STATES}
      */
@@ -119,6 +129,7 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
     private List<Status.CODE> goodStates;
     private List<Status.CODE> badStates;
     private boolean failureTolerant;
+    private int sleep;
     private Log log;        
 
     public WaitForStatusStep (Configuration conf) {
@@ -127,7 +138,9 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
         log = LogFactory.getLog(this.getClass().getName());
 
         failureTolerant = conf.getBoolean(CONF_FAILURE_TOLERANT,
-                                          DEFAULT_FAILURE_TOLERANT);
+                                                      DEFAULT_FAILURE_TOLERANT);
+        
+        sleep = conf.getInt(CONF_SLEEP_TIME_IN_MS, DEFAULT_SLEEP_TIME_IN_MS);
 
         List<String> _goodStates = conf.getStrings(CONF_GOOD_STATES,
                                                    DEFAULT_GOOD_STATES);
@@ -186,8 +199,7 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
                 }
 
                 try {
-                    // TODO: Make the sleep time configurable?
-                    Thread.sleep(5000);
+                    Thread.sleep(sleep);
                 } catch (InterruptedException e1) {
                     log.warn("Interrupted while recovering from error. "
                              + "Aborting workflow step");
