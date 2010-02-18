@@ -47,7 +47,7 @@ public class WebServices {
     }
 
     /**
-     * Constructor, if serivces container is empty, services are created.
+     * Constructor, if services container is empty, services are created.
      */
     public WebServices() {
         if (servicehash.isEmpty()) {
@@ -248,7 +248,6 @@ public class WebServices {
         } else {
             log.warn("Service Object is not of type soap or REST.");
         }
-        // TODO shouldn't this be the first check?
         if (!ok) {
             service = null;
         }
