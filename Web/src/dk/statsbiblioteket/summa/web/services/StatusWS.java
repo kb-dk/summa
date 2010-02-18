@@ -14,27 +14,21 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
-import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -44,15 +38,12 @@ import org.w3c.dom.NodeList;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 /**
  * A class containing methods meant to be exposed as a web service
