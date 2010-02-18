@@ -1,12 +1,6 @@
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
-<%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
-<%@ page import="dk.statsbiblioteket.util.xml.XSLT" %>
-<%@ page import="org.w3c.dom.Document" %>
-<%@ page import="javax.xml.transform.TransformerException" %>
-<%@ page import="java.io.File" %>
-<%@ page import="java.net.URL" %>
-<%@ page import="java.util.Properties" %>
 <%@ page import="dk.statsbiblioteket.summa.web.services.StatusBuilder" %>
+<%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
 <%@ page import="org.w3c.dom.Node" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
@@ -25,17 +19,20 @@
 
     out.clearBuffer();
 %>
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>Summa Status Page</title>
-    <link rel="alternate" type="application/rss+xml" title="Summa Status Feed" href="<%= rssUrl %>%>" />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link rel="alternate" type="application/rss+xml" title="Summa Status Feed" href="<%= rssUrl %>" />
 </head>
 <body style="padding: 10px;">
 
 <img src="images/summa-logo_h40.png" alt="Summa logo"/>
 <h1>Summa Status Page</h1>
-Live updates: <a class="rsslink" href="<%= rssUrl %>">RSS Status Feed</a>
-<p/>
+<p>
+    Live updates: <a class="rsslink" href="<%= rssUrl %>">RSS Status Feed</a>
+</p>
 <%= stats.toString() %>
 </body>
 </html>

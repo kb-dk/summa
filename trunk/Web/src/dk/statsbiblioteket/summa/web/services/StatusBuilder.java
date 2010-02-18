@@ -14,25 +14,26 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
-import dk.statsbiblioteket.summa.common.util.Pair;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.NumberFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.LinkedList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * FIXME: Missing class docs for dk.statsbiblioteket.summa.web.services.StatusPresentation
+ * FIXME: Missing class docs for
+ * dk.statsbiblioteket.summa.web.services.StatusPresentation
  *
  * @author mke
  * @since Nov 25, 2009
@@ -187,11 +188,14 @@ public class StatusBuilder {
     }
 
     public Appendable toString(Appendable buf) throws IOException {
+        buf.append("<p>\n");
         buf.append("Last update: ").append(lastUpdate).append("<br/>");
         buf.append("Report generated: ").append(now).append("<br/>");
-        buf.append("<p/>\n");
+        buf.append("</p>\n");
 
-        buf.append("<b>Searcher:</b> <i>").append(searcherStatus).append("</i><br/>");
+        buf.append("<p>\n");
+        buf.append("<b>Searcher:</b> <i>").append(searcherStatus)
+                .append("</i><br/>");
         buf.append("Number of documents: ")
             .append(searcher.getText("numDocs"))
             .append("<br/>");
@@ -201,34 +205,41 @@ public class StatusBuilder {
         buf.append("Raw search time: ")
             .append(searcher.getText("searchTime"))
             .append("ms<br/>");
-        buf.append("<p/>\n");
+        buf.append("</p>\n");
 
-        buf.append("<b>Storage:</b> <i>").append(storageStatus).append("</i><br/>");
+        buf.append("<p>\n");
+        buf.append("<b>Storage:</b> <i>").append(storageStatus)
+                .append("</i><br/>");
         buf.append("Response time: ")
             .append(storage.getText("responseTime"))
             .append("ms<br/>");
-        buf.append("<p/>\n");
+        buf.append("</p>\n");
 
-        buf.append("<b>Suggest:</b> <i>").append(suggestStatus).append("</i><br/>");
+        buf.append("<p>\n");
+        buf.append("<b>Suggest:</b> <i>").append(suggestStatus)
+                .append("</i><br/>");
         buf.append("Response time: ")
             .append(suggest.getText("responseTime"))
             .append("ms<br/>");
-        buf.append("<p/>\n");
+        buf.append("</p>\n");
 
+        buf.append("<p>\n");
         buf.append("<b>Popular queries the last 24 hours</b>");
         buf.append("<i>(number of queries - query string)</i>:<br/>");
-        buf.append("<ul>");        
-        for (Pair<String,String> prop : queryCount) {
-            buf.append("<li>")
-               .append(Integer.toString(Integer.parseInt(prop.getKey())))
-               .append(" - ")
-               .append("<tt>")
-               .append(prop.getValue())
-               .append("</tt>")
-               .append("</li>\n");
+        if(queryCount.size() > 0) {
+            buf.append("<ul>");
+            for (Pair<String,String> prop : queryCount) {
+                buf.append("<li>")
+                   .append(Integer.toString(Integer.parseInt(prop.getKey())))
+                   .append(" - ")
+                   .append("<tt>")
+                   .append(prop.getValue())
+                   .append("</tt>")
+                   .append("</li>\n");
+            }
+            buf.append("</ul>\n");
         }
-        buf.append("</ul>\n");
-        buf.append("<p/>\n");
+        buf.append("</p>\n");
 
         Node holdings = DOM.selectNode(statusDom,
           "/status/group[@name='storage']/property[@name='holdings']/holdings");
@@ -236,31 +247,30 @@ public class StatusBuilder {
         buf.append("<b>Storage holdings:</b>");
         if (holdings != null) {
             NodeList bases = holdings.getChildNodes();
-            buf.append("<ul>\n");
-            for (int i = 0; i < bases.getLength(); i++) {
-                if (bases.item(i).getNodeType() != Node.ELEMENT_NODE) {
-                    continue;
+            if(bases.getLength() > 0) {
+                buf.append("<ul>\n");
+                for (int i = 0; i < bases.getLength(); i++) {
+                    if (bases.item(i).getNodeType() != Node.ELEMENT_NODE) {
+                        continue;
+                    }
+                    NamedNodeMap base = bases.item(i).getAttributes();
+                    buf.append("<li><tt>")
+                       .append(base.getNamedItem("name").getTextContent())
+                       .append("</tt><br/>")
+                       .append("Live: ")
+                       .append(base.getNamedItem("live").getTextContent())
+                       .append(", total: ")
+                       .append(base.getNamedItem("total").getTextContent())
+                       .append(". Updated: ")
+                       .append(base.getNamedItem("mtime").getTextContent())
+                       .append("</li>\n");
                 }
-                NamedNodeMap base = bases.item(i).getAttributes();
-                buf.append("<li><tt>")
-                   .append(base.getNamedItem("name").getTextContent())
-                   .append("</tt><br/>")
-                   .append("Live: ")
-                   .append(base.getNamedItem("live").getTextContent())
-                   .append(", total: ")
-                   .append(base.getNamedItem("total").getTextContent())
-                   .append(". Updated: ")
-                   .append(base.getNamedItem("mtime").getTextContent())
-                   .append("</li>\n");
+                buf.append("</ul>\n");
             }
-            buf.append("</ul>\n");
         } else {
             buf.append(" Not available");
         }
-
-
         return buf;
     }
-
 }
 
