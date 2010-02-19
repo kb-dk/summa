@@ -1,8 +1,35 @@
 ========================
-2010-02-05: Summa 1.5.2
+2010-02-19: Summa 1.5.2
 ========================
+ 
+ * NOTICE: The didYouMean web services is only experimetal. API and 
+    configuration keys may still change.
 
- * Implement a 'batchjob' command for storage-tool.sh
+ * Bugfix: Updated status page, so it present a valid html site. 
+
+ * Bugfix: Added LuceneIndexDescriptor.xsd schema
+
+ * Bugfix: Updated sample xml response, to be consisted in naming
+ 	 	with schemas
+
+ * Bugfix: Storage.batchJob() would
+		set the 'last' variable in the batch job whenever the job crossed
+	  a page boundary while iterating over the selected records for the
+	  batch job
+
+ * Feature: Expose a didYouMean webservice under the standard SearchWS. 
+    Web service can return more than one result, this is configurable 
+    at query time, defaulting to 1.
+		Import Lucene didyoumean libs from
+	  			 http://github.com/mkamstrup/lucene-didyoumean/downloads
+
+ * Feature: Sleep time in 
+    Workflow/src/dk/statsbiblioteket/summa/workflow/WaitForStatusStep.java
+    is now configurable.
+
+ * Feature: Implement a 'batchjob' command for storage-tool.sh
+
+ * Release includes all xsd schemas for xml responses found in /doc/schema/
 
 ========================
 2010-02-05: Summa 1.5.1
