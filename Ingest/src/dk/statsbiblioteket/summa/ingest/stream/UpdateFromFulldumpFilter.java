@@ -19,6 +19,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,7 +32,7 @@ import java.util.*;
  * Take a fulldump and treat it as a update, where non-existing records should
  * be deleted, all other records are inserted.
  * Note: Existing records should not have there
- * {@link dk.statsbiblioteket.summa.common.Record#modificationTime} updated.
+ * {@link Record#modificationTime} updated.
  *
  * <ul>
  *  <li>Take the full storage and save a local copy of all ID's.</li>
@@ -90,6 +92,11 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Map<String, Record> ids = null;
 
     /**
+     * Private container for records, which should be inserted/updated.
+     */
+    private List<Record> records = null;
+
+    /**
      * Constructor
      * SideEffect: Fetch a copy of storage ID's for local storage.
      *
@@ -106,6 +113,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                                    DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
         ids = new HashMap<String, Record>();
+        records = new ArrayList<Record>();
 
         this.storage = storage;
         log.info("Get all records id from storage.");
@@ -123,30 +131,51 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         // get a local copy of all records id.
         try {
             long iteratorKey = storage.getRecordsModifiedAfter(0, null, null);
-            List<Record> records = null;
+            List<Record> tmpRecords;
+            int i = 0;
             do {
-                records = storage.next(iteratorKey, numberOfRecordsFromStorage);
-                for(Record r: records) {
-                    ids.put(r.getId(), r);
+                tmpRecords = storage.next(iteratorKey, numberOfRecordsFromStorage);
+                for(Record r: tmpRecords) {
+                    ids.put(r.getId(), null);
+                    i++;
                 }
             }
-            while(records.size() == numberOfRecordsFromStorage);
-
+            while(tmpRecords.size() == numberOfRecordsFromStorage);
+            log.info("All '" + i + "' records from storage has been locally "
+                     + "stored");
         } catch (NoSuchElementException e) {
-            // last element   
+            // last element ok not to report this error.   
         } catch (IOException e) {
             log.warn("IOException on communication with storage.", e);    
         }
     }
 
+    /**
+     * For each record recieved this filter is unmarking the record in the local
+     * storage copy.
+     *
+     * @param payload the Payload to process.
+     * @return true if no error where detected, false otherwise. Eg. return
+     * false, if {@link Payload#getRecord()} == null.
+     * @throws PayloadException if payload is null.
+     */
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        return false;
+        Record r = payload.getRecord();
+        if(r == null) {
+            throw new PayloadException("null received in Payload in next()"
+                                       + ". This should not happen");
+        }
+        ids.remove(r.getId());
+        records.add(r);
+        return true;
     }
 
     /**
      * Overrided from Filter. Delete non inserted records, if less than
-     * {@link }
+     * {@link Configuration#getInt(String, int)} with parameters
+     * {@link UpdateFromFulldumpFilter#CONF_MAX_NUMBER_DELETES} and
+     * {@link UpdateFromFulldumpFilter#DEFAULT_MAX_NUMBER_DELETES}. 
      * 
      * @param ok true if everything was okay, false on dirty closure.
      */
@@ -154,14 +183,29 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     public void close(boolean ok) {
         // Clean closure
         if(ok) {
+            StringMap sm = new StringMap();
+            sm.put("TRY_UPDATE", "true");
+            try {
+                QueryOptions qs = new QueryOptions(null, null, 0, 0, sm);
+                storage.flushAll(records, qs);
+            } catch(IOException e) {
+                log.error("Exception when flushing "
+                        + records.size() + " records to storage", e);
+            }
             if(ids.size() < maxNumberDeletes) {
                 try {
-                    storage.flushAll(new ArrayList(ids.values()));
+                    for(String id: new ArrayList<String>(ids.keySet())) {
+                        storage.getRecord(id, null).setDeleted(true); // TODO i think     
+                    }
                 } catch(IOException e) {
-                    // TODO throw error
+                    log.error("IOException when deleting records from storage. "
+                              +"Storage now contains deleted records.");    
                 }
             } else {
-                // TODO throw error.
+                log.error("Number of records to delete from storage is '"
+                        + ids.size() + "' > '" + maxNumberDeletes + "', "
+                        + "so no records are delete, storage is now "
+                        + "containing delete records.");
             }
         } else {
             log.error("Dirty closure of UpdateFromFulldumpFilter, are not "
