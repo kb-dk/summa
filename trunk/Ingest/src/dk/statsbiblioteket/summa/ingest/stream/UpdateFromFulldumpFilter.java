@@ -59,7 +59,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     public static final String CONF_MAX_NUMBER_DELETES =
                  "summa.ingest.stream.updatefromfulldumpfiler.maxnumberdeletes";
     /**
-     * Default value of {@link dk.statsbiblioteket.summa.ingest.stream.UpdateFromFulldumpFilter#CONF_MAX_NUMBER_DELETES}.
+     * Default value of {@link UpdateFromFulldumpFilter#CONF_MAX_NUMBER_DELETES}.
      */
     public static final int DEFAULT_MAX_NUMBER_DELETES = 100;
 
@@ -134,7 +134,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             List<Record> tmpRecords;
             int i = 0;
             do {
-                tmpRecords = storage.next(iteratorKey, numberOfRecordsFromStorage);
+                tmpRecords = storage.next(iteratorKey,
+                                                    numberOfRecordsFromStorage);
                 for(Record r: tmpRecords) {
                     ids.put(r.getId(), null);
                     i++;
@@ -166,6 +167,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             throw new PayloadException("null received in Payload in next()"
                                        + ". This should not happen");
         }
+        log.info("Process record '" + r.getId() + "' ok.");
         ids.remove(r.getId());
         records.add(r);
         return true;
@@ -183,11 +185,14 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     public void close(boolean ok) {
         // Clean closure
         if(ok) {
+            log.info("Closing update from fulldump, means deleting non matched "
+                + "records and try-update of matched records.");
             StringMap sm = new StringMap();
             sm.put("TRY_UPDATE", "true");
             try {
                 QueryOptions qs = new QueryOptions(null, null, 0, 0, sm);
                 storage.flushAll(records, qs);
+                log.info("Flushed '" + records.size() + "' to storage.");
             } catch(IOException e) {
                 log.error("Exception when flushing "
                         + records.size() + " records to storage", e);
@@ -195,8 +200,12 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             if(ids.size() < maxNumberDeletes) {
                 try {
                     for(String id: new ArrayList<String>(ids.keySet())) {
-                        storage.getRecord(id, null).setDeleted(true); // TODO i think     
+                        Record tmp = storage.getRecord(id, null);
+                        tmp.setDeleted(true); // TODO i think
+                        storage.flush(tmp);
+
                     }
+                    log.info("Marked '" + ids.size() + "' records as deleted.");
                 } catch(IOException e) {
                     log.error("IOException when deleting records from storage. "
                               +"Storage now contains deleted records.");    
@@ -212,5 +221,11 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 + "removing any records from storage. There should have been "
                 + "removed: " + ids.size() + " records");
         }
+        try {
+            storage.close();
+        } catch(IOException e) {
+            log.warn("IOException while closing storage");
+        }
+        log.info("Closed UpdateFromFulldumpFilter.");
     }
 }
