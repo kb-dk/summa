@@ -102,6 +102,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      *
      * @param storage the storage, where we should insert and possibly delete
      * records from.
+     * @param config configuration for the running version.
      */
     public UpdateFromFulldumpFilter(Storage storage, Configuration config) {
         super(config);
@@ -120,14 +121,11 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         getRecords();
     }
 
+    /**
+     * Get all record id's from storage. These ids are place in a local
+     * Map for later usage. 
+     */
     private void getRecords() {
-        /*  -  Print number of records in storage.
-        StringMap meta = new StringMap();
-        meta.put("ALLOW_PRIVATE", "true");
-        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
-        Record holdings = storage.getRecord("__holdings__", opts);
-        log.info("Number of records in storage: " + storage.);
-        */
         // get a local copy of all records id.
         try {
             long iteratorKey = storage.getRecordsModifiedAfter(0, null, null);
