@@ -17,20 +17,16 @@ package dk.statsbiblioteket.summa.web.services;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.XMLStreamException;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -148,10 +144,6 @@ public class StorageWS {
         } catch (IOException e) {
             log.error("Error while getting record with id: " + id + ". Error was: ", e);
             // an error occured while retrieving the record. We simply return null to indicate the record was not found.
-            retXML = null;
-        } catch (XMLStreamException e) {
-            log.error("Error while converting record to XML: " + id + ". Error was: ", e);
-            // an error occured while converting the record. We simply return null to indicate the error.
             retXML = null;
         }
 

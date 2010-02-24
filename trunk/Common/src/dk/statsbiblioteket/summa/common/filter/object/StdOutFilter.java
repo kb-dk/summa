@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 
@@ -27,6 +28,8 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * A {@link Filter} piping record content or XML format to {@code stdout}
@@ -85,13 +88,12 @@ public class StdOutFilter extends ObjectFilterImpl {
             try {
                 System.out.println(RecordUtil.toXML(payload.getRecord(),
                                                     escapeContent));
-            } catch (javax.xml.stream.XMLStreamException e) {
+            } catch (IOException e) {
                 throw new PayloadException("Error parsing record content for "
                                            + payload.getId() + ": "
                                            + e.getMessage(), e);
             }
         }
-        
         return true;
     }
 }

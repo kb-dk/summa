@@ -20,12 +20,25 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.XMLEvent;
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Helpers for processing Records.
@@ -105,11 +118,11 @@ public class RecordUtil {
      * proper XML.
      * @param record the Record to represent as XML.
      * @return the Record as UTF-8 XML, without header.
-     * @throws javax.xml.stream.XMLStreamException if an error occured during
-     *         XML creation.
+     * @throws IOException if an error occured during
+     *         XML creation op input record.
      * @see {@link #fromXML}
      */
-    public static String toXML(Record record) throws XMLStreamException {
+    public static String toXML(Record record) throws IOException {
         return toXML(record, DEFAULT_ESCAPE_CONTENT);
     }
 
@@ -131,18 +144,25 @@ public class RecordUtil {
      * @param escapeContent if true, XML-content from the Records will be
      *                      entity-escaped.
      * @return the Record as UTF-8 XML, without header.
-     * @throws javax.xml.stream.XMLStreamException if an error occured during
-     *         XML creation.
+     * @throws IOException if an error occured during
+     *         XML creation of input record.
      * @see {@link #fromXML}.
      * @see {@link RecordUtil#toXML}.
      */
     public static String toXML(Record record, boolean escapeContent) throws
-                                                            XMLStreamException {
+                                                     IOException {
         log.trace("Creating XML for Record '" + record.getId() + "'");
         StringWriter sw = new StringWriter(5000);
-        XMLStreamWriter xmlOut = xmlOutputFactory.createXMLStreamWriter(sw);
-        xmlOut.setDefaultNamespace(RECORD_NAMESPACE);
-        toXML(xmlOut, 0, new HashSet<Record>(10), record, escapeContent);
+        try {
+            XMLStreamWriter xmlOut = xmlOutputFactory.createXMLStreamWriter(sw);
+            xmlOut.setDefaultNamespace(RECORD_NAMESPACE);
+            toXML(xmlOut, 0, new HashSet<Record>(10), record, escapeContent);
+        } catch (XMLStreamException e) {
+            String error =
+                  "Uable to convert record to XML due to XML Stream Exception ";
+            log.warn(error);
+            throw new IOException(error, e);
+        }
         log.debug("Created an XML representation of '" + record.getId() + "'");
         return sw.toString();
     }
@@ -151,6 +171,7 @@ public class RecordUtil {
     // 2002-10-10T17:00:00.000
     private static SimpleDateFormat schemaTimestampFormatter =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
+
     // synchronized due to schemaTimestampFormatter
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.QA_NEEDED,
@@ -482,14 +503,21 @@ public class RecordUtil {
      *                         copied.
      * @param maxElements the maximum number of elements to copy. Only top-level
      *                    elements are counted. -1 means all elements.
-     * @throws javax.xml.stream.XMLStreamException if the reader could not
+     * @throws IllegalArgumentException if the reader could not
      *         parse its content.
      */
     public static void copyContent(
             XMLStreamReader reader, XMLStreamWriter writer,
             boolean skipDeclarations, int maxElements)
-                                                     throws XMLStreamException {
-        copyContent(reader, writer, null, skipDeclarations, maxElements);
+                                              throws IllegalArgumentException {
+        try {
+            copyContent(reader, writer, null, skipDeclarations, maxElements);
+        } catch (XMLStreamException e) {
+            final String err = "Parsing of reading resulted in a stream "
+                + "exception.";
+            log.warn(err);
+            throw new IllegalArgumentException(err, e);
+        }
     }
 
     /* Like above but with nice debug message on error is record != null */
@@ -710,6 +738,7 @@ public class RecordUtil {
     public static int calculateRecordSize(Record record, boolean followLinks) {
         return calculateRecordSize(record, followLinks, null);
     }
+
     private static int calculateRecordSize(Record record, boolean followLinks,
                                            Set<Record> visited) {
         if (visited != null) {
