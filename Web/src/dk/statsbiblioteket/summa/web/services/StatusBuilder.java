@@ -148,6 +148,10 @@ public class StatusBuilder {
         return l;
     }
 
+    /**
+     * Return true if searcher, storage and suggest is 'OK'.
+     * @return true if searcher, sorage and suggest is 'OK', false otherwise.
+     */
     public boolean allGood() {
         return "OK".equals(searcherStatus) &&
                "OK".equals(storageStatus) &&
@@ -232,9 +236,9 @@ public class StatusBuilder {
                 buf.append("<li>")
                    .append(Integer.toString(Integer.parseInt(prop.getKey())))
                    .append(" - ")
-                   .append("<tt>")
+                   .append("<tt>'")
                    .append(prop.getValue())
-                   .append("</tt>")
+                   .append("'</tt>")
                    .append("</li>\n");
             }
             buf.append("</ul>\n");
