@@ -32,26 +32,58 @@ import java.rmi.RemoteException;
  * @since Feb 9, 2010
  */
 public class DidYouMeanSearchNode extends SearchNodeImpl {
+    /**
+     * Log factory.
+     */
     private static final Log log = LogFactory.getLog(DidYouMeanSearchNode.class);
 
+    /**
+     * The configuration field in configuration file for the apriorifield.
+     */
     public static final String CONF_APRIORI_FIELD =
                                         "summa.support.didyoumean.apriorifield";
+    /**
+     * The default value for {@link DidYouMeanSearchNode#CONF_APRIORI_FIELD}.
+     * The value is 'freetext'.
+     */
     public static final String DEFAULT_APRIORI_FIELD = "freetext";
 
+    /**
+     * The configuration field in configuration file for the Did-You-Mean
+     * analyzer.
+     */
     public static final String CONF_DIDYOUMEAN_ANALYZER =
                                         "summa.support.didyoumean.analyzer";
-
+    /**
+     * Default value of {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_ANALYZER},
+     * the value is {@link SummaStandardAnalyzer}
+     */
     public static final Class<? extends Analyzer> DEFAULT_DIDYOUMEAN_ANALYZER =
                                             SummaStandardAnalyzer.class;
-
+    /**
+     * Local variable for apriori field.
+     */
     private String aprioriField = null;
 
+    /**
+     * Local value for Analyzer.
+     */
     private Analyzer analyzer = null;
 
+    /**
+     * Local TokenPhraseSuggester
+     */
     private TokenPhraseSuggester phraseSuggester = null;
-    private NgramTokenSuggester tokenSuggester = null;
+    /**
+     * Local IndexReader.
+     */
     private IndexReader aprioriIndex = null;
 
+    /**
+     * Constructor for DidYouMeanSearchNode. Get needed configuration values.
+     *
+     * @param config The configuration for this instance.
+     */
     public DidYouMeanSearchNode(Configuration config) {
         super(config);
         aprioriField = config.getString(
@@ -61,39 +93,61 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                                        DEFAULT_DIDYOUMEAN_ANALYZER, config);
         analyzer = Configuration.create(analyzerClass, config);
 
-        log.debug("Using apriori field '" + aprioriField +"'");
-        log.debug("Using analyzer '" + analyzerClass.getName() + "'");
+        log.debug("Using apriori field '" + aprioriField +"'.");
+        log.debug("Using analyzer '" + analyzerClass.getName() + "'.");
     }
 
+    /**
+     * Nothing is done at warmup.
+     * 
+     * @param request as specified in
+     *       {@link dk.statsbiblioteket.summa.search.SearchNode#warmup(String)}.
+     */
     @Override
     protected void managedWarmup(String request) {
-
+        // Not needed.
     }
 
+    /**
+     * Create needed locale: AprioriIndex, TokenSuggester and PhraseSuggester.
+     *
+     * @param location as specified in
+     *          {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
+     * @throws RemoteException is thrown if an IOException is cast during
+     * creation of a local datastructure.
+     */
     @Override
     protected void managedOpen(String location) throws RemoteException {
         log.debug("Opening '" + location + "'");
-        IndexFacade aprioriIndexFactory = null;
+        IndexFacade aprioriIndexFactory;
 
+        // Setup AprioriIndex
         try {
             aprioriIndexFactory = new DirectoryIndexFacade(
                                             FSDirectory.getDirectory(location));
             aprioriIndex = aprioriIndexFactory.indexReaderFactory();
         } catch (IOException e) {
-            throw new RemoteException("IOException when opening Lucene index.", e);
+            throw new RemoteException("IOException when opening Lucene index.",
+                                                                             e);
         }
 
+        // Setup TokenSuggester
+        NgramTokenSuggester tokenSuggester = null;
         try {
             log.debug("Building token index");
-            IndexFacade ngramIndexFactory = new DirectoryIndexFacade(new RAMDirectory());
-            ngramIndexFactory.indexWriterFactory(null, true).close(); // Initialize empty index
+            IndexFacade ngramIndexFactory =
+                                   new DirectoryIndexFacade(new RAMDirectory());
+            // Initialize empty index
+            ngramIndexFactory.indexWriterFactory(null, true).close();
             tokenSuggester = new NgramTokenSuggester(ngramIndexFactory);
-            tokenSuggester.indexDictionary(new TermEnumIterator(aprioriIndex, aprioriField), 2);
+            tokenSuggester.indexDictionary(
+                           new TermEnumIterator(aprioriIndex, aprioriField), 2);
         } catch (IOException e) {
-            throw new RemoteException("IOException when creating ngramIndex.", e);
+            throw new RemoteException("IOException when creating ngramIndex.",
+                                                                             e);
         }
 
-
+        // Setup PhraceSuggester
         try {
             //phraseSuggester = new TokenPhraseSuggesterImpl(tokenSuggester,
             //                  aprioriField, false, 3, analyzer, aprioriIndex);
@@ -106,6 +160,11 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         
     }
 
+    /**
+     * Closes open indexes.
+     * @throws RemoteException if IOException is catched when closing the
+     * indexes.
+     */
     @Override
     protected void managedClose() throws RemoteException {
         log.debug("Close");
@@ -119,6 +178,29 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
     }
 
+    /**
+     * Manage the search, by giving the local phraseSuggester the 'query' and
+     * 'number of suggestion'.
+     * Note:
+     * <ul>
+     *  <li>'number of suggestion' can be overidden in 'request' contains
+     *      {@link DidYouMeanKeys#SEARCH_MAX_RESULTS} is set.</li>
+     *  <li>'query' is found in the 'request' key
+     *      {@link DidYouMeanKeys#SEARCH_QUERY}.</li>
+     * </ul>
+     * SIDEEFFECT:
+     * <ul>
+     *  <li>The resulting XML is added to the 'response' parameter.</li>
+     * </ul>
+     *  
+     * @param request   as specified in
+     *        {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+     *                 dk.statsbiblioteket.summa.search.api.ResponseCollection)}
+     * @param responses as specified in
+     *        {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+     *                                                      ResponseCollection)}
+     * @throws RemoteException dictated by overriding method.
+     */
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
