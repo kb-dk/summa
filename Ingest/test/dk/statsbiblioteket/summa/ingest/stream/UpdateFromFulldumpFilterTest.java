@@ -44,8 +44,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         // Set up the source filter
         PushFilter source = new PushFilter(records.length+1, 2048);
 
-        for (int i = 0; i < records.length; i++) {
-            Payload p = new Payload(records[i]);
+        for (Record record : records) {
+            Payload p = new Payload(record);
             source.add(p);
         }
         source.signalEOF();
@@ -100,6 +100,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
     /**
      * Test how we fare with no bases and no connection configured
+     * @throws Exception if thrown
      */
     public void testNoBases() throws Exception {
         filter = new UpdateFromFulldumpFilter(createTestStorage(),
@@ -107,7 +108,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         chain = prepareFilterChain(filter,
                                    new Record("id", "base", "data".getBytes()));
 
-        while(chain.pump()); // loop over chain
+        while(chain.pump()) {
+            // intended
+        }
 
         assertEquals(1, chain.size());
     }
@@ -124,7 +127,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         chain = prepareFilterChain(filter,
                                    rec2);
 
-        while(chain.pump());
+        while(chain.pump()) {
+            // intended
+        }
         filter.close(true);  // why isn't this called via pump?
 
         assertEquals(1, chain.size());
@@ -145,7 +150,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         chain = prepareFilterChain(filter, rec1, rec2);
 
         //noinspection StatementWithEmptyBody
-        while(chain.pump());
+        while(chain.pump()) {
+            // intended
+        }
         filter.close(true); // why isn't this called via pump?
         
         assertEquals(2, chain.size());
@@ -167,7 +174,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         chain = prepareFilterChain(filter,rec1);
 
         //noinspection StatementWithEmptyBody
-        while(chain.pump());
+        while(chain.pump()) {
+            // intended
+        }
         filter.close(true); // why isn't this called via pump?
 
         assertEquals(1, chain.size());
