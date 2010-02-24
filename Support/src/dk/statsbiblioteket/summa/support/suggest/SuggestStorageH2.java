@@ -585,9 +585,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     /**
      * If queryCount is -1 we must add one to the previous value, otherwise
      * we should set suggest_index.query_count to queryCount
-     * @param query
-     * @param hits
-     * @param queryCount
+     * @param query the search query.
+     * @param hits the hit count, gonna override 'suggest_data.hit_count'.
+     * @param queryCount if -1 we add one to old query_count otherwise override.
      */
     private void updateSuggestion(String query, int hits, int queryCount) {
         try {
@@ -890,13 +890,19 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    /**
+     * Join a stream of tokens, between each token, is added the delimiter.
+     * @param toks token stream.
+     * @param delimiter the delimiter.
+     * @return the string build by added delimiter between each token.
+     */
     private String join(TokenStream toks, String delimiter) {
         StringBuilder buf = threadLocalBuilder.get();
         try {
             Token tok = new Token();
             while (toks.next(tok) != null) {
                 if (buf.length() != 0) {
-                    buf.append(" ");
+                    buf.append(delimiter);
                 }
                 buf.append(tok.termBuffer(), 0, tok.termLength());
             }
