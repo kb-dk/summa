@@ -25,6 +25,20 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     UpdateFromFulldumpFilter filter;
     PayloadBufferFilter chain;
 
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        if(storage != null) {
+            storage.close();
+        }
+        if(filter != null) {
+            filter.close(true);
+        }
+        if(chain != null) {
+            chain.close(true);
+        }
+    }
+
     public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
                                                   Record... records) {
         // Set up the source filter
