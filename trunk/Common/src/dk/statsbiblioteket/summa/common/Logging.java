@@ -116,6 +116,23 @@ public class Logging {
         }
     }
 
+    public static void logProcess(String origin, String message, LogLevel level,
+                                  String id) {
+        logProcess(origin, message, level, id, null);
+    }
+
+    public static void logProcess(String origin, String message, LogLevel level,
+                                  String id, Throwable cause) {
+        String fullMessage = (origin == null ? "" : origin + ": ")
+                             + message + ". " + id;
+
+        if (cause == null) {
+            log(fullMessage,processLog, level);
+        } else {
+            log(fullMessage,processLog, level, cause);
+        }
+    }
+
     /**
      * @param level is logging done on this level?
      * @return true if process logging is done on the stated level.
