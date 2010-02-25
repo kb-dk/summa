@@ -268,21 +268,21 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                         this.getClass().getSimpleName(),
                         ERROR_NOTMULTI + "parents and children. We set it to "
                         + MarcAnnotations.MultiVolumeType.SEKTION + " for "
-                        + record, Logging.LogLevel.DEBUG, null);
+                        + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.SEKTION;
             } else if (hasParent) {
                 Logging.logProcess(
                         this.getClass().getSimpleName(),
                         ERROR_NOTMULTI + "parents. We set it to "
                         + MarcAnnotations.MultiVolumeType.BIND + " for "
-                        + record, Logging.LogLevel.DEBUG, null);
+                        + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.BIND;
             } else if (record.getChildren() != null) {
                 Logging.logProcess(
                         this.getClass().getSimpleName(),
                         ERROR_NOTMULTI + "children. We set it to "
                         + MarcAnnotations.MultiVolumeType.HOVEDPOST + " for "
-                        + record, Logging.LogLevel.DEBUG, null);
+                        + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
             }
         }
@@ -295,7 +295,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             Logging.logProcess(this.getClass().getSimpleName(),
                     "Found 24x in " + record + ", but type was " + type
                     + " so no replacement was done. The content will probably "
-                    + "not be processed", Logging.LogLevel.DEBUG, null);
+                    + "not be processed", Logging.LogLevel.DEBUG, 
+                    record.getId());
         }
         return line;
     }
