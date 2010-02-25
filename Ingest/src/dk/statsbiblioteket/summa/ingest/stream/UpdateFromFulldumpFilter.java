@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -22,6 +23,8 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,31 +50,33 @@ import java.util.*;
  * @author Henrik Kirk <hbk@statsbiblioteket.dk>
  * @since 2010-19-02
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_OK,
+        author = "hbk",
+        reviewers = "te")
 public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Log log = LogFactory.getLog(UpdateFromFulldumpFilter.class);
     // storage to manipulate.
     private Storage storage = null;
 
     /**
-     * Maxium number of records to delete from storage, without going down with
+     * Maximum number of records to delete from storage, without going down with
      * an error.
+     * </p><p>
+     * Optional, but highly recommended. Default is 10.
      */
     public static final String CONF_MAX_NUMBER_DELETES =
                  "summa.ingest.stream.updatefromfulldumpfiler.maxnumberdeletes";
     /**
      * Default value of {@link UpdateFromFulldumpFilter#CONF_MAX_NUMBER_DELETES}.
      */
-    public static final int DEFAULT_MAX_NUMBER_DELETES = 100;
-
-    /**
-     * Value of {@link this#CONF_MAX_NUMBER_DELETES}
-     * if set otherwise {@link this#DEFAULT_MAX_NUMBER_DELETES }.
-     */
-    private int maxNumberDeletes = 0;
+    public static final int DEFAULT_MAX_NUMBER_DELETES = 10;
 
     /**
      * Maximum number of records to get from storage at each
      * {@link Storage#next(long, int)} records.
+     * </p><p>
+     * Optional. Default is 100.
      */
     public static final String CONF_NUMBER_OF_RECORDS_FROM_STORAGE =
     "summa.ingest.stream.updatefromfulldumpfiler.numberofrecordsfromstorage";
@@ -79,6 +84,12 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      * Default value {@link this#CONF_NUMBER_OF_RECORDS_FROM_STORAGE}.
      */
     public static final int DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE = 100;
+
+    /**
+    * Value of {@link this#CONF_MAX_NUMBER_DELETES}
+    * if set otherwise {@link this#DEFAULT_MAX_NUMBER_DELETES }.
+    */
+   private int maxNumberDeletes = 0;
 
     /**
      * Value of {@link this#CONF_MAX_NUMBER_DELETES} if set otherwise
@@ -92,21 +103,29 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Map<String, Record> ids = null;
 
     /**
-     * Private container for records, which should be inserted/updated.
-     */
-    private List<Record> records = null;
-
-    /**
      * Constructor
      * SideEffect: Fetch a copy of storage ID's for local storage.
      *
-     * @param storage the storage, where we should insert and possibly delete
-     * records from.
      * @param config configuration for the running version.
      */
-    public UpdateFromFulldumpFilter(Storage storage, Configuration config) {
+    public UpdateFromFulldumpFilter(Configuration config) {
         super(config);
+        try {
+            storage = StorageFactory.createStorage(config);
+        } catch (IOException e) {
+            throw new ConfigurationException("Unable to connect to Storage", e);
+        }
 
+        init(config);
+    }
+
+    UpdateFromFulldumpFilter(Storage storage, Configuration config) {
+        super(config);
+        this.storage = storage;
+        init(config);
+    }
+
+    private void init(Configuration config) {
         maxNumberDeletes = config.getInt(CONF_MAX_NUMBER_DELETES
                                                   , DEFAULT_MAX_NUMBER_DELETES);
         numberOfRecordsFromStorage =
@@ -114,9 +133,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                                    DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
         ids = new HashMap<String, Record>();
-        records = new ArrayList<Record>();
 
-        this.storage = storage;
         log.info("Get all records id from storage.");
         getRecords();
     }
@@ -167,7 +184,9 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         }
         log.info("Process record '" + r.getId() + "' ok.");
         ids.remove(r.getId());
-        records.add(r);
+        Logging.logProcess(
+                "UpdateFromFulldumpFilter", "Marking as existing",
+                Logging.LogLevel.TRACE, payload);
         return true;
     }
 
@@ -181,27 +200,22 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     @Override
     public void close(boolean ok) {
+        super.close(ok);
         // Clean closure
         if(ok) {
             log.info("Closing update from fulldump, means deleting non matched "
-                + "records and try-update of matched records.");
-            StringMap sm = new StringMap();
-            sm.put("TRY_UPDATE", "true");
-            try {
-                QueryOptions qs = new QueryOptions(null, null, 0, 0, sm);
-                storage.flushAll(records, qs);
-                log.info("Flushed '" + records.size() + "' to storage.");
-            } catch(IOException e) {
-                log.error("Exception when flushing "
-                        + records.size() + " records to storage", e);
-            }
+                + "records and try-update of " + ids.size()
+                + " matched records.");
             if(ids.size() < maxNumberDeletes) {
                 try {
                     for(String id: new ArrayList<String>(ids.keySet())) {
                         Record tmp = storage.getRecord(id, null);
                         tmp.setDeleted(true); // TODO i think
+                        Logging.logProcess(
+                                "UpdateFromFulldumpFilter",
+                                "Marking as deleted",
+                                Logging.LogLevel.DEBUG, id);
                         storage.flush(tmp);
-
                     }
                     log.info("Marked '" + ids.size() + "' records as deleted.");
                 } catch(IOException e) {
