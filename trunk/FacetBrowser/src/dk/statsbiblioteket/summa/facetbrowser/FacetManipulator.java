@@ -36,11 +36,6 @@ import java.rmi.RemoteException;
  * persistent view on Facet-information coupled to a document index (such as
  * Lucene). The manipulator allows for iterative updates and is capable of
  * doing a complete rebuild if needed.
- * </p><p>
- * This class is abstract and a document searcher specific handling of updates
- * needs to be implemented. The base case is Lucene support, where the
- * implementation extracts the contents of fields and rebuilds based on a
- * complete index.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -119,8 +114,8 @@ public class FacetManipulator implements IndexManipulator {
 
     public FacetManipulator(Configuration conf) throws RemoteException {
         log.info("Constructing FacetManipulator");
-        clearTagsOnClear = conf.getBoolean(CONF_CLEAR_TAGS_ON_CLEAR,
-                                           DEFAULT_CLEAR_TAGS_ON_CLEAR);
+        clearTagsOnClear = conf.getBoolean(
+                CONF_CLEAR_TAGS_ON_CLEAR, DEFAULT_CLEAR_TAGS_ON_CLEAR);
         clearTagsOnConsolidate = conf.getBoolean(
                 CONF_CLEAR_TAGS_ON_CONSOLIDATE,
                 DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE);
@@ -129,11 +124,11 @@ public class FacetManipulator implements IndexManipulator {
         skipFacetOnUpdate = conf.getBoolean(
                 CONF_SKIP_FACET_ON_UPDATE, DEFAULT_SKIP_FACET_ON_UPDATE);
         Structure structure = new Structure(conf);
-        TagHandler tagHandler =
-                TagHandlerFactory.getTagHandler(conf, structure, false);
+        TagHandler tagHandler = TagHandlerFactory.getTagHandler(
+                conf, structure, false);
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
-        builder =
-                BuilderFactory.getBuilder(conf, structure, coreMap, tagHandler);
+        builder = BuilderFactory.getBuilder(
+                conf, structure, coreMap, tagHandler);
         log.info(String.format(
                 "FacetManipulator(clearTagsOnClear=%b, clearTagsOnConsolidate=%"
                 + "b, skipFacetOnUpdate=%b) created with facets %s",
@@ -220,4 +215,3 @@ public class FacetManipulator implements IndexManipulator {
         return orderChanged;
     }
 }
-
