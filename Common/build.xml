@@ -105,25 +105,31 @@
     <target name="compiletest" depends="compile">
         <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
                encoding="UTF-8" verbose="true" >
-            <classpath refid="test.lib.path"/>
+            <classpath refid="test.lib.path" />
         </javac>
     </target>
 
     <target name="runtest" depends="compiletest">
         <delete dir="${test.report.dir}" />
-        <mkdir dir="${test.report.dir}"/>
-        <junit>
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes">
             <classpath refid="test.lib.path" />
-            <formatter type="brief" usefile="false" />            
+            <formatter type="xml" usefile="true" />            
             <batchtest todir="${test.report.dir}">
-                <formatter type="xml"/>
+                <formatter type="brief" />
                 <fileset dir="${test.src.dir}">
-			        <include name="**/*.java"/>
+			        <include name="**/*.java" />
                 </fileset>
             </batchtest>
         </junit>
     </target>
 
+    <target name="createjunitoutput" depends="runtest">
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
 
     <target name="clean-compile-test" depends="clean, compiletest" />
 
