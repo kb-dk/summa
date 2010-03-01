@@ -17,6 +17,8 @@
     <property name="src.dir" value="${basedir}/src"/>
     <property name="test.src.dir" value="${basedir}/test"/>
 
+    <property  name="test.report.dir" value="${basedir}/test/reports/" />
+
     <!-- Temporary files and directories -->
     <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
     <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
@@ -37,7 +39,7 @@
     <path id="lib.path">
         <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
-            <exclude name="junit*"/>
+            <!--<exclude name="junit*"/>-->
         </fileset>
     </path>
 
@@ -53,6 +55,11 @@
     <path id="lib.internal">
         <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Common/${summa.classes.dir}"/>
+    </path>
+
+    <path id="lib.internal.test">
+        <pathelement location="../Storage/${summa.test.classes.dir}"/>
+        <pathelement location="../Common/${summa.test.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -146,6 +153,41 @@
         <delete dir="${doc.dir}"/>
     </target>
 
+    <target name="compiletest" depends="compile">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+               encoding="UTF-8" verbose="true" compiler="${compiler}" >
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <classpath refid="lib.internal.test" />
+        </javac>
+    </target>
+
+    <target name="runtest" depends="compiletest">
+        <delete dir="${test.report.dir}" />
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" dir="${basedir}" fork="true">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${test.report.dir}">
+                <formatter type="brief" />
+                <fileset dir="${test.src.dir}">
+			        <include name="**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="createjunitoutput" depends="runtest">
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="cleancompiletest" depends="clean, compiletest" /> 
+
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
         <mkdir dir="${lib.dir}"/>
@@ -156,6 +198,7 @@
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
         <copy file="${basedir}/../${summa.lib.marc4j}" tofile="${summa.lib.marc4j}"/>
         <copy file="${basedir}/../${summa.lib.marc4j.normalizer}" tofile="${summa.lib.marc4j.normalizer}"/>
+        <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
     </target>
 
 

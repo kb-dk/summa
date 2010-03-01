@@ -48,8 +48,8 @@
         <path refid="lib.path" />
         <pathelement location="${build.dir}" />
         <pathelement location="${test.build.dir}" />
-        <pathelement location="${ant.home}/lib/ant-junit.jar"/>
-        <pathelement location="${test.src.dir}"/>
+        <pathelement location="${ant.home}/lib/ant-junit.jar" />
+        <pathelement location="${test.src.dir}" />
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -91,6 +91,7 @@
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
+        <mkdir  dir="${test.build.dir}" />
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete dir="${test.report.dir}" />
@@ -112,7 +113,7 @@
     <target name="runtest" depends="compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
-        <junit printsummary="yes">
+        <junit printsummary="yes" dir="${basedir}" fork="true">
             <classpath refid="test.lib.path" />
             <formatter type="xml" usefile="true" />            
             <batchtest todir="${test.report.dir}">
@@ -131,7 +132,7 @@
         </junitreport>
     </target>
 
-    <target name="clean-compile-test" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, compiletest" />
 
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
