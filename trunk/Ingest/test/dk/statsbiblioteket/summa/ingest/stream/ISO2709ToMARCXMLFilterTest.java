@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -26,10 +25,20 @@ import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.marc4j.*;
+import org.marc4j.MarcPermissiveStreamReader;
+import org.marc4j.MarcReader;
+import org.marc4j.MarcStreamReader;
+import org.marc4j.MarcStreamWriter;
+import org.marc4j.MarcWriter;
+import org.marc4j.MarcXmlWriter;
 import org.marc4j.marc.Record;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -113,10 +122,12 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     public void testDirectDump() throws Exception {
         File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
-        ByteOutputStream out = new ByteOutputStream((int)SAMPLE.length());
+        //ByteOutputStream out = new ByteOutputStream((int)SAMPLE.length());
+        ByteArrayOutputStream out =
+                                new ByteArrayOutputStream((int)SAMPLE.length());
         Streams.pipe(sampleIn, out);
         System.out.println("Content of " + SAMPLE + "in ISO-8859-1 is:\n"
-                           + new String(out.getBytes(), "cp850"));
+                           + new String(out.toByteArray(), "cp850"));
     }
 
     public void testTransform() throws Exception {
