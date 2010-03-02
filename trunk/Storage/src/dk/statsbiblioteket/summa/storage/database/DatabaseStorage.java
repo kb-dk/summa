@@ -44,8 +44,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -561,7 +574,7 @@ getco     */
      * Get a new pooled connection via {@link #getConnection()} and optimize it
      * for transactional mode, meaning that auto commit is off and the
      * transaction isolation level is set to the fastet one making sense.
-     * @return
+     * @return  database connection from connection pool.
      */
     private Connection getTransactionalConnection() {
         Connection conn = getConnection();
@@ -586,9 +599,10 @@ getco     */
      * <code>finally</code> clause to make sure statements
      * (and thus connections) are not leaked.
      * <p/>
-     * Connection leaking can end up locking up the entire storage process
-     * @param sql SQL statement for the prepared statement
-     * @return a handle that can be used to retrieve a PreparedStatement
+     * Connection leaking can end up locking up the entire storage process.
+     * @param sql SQL statement for the prepared statement.
+     * @return a handle that can be used to retrieve a PreparedStatement.
+     * @throws SQLException from implementation.
      */
     protected abstract StatementHandle prepareStatement(String sql)
                                                             throws SQLException;
@@ -603,11 +617,12 @@ getco     */
      * <code>finally</code> clause to make sure statements
      * (and thus connections) are not leaked.
      * <p/>
-     * Connection leaking can end up locking up the entire storage process
+     * Connection leaking can end up locking up the entire storage process.
      *
      * @param handle statement handle as obtained when calling
-     *               {@link #prepareStatement(String)}
-     * @return a prepared statement that <i>must</i> be closed by the caller
+     *               {@link #prepareStatement(String)}.
+     * @return a prepared statement that <i>must</i> be closed by the caller.
+     * @throws SQLException from implementation.
      */
     protected abstract PreparedStatement getManagedStatement(
                                  StatementHandle handle) throws SQLException;
@@ -1022,7 +1037,7 @@ getco     */
      * @param options any {@link QueryOptions} the query should match
      * @return a {@link ResultSetCursor} that <i>must</i> be closed by the
      *         caller to avoid leaking connections and locking up the storage
-     * @throws IOException
+     * @throws IOException if prepered SQL statement is invalid.
      */
     public ResultSetCursor getRecordsModifiedAfterCursor (
             long mtimeTimestamp, String base, QueryOptions options)
@@ -1057,9 +1072,16 @@ getco     */
      * This method is responsible for closing 'stmt'. This is handled implicitly
      * since 'stmt' is added to a ResultIterator and it will be closed when
      * the iterator is closed.
+     * @param mtimeTimestamp a timestamp as returned by a
+     *                       {@link UniqueTimestampGenerator}.
+     * @param base the base which the retrieved records must belong to.
+     * @param options any {@link QueryOptions} the query should match.
+     * @param stmt prepared statement.
      * @return {@code null} if there are no records updated in {@code base}
      *         after {@code time}. Otherwise a ResultIterator ready for fetching
-     *         records
+     *         records.
+     * @throws IOException if error experienced when prepareing connection for
+     *  cursoring.
      */
     private synchronized ResultSetCursor doGetRecordsModifiedAfterCursor(
             long mtimeTimestamp, String base, QueryOptions options,
@@ -1273,9 +1295,10 @@ getco     */
     }
 
     /**
-     * Return a private record, such as __holdings__ or __statistics__
-     * @param id the id of the private record to retrieve
-     * @return the matching record or {@code null} in case of an unknown id
+     * Return a private record, such as __holdings__ or __statistics__.
+     * @param id the id of the private record to retrieve.
+     * @return the matching record or {@code null} in case of an unknown id.
+     * @throws IOException if error when reading private record.
      */
     private Record getPrivateRecord(String id) throws IOException {
         log.debug(String.format("Fetching private record '%s'", id));
@@ -1637,6 +1660,9 @@ getco     */
      * @param id the id of the records which parents to touch
      * @param options any query options that may affect how the touching is
      *                handled
+     * @param conn the sql connection.
+     * @throws IOException if error is experienced when closing statement. 
+     * @throws SQLException if {@link Connection@prepareStatement} fails.
      */
     protected void touchParents (String id, QueryOptions options,
                                  Connection conn)
@@ -2272,8 +2298,9 @@ getco     */
 
     /**
      * Set the {@code hasRelations} column to {@code true} on the listed
-     * childIds
-     * @param childIds
+     * childIds.
+     * @param childIds children ID's.
+     * @param conn the database connection.
      */
     private void markHasRelations(List<String> childIds,
                                   Connection conn) {
@@ -2298,7 +2325,7 @@ getco     */
     }
 
     private void checkHasRelations(String id, Connection conn)
-                                                           throws SQLException {;
+                                                           throws SQLException {
         PreparedStatement stmt =
                               conn.prepareStatement(stmtGetRelatedIds.getSql());
 
@@ -2811,6 +2838,13 @@ getco     */
     /**
      * As {@link #scanRecord(ResultSet, ResultSetCursor)} with
      * {@code resultSet = null}.
+     * @param resultSet a SQL result set. The result set will be stepped to the
+     *   beginning of the following record
+     * @return a Record based on the result set.
+     * @throws SQLException if there was a problem extracting values from the
+     *                      SQL result set.
+     * @throws IOException  If the data (content) could not be uncompressed
+     *                      with gunzip.
      */
     public Record scanRecord (ResultSet resultSet)
                                               throws SQLException, IOException {
@@ -2822,6 +2856,7 @@ getco     */
      * to a {@link ResultSetCursor}.
      * @param stmt the statement to execute.
      * @param base the base we are iterating over
+     * @param options query options.
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
