@@ -2884,11 +2884,11 @@ getco     */
 
     @Override
     public void close() throws IOException {
-        log.info("Closing");
+        log.info("Closing DatabaseStorage");
 
         iteratorReaper.stop();
 
-        log.info("Closed");
+        log.info("Closed DatabaseStorage");
     }
 
     public List<BaseStats> getStats() throws IOException {

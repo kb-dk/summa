@@ -203,9 +203,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         super.close(ok);
         // Clean closure
         if(ok) {
-            log.info("Closing update from fulldump, means deleting non matched "
-                + "records and try-update of " + ids.size()
-                + " matched records.");
+            log.info("Closing update from fulldump, means deleting non-matched "
+                + "records.");
             if(ids.size() < maxNumberDeletes) {
                 try {
                     for(String id: new ArrayList<String>(ids.keySet())) {
