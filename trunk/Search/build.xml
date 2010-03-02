@@ -24,6 +24,7 @@
     <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
     <property name="lib.dir" value="${basedir}/lib"/>
+    <property  name="test.report.dir" value="${basedir}/test/reports/" />
 
     <!-- Compilation properties -->
     <property name="compiler" value="${summa.compiler}"/>
@@ -37,7 +38,7 @@
     <path id="lib.path">
         <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
-            <exclude name="junit*"/>
+            <!-- <exclude name="junit*"/> -->
         </fileset>
     </path>
 
@@ -54,6 +55,8 @@
     <path id="lib.internal">
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Storage/${summa.classes.dir}"/>
+        <pathelement location="../Common/${summa.test.classes.dir}"/>
+        <pathelement location="../Storage/${summa.test.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -147,8 +150,11 @@
 
     <target name="clean">
         <delete dir="${build.dir}"/>
+        <delete dir="${test.build.dir}"/>
+        <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
+        <delete dir="${test.report.dir}" />
     </target>
 
     <target name="distclean" depends="clean">
@@ -156,6 +162,40 @@
         <delete dir="${dist.dir}"/>
         <delete dir="${doc.dir}"/>
     </target>
+
+    <target name="compiletest" depends="compile">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+               encoding="UTF-8" verbose="true" >
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+        </javac>
+    </target>
+
+    <target name="runtest" depends="compiletest">
+        <delete dir="${test.report.dir}" />
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" dir="${basedir}" fork="true">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${test.report.dir}">
+                <formatter type="brief" />
+                <fileset dir="${test.src.dir}">
+			        <include name="**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="createjunitoutput" depends="runtest">
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="cleancompiletest" depends="clean, compiletest" />
 
     <target name="compile" depends="depends">
         <mkdir dir="${build.dir}"/>

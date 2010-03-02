@@ -21,6 +21,7 @@
     <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
     <property name="lib.dir" value="${basedir}/lib"/>
+    <property  name="test.report.dir" value="${basedir}/test/reports/" />
 
     <!-- Compiled sub-packages -->
     <property name="release.search.war" value="${dist.dir}/${project.name}-search.war"/>
@@ -40,7 +41,7 @@
     <path id="lib.path">
         <fileset dir="${lib.dir}">            
             <include name="**/*.jar"/>
-            <exclude name="junit*"/>
+            <!--<exclude name="junit*"/>-->
         </fileset>
     </path>
 
@@ -215,6 +216,7 @@
         <delete file="${release.storage.war}"/>
         <delete file="${release.website.war}"/>
         <delete file="${release.status.war}"/>
+        <delete dir="${test.report.dir}" />
     </target>
 
     <target name="distclean" depends="clean">
@@ -222,6 +224,41 @@
         <delete dir="${dist.dir}"/>
         <delete dir="${doc.dir}"/>
     </target>
+
+    <target name="compiletest" depends="compile">
+        <mkdir dir="${test.build.dir}" />
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+               encoding="UTF-8" verbose="true" >
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+        </javac>
+    </target>
+
+    <target name="runtest" depends="compiletest">
+        <mkdir dir="${test.report.dir}" />
+        <delete dir="${test.report.dir}" />
+        <junit printsummary="yes" dir="${basedir}" fork="true">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${test.report.dir}">
+                <formatter type="brief" />
+                <fileset dir="${test.src.dir}">
+			        <include name="**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="createjunitoutput" depends="runtest">
+        <mkdir dir="${test.report.dir}" />
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="cleancompiletest" depends="clean, compiletest" />
 
     <target name="compile" depends="depends">
         <mkdir dir="${build.dir}"/>
