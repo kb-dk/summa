@@ -428,11 +428,16 @@ public class ConfigurationTest extends TestCase {
                                  conf.getStrings("b0rk", val)));
     }
 
-    public void testUnescape() throws Exception {
-        URL url = new File("mypath#klaf/somefile.xml").toURI().toURL();
-        System.out.println("Got URL " + url);
-        System.out.println("Got File from URL: " + url.getFile());
-        System.out.println("new File(URI): " + new File(url.toURI()));
+    public void testUnEscape() throws Exception {
+        File file = new File("mypath#klaf/somefile.xml");
+        URL url = file.toURI().toURL();
+        assertNotSame("Got URL '" + url + "' expected '" + file + "'", file,
+                url);
+        assertNotSame("Got File from URL: '" + url.getFile() + "' expected '"
+                + file + "'.", file, url.getFile());
+        assertEquals("new File(URI): " + new File(url.toURI()), file.getAbsolutePath(),
+                new File(url.toURI()).getAbsolutePath());
+
     }
 
     public void testPathEscape() {
