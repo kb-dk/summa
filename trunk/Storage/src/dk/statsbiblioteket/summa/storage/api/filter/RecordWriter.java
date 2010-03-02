@@ -353,6 +353,7 @@ public class RecordWriter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         Record record = payload.getRecord();
+
         if (record == null) {
             throw new PayloadException("null received in Payload in next()"
                                        + ". This should not happen");
@@ -360,6 +361,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
         batcher.add(record);
         profiler.beat();
+        log.info("Record '" + record.getId() + "' ok through RecordWriter.");
         return true;
     }
 

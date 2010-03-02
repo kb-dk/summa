@@ -43,7 +43,6 @@ public class JStorage implements ConfigurationStorage {
 
     public JStorage (String resource) throws IOException {
         this();
-
         InputStream _in = ClassLoader.getSystemResourceAsStream(resource);
         if (_in == null) {
             throw new FileNotFoundException("Unable to locate resource: "

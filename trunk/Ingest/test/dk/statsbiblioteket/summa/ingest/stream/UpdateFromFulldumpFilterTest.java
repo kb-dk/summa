@@ -33,16 +33,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         if(storage != null) {
             storage.close();
         }
-/*        if(filter != null) {
-            filter.close(true);
-        }
-        if(chain != null) {
-            chain.close(true);
-        }*/
     }
 
-    public PayloadBufferFilter prepareFilterChain(
-            ObjectFilter fullDumpFilter, Storage storage,
+    public PayloadBufferFilter prepareFilterChain(ObjectFilter fullDumpFilter,
             Record... records) throws IOException {
         // Set up the source filter
         PushFilter source = new PushFilter(records.length+1, 2048);
@@ -58,17 +51,14 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         RecordWriter writer = new RecordWriter(storage, 100, 10000);
         writer.setSource(fullDumpFilter);
 
-
         // Set up the endpoint filter
         PayloadBufferFilter buf = new PayloadBufferFilter(
                                                 Configuration.newMemoryBased());
 
         // Connect filters
         buf.setSource(writer);
-
         
         return buf;
-
     }
 
     public void assertBaseCount(String base, long expected) throws Exception {
@@ -77,6 +67,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         long actual = 0;
         while (iter.hasNext()) {
             Record r = iter.next();
+            System.out.println("Record: '" + r.getId() + "', delete: " + r.isDeleted());
             if (!r.isDeleted()) {
                 actual++;
             }
@@ -116,38 +107,39 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         Storage storage = createTestStorage();
         filter = new UpdateFromFulldumpFilter(storage,
                                                 Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter, storage,
+        chain = prepareFilterChain(filter,
                                    new Record("id", "base", "data".getBytes()));
-
+        assertBaseCount("base", 0);
+        
         while(chain.pump()) {
             // intended
         }
         chain.close(true);
 
-        assertEquals(1, chain.size());
+        assertEquals(1, chain.size());        
+
+        assertBaseCount("base", 1);
     }
 
     public void testInsertExtraRecord() throws Exception {
         createTestStorage();
 
-        Record rec = new Record("id1", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes());
         Record rec2 = new Record("id2", "base", "data".getBytes());
-        storage.flush(rec);
+        storage.flush(rec1);
         assertBaseCount("base", 1);
 
         filter = new UpdateFromFulldumpFilter(
                 storage, Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter, storage, rec2);
+        chain = prepareFilterChain(filter, rec1, rec2);
 
         while(chain.pump()) {
             // intended
         }
         chain.close(true);  // why isn't this called via pump?
 
-
-        assertEquals(1, chain.size());
-
-        assertBaseCount("base", 1);
+        assertEquals(2, chain.size());
+        assertBaseCount("base", 2);
     }
 
     public void testSameFullDump() throws Exception {
@@ -161,7 +153,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         filter = new UpdateFromFulldumpFilter(
                 storage, Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter, storage, rec1, rec2);
+        chain = prepareFilterChain(filter, rec1, rec2);
 
         //noinspection StatementWithEmptyBody
         while(chain.pump()) {
@@ -186,7 +178,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         filter = new UpdateFromFulldumpFilter(
                 storage, Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter, storage, rec1);
+        chain = prepareFilterChain(filter, rec1);
 
         //noinspection StatementWithEmptyBody
         while(chain.pump()) {
