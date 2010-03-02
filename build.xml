@@ -9,6 +9,8 @@
     <property name="apidocs.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="lib.dir" value="${basedir}/lib"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
+    <property  name="report.output.dir" value="${basedir}/reports/" />
+    <property  name="test.report.dir" value="/test/reports/" />
     
     <tstamp>
         <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
@@ -147,6 +149,80 @@
         <!-- <ant dir="Dice" inheritall="false" target="clean"/> -->
         <!-- <ant dir="ClusterExtractor" inheritall="false" target="clean"/>-->        
     </target>
+
+    <!-- Compile all test cases in all modules -->
+    <target name="compiletests">
+        <echo message="Compiling all modules tests"/>
+        <ant dir="Common" inheritall="false" target="compiletest"/>
+        <ant dir="Storage" inheritall="false" target="compiletest"/>
+        <ant dir="Ingest" inheritall="false" target="compiletest"/>
+        <ant dir="Index" inheritall="false" target="compiletest"/>
+        <ant dir="Search" inheritall="false" target="compiletest"/>
+        <ant dir="Support" inheritall="false" target="compiletest"/>
+        <ant dir="FacetBrowser" inheritall="false" target="compiletest"/>
+        <ant dir="Control" inheritall="false" target="compiletest"/>
+        <ant dir="Web" inheritall="false" target="compiletest"/>
+        <ant dir="Workflow" inheritall="false" target="compiletest"/>
+        <!-- Legacy modules not built: -->
+        <!-- <ant dir="ClusterExtractor" inheritall="false" target="compiletest"/>-->
+    </target>
+
+   <!-- Run all test cases in all modules -->
+   <target name="runtests">
+       <echo message="Compiling all modules tests"/>
+       <ant dir="Common" inheritall="false" target="runtest"/>
+       <ant dir="Storage" inheritall="false" target="runtest"/>
+       <ant dir="Ingest" inheritall="false" target="runtest"/>
+       <ant dir="Index" inheritall="false" target="runtest"/>
+       <ant dir="Search" inheritall="false" target="runtest"/>
+       <ant dir="Support" inheritall="false" target="runtest"/>
+       <ant dir="FacetBrowser" inheritall="false" target="runtest"/>
+       <!--<ant dir="Control" inheritall="false" target="runtest"/>-->
+       <ant dir="Web" inheritall="false" target="runtest"/>
+       <ant dir="Workflow" inheritall="false" target="runtest"/>
+       <!-- Legacy modules not built: -->
+       <!-- <ant dir="ClusterExtractor" inheritall="false" target="runtest"/>-->
+   </target>
+
+    <!-- Run all test cases in all modules -->
+    <target name="maketestreport" > <!--depends="runtests">-->
+       <echo message="Making testreports for all modules"/>
+
+       <ant dir="Common" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Storage" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Ingest" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Index" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Search" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Support" inheritall="false" target="createjunitoutput"/>
+       <ant dir="FacetBrowser" inheritall="false" target="createjunitoutput"/>
+       <!--<ant dir="Control" inheritall="false" target="createjunitoutput"/>-->
+       <ant dir="Web" inheritall="false" target="createjunitoutput"/>
+       <ant dir="Workflow" inheritall="false" target="createjunitoutput"/>
+       <!-- Legacy modules not built: -->
+       <!-- <ant dir="ClusterExtractor" inheritall="false" target="createjunitoutput"/>--> 
+
+       <!-- Move xml files to main report location. -->
+       <mkdir dir="${report.output.dir}" />
+       <copy todir="${report.output.dir}">
+           <fileset file="${basedir}/Common/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Storage/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Ingest/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Index/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Search/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Support/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/FacetBrowser/${test.report.dir}/*" excludes="**/*.html" />
+           <!--<fileset file="${basedir}/Control/${test.report.dir}/*" excludes="**/*.html" />-->
+           <fileset file="${basedir}/Web/${test.report.dir}/*" excludes="**/*.html" />
+           <fileset file="${basedir}/Workflow/${test.report.dir}/*" excludes="**/*.html" />
+           <!--<fileset file="${basedir}/ClusterExtractor/${test.report.dir}/*" excludes="**/*.html" />-->
+       </copy>
+
+       <junitreport todir="${report.output.dir}">
+          <fileset dir="${report.output.dir}" />
+          <report todir="${report.output.dir}" />
+       </junitreport>
+
+   </target>
 
     <!-- Delete all files not in CVS -->
     <target name="distclean">

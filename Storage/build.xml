@@ -25,6 +25,7 @@
     <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="lib.dir" value="${basedir}/lib"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
+    <property  name="test.report.dir" value="${basedir}/test/reports/" />
 
     <!-- Compilation properties -->
     <property name="compiler" value="${summa.compiler}"/>
@@ -38,7 +39,7 @@
     <path id="lib.path">
         <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
-            <exclude name="junit*"/>
+            <!--<exclude name="junit*"/>-->
         </fileset>
     </path>
 
@@ -88,6 +89,7 @@
                 <available file="${summa.lib.postgres}"/>
                 <available file="${summa.lib.h2}"/>
                 <available file="${summa.lib.sbutil}"/>
+                <available file="${summa.lib.servlet-api}" />
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -119,6 +121,7 @@
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
+        <delete dir="${test.report.dir}" />
     </target>
 
     <target name="distclean" depends="clean">
@@ -126,6 +129,40 @@
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
     </target>
+
+    <target name="compiletest" depends="compile">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+               encoding="UTF-8" verbose="true" >
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+        </javac>
+    </target>
+
+    <target name="runtest" depends="compiletest">
+        <delete dir="${test.report.dir}" />
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" dir="${basedir}" fork="true">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${test.report.dir}">
+                <formatter type="brief" />
+                <fileset dir="${test.src.dir}">
+			        <include name="**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="createjunitoutput" depends="runtest">
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="cleancompiletest" depends="clean, compiletest" />
 
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
@@ -138,6 +175,7 @@
         <copy file="${basedir}/../${summa.lib.postgres}" tofile="${summa.lib.postgres}"/>
         <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <copy file="${basedir}/../${summa.lib.servlet-api}" tofile="${summa.lib.servlet-api}" />
     </target>
 
 
