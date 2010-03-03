@@ -33,6 +33,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.jws.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.transform.TransformerException;
@@ -43,6 +44,7 @@ import java.util.regex.Pattern;
 /**
  * A class containing methods meant to be exposed as a web service
  */
+@WebService
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mv")
@@ -65,7 +67,8 @@ public class SearchWS {
     private synchronized SearchClient getSearchClient() {
         if (searcher == null) {
             try {
-                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.search"));
+                searcher = new SearchClient(getConfiguration()
+                                      .getSubConfiguration("summa.web.search"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for search.", e);
             }
@@ -80,7 +83,8 @@ public class SearchWS {
     private synchronized SearchClient getSuggestClient() {
         if (suggester == null) {
             try {
-                suggester = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
+                suggester = new SearchClient(getConfiguration()
+                                     .getSubConfiguration("summa.web.suggest"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for suggest.", e);
             }
@@ -96,7 +100,8 @@ public class SearchWS {
     private synchronized SearchClient getDidYouMeanClient() {
         if (didyoumean == null) {
             try {
-                didyoumean = new SearchClient(getConfiguration().getSubConfiguration("summa.web.didyoumean"));
+                didyoumean = new SearchClient(getConfiguration()
+                                  .getSubConfiguration("summa.web.didyoumean"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for didYouMean.", e);
             }
@@ -105,8 +110,9 @@ public class SearchWS {
     }
 
     /**
-     * Get the a Configuration object. First trying to load the configuration from the location
-     * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
+     * Get the a Configuration object. First trying to load the configuration
+     * from the location specified in the JNDI property
+     * java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
      * @return The Configuration object
      */
@@ -115,7 +121,8 @@ public class SearchWS {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                String paramValue = (String)
+                                   context.lookup("java:comp/env/confLocation");
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
@@ -130,12 +137,13 @@ public class SearchWS {
 
     /**
      * Given search query and maximum number of result, this method returns a
-     * XML block containing the suggetions given by the did-you-mean service.
+     * XML block containing the suggestions given by the did-you-mean service.
      * @param query user given search query.
-     * @param maxSuggestions maxium number of returned suggestions.
+     * @param maxSuggestions maximum number of returned suggestions.
      * @return XML block containing the suggestions given the did-you-mean
      * services.
      */
+    @WebMethod
     public String didYouMean(String query, int maxSuggestions) {
         log.trace("didYouMean('" + query + "', " + maxSuggestions + ")");
         long startTime = System.currentTimeMillis();
@@ -174,11 +182,13 @@ public class SearchWS {
     }
 
     /**
-     * Given a prefix this method returns other queries that start with the same prefix.
+     * Given a prefix this method returns other queries that start with the same
+     * prefix.
      * @param prefix The prefix that the returned queries must start with.
      * @param maxSuggestions The maximum number of queries to be returned.
      * @return An XML string containing the result or an error description.
      */
+    @WebMethod
     public String getSuggestions(String prefix, int maxSuggestions) {
         log.trace("getSuggestion('" + prefix + "', " + maxSuggestions + ")");
         long startTime = System.currentTimeMillis();
@@ -224,6 +234,7 @@ public class SearchWS {
      * @param maxSuggestions The maximum number of queries to be returned.
      * @return An XML string containing the result or an error description.
      */
+    @WebMethod
     public String getRecentSuggestions(int ageSeconds, int maxSuggestions) {
         log.trace("getRecentSuggestions(" + ageSeconds + "s, "
                   + maxSuggestions + ")");
@@ -262,16 +273,18 @@ public class SearchWS {
     }
 
     /**
-     * Commits a query to the Suggestion database. This enables this query to be returned in the result from
-     * getSuggestions. It is recommended that only query that the user actually enters are committed - ie. it might not
-     * be a good idea to commit queries that come from the user clicking facets, etc.
+     * Commits a query to the Suggestion database. This enables this query to be
+     * returned in the result from getSuggestions. It is recommended that only
+     * query that the user actually enters are committed - ie. it might not be
+     * a good idea to commit queries that come from the user clicking facets,
+     * etc.
      * @param query the query to commit to the database.
-     * @param hitCount the number of hits that resulted from the query. If this is 0 then the query is removed from the
-     * Suggestion database.
+     * @param hitCount the number of hits that resulted from the query. If this
+     * is 0 then the query is removed from the Suggestion database.
      */
+    @WebMethod
     public void commitQuery(String query, long hitCount) {
         log.debug("commitQuery('" + query + "', " + hitCount + ")");
-        ResponseCollection res;
 
         Request req = new Request();
         req.put(SuggestKeys.SEARCH_UPDATE_QUERY, cleanQuery(query));
@@ -287,12 +300,13 @@ public class SearchWS {
 
 
     /**
-     * Returns a given field from the search index for a specific recordId. This could for instance be used to get the
-     * shortformat for a specific record. 
+     * Returns a given field from the search index for a specific recordId. This
+     * could for instance be used to get the shortformat for a specific record.
      * @param id The recordId to look up.
      * @param fieldName The name of the field to return.
      * @return An XML string containing the result or an error description.
      */
+    @WebMethod
     public String getField(String id, String fieldName) {
         log.trace("getField('" + id + "', '" + fieldName + "')");
         long startTime = System.currentTimeMillis();
@@ -340,7 +354,7 @@ public class SearchWS {
      * Performs a lookup in the given field for the given term and returns a
      * list starting at the term position + delta with the given length.
      * </p><p>
-     * Example: {@code indexLookup("myfield", "d", -2, 5)} on a field that has
+     * Example: {@code indexLookup("myField", "d", -2, 5)} on a field that has
      *          the values a, b, c, d, e, f, g, h will give the result
      *          b, c, d, e, f.
      * </p><p>
@@ -353,6 +367,7 @@ public class SearchWS {
      * @param length the maximum number of terms to return.
      * @return an XML string containing the result or an error description.
      */
+    @WebMethod
     public String indexLookup(String field, String term,
                               int delta, int length) {
         //noinspection DuplicateStringLiteralInspection
@@ -387,10 +402,12 @@ public class SearchWS {
 
     /**
      * Gives a search result of records that "are similar to" a given record. 
-     * @param id The recordID of the record that should be used as base for the MoreLikeThis query.
+     * @param id The recordID of the record that should be used as base for the
+     * MoreLikeThis query.
      * @param numberOfRecords The maximum number of records to return.
      * @return An XML string containing the result or an error description.
      */
+    @WebMethod
     public String getMoreLikeThis(String id, int numberOfRecords) {
         log.trace("getMoreLikeThis('" + id + "', " + numberOfRecords + ")");
         long startTime = System.currentTimeMillis();
@@ -422,22 +439,27 @@ public class SearchWS {
     }
 
     /**
-     * A simple way to query the index returning results sorted by relevance. The same as calling
-     * simpleSearchSorted while specifying a normal sort on relevancy.
+     * A simple way to query the index returning results sorted by relevance.
+     * The same as calling simpleSearchSorted while specifying a normal sort on
+     * relevancy.
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
-     * @param startIndex Where to start returning records from (used to implement paging).
+     * @param startIndex Where to start returning records from (used to
+     * implement paging).
      * @return An XML string containing the result or an error description.
      */
-    public String simpleSearch(String query, int numberOfRecords, int startIndex) {
-        return simpleSearchSorted(query, numberOfRecords, startIndex, DocumentKeys.SORT_ON_SCORE, false);
+    @WebMethod
+    public String simpleSearch(String query, int numberOfRecords,
+                               int startIndex) {
+        return simpleSearchSorted(query, numberOfRecords, startIndex,
+                                             DocumentKeys.SORT_ON_SCORE, false);
     }
 
     public static final Pattern PROCESSING_OPTIONS =
             Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
     /**
-     * A simple way to query the index wile being able to specify which field to sort by and whether the sorting
-     * should be reversed.
+     * A simple way to query the index wile being able to specify which field to
+     * sort by and whether the sorting should be reversed.
      * </p><p>
      * Processing-options can be specified at the start of the query prepended
      * by '<:' and appended by ':>', divided by spaces. As of now, the only
@@ -447,24 +469,29 @@ public class SearchWS {
      * was selected.
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
-     * @param startIndex Where to start returning records from (used to implement paging).
+     * @param startIndex Where to start returning records from (used to
+     * implement paging).
      * @param sortKey The field to sort by.
      * @param reverse Whether or not the sort should be reversed.
      * @return An XML string containing the result or an error description.
      */
-    public String simpleSearchSorted(String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
+    @WebMethod
+    public String simpleSearchSorted(String query, int numberOfRecords,
+                                     int startIndex, String sortKey,
+                                     boolean reverse) {
         if (log.isTraceEnabled()) {
             log.debug(String.format(
                     "simpleSearchSorted(query='%s', numberOfRecords=%d, "
                     + "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
         }
-        return filterSearchSorted(null, query, numberOfRecords, startIndex, sortKey, reverse);
+        return filterSearchSorted(null, query, numberOfRecords, startIndex,
+                                                              sortKey, reverse);
     }
 
     /**
-     * A simple way to query the index wile being able to specify which field to sort by and whether the sorting
-     * should be reversed.
+     * A simple way to query the index wile being able to specify which field to
+     * sort by and whether the sorting should be reversed.
      * </p><p>
      * Processing-options can be specified at the start of the query prepended
      * by '<:' and appended by ':>', divided by spaces. As of now, the only
@@ -475,11 +502,13 @@ public class SearchWS {
      * @param filter the filter to use before querying.
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
-     * @param startIndex Where to start returning records from (used to implement paging).
+     * @param startIndex Where to start returning records from (used to
+     * implement paging).
      * @param sortKey The field to sort by.
      * @param reverse Whether or not the sort should be reversed.
      * @return An XML string containing the result or an error description.
      */
+    @WebMethod
     public String filterSearchSorted(
             String filter, String query, int numberOfRecords, int startIndex,
             String sortKey, boolean reverse) {
@@ -589,8 +618,10 @@ public class SearchWS {
     /**
      * A simple way to query the facet browser.
      * @param query The query to perform.
-     * @return An XML string containing the facet result or an error description.
+     * @return An XML string containing the facet result or an error
+     * description.
      */
+    @WebMethod
     public String simpleFacet(String query) {
         log.trace("simpleFacet('" + query + "')");
         long startTime = System.currentTimeMillis();
@@ -603,21 +634,30 @@ public class SearchWS {
     }
 
     /**
-     * A more advanced way to query the facet browser giving the caller control over the individual facets and tags.
+     * A more advanced way to query the facet browser giving the caller control
+     * over the individual facets and tags.
      * @param query The query to perform.
-     * @param facetKeys A comma-separeted list with the names of the wanted Facets.
-     * Optionally, the maximum Tag-count for a given Facet can be specified in parenthesis after the name.
+     * @param facetKeys A comma-separeted list with the names of the wanted
+     * Facets.
+     * Optionally, the maximum Tag-count for a given Facet can be specified in
+     * parenthesis after the name.
      *
      * Example: "Title, Author (5), City (10), Year".
      *
-     * If no maximum Tag-count is specified, the number is taken from the defaults.
-     * Optionally, the sort-type for a given Facet can be specified in the same parenthesis. Valid values are POPULARITY and ALPHA. If no sort-type is specified, the number is taken from the defaults.
+     * If no maximum Tag-count is specified, the number is taken from the
+     * defaults.
+     * Optionally, the sort-type for a given Facet can be specified in the same
+     * parenthesis. Valid values are POPULARITY and ALPHA. If no sort-type is
+     * specified, the number is taken from the defaults.
      *
      * Example: "Title (ALPHA), Author (5 POPULARITY), City"
      *
-     * This is all optional. If no facets are specified, the default facets are requested.
-     * @return An XML string containing the facet result or an error description.
+     * This is all optional. If no facets are specified, the default facets are
+     * requested.
+     * @return An XML string containing the facet result or an error
+     * description.
      */
+    @WebMethod
     public String advancedFacet(String query, String facetKeys) {
         log.trace("advancedFacet('" + query + "', '" + facetKeys + "')");
         long startTime = System.currentTimeMillis();
@@ -641,7 +681,8 @@ public class SearchWS {
             Document dom = DOM.stringToDOM(res.toXML());
 
             // remove any response not related to FacetResult
-            NodeList nl = DOM.selectNodeList(dom, "/responsecollection/response");
+            NodeList nl =
+                        DOM.selectNodeList(dom, "/responsecollection/response");
             for (int i = 0; i < nl.getLength(); i++) {
                 Node n = nl.item(i);
                 NamedNodeMap attr = n.getAttributes();
@@ -668,8 +709,9 @@ public class SearchWS {
             retXML = "<error>Error performing query</error>";
         }
 
-        log.debug("advancedFacet('" + query + "', '" + facetKeys + "') finished in "
-                  + (System.currentTimeMillis() - startTime) + "ms");
+        log.debug("advancedFacet('" + query + "', '" + facetKeys
+                + "') finished in " + (System.currentTimeMillis() - startTime)
+                + "ms");
         return retXML;
     }
 }
