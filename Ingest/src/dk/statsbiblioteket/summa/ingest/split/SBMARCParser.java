@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -94,6 +95,8 @@ public class SBMARCParser extends MARCParser {
     public static final String TYPE_HOVEDPOST = "h";
     public static final String TYPE_SEKTION = "s";
     public static final String TYPE_BIND = "b";
+
+    public static final String CONTROL_DELETE_TAG = "DEL";
 
     /**
      * The id.
@@ -395,5 +398,18 @@ public class SBMARCParser extends MARCParser {
         return "SBMARCParser(" + super.toString() + ")";
     }
 
+    @Override
+    protected String setControlField(String tag, String content) {
+        if (!CONTROL_DELETE_TAG.equals(tag)) {
+            return null;
+        }
+        Logging.logProcess(
+                "SBMARCParser", "Marking as deleted with message '" + content
+                                + "'", Logging.LogLevel.DEBUG, id);
+        isDeleted = true;
+        return String.format(
+                "<controlfield tag=\"%s\">%s</controlfield>\n",
+                tag, content);
+    }
 }
 

@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
 
 /**
  * A modified MARC21Slim-like parser that steps through MARC records and sends
- * events when leader, datafield and subfields are encountered. The parser also
- * handles the logic of adding produced Records to the queue.
+ * events when leader, controlfield, datafield and subfields are encountered.
+ * The parser also handles the logic of adding produced Records to the queue.
  * A streaming parser is used as performance is prioritized over clarity (the
  * streaming parser has less GC overhead than a full DOM build).
  * </p><p>
