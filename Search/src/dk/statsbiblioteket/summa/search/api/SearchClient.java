@@ -28,15 +28,15 @@ import org.apache.commons.logging.LogFactory;
 /**
  * A helper class utilizing a stateless connection to a search engine exposing
  * a {@link SummaSearcher} interface. Unless your needs are very advanced
- * or you must do manual connection management, this is by far the
- * easiest way to use a remote {@link SummaSearcher}.
+ * or you must do manual connection management, this is by far the easiest way
+ * to use a remote {@link SummaSearcher}.
  * <p></p>
  * It is modelled as a {@link ConnectionConsumer} meaning that you can tweak
  * its behavior by changing the configuration parameters
  * {@link GenericConnectionFactory#CONF_RETRIES},
  * {@link GenericConnectionFactory#CONF_GRACE_TIME},
  * {@link GenericConnectionFactory#CONF_FACTORY}, and
- * {@link ConnectionConsumer#CONF_RPC_TARGET}
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -57,9 +57,9 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
      * Perform a search on the remote {@link SummaSearcher}. Connection handling
      * is done transparently underneath.
      * 
-     * @param request the request to pass
-     * @return what ever response the search engine returns
-     * @throws IOException on communication errros with the search engine
+     * @param request the request to pass.
+     * @return what ever response the search engine returns.
+     * @throws IOException on communication errors with the search engine.
      */
     public ResponseCollection search (Request request) throws IOException {
         SummaSearcher searcher = getConnection();
