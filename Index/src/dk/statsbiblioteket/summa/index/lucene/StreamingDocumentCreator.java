@@ -143,7 +143,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             if (log.isDebugEnabled()) {
                 log.debug(message + " " + payload
                           + ". Problematic content was:\n"
-                          + payload.getRecord().getContentAsUTF8());
+                          + payload.getRecord().getContentAsUTF8(), e);
             }
             Logging.logProcess("StreamingDocumentcreator", message,
                                Logging.LogLevel.WARN, payload, e);
@@ -167,6 +167,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             throws ParseException, XMLStreamException {
         long startTime = System.nanoTime();
         log.trace("Parsing header-information for " + payload);
+        skipComments(reader);
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
             //noinspection DuplicateStringLiteralInspection
@@ -179,7 +180,9 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             throw new ParseException(
                     "The stream must have at lest one element", 0);
         }
-        eventType = reader.next();
+        reader.next();
+        skipComments(reader);
+        eventType = reader.getEventType();
         if (!(eventType == XMLEvent.START_ELEMENT
             && SUMMA_DOCUMENT.equals(reader.getLocalName())
             && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
@@ -209,6 +212,18 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                   + (System.nanoTime() - startTime) + " ns");
     }
 
+    private void skipComments(XMLStreamReader reader) throws
+                                                            XMLStreamException {
+        log.debug("*** Checking for comments");
+        while (reader.getEventType() == XMLStreamReader.COMMENT) {
+            if (!reader.hasNext()) {
+                return;
+            }
+            log.debug("**** Skipping comment");
+            reader.next();
+        }
+    }
+
     private void processBody(XMLStreamReader reader,
                                org.apache.lucene.document.Document luceneDoc,
                                Payload payload)
@@ -223,6 +238,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         }
         while(reader.hasNext()) {
             reader.next();
+            skipComments(reader);
             if (reader.getEventType() == XMLStreamReader.START_ELEMENT
                 && SUMMA_FIELDS.equals(reader.getLocalName())
                 && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI())) {
@@ -236,6 +252,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         log.trace("Adding fields to Lucene Document for " + payload);
         while (reader.hasNext()) {
             reader.next();
+            skipComments(reader);
             if (reader.getEventType() == XMLStreamReader.END_ELEMENT
                 && SUMMA_FIELDS.equals(reader.getLocalName())
                 && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI())) {
