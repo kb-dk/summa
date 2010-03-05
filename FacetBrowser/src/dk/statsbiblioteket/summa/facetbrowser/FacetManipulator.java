@@ -82,7 +82,7 @@ public class FacetManipulator implements IndexManipulator {
      * Optional. Default is true.
      */
     public static final String CONF_CLEAR_TAGS_ON_COMMIT =
-            "summa.facet.cleartagsoncommite";
+            "summa.facet.cleartagsoncommit";
     public static final boolean DEFAULT_CLEAR_TAGS_ON_COMMIT = true;
 
     /**
