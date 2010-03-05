@@ -33,6 +33,7 @@ import org.apache.lucene.search.didyoumean.secondlevel.token.MultiTokenSuggester
 import org.apache.lucene.search.didyoumean.secondlevel.token.TokenPhraseSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.ngram.NgramTokenSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.ngram.TermEnumIterator;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
@@ -47,21 +48,28 @@ import java.rmi.RemoteException;
  * @since Feb 9, 2010
  */
 public class DidYouMeanSearchNode extends SearchNodeImpl {
+    private static enum DIRECTORYTYPE {
+        fsDirectory,
+        ramDirectory
+    }
+
     /**
      * Log factory.
      */
-    private static final Log log = LogFactory.getLog(DidYouMeanSearchNode.class);
+    private static final Log log =
+                                  LogFactory.getLog(DidYouMeanSearchNode.class);
 
     /**
      * The configuration field in configuration file for the apriorifield.
      */
-    public static final String CONF_APRIORI_FIELD =
+    public static final String CONF_DIDYOUMEAN_APRIORI_FIELD =
                                         "summa.support.didyoumean.apriorifield";
     /**
-     * The default value for {@link DidYouMeanSearchNode#CONF_APRIORI_FIELD}.
+     * The default value for
+     * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_APRIORI_FIELD}.
      * The value is 'freetext'.
      */
-    public static final String DEFAULT_APRIORI_FIELD = "freetext";
+    public static final String DEFAULT_DIDYOUMEAN_APRIORI_FIELD = "freetext";
 
     /**
      * The configuration field in configuration file for the Did-You-Mean
@@ -75,6 +83,34 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public static final Class<? extends Analyzer> DEFAULT_DIDYOUMEAN_ANALYZER =
                                             SummaStandardAnalyzer.class;
+    /**
+     * The configuration field in configuration file for the Did-You-Mean
+     * directory type.
+     * Possibilities:
+     * <ul>
+     *  <li>fsDirectory</li>
+     *  <li>ramDirectory</li>
+     * </ul>
+     */
+    public static final String CONF_DIDYOUMEAN_DIRECTORY =
+                                           "summa.support.didyoumean.directory";
+    public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
+
+    /**
+     * The configuration field in configuration file for the Did-you-mean
+     * FSDirectory directory, in case
+     * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_FSDIRECTORY} is set to
+     * default value.
+     */
+    public static final String CONF_DIDYOUMEAN_FSDIRECTORY =
+                                         "summa.support.didyoumean.fsdirectory";
+    public static final String DEFAULT_DIDYOUMEAN_FSDIRECTORY = "FSDirectory";
+
+    /**
+     * Local directory version.
+     */
+    private Directory directory = null;
+
     /**
      * Local variable for apriori field.
      */
@@ -95,19 +131,46 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     private IndexReader aprioriIndex = null;
 
     /**
+     * Local variable pointing to FS directory.
+     */
+    private String fsDirectory = null;
+
+    /**
      * Constructor for DidYouMeanSearchNode. Get needed configuration values.
      *
      * @param config The configuration for this instance.
+     * @throws IOException if error opening FSDirectory or value of
+     *  {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_DIRECTORY} isn't valid.
      */
-    public DidYouMeanSearchNode(Configuration config) {
+    public DidYouMeanSearchNode(Configuration config) throws IOException {
         super(config);
-        aprioriField = config.getString(
-                                    CONF_APRIORI_FIELD, DEFAULT_APRIORI_FIELD);
+        aprioriField = config.getString(CONF_DIDYOUMEAN_APRIORI_FIELD,
+                                              DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
                                        CONF_DIDYOUMEAN_ANALYZER, Analyzer.class,
                                        DEFAULT_DIDYOUMEAN_ANALYZER, config);
         analyzer = Configuration.create(analyzerClass, config);
+        String directoryType = config.getString(CONF_DIDYOUMEAN_DIRECTORY,
+                                                  DEFAULT_DIDYOUMEAN_DIRECTORY);
+        DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
+        fsDirectory = config.getString(CONF_DIDYOUMEAN_FSDIRECTORY,
+                                                DEFAULT_DIDYOUMEAN_FSDIRECTORY);
+
+        switch(type) {
+            case ramDirectory:
+                directory = new RAMDirectory();
+                break;
+            case fsDirectory:
+                directory = FSDirectory.getDirectory(fsDirectory);
+                break;
+            default:
+                String error = "Directory '" + directoryType
+                        + "' didn't correspond to a known type";
+                log.error(error);
+                throw new IOException(error);
+        }
+        log.debug("Using Directory '" + directoryType + "'.");
         log.debug("Using apriori field '" + aprioriField +"'.");
         log.debug("Using analyzer '" + analyzerClass.getName() + "'.");
     }
@@ -127,7 +190,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      * Create needed locale: AprioriIndex, TokenSuggester and PhraseSuggester.
      *
      * @param location as specified in
-     *          {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
+     * {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
      * @throws RemoteException is thrown if an IOException is cast during
      * creation of a local datastructure.
      */
@@ -147,11 +210,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         }
 
         // Setup TokenSuggester
-        NgramTokenSuggester tokenSuggester = null;
+        NgramTokenSuggester tokenSuggester;
         try {
             log.debug("Building token index");
-            IndexFacade ngramIndexFactory =
-                                   new DirectoryIndexFacade(new RAMDirectory());
+            IndexFacade ngramIndexFactory = new DirectoryIndexFacade(directory);
             // Initialize empty index
             ngramIndexFactory.indexWriterFactory(null, true).close();
             tokenSuggester = new NgramTokenSuggester(ngramIndexFactory);
@@ -187,6 +249,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             aprioriIndex.close();
             // TODO tokenSuggester.close();
             // TODO phraseSuggester.close();
+            // TODO now sure if this can be closed after usage in managedOpen.
+            directory.close();
         } catch (IOException e) {
             throw new RemoteException("IOException while closing indexes.", e);
         }
@@ -226,10 +290,12 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
         if(request.containsKey(DidYouMeanKeys.SEARCH_QUERY)) {
             String query = request.getString(DidYouMeanKeys.SEARCH_QUERY);
+            long time = System.currentTimeMillis();
             SuggestionPriorityQueue spq =
                                 phraseSuggester.suggest(query, numSuggestions);
+            time = System.currentTimeMillis() - time;
 
-            DidYouMeanResponse response = new DidYouMeanResponse(query);
+            DidYouMeanResponse response = new DidYouMeanResponse(query, time);
             responses.add(response);
             if(spq.size() > 0) {
                 log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
