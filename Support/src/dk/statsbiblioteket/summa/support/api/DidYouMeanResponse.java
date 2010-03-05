@@ -59,6 +59,11 @@ public class DidYouMeanResponse implements Response {
     public static final String QUERY_TAG = "query";
 
     /**
+     * Did-You-Mean query search time XML tag.
+     */
+    public static final String TIME_TAG = "searchTime";
+
+    /**
      * Did-You-Mean XML tag.
      */
     public static final String DIDYOUMEAN = "didyoumean";
@@ -74,6 +79,11 @@ public class DidYouMeanResponse implements Response {
     private String query = null;
 
     /**
+     * Search time.
+     */
+    private long time = -1l;
+
+    /**
      * Local linkedList, which is used for storage of query results.
      */
     private LinkedList<ResultTuple> resultTuples = null;
@@ -86,6 +96,17 @@ public class DidYouMeanResponse implements Response {
         this.query = query;
         resultTuples = new LinkedList<ResultTuple>();
     }
+
+    /**
+     * Did-You-Mean response constructor.
+     * @param query the query.
+     * @param time the time used for doing Did-You-Mean look up.
+     */
+    public DidYouMeanResponse(String query, long time) {
+        this(query);
+        this.time = time;
+    }
+
 
     /**
      * Getter for Did-You-Mean name.
@@ -134,6 +155,9 @@ public class DidYouMeanResponse implements Response {
             writer.writeDefaultNamespace(NAMESPACE);
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
+            if(time != -1) {
+                writer.writeAttribute(TIME_TAG, String.valueOf(time));
+            }
             writer.writeCharacters("\n");
             for(ResultTuple tuple: resultTuples) {
                 writer.writeCharacters("    ");

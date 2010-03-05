@@ -15,13 +15,20 @@
             <xsd:sequence>
                 <xsd:element name="didyoumean" type="didyoumean:didyoumeanType" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
-            <xsd:attribute name="version" type="xsd:string" use="optional"/>
-            <xsd:attribute name="query" type="xsd:string">
+            <xsd:attribute name="version" type="xsd:string" use="optional">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">
-                        The id-attribute is highly recommended for ease of
-                        debugging, but the authoritative id is taken from the
-                        Record object.
+                        The version-attribute is used for showing the version of
+                        this respose.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="query" type="xsd:string" />
+            <xsd:attribute name="searchTime" type="xsd:long" use="optional">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        The searchTime-attribute is used for showing time spent
+                        on this query.
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
