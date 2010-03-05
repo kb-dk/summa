@@ -376,9 +376,18 @@ public class LuceneFacetBuilder extends BuilderImpl {
                                                                IOException {
         log.debug("buildTermsToDocs() started");
         long startTime = System.currentTimeMillis();
+        int currentFacet = 0;
+        int totalFacets = structure.getFacets().entrySet().size();
+        Profiler totalProfiler = new Profiler();
+        Profiler profiler = new Profiler();
         for (Map.Entry<String, FacetStructure> entry:
                 structure.getFacets().entrySet()) {
             FacetStructure facet = entry.getValue();
+            log.debug("buildTermsToDocs() for facet " + ++currentFacet + "/"
+                      + totalFacets + ": " + facet.getName());
+            long termCount = 0;
+            long refCount = 0;
+            profiler.reset();
             for (String fieldName: facet.getFields()) {
                 TermEnum terms = ir.terms(new Term(fieldName, ""));
                 if (terms == null) {
@@ -389,6 +398,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     if (term == null || !fieldName.equals(term.field())) {
                         break;
                     }
+                    termCount++; // We also count blanks to measure performance
                     if (term.text() == null || "".equals(term.text())) {
                         continue; // Skip blank tags
                     }
@@ -404,8 +414,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
                             log.trace("Adding " + docCount + " references to "
                                       + facet.getName() + ":" + term.text());
                         }
-                        facetMap.add(docBuffer, docCount, facet.getName(),
+                        facetMap.add(docBuffer, docCount, facet.getName(), 
                                      term.text());
+                        refCount += docCount;
                     }
                     /* Mind-numbingly slow due to repeated term lookups
                     while(termDocs.next()) {
@@ -414,9 +425,12 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     }*/
                 } while (terms.next());
             }
+            log.debug("Found " + termCount + " terms for facet "
+                      + facet.getName() + " with " + refCount
+                      + " references in " + profiler.getSpendTime());
         }
-        log.debug("Finished buildTermsToDocs in "
-                  + (System.currentTimeMillis() - startTime) + " ms");
+        log.debug(
+                "Finished buildTermsToDocs in " + totalProfiler.getSpendTime());
     }
 
     public boolean update(Payload payload) {
