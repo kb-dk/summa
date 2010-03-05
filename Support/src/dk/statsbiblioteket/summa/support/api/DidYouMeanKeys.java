@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.support.api;
 
+import dk.statsbiblioteket.util.qa.*;
+
 /**
  * Search keys for the
  * {@link dk.statsbiblioteket.summa.support.didyoumean.DidYouMeanSearchNode}
@@ -21,6 +23,9 @@ package dk.statsbiblioteket.summa.support.api;
  * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "hbk")
 public interface DidYouMeanKeys {
     /**
      * Did-You-Mean search query key.

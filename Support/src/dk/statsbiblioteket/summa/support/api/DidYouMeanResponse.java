@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.util.qa.*;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -30,6 +31,9 @@ import java.util.LinkedList;
  * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "hbk")
 public class DidYouMeanResponse implements Response {
     /**
      * Did-You-Mean response name.
