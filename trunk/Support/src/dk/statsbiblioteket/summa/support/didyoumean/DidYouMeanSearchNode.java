@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
+import dk.statsbiblioteket.util.qa.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -47,6 +48,9 @@ import java.rmi.RemoteException;
  * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "hbk")
 public class DidYouMeanSearchNode extends SearchNodeImpl {
     private static enum DIRECTORYTYPE {
         fsDirectory,
