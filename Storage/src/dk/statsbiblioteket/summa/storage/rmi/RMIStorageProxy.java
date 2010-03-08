@@ -41,7 +41,7 @@ import java.util.List;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "mke, te")
+        author = "mke, te, hbk")
 public class RMIStorageProxy extends UnicastRemoteObject
                              implements RemoteStorage {
 
@@ -56,7 +56,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
     public static final String CONF_BACKEND = "summa.storage.rmi.backend";
 
     /**
-     * Default class for the storage backend implementation
+     * Default class for the storage backend implementation.
      */
     public static final Class<? extends Storage> DEFAULT_BACKEND =
                                                              H2Storage.class;
@@ -80,9 +80,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
      */
     public static final String CONF_SERVICE_NAME =
                                                "summa.storage.rmi.service.name";
-
     /**
-     *
+     * Default value for {@link RMIStorageProxy#CONF_SERVICE_NAME}.
      */
     public static final String DEFAULT_SERVICE_NAME = "summa-storage";
 
@@ -98,7 +97,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
         // FIXME: The below config should really be kept entirely in memory,
-        //        but we can't use a memorybased config because of bug:
+        //        but we can't use a memory-based config because of bug:
         //        https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
         Configuration backendConf = new Configuration (new XStorage());
         backendConf.importConfiguration (conf);
@@ -111,7 +110,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
 
         /* If the backend is set to be another RMIStorageProxy then avoid
-         * infinite recursion by forcing it into a DerbyStorage */
+         * infinite recursion by forcing it into a DerbyStorage. */
         if (backendConf.valueExists (CONF_CLASS)) {
             if (this.getClass().getName().equals(
                                           backendConf.getString (CONF_CLASS))) {
@@ -148,7 +147,13 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-     private static int getServicePort(Configuration configuration) {
+    /**
+     * Return this proxy's service port.
+     *
+     * @param configuration The configuration.
+     * @return This proxy's services port.
+     */
+    private static int getServicePort(Configuration configuration) {
         try {
             return configuration.getInt(Storage.CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
@@ -159,11 +164,24 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    /* Reader methods */
+    /**
+     * Return iterator key for records modified after input time, from the
+     * backend storage.
+     *
+     * @param time Timestamp records should be modified after.
+     * @param base The base to look in.
+     * @param options The query options.
+     * @return Iterator key for the result set.
+     * @throws RemoteException If error occurred while doing RMI call.
+     */
     @Override
     public long getRecordsModifiedAfter(
             long time, String base, QueryOptions options)
                                                         throws RemoteException {
+        if(log.isTraceEnabled()) {
+            log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', "
+                + options + ").");
+        }
         try {
             return backend.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
@@ -175,10 +193,18 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Return iterator key for records modified after input time, from the
+     * backend storage.
+     *
+     * @param base The base to look in.
+     * @return Iterator ey for the result set.
+     * @throws RemoteException If error occurred while doing RMI call.
+     */
     @Override
     public long getModificationTime(String base) throws RemoteException {
         try {
-            return backend.getModificationTime (base);
+            return backend.getModificationTime(base);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getModificationTime(base='%s') for %d:%s",
@@ -187,6 +213,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Return a list of records, given a list of id's and query options, from
+     * the backend storage.
+     *
+     * @param ids A list of string id's.
+     * @param options The query options.
+     * @return Return a list of records, given the id's and query options.
+     * @throws RemoteException if error occurred doing RMI.
+     */
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                         throws RemoteException {
@@ -201,6 +236,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Return a single Record based on the id and query options, from the
+     * backend storage.
+     *
+     * @param id A single id string.
+     * @param options The query options.
+     * @return Return a single record, given the id and query options.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public Record getRecord(String id, QueryOptions options)
                                                         throws RemoteException {
@@ -214,6 +258,14 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Return next record of the iterator based on the iterator key, from the
+     * backend storage.
+     *
+     * @param iteratorKey The iterator key
+     * @return Next record based on the iterator key.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public Record next(long iteratorKey) throws RemoteException {
         try {
@@ -226,6 +278,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Return a list of record of maximum maxRecords, given the iterator key,
+     * from the backend storage.
+     *
+     * @param iteratorKey The iterator key.
+     * @param maxRecords maximum number of records.
+     * @return a list of records based on iterator key from backend storage.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public List<Record> next(long iteratorKey, int maxRecords)
                                                         throws RemoteException {
@@ -239,6 +300,14 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Flush the record into backend storage, based on query options.
+     *
+     * @param record The record to store or update.
+     * @param options A set of arguments to modify how the record is inserted
+     *                or updated.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void flush(Record record, QueryOptions options)
                                                         throws RemoteException {
@@ -251,11 +320,26 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Flush the record into backend storage, with query options equal 'null'.
+     *
+     * @param record The record to store or update.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void flush(Record record) throws RemoteException {
         flush(record, null);
     }
 
+    /**
+     * Flush a list of records into backend storage, based on the query options.
+     *
+     * @param records a list of records to store or update. On duplicate ids
+     *                only the last of the duplicated records are stored.
+     * @param options A set of arguments to modify how records are inserted
+     *                or updated.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void flushAll(List<Record> records, QueryOptions options)
                                                         throws RemoteException {
@@ -268,11 +352,24 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Flush a list of records into backend storage, with query options equal
+     * to 'null'.
+     *
+     * @param records a list of records to store or update. On duplicate ids
+     *                only the last of the duplicated records are stored.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void flushAll(List<Record> records) throws RemoteException {
         flushAll(records, null);
     }
 
+    /**
+     * Closes the RMI proxy storage.
+     *
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void close() throws RemoteException {
         try {
@@ -301,6 +398,12 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Clear the base in the underlaying backend storage.
+     *
+     * @param base the base to clear.
+     * @throws RemoteException If error occurred doing RMI.
+     */
     @Override
     public void clearBase(String base) throws RemoteException {
         final String CALL = String.format("clearBase(%s) for %d:%s",
@@ -314,6 +417,26 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Run a batch job on the backend storage.
+     *
+     * @param jobName The name of the job to instantiate.
+     *                The job name must match the regular expression
+     *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
+     *                resource in the classpath of the storage process.
+     *                Fx {@code count.job.js}.
+     * @param base Restrict the batch jobs to records in this base. If
+     *             {@code base} is {@code null} the records from all bases will
+     *             be included in the batch job.
+     * @param minMtime Only records with modification times strictly greater
+     *                 than {@code minMtime} will be included in the batch job.
+     * @param maxMtime Only records with modification times strictly less than
+     *                 {@code maxMtime} will be included in the batch job.
+     * @param options Restrict to records for which
+     *                {@link QueryOptions#allowsRecord} returns true.
+     * @return a result string.
+     * @throws IOException if error occurred.
+     */
     @Override
     public String batchJob(String jobName, String base,
                            long minMtime, long maxMtime, QueryOptions options)
