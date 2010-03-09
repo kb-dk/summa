@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.*;
 
 import java.util.List;
 import java.util.Arrays;
@@ -26,13 +27,21 @@ import java.io.StringReader;
  * Load test data into memory so we have it around. This is done to
  * prevent any IO during performance test of the analyzers
  */
-public class SampleDataLoader {
+public class SampleDataLoader extends TestCase {
 
     static final List<String> data = Arrays.asList(
             Strings.flushLocal(getSystemResourceAsStream(
                                                     "data/lgpl-2.1-german.txt"))
             // Add more sample data sources here
     );
+
+    public SampleDataLoader() {
+        // for unit test purpose
+    }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
 
     public static String getDataString(int i) {
         return data.get(i);

@@ -87,7 +87,7 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         }
     }
 
-    public void testSpeed() throws Exception {
+    public void disabledtestSpeed() throws Exception {
         int NUM_WORDS = 100000;
         int MAX_WORD_LENGTH = 10;
         int WARMUP = 5;

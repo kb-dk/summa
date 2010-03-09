@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
+import dk.statsbiblioteket.summa.common.configuration.storage.*;
 import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorageMBean;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -27,6 +27,10 @@ public class ConfigurationStorageTestCase extends TestCase {
     static final String configFilename = "configuration.xml";
     public ConfigurationStorage storage;
     public String testName;
+
+    public ConfigurationStorageTestCase() throws Exception {
+        this(new FileStorage("configuration.xml"));        
+    }
 
     public ConfigurationStorageTestCase (ConfigurationStorage storage) {
         this.storage = storage;

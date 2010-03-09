@@ -29,7 +29,7 @@ import dk.statsbiblioteket.summa.common.pool.SortedPool;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DiskPoolTest extends StringPoolSuperTest {
+public class DiskPoolTest extends StringPoolSuper {
     public DiskPoolTest(String name) {
         super(name);
     }

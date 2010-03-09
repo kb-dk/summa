@@ -72,7 +72,11 @@ public class XHTMLEntityResolverTest extends TestCase {
     }
 
     public void testEscapingTransformationNondeclared() throws Exception {
-        testEscapingTransformation("data/webpage_html-nondeclared.html");
+        try {
+            testEscapingTransformation("data/webpage_html-nondeclared.html");
+        } catch(Exception e) {
+            fail("Should be fixed");
+        }
     }
 
     public static void testEscapingTransformation(String webpage)

@@ -29,7 +29,7 @@ import java.io.File;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class MemoryStringPoolTest extends StringPoolSuperTest {
+public class MemoryStringPoolTest extends StringPoolSuper {
     public MemoryStringPoolTest(String name) {
         super(name);
     }
@@ -62,28 +62,28 @@ public class MemoryStringPoolTest extends StringPoolSuperTest {
         pool1.add("Daskelars");
         pool1.add("Dumrian");
         pool1.add("Drøbel");
-        StringPoolSuperTest.compareOrder(
+        StringPoolSuper.compareOrder(
                 "The constructed pool should be as expected",
                 pool1, 
                 new String[]{"Daskelars", "Drøbel", "Duksedreng", "Dumrian"});
         pool1.store();
         pool2.open(poolDir, pool1.getName(), false, false);
-        StringPoolSuperTest.compareOrder("The loaded pool should be equal to the"
+        StringPoolSuper.compareOrder("The loaded pool should be equal to the"
                                     + " saved", pool1, pool2);
-        StringPoolSuperTest.compareOrder(
+        StringPoolSuper.compareOrder(
                 "The loaded pool should be as expected",
                 pool2,
                 new String[]{"Daskelars", "Drøbel", "Duksedreng", "Dumrian"});
 
         pool1.add("Drillenisse");
-        StringPoolSuperTest.compareOrder(
+        StringPoolSuper.compareOrder(
                 "Adding after store",
                 pool1,
                 new String[]{"Daskelars", "Drillenisse", "Drøbel", "Duksedreng",
                              "Dumrian"});
 
         pool2.add("Drillenisse");
-        StringPoolSuperTest.compareOrder(
+        StringPoolSuper.compareOrder(
                 "Adding after load",
                 pool2,
                 new String[]{"Daskelars", "Drillenisse", "Drøbel", "Duksedreng",

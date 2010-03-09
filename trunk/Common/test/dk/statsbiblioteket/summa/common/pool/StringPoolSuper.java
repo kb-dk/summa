@@ -35,8 +35,8 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public abstract class StringPoolSuperTest extends TestCase {
-    private Log log = LogFactory.getLog(StringPoolSuperTest.class);
+public abstract class StringPoolSuper extends TestCase {
+    private Log log = LogFactory.getLog(StringPoolSuper.class);
 
     /**
      * Construct a new pool with the given parameters.
@@ -48,7 +48,7 @@ public abstract class StringPoolSuperTest extends TestCase {
     public abstract SortedPool<String> getPool(File location, String name)
                                                                throws Exception;
 
-    public StringPoolSuperTest(String name) {
+    public StringPoolSuper(String name) {
         super(name);
     }
 
