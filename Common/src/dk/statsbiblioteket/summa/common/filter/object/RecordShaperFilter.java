@@ -51,7 +51,8 @@ import org.apache.commons.logging.LogFactory;
  * </p><p>
  * Hint: See the list of embedded options for regexp matching at
  * {link http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html}
- * }
+ * Hint 2: When using multiline patterns, prepending {@code (?s)} to the regexp
+ * sets the pattern matcher in DOTALL-mode. 
  */
 public class RecordShaperFilter extends ObjectFilterImpl {
     private static final Log log = LogFactory.getLog(RecordShaperFilter.class);
