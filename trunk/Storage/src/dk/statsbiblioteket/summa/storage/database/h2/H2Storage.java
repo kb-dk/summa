@@ -188,8 +188,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             }
         }
 
-
-        if (!location.mkdirs()) {
+        location.mkdirs();
+        if (!location.isDirectory()) {
             throw new IOException("Database location '" + location
                                   + "' not a directory");
         }
