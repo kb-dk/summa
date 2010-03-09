@@ -59,8 +59,8 @@ public class StorageWriterClientTest extends TestCase {
             "java.io.tmpdir", "storagetest"));
     private Storage getRMIStorage() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
-                DatabaseStorage.CONF_LOCATION,
-                testRoot.toString());
+                DatabaseStorage.CONF_LOCATION, testRoot.toString(),
+                Storage.CONF_CLASS, H2Storage.class);
         return new RMIStorageProxy(conf);
     }
 

@@ -29,6 +29,7 @@ import java.util.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import junit.framework.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class HttpStorageBridge implements Configurable {
+public class HttpStorageBridge extends TestCase implements Configurable {
     private static final Log log = LogFactory.getLog(HttpStorageBridge.class);
 
 
@@ -76,6 +77,13 @@ public class HttpStorageBridge implements Configurable {
     public enum HttpMethod {
         GET,
         POST
+    }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
+    public HttpStorageBridge() throws Exception {
+        // for test purpose.
     }
 
     public HttpStorageBridge(Configuration conf) throws IOException {

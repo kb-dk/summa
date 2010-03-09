@@ -127,7 +127,7 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, deleted);
         assertEquals(Strings.join(
-                Arrays.asList(testId1, testId3), "\n") + "\n", ids);
+                Arrays.asList(testId1, testId3), "\n"), ids);
     }
 
     public void testRenameByBaseAndMtime() throws Exception {

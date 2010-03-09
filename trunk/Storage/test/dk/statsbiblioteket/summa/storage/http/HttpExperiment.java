@@ -27,12 +27,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Streams;
+import junit.framework.*;
 
 /**
  * Experimental class used to play around with the HTTPServer shipped in
  * Java 1.6
  */
-public class HttpExperiment {
+public class HttpExperiment extends TestCase {
 
     public static class Handler implements HttpHandler {
 
@@ -72,6 +73,10 @@ public class HttpExperiment {
             t.getResponseBody().close();
             
         }
+    }
+
+    public void testDummy() {
+        assertTrue(true);
     }
 
     public static void main (String[] args) throws Exception {

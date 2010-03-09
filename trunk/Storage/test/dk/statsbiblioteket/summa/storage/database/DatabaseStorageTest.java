@@ -17,22 +17,12 @@ package dk.statsbiblioteket.summa.storage.database;
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 
-import java.io.File;
 import java.util.List;
 import java.util.Arrays;
-
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * These test cases are meant to test functionality specifically requiring the

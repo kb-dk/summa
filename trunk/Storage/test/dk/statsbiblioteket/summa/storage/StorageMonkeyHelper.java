@@ -65,6 +65,10 @@ public class StorageMonkeyHelper extends TestCase {
 
     private boolean checkForExistingOnDelete = true;
 
+    public StorageMonkeyHelper() {
+        // for test purpose
+    }
+
     public void testDummy() {
         assertTrue(true);
     }
