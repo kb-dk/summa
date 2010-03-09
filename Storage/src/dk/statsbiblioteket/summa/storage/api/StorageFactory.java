@@ -14,14 +14,10 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import java.rmi.RemoteException;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -100,8 +96,10 @@ public class StorageFactory {
             // FIXME: This forces a RMI call when packing as a service. Not good
             return Configuration.create(storageClass, conf);
         } catch (Exception e) {
-            throw new IOException("Failed to instantiate storage class "
-                                  + classProp + ": " + e.getMessage(), e);
+            throw new IOException("Failed to instantiate storage class: "
+                    + e.getMessage() + ".\n"
+                    + "NOTE: The setting '" + Storage.CONF_CLASS
+                    + "' should be well defined.", e);
         }
     }
 
