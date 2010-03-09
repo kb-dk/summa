@@ -48,6 +48,10 @@ import org.apache.commons.logging.LogFactory;
  * <p/>
  * The escape character for the templates is backslash ({@code \}). To insert
  * dollar sign literals in your templates you must write {@code \$}.
+ * </p><p>
+ * Hint: See the list of embedded options for regexp matching at
+ * {link http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html}
+ * }
  */
 public class RecordShaperFilter extends ObjectFilterImpl {
     private static final Log log = LogFactory.getLog(RecordShaperFilter.class);
@@ -166,7 +170,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         if (conf.valueExists(CONF_CONTENT_REGEXP)) {
             assignContent = new Pair<Pattern, String>(
                     Pattern.compile(conf.getString(CONF_CONTENT_REGEXP)),
-                    conf.getString(CONF_CONTENT_TEMPLATE, DEFAULT_CONTENT_TEMPLATE));
+                    conf.getString(
+                            CONF_CONTENT_TEMPLATE, DEFAULT_CONTENT_TEMPLATE));
         }
         if (conf.valueExists(CONF_ID_REGEXP)) {
             assignId = new Pair<Pattern, String>(
