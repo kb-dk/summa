@@ -49,6 +49,7 @@
         <pathelement location="${test.build.dir}" />
         <pathelement location="${ant.home}/lib/ant-junit.jar" />
         <pathelement location="${test.src.dir}" />
+        <pathelement location="${src.dir}" />
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -113,13 +114,13 @@
     <target name="runtest" depends="compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
-        <junit printsummary="yes" dir="${basedir}" fork="true">
-            <classpath refid="test.lib.path" />
+        <junit printsummary="yes" dir="${basedir}/../" fork="true">
+            <classpath refid="test.lib.path" />            
             <formatter type="xml" usefile="true" />            
             <batchtest todir="${test.report.dir}">
                 <formatter type="brief" />
                 <fileset dir="${test.src.dir}">
-			        <include name="**/*.java" />
+			        <include name="**/*Test*.java" />
                 </fileset>
             </batchtest>
         </junit>

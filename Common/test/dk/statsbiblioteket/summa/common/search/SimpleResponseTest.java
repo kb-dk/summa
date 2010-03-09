@@ -40,7 +40,12 @@ public class SimpleResponseTest extends TestCase {
         super.tearDown();
     }
     // TODO: This should be deprecated. Check before delete
-                       /*
+
+
+    public void testDummy() {
+        assertTrue(true);
+    }
+    /*
     public void testGetErrorID() throws Exception {
         SimpleResponse response = new SimpleResponse();
         response.error(87, "Flam");

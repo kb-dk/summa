@@ -14,12 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.shell;
 
+import junit.framework.*;
+
 import java.io.IOException;
 
 /**
  * Test the Layout class
  */
-public class LayoutTest {
+public class LayoutTest extends TestCase {
 
     public static void main (String[] args) {
         Layout layout = new Layout("Foo");
@@ -34,6 +36,14 @@ public class LayoutTest {
 
         System.out.println(layout.toString());
 
+    }
+
+    public LayoutTest() {
+        // for unit test purpose.
+    }
+
+    public void testDummy() {
+        assertTrue(true);
     }
 }
 

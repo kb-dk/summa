@@ -15,13 +15,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
+import junit.framework.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * Test-class that takes a stream and transforms received data into Records.
  */
-public class DummyStreamToRecords implements ObjectFilter {
+public class DummyStreamToRecords extends TestCase implements ObjectFilter {
     private static final Log log =
             LogFactory.getLog(DummyStreamToRecords.class);
 
@@ -31,6 +32,14 @@ public class DummyStreamToRecords implements ObjectFilter {
     private int dataSize = 100;
     private Record record;
     private static AtomicInteger idCounter = new AtomicInteger();
+
+    public DummyStreamToRecords() {
+        // for unit test purpose
+    }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
 
     public DummyStreamToRecords(Configuration configuration) throws
                                                              RemoteException {

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Buffers all incominf payloads for later retrieval
+ * Buffers all incoming payloads for later retrieval
  */
 public class PayloadBufferFilter extends ObjectFilterImpl {
 

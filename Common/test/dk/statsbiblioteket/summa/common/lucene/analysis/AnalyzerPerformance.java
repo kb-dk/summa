@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.*;
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
@@ -28,7 +29,7 @@ import java.io.StringReader;
 /**
  * Performance tests for the analyzers
  */
-public class AnalyzerPerformance {
+public class AnalyzerPerformance extends TestCase {
 
     final int NUM_TESTS = 2000;
 
@@ -66,6 +67,10 @@ public class AnalyzerPerformance {
 
         // Prevent sneaky JIT compiling... Hopefully :-)
         System.out.println("Garbage data: " + dummyInspection);
+    }
+
+    public void testDummy() {
+        assertTrue(true);
     }
 
     public static void dumpTokens(TokenStream t, Appendable out) throws Exception {

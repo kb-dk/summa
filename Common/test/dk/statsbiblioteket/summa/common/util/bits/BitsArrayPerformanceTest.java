@@ -22,5 +22,9 @@ public class BitsArrayPerformanceTest extends TestCase {
     public void disabledtestPerformanceFast() throws Exception {
         new BitsArrayPerformance().testPerformance(true);
     }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
 }
 

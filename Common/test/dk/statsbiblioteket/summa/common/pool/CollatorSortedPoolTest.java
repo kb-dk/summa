@@ -74,7 +74,7 @@ public class CollatorSortedPoolTest extends TestCase {
     }
 
     public void testMutation(CollatorSortedPool pool) throws IOException {
-        pool.open(StringPoolSuperTest.poolDir, "foo", false, true);
+        pool.open(StringPoolSuper.poolDir, "foo", false, true);
         pool.clear();
         pool.setCollator(null);
         assertEquals(new String[0], pool);
