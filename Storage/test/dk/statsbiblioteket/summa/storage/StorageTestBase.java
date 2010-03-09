@@ -99,6 +99,10 @@ public class StorageTestBase extends TestCase {
         return conf;
     }
 
+    public void testDummy() {
+        assertTrue(true);
+    }
+
     public void setUp () throws Exception {
         File dbRoot = new File(testDBRoot);
 
