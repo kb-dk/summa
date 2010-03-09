@@ -38,7 +38,7 @@ import java.util.Iterator;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        author = "mke, hbk")
 public class StorageTestBase extends TestCase {
 
     protected static Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
@@ -65,7 +65,7 @@ public class StorageTestBase extends TestCase {
         lastStorageLocation =
                 testDBRoot + File.separator + dbPrefix + (storageCounter++);
         // H2 Config
-        Configuration conf = Configuration.newMemoryBased(
+        return Configuration.newMemoryBased(
                 Storage.CONF_CLASS, H2Storage.class,
                 DatabaseStorage.CONF_LOCATION, lastStorageLocation
         );
@@ -96,7 +96,7 @@ public class StorageTestBase extends TestCase {
                 ""
         );*/
 
-        return conf;
+        //return conf;
     }
 
     public void testDummy() {
@@ -121,7 +121,9 @@ public class StorageTestBase extends TestCase {
 
     public void tearDown () throws Exception {
         log.info("Test case tear down commencing");
-
+        if(storage == null) {
+            return;
+        }
         if (storage instanceof DatabaseStorage) {
             ((DatabaseStorage)storage).destroyDatabase();
         }

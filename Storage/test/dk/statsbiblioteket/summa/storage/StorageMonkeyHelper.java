@@ -18,6 +18,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.*;
+import junit.framework.*;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -39,8 +40,8 @@ import java.io.StringWriter;
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public class StorageMonkeyHelper {
+        author = "te, hbk")
+public class StorageMonkeyHelper extends TestCase {
     private static Log log = LogFactory.getLog(StorageMonkeyHelper.class);
 
 //    private List<Integer> existingIDs = new ArrayList<Integer>(10000);
@@ -63,6 +64,10 @@ public class StorageMonkeyHelper {
     private int maxMetaLength;
 
     private boolean checkForExistingOnDelete = true;
+
+    public void testDummy() {
+        assertTrue(true);
+    }
 
     /**
      * Performs a monkey-test on the given Storage, using multiple Threads with
