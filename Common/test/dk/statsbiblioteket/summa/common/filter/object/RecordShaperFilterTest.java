@@ -22,8 +22,11 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * RecordShaperFilter Tester.
@@ -102,6 +105,37 @@ public class RecordShaperFilterTest extends TestCase {
         assigner.setSource(new PayloadFeederHelper(payloads));
         Record record = assigner.next().getRecord();
         assertEquals("The ID should match", "bar/foo", record.getId());
+    }
+
+    public static final String CONTENT =
+            "<foo>\n"
+            + "    <bar class=\"booga\">kabloey</bar>\n"
+            + "    <bar class=\"id\">21</bar>\n"
+            + "    <bar class=\"ids\">a, b, c</bar>\n"
+            + "</foo>";
+    public static final String ID_REGEXP =
+            "(?s)<foo.*>.*<bar .*class=\"id\".*>(.+)</bar>";
+//    "(?m)<foo.*>.*<bar .*class=\"id\".*>(.+)</bar>";
+
+    public void testMultiline() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
+                RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
+
+        List<Payload> payloads = Arrays.asList(new Payload(new Record(
+                        "id1", "base1", CONTENT.getBytes("utf-8"))));
+        RecordShaperFilter assigner = new RecordShaperFilter(conf);
+        assigner.setSource(new PayloadFeederHelper(payloads));
+        Record record = assigner.next().getRecord();
+        assertEquals("The ID should match", "21", record.getId());
+    }
+
+    public void testMultilineBaseUse() throws Exception {
+        Pattern pattern = Pattern.compile(ID_REGEXP);
+        Matcher matcher = pattern.matcher(CONTENT);
+        assertTrue("The pattern " + ID_REGEXP 
+                   + " should match somewhere in the content",
+                   matcher.find());
     }
 }
 
