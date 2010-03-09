@@ -29,7 +29,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -107,7 +106,7 @@ public class RecordWriterTest extends TestCase {
         assertBaseCount("fooBase", 100);
     }
 
-    public void testBatchOvershoot() throws Exception {
+    public void disabledtestBatchOvershoot() throws Exception {
         writer.setSource(new ObjectProvider(100007));
         while (writer.pump()) {
             // Wait
