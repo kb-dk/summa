@@ -18,12 +18,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
-import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Profiler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,10 +29,10 @@ import java.io.File;
 import java.io.StringWriter;
 import java.io.IOException;
 
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import dk.statsbiblioteket.util.qa.*;
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "hbk")
 public class StorageTest extends StorageTestBase {
 
     public void testGetEmpty () throws Exception {
@@ -473,6 +469,7 @@ public class StorageTest extends StorageTestBase {
 
     /**
      * Test that ingesting one record also ingests any child records on it
+     * @throws Exception if error.
      */
     public void testAddNestedRecords () throws Exception {
         Record recP = new Record (testId1, testBase1, testContent1);
@@ -535,7 +532,9 @@ public class StorageTest extends StorageTestBase {
 
     /**
      * Test that ctime is preserved but mtime is updated when flushing the same
-     * tecord two times
+     * tecord two times.
+     *
+     * @throws Exception if error.
      */
     public void testTimestampUpdates () throws Exception {
         Record r1 = new Record (testId1, testBase1, testContent1);
@@ -726,8 +725,8 @@ public class StorageTest extends StorageTestBase {
         }
         }
 
-        for(int k = 0; k < batches.size(); k++) {
-            storage.flushAll(batches.get(k));
+        for (List<Record> batche : batches) {
+            storage.flushAll(batche);
         }
 
         assertBaseCount(testBase1, batchSize*batchCount*2);
@@ -736,10 +735,10 @@ public class StorageTest extends StorageTestBase {
                                                  new QueryOptions(null, null,
                                                                   -1 , -1));
         assertEquals(batchCount*batchSize, result.size());
-        for (int l = 0; l < result.size(); l++) {
-            assertEquals(1, result.get(l).getChildren().size());
+        for (Record aResult : result) {
+            assertEquals(1, aResult.getChildren().size());
             assertEquals("child_",
-                         result.get(l).getChildren().get(0).getId().substring(0,6));
+                    aResult.getChildren().get(0).getId().substring(0, 6));
         }
     }
 
@@ -758,7 +757,9 @@ public class StorageTest extends StorageTestBase {
                            + new File(lastStorageLocation).getAbsolutePath());
         System.out.println("Before:     " + before);
         System.out.println("AfterFlush: " + afterFlush);
+        assertEquals(before, afterFlush);
         System.out.println("AfterClose: " + afterClose);
+        storage = null;
     }
 
     private File[] listStorageFiles() throws IOException {
@@ -767,13 +768,15 @@ public class StorageTest extends StorageTestBase {
 
     // Copied from the Service API
     public static final String CONF_SERVICE_ID = "summa.control.service.id";
-    public static final String CONF_SERVICE_BASEPATH = "summa.control.service.basepath";
+    //public static final String CONF_SERVICE_BASEPATH =
+    //                                         "summa.control.service.basepath";
     public static final String CONF_SERVICE_PORT = "summa.control.service.port";
-    public static final String CONF_REGISTRY_PORT = "summa.control.service.registry.port";
+    public static final String CONF_REGISTRY_PORT =
+                                          "summa.control.service.registry.port";
 
 
-    public static final String STORAGE_ADDRESS =
-            "//localhost:28000/summa-storage";
+    /*public static final String STORAGE_ADDRESS =
+            "//localhost:28000/summa-storage";*/
     public static Configuration getStorageConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.CONF_LOCATION,
