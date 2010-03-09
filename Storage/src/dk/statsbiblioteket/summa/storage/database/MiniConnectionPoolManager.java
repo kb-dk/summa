@@ -14,24 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
-/*
- * Copyright 2007 Christian d'Heureuse, www.source-code.biz
- * Copyright 2009 Mikkel Kamstrup Erlandsen statsbiblioteket.dk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,7 +24,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.util.concurrent.TimeUnit;
-import javax.sql.*;
+import javax.sql.ConnectionEvent;
+import javax.sql.ConnectionEventListener;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.PooledConnection;
 
 /**
  * A simple standalone JDBC connection pool manager.
@@ -50,8 +36,12 @@ import javax.sql.*;
  * <p>
  * This class is based on the work of Christian d'Heureuse, www.source-code.biz.
  * For more information see
- * <a href="http://www.source-code.biz/snippets/java/8.htm">www.source-code.biz/snippets/java/8.htm</a>
+ * <a href="http://www.source-code.biz/snippets/java/8.htm">
+ * www.source-code.biz/snippets/java/8.htm</a>
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke, hbk, te")
 public class MiniConnectionPoolManager {
 
     private ConnectionPoolDataSource       dataSource;
@@ -167,6 +157,7 @@ public class MiniConnectionPoolManager {
 
     /**
      * Closes all unused pooled connections.
+     * @throws java.sql.SQLException if SQLException is thrown 
      */
     public synchronized void dispose() throws SQLException {
         if (isDisposed) {
@@ -259,7 +250,7 @@ public class MiniConnectionPoolManager {
 
     /**
      * Get a PooledConnection from the connection pool.
-     * @return
+     * @return a PooledConnection from the connection pool.
      */
     protected PooledConnection getPooledConnection() {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.

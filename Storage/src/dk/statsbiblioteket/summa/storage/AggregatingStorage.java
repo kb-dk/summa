@@ -40,7 +40,7 @@ import java.util.*;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "mke")
+        author = "mke, hbk")
 public class AggregatingStorage extends StorageBase {
 
     /**
@@ -92,6 +92,9 @@ public class AggregatingStorage extends StorageBase {
 
     private Log log;
 
+    /**
+     * Merging context class.
+     */
     private class MergingContext extends IteratorContext {
 
         private ReadableStorage[] readerList;
@@ -99,6 +102,14 @@ public class AggregatingStorage extends StorageBase {
         private long[] iterKeys;
         long iterKey;
 
+        /**
+         * Create a MergingContext.
+         * 
+         * @param mtime modified time.
+         * @param opts query options.
+         * @param lastAccess lastAccess.
+         * @throws IOException if error occurred.
+         */
         public MergingContext(long mtime, QueryOptions opts,
                               long lastAccess) throws IOException {
             super(null, null, mtime, opts, lastAccess);
@@ -123,7 +134,7 @@ public class AggregatingStorage extends StorageBase {
                         reader, readerBase, mtime, opts, lastAccess);
                 long subKey = subIter.getKey();
 
-                // FIXME: Better collision handling
+                // TODO: Better collision handling
                 if (iterators.containsKey(subKey)) {
                     throw new RuntimeException(String.format(
                             "Internal error. Iterator key collision '%s'",
@@ -230,10 +241,14 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
+    /**
+     * Iterator context class.
+     */
     private static class IteratorContext {
         protected ReadableStorage reader;
         protected String base;
         protected long mtime;
+        private Log log;
         protected QueryOptions opts;
         protected long lastAccess;
         protected long iterKey;
@@ -245,7 +260,11 @@ public class AggregatingStorage extends StorageBase {
             this.base = base;
             this.mtime = mtime;
             this.opts = opts;
+            log = LogFactory.getLog (IteratorContext.class);
             this.lastAccess = lastAccess;
+
+            log.debug("IteratorContext class created with mtime '" + mtime
+                    + "', base '" + base + "'.");
 
             if (reader != null) {
                 this.iterKey = reader.getRecordsModifiedAfter(
@@ -261,19 +280,19 @@ public class AggregatingStorage extends StorageBase {
             return reader.next(iterKey, maxRecords);
         }
 
-        public String getBase () {
+        /*public String getBase () {
             accessed();
             return base;
-        }
+        }*/
 
         public long getKey () {
             accessed();
             return iterKey;
         }
 
-        public long getLastAccess () {
+        /*public long getLastAccess () {
             return lastAccess;
-        }
+        }*/
 
         public long accessed () {
             return (lastAccess = System.currentTimeMillis());
@@ -284,6 +303,9 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
+    /**
+     * Iterator Context Reaper class.
+     */
     private static class IteratorContextReaper implements Runnable {
 
         private Map<Long,IteratorContext> iterators;
@@ -361,17 +383,23 @@ public class AggregatingStorage extends StorageBase {
      */
     private List<StorageWriterClient> toClose;
 
+    /**
+     * Aggregating storage constructor.
+     *
+     * @param conf The configuration.
+     * @throws IOException if any errors are experienced during creation.
+     */
     public AggregatingStorage (Configuration conf) throws IOException {
         super (conf);
 
         log = LogFactory.getLog(this.getClass().getName());
-        log.debug ("Creating aggregating storage");
+        log.debug("Creating aggregating storage");
 
         List<Configuration> subConfs =
                                    conf.getSubConfigurations(CONF_SUB_STORAGES);
 
         if (subConfs.size() == 0) {
-            log.warn ("No sub storages configured");
+            log.warn("No sub storages configured");
         }
 
         readers = new HashMap<String,StorageReaderClient>();
@@ -412,14 +440,14 @@ public class AggregatingStorage extends StorageBase {
                 storageConf = subConf.getSubConfiguration(
                                                        CONF_SUB_STORAGE_CONFIG);
             } catch (IOException e) {
-                log.warn ("No sub-sub-config for aggregated storage for bases '"
+                log.warn("No sub-sub-config for aggregated storage for bases '"
                           + Strings.join(bases, ", ") + "'. We can't tell if "
                           + "this is an error. See https://gforge.statsbibliote"
                           + "ket.dk/tracker/index.php?func=detail&aid=1487");
             }
 
             if (storageConf != null) {
-                log.info ("Configuring aggregated storage: "
+                log.info("Configuring aggregated storage: "
                           + writer.getVendorId());
                 StorageFactory.createStorage(storageConf);
 
@@ -434,7 +462,8 @@ public class AggregatingStorage extends StorageBase {
     public long getRecordsModifiedAfter(long time, String base,
                                         QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("getRecordsModifiedAfter("+time+", '"+base+"')");
+            log.trace ("AggregatingStorage.getRecordsModifiedAfter(" + time
+                    + ", '" + base + "')");
         }
 
         IteratorContext ctx;
@@ -459,13 +488,17 @@ public class AggregatingStorage extends StorageBase {
 
         long iterKey = ctx.getKey();
 
-        // FIXME: Handle iterKey collisions in a sane way!
+        // TODO: Handle iterKey collisions in a sane way!
         if (iterators.containsKey(iterKey)) {
             throw new RuntimeException("Internal error. Iterator key "
                                        + "collision '" + iterKey + "'");
         }
 
         iterators.put(iterKey, ctx);
+        if (log.isTraceEnabled()) {
+            log.trace ("getRecordsModifiedAfter returns: "
+                    + iterKey + ".");
+        }
         return iterKey;
     }
 
@@ -569,11 +602,25 @@ public class AggregatingStorage extends StorageBase {
         return r;
     }
 
+    /**
+     * Get maxRecords records associated with given iterator.
+     *  
+     * @param iteratorKey the key given by {@link ReadableStorage}.
+     * @param maxRecords max number of records returned.
+     * @return List containing max number of records, associated to the iterator
+     * key.
+     * @throws IOException if error occured when fetching elements.
+     */
     @Override
     public List<Record> next(long iteratorKey, int maxRecords)
                                                             throws IOException {
         if (iteratorKey == UNKNOWN_BASE_KEY) {
             throw new NoSuchElementException("Empty iterator " + iteratorKey);
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("AggregratingStorage.next(" + iteratorKey + ", "
+                    + maxRecords + ") entered.");
         }
 
         IteratorContext iter = iterators.get(iteratorKey);
