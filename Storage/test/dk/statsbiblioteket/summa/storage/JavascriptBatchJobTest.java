@@ -16,14 +16,12 @@ package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.JavascriptBatchJobTest
@@ -33,7 +31,7 @@ import java.util.Iterator;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        author = "mke, hbk")
 public class JavascriptBatchJobTest extends StorageTestBase {    
 
     public void testCountByBaseJob() throws Exception {
@@ -87,15 +85,16 @@ public class JavascriptBatchJobTest extends StorageTestBase {
 
         String ids = storage.batchJob(
                 "collect_ids.job.js", null, 0, Long.MAX_VALUE, null);
-        assertEquals(Strings.join(
-                Arrays.asList(testId1, testId2, testId3), "\n") + "\n", ids);
+        String idsExpected = Strings.join(
+                Arrays.asList(testId1, testId2, testId3), "\n");
+        assertEquals(idsExpected, ids);
 
         ids = storage.batchJob(
                 "collect_ids.job.js", null, stamp3, Long.MAX_VALUE, null);
-        assertEquals(testId3 + "\n", ids);
+        assertEquals(testId3, ids);
 
         ids = storage.batchJob(
-                "collect_ids.job.js", null, Long.MAX_VALUE, Long.MAX_VALUE, null);
+              "collect_ids.job.js", null, Long.MAX_VALUE, Long.MAX_VALUE, null);
         assertEquals("", ids);
     }
 
