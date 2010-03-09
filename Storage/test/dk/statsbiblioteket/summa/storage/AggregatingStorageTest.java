@@ -50,6 +50,7 @@ public class AggregatingStorageTest extends TestCase {
     String testId1 = "testId1";
     String testId2 = "testId2";
     String testId3 = "testId3";
+    String testId4 = "testId4";
     byte[] testContent1 = "Summa rocks your socks!".getBytes();
     List<Configuration> storageConfs;
     Storage storage;
@@ -154,11 +155,12 @@ public class AggregatingStorageTest extends TestCase {
         storage.flush(new Record(testId1, base1, testContent1));
         storage.flush(new Record(testId2, base2, testContent1));
         storage.flush(new Record(testId3, base3, testContent1));
+        storage.flush(new Record(testId4, base3, testContent1));
         
         assertBaseCount(base1, 1);
         assertBaseCount(base2, 1);
-        assertBaseCount(base3, 1);
-        assertBaseCount(null, 3);
+        assertBaseCount(base3, 2);
+        assertBaseCount(null, 4);
     }
 
     public void testNonExistingBaseIteration() throws Exception {
@@ -180,9 +182,11 @@ public class AggregatingStorageTest extends TestCase {
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
+        System.out.println("basecount: " + base + ", expected " + expected);
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
-        
+
         long actual = 0;
         while (iter.hasNext()) {
             iter.next();
