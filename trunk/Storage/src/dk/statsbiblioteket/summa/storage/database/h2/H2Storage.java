@@ -21,7 +21,11 @@ import org.h2.jdbcx.JdbcDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -29,16 +33,13 @@ import java.util.HashSet;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.ManagedStatement;
+
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.Files;
-
-import javax.sql.ConnectionPoolDataSource;
-import javax.sql.PooledConnection;
 
 /**
  * Storage implementation on top of the H" database engine.
@@ -47,7 +48,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     private static Log log = LogFactory.getLog(H2Storage.class);
     private static final String DB_FILE = "summa_h2storage";
-    public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
+    //public static final int META_LIMIT = 50*1024*1024; // MAX_VALUE instead?
 
     /**
      * We optimize the index statistics after this many flushes
@@ -132,6 +133,24 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         log.trace("Construction completed");
     }
 
+    /**
+     * Closes H2 Storage, thereby closes storage and database connections.
+     * @throws IOException if throws while closing storage.
+     */
+    @Override
+    public void close() throws IOException {
+        super.close();
+        try {
+            pool.dispose();
+        } catch (SQLException e) {
+            final String error = "SQLException while closing pooled connection";
+            log.warn(error);
+            throw new IOException(error, e);
+        }
+        log.info("H2 Storage closed.");
+        
+    }
+
     @Override
     protected void connectToDatabase(Configuration configuration) throws
                                                                IOException {
@@ -169,8 +188,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             }
         }
 
-        location.mkdirs();
-        if (!location.isDirectory()) {
+
+        if (!location.mkdirs()) {
             throw new IOException("Database location '" + location
                                   + "' not a directory");
         }
@@ -216,7 +235,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
             log.warn("Failed to optimize table selectivity", e);
-            return;
         } finally {
             try {
                 conn.close();
@@ -270,7 +288,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         } catch (SQLException e) {
             log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance"
                       + " on large result sets");
-            return;
         } finally {
             try {
                 conn.close();

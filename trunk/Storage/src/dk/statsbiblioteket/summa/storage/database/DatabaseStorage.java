@@ -304,7 +304,7 @@ getco     */
     /* Constants for database-setup */
     public static final int ID_LIMIT =       255;
     public static final int BASE_LIMIT =     31;
-    public static final int DATA_LIMIT =     50*1024*1024;
+    //public static final int DATA_LIMIT =     50*1024*1024;
     private static final int FETCH_SIZE = 100;
 
     private static final long EMPTY_ITERATOR_KEY = -1;
@@ -1001,11 +1001,30 @@ getco     */
         }
     }
 
+    /**
+     * Get a {@link ResultSetCursor} over all records with an {@code mtime}
+     * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
+     * timestamp must be in the format as returned by a
+     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator},
+     * ie. it is <i>not</i> a normal system time in milliseconds.
+     * <p/>
+     * The returned iteration key, can be used for later iteration over records.
+     *
+     * @param mtime a timestamp as returned by a
+     *                       {@link UniqueTimestampGenerator}.
+     * @param base the base which the retrieved records must belong to.
+     * @param options any {@link QueryOptions} the query should match.
+     * @return a iteration key.
+     * @throws IOException if prepared SQL statement is invalid.
+     */
     @Override
     public synchronized long getRecordsModifiedAfter(
-            long time, String base, QueryOptions options) throws IOException {
+             long mtime, String base, QueryOptions options) throws IOException {
+
+       log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime
+                                       + ", '" + base + "', " + options + ").");
         // Convert time to the internal binary format used by DatabaseStorage
-        long mtimeTimestamp = timestampGenerator.baseTimestamp(time);
+        long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
 
         Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp,
                                                     base, options);
@@ -1025,45 +1044,44 @@ getco     */
      * Get a {@link ResultSetCursor} over all records with an {@code mtime}
      * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
      * timestamp must be in the format as returned by a
-     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator}, ie. it is <i>not</i> a normal system
-     * time in milliseconds.
+     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator},
+     * ie. it is <i>not</i> a normal system time in milliseconds.
      * <p/>
      * The returned ResultSetCursor <i>must</i> be closed by the caller to
-     * avoid leaking connections and locking up the storage
+     * avoid leaking connections and locking up the storage.
      *
-     * @param mtimeTimestamp a timestamp as returned by a
-     *                       {@link UniqueTimestampGenerator}
-     * @param base the base which the retrieved records must belong to
-     * @param options any {@link QueryOptions} the query should match
+     * @param mtime a timestamp as returned by a
+     *                       {@link UniqueTimestampGenerator}.
+     * @param base the base which the retrieved records must belong to.
+     * @param options any {@link QueryOptions} the query should match.
      * @return a {@link ResultSetCursor} that <i>must</i> be closed by the
-     *         caller to avoid leaking connections and locking up the storage
-     * @throws IOException if prepered SQL statement is invalid.
+     *         caller to avoid leaking connections and locking up the storage.
+     * @throws IOException if prepared SQL statement is invalid.
      */
     public ResultSetCursor getRecordsModifiedAfterCursor (
-            long mtimeTimestamp, String base, QueryOptions options)
-                                                            throws IOException {
+             long mtime, String base, QueryOptions options) throws IOException {
         PreparedStatement stmt;
+        String statement = "";
+        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime
+                                       + ", '" + base + "', " + options + ").");
 
         try {
             if (base == null) {
+                statement = stmtGetModifiedAfterAll.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfterAll);
             } else {
+                statement = stmtGetModifiedAfter.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfter);
             }
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
-                                  + stmtGetModifiedAfterAll +": "
+                                  + statement +": "
                                   + e.getMessage(), e);
         }
 
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
-        ResultSetCursor iter = doGetRecordsModifiedAfterCursor (mtimeTimestamp,
-                                                                base,
-                                                                options,
-                                                                stmt);
-
-        return iter;
+        return  doGetRecordsModifiedAfterCursor (mtime, base, options, stmt);
     }
 
     /**
@@ -1080,14 +1098,14 @@ getco     */
      * @return {@code null} if there are no records updated in {@code base}
      *         after {@code time}. Otherwise a ResultIterator ready for fetching
      *         records.
-     * @throws IOException if error experienced when prepareing connection for
+     * @throws IOException if error experienced when preparing connection for
      *  cursoring.
      */
     private synchronized ResultSetCursor doGetRecordsModifiedAfterCursor(
             long mtimeTimestamp, String base, QueryOptions options,
             PreparedStatement stmt) throws IOException {
-        log.debug("getRecordsModifiedAfter('" + mtimeTimestamp + "', " + base
-                  + ") entered");
+        log.debug("doGetRecordsModifiedAfterCursor('" + mtimeTimestamp + "', "
+                + base + ") entered");
 
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
@@ -2011,6 +2029,26 @@ getco     */
         }
     }
 
+    /**
+     *
+     * @param jobName The name of the job to instantiate.
+     *                The job name must match the regular expression
+     *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
+     *                resource in the classpath of the storage process.
+     *                Fx {@code count.job.js}
+     * @param base Restrict the batch jobs to records in this base. If
+     *             {@code base} is {@code null} the records from all bases will
+     *             be included in the batch job
+     * @param minMtime Only records with modification times strictly greater
+     *                 than {@code minMtime} will be included in the batch job
+     * @param maxMtime Only records with modification times strictly less than
+     *                 {@code maxMtime} will be included in the batch job
+     * @param options Restrict to records for which
+     *                {@link QueryOptions#allowsRecord} returns true
+     * @return The result of the batch job run.
+     * @throws IOException
+     */
+    @Override
     public synchronized String batchJob (String jobName,
             String base, long minMtime, long maxMtime, QueryOptions options)
                                                             throws IOException {
@@ -2037,6 +2075,28 @@ getco     */
         }
     }
 
+    /**
+     *
+     * @param conn The database connection.
+     * @param jobName The name of the job to instantiate.
+     *                The job name must match the regular expression
+     *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
+     *                resource in the classpath of the storage process.
+     *                Fx {@code count.job.js}
+     * @param base Restrict the batch jobs to records in this base. If
+     *             {@code base} is {@code null} the records from all bases will
+     *             be included in the batch job
+     * @param minMtime Only records with modification times strictly greater
+     *                 than {@code minMtime} will be included in the batch job
+     * @param maxMtime Only records with modification times strictly less than
+     *                 {@code maxMtime} will be included in the batch job
+     * @param options Restrict to records for which
+     *                {@link QueryOptions#allowsRecord} returns true
+     * @return Output from batch job.
+     * @throws IOException if any error when prepareing for or running batch
+     * job.
+     * @throws SQLException if any error occur while closing sql connection.
+     */
     private String batchJobWithConnection (String jobName,
                                       String base, long minMtime, long maxMtime,
                                       QueryOptions options, Connection conn)

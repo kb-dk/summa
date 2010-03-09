@@ -15,12 +15,14 @@
 package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
@@ -76,6 +78,10 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         this.next = true;
         records = new LinkedBlockingQueue<Record>(maxBufferSize);
         maxQueueSize = maxBufferSize;
+        if(log.isTraceEnabled()) {
+            log.trace("Created StorageIterator(" + iteratorHolder + ", " + key
+                + ", " + maxBufferSize + ")");
+        }
     }
 
     public boolean hasNext() {
@@ -110,6 +116,8 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     /**
      * Download next batch of records if applicable and set the 'next' state
      * appropriately
+     *
+     * @throws IOException if something went wrong when checking records.
      */
     private void checkRecords () throws IOException {
         if (records.size() == 0 && next) {

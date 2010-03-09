@@ -49,6 +49,12 @@ public class PagingCursor implements Cursor {
     private Record nextRecord;
     private DatabaseStorage db;
 
+    /**
+     * PageCursor constructor.
+     *
+     * @param db The database storage.
+     * @param firstPage the first page of {@link ResultSetCursor}.
+     */
     public PagingCursor(DatabaseStorage db,
                         ResultSetCursor firstPage) {
         this.db = db;
@@ -69,7 +75,8 @@ public class PagingCursor implements Cursor {
             nextRecord = null;
         }
 
-        log.debug("Created " + this + " for " + firstPage);
+        log.debug("Created " + this + " for storage " + db + ", and resultset "
+                + firstPage);
     }
 
     @Override
@@ -83,7 +90,7 @@ public class PagingCursor implements Cursor {
     }
 
     @Override
-    public long getKey () {
+    public long getKey() {
         return key;
     }
 
@@ -98,8 +105,13 @@ public class PagingCursor implements Cursor {
         return nextRecord != null;
     }
 
+    /**
+     * Return the next record, for the iterator.
+     *
+     * @return The next valid record.
+     */
     @Override
-    public Record next () {
+    public Record next() {
         lastAccess = System.currentTimeMillis();
 
         if (!hasNext()) {
@@ -109,10 +121,11 @@ public class PagingCursor implements Cursor {
         if (pageRecords == 0) {
             firstAccess = lastAccess; // Set to 'now'
         }
-
+        // set temporary return record.
         Record rec = nextRecord;
         lastMtimeTimestamp = page.currentMtimeTimestamp();
 
+        // update next record.
         nextRecord = nextValidRecord();
         pageRecords++;
         totalRecords++;
@@ -120,7 +133,13 @@ public class PagingCursor implements Cursor {
         return rec;
     }
 
-    private Record nextValidRecord () {
+    /**
+     * Private helper method for {@link PagingCursor#next()}. Get next valid
+     * element.
+     *
+     * @return 
+     */
+    private Record nextValidRecord() {
         // Note that ths method does not need to care about filtering out
         // records that do not match the query options. This is done by
         // the 'page' (ResultSetCursor)
