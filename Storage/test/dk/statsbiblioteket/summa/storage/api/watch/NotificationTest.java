@@ -25,7 +25,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
@@ -63,8 +62,8 @@ public class NotificationTest extends TestCase {
         }
     }
 
-    static final String testDBLocation = "test_db";
-    static int storageCounter = 0;
+    static final String testDBLocation =
+                                      "summatest" + File.separator +  "test_db";
 
     static final String testId1 = "testId1";
     static final String testId2 = "testId2";
@@ -81,22 +80,18 @@ public class NotificationTest extends TestCase {
     Listener l2, l3, l4;
 
     public static Configuration createConf () throws Exception {
-
-        Configuration conf = Configuration.newMemoryBased(
-                RMIStorageProxy.CONF_BACKEND,
-                H2Storage.class,
-                DatabaseStorage.CONF_LOCATION,
-                testDBLocation + (storageCounter++),
-                DatabaseStorage.CONF_FORCENEW,
-                true
+        return Configuration.newMemoryBased(
+             RMIStorageProxy.CONF_BACKEND, H2Storage.class,
+             Storage.CONF_CLASS, H2Storage.class,
+             DatabaseStorage.CONF_LOCATION, testDBLocation,
+             DatabaseStorage.CONF_FORCENEW, true,
+             DatabaseStorage.CONF_CREATENEW, true
         );
-
-        return conf;
     }
 
     public void setUp () throws Exception {
-        if (new File(testDBLocation + storageCounter).exists()) {
-            Files.delete (testDBLocation + storageCounter);
+        if (new File(testDBLocation).exists()) {
+            Files.delete(testDBLocation);
         }
 
         storage = StorageFactory.createStorage(createConf());

@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.http;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.*;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -32,7 +33,7 @@ import java.util.NoSuchElementException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class QueryTokenizer implements Iterator<QueryToken> {
+public class QueryTokenizer extends TestCase implements Iterator<QueryToken> {
     private StringBuilder builder;
     private CharSequence seq;
     private int pos;
@@ -50,6 +51,15 @@ public class QueryTokenizer implements Iterator<QueryToken> {
         pos = 0;
         builder = new StringBuilder();
     }
+
+    public QueryTokenizer() throws Exception {
+        // for test purpose.
+    }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
+
 
     public QueryTokenizer reset() {
         pos = 0;

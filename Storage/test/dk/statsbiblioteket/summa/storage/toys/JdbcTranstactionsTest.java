@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.toys;
 
 import dk.statsbiblioteket.summa.common.util.Environment;
+import junit.framework.*;
 
 import java.sql.DriverManager;
 import java.sql.Connection;
@@ -26,7 +27,7 @@ import java.io.File;
  * Various test databases and see how and when unique key constraint
  * violations are raised
  */
-public class JdbcTranstactionsTest {
+public class JdbcTranstactionsTest extends TestCase {
 
     public static final String DB = "${user.home}/tmp/h2test";
 
@@ -76,5 +77,10 @@ public class JdbcTranstactionsTest {
         stmt.close();
         conn.setAutoCommit(true);
     }
+
+    public void testDummy() {
+        assertTrue(true);
+    }
+
 }
 

@@ -52,10 +52,10 @@ public class RMIStorageProxyTest extends TestCase {
 
     private File testRoot = new File(System.getProperty(
             "java.io.tmpdir", "storagetest"));
+    
     private Storage getRMIStorage() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
-                DatabaseStorage.CONF_LOCATION,
-                testRoot.toString());
+                DatabaseStorage.CONF_LOCATION, testRoot.toString());
         return new RMIStorageProxy(conf);
     }
 

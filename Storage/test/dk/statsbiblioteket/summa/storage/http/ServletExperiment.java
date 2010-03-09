@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.http;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.*;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ import java.io.PrintWriter;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ServletExperiment extends HttpServlet {
+    TestCase testCase;
 
     public void doGet(HttpServletRequest req, HttpServletResponse res)
                                    throws ServletException, IOException {
@@ -45,7 +47,6 @@ public class ServletExperiment extends HttpServlet {
         out.println("<BODY>");
         out.println("<BIG>Hello World</BIG>");
         out.println("</BODY></HTML>");
-      }
-
+    }
 }
 
