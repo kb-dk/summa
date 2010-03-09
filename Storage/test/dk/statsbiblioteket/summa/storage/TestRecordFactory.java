@@ -15,11 +15,12 @@
 package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
+import junit.framework.*;
 
 /**
  * A test-helper tool for creating dummy records
  */
-public class TestRecordFactory {
+public class TestRecordFactory extends TestCase {
 
     public static long recordId = 0;
     public static String recordContent = "Dummy content";
@@ -39,6 +40,10 @@ public class TestRecordFactory {
         return new Record (""+ recordId, recordBase,
                            recordContent.getBytes());
 
+    }
+
+    public void testDummy() {
+        assertTrue(true);
     }
 }
 
