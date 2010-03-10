@@ -186,14 +186,14 @@
     <target name="runtest" depends="compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
-        <junit printsummary="yes" dir="${basedir}" fork="true">
+        <junit printsummary="yes" dir="${basedir}/../" fork="true">
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
             <formatter type="xml" usefile="true" />
             <batchtest todir="${test.report.dir}">
                 <formatter type="brief" />
                 <fileset dir="${test.src.dir}">
-			        <include name="**/*.java" />
+			        <include name="**/*Test*.java" />
                 </fileset>
             </batchtest>
         </junit>
