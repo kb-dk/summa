@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.didyoumean;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -38,7 +38,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
-import java.io.IOException;
+import java.io.*;
 import java.rmi.RemoteException;
 
 /**
@@ -202,7 +202,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     protected void managedOpen(String location) throws RemoteException {
         log.debug("Opening '" + location + "'");
         IndexFacade aprioriIndexFactory;
-
+        File didyoumeanIndex =
+                             Resolver.getPersistentFile(new File("didyoumean"));
         // Setup AprioriIndex
         try {
             aprioriIndexFactory = new DirectoryIndexFacade(

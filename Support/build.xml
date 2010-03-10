@@ -203,7 +203,7 @@
             <batchtest todir="${test.report.dir}">
                 <formatter type="brief" />
                 <fileset dir="${test.src.dir}">
-			        <include name="**/*.java" />
+			        <include name="**/*Test*.java" />
                 </fileset>
             </batchtest>
         </junit>

@@ -58,13 +58,18 @@ public class TikaDocumentCreatorTest extends TestCase {
         Configuration idConf = conf.createSubConfiguration(
                 IndexDescriptor.CONF_DESCRIPTOR);
         idConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
-
-        TikaDocumentCreator tika = new TikaDocumentCreator(conf);
-        tika.setSource(feeder);
-        System.out.println("**** Dumping strict");
-        tika.next();
-        System.out.println("**** Dumping lax");
-        tika.next();
+        TikaDocumentCreator tika;
+        try {
+            tika = new TikaDocumentCreator(conf);
+            tika.setSource(feeder);
+            System.out.println("**** Dumping strict");
+            tika.next();
+            System.out.println("**** Dumping lax");
+            tika.next();            
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Craeting of TikaDocument fails.");
+        }
     }
 }
 
