@@ -13,6 +13,7 @@ import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.*;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -22,6 +23,9 @@ import java.util.Iterator;
 /**
  *  Unit tests for {@link UpdateFromFulldumpFilter}
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "hbk")
 public class UpdateFromFulldumpFilterTest  extends TestCase {
     Storage storage;
     UpdateFromFulldumpFilter filter;
@@ -163,7 +167,6 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         chain.close(true); // why isn't this called via pump?
         
         assertEquals(2, chain.size());
-
         assertBaseCount("base", 2);
     }
 
@@ -191,6 +194,14 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertEquals(1, chain.size());
 
         assertBaseCount("base", 1);
+    }
+
+    /**
+     * Test only deletes of input base.
+     * @throws Exception if error.
+     */
+    public void testDifferentBases() throws Exception {
+        fail("should be implemented");
     }
     
 

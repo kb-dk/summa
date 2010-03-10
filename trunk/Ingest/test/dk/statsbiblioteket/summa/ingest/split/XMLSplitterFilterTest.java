@@ -110,12 +110,13 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
         conf.set(XMLSplitterFilter.CONF_REQUIRE_VALID, "true");
         return conf;
     }
-    /* ObjectFilter implementation */
 
+    /* ObjectFilter implementation */
     private void startProducer(int payloadCount) {
         this.payloadCount = payloadCount;
         closeCount = 0;
     }
+
     int closeCount = 0;
     private int payloadCount = 0;
     public boolean hasNext() {
@@ -142,15 +143,19 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
         payloadCount--;
         return new Payload(stream);
     }
+
     public boolean pump() throws IOException {
         return hasNext() && next() != null;
     }
 
-   public void remove() {
+    public void remove() {
+        // not used
     }
     public void setSource(Filter filter) {
+        // not used
     }
     public void close(boolean success) {
+        // not used
     }
 }
 
