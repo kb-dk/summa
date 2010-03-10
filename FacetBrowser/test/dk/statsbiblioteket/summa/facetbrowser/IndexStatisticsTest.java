@@ -48,9 +48,13 @@ import org.apache.lucene.search.IndexSearcher;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class IndexStatisticsTest extends TestCase {
+    public void testdummy() {
+        assertTrue(true); 
+    }
+
     // Make statistics for repetition of tags in facets
     // Produce a graph with documentcount at X and unique authors at Y
-    public void testUnique() throws Exception {
+    public void disabledtestUnique() throws Exception {
 //        String[] facets = {"author_normalised", "location_normalised", "series_normalised", "llcl", "lnlm", "ldbk", "ludk", "ldds", "lkl", "lfn", "linst", "ldk5", "lma_long", "su_pe", "su_corp", "su_lc", "mesh", "su_dk", "lsu_oai", "llang"};
         String[] facets = {"freetext"};
         IndexReader ir = null; //new IndexSearcher(ClusterCommon.getProperties().getProperty(ClusterCommon.INDEX_LOCATION)).getIndexReader();
@@ -452,15 +456,15 @@ public class IndexStatisticsTest extends TestCase {
 //                getProperty(ClusterCommon.INDEX_LOCATION));
 //    }
 
-    public void testUniqueCharsInRealIndex() throws Exception {
-        testUniqueChars("/space/full_index");
+    public void disabledtestUniqueCharsInRealIndex() throws Exception {
+        disabledtestUniqueChars("/tmp/space/full_index");
     }
 
-    public void testUniqueCharsInPartRealIndex() throws Exception {
-        testUniqueChars("/home/te/projects/summaIndex/split/64th");
+    public void disabledtestUniqueCharsInPartRealIndex() throws Exception {
+        disabledtestUniqueChars("/home/te/projects/summaIndex/split/64th");
     }
 
-    public void testUniqueChars(String indexLocation) throws Exception {
+    public void disabledtestUniqueChars(String indexLocation) throws Exception {
         int limit = Integer.MAX_VALUE;
         int maxIDs = 5;
         int linelength = 50;
