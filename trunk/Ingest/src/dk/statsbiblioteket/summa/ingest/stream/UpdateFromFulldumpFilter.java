@@ -62,6 +62,15 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Storage storage = null;
 
     /**
+     * The target base.
+     * </p><p>
+     * Mandatory. If '*' is specified, all bases are used. Warning: This is
+     *            normally not the right thing to do.
+     */
+    public static final String CONF_BASE =
+            "summa.ingest.stream.updatefromfulldumpfiler.base";
+
+    /**
      * Maximum number of records to delete from storage, without going down with
      * an error.
      * </p><p>
@@ -87,6 +96,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     public static final int DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE = 100;
 
+
+    private String base = null;
     /**
     * Value of {@link this#CONF_MAX_NUMBER_DELETES}
     * if set otherwise {@link this#DEFAULT_MAX_NUMBER_DELETES }.
@@ -128,6 +139,19 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     }
 
     private void init(Configuration config) {
+        if (!config.valueExists(CONF_BASE)) {
+            throw new ConfigurationException(
+                    "The property " + CONF_BASE + " must be defined");
+        }
+        base = config.getString(CONF_BASE);
+        if ("*".equals(base)) {
+            base = null;
+            log.info("The base was specified as *, which matches all records in"
+                     + " storage. Note that this only makes sense when the "
+                     + "storage contains only a single base or when the current"
+                     + " ingest-chain performs full ingests from all bases ");
+        }
+
         maxNumberDeletes = config.getInt(CONF_MAX_NUMBER_DELETES
                                                   , DEFAULT_MAX_NUMBER_DELETES);
         numberOfRecordsFromStorage =
@@ -136,7 +160,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
 
         ids = new HashMap<String, Record>();
 
-        log.info("Get all records id from storage.");
+        log.info("Getting all records id from storage for base " + base);
         getRecords();
     }
 
@@ -147,12 +171,12 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private void getRecords() {
         // get a local copy of all records id.
         try {
-            long iteratorKey = storage.getRecordsModifiedAfter(0, null, null);
+            long iteratorKey = storage.getRecordsModifiedAfter(0, base, null);
             List<Record> tmpRecords;
             int i = 0;
             do {
-                tmpRecords = storage.next(iteratorKey,
-                                                    numberOfRecordsFromStorage);
+                tmpRecords = storage.next(
+                        iteratorKey, numberOfRecordsFromStorage);
                 for(Record r: tmpRecords) {
                     ids.put(r.getId(), null);
                     i++;
@@ -218,13 +242,15 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                                 Logging.LogLevel.DEBUG, id);
                         storage.flush(tmp);
                     }
-                    log.info("Marked '" + ids.size() + "' records as deleted.");
+                    log.info("Marked '" + ids.size() + "' records as deleted "
+                             + "from base " + base + ".");
                 } catch(IOException e) {
                     log.error("IOException when deleting records from storage. "
                               +"Storage now contains deleted records.");    
                 }
             } else {
-                log.error("Number of records to delete from storage is '"
+                log.error("Number of records to delete from storage for base "
+                          + base + " is '"
                         + ids.size() + "' > '" + maxNumberDeletes + "', "
                         + "so no records are delete, storage is now "
                         + "containing delete records.");
