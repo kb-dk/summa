@@ -73,9 +73,9 @@ public class SuggestSearchNodeTest extends TestCase {
         put(node, "Foo Fighters", 87);
         put(node, "Foo Bars", 123);
         assertGet(node, "Foo", "queryCount=\"1\">Foo Fighters");
-        put(node, "foo fighters", 87);
+        put(node, "foo fighters", 87, 2);
         assertGet(node, "Foo", "queryCount=\"2\">foo fighters");
-        assertGet(node, "Foo", "queryCount=\"2\">Foo Fighters");
+        assertGet(node, "Foo", "queryCount=\"1\">Foo Fighters");
         node.close();
     }
 

@@ -105,10 +105,10 @@ public class SuggestSearcherTest extends TestCase {
         put("Foo Bars", 123);
         assertGet("Foo", "queryCount=\"1\">Foo Fighters");
         assertGet("foo", "queryCount=\"1\">Foo Fighters");
-        put("Foo fighters", 87);
-        assertGet("Foo", "queryCount=\"2\">Foo Fighters");
+        put("Foo fighters", 87, 2); // no query count, no update of  query count
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
         assertGet("Foo", "queryCount=\"2\">Foo fighters");
-        System.out.println(get("fo"));
+        //System.out.println(get("fo"));
     }
 
     public void testAddWithQueryCount() throws Exception {
