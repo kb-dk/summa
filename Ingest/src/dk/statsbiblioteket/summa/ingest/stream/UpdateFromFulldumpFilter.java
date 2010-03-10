@@ -20,8 +20,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -29,7 +27,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Take a fulldump and treat it as a update, where non-existing records should
@@ -231,11 +233,6 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             log.error("Dirty closure of UpdateFromFulldumpFilter, are not "
                 + "removing any records from storage. There should have been "
                 + "removed: " + ids.size() + " records");
-        }
-        try {
-            storage.close();
-        } catch(IOException e) {
-            log.warn("IOException while closing storage");
         }
         log.info("Closed UpdateFromFulldumpFilter.");
     }
