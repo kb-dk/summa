@@ -80,8 +80,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testBasicMarc4j() throws Exception {
-//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+ //       File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
 //        MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
@@ -131,11 +131,11 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testTransform() throws Exception {
-        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
+       // File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
 //        File SAMPLE = Resolver.getFile(
 //                "/home/te/projects/data/dpb/dpb20091130.data");
-//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
         assertTrue("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
@@ -163,8 +163,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 //        File SAMPLE = Resolver.getFile(
 //                "/home/te/projects/data/dpb/dpb20091109");
 //        "/home/te/projects/data/dpb/dpb20091130.data");
-//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
         assertNotNull("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
@@ -214,7 +214,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testChain() throws Exception {
-        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
         assertNotNull("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
