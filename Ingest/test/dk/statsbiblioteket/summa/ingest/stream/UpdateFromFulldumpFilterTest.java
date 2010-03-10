@@ -73,10 +73,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
             }
         }
 
-        if (actual != expected) {
-            fail("Base '" + base + "' should contain " + expected
-                 + " records, but found " + actual);
-        }
+        assertEquals("The base '" + base +"' should contain the right "
+                     + "number of records", expected, actual);
     }
 
     public Storage createTestStorage() throws Exception {
@@ -105,10 +103,11 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
      */
     public void testNoBases() throws Exception {
         Storage storage = createTestStorage();
-        filter = new UpdateFromFulldumpFilter(storage,
-                                                Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter,
-                                   new Record("id", "base", "data".getBytes()));
+        filter = new UpdateFromFulldumpFilter(
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base"));
+        chain = prepareFilterChain(
+                filter, new Record("id", "base", "data".getBytes()));
         assertBaseCount("base", 0);
         
         while(chain.pump()) {
@@ -130,7 +129,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base", 1);
 
         filter = new UpdateFromFulldumpFilter(
-                storage, Configuration.newMemoryBased());
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1, rec2);
 
         while(chain.pump()) {
@@ -152,7 +152,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base", 2);
 
         filter = new UpdateFromFulldumpFilter(
-                storage, Configuration.newMemoryBased());
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1, rec2);
 
         //noinspection StatementWithEmptyBody
@@ -177,7 +178,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base", 2);
 
         filter = new UpdateFromFulldumpFilter(
-                storage, Configuration.newMemoryBased());
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1);
 
         //noinspection StatementWithEmptyBody
