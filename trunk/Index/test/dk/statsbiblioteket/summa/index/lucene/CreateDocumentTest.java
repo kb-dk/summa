@@ -79,9 +79,16 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         assertNotNull("The Gurli Document should contain the Field "
                      + IndexUtils.RECORD_FIELD,
                      gurliDoc.getValues(IndexUtils.RECORD_FIELD));
+        String id = null;
+        try {
+            id = gurliDoc.getValues(IndexUtils.RECORD_FIELD)[0];
+        } catch(Exception e) {
+            fail("Exception from 'gurliDoc.getValues(IndexUtils.RECORD_FIELD)"
+                    + "[0]'");
+            e.printStackTrace();
+        }
         assertEquals("The Gurli Document should have the correct id",
-                     "fagref:" + GURLI,
-                     gurliDoc.getValues(IndexUtils.RECORD_FIELD)[0]);
+                     "fagref:" + GURLI, id);
         creator.close(true);
         //noinspection ControlFlowStatementWithoutBraces,StatementWithEmptyBody
         while (creator.pump());
