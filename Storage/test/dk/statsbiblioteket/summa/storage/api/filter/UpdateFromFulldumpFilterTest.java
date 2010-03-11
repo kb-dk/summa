@@ -27,7 +27,7 @@ import java.util.Iterator;
         author = "hbk")
 public class UpdateFromFulldumpFilterTest  extends TestCase {
     Storage storage;
-    UpdateFromFulldumpFilter filter;
+    UpdateFromFilldumpFilterTestClass filter;
     PayloadBufferFilter chain;
 
     @Override
@@ -70,7 +70,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         long actual = 0;
         while (iter.hasNext()) {
             Record r = iter.next();
-            System.out.println("Record: '" + r.getId() + "', delete: " + r.isDeleted());
+            //System.out.println("Record: '" + r.getId() + "', delete: " + r.isDeleted());
             if (!r.isDeleted()) {
                 actual++;
             }
@@ -107,14 +107,14 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testNoBases() throws Exception {
         Storage storage = createTestStorage();
 
-        assertBaseCount("base", 0);
+        assertBaseCount("base1", 0);
 
-        Record r1 = new Record("id1", "base", "data".getBytes());
-        Record r2 = new Record("id2", "base", "data".getBytes());
+        Record r1 = new Record("id1", "base1", "data".getBytes());
+        Record r2 = new Record("id2", "base1", "data".getBytes());
 
-        filter = new UpdateFromFulldumpFilter(
+        filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
-                        UpdateFromFulldumpFilter.CONF_BASE, "base"));
+                        UpdateFromFulldumpFilter.CONF_BASE, "base1"));
         chain = prepareFilterChain(filter, r1, r2);
 
         
@@ -125,7 +125,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         assertEquals(2, chain.size());
 
-        assertBaseCount("base", 2);
+        assertBaseCount("base1", 2);
     }
 
     public void testInsertExtraRecord() throws Exception {
@@ -136,7 +136,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         storage.flush(rec1);
         assertBaseCount("base", 1);
 
-        filter = new UpdateFromFulldumpFilter(
+        filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
                         UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1, rec2);
@@ -159,7 +159,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         storage.flush(rec2);
         assertBaseCount("base", 2);
 
-        filter = new UpdateFromFulldumpFilter(
+        filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
                         UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1, rec2);
@@ -178,13 +178,15 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         createTestStorage();
 
         Record rec1 = new Record("id1", "base", "data".getBytes());
+        rec1.setDeleted(false);
         Record rec2 = new Record("id2", "base", "data".getBytes());
+        rec2.setDeleted(false);
         storage.flush(rec1);
         storage.flush(rec2);
 
         assertBaseCount("base", 2);
 
-        filter = new UpdateFromFulldumpFilter(
+        filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
                         UpdateFromFulldumpFilter.CONF_BASE, "base"));
         chain = prepareFilterChain(filter, rec1);
@@ -221,7 +223,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base2", 1);
         assertBaseCount("base3", 1);
 
-        filter = new UpdateFromFulldumpFilter(
+        filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
                         UpdateFromFulldumpFilter.CONF_BASE, "base1"));
         chain = prepareFilterChain(filter, rec1);
@@ -238,6 +240,49 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base2", 1);
         assertBaseCount("base3", 1);
     }
-    
 
+    public void testalreadyDeletedPost() throws Exception {
+        createTestStorage();
+
+        Record rec1 = new Record("id1", "base1", "data".getBytes());
+        Record rec2 = new Record("id2", "base1", "data".getBytes());
+        Record rec3 = new Record("id3", "base1", "data".getBytes());
+        rec2.setDeleted(true);
+
+        storage.flush(rec1);
+        storage.flush(rec2);
+        storage.flush(rec3);
+
+        assertBaseCount("base1", 2);
+
+        filter = new UpdateFromFilldumpFilterTestClass(
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base1"));
+        chain = prepareFilterChain(filter, rec1);
+
+        assertEquals(2, filter.getNumberOfReadRecords());
+
+        //noinspection StatementWithEmptyBody
+        while(chain.pump()) {
+            // intended
+        }
+        chain.close(true); // why isn't this called via pump?
+
+        assertEquals(1, chain.size());
+
+        assertBaseCount("base1", 1);
+    }
+    
+    private class UpdateFromFilldumpFilterTestClass
+                                              extends UpdateFromFulldumpFilter {
+        public UpdateFromFilldumpFilterTestClass(Storage storage,
+                                                         Configuration config) {
+            super(config);
+            init(config, storage, storage);
+        }
+
+        public int getNumberOfReadRecords() {
+            return ids.size();
+        }
+    }
 }
