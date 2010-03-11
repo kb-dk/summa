@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module relativePaths="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/classes" />
+    <output-test url="file://$MODULE_DIR$/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/doc" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="Common" />
+    <orderEntry type="module" module-name="Search" />
+    <orderEntry type="module" module-name="Storage" />
+    <orderEntry type="module" module-name="Support" />
+    <orderEntry type="library" name="sbutil" level="project" />
+    <orderEntry type="module" module-name="FacetBrowser" />
+    <orderEntry type="module-library">
+      <library name="servlet-api">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/servlet-api-2.5.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="axis">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/axis/axis-ant-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/saaj-axis-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/wsdl4j-1.5.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/jaxrpc-axis-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/commons-discovery-0.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/axis/axis-1.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-1.2.14">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/log4j-1.2.14.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commens-logging-1.2">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/commons-logging-1.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="junit-3.8.1" level="project" />
+  </component>
+</module>
+
