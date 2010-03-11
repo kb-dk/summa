@@ -98,7 +98,7 @@ public class StorageFactory {
         } catch (Exception e) {
             throw new IOException("Failed to instantiate storage class: "
                     + e.getMessage() + ".\n"
-                    + "NOTE: The setting '" + Storage.CONF_CLASS
+                    + "Remember: The setting '" + Storage.CONF_CLASS
                     + "' should be well defined.", e);
         }
     }
