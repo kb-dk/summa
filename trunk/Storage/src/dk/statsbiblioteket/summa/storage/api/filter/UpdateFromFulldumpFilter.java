@@ -216,7 +216,6 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             throw new PayloadException("null received in Payload in next()"
                                        + ". This should not happen");
         }
-        log.info("Process record '" + r.getId() + "' ok.");
         ids.remove(r.getId());
         Logging.logProcess(
                 "UpdateFromFulldumpFilter", "Marking as existing",
