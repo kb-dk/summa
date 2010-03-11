@@ -2006,14 +2006,18 @@ getco     */
                     totalCount++;
                     pageCount++;
                 }
+                log.trace("Closing cursor");
                 cursor.close();
+                log.debug("Comitting at update " + totalCount);
+                stmt.getConnection().commit();
             }
 
-            // Commit the full transaction
-            // FIXME: It would probably save memory to do incremental commits
-            stmt.getConnection().commit();
+            log.debug("Commit finished, invalidate cache stats");
             invalidateCachedStats();
+            log.debug("Updating modification timestamps");
             updateModificationTime(base);
+            log.debug("Comitting (last)");
+            stmt.getConnection().commit();
             log.info("Cleared base '" + base + "' in "
                     + (System.currentTimeMillis() - start)
                     + "ms. Marked " + totalCount + " records as deleted");
