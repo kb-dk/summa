@@ -20,8 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,6 +55,10 @@ import java.util.NoSuchElementException;
  * resource intensive for bases with a large number of records. A rule of thumb
  * is that bases with 20+ million records should be cleared with
  * {@link ClearBaseFilter}.
+ * </p><p>
+ * In order to use this, the property
+*{@link dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer#CONF_RPC_TARGET}
+ * must set to a Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
@@ -64,7 +67,8 @@ import java.util.NoSuchElementException;
 public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Log log = LogFactory.getLog(UpdateFromFulldumpFilter.class);
     // storage to manipulate.
-    private Storage storage = null;
+    private ReadableStorage readableStorage = null;
+    private WritableStorage writableStorage = null;
 
     /**
      * The target base.
@@ -128,18 +132,16 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     public UpdateFromFulldumpFilter(Configuration config) {
         super(config);
-        try {
-            storage = StorageFactory.createStorage(config);
-        } catch (IOException e) {
-            throw new ConfigurationException("Unable to connect to Storage", e);
-        }
+        readableStorage = new StorageReaderClient(config);
+        writableStorage = new StorageWriterClient(config);
 
         init(config);
     }
 
     UpdateFromFulldumpFilter(Storage storage, Configuration config) {
         super(config);
-        this.storage = storage;
+        readableStorage = storage;
+        writableStorage = storage;
         init(config);
     }
 
@@ -176,11 +178,12 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private void getRecords() {
         // get a local copy of all records id.
         try {
-            long iteratorKey = storage.getRecordsModifiedAfter(0, base, null);
+            long iteratorKey =
+                    readableStorage.getRecordsModifiedAfter(0, base, null);
             List<Record> tmpRecords;
             int i = 0;
             do {
-                tmpRecords = storage.next(
+                tmpRecords = readableStorage.next(
                         iteratorKey, numberOfRecordsFromStorage);
                 for(Record r: tmpRecords) {
                     ids.put(r.getId(), null);
@@ -188,8 +191,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 }
             }
             while(tmpRecords.size() == numberOfRecordsFromStorage);
-            log.info("All '" + i + "' records from storage has been locally "
-                     + "stored");
+            log.info("Ids for all '" + i + "' records from storage has been " 
+                     + "locally stored");
         } catch (NoSuchElementException e) {
             // last element ok not to report this error.   
         } catch (IOException e) {
@@ -235,36 +238,37 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         // Clean closure
         if(ok) {
             log.info("Closing update from fulldump, means deleting non-matched "
-                + "records.");
+                     + "records.");
             if(ids.size() < maxNumberDeletes) {
                 try {
                     for(String id: new ArrayList<String>(ids.keySet())) {
-                        Record tmp = storage.getRecord(id, null);
+                        Record tmp = readableStorage.getRecord(id, null);
                         tmp.setDeleted(true); // TODO i think
                         Logging.logProcess(
                                 "UpdateFromFulldumpFilter",
                                 "Marking as deleted",
                                 Logging.LogLevel.DEBUG, id);
-                        storage.flush(tmp);
+                        writableStorage.flush(tmp);
                     }
                     log.info("Marked '" + ids.size() + "' records as deleted "
-                             + "from base " + base + ".");
+                             + "from base " + base);
                 } catch(IOException e) {
                     log.error("IOException when deleting records from storage. "
-                              +"Storage now contains deleted records.");    
+                              +"Storage now contains deleted records");
                 }
             } else {
                 log.error("Number of records to delete from storage for base "
                           + base + " is '"
                         + ids.size() + "' > '" + maxNumberDeletes + "', "
                         + "so no records are delete, storage is now "
-                        + "containing delete records.");
+                        + "containing delete records");
             }
         } else {
             log.error("Dirty closure of UpdateFromFulldumpFilter, are not "
                 + "removing any records from storage. There should have been "
                 + "removed: " + ids.size() + " records");
         }
-        log.info("Closed UpdateFromFulldumpFilter.");
+        // Note: Do not close writableStorage, as is closes the server Storage
+        log.info("Closed UpdateFromFulldumpFilter");
     }
 }
