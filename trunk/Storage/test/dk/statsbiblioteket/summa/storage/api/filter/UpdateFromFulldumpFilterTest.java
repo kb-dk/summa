@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.ingest.stream;
+package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;

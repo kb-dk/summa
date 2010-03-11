@@ -33,7 +33,11 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple filter that clears a given set of bases on the first invocation
- * and is a no-op on any subsequent calls to {@code pump()}.
+ * and is a no-op on any subsequent calls to {@code pump()}. This filter is
+ * somewhat dangerous to use: If the base is cleared and the subsequent ingest
+ * is interrupted, a lot of records will be left marked deleted. If possible,
+ * it is highly recommended to use {@link UpdateFromFulldumpFilter} as this
+ * ensures that a failed ingest leaves the Storage in a usable stage.
  * </p><p>
  * If any property from {@link PayloadMatcher} is defined, the bases will be
  * cleared if and only if the PayloadMatcher matches a Payload.
