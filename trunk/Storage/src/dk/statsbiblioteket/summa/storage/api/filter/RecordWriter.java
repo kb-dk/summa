@@ -166,7 +166,7 @@ public class RecordWriter extends ObjectFilterImpl {
         public synchronized void add(Record r) {
             while (records.size() >= batchSize || byteSize > batchMaxMemory) {
                 try {
-                    log.debug("Waiting for batch queue to fluscoh");
+                    log.debug("Waiting for batch queue to flush");
                     wait(batchTimeout);
                 } catch (InterruptedException e) {
                     // Check our capacity again
