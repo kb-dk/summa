@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.ingest.stream;
+package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
@@ -36,8 +36,8 @@ import java.util.NoSuchElementException;
 /**
  * Take a fulldump and treat it as a update, where non-existing records should
  * be deleted, all other records are inserted.
- * Note: Existing records should not have there
- * {@link Record#modificationTime} updated.
+ * Note: Existing records should not have their {@link Record#modificationTime}
+ * updated.
  *
  * <ul>
  *  <li>Take the full storage and save a local copy of all ID's.</li>
@@ -51,10 +51,15 @@ import java.util.NoSuchElementException;
  *
  * @author Henrik Kirk <hbk@statsbiblioteket.dk>
  * @since 2010-19-02
+ * </p><p>
+ * Note: As the ids are sent through RMI and kept in RAM, this filter is very
+ * resource intensive for bases with a large number of records. A rule of thumb
+ * is that bases with 20+ million records should be cleared with
+ * {@link ClearBaseFilter}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
-        author = "hbk",
+        author = "hbk, te",
         reviewers = "te")
 public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Log log = LogFactory.getLog(UpdateFromFulldumpFilter.class);
