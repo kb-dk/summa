@@ -122,7 +122,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     /**
      * Map containing ids for records in storage.
      */
-    private Map<String, Record> ids = null;
+    protected Map<String, Record> ids = null;
 
     /**
      * Constructor
@@ -132,20 +132,16 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     public UpdateFromFulldumpFilter(Configuration config) {
         super(config);
-        readableStorage = new StorageReaderClient(config);
-        writableStorage = new StorageWriterClient(config);
 
-        init(config);
+        init(config, new StorageWriterClient(config),
+                                               new StorageReaderClient(config));
     }
 
-    UpdateFromFulldumpFilter(Storage storage, Configuration config) {
-        super(config);
-        readableStorage = storage;
-        writableStorage = storage;
-        init(config);
-    }
-
-    private void init(Configuration config) {
+    protected void init(Configuration config, WritableStorage writableStorage,
+                                              ReadableStorage readableStorage) {
+        this.writableStorage = writableStorage;
+        this.readableStorage = readableStorage;
+        
         if (!config.valueExists(CONF_BASE)) {
             throw new ConfigurationException(
                     "The property " + CONF_BASE + " must be defined");
@@ -177,9 +173,10 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     private void getRecords() {
         // get a local copy of all records id.
+        QueryOptions queryOptions = new QueryOptions(false, null, 0, 0);
         try {
             long iteratorKey =
-                    readableStorage.getRecordsModifiedAfter(0, base, null);
+                 readableStorage.getRecordsModifiedAfter(0, base, queryOptions);
             List<Record> tmpRecords;
             int i = 0;
             do {
