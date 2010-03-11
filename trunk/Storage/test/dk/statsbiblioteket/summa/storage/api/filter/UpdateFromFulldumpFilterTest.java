@@ -9,7 +9,6 @@ import dk.statsbiblioteket.summa.common.filter.object.PushFilter;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
@@ -52,7 +51,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         fullDumpFilter.setSource(source);
 
-        RecordWriter writer = new RecordWriter(storage, 100, 10000);
+        RecordWriter writer = new RecordWriter(storage, 1, 10000);
         writer.setSource(fullDumpFilter);
 
         // Set up the endpoint filter
@@ -78,7 +77,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         }
 
         assertEquals("The base '" + base +"' should contain the right "
-                     + "number of records", expected, actual);
+                     + "number of records:", expected, actual);
     }
 
     public Storage createTestStorage() throws Exception {
@@ -107,21 +106,26 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
      */
     public void testNoBases() throws Exception {
         Storage storage = createTestStorage();
+
+        assertBaseCount("base", 0);
+
+        Record r1 = new Record("id1", "base", "data".getBytes());
+        Record r2 = new Record("id2", "base", "data".getBytes());
+
         filter = new UpdateFromFulldumpFilter(
                 storage, Configuration.newMemoryBased(
                         UpdateFromFulldumpFilter.CONF_BASE, "base"));
-        chain = prepareFilterChain(
-                filter, new Record("id", "base", "data".getBytes()));
-        assertBaseCount("base", 0);
+        chain = prepareFilterChain(filter, r1, r2);
+
         
         while(chain.pump()) {
             // intended
         }
         chain.close(true);
 
-        assertEquals(1, chain.size());        
+        assertEquals(2, chain.size());
 
-        assertBaseCount("base", 1);
+        assertBaseCount("base", 2);
     }
 
     public void testInsertExtraRecord() throws Exception {
@@ -201,7 +205,38 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
      * @throws Exception if error.
      */
     public void testDifferentBases() throws Exception {
-        fail("should be implemented");
+        createTestStorage();
+
+        Record rec1 = new Record("id1", "base1", "data".getBytes());
+        Record rec2 = new Record("id2", "base1", "data".getBytes());
+        Record rec3 = new Record("id3", "base2", "data".getBytes());
+        Record rec4 = new Record("id4", "base3", "data".getBytes());
+
+        storage.flush(rec1);
+        storage.flush(rec2);
+        storage.flush(rec3);
+        storage.flush(rec4);
+
+        assertBaseCount("base1", 2);
+        assertBaseCount("base2", 1);
+        assertBaseCount("base3", 1);
+
+        filter = new UpdateFromFulldumpFilter(
+                storage, Configuration.newMemoryBased(
+                        UpdateFromFulldumpFilter.CONF_BASE, "base1"));
+        chain = prepareFilterChain(filter, rec1);
+
+        //noinspection StatementWithEmptyBody
+        while(chain.pump()) {
+            // intended
+        }
+        chain.close(true); // why isn't this called via pump?
+
+        assertEquals(1, chain.size());
+
+        assertBaseCount("base1", 1);
+        assertBaseCount("base2", 1);
+        assertBaseCount("base3", 1);
     }
     
 
