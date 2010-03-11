@@ -22,7 +22,6 @@
 
     <!-- Temporary files and directories -->
     <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
-    <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
     <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
     <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="lib.dir" value="${basedir}/lib"/>
@@ -49,7 +48,6 @@
         <path refid="lib.path" />
         <fileset dir="${lib.dir}" includes="junit*.jar"/>
         <pathelement location="${build.dir}" />
-        <pathelement location="${test.build.dir}" />
         <pathelement location="${ant.home}/lib/ant-junit.jar"/>
         <pathelement location="${test.src.dir}"/>
     </path>
@@ -161,7 +159,6 @@
 
     <target name="clean">
         <delete dir="${build.dir}"/>
-        <delete dir="${test.build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
@@ -175,8 +172,8 @@
     </target>
 
     <target name="compiletest" depends="compile">
-        <mkdir dir="${test.build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}"
                encoding="UTF-8" verbose="true" >
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
@@ -230,8 +227,8 @@
     </target>
 
     <target name="test.compile" depends="depends">
-        <mkdir dir="${test.build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" encoding="UTF-8"
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="on"
                debug="on">
             <classpath refid="test.lib.path"/>
