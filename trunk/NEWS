@@ -1,4 +1,42 @@
 ========================
+2010-03-11: Summa 1.5.3
+========================
+
+ * NOTICE: The didYouMean web services is only experimetal. API and 
+    configuration keys may still change.
+
+ * Added UpdateFromFulldumpFilter which from a fulldump treat the dump
+ 	  as an update on a single base. This means:
+	  - updating changed records.
+	  - delete non-existing records.
+	  - records that hasn't changed are ignored.
+
+ * Feature: Added Did-You-Mean support for FSDirectory as well as
+	  RAMDirectory. This is a configuration.
+		Feature: Added didyoumean tool to Samples/
+    Updated Did-You-Mean example response xml and schema.
+
+ * Feature: Added junit test functionality to all ant files, which
+	  include generating xml and html files for showing result of junit
+	  tests on a single webpage.
+	  NOTE: The control module, is not working at this point.
+
+ * Bugfix: The MarcMultiVolumeMerger threw an Exception logging
+	  errors for multi volume.
+
+ * Bugfix: The DatabaseStorage made a single commit at the end of
+	  base delete. In the current version of h2, this commit required a
+	  very large amount of memory (½GB+ for 400K records). This has
+	  been changed to commit every 500 records, which has very little
+	  memory overhead.
+
+ * Bugfix: Fixed ticket #31, now RecordUtil.toXML doesn't show the
+	  underlying XML framework to API.
+	  
+ * Bugfix: Added teardown method, to stop storage and close connections.
+
+
+========================
 2010-02-19: Summa 1.5.2
 ========================
  
