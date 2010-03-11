@@ -256,16 +256,16 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                               +"Storage now contains deleted records");
                 }
             } else {
-                log.error("Number of records to delete from storage for base "
-                          + base + " is '"
-                        + ids.size() + "' > '" + maxNumberDeletes + "', "
-                        + "so no records are delete, storage is now "
-                        + "containing delete records");
+                log.error("The number of records to delete from storage for "
+                          + "base " + base + " is too great: "
+                        + ids.size() + " > " + maxNumberDeletes + ". "
+                        + "No records are deleted. Storage probably "
+                        + "contains records that should have been deleted");
             }
         } else {
-            log.error("Dirty closure of UpdateFromFulldumpFilter, are not "
-                + "removing any records from storage. There should have been "
-                + "removed: " + ids.size() + " records");
+            log.error("Dirty closure of UpdateFromFulldumpFilter. No Records " 
+                      + "are removed from Storage. There should have been "
+                      + "removed: " + ids.size() + " records");
         }
         // Note: Do not close writableStorage, as is closes the server Storage
         log.info("Closed UpdateFromFulldumpFilter");
