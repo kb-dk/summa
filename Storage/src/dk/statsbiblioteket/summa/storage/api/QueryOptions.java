@@ -16,9 +16,9 @@ package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.qa.*;
 
 import java.io.Serializable;
-import java.util.HashMap;
 
 /**
  * {@code QueryFilter} is an immutable filter that is passed into the methods
@@ -73,19 +73,54 @@ import java.util.HashMap;
  *       already known</li>
  * </ul>
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke, hbk")
 public class QueryOptions implements Serializable {
-
+    /**
+     * Iff {@code true} match only deleted records, and if {@code false} match
+     * only records that are not deleted.
+     */
     protected Boolean deletedFilter;
+
+    /**
+     * If {@code null} allow all records disregarding their state. If
+     * {@code false} match only records not indexable, and if {@code true} match
+     * only records that are marked indexable.
+     */
     protected Boolean indexableFilter;
+
+    /**
+     * The number of child levels to expand children to. If this value is
+     * {@code 0} then no expansion will occur, if it is {@code -1} expansion
+     * will occur recursively to any depth.
+     */
     protected int childDepth;
+
+    /**
+     * Number of levels to expand parent records upwards. If this value is
+     * {@code 0} then no parent expansion occurs, and if it is {@code -1} do
+     * recursive expansion up to the root record.
+     */
     protected int parentHeight;
     protected StringMap meta;
 
-    public QueryOptions(Boolean deletedFilter,
-                        Boolean indexableFilter,
-                        int childDepth,
-                        int parentHeight,
-                        StringMap meta) {
+    /**
+     * Constructor for an immutable filter that can be passed to
+     * {@link ReadableStorage}, for further constraints on which records to
+     * fetch.
+     *
+     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
+     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param childDepth The child depth for records to fetch
+     * {@link this#childDepth}.
+     * @param parentHeight The parent heigth for records to fetch
+     * {@link this#childDepth}.
+     * @param meta A local StringMap for storing meta values for these query
+     * options.
+     */
+    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
+                        int childDepth, int parentHeight, StringMap meta) {
         this.deletedFilter = deletedFilter;
         this.indexableFilter = indexableFilter;
         this.childDepth = childDepth;
@@ -93,19 +128,35 @@ public class QueryOptions implements Serializable {
         this.meta = meta;
     }
 
-    public QueryOptions() {
-        this(null, null, 0, 0, null);
-    }
-
-    public QueryOptions(Boolean deletedFilter,
-                        Boolean indexableFilter,
-                        int childDepth,
-                        int parentHeight) {
+    /**
+     * Calls
+     * {@link QueryOptions#QueryOptions(Boolean, Boolean, int, int, StringMap)}
+     * with QueryOptions(Boolean, Boolean, int, int, null).
+     *
+     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
+     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param childDepth The child depth for records to fetch
+     * {@link this#childDepth}.
+     * @param parentHeight The parent heigth for records to fetch
+     * {@link this#childDepth}.
+     */
+    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
+                        int childDepth, int parentHeight) {
         this(deletedFilter, indexableFilter, childDepth, parentHeight, null);
     }
 
     /**
+     * Calls
+     * {@link QueryOptions#QueryOptions(Boolean, Boolean, int, int, StringMap)}
+     * with QueryOptions(null, null, 0, 0, null).
+     */
+    public QueryOptions() {
+        this(null, null, 0, 0, null);
+    }    
+
+    /**
      * Create a clone of {@code original}.
+     *
      * @param original a non-{@code null} QueryOptions object
      */
     public QueryOptions(QueryOptions original) {
@@ -116,30 +167,66 @@ public class QueryOptions implements Serializable {
              original.meta());
     }
 
+    /**
+     * Return boolean value for {@link this#deletedFilter}.
+     *
+     * @return value of {@link this#deletedFilter}.
+     */
     public Boolean deletedFilter() {
         return deletedFilter;
     }
 
+    /**
+     * Return true if this filter has a {@link this#deletedFilter} attribute.
+     *
+     * @return true if this filter has a {@link this#deletedFilter} attribute.
+     */
     public boolean hasDeletedFilter() {
         return deletedFilter != null;
     }
 
+    /**
+     * Return boolean value for {@link this#indexableFilter}.
+     *
+     * @return value of {@link this#indexableFilter}.
+     */
     public Boolean indexableFilter () {
         return indexableFilter;
     }
 
+    /**
+     * Return true if this filter has an {@link this#indexableFilter} defined.
+     *
+     * @return true if this filter has an {@link this#indexableFilter} defined.
+     */
     public boolean hasIndexableFilter () {
         return indexableFilter != null;
     }
 
+    /**
+     * Return boolean value for {@link this#childDepth}.
+     *
+     * @return value of {@link this#childDepth}.
+     */
     public int childDepth () {
         return childDepth;
     }
 
+    /**
+     * Return true if this filter has an {@link this#parentHeight} defined.
+     *
+     * @return true if this filter has an {@link this#parentHeight} defined.
+     */
     public int parentHeight () {
         return parentHeight;
     }
 
+    /**
+     * Return true if this filter has {@link this@meta} and this StringMap isn't
+     * empty.
+     *
+     * @return true {@link this@meta} defined and not empty.
+     */
     public boolean hasMeta () {
         return meta != null && !meta.isEmpty();
     }
@@ -184,11 +271,11 @@ public class QueryOptions implements Serializable {
      */
     public boolean allowsRecord (Record r) {
         if (hasDeletedFilter()) {
-            return r.isDeleted() == deletedFilter().booleanValue();
+            return r.isDeleted() == deletedFilter();
         }
 
         if (hasIndexableFilter()) {
-            return r.isIndexable() == indexableFilter().booleanValue();
+            return r.isIndexable() == indexableFilter();
         }
 
         return true;
