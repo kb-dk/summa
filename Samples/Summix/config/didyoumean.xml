@@ -45,6 +45,10 @@
             <key>summa.search.staticroot</key>
             <value class="string">didyoumean</value>
         </entry>
+        <entry>
+            <key>summa.support.didyoumean.directory</key>
+            <value class="string">ramDirectory</value>
+        </entry>
         
     </xproperties>
 </xproperties>
