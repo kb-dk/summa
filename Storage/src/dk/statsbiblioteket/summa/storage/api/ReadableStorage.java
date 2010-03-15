@@ -27,15 +27,16 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
  * Summa. The other interface is the {@link WritableStorage} interface.
  * <p/>
  * Iteration over the result sets returned by this interface is done via
- * keys (in the form of {@code long}s which are passed to the {@link #next(long)}
- * or {@link #next(long,int)} methods until a
+ * keys (in the form of {@code long}s which are passed to the
+ * {@link #next(long)} or {@link #next(long,int)} methods until a
  * {@link java.util.NoSuchElementException} is thrown. Alternatively one can
  * use the {@link StorageIterator} class to handle all this behind an
  * {@link Iterator} facade.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
-        author = "mke")
+        state = QAInfo.State.QA_OK,
+        author = "mke",
+        reviewers = "hbk")
 public interface ReadableStorage extends Configurable {
 
     /**
@@ -52,15 +53,15 @@ public interface ReadableStorage extends Configurable {
      * For convenient iteration over the result set one can use a
      * {@link StorageIterator} on the returned iterator key.
      *
-     * @param time a timestamp in milliseconds
-     * @param base the name of the original record base or null if all bases are
+     * @param time A timestamp in milliseconds.
+     * @param base The name of the original record base or null if all bases are
      *             to be used.
-     * @param options a possible {@code null} set of options to apply to the
+     * @param options A possible {@code null} set of options to apply to the
      *                query. Please see the documentation for
-     *                {@link QueryOptions} on how it is interpreted
-     * @return an iterator key that can be used to iterate over all records
-     *         modified after given time (sorted by record id)
-     * @throws IOException on communication errors with the storage
+     *                {@link QueryOptions} on how it is interpreted.
+     * @return An iterator key that can be used to iterate over all records
+     *         modified after given time (sorted by record id).
+     * @throws IOException on communication errors with the storage.
      */
     long getRecordsModifiedAfter(long time, String base, QueryOptions options)
                                                              throws IOException;
@@ -74,13 +75,13 @@ public interface ReadableStorage extends Configurable {
      * <i>Warning</i>: Callers of this method should never compare the
      * local system time with the returned timestamp.
      *
-     * @param base the base in which to check for changes. If {@code base} is
+     * @param base The base in which to check for changes. If {@code base} is
      *             {@code null} the most recent change across all bases is
-     *             returned
-     * @return the timestamp for the last change in {@code base}. If
+     *             returned.
+     * @return The timestamp for the last change in {@code base}. If
      *         {@code base} is unknown or has never received updates {@code 0}
      *         is returned.
-     * @throws IOException on communication errors with the storage service
+     * @throws IOException on communication errors with the storage service.
      */
     long getModificationTime (String base) throws IOException;
 
@@ -93,17 +94,17 @@ public interface ReadableStorage extends Configurable {
      * if the query options has the {©code ALLOW_PRIVATE} meta field set to
      * the string {@code "true"}.
      * 
-     * @param ids list of ids to fetch
-     * @param options a possible {@code null} set of options to apply to the
+     * @param ids List of ids to fetch.
+     * @param options A possible {@code null} set of options to apply to the
      *                query. Please see the documentation for
-     *                {@link QueryOptions} on how it is interpreted
-     * @return a list of the requested Records. The list will be ordered
-     *         arcording to the {@code ids} parameter. If one or more records
+     *                {@link QueryOptions} on how it is interpreted.
+     * @return A list of the requested Records. The list will be ordered
+     *         according to the {@code ids} parameter. If one or more records
      *         can not be found they will be omitted from the list.
-     * @throws IOException on communication errors with the storage
+     * @throws IOException on communication errors with the storage.
      * @throws IllegalArgumentException if passed a private id, but
      *                                  ALLOW_PRIVATE is not set to
-     *                                  {@code "true"} in {@code options}
+     *                                  {@code "true"} in {@code options}.
      */
     List<Record> getRecords(List<String> ids, QueryOptions options)
                                                              throws IOException;
@@ -120,16 +121,16 @@ public interface ReadableStorage extends Configurable {
      * if the query options has the {©code ALLOW_PRIVATE} meta field set to
      * the string {@code "true"}.
      *
-     * @param id the id of the record to retrieve
-     * @param options a possible {@code null} set of options to apply to the
+     * @param id The id of the record to retrieve.
+     * @param options A possible {@code null} set of options to apply to the
      *                query. Please see the documentation for
-     *                {@link QueryOptions} on how it is interpreted
-     * @return the requested record or {@code null} if it wasn't found. Expanded
-     *         child records can be retrieved with {@link Record#getChildren}
-     * @throws IOException on communication errors
+     *                {@link QueryOptions} on how it is interpreted.
+     * @return The requested record or {@code null} if it wasn't found. Expanded
+     *         child records can be retrieved with {@link Record#getChildren}.
+     * @throws IOException on communication errors.
      * @throws IllegalArgumentException if passed a private id, but
      *                                  ALLOW_PRIVATE is not set to
-     *                                  {@code "true"} in {@code options}
+     *                                  {@code "true"} in {@code options}.
      */
     Record getRecord (String id, QueryOptions options) throws IOException;
 
@@ -141,16 +142,16 @@ public interface ReadableStorage extends Configurable {
      * instead iterate until you receive a {{{NoSuchElementException}}}. This is
      * to enforce that bad clients don't do two remote calls per record.
      * 
-     * @param iteratorKey iterator key
-     * @return the next record in the iteration
-     * @throws IOException if there was a problem requesting the record
+     * @param iteratorKey Iterator key.
+     * @return The next record in the iteration.
+     * @throws IOException if there was a problem requesting the record.
      * @throws java.util.NoSuchElementException if there are no more records
      *                                          available for the iterator.
      *                                          In case this exception is thrown
      *                                          the iterator should not be
-     *                                          accessed again
+     *                                          accessed again.
      * @throws IllegalArgumentException if {@code iteratorKey} is not known
-     *                                  by the storage
+     *                                  by the storage.
      */
     Record next(long iteratorKey) throws IOException;
 
@@ -162,23 +163,21 @@ public interface ReadableStorage extends Configurable {
      * instead iterate until you receive a {{{NoSuchElementException}}}. This is
      * to enforce that bad clients don't do two remote calls per record.
      * 
-     * @param iteratorKey iterator key.
-     * @param maxRecords  the maximum number of records to return. If there are
-     *                    less records returned than {@code maxRecords} then the
-     *                    iterator has been depleted
-     * @return a list of {@link Record} objects
+     * @param iteratorKey Iterator key.
+     * @param maxRecords The maximum number of records to return. If there are
+     *                   less records returned than {@code maxRecords} then the
+     *                   iterator has been depleted.
+     * @return A list of {@link Record} objects.
      * @throws java.util.NoSuchElementException if there are no more records
      *                                          available for the iterator.
      *                                          In case this exception is thrown
      *                                          the iterator should not be
-     *                                          accessed again
-     * @throws IOException if there was a problem requesting
-     *                                  Records.
+     *                                          accessed again.
+     * @throws IOException if there was a problem requesting Records.
      * @throws IllegalArgumentException if {@code iteratorKey} is not known
-     *                                  by the storage
+     *                                  by the storage.
      */
     List<Record> next(long iteratorKey, int maxRecords) throws IOException;
-
 }
 
 
