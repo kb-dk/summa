@@ -125,18 +125,21 @@ public class DidYouMeanResponse implements Response {
     /**
      * Should merge multiple responses together, used for distributed searc.
      * @param other the Response to merge into this.
-     * @throws ClassCastException
+     * @throws ClassCastException if other can't be cast to {@link this}.
      */
     @Override
     public void merge(Response other) throws ClassCastException {
-        // TODO something nice to other.
+        DidYouMeanResponse otherResponse = (DidYouMeanResponse) other;
+        for(ResultTuple tuple: otherResponse.getResultTuples()) {
+            resultTuples.add(tuple);
+        }
     }
 
     /**
      * Converts response to an XML document. Eg.
      * <pre>
      * <?xml version="1.0" encoding="UTF-8" ?>
-     * <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0">
+     * <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0" searchtime="110">
      *  <didyoumean score="0.6666666666666667">koobas</didyoumean>
      *  <didyoumean score="0.6666666666666667">boobar</didyoumean>
      * </DidYouMeanResponse>
@@ -194,6 +197,14 @@ public class DidYouMeanResponse implements Response {
     public void addResult(String result, double score, int corpusQueryResults) {
         resultTuples.addFirst(new ResultTuple(result, score,
                                                            corpusQueryResults));
+    }
+
+    /**
+     * Return this responses result tuple, which contains all results.
+     * @return this responses result tuple.
+     */
+    public LinkedList<ResultTuple> getResultTuples() {
+        return resultTuples;
     }
 
     /**
