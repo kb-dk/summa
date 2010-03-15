@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.util.qa.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,6 +36,9 @@ import java.util.concurrent.TimeUnit;
  */
 // TODO: Abort warmup if an open is issued while an old open is running
 // TODO: Make it optional if searches are permitted before warmup is finished
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "toke, mke")
 public abstract class SearchNodeImpl implements SearchNode {
     private static Log log = LogFactory.getLog(SearchNodeImpl.class);
 
@@ -328,14 +332,18 @@ public abstract class SearchNodeImpl implements SearchNode {
 
     /**
      * A managed version of
-     * {@link SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)} open(String)}.
+     * {@link SearchNode#search(Request,
+     *  dk.statsbiblioteket.summa.search.api.ResponseCollection)} open(String)}.
      * Implementations are free to ignore threading and locking-issues.
-     * @param request   as specified in
-     *                  {@link SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)}
-     * @param responses as specified in
+     *
+     * @param request   As specified in
+     *                  {@link SearchNode#search(Request,
+     *                 dk.statsbiblioteket.summa.search.api.ResponseCollection)}
+     * @param responses As specified in
      *                  {@link SearchNode#search(Request, ResponseCollection)}
      * @throws RemoteException as specified in
-     *                  {@link SearchNode#search(dk.statsbiblioteket.summa.search.api.Request , ResponseCollection)}
+     *                  {@link SearchNode#search(
+     *       dk.statsbiblioteket.summa.search.api.Request , ResponseCollection)}
      */
     protected abstract void managedSearch(Request request,
                                           ResponseCollection responses) throws
