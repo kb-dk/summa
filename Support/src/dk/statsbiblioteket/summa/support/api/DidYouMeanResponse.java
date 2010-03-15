@@ -29,6 +29,7 @@ import java.util.LinkedList;
  * a result to XML.
  *
  * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
+ * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -245,5 +246,4 @@ public class DidYouMeanResponse implements Response {
             return corpusQueryResults;
         }
     }
-
 }

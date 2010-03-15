@@ -46,6 +46,7 @@ import java.rmi.RemoteException;
  * doing the actual search. 
  *
  * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
+ * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -101,16 +102,6 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
 
     /**
-     * The configuration field in configuration file for the Did-you-mean
-     * FSDirectory directory, in case
-     * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_FSDIRECTORY} is set to
-     * default value.
-     */
-    public static final String CONF_DIDYOUMEAN_FSDIRECTORY =
-                                         "summa.support.didyoumean.fsdirectory";
-    public static final String DEFAULT_DIDYOUMEAN_FSDIRECTORY = "FSDirectory";
-
-    /**
      * Local directory version.
      */
     private Directory directory = null;
@@ -135,9 +126,15 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     private IndexReader aprioriIndex = null;
 
     /**
-     * Local variable pointing to FS directory.
+     * Private copy of the local location of the didyoumean index on disc.
      */
-    private String fsDirectory = null;
+    private File didyoumeanIndex;
+
+    /**
+     * True if we are creating index, false otherwise. Used to stop searching
+     * when creating index.
+     */
+    private boolean creatingIndex = true;
 
     /**
      * Constructor for DidYouMeanSearchNode. Get needed configuration values.
@@ -158,15 +155,14 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                                                   DEFAULT_DIDYOUMEAN_DIRECTORY);
         DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
-        fsDirectory = config.getString(CONF_DIDYOUMEAN_FSDIRECTORY,
-                                                DEFAULT_DIDYOUMEAN_FSDIRECTORY);
+        didyoumeanIndex = Resolver.getPersistentFile(new File("didyoumean"));
 
         switch(type) {
             case ramDirectory:
                 directory = new RAMDirectory();
                 break;
             case fsDirectory:
-                directory = FSDirectory.getDirectory(fsDirectory);
+                directory = FSDirectory.getDirectory(didyoumeanIndex);
                 break;
             default:
                 String error = "Directory '" + directoryType
@@ -182,8 +178,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     /**
      * Nothing is done at warmup.
      * 
-     * @param request as specified in
-     *       {@link dk.statsbiblioteket.summa.search.SearchNode#warmup(String)}.
+     * @param request As specified in
+     * {@link dk.statsbiblioteket.summa.search.SearchNode#warmup(String)}.
      */
     @Override
     protected void managedWarmup(String request) {
@@ -191,45 +187,68 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Create needed locale: AprioriIndex, TokenSuggester and PhraseSuggester.
+     * Create needed locale indexes: AprioriIndex, TokenSuggester and
+     * PhraseSuggester. If index is already created we uses old index.
      *
-     * @param location as specified in
+     * @param location As specified in
      * {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
+     * Note: not used.
      * @throws RemoteException is thrown if an IOException is cast during
      * creation of a local datastructure.
      */
     @Override
     protected void managedOpen(String location) throws RemoteException {
-        log.debug("Opening '" + location + "'");
+        log.debug("Opening '" + didyoumeanIndex + "'");
         IndexFacade aprioriIndexFactory;
-        File didyoumeanIndex =
-                             Resolver.getPersistentFile(new File("didyoumean"));
+        NgramTokenSuggester tokenSuggester;
+        IndexFacade ngramIndexFactory;
         // Setup AprioriIndex
         try {
             aprioriIndexFactory = new DirectoryIndexFacade(
-                                            FSDirectory.getDirectory(location));
+                                     FSDirectory.getDirectory(didyoumeanIndex));
             aprioriIndex = aprioriIndexFactory.indexReaderFactory();
         } catch (IOException e) {
-            throw new RemoteException("IOException when opening Lucene index.",
-                                                                             e);
+            throw new RemoteException(
+                                   "IOException when opening Lucene index.", e);
+        }
+
+        // create DirectoryIndexFacede
+        if(IndexReader.indexExists(didyoumeanIndex)) {
+            log.info("Using existing index in '"
+                                    + didyoumeanIndex.getAbsolutePath() + "'.");
+            try {
+                ngramIndexFactory = new DirectoryIndexFacade(directory);
+                // opening index
+                ngramIndexFactory.indexWriterFactory(null, false).close();
+            } catch(IOException e) {
+                throw new RemoteException(
+                            "IOException when opening directoryIndexFaced.", e);    
+            }
+        } else {
+            log.info("Creating new Did-You-Mean index.");
+            try {
+                ngramIndexFactory = new DirectoryIndexFacade(directory);
+                // Initialize empty index
+                ngramIndexFactory.indexWriterFactory(null, true).close();
+            } catch(IOException e) {
+                throw new RemoteException(
+                           "IOException when creating directoryIndexFaced.", e);
+            }
         }
 
         // Setup TokenSuggester
-        NgramTokenSuggester tokenSuggester;
         try {
-            log.debug("Building token index");
-            IndexFacade ngramIndexFactory = new DirectoryIndexFacade(directory);
-            // Initialize empty index
-            ngramIndexFactory.indexWriterFactory(null, true).close();
+            log.debug("Building token index");            
             tokenSuggester = new NgramTokenSuggester(ngramIndexFactory);
             tokenSuggester.indexDictionary(
-                           new TermEnumIterator(aprioriIndex, aprioriField), 2);
-        } catch (IOException e) {
-            throw new RemoteException("IOException when creating ngramIndex.",
-                                                                             e);
+                       new TermEnumIterator(aprioriIndex, aprioriField), 2);
+
+        } catch(IOException e) {
+            throw new RemoteException(
+                                    "IOException when creating ngramIndex.", e);
         }
 
-        // Setup PhraceSuggester
+        // Setup PhraseSuggester
         try {
             //phraseSuggester = new TokenPhraseSuggesterImpl(tokenSuggester,
             //                  aprioriField, false, 3, analyzer, aprioriIndex);
@@ -239,7 +258,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             throw new RemoteException(
                             "IOException while creating phraseSuggester", e);
         }
-        
+        creatingIndex = false;
     }
 
     /**
@@ -254,7 +273,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             aprioriIndex.close();
             // TODO tokenSuggester.close();
             // TODO phraseSuggester.close();
-            // TODO now sure if this can be closed after usage in managedOpen.
+            // TODO not sure if this can be closed after usage in managedOpen.
             directory.close();
         } catch (IOException e) {
             throw new RemoteException("IOException while closing indexes.", e);
@@ -264,7 +283,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
     /**
      * Manage the search, by giving the local phraseSuggester the 'query' and
-     * 'number of suggestion'.
+     * 'number of suggestion'. When creating or opening we return an empty
+     * response.
      * Note:
      * <ul>
      *  <li>'number of suggestion' can be overidden in 'request' contains
@@ -272,16 +292,16 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      *  <li>'query' is found in the 'request' key
      *      {@link DidYouMeanKeys#SEARCH_QUERY}.</li>
      * </ul>
-     * SIDEEFFECT:
+     * Sideeffect:
      * <ul>
      *  <li>The resulting XML is added to the 'response' parameter.</li>
      * </ul>
      *  
-     * @param request   as specified in
-     *        {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+     * @param request As specified in
+     * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
      *                 dk.statsbiblioteket.summa.search.api.ResponseCollection)}
-     * @param responses as specified in
-     *        {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+     * @param responses As specified in
+     * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
      *                                                      ResponseCollection)}
      * @throws RemoteException dictated by overriding method.
      */
@@ -296,13 +316,18 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         if(request.containsKey(DidYouMeanKeys.SEARCH_QUERY)) {
             String query = request.getString(DidYouMeanKeys.SEARCH_QUERY);
             long time = System.currentTimeMillis();
-            SuggestionPriorityQueue spq =
-                                phraseSuggester.suggest(query, numSuggestions);
+            SuggestionPriorityQueue spq = null;
+            // if creating index then don't ask phraseSuggester
+            if(!creatingIndex) {
+                spq = phraseSuggester.suggest(query, numSuggestions);
+            } else {
+                log.debug("Creating/opening index.");
+            }
             time = System.currentTimeMillis() - time;
 
             DidYouMeanResponse response = new DidYouMeanResponse(query, time);
             responses.add(response);
-            if(spq.size() > 0) {
+            if(spq != null && spq.size() > 0) {
                 log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
                           + "' results.");
                 for(Suggestion suggestion: spq.toArray()) {
@@ -310,7 +335,6 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                                        suggestion.getScore(),
                                        suggestion.getCorpusQueryResults());
                 }
-
             } else {
                 log.debug("No did-you-mean result for '" + query + "'");
             }
