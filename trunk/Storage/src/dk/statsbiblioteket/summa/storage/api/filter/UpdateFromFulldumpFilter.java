@@ -239,7 +239,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 try {
                     for(String id: new ArrayList<String>(ids.keySet())) {
                         Record tmp = readableStorage.getRecord(id, null);
-                        tmp.setDeleted(true); // TODO i think
+                        tmp.setDeleted(true);
                         Logging.logProcess(
                                 "UpdateFromFulldumpFilter",
                                 "Marking as deleted",
