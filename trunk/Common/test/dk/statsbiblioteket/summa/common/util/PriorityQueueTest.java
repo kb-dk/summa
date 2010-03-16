@@ -18,14 +18,13 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te, hbk")
 public class PriorityQueueTest extends TestCase {
     public PriorityQueueTest(String name) {
         super(name);
@@ -39,8 +38,8 @@ public class PriorityQueueTest extends TestCase {
         super.tearDown();
     }
 
-    private PriorityQueueLong setUpPriorityQueue(long[] input) {
-        PriorityQueueLong queue = new PriorityQueueLong();
+    private PriorityQueue<Long> setUpPriorityQueue(long[] input) {
+        PriorityQueue<Long> queue = new PriorityQueue<Long>(input.length);
         for (long element: input) {
             queue.insert(element);
         }
@@ -52,10 +51,11 @@ public class PriorityQueueTest extends TestCase {
         long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
         long[] expected = input.clone();
         Arrays.sort(expected);
-        PriorityQueueLong queue = setUpPriorityQueue(input);
+        expected = PriorityQueueLongTest.reverseArray(expected);
+        PriorityQueue<Long> queue = setUpPriorityQueue(input);
         for (long element: expected) {
             assertEquals("The order of the output should be as expected",
-                         element, queue.removeMin());
+                         element, (long)queue.removeMin());
         }
     }
 
@@ -65,29 +65,31 @@ public class PriorityQueueTest extends TestCase {
         int reRuns = 100;
         Random random = new Random();
         for (int i = 0 ; i < reRuns ; i++) {
-            long[] input = new long[random.nextInt(maxLength)];
+            Long[] input = new Long[random.nextInt(maxLength)];
             for (int j = 0 ; j < input.length ; j++) {
-                input[j] = random.nextInt(maxValue);
+                input[j] = new Long(random.nextInt(maxValue));
             }
-            long[] expected = input.clone();
+            Long[] expected = input.clone();
             Arrays.sort(expected);
-            PriorityQueueLong queue = new PriorityQueueLong();
+            expected = PriorityQueueLongTest.reverseArray(expected);
+            PriorityQueue<Long> queue = new PriorityQueue<Long>(input.length);
             for (long element: input) {
                 queue.insert(element);
             }
             for (long element: expected) {
                 assertEquals("The order of the output should be as expected "
                              + "by using insert",
-                             element, queue.removeMin());
+                             element, (long)queue.removeMin());
             }
 
-            queue = new PriorityQueueLong();
+            queue = new PriorityQueue<Long>();
             queue.setValues(input, input.length, false, input.length);
+            assertEquals(expected.length, queue.getSize());
             for (long element: expected) {
                 //noinspection DuplicateStringLiteralInspection
                 assertEquals("The order of the output should be as expected "
-                             + "by using set",
-                             element, queue.removeMin());
+                             + "in rerun '" + i + "', by using set",
+                             element, (long)queue.removeMin());
             }
         }
 
@@ -95,14 +97,20 @@ public class PriorityQueueTest extends TestCase {
 
     public void testSetValues() throws Exception {
         long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
-        PriorityQueueLong queue = setUpPriorityQueue(input);
-        long[] input2 = new long[] { 13, 4, 6, 8, 9, 10, 1, 13};
-        long[] expected = input2.clone();
+        PriorityQueue<Long> queue = setUpPriorityQueue(input);
+        long[] inputLong = new long[] { 13, 4, 6, 8, 9, 10, 1, 13 };
+        Long[] input2 = new Long[8];
+        for(int i=0; i<inputLong.length; i++) {
+            input2[i] = inputLong[i];
+        }
+
+        Long[] expected = input2.clone();
         Arrays.sort(expected);
+        expected = PriorityQueueLongTest.reverseArray(expected);
         queue.setValues(input2, 8, true, 16);
         for (long element: expected) {
             assertEquals("The order of the output should be as expected",
-                         element, queue.removeMin());
+                         element, (long)queue.removeMin());
         }
     }
 
@@ -110,12 +118,13 @@ public class PriorityQueueTest extends TestCase {
         long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
         long[] expected = input.clone();
         Arrays.sort(expected);
-        PriorityQueueLong queue = setUpPriorityQueue(input);
+        expected = PriorityQueueLongTest.reverseArray(expected);
+        PriorityQueue<Long> queue = setUpPriorityQueue(input);
         for (long element: expected) {
             assertEquals("The getMin should return the smallest element "
-                    +"without removing it", element, queue.getMin());
+                    +"without removing it", element, (long)queue.getMin());
             assertEquals("The order of the output should be as expected",
-                         element, queue.removeMin());
+                         element, (long)queue.removeMin());
         }
     }
 
@@ -123,7 +132,8 @@ public class PriorityQueueTest extends TestCase {
         long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
         long[] expected = input.clone();
         Arrays.sort(expected);
-        PriorityQueueLong queue = setUpPriorityQueue(input);
+        expected = PriorityQueueLongTest.reverseArray(expected);
+        PriorityQueue<Long> queue = setUpPriorityQueue(input);
         for (int expectedSize = 0; expectedSize < expected.length;
              expectedSize++) {
             assertEquals(expected.length-expectedSize, queue.getSize());
