@@ -21,7 +21,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -38,7 +38,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.rmi.RemoteException;
 
 /**
@@ -51,7 +52,7 @@ import java.rmi.RemoteException;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hbk")
+        author = "mke, hbk")
 public class DidYouMeanSearchNode extends SearchNodeImpl {
     private static enum DIRECTORYTYPE {
         fsDirectory,
@@ -102,6 +103,14 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
 
     /**
+     * Where to place the Did-You-Mean index in the persistant storage.
+     * Note: only used in combination with fsDirectory.
+     */
+    public static final String CONF_DIDYOUMEAN_PLACEMENT =
+                                            "summa.support.didyoumen.placement";
+    public static final String DEFAULT_DIDYOUMEAN_PLACEMENT = "didyoumean";
+
+    /**
      * Local directory version.
      */
     private Directory directory = null;
@@ -120,13 +129,15 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      * Local TokenPhraseSuggester
      */
     private TokenPhraseSuggester phraseSuggester = null;
+    
     /**
      * Local IndexReader.
      */
     private IndexReader aprioriIndex = null;
 
     /**
-     * Private copy of the local location of the didyoumean index on disc.
+     * Private copy of the local location of the didyoumean index on disc. Not
+     * used when using RAMDirectory.
      */
     private File didyoumeanIndex;
 
@@ -145,17 +156,26 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public DidYouMeanSearchNode(Configuration config) throws IOException {
         super(config);
+
+        // Get AprioriField.
         aprioriField = config.getString(CONF_DIDYOUMEAN_APRIORI_FIELD,
                                               DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
+
+        // Get Anaylyzer class.
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
                                        CONF_DIDYOUMEAN_ANALYZER, Analyzer.class,
                                        DEFAULT_DIDYOUMEAN_ANALYZER, config);
         analyzer = Configuration.create(analyzerClass, config);
+
+        // Get directory class.
         String directoryType = config.getString(CONF_DIDYOUMEAN_DIRECTORY,
                                                   DEFAULT_DIDYOUMEAN_DIRECTORY);
         DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
-        didyoumeanIndex = Resolver.getPersistentFile(new File("didyoumean"));
+        // determining the placement for the Did-You-Mean index.
+        String placement = config.getString(CONF_DIDYOUMEAN_PLACEMENT,
+                                                  DEFAULT_DIDYOUMEAN_PLACEMENT);
+        didyoumeanIndex = Resolver.getPersistentFile(new File(placement));
 
         switch(type) {
             case ramDirectory:
@@ -192,20 +212,21 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      *
      * @param location As specified in
      * {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
-     * Note: not used.
+     * Note: not used, we uses {@link Resolver#getPersistentFile}.
      * @throws RemoteException is thrown if an IOException is cast during
-     * creation of a local datastructure.
+     * creation of a local data structure.
      */
     @Override
     protected void managedOpen(String location) throws RemoteException {
-        log.debug("Opening '" + didyoumeanIndex + "'");
+        location = location.concat(File.separator + "lucene"  + File.separator);
+        log.debug("Opening '" + location + "'");
         IndexFacade aprioriIndexFactory;
         NgramTokenSuggester tokenSuggester;
         IndexFacade ngramIndexFactory;
         // Setup AprioriIndex
         try {
             aprioriIndexFactory = new DirectoryIndexFacade(
-                                     FSDirectory.getDirectory(didyoumeanIndex));
+                                     FSDirectory.getDirectory(location));
             aprioriIndex = aprioriIndexFactory.indexReaderFactory();
         } catch (IOException e) {
             throw new RemoteException(
@@ -213,7 +234,9 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         }
 
         // create DirectoryIndexFacede
-        if(IndexReader.indexExists(didyoumeanIndex)) {
+        if(directory instanceof FSDirectory
+           // only check for existing index if using FSDirectory
+           && IndexReader.indexExists(didyoumeanIndex)) {
             log.info("Using existing index in '"
                                     + didyoumeanIndex.getAbsolutePath() + "'.");
             try {
@@ -273,12 +296,11 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             aprioriIndex.close();
             // TODO tokenSuggester.close();
             // TODO phraseSuggester.close();
-            // TODO not sure if this can be closed after usage in managedOpen.
+            // TODO directory.close() should be handled by DirectoryIndexFacede
             directory.close();
         } catch (IOException e) {
             throw new RemoteException("IOException while closing indexes.", e);
         }
-
     }
 
     /**
@@ -292,7 +314,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      *  <li>'query' is found in the 'request' key
      *      {@link DidYouMeanKeys#SEARCH_QUERY}.</li>
      * </ul>
-     * Sideeffect:
+     * Side-effect:
      * <ul>
      *  <li>The resulting XML is added to the 'response' parameter.</li>
      * </ul>
