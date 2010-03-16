@@ -35,7 +35,7 @@ import java.util.*;
  * {@link #getContent} or {@link #getContentAsUTF8()}
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "hal, te, mke")
 public class Record implements Serializable, Comparable{
     private static Log log = LogFactory.getLog(Record.class);
@@ -120,8 +120,8 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Meta-data for the Record, such as validation-state. Used for filter-
-     * specific data. The map can be accessed by {@link#getMeta}. It does not
-     * permit null - neither as key, nor value.
+     * specific data. The map can be accessed by {@link this#getMeta}. It does
+     * not permit null - neither as key, nor value.
      */
     private StringMap meta;
 
@@ -130,7 +130,6 @@ public class Record implements Serializable, Comparable{
      * If it is a call to {@link #getContent} should uncompress it before
      * returning the data and set this value to {@code false}.
      */
-    // TODO: Add a getter and update MarcMultiVolumeMerger to use it for set
     private boolean contentCompressed;
 
     /**
@@ -604,8 +603,8 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Request a meta-value for the given key. This method is more efficient
-     * than requesting the full map with {@link#getMeta()}, as it never creates
-     * a new map.
+     * than requesting the full map with {@link this#getMeta()}, as it never
+     * creates a new map.
      * @param key the key for the value.
      * @return the value for the key, or null if the key is not in the map.
      */
@@ -631,7 +630,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Returns a hash code value for the record.
-     * @return a hash code value
+     * @return a hash code value.
      */
     @Override
     @QAInfo(level = QAInfo.Level.FINE,
@@ -823,5 +822,14 @@ public class Record implements Serializable, Comparable{
 
         return !ib.hasNext();
     }
+
+    /**
+     * Return true if content is compressed. False otherwise.
+     * @return true if content is compressed, falsed otherwise.
+     */
+    public boolean isContentCompressed() {
+        return contentCompressed;
+    }
+
 }
 
