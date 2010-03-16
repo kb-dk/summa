@@ -92,9 +92,18 @@ public class SearchTest extends NoExitTestCase {
 
     public static Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
+
+        String path = storageConf.getString(DatabaseStorage.CONF_LOCATION);
+        if(new File(path).exists()) {
+            System.out.println("deleted '" + path + "' database.");
+            new File(path).delete();
+        }
+
         storageConf.set(DatabaseStorage.CONF_CREATENEW, true);
         storageConf.set(DatabaseStorage.CONF_FORCENEW, true);
-        return StorageFactory.createStorage(storageConf);
+        Storage storage = StorageFactory.createStorage(storageConf);
+
+        return storage;
     }
         
     /* ingest the data in the given folder to Storage, assuming that Storage
