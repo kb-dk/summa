@@ -39,19 +39,24 @@ public class PriorityQueueTest extends TestCase {
         super.tearDown();
     }
 
-    public void testPriorityQueue() throws Exception {
-        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
-        long[] expected = input.clone();
-        Arrays.sort(expected);
+    private PriorityQueueLong setUpPriorityQueue(long[] input) {
         PriorityQueueLong queue = new PriorityQueueLong();
         for (long element: input) {
             queue.insert(element);
         }
+
+        return queue;
+    }
+
+    public void testPriorityQueue() throws Exception {
+        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
+        long[] expected = input.clone();
+        Arrays.sort(expected);
+        PriorityQueueLong queue = setUpPriorityQueue(input);
         for (long element: expected) {
             assertEquals("The order of the output should be as expected",
                          element, queue.removeMin());
         }
-
     }
 
     public void testPriorityQueueRandom() throws Exception {
@@ -87,17 +92,44 @@ public class PriorityQueueTest extends TestCase {
         }
 
     }
-    // TODO: Fill the TagHandler from the index
+
     public void testSetValues() throws Exception {
-        //TODO: Test goes here...
+        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
+        PriorityQueueLong queue = setUpPriorityQueue(input);
+        long[] input2 = new long[] { 13, 4, 6, 8, 9, 10, 1, 13};
+        long[] expected = input2.clone();
+        Arrays.sort(expected);
+        queue.setValues(input2, 8, true, 16);
+        for (long element: expected) {
+            assertEquals("The order of the output should be as expected",
+                         element, queue.removeMin());
+        }
     }
 
     public void testGetMin() throws Exception {
-        //TODO: Test goes here...
+        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
+        long[] expected = input.clone();
+        Arrays.sort(expected);
+        PriorityQueueLong queue = setUpPriorityQueue(input);
+        for (long element: expected) {
+            assertEquals("The getMin should return the smallest element "
+                    +"without removing it", element, queue.getMin());
+            assertEquals("The order of the output should be as expected",
+                         element, queue.removeMin());
+        }
     }
 
     public void testGetSize() throws Exception {
-        //TODO: Test goes here...
+        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
+        long[] expected = input.clone();
+        Arrays.sort(expected);
+        PriorityQueueLong queue = setUpPriorityQueue(input);
+        for (int expectedSize = 0; expectedSize < expected.length;
+             expectedSize++) {
+            assertEquals(expected.length-expectedSize, queue.getSize());
+            queue.removeMin();
+        }
+        assertEquals(0, queue.getSize());
     }
 
     public static Test suite() {
