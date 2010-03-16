@@ -39,16 +39,16 @@
             <key>summa.search.searcheravailability.timeout</key>
             <value class="int">5000</value>
         </entry>
-        
         <!-- Static root dir for didyoumean db, no IndexWatcher -->
         <entry>
             <key>summa.search.staticroot</key>
-            <value class="string">didyoumean</value>
+            <value class="string">index</value>
         </entry>
-        <entry>
+        <!-- Define which directory to use -->
+        <!--<entry>
             <key>summa.support.didyoumean.directory</key>
             <value class="string">ramDirectory</value>
-        </entry>
+        </entry>-->
         
     </xproperties>
 </xproperties>
