@@ -128,7 +128,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         }
 
         // This is O(n), although it looks like O(n*log(n))
-        for (int position = size / 2 - 1 ; size >= 0 ; size--) {
+        for (int position = size / 2 - 1 ; position  >= 0 ; position --) {
             siftDown(position);
         }
     }
@@ -267,6 +267,18 @@ public class PriorityQueue<T extends Comparable<? super T>> {
      */
     public Comparator<T> getComparator() {
         return comparator;
+    }
+
+    /**
+     * Pretty print the heap.
+     * @return string with all element and there placement in internal heap.
+     */
+    public String toString() {
+        String str = "{";
+        for(int i=0; i<size; i++) {
+            str += heap[i] + ",";
+        }
+        return str + "}\n";
     }
 }
 
