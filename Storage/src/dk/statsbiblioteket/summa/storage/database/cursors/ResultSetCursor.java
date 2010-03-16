@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
@@ -30,6 +31,10 @@ import java.util.NoSuchElementException;
 /**
  * Wraps a ResultSet and the context in was created in as a {@link Cursor}
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke",
+        reviewers = "hbk")
 public class ResultSetCursor implements Cursor {
     private Log log = LogFactory.getLog(ResultSetCursor.class);
 
@@ -52,9 +57,9 @@ public class ResultSetCursor implements Cursor {
      * Create a new non-anonymous cursor with {@code null} base and query
      * options.
      *
-     * @param db the DatabaseStorage owning the cursor.
-     * @param stmt the statement which produced {@code resultSet}.
-     * @param resultSet the ResultSet to read records from.
+     * @param db The DatabaseStorage owning the cursor.
+     * @param stmt The statement which produced {@code resultSet}.
+     * @param resultSet The ResultSet to read records from.
      * @throws SQLException on any SQLException reading the result set.
      * @throws IOException on any IOExceptions reading records.
      */
@@ -66,12 +71,13 @@ public class ResultSetCursor implements Cursor {
     }
 
     /**
-     * Create a new cursor with {@code null} base and query options.
+     * Create a new possibly anonymous cursor with {@code null} base and query
+     * options.
      *
-     * @param db the DatabaseStorage owning the cursor.
-     * @param stmt the statement which produced {@code resultSet}.
-     * @param resultSet the ResultSet to read records from.
-     * @param anonymous anonymous cursors does less logging. They are suitable
+     * @param db The DatabaseStorage owning the cursor.
+     * @param stmt The statement which produced {@code resultSet}.
+     * @param resultSet The ResultSet to read records from.
+     * @param anonymous Anonymous cursors does less logging. They are suitable
      *                  for short lived, and intermediate, result sets.
      * @throws SQLException on any SQLException reading the result set.
      * @throws IOException on any IOExceptions reading records.
@@ -87,12 +93,12 @@ public class ResultSetCursor implements Cursor {
     /**
      * Create a new non-anonymous cursor.
      *
-     * @param db the DatabaseStorage owning the cursor.
-     * @param stmt the statement which produced {@code resultSet}.
-     * @param resultSet the ResultSet to read records from.
-     * @param base the Record base the cursor is iterating over. Possibly
+     * @param db The DatabaseStorage owning the cursor.
+     * @param stmt The statement which produced {@code resultSet}.
+     * @param resultSet The ResultSet to read records from.
+     * @param base The Record base the cursor is iterating over. Possibly
      *             {@code null} if the base is undefined.
-     * @param options any query options the records must match.
+     * @param options Any query options the records must match.
      * @throws SQLException on any SQLException reading the result set.
      * @throws IOException on any IOExceptions reading records.
      */
@@ -106,15 +112,15 @@ public class ResultSetCursor implements Cursor {
     }
 
     /**
-     * Create a new cursor.
+     * Create a new possible anonymous cursor.
      *
-     * @param db the DatabaseStorage owning the cursor.
-     * @param stmt the statement which produced {@code resultSet}.
-     * @param resultSet the ResultSet to read records from.
-     * @param base the Record base the cursor is iterating over. Possibly
+     * @param db The DatabaseStorage owning the cursor.
+     * @param stmt The statement which produced {@code resultSet}.
+     * @param resultSet The ResultSet to read records from.
+     * @param base The Record base the cursor is iterating over. Possibly
      *             {@code null} if the base is undefined.
-     * @param options any query options the records must match.
-     * @param anonymous anonymous cursors does less logging. They are suitable
+     * @param options Any query options the records must match.
+     * @param anonymous Anonymous cursors does less logging. They are suitable
      *                  for short lived, and intermediate, result sets.
      * @throws SQLException on any SQLException reading the result set.
      * @throws IOException on any IOExceptions reading records.
@@ -199,7 +205,7 @@ public class ResultSetCursor implements Cursor {
 
     /**
      * Return true if this iterator has a next item.
-     * Note: Sideeffect updated lastAccess time.
+     * Note: Side-effect updated lastAccess time.
      *
      * @return true if it has next item.
      */
@@ -218,8 +224,7 @@ public class ResultSetCursor implements Cursor {
         lastAccess = System.currentTimeMillis();
 
         if (nextRecord == null) {
-            throw new NoSuchElementException("Iterator " + key
-                                             + " depleted");
+            throw new NoSuchElementException("Iterator " + key + " depleted");
         }
 
         if (totalRecords == 0) {
@@ -257,12 +262,13 @@ public class ResultSetCursor implements Cursor {
     }
 
     /**
-     * Remove first element.
-     * Note this function isn't implemented yet.
-     * TODO: consider implementing.
+     * Remove first element, by calling next() and throwing the returned record
+     * away.
      */
     public void remove () {
-        throw new UnsupportedOperationException();
+        if(hasNext()) {
+            next();
+        }
     }
 
     /**
@@ -310,8 +316,8 @@ public class ResultSetCursor implements Cursor {
     private void logDepletedStats () {
         // Only log stats if this is a non-anonymous cursor
         if (key != 0) {
-            log.debug(this + " depleted. After " + totalRecords + " records and "
-                      + (lastAccess - firstAccess) + "ms");
+            log.debug(this + " depleted. After " + totalRecords
+                    + " records and " + (lastAccess - firstAccess) + "ms");
         }
     }
 
@@ -376,7 +382,7 @@ public class ResultSetCursor implements Cursor {
      * primary intent is to use this unique timestamp for {@link PagingCursor}.
      * 
      * @return the raw, unique, binary timestamp of the last record returned by
-     *          this cursor.
+     *         this cursor.
      */
     public long currentMtimeTimestamp() {
         return currentMtimeTimestamp;
