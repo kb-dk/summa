@@ -37,9 +37,14 @@ public class SummaConstants {
      */
     public static final int SUMMAVERSIONREVISION = 2216;
 
-
+    /**
+     * Get version string, used to present the Summa version and the revision
+     * number it comes from.
+     *
+     * @return a string representation of summa version and revision.
+     */
     public static String getVersion() {
-        return "Version: " + SUMMAVERSION + ", Revision: "
+        return "Summa version: " + SUMMAVERSION + ", Revision: "
                 + SUMMAVERSIONREVISION;
     }
 }
