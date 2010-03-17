@@ -1,3 +1,6 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
 <%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
 <%@ page import="dk.statsbiblioteket.util.xml.XSLT" %>
@@ -6,6 +9,7 @@
 <%@ page import="java.io.File" %>
 <%@ page import="java.net.URL" %>
 <%@ page import="java.util.Properties" %>
+<%@ page import="dk.statsbiblioteket.summa.common.*" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
@@ -46,7 +50,6 @@
 
     if (query != null || filter != null) {
         int per_page = 10;
-        int startIndex = 0;
         int current_page;
         try {
             current_page = Integer.parseInt(request.getParameter("page"));
@@ -72,7 +75,7 @@
                 Document search_dom = DOM.stringToDOM(xml_search_result);
                 String hitCountStr = DOM.selectString(search_dom,
                         "/responsecollection/response/documentresult/@hitCount", "0");
-                long hitCount = 0;
+                long hitCount;
                 try {
                     hitCount = Long.parseLong(hitCountStr);
                 } catch (NumberFormatException e) {
@@ -142,13 +145,14 @@
 
     }
 %>
-
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <title>summa example website</title>
-    <link rel="stylesheet" type="text/css" href="css/project.css"/>
-    <script type="text/javascript" src="js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="js/jquery.autocomplete.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+    <%-- TODO name should be depended on target test/services/dev. --%>
+    <title>summa example website - <%= SummaConstants.getVersion() %></title>
+    <link rel="stylesheet" type="text/css" href="css/project.css" />
+    <script type="text/javascript" src="js/jquery-1.3.2.min.js" ></script>
+    <script type="text/javascript" src="js/jquery.autocomplete.min.js" ></script>
 
     <script type="text/javascript">
         function init() {
@@ -163,16 +167,20 @@
 </head>
 <body style="padding: 10px;" onload="init();">
 
-<img src="images/summa-logo_h40.png" alt="Summa logo" />
-<br />
+<div>
+    <img src="images/summa-logo_h40.png" alt="Summa logo" />
+    <br />    
+</div>
 
 <div class="searchBoxContainer" id="searchBoxContainer">
     <div class="searchBox" id="searchBox">
         <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
-            Standard search
-            <input type="text" name="query" size="65" id="q" value="<%= form_query %>" />
-            <input type="submit" value="Search" />
-            <input type="hidden" name="usersearch" value="true" />
+            <div>
+                <label for="q">Standard search</label>
+                <input type="text" name="query" size="65" id="q" value="<%= form_query %>" />
+                <input type="submit" value="Search" />
+                <input type="hidden" name="usersearch" value="true" />
+            </div>
         </form>
         <%--
         <form action="index.jsp" class="searchBoxTweak" id="fpSearchI">
@@ -193,12 +201,14 @@
 	<hr />
 
         <form action="index.jsp" class="searchBoxTweak" id="fpFilterSortSearch">
-            Filter sorted search<br />
-            Filter: <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
-            Query: <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
-            Sort field: <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
-            <input type="submit" value="Search" />
-            <input type="hidden" name="userfiltersortsearch" value="true" />
+            <div>
+                Filter sorted search<br />
+                <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
+                <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
+                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
+                <input type="submit" value="Search" />
+                <input type="hidden" name="userfiltersortsearch" value="true" />
+            </div>
         </form>
     </div>
 </div>
@@ -209,5 +219,6 @@
 <div class="clusterRight">
     <%= facet_html %>
 </div>
+
 </body>
 </html>
