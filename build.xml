@@ -352,4 +352,43 @@
         </zip>
         <delete dir="${release.tmp.dir}" />
     </target>
+
+    <target name=".checkForArguments">
+
+    </target>
+
+    <target name="bumpVersion" depends=".checkForArguments">
+        <condition property="goodToGo">
+            <and>
+                <isset property="version" />
+                <isset property="revision" />
+            </and>
+        </condition>
+        <fail unless="goodToGo"
+              message="Set variable ' -Dversion=1.0.0 -Drevision=1000" />
+        <echo  message="Setting new Summa version = '${version}' and revision '${revision}'." />
+
+        <replaceregexp file="./build.properties"
+               match="summa.version=(.*)"
+               replace="summa.version=${version}"
+               byline="true"
+        />
+        <replaceregexp file="./build.properties"
+               match="summa.version.revision=(.*)"
+               replace="summa.version.revision=${revision}"
+               byline="true"
+        />
+        <replaceregexp file="Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java"
+
+               match="public static final String SUMMAVERSION = &quot;(.*)&quot;;"
+               replace="public static final String SUMMAVERSION = &quot;${version}&quot;;"
+               byline="true"
+        />
+        <replaceregexp file="Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java"
+
+               match="public static final int SUMMAVERSIONREVISION =(.*);"
+               replace="public static final int SUMMAVERSIONREVISION = ${revision};"
+               byline="true"
+        />
+   </target>
 </project>
