@@ -37,4 +37,9 @@ public class SummaConstants {
      */
     public static final int SUMMAVERSIONREVISION = 2216;
 
+
+    public static String getVersion() {
+        return "Version: " + SUMMAVERSION + ", Revision: "
+                + SUMMAVERSIONREVISION;
+    }
 }
