@@ -36,6 +36,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.jws.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.IOException;
@@ -46,11 +47,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * A class containing methods meant to be exposed as a web service
+ * A class containing methods meant to be exposed as a web service.
+ *
+ * @author Mikkel Kamstrup Erlandsen
+ * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        state = QAInfo.State.QA_OK,
+        author = "mke",
+        reviewers = {"hbk"})
+@WebService
 public class StatusWS {
     private Log log;
     private DateFormat dateFormat;
@@ -61,12 +67,16 @@ public class StatusWS {
     static SearchClient suggester;
     Configuration conf;
 
+    /**
+     * Concstructor for status web service.
+     */
     public StatusWS() {
         log = LogFactory.getLog(StatusWS.class);
         dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         numberFormat = NumberFormat.getIntegerInstance();
         numberFormat.setGroupingUsed(false);
-        numberFormat.setMinimumIntegerDigits(12); // Padding to ensure correct sort
+        // Padding to ensure correct sort
+        numberFormat.setMinimumIntegerDigits(12);
     }
 
     /**
@@ -76,7 +86,8 @@ public class StatusWS {
     private synchronized StorageReaderClient getStorageClient() {
         if (storage == null) {
             try {
-                storage = new StorageReaderClient(getConfiguration().getSubConfiguration("summa.web.storage"));
+                storage = new StorageReaderClient(getConfiguration()
+                                     .getSubConfiguration("summa.web.storage"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for storage.", e);
             }
@@ -91,7 +102,8 @@ public class StatusWS {
     private synchronized SearchClient getSearchClient() {
         if (searcher == null) {
             try {
-                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.search"));
+                searcher = new SearchClient(getConfiguration()
+                                      .getSubConfiguration("summa.web.search"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for search.", e);
             }
@@ -106,7 +118,8 @@ public class StatusWS {
     private synchronized SearchClient getSuggestClient() {
         if (suggester == null) {
             try {
-                suggester = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
+                suggester = new SearchClient(getConfiguration()
+                                     .getSubConfiguration("summa.web.suggest"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for suggest.", e);
             }
@@ -115,17 +128,20 @@ public class StatusWS {
     }
 
     /**
-     * Get the a Configuration object. First trying to load the configuration from the location
-     * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
+     * Get the a Configuration object. First trying to load the configuration
+     * from the location specified in the JNDI property
+     * java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
-     * @return The Configuration object
+     *
+     * @return The Configuration object.
      */
     private Configuration getConfiguration() {
         if (conf == null) {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                String paramValue =
+                          (String) context.lookup("java:comp/env/confLocation");
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
@@ -139,9 +155,11 @@ public class StatusWS {
     }
 
     /**
-     * Collect status for all known services
-     * @return An XML string containing the status
+     * Collect status for all known services.
+     *
+     * @return An XML string containing the status.
      */
+    @WebMethod
     public String fullStatus() {
         log.trace("fullStatus()");
         try {
@@ -161,6 +179,11 @@ public class StatusWS {
         }
     }
 
+    /**
+     * Collect status from storage.
+     *
+     * @param status where status should be placed.
+     */
     private void collectStorageStats(Status status) {
         try {
             ReadableStorage storage = getStorageClient();
@@ -182,6 +205,11 @@ public class StatusWS {
         }
     }
 
+    /**
+     * Collect status from Searcher.
+     *
+     * @param status where status should be placed.
+     */
     private void collectSearcherStats(Status status) {
         try {
             Request req = new Request();
@@ -212,7 +240,8 @@ public class StatusWS {
                 for (int j = 0; j < tags.getLength(); j++) {
                     NamedNodeMap tag = tags.item(j).getAttributes();
                     String tagName = tag.getNamedItem("name").getNodeValue();
-                    String tagCount = tag.getNamedItem("addedobjects").getNodeValue();
+                    String tagCount =
+                                tag.getNamedItem("addedobjects").getNodeValue();
                     status.put("facets", facetName + ":"+tagName, tagCount);
                 }
             }
@@ -221,6 +250,11 @@ public class StatusWS {
         }
     }
 
+    /**
+     * Collect status from suggest.
+     *
+     * @param status where status should be placed.
+     */
     private void collectSuggestStats(Status status) {
         try {
             /* Most popular suggestions in last 24h */
@@ -255,16 +289,31 @@ public class StatusWS {
         }
     }
 
+    /**
+     * The status class, this is basically just a List with Service, Pair. Where
+     * each pair could contain keyword, value. Eg:
+     * ''Suggest', Pair('Status', 'ok')'.
+     */
     private class Status {
         Map<String, List<Pair<String,String>>> groups =
                                new HashMap<String, List<Pair<String,String>>>();
 
         Date date;
 
+        /**
+         * Construct a new status, with current time as timestamp.
+         */
         public Status() {
             date = new Date(System.currentTimeMillis());
         }
 
+        /**
+         * Put a group into this status object.
+         *
+         * @param group The groupd, eg. a service name.
+         * @param name The name of status eg. 'responseTime'.
+         * @param value Value of the status eg. '23ms'.
+         */
         public void put(String group, String name, String value) {
             if (!groups.containsKey(group)) {
                 groups.put(group, new LinkedList<Pair<String,String>>());
@@ -272,6 +321,11 @@ public class StatusWS {
             groups.get(group).add(new Pair<String,String>(name, value));
         }
 
+        /**
+         * Present the content of the status as XML.
+         *
+         * @return XML presentation of the content.
+         */
         public String toXML() {
             StringBuilder buf = new StringBuilder();
             buf.append(DOM.XML_HEADER)
@@ -303,7 +357,6 @@ public class StatusWS {
 
             return buf.toString();
         }
-
     }
 }
 
