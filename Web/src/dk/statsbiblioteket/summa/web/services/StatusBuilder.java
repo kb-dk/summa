@@ -32,26 +32,40 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * FIXME: Missing class docs for
- * dk.statsbiblioteket.summa.web.services.StatusPresentation
+ * Status builder.
  *
- * @author mke
+ * @author Mikkel Kamstrup Erlandsen
+ * @author Henrik Kirk <mailto:hbk@statsbiblioteket.dk>
  * @since Nov 25, 2009
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke",
+        reviewers = {"hbk"})
 public class StatusBuilder {
-
+    /**
+     * Static Properties class.
+     */
     static class Properties {
         Node group;
 
+        /**
+         * Constructor for properties class.
+         *
+         * @param group The Node group, if null NullPointerException is thrown.
+         */
         Properties(Node group) {
             if (group == null) throw new NullPointerException(
                                              "Properties based on null group");
             this.group = group;
         }
 
+        /**
+         * Getter for a node child, specified by input 'name'.
+         *
+         * @param name The child name.
+         * @return the node child, given the specified 'name'.
+         */
         Node get(String name) {
             NodeList children = group.getChildNodes();
 
@@ -77,6 +91,11 @@ public class StatusBuilder {
             return null;
         }
 
+        /**
+         * Get the child with names text.
+         * @param name The name of the child, which text to return.
+         * @return text for a by 'name' specified child.
+         */
         String getText(String name) {
             Node prop = get(name);
             if (prop == null) return "Undefined";
@@ -103,6 +122,11 @@ public class StatusBuilder {
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     NumberFormat numberFormat = NumberFormat.getIntegerInstance();
 
+    /**
+     * Constructor for StatusBuilder.
+     *
+     * @param statusDom The DOM used to build the status web content.
+     */
     public StatusBuilder (Node statusDom) {
         this.statusDom = statusDom;
 
@@ -129,7 +153,12 @@ public class StatusBuilder {
         numberFormat.setMinimumIntegerDigits(6);
     }
 
-    /* Parse the queryCount group into a sorted list of Pairs (count, query) */
+    /**
+     * Parse the queryCount group into a sorted list of Pairs (count, query).
+     *
+     * @param nodes Items to parse and sort.
+     * @return a sorted collection with Pairs (count, query).
+     */
     private List<Pair<String,String>> sortQueries(NodeList nodes) {
         List<Pair<String,String>> l = new LinkedList<Pair<String,String>>();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -150,7 +179,7 @@ public class StatusBuilder {
 
     /**
      * Return true if searcher, storage and suggest is 'OK'.
-     * @return true if searcher, sorage and suggest is 'OK', false otherwise.
+     * @return true if searcher, storage and suggest is 'OK', false otherwise.
      */
     public boolean allGood() {
         return "OK".equals(searcherStatus) &&
@@ -158,10 +187,20 @@ public class StatusBuilder {
                "OK".equals(suggestStatus);
     }
 
+    /**
+     * Get last update.
+     *
+     * @return return last update time.
+     */
     public String getLastUpdate() {
         return lastUpdate;
     }
 
+    /**
+     * Get last update, defined as a timestamp.
+     *
+     * @return last update time as a date object.
+     */
     public Date getLastUpdateStamp() {
         try {
             return dateFormat.parse(lastUpdate);
@@ -170,6 +209,11 @@ public class StatusBuilder {
         }
     }
 
+    /**
+     * Get creation time for this status builder.
+     *
+     * @return creation time for this status builder object as date object.
+     */
     public Date getNowStamp() {
         try {
             return dateFormat.parse(now);
@@ -178,10 +222,22 @@ public class StatusBuilder {
         }
     }
 
+    /**
+     * Creation time for this object.
+     *
+     * @return string in 'yyyy-MM-dd'T'HH:mm:ss.SSS' for the creation time of
+     * this object.
+     */
     public String getNow() {
         return now;
     }
 
+    /**
+     * ToString for this object, return html for the content of the status
+     * web page.
+     *
+     * @return html content for a status web page.
+     */
     public String toString() {
         try {
             return toString(new StringBuilder()).toString();
@@ -191,6 +247,14 @@ public class StatusBuilder {
         }
     }
 
+    /**
+     * Given a Appendable object, this method creates content for a web page
+     * used to present the status.
+     *
+     * @param buf buffer for appending the content of the web page.
+     * @return html for presenting a status message on a web page.
+     * @throws IOException if errors are encountered while appending to buffer.
+     */
     public Appendable toString(Appendable buf) throws IOException {
         buf.append("<p>\n");
         buf.append("Last update: ").append(lastUpdate).append("<br/>");
