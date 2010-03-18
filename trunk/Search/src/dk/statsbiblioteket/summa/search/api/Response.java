@@ -19,12 +19,14 @@ import java.io.Serializable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * A response from a SearchNode contains SearchNode specific content.
+ * A response from a SearchNode contains SearchNode specific content. This class
+ * should is responsible for merging the content of this response with another
+ * search response and converting the response to a XML block.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
-        comment="Better class description needed ")
+        reviewers = {"hbk"})
 public interface Response extends Serializable {
     /**
      * @return the name of the response. Responses instantiated from the same
@@ -37,20 +39,22 @@ public interface Response extends Serializable {
     /**
      * Merge the content from other into this Response, sorting and trimming
      * when necessary.
-     * @param other the Response to merge into this.
+     * @param other The Response to merge into this.
      * @throws ClassCastException if other was not assignable to this.
      */
     public void merge(Response other) throws ClassCastException;
 
     /**
      * The XML returned should be an XML-snippet: UTF-8 is used and no header
-     * should be included. A proper response could be {@code
-<myresponse>
-    <hits total="87">
-    <hit>Foo</hit>
-    ...
-</myresponse>
-    }
+     * should be included. A proper response could be:
+     * <pre>
+        <myresponse>
+            <hits total="87">
+            <hit>Foo</hit>
+            ...
+        </myresponse>
+     * </pre>
+     *
      * @return the content of Response as XML.
      */
     public String toXML();

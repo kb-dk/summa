@@ -36,6 +36,8 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 public class FacetResultExternal extends FacetResultImpl<String> {
     private HashMap<String, String[]> fields;
 
+    public static final String NAME = "FacetResult";
+
     public FacetResultExternal(HashMap<String, Integer> maxTags,
                                HashMap<String, Integer> facetIDs,
                                HashMap<String, String[]> fields) {
@@ -49,7 +51,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     public String getName() {
         //noinspection DuplicateStringLiteralInspection
-        return "FacetResult";
+        return NAME;
     }
 
     @Override
