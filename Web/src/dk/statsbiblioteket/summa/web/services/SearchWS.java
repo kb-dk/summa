@@ -16,14 +16,14 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
-import dk.statsbiblioteket.summa.support.api.LuceneKeys;
-import dk.statsbiblioteket.summa.support.api.SuggestKeys;
+import dk.statsbiblioteket.summa.search.api.document.*;
+import dk.statsbiblioteket.summa.support.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -33,21 +33,29 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.jws.*;
+import javax.jws.WebMethod;
+import javax.jws.WebService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * A class containing methods meant to be exposed as a web service
+ *
+ * @author Mads Villadsen <mailto:mv@statsbiblioteket.dk>
+ * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  */
 @WebService
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mv")
+        author = "mv, hbk")
 public class SearchWS {
     private Log log;
 
@@ -55,6 +63,25 @@ public class SearchWS {
     static SearchClient suggester;
     static SearchClient didyoumean;
     Configuration conf;
+
+    /**
+     * Local XML output factory.
+     */
+    private static XMLOutputFactory xmlOutputFactory =
+                                                 XMLOutputFactory.newInstance();
+
+    /**
+     * Did-You-Mean XML namespace.
+     */
+    public static final String NAMESPACE =
+                            "http://statsbiblioteket.dk/summa/2009/SearchError";
+    public static final String SEARCH_ERROR_RESPONSE = "searcherror";
+    public static final String NAME_TAG = "name";
+    public static final String ERROR_TAG = "error";
+    public static final String MESSAGE_TAG = "message";
+    public static final String VERSION_TAG = "version";
+    public static final String VERSION = "1.0";
+
 
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
@@ -114,7 +141,7 @@ public class SearchWS {
      * from the location specified in the JNDI property
      * java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
-     * @return The Configuration object
+     * @return The Configuration object.
      */
     private Configuration getConfiguration() {
         if (conf == null) {
@@ -165,14 +192,14 @@ public class SearchWS {
             log.warn("Error executing didYouMean: '" + query + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing didYouMean</error>";
+            String mes = "Error performing didYouMean query";
+            retXML = getErrorXML(DidYouMeanResponse.DIDYOUMEANRESPONSE, mes, e);
         } catch (TransformerException e) {
             log.warn("Error executing didYouMean: '" + query + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing didYouMean</error>";
+            String mes = "Error performing didYouMean query";
+            retXML = getErrorXML(DidYouMeanResponse.DIDYOUMEANRESPONSE, mes, e);
         }
 
         log.debug("didYouMean('" + query + "', " + maxSuggestions
@@ -210,14 +237,14 @@ public class SearchWS {
             log.warn("Error executing getSuggestions: '" + prefix + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing getSuggestions</error>";
+            String mes = "Error performing getSuggestions";
+            retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
             log.warn("Error executing getSuggestions: '" + prefix + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing getSuggestions</error>";
+            String mes = "Error performing getSuggestions";
+            retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         }
 
         log.debug("getSuggestion('" + prefix + "', " + maxSuggestions
@@ -240,7 +267,6 @@ public class SearchWS {
                   + maxSuggestions + ")");
         long startTime = System.currentTimeMillis();
         String retXML;
-
         ResponseCollection res;
 
         Request req = new Request();
@@ -256,14 +282,14 @@ public class SearchWS {
         } catch (IOException e) {
             log.warn("Error executing getRecentSuggestions: "
                      + ageSeconds + "s, " + maxSuggestions + ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing getRecentSuggestions</error>";
+            String mes = "Error performing getRecentSuggestions";
+            retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
             log.warn("Error executing getRecentSuggestions: "
                      + ageSeconds + "s, " + maxSuggestions
                      + ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing getRecentSuggestions</error>";
+            String mes = "Error performing getRecentSuggestions";
+            retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         }
 
         log.debug("getRecentSuggestions(" + ageSeconds + "s, " + maxSuggestions
@@ -334,13 +360,13 @@ public class SearchWS {
         } catch (IOException e) {
             log.warn("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
+            String mes = "Error performing query";
+            retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         } catch (TransformerException e) {
             log.warn("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
+            String mes = "Error performing query";
+            retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
         log.trace("getField('" + id + "', '" + fieldName
@@ -390,9 +416,8 @@ public class SearchWS {
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn("Error executing " + call + ": ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing " + call + ": " + e.getMessage()
-                     + "</error>";
+            String mes = "Error performing " + call + ": " + e.getMessage();
+            retXML = getErrorXML(IndexResponse.NAME, mes, e);
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace(call + " finished in "
@@ -428,8 +453,8 @@ public class SearchWS {
             log.warn("Error executing morelikethis: '" + id + "', " +
                     numberOfRecords +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing morelikethis</error>";
+            String mes = "Error performing morelikethis";
+            retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
         log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords
@@ -581,9 +606,9 @@ public class SearchWS {
                     "Error executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex,
                     sortKey, reverse, e.getMessage()), e);
-            // TODO: return a nicer error xml block
-            retXML = String.format("<error>Error performing query: %s</error>", 
-                                   e.getMessage());
+            String mes = String.format("Error performing query: %s", 
+                                                                e.getMessage());
+            retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
         log.debug(String.format(
@@ -700,19 +725,60 @@ public class SearchWS {
         } catch (IOException e) {
             log.warn("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
+            String mes = "Error performing query";
+            retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         } catch (TransformerException e) {
             log.warn("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
+            String mes = "Error performing query";
+            retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         }
 
         log.debug("advancedFacet('" + query + "', '" + facetKeys
                 + "') finished in " + (System.currentTimeMillis() - startTime)
                 + "ms");
         return retXML;
+    }
+
+    private String getErrorXML(String responseName, String message,
+                                                          Exception exception) {
+        StringWriter sw = new StringWriter(2000);
+        XMLStreamWriter writer;
+        try {
+            writer = xmlOutputFactory.createXMLStreamWriter(sw);
+        } catch (XMLStreamException e) {
+            throw new RuntimeException(
+                    "Unable to create XMLStreamWriter from factory", e);
+        }
+        // Write XML document.
+        try {
+            writer.setDefaultNamespace(NAMESPACE);
+            writer.writeStartElement(SEARCH_ERROR_RESPONSE);
+            writer.writeDefaultNamespace(NAMESPACE);
+            writer.writeAttribute(NAME_TAG, responseName);
+            writer.writeAttribute(VERSION_TAG, VERSION);
+            // message
+            writer.writeStartElement(MESSAGE_TAG);
+            writer.writeCharacters(message);
+            writer.writeEndElement();
+            writer.writeCharacters("\n");
+            // stack trace
+            writer.writeStartElement(ERROR_TAG);
+            writer.writeCharacters(exception.toString());
+            writer.writeEndElement();
+            writer.writeCharacters("\n");
+
+            writer.writeEndElement();
+            writer.writeCharacters("\n");
+            writer.writeEndDocument();
+
+            writer.flush(); // Just to make sure
+        } catch (XMLStreamException e) {
+            throw new RuntimeException(
+                    "Got XMLStreamException while constructing XML from "
+                    + "DidYouMeanResponse", e);
+        }
+        return sw.toString();
     }
 }
 

@@ -28,7 +28,7 @@ import java.util.LinkedList;
  * The DidYouMeanResponse class, Responsible for merging results, converting
  * a result to XML.
  *
- * @author Mikkel Kamstrup Erlandsen <mailto:mke@statsbiblioteket.dk>
+ * @author Mikkel Kamstrup Erlandsen
  * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  * @since Feb 9, 2010
  */
@@ -45,7 +45,7 @@ public class DidYouMeanResponse implements Response {
      * Did-You-Mean XML namespace.
      */
     public static final String NAMESPACE =
-            "http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse";
+                     "http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse";
     /**
      * Did-You-Mean XML version.
      */
@@ -138,12 +138,13 @@ public class DidYouMeanResponse implements Response {
     /**
      * Converts response to an XML document. Eg.
      * <pre>
-     * <?xml version="1.0" encoding="UTF-8" ?>
-     * <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0" searchtime="110">
-     *  <didyoumean score="0.6666666666666667">koobas</didyoumean>
-     *  <didyoumean score="0.6666666666666667">boobar</didyoumean>
-     * </DidYouMeanResponse>
-     * </pre>
+          <?xml version="1.0" encoding="UTF-8" ?>
+          <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0" searchtime="110">
+              <didyoumean score="0.6666666666666667">koobas</didyoumean>
+              <didyoumean score="0.6666666666666667">boobar</didyoumean>
+          </DidYouMeanResponse>
+      </pre>
+
      * @return XML block as a string.
      */
     @Override

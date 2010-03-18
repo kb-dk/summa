@@ -65,6 +65,8 @@ public class DocumentResponse implements Response, DocumentKeys {
     private long searchTime;
     private long hitCount;
 
+    public static final String NAME = "DocumentResponse";
+
     private List<Record> records;
 
     public DocumentResponse(String filter, String query,
@@ -189,7 +191,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     }
 
     public String getName() {
-        return "DocumentResponse";
+        return NAME;
     }
 
     /**

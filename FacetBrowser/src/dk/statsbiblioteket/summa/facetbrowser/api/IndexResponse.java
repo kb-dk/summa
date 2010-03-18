@@ -42,6 +42,7 @@ public class IndexResponse implements Response {
 
     public static final String INDEX_RESPONSE_NAMESPACE =
             "http://statsbiblioteket.dk/summa/2009/IndexResponse";
+    public static final String NAME = "IndexResponse";
 
     // Taken directly from {@link IndexKeys}.
     private String field;
@@ -88,7 +89,7 @@ public class IndexResponse implements Response {
     }
 
     public String getName() {
-        return "IndexResponse";
+        return NAME;
     }
 
     /**

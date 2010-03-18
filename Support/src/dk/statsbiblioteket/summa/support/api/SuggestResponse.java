@@ -49,6 +49,7 @@ public class SuggestResponse implements Response {
     public static final String SUGGESTION = "suggestion";
     public static final String HITS_TAG = "hits";
     public static final String QUERYCOUNT_TAG = "queryCount";
+    public static final String NAME = "SuggestResponse";
 
     private static XMLOutputFactory xmlOutputFactory;
     static {
@@ -160,7 +161,7 @@ public class SuggestResponse implements Response {
     }
 
     public String getName() {
-        return "SuggestResponse";
+        return NAME;
     }
 
     private static class SuggestTripel implements Serializable {
