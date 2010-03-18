@@ -10,6 +10,8 @@
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/doc" />
       <excludeFolder url="file://$MODULE_DIR$/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/test-classes" />
+      <excludeFolder url="file://$MODULE_DIR$/test/reports" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
