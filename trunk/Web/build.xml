@@ -41,7 +41,6 @@
     <path id="lib.path">
         <fileset dir="${lib.dir}">            
             <include name="**/*.jar"/>
-            <!--<exclude name="junit*"/>-->
         </fileset>
     </path>
 
@@ -211,12 +210,20 @@
     </target>
 
     <target name="clean">
+        <echo message="Cleaning depended modules" />
+        <ant dir="../Common" inheritall="false" target="clean"/>
+        <ant dir="../Search" inheritall="false" target="clean"/>
+        <ant dir="../Storage" inheritall="false" target="clean"/>
+        <ant dir="../Support" inheritall="false" target="clean"/>
+        <ant dir="../FacetBrowser" inheritall="false" target="clean"/>
+        <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete file="${release.search.war}"/>
         <delete file="${release.storage.war}"/>
         <delete file="${release.website.war}"/>
         <delete file="${release.status.war}"/>
         <delete dir="${test.report.dir}" />
+        <delete dir="${build.dir}" />
     </target>
 
     <target name="distclean" depends="clean">

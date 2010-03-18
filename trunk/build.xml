@@ -147,7 +147,13 @@
         <delete dir="${basedir}/${summa.schema.doc.dir}" />
         <!-- Legacy modules not built: -->
         <!-- <ant dir="Dice" inheritall="false" target="clean"/> -->
-        <!-- <ant dir="ClusterExtractor" inheritall="false" target="clean"/>-->        
+        <!-- <ant dir="ClusterExtractor" inheritall="false" target="clean"/>-->
+        <delete>
+            <fileset dir=".">
+                <include name="xconfiguration.*.xml" />
+                <include name="configuration.*.xml" />
+            </fileset>
+        </delete>
     </target>
 
     <!-- Compile all test cases in all modules -->

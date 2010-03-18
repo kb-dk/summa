@@ -170,12 +170,20 @@
     </target>
 
     <target name="clean">
+        <echo message="Cleaning depended modules" />
+        <ant dir="../Common" inheritall="false" target="clean"/>
+        <ant dir="../Search" inheritall="false" target="clean"/>
+        <ant dir="../Index" inheritall="false" target="clean"/>
+        <ant dir="../Ingest" inheritall="false" target="clean"/>
+        <ant dir="../FacetBrowser" inheritall="false" target="clean"/>
+        <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
         <delete dir="${test.report.dir}" />
+        <delete dir="${dist.dir}" />
     </target>
 
     <target name="distclean" depends="clean">
@@ -185,8 +193,7 @@
     </target>
 
     <target name="compiletest" depends="compile">
-        <mkdir dir="${test.build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}"
                encoding="UTF-8" verbose="true" >
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
@@ -207,6 +214,11 @@
                 </fileset>
             </batchtest>
         </junit>
+        <delete>
+            <fileset dir=".">
+                <include name="xconfiguration.*.xml" />
+            </fileset>
+        </delete>
     </target>
 
     <target name="createjunitoutput" depends="runtest">
