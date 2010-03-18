@@ -115,15 +115,19 @@
     </target>
 
     <target name="clean">
+        <echo message="Cleaning depended modules" />
+        <ant dir="../Common" inheritall="false" target="clean"/>
+        <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
         <delete dir="${test.report.dir}" />
+        <delete dir="${dist.dir}"/>
     </target>
 
     <target name="distclean" depends="clean">
-        <delete dir="${dist.dir}"/>
+
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
     </target>
@@ -151,6 +155,12 @@
                 </fileset>
             </batchtest>
         </junit>
+        <echo message="Deleting old configurations"/>
+        <delete>
+            <fileset dir=".">
+                <include name="xconfiguration.*.xml" />
+            </fileset>
+        </delete>
     </target>
 
     <target name="createjunitoutput" depends="runtest">
