@@ -45,6 +45,8 @@ public class SearchTool {
                                 "search.document.lucene.morelikethis.recordid=myRecordId27\n");
             System.err.println ("\tsearch-tool.sh " +
                                 "search.index.field=lme search.index.term=danmark\n");
+            System.err.println ("\tsearch-tool.sh " +
+                                "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5\n");
             System.err.println ("Optionally you may set the CONFIGURATION" +
                                 "variable in your shell and it will be used for" +
                                 "the summa.configuration property\n");            
