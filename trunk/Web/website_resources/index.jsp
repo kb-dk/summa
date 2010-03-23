@@ -17,6 +17,7 @@
 
     String search_html = "";
     String facet_html = "";
+    String didyoumean_html = "";
     String form_filter = "";
     String form_query = "";
     String form_sort = "";
@@ -57,6 +58,15 @@
         catch (NumberFormatException e) {
             current_page = 0;
         }
+
+        URL didyoumean_xslt = new File(basepath + "xslt/didyoumean.xsl").toURI().toURL();
+        Properties didyoumean_prop = new Properties();
+        // didyoumean_prop.put("query", query == null ? "" : query);
+        String xml_didyoumean_result = (String)services.execute(
+                "summadidyoumean", query, 10);
+        XSLT.clearTransformerCache();
+        didyoumean_html = XSLT.transform(didyoumean_xslt, xml_didyoumean_result, didyoumean_prop, false);
+
 
         String xml_search_result = (String)services.execute(
                 "summafiltersearchsorted", filter, query,
@@ -139,7 +149,6 @@
                 facet_html = "Transformer exception: " + e.getMessage();
             }
         }
-
     }
     out.clearBuffer();
 %>
@@ -211,8 +220,10 @@
                 <input type="hidden" name="userfiltersortsearch" value="true" />
             </div>
         </form>
+<%= didyoumean_html %>
     </div>
 </div>
+
 
 <div class="clusterLeft" style="clear: both;">
     <%= search_html %>
