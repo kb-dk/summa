@@ -64,8 +64,12 @@
         // didyoumean_prop.put("query", query == null ? "" : query);
         String xml_didyoumean_result = (String)services.execute(
                 "summadidyoumean", query, 10);
-        XSLT.clearTransformerCache();
-        didyoumean_html = XSLT.transform(didyoumean_xslt, xml_didyoumean_result, didyoumean_prop, false);
+        if (xml_didyoumean_result == null) {
+            didyoumean_html = "No contact to Did You Mean service";
+        } else {
+            //XSLT.clearTransformerCache();
+            didyoumean_html = XSLT.transform(didyoumean_xslt, xml_didyoumean_result, didyoumean_prop, false);
+        }
 
 
         String xml_search_result = (String)services.execute(
