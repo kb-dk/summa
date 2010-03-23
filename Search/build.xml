@@ -147,10 +147,10 @@
     </target>
 
     <target name="clean">
-        <echo message="Cleaning depended modules" />
+        <!--<echo message="Cleaning depended modules" />
         <ant dir="../Common" inheritall="false" target="clean"/>
         <ant dir="../Storage" inheritall="false" target="clean"/>
-        <echo message="Cleaning this module"/>
+        <echo message="Cleaning this module"/>-->
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>

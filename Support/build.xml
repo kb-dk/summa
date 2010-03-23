@@ -170,13 +170,13 @@
     </target>
 
     <target name="clean">
-        <echo message="Cleaning depended modules" />
+        <!---<echo message="Cleaning depended modules" />
         <ant dir="../Common" inheritall="false" target="clean"/>
         <ant dir="../Search" inheritall="false" target="clean"/>
         <ant dir="../Index" inheritall="false" target="clean"/>
         <ant dir="../Ingest" inheritall="false" target="clean"/>
         <ant dir="../FacetBrowser" inheritall="false" target="clean"/>
-        <echo message="Cleaning this module"/>
+        <echo message="Cleaning this module"/>-->
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
         <delete dir="${tmp.dir}"/>
