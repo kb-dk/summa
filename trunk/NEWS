@@ -1,4 +1,48 @@
 ========================
+2010-03-24: Summa 1.5.4
+========================
+ 
+ * Feature: Did-You-Mean service built index on start-up, iff index 
+   is not already present. Searching while building index results in 
+   an empty search response.
+   Added DidYouMean support to the sample website.
+
+ * NOTICE: Did-You-Mean static root for index is renamed to 'index' 
+   since the index created by FSDirectory is by default placed in
+   the directory 'didyoumean'.
+
+ * NOTICE: didyoumean.xml config file, uses a RAMDirectory as standard.
+   Should be changed to FSDirectory if using large indexes to generate 
+   the Did-You-Mean index.
+	  
+ * Feature: Added merge method to merge responses to Did-You-Mean
+   service.
+
+ * Feature: Added Did-You-Mean search tool. Found in
+   'didyoumean-tool.sh' or 'didyoumean-tool.bat'.
+
+ * Feature: Status and Sample website now shows version number and
+   revision tag. This fixes #78 in tracker.
+
+ * Bugfix: Updated SearchWS so it now returns valid XML, when an
+   error occur in creation of a search response. See schema 
+   'SearchErrorResponse.xsd' for details.
+
+ * Bugfix: Sample and status websites are updated to XHTML 1.0.   
+
+ * Bugfix: in PriorityQueue.
+
+ * Cleanup in ant targets.
+   - ant jars - which builds all jar/war files and creates 
+                '/dist/summa-test-$version.zip', with all jars 
+                and wars, along with a summix.
+	              This is done in approximately 20 seconds on ssd.
+   - ant release - builds a full release zip in /dist.
+                This takes approximately 105 seconds on ssd.
+   Furthermore each module has the possibility to make a 'jar' or 
+   'release'.
+ 
+========================
 2010-03-11: Summa 1.5.3
 ========================
 
@@ -1409,3 +1453,5 @@ The feature set of this release is not much more than what you will find on the
 tutorial page at :
 
       http://wiki.statsbiblioteket.dk/summa/Tutorials/MinimalDeployment0.8.0
+
+ LocalWords:  didyoumean
