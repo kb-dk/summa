@@ -1,3 +1,296 @@
+2010-03-24 09:23  hkirk
+
+	* [r2252] Common/build.xml, Control/build.xml,
+	  FacetBrowser/build.xml, Index/build.xml, Ingest/build.xml,
+	  Samples/Summix/build.xml, Samples/build.xml, Search/build.xml,
+	  Storage/build.xml, Support/build.xml, Web/build.xml,
+	  Workflow/build.xml, build.properties, build.xml:
+	  
+	  Bugfix: "Cleaned" ant. This means that we have to main targest
+	  for main Summa modules.
+	  ant jars - which build jar and creates a summa-test-$version.zip
+	  in /dist with all jars and wars, along with a running summix.
+	  This is done in aprox 20sec on ssd
+	  ant release - builds a full release in /dist and takes 1.45 sec
+	  on ssd.
+	  Furthermore each module has the posibility to make a 'jar' or
+	  'release'.
+	  Unit test targest havn't be touched and should still work.
+
+2010-03-23 15:55  toke-sb
+
+	* [r2251] Web/website_resources/index.jsp:
+	  
+	  Minor: Made index.jsp for the sample website more robust with
+	  regards to DidyouMean
+
+2010-03-23 14:38  toke-sb
+
+	* [r2250] Common/test/configuration.xml,
+	  Ingest/src/dk/statsbiblioteket/summa/storage/api/filter[ADD],
+	  Summa.ipr, Web/website_resources/index.jsp,
+	  Web/website_resources/xslt/didyoumean.xsl[ADD]:
+	  
+	  Added DidYouMean support to the sample website
+
+2010-03-23 12:41  toke-sb
+
+	* [r2249] Web/website_resources/index.jsp:
+	  
+	  BugFix: clearBuffer, not clearbuffer in index.jsp for the sample
+	  website
+
+2010-03-23 12:09  hkirk
+
+	* [r2248] Control/build.xml, FacetBrowser/build.xml,
+	  Search/build.xml, Storage/build.xml, Support/build.xml,
+	  Web/build.xml:
+	  
+	  Bugfix: building failed on release/all since some jar was removed
+	  in the process
+
+2010-03-23 10:45  toke-sb
+
+	* [r2247] Ingest/src/dk/statsbiblioteket/summa/storage/api[ADD],
+	  Web/config/website/services.xml:
+	  
+	  web: Added didyoumean to the list of services for the sample
+	  website
+
+2010-03-22 13:33  toke-sb
+
+	* [r2246]
+	  Search/src/dk/statsbiblioteket/summa/search/api/tools/SearchTool.java:
+	  
+	  GUI: Added DidYouMean example arguments to SearchTool
+
+2010-03-18 13:04  hkirk
+
+	* [r2245] Control/build.xml, FacetBrowser/build.xml,
+	  Search/build.xml, Storage/build.xml, Support/build.xml,
+	  Web/build.xml, build.xml:
+	  
+	  Bugfix: ant clean, also removes dist directory, which have given
+	  problems with compiling when editing in more than one module.
+	  Small fixes to runTest, which in some cases also do some ugly
+	  cleanup
+
+2010-03-18 13:01  hkirk
+
+	* [r2244] Common/Common.iml, FacetBrowser/FacetBrowser.iml,
+	  Index/Index.iml, Ingest/Ingest.iml, Search/Search.iml,
+	  Storage/Storage.iml, Summa.iml, Support/Support.iml, Web/Web.iml:
+	  
+	  Updated iml filer, such that they ignore report directories,
+	  created by ant test scripts
+
+2010-03-18 10:16  hkirk
+
+	* [r2243]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultExternal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/Response.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponseSample.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchErrorResponse.xsd[ADD],
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchErrorResponseSample.xml[ADD],
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Bugfix: Updated SearchWS so it now returns valid XML, when an
+	  error occur in creation of a search response.
+
+2010-03-17 14:53  hkirk
+
+	* [r2242]
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java:
+	  
+	  Bugfix: javadoc
+
+2010-03-17 14:49  hkirk
+
+	* [r2241]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Review: review and followup
+
+2010-03-17 14:42  hkirk
+
+	* [r2240]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java:
+	  
+	  Bugfix: Added javadoc. And QAInfo
+
+2010-03-17 14:27  hkirk
+
+	* [r2239] Web/status_resources/index.jsp,
+	  Web/website_resources/index.jsp:
+	  
+	  Bugfix: html is now valid.
+	  Feature: Status site now shows summa version number.
+
+2010-03-17 14:03  hkirk
+
+	* [r2238] Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Bugfix: updated javadoc, code style (for most of this class).
+	  Added QAInfo annotaion.
+	  Info: QA_NEEDED
+
+2010-03-17 12:43  hkirk
+
+	* [r2237] Web/website_resources/index.jsp:
+	  
+	  Feature: added version/revision to title tag.
+	  Bugfix: updated to XHTML 1.0
+
+2010-03-17 12:43  hkirk
+
+	* [r2236]
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java:
+	  
+	  Feature: added getVersion:String to SummaConstants class.
+
+2010-03-17 11:45  hkirk
+
+	* [r2235] build.properties, build.xml:
+	  
+	  Feature: Ant target for updating version/revision in both
+	  build.properties and SummaConstants.java
+
+2010-03-17 11:44  hkirk
+
+	* [r2234]
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java[ADD]:
+	  
+	  Feature: Added version/revision constants for usage in web
+	  interface and status, #78 in the tracker
+
+2010-03-16 13:53  hkirk
+
+	* [r2233]
+	  Common/test/dk/statsbiblioteket/summa/common/util/PriorityQueueLongTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/PriorityQueueTest.java:
+	  
+	  Bugfix: updated test in both priorityqueues to test for the bug
+	  solved in last revision.
+
+2010-03-16 13:51  hkirk
+
+	* [r2232]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PriorityQueue.java:
+	  
+	  Bugfix: Removed index bug in setValues
+
+2010-03-16 12:45  hkirk
+
+	* [r2231]
+	  Common/test/dk/statsbiblioteket/summa/common/util/PriorityQueueTest.java:
+	  
+	  Bugfix: updated empty test cases
+
+2010-03-16 12:24  hkirk
+
+	* [r2230] Common/src/dk/statsbiblioteket/summa/common/Record.java:
+	  
+	  Bugfix: fixed Todo
+
+2010-03-16 12:12  hkirk
+
+	* [r2229]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java:
+	  
+	  Bugfix: removed old todo
+
+2010-03-16 12:11  hkirk
+
+	* [r2228]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/ResultSetCursor.java:
+	  
+	  Feature: implemented remove() and made review.
+
+2010-03-16 10:38  hkirk
+
+	* [r2227]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java:
+	  
+	  Bugfix: delete old database file, before creating new database,
+	  when creating storage using SearchTest
+
+2010-03-16 10:13  hkirk
+
+	* [r2226] Samples/Summix/config/didyoumean.xml:
+	  
+	  Bugfix: Updated index static root for Did-you-mean to 'index',
+	  because the index created by FSDirectory is by default placed in
+	  didyoumean
+
+2010-03-16 10:12  hkirk
+
+	* [r2225]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Feature: Did-You-Mean tool support searches when building index,
+	  we then return empty search response.
+	  Did-you-mean reuses old index if pressent
+
+2010-03-15 14:58  hkirk
+
+	* [r2224]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java:
+	  
+	  Feature: added merge, need to test Did-You-Mean service on
+	  distributed search system, to make sure this works.
+	  Implementation is pretty straight forward.
+
+2010-03-15 14:39  hkirk
+
+	* [r2223]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Feature: Started building the logic, which should make sure
+	  Did-You-Mean module don't rebuild index if it already exists.
+	  Feature: A call to manageSearch while creating/opening index now
+	  result in an empty searcy response.
+
+2010-03-15 14:38  hkirk
+
+	* [r2222] Samples/Summix/config/didyoumean.xml:
+	  
+	  The didyoumean.xml config file,uses a RAMDirectory as standard.
+	  Should be changed if using large indexes to generate the
+	  did-you-mean index.
+
+2010-03-15 12:06  hkirk
+
+	* [r2221]
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeImpl.java:
+	  
+	  Bugfix: added QA info and fixed line length
+
+2010-03-15 08:49  hkirk
+
+	* [r2220]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/ReadableStorage.java:
+	  
+	  Review
+
+2010-03-12 10:09  hkirk
+
+	* [r2219]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java:
+	  
+	  Bugfix: Updated class with javadoc and QA options. This method
+	  now is in need of review.
+
+2010-03-11 14:44  hkirk
+
+	* [r2217] ChangeLog, NEWS, build.properties:
+	  
+	  Updated Changelog, NEWS file and build.properties for Summa 1.5.3
+
 2010-03-11 14:10  hkirk
 
 	* [r2216]
