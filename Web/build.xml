@@ -72,7 +72,7 @@
     <target name=".phony"><!-- Dummy target --></target>
 
     <target name=".getCommon">
-        <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
+        <condition property="releaseCommonTask" value=".phony" else="jar">
             <available file="../${summa.ilib.common}"/>
         </condition>
         <antcall target="${releaseCommonTask}"/>
@@ -80,11 +80,11 @@
     </target>
 
     <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
+        <ant inheritAll="false" dir="../Common" target=".release"/>
     </target>
 
     <target name=".getStorage">
-        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
+        <condition property="releaseStorageTask" value=".phony" else="jar">
             <available file="../${summa.ilib.storage.api}"/>
         </condition>
         <antcall target="${releaseStorageTask}"/>
@@ -92,11 +92,11 @@
     </target>
 
     <target name=".releaseStorage">
-        <ant inheritAll="false" dir="../Storage" target="release"/>
+        <ant inheritAll="false" dir="../Storage" target=".release"/>
     </target>
 
     <target name=".getSupport">
-        <condition property="releaseSupportTask" value=".phony" else=".releaseSupport">
+        <condition property="releaseSupportTask" value=".phony" else="jar">
             <available file="../${summa.ilib.support.api}"/>
         </condition>
         <antcall target="${releaseSupportTask}"/>
@@ -104,11 +104,11 @@
     </target>
 
     <target name=".releaseSupport">
-        <ant inheritAll="false" dir="../Support" target="release"/>
+        <ant inheritAll="false" dir="../Support" target=".release"/>
     </target>
 
     <target name=".getSearch">
-        <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
+        <condition property="releaseSearchTask" value=".phony" else="jar">
             <available file="../${summa.ilib.search.api}"/>
         </condition>
         <antcall target="${releaseSearchTask}"/>
@@ -116,11 +116,11 @@
     </target>
 
     <target name=".releaseSearch">
-        <ant inheritAll="false" dir="../Search" target="release"/>
+        <ant inheritAll="false" dir="../Search" target=".release"/>
     </target>
 
     <target name=".getFacetBrowser">
-        <condition property="releaseFacetBrowserTask" value=".phony" else=".releaseFacetBrowser">
+        <condition property="releaseFacetBrowserTask" value=".phony" else="jar">
             <available file="../${summa.ilib.facetbrowser.api}"/>
         </condition>
         <antcall target="${releaseFacetBrowserTask}"/>
@@ -128,12 +128,12 @@
     </target>
 
     <target name=".releaseFacetBrowser">
-        <ant inheritAll="false" dir="../FacetBrowser" target="release"/>
+        <ant inheritAll="false" dir="../FacetBrowser" target=".release"/>
     </target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If we miss some libs we call the getLibs target -->
         <echo message="Checking for 3rd party libs"/>
@@ -188,7 +188,7 @@
         </pathconvert>
     </target>
 
-    <target name=".release.depends" depends="depends">
+    <target name=".release.depends" depends=".depends">
 
     </target>
 
@@ -232,7 +232,7 @@
         <delete dir="${doc.dir}"/>
     </target>
 
-    <target name="compiletest" depends="compile">
+    <target name=".compiletest" depends="compile">
         <mkdir dir="${test.build.dir}" />
         <javac srcdir="${test.src.dir}" destdir="${test.build.dir}"
                encoding="UTF-8" verbose="true" >
@@ -241,7 +241,7 @@
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <mkdir dir="${test.report.dir}" />
         <delete dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}" fork="true">
@@ -265,9 +265,9 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
@@ -307,7 +307,7 @@
         -->
     </target>
 
-    <target name=".search.war" depends=".release.depends, clean, compile">
+    <target name=".search.war"> <!--  depends=".release.depends, clean, compile">-->
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.search.war}"
              webxml="config/search/web.xml">
@@ -336,7 +336,7 @@
         </war>
     </target>
 
-    <target name=".storage.war" depends=".release.depends, clean, compile">
+    <target name=".storage.war"> <!--  depends=".release.depends, clean, compile"> -->
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.storage.war}"
              webxml="config/storage/web.xml">
@@ -365,7 +365,7 @@
         </war>
     </target>
 
-    <target name=".website.war" depends=".release.depends, clean, compile">
+    <target name=".website.war"> <!--  depends=".release.depends, clean, compile">-->
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.website.war}"
              webxml="config/website/web.xml">
@@ -391,7 +391,7 @@
         </war>
     </target>
 
-    <target name=".status.war" depends=".release.depends, clean, compile">
+    <target name=".status.war"> <!-- depends=".release.depends, clean, compile">-->
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.status.war}"
              webxml="config/status/web.xml">
@@ -424,15 +424,17 @@
         </war>
     </target>
 
-    <target name=".jar" depends=".search.war, .storage.war, .website.war, .status.war">
-
+    <target name="wars" depends="compile">
+        <antcall target=".search.war" />
+        <antcall target=".storage.war" />
+        <antcall target=".website.war" />
+        <antcall target=".status.war" />
     </target>
 
+    <target name="jar" depends="wars" />
 
-    <target name=".release.search" depends=".release.depends, .search.war, .storage.war, .website.war, .status.war, doc">
-
+    <target name=".release" depends=".release.depends, wars, doc">
         <mkdir dir="${dist.dir}"/>
-
         <property name="prefix" value="${release}"/>
 
         <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
@@ -440,7 +442,6 @@
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
-
             <zipfileset prefix="${prefix}" file="${release.search.war}"/>
             <zipfileset prefix="${prefix}" file="${release.storage.war}"/>
             <zipfileset prefix="${prefix}" file="${release.website.war}"/>
@@ -453,16 +454,13 @@
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
-
         </zip>
-
         <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
     </target>
 
-    <target name="release" depends="distclean, .release.search"/>
+    <target name="release" depends="distclean, .release"/>
 
     <target name="all" depends="release"/>
-
 </project>
 
 

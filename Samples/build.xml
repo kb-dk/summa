@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project default="release" name="Samples" basedir=".">
+<project default=".release" name="Samples" basedir=".">
 
     <property file="${basedir}/../build.properties"/>
     
@@ -15,7 +15,7 @@
     </tstamp>
 
     <!-- Run all samples -->
-    <target name="release" depends="distclean">
+    <target name=".release" depends="distclean">
         <ant dir="Summix" inheritall="false"/>
     </target>
     

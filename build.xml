@@ -17,7 +17,7 @@
     </tstamp>
 
     <!-- Ensure we have global libs and correct Java and Ant version -->
-    <target name="depends">
+    <target name=".depends">
         <echo message="Checking Java compiler version is 1.6"/>
         <condition property="hasJava">
             <equals arg1="${summa.compiler.version}" arg2="${ant.java.version}"/>
@@ -55,27 +55,27 @@
         The module listing here takes module dependencies into account.
         Bad ordering may prolong compilation (but not break it)
     -->
-    <target name="all" depends="depends, .standalone.jar">
-        <ant dir="Common" inheritall="false" />
-        <ant dir="Storage" inheritall="false" />
-        <ant dir="Ingest" inheritall="false" />
-        <ant dir="Index" inheritall="false" />
-        <ant dir="Search" inheritall="false" />
-        <ant dir="Support" inheritall="false" />
-        <ant dir="FacetBrowser" inheritall="false" />
-        <ant dir="Control" inheritall="false" />
-        <ant dir="Web" inheritall="false" />
-        <ant dir="Workflow" inheritall="false" />
-        <ant dir="Samples" inheritall="false" />
+    <target name=".release.modules" depends=".depends, .standalone.jar">
+        <ant dir="Common" inheritall="false" target=".release" />
+        <ant dir="Storage" inheritall="false" target=".release" />
+        <ant dir="Ingest" inheritall="false" target=".release" />
+        <ant dir="Index" inheritall="false" target=".release" />
+        <ant dir="Search" inheritall="false" target=".release" />
+        <ant dir="Support" inheritall="false" target=".release" />
+        <ant dir="FacetBrowser" inheritall="false" target=".release" />
+        <ant dir="Control" inheritall="false" target=".release" />
+        <ant dir="Web" inheritall="false" target=".release" />
+        <ant dir="Workflow" inheritall="false" target=".release" />
+        <ant dir="Samples" inheritall="false" target=".release" />
     </target>
 
     <!-- Build documentation for all modules -->  
     <target name="doc">
         <mkdir dir="${apidocs.dir}"/>        
-        <javadoc packagenames="dk.statsbiblioteket.*"
-                destdir="${apidocs.dir}" author="true"
-                version="true" access="protected" windowtitle="Summa Documentation - ${summa.version}"
-                additionalparam="-breakiterator">
+        <javadoc packagenames="dk.statsbiblioteket.*" destdir="${apidocs.dir}"
+                 author="true" version="true" access="protected"
+                 windowtitle="Summa Documentation - ${summa.version}"
+                 additionalparam="-breakiterator">
             <classpath>
                 <fileset dir="${basedir}">
                     <include name="*/lib/**/*.jar"/>
@@ -157,18 +157,18 @@
     </target>
 
     <!-- Compile all test cases in all modules -->
-    <target name="compiletests">
+    <target name=".compiletests">
         <echo message="Compiling all modules tests"/>
-        <ant dir="Common" inheritall="false" target="compiletest"/>
-        <ant dir="Storage" inheritall="false" target="compiletest"/>
-        <ant dir="Ingest" inheritall="false" target="compiletest"/>
-        <ant dir="Index" inheritall="false" target="compiletest"/>
-        <ant dir="Search" inheritall="false" target="compiletest"/>
-        <ant dir="Support" inheritall="false" target="compiletest"/>
-        <ant dir="FacetBrowser" inheritall="false" target="compiletest"/>
-        <ant dir="Control" inheritall="false" target="compiletest"/>
-        <ant dir="Web" inheritall="false" target="compiletest"/>
-        <ant dir="Workflow" inheritall="false" target="compiletest"/>
+        <ant dir="Common" inheritall="false" target=".compiletest"/>
+        <ant dir="Storage" inheritall="false" target=".compiletest"/>
+        <ant dir="Ingest" inheritall="false" target=".compiletest"/>
+        <ant dir="Index" inheritall="false" target=".compiletest"/>
+        <ant dir="Search" inheritall="false" target=".compiletest"/>
+        <ant dir="Support" inheritall="false" target=".compiletest"/>
+        <ant dir="FacetBrowser" inheritall="false" target=".compiletest"/>
+        <ant dir="Control" inheritall="false" target=".compiletest"/>
+        <ant dir="Web" inheritall="false" target=".compiletest"/>
+        <ant dir="Workflow" inheritall="false" target=".compiletest"/>
         <!-- Legacy modules not built: -->
         <!-- <ant dir="ClusterExtractor" inheritall="false" target="compiletest"/>-->
     </target>
@@ -269,16 +269,16 @@
     <!-- Compile all project jar files -->
     <target name=".jar">
         <echo message="Compiling all jar files"/>
-        <ant dir="Common" inheritall="false" target=".jar"/>
-        <ant dir="Storage" inheritall="false" target=".jar"/>
-        <ant dir="Ingest" inheritall="false" target=".jar"/>
-        <ant dir="Index" inheritall="false" target=".jar"/>
-        <ant dir="Search" inheritall="false" target=".jar"/>
-        <ant dir="Support" inheritall="false" target=".jar"/>
-        <ant dir="FacetBrowser" inheritall="false" target=".jar"/>
-        <ant dir="Control" inheritall="false" target=".jar"/>
-        <ant dir="Web" inheritall="false" target=".jar"/>
-        <ant dir="Workflow" inheritall="false" target=".jar"/>
+        <ant dir="Common" inheritall="false" target="jar"/>
+        <ant dir="Storage" inheritall="false" target="jar"/>
+        <ant dir="Ingest" inheritall="false" target="jar"/>
+        <ant dir="Index" inheritall="false" target="jar"/>
+        <ant dir="Search" inheritall="false" target="jar"/>
+        <ant dir="Support" inheritall="false" target="jar"/>
+        <ant dir="FacetBrowser" inheritall="false" target="jar"/>
+        <ant dir="Control" inheritall="false" target="jar"/>
+        <ant dir="Web" inheritall="false" target="jar"/>
+        <ant dir="Workflow" inheritall="false" target="jar"/>
     </target>
 
     <target name=".standalone.jar" depends=".jar">
@@ -311,7 +311,7 @@
     </target>
 
     <!-- Wrap up a tarball ready for distribution -->
-    <target name="release" depends="depends, distclean, all, doc">
+    <target name="release" depends="distclean, .depends, .release.modules, doc">
         <antcall target="tarball">
             <param name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
             <param name="release.file" value="${dist.dir}/summa-${summa.version}.zip" />
@@ -320,7 +320,9 @@
     </target>
 
     <!-- Wrap up a tarball ready for test -->
-    <target name="test" depends="depends, distclean, all">
+    <target name="jars" depends=".depends, distclean">
+        <echo message="Releasing version of summix" />
+        <ant dir="Samples" inheritall="false" target=".release" />
         <antcall target="tarball">
             <param name="release.tmp.dir" value="${dist.dir}/summa-test-${summa.version}.tmp" />
             <param name="release.file" value="${dist.dir}/summa-test-${summa.version}.zip" />

@@ -71,7 +71,7 @@
     </target>
 
     <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
+        <ant inheritAll="false" dir="../Common" target="jar"/>
     </target>
 
     <target name=".compileStorage">
@@ -79,12 +79,12 @@
     </target>
 
     <target name=".releaseStorage">
-        <ant inheritAll="false" dir="../Storage" target="release"/>
+        <ant inheritAll="false" dir="../Storage" target="jar"/>
     </target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If we miss some libs we call the getLibs target -->
         <echo message="Checking for 3rd party libs"/>
@@ -120,7 +120,7 @@
         </pathconvert>
     </target>
 
-    <target name=".release.depends" depends="depends">
+    <target name=".release.depends" depends=".depends">
         <!-- Check that Common release is compiled -->
         <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
             <available file="../${summa.ilib.common}"/>
@@ -147,10 +147,10 @@
     </target>
 
     <target name="clean">
-        <!--<echo message="Cleaning depended modules" />
+        <echo message="Cleaning depended modules" />
         <ant dir="../Common" inheritall="false" target="clean"/>
         <ant dir="../Storage" inheritall="false" target="clean"/>
-        <echo message="Cleaning this module"/>-->
+        <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
@@ -164,15 +164,15 @@
         <delete dir="${doc.dir}"/>
     </target>
 
-    <target name="compiletest" depends="compile">
-        <javac srcdir="${test.src.dir}" destdir="${build.dir}"
-               encoding="UTF-8" verbose="true" >
+    <target name=".compiletest" depends="compile">
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               verbose="true" compiler="${compiler}" optimize="on" debug="on">
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}" fork="true">
@@ -200,23 +200,15 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
-        </javac>
-    </target>
-
-    <target name="test.compile">
-        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
-               compiler="${compiler}" optimize="on"
-               debug="on">
-            <classpath refid="test.lib.path"/>
         </javac>
     </target>
 
@@ -244,7 +236,12 @@
         <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
              includes="dk/statsbiblioteket/summa/search/api/**/*"/>
     </target>
-    
+
+    <target name="jar" depends=".jar">
+        <mkdir dir="${dist.dir}"/>
+        <copy file="${release.jar}" todir="${dist.dir}" />
+        <copy file="${release.api.jar}" todir="${dist.dir}" />
+    </target>
     
     <!-- This target has been disabled from the default build because
          the search service is going to broken for a good while anyway -->
@@ -273,10 +270,8 @@
         </jar>
     </target>
 
-    <target name=".release.search" depends=".release.depends, .jar, doc">
-
+    <target name=".release" depends=".release.depends, .jar, doc">
         <mkdir dir="${dist.dir}"/>
-
         <property name="prefix" value="${release}"/>
 
         <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
@@ -284,10 +279,8 @@
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
-
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
             <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
-            
             <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
 
             <zipfileset prefix="${prefix}/lib"  dir="${lib.dir}" includes="${lib.files}"/>
@@ -299,16 +292,13 @@
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
-
         </zip>
-
         <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
     </target>
 
-    <target name="release" depends="distclean, .release.search"/>
+    <target name="release" depends="distclean, .release"/>
 
     <target name="all" depends="release"/>
-
 </project>
 
 

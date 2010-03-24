@@ -73,7 +73,7 @@
     </target>
 
     <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
+        <ant inheritAll="false" dir="../Common" target="jar"/>
     </target>
 
     <target name=".compileIndex">
@@ -81,7 +81,7 @@
     </target>
 
     <target name=".releaseIndex">
-        <ant inheritAll="false" dir="../Index" target="release"/>
+        <ant inheritAll="false" dir="../Index" target="jar"/>
     </target>
 
     <target name=".compileSearch">
@@ -89,12 +89,12 @@
     </target>
 
     <target name=".releaseSearch">
-        <ant inheritAll="false" dir="../Search" target="release"/>
+        <ant inheritAll="false" dir="../Search" target="jar"/>
     </target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If libs/ does not exist, call getLibs target -->
         <echo message="Checking for libs/"/>
@@ -137,7 +137,7 @@
         </pathconvert>
     </target>
 
-    <target name=".release.depends" depends="depends">
+    <target name=".release.depends" depends=".depends">
         <!-- Check that Common release is compiled -->
         <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
             <available file="../${summa.ilib.common}"/>
@@ -158,11 +158,11 @@
     </target>
 
     <target name="clean">
-        <!--<echo message="Cleaning depended modules" />
+        <echo message="Cleaning depended modules" />
         <ant dir="../Common" inheritall="false" target="clean"/>
         <ant dir="../Search" inheritall="false" target="clean"/>
         <ant dir="../Index" inheritall="false" target="clean"/>
-        <echo message="Cleaning this module"/>-->
+        <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
@@ -176,16 +176,16 @@
         <delete dir="${doc.dir}"/>
     </target>
 
-    <target name="compiletest" depends="compile">
+    <target name=".compiletest" depends="compile">
         <mkdir dir="${build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${build.dir}"
-               encoding="UTF-8" verbose="true" >
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               verbose="true" compiler="${compiler}" optimize="on" debug="on">
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}/../" fork="true">
@@ -208,7 +208,7 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
     <target name=".getLibs">
         <mkdir dir="${lib.dir}"/>
@@ -221,7 +221,7 @@
     </target>
 
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
@@ -230,17 +230,6 @@
             <classpath refid="lib.internal"/>
         </javac>
     </target>
-
-    <target name="test.compile" depends="depends">
-        <mkdir dir="${build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
-               compiler="${compiler}" optimize="on"
-               debug="on">
-            <classpath refid="test.lib.path"/>
-            <classpath refid="lib.internal"/>
-        </javac>
-    </target>
-
 
     <target name="doc" depends="compile">
         <mkdir dir="${doc.dir}"/>
@@ -269,8 +258,15 @@
              includes="dk/statsbiblioteket/summa/facetbrowser/api/**/*"/>
     </target>
 
-    <target name="release" depends="distclean, .release.depends, .jar, doc">
+    <target name="jar" depends=".jar">
+        <mkdir dir="${dist.dir}"/>
+        <copy file="${release.jar}" todir="${dist.dir}" />
+        <copy file="${release.api.jar}" todir="${dist.dir}" />
+    </target>
 
+    <target name="release" depends="distclean, .release" />
+
+    <target name=".release" depends=".release.depends, .jar, doc">
         <mkdir dir="${dist.dir}"/>
 
         <property name="prefix" value="${release}"/>
@@ -280,7 +276,6 @@
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
-
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
             <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
             
@@ -293,27 +288,24 @@
             <zipfileset dir="${basedir}/config" prefix="${prefix}/config">
                 <include name="**/*"/>
             </zipfileset>
-
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
-
         </zip>
-
         <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
-
     </target>
 
-    <target name="test" depends="test.compile">
+    <!--
+    <target name="test" depends=".compiletest">
         <junit printsummary="withOutAndErr" haltonfailure="yes" haltonerror="yes">
             <classpath refid="test.lib.path" />
             <formatter type="plain" usefile="no" />
 
-            <!-- add tests here -->
+             TODO add tests here >
             <test name="dk.statsbiblioteket.summa.facetbrowser.TestCommon" />
 
         </junit>
-    </target>
+    </target> -->
 
     <target name="all" depends="release"/>
 

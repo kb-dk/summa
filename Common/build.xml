@@ -59,9 +59,9 @@
 
     <target name=".phony"><!-- Dummy target --></target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If libs/ does not exist, call getLibs target -->
         <echo message="Checking for libs/"/>
@@ -100,7 +100,7 @@
         <delete dir="${doc.dir}" />
     </target>
 
-    <target name="compiletest" depends="compile">
+    <target name=".compiletest" depends="compile">
         <mkdir  dir="${build.dir}" />
         <javac srcdir="${test.src.dir}" destdir="${build.dir}"
                encoding="UTF-8" verbose="true" >
@@ -108,7 +108,7 @@
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}/../" fork="true">
@@ -130,7 +130,7 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
@@ -148,7 +148,7 @@
     </target>
 
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <!-- Set source files up in tmp.dir and expand any properties
              inside the codebase -->
         <delete dir="${build.dir}"/>
@@ -205,7 +205,6 @@
                 <include name="dk/statsbiblioteket/summa/**"/>
             </packageset>
         </javadoc>
-
     </target>
 
     <target name=".jar" depends="compile">
@@ -213,41 +212,36 @@
                 excludes="log4j.xml"/>
     </target>
 
-    <target name="release" depends="distclean, depends, .jar, doc">
-
+    <target name="jar" depends=".jar">
         <mkdir dir="${dist.dir}"/>
+        <copy file="${release.jar}" todir="${dist.dir}" />
+    </target>
 
+    <target name="release" depends="distclean, .release" />
+
+    <target name=".release" depends=".depends, .jar, doc">
+        <mkdir dir="${dist.dir}"/>
         <property name="prefix" value="${release}"/>
-
         <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
             <fileset dir="${doc.dir}" includes="**/*"/>
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
-
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
-
             <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
-
             <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
-
             <zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin" filemode="755">
                 <include name="*"/>
             </zipfileset>
-
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
-
         </zip>
 
         <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
     </target>
 
-
-
     <target name="all" depends="release" />
-
 </project>
 
 
