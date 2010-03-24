@@ -76,7 +76,7 @@
     </target>
 
     <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
+        <ant inheritAll="false" dir="../Common" target="jar"/>
     </target>
 
     <target name=".compileStorage">
@@ -84,7 +84,7 @@
     </target>
 
     <target name=".releaseStorage">
-        <ant inheritAll="false" dir="../Storage" target="release"/>
+        <ant inheritAll="false" dir="../Storage" target="jar"/>
     </target>
 
     <target name=".compileIngest">
@@ -92,7 +92,7 @@
     </target>
 
     <target name=".releaseIngest">
-        <ant inheritAll="false" dir="../Ingest" target="release"/>
+        <ant inheritAll="false" dir="../Ingest" target="jar"/>
     </target>
 
     <target name=".compileIndex">
@@ -100,7 +100,7 @@
     </target>
 
     <target name=".releaseIndex">
-        <ant inheritAll="false" dir="../Index" target="release"/>
+        <ant inheritAll="false" dir="../Index" target="jar"/>
     </target>
 
     <target name=".compileSearch">
@@ -108,7 +108,7 @@
     </target>
 
     <target name=".releaseSearch">
-        <ant inheritAll="false" dir="../Search" target="release"/>
+        <ant inheritAll="false" dir="../Search" target="jar"/>
     </target>
 
     <target name=".compileSupport">
@@ -116,7 +116,7 @@
     </target>
 
     <target name=".releaseSupport">
-        <ant inheritAll="false" dir="../Support" target="release"/>
+        <ant inheritAll="false" dir="../Support" target="jar"/>
     </target>
 
     <target name=".compileFacetBrowser">
@@ -124,12 +124,12 @@
     </target>
 
     <target name=".releaseFacetBrowser">
-        <ant inheritAll="false" dir="../FacetBrowser" target="release"/>
+        <ant inheritAll="false" dir="../FacetBrowser" target="jar"/>
     </target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If libs/ does not exist, call getLibs target -->
         <echo message="Checking for libs/"/>
@@ -202,7 +202,7 @@
         </pathconvert>
     </target>
 
-    <target name=".release.depends" depends="depends">
+    <target name=".release.depends" depends=".depends">
         <!-- Check that Common release is compiled -->
         <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
             <available file="../${summa.ilib.common}"/>
@@ -247,7 +247,7 @@
     </target>
 
     <target name="clean">
-        <!--<echo message="Cleaning depended modules" />
+        <echo message="Cleaning depended modules" />
         <ant dir="../Common" inheritall="false" target="clean"/>
         <ant dir="../Search" inheritall="false" target="clean"/>
         <ant dir="../Index" inheritall="false" target="clean"/>
@@ -255,7 +255,7 @@
         <ant dir="../FacetBrowser" inheritall="false" target="clean"/>
         <ant dir="../Storage" inheritall="false" target="clean"/>
         <ant dir="../Support" inheritall="false" target="clean"/>
-        <echo message="Cleaning this module"/> -->
+        <echo message="Cleaning this module"/>
 
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
@@ -271,16 +271,18 @@
         <delete dir="${doc.dir}"/>
     </target>
 
-    <target name="compiletest" depends="compile">
+    <target name=".compiletest" depends="compile">
         <mkdir dir="${build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${build.dir}"
-               encoding="UTF-8" verbose="true" >
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               verbose="true" compiler="${summa.compiler}"
+               optimize="${summa.compiler.optimize}" debug="on"> <!-- TODO check switches -->
             <classpath refid="test.lib.path" />
             <classpath refid="lib.internal"/>
+            <classpath refid="lib.path"/>
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}" fork="true">
@@ -303,7 +305,7 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />    
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
@@ -319,24 +321,13 @@
     </target>
 
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${summa.compiler}" optimize="${summa.compiler.optimize}"
                debug="${summa.compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>            
-        </javac>
-    </target>
-
-    <target name="test.compile" depends="compile">
-        <mkdir dir="${test.build.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" encoding="UTF-8"
-               compiler="${summa.compiler}" optimize="${summa.compiler.optimize}"
-               debug="on">
-            <classpath refid="lib.path"/>
-            <classpath refid="test.lib.path"/>
-            <classpath refid="lib.internal"/>
         </javac>
     </target>
 
@@ -372,6 +363,12 @@
         </copy>
     </target>
 
+    <target name="jar" depends=".jar">
+        <mkdir dir="${dist.dir}"/>
+        <copy file="${release.jar}" todir="${dist.dir}" />
+        <copy file="${release.api.jar}" todir="${dist.dir}" />
+    </target>
+
     <target name=".scripts" depends=".release.depends">
         <mkdir dir="${dist.dir}/bin"/>
         <copy todir="${dist.dir}/bin">
@@ -391,7 +388,7 @@
         </replace>
     </target>
 
-    <target name=".release.bundles" depends="depends, .release.depends, .jar, .test-client-1.bundle, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
+    <target name=".release.bundles" depends=".depends, .release.depends, .jar, .test-client-1.bundle, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
         <mkdir dir="${dist.dir}"/>
         <zip destfile="${dist.dir}/${release.bundles.zip}">
             <zipfileset prefix="${release.bundles}" dir="${dist.dir}">
@@ -438,7 +435,9 @@
         </jar>
     </target>
 
-    <target name="release" depends="distclean, depends, .scripts, .release.depends,.jar, doc">
+    <target name="release" depends="distclean, .release" />
+
+    <target name=".release" depends=".depends, .scripts, .release.depends, .jar, doc">
 
         <mkdir dir="${dist.dir}"/>
         
@@ -496,7 +495,7 @@
         </copy>
     </target>
 
-    <target name=".test-search-1.bundle" depends=".jar, test.compile">
+    <target name=".test-search-1.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -548,7 +547,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-facet-index-1.bundle" depends=".jar, test.compile">
+    <target name=".test-facet-index-1.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -601,7 +600,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-facet-search-1.bundle" depends=".jar, test.compile">
+    <target name=".test-facet-search-1.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -655,7 +654,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-ingest-1.bundle" depends=".jar, test.compile">
+    <target name=".test-ingest-1.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -705,7 +704,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-ingest-fagref.bundle" depends=".jar, test.compile">
+    <target name=".test-ingest-fagref.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -755,7 +754,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-ingest-oai.bundle" depends=".jar, test.compile">
+    <target name=".test-ingest-oai.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -805,7 +804,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-index-fagref.bundle" depends=".jar, test.compile">
+    <target name=".test-index-fagref.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -856,7 +855,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name=".test-index-oai.bundle" depends=".jar, test.compile">
+    <target name=".test-index-oai.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -960,7 +959,7 @@
         <!--<delete dir="${tmp.dir}"/>-->
     </target>
 
-    <target name=".test-client-1.bundle" depends=".jar, test.compile">
+    <target name=".test-client-1.bundle" depends=".jar, .compiletest">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Roll client bundle -->
@@ -1010,7 +1009,7 @@
 
     <target name="all" depends="release, .release.bundles, .release.bundleTool"/>
 
-    <target name="performance" depends=".jar, test.compile">
+    <target name="performance" depends=".jar, .compiletest">
         <property name="performance.dir" value="${basedir}/test/dk/statsbiblioteket/summa/performance"/>
 
         <mkdir dir="${tmp.dir}"/>

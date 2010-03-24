@@ -70,5 +70,4 @@
             <zipfileset dir="${basedir}" includes="README" prefix="${root}"/>
         </zip>
     </target>
-
 </project>

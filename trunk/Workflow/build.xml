@@ -59,28 +59,28 @@
     <target name=".phony"><!-- Dummy target --></target>
 
     <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
+        <ant inheritAll="false" dir="../Common" target="jar"/>
     </target>
 
     <target name=".releaseStorage">
-        <ant inheritAll="false" dir="../Storage" target="release"/>
+        <ant inheritAll="false" dir="../Storage" target="jar"/>
     </target>
 
     <target name=".releaseSearch">
-        <ant inheritAll="false" dir="../Search" target="release"/>
+        <ant inheritAll="false" dir="../Search" target="jar"/>
     </target>
 
     <target name=".releaseControl">
-        <ant inheritAll="false" dir="../Control" target="release"/>
+        <ant inheritAll="false" dir="../Control" target="jar"/>
     </target>
 
     <target name=".releaseIngest">
-        <ant inheritAll="false" dir="../Ingest" target="release"/>
+        <ant inheritAll="false" dir="../Ingest" target="jar"/>
     </target>
 
-    <target name="depends">
+    <target name=".depends">
         <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
+        <ant inheritall="false" dir=".." target=".depends"/>
 
         <!-- If libs/ does not exist, call getLibs target -->
         <echo message="Checking for libs/"/>
@@ -155,7 +155,7 @@
         <delete dir="${doc.dir}"/>
     </target>
 
-    <target name="compiletest" depends="compile">
+    <target name=".compiletest" depends="compile">
         <javac srcdir="${test.src.dir}" destdir="${build.dir}"
                encoding="UTF-8" verbose="true" >
             <classpath refid="test.lib.path" />
@@ -163,7 +163,7 @@
         </javac>
     </target>
 
-    <target name="runtest" depends="compiletest">
+    <target name="runtest" depends=".compiletest">
         <delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}" fork="true">
@@ -186,7 +186,7 @@
         </junitreport>
     </target>
 
-    <target name="cleancompiletest" depends="clean, compiletest" />
+    <target name="cleancompiletest" depends="clean, .compiletest" />
 
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
@@ -199,7 +199,7 @@
     </target>
 
 
-    <target name="compile" depends="depends">
+    <target name="compile" depends=".depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
@@ -229,7 +229,7 @@
 
     </target>
 
-    <target name=".jar" depends="compile">
+    <target name="jar" depends="compile">
         <delete dir="${tmp.dir}"/>
         <mkdir dir="${tmp.dir}"/>
 
@@ -247,12 +247,11 @@
             </fileset>
         </unzip>
 
-        <!-- Prepare clearandgo class files -->
+        <!-- Prepare clear-and-go class files -->
         <copy todir="${tmp.dir}">
             <fileset dir="${build.dir}"
                  includes="dk/statsbiblioteket/summa/workflow/**/*"/>
         </copy>
-
         <copy file="${config.dir}/log4j.xml" todir="${tmp.dir}"/>
 
         <!-- Roll the .jar -->
@@ -265,10 +264,10 @@
         </jar>
     </target>
 
-    <target name="release" depends="distclean, .jar, doc">
+    <target name="release" depends="distclean, .release" />
 
+    <target name=".release" depends="jar, doc">
         <mkdir dir="${dist.dir}"/>
-
         <property name="prefix" value="${release}"/>
 
         <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
@@ -276,22 +275,15 @@
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
-
             <zipfileset prefix="${prefix}" dir="${dist.dir}"
                         includes="${release.jar}"/>
-
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
-
         </zip>
-
     </target>
 
-
-
     <target name="all" depends="release"/>
-
 </project>
 
 
