@@ -53,7 +53,7 @@ public class PagingCursor implements Cursor {
      * PageCursor constructor.
      *
      * @param db The database storage.
-     * @param firstPage the first page of {@link ResultSetCursor}.
+     * @param firstPage The first page of {@link ResultSetCursor}.
      */
     public PagingCursor(DatabaseStorage db,
                         ResultSetCursor firstPage) {

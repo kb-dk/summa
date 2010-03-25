@@ -99,9 +99,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         if (!hasNext()) {
             throw new NoSuchElementException ("Depleted");
         }
-
         return records.poll();
-
     }
 
     /**
