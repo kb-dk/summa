@@ -184,9 +184,10 @@ public class AggregatingStorageTest extends TestCase {
     public void assertBaseCount (String base, long expected) throws Exception {
         System.out.println("basecount: " + base + ", expected " + expected);
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
-
+        System.out.println("Iteration key: " + iterKey);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
 
+        System.out.println("Counter records in iterator: " + iterKey);
         long actual = 0;
         while (iter.hasNext()) {
             iter.next();

@@ -22,6 +22,7 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
+import java.rmi.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -134,11 +135,33 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             // iterator depleted
             throw new NoSuchElementException();
         } catch (Throwable t) {
+            // TODO: Consider should this be called if NoSuchElement on other site?
             connectionError(t);
+            checkForNoSuchElementException(t);
             throw new IOException("next("+iteratorKey+") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
+        }
+    }
+
+    /**
+     * Helper method for recursively checking a nested exception stack, this is
+     * because our RMI helper methods wraps a possible
+     * {@link NoSuchElementException} into a {@link RemoteException} when
+     * talking to a remote storage.
+     * Note: this is a result of an API which throws
+     * {@link NoSuchElementException} when a {@link Iterable} is depleted.
+     *  
+     * @param e An exception possible nested, which posibly contains a
+     * {@link NoSuchElementException}.
+     */
+    private void checkForNoSuchElementException(Throwable e) {
+        if(e instanceof RemoteException && e.getCause() != null) {
+            if(e.getCause() instanceof NoSuchElementException) {
+                throw (NoSuchElementException)e.getCause();
+            }
+            checkForNoSuchElementException(e.getCause());
         }
     }
 

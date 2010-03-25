@@ -28,11 +28,13 @@ import java.util.List;
 public interface RemoteStorage extends Storage, Remote {
 
     /* Reader methods */
-    long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws RemoteException;
+    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
+                                                         throws RemoteException;
 
     long getModificationTime (String base) throws RemoteException;
 
-    List<Record> getRecords(List<String> ids, QueryOptions options) throws RemoteException;
+    List<Record> getRecords(List<String> ids, QueryOptions options)
+                                                         throws RemoteException;
 
     Record getRecord(String id, QueryOptions options) throws RemoteException;
 
@@ -49,6 +51,7 @@ public interface RemoteStorage extends Storage, Remote {
 
     void clearBase (String base) throws RemoteException;
 
+    /* Remote methods */
 }
 
 

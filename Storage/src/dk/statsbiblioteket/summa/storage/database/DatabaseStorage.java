@@ -1062,7 +1062,7 @@ getco     */
              long mtime, String base, QueryOptions options) throws IOException {
         PreparedStatement stmt;
         String statement = "";
-        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime
+        log.debug("DatabaseStorage.getRecordsModifiedAfterCursor(" + mtime
                                        + ", '" + base + "', " + options + ").");
 
         try {
@@ -1153,7 +1153,7 @@ getco     */
             return startIterator(stmt, base, options);
         }
 
-        // Prepared stmt for a specfic base
+        // Prepared stmt for a specific base
         try {
             stmt.setString(1, base);
             stmt.setLong(2, mtimeTimestamp);
@@ -2918,9 +2918,10 @@ getco     */
     /**
      * Given a query, execute this query and transform the {@link ResultSet}
      * to a {@link ResultSetCursor}.
-     * @param stmt the statement to execute.
-     * @param base the base we are iterating over
-     * @param options query options.
+     *
+     * @param stmt The statement to execute.
+     * @param base The base we are iterating over
+     * @param options Query options.
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
