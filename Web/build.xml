@@ -72,7 +72,7 @@
     <target name=".phony"><!-- Dummy target --></target>
 
     <target name=".getCommon">
-        <condition property="releaseCommonTask" value=".phony" else="jar">
+        <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
             <available file="../${summa.ilib.common}"/>
         </condition>
         <antcall target="${releaseCommonTask}"/>
@@ -84,7 +84,7 @@
     </target>
 
     <target name=".getStorage">
-        <condition property="releaseStorageTask" value=".phony" else="jar">
+        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
             <available file="../${summa.ilib.storage.api}"/>
         </condition>
         <antcall target="${releaseStorageTask}"/>
@@ -96,7 +96,7 @@
     </target>
 
     <target name=".getSupport">
-        <condition property="releaseSupportTask" value=".phony" else="jar">
+        <condition property="releaseSupportTask" value=".phony" else=".releaseSupport">
             <available file="../${summa.ilib.support.api}"/>
         </condition>
         <antcall target="${releaseSupportTask}"/>
@@ -108,7 +108,7 @@
     </target>
 
     <target name=".getSearch">
-        <condition property="releaseSearchTask" value=".phony" else="jar">
+        <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
             <available file="../${summa.ilib.search.api}"/>
         </condition>
         <antcall target="${releaseSearchTask}"/>
@@ -120,7 +120,7 @@
     </target>
 
     <target name=".getFacetBrowser">
-        <condition property="releaseFacetBrowserTask" value=".phony" else="jar">
+        <condition property="releaseFacetBrowserTask" value=".phony" else=".releaseFacetBrowser">
             <available file="../${summa.ilib.facetbrowser.api}"/>
         </condition>
         <antcall target="${releaseFacetBrowserTask}"/>
@@ -424,16 +424,18 @@
         </war>
     </target>
 
-    <target name="wars" depends="compile">
+    <target name=".wars" depends="compile">
         <antcall target=".search.war" />
         <antcall target=".storage.war" />
         <antcall target=".website.war" />
         <antcall target=".status.war" />
     </target>
 
-    <target name="jar" depends="wars" />
+    <target name="wars" depends="distclean, .wars" />
 
-    <target name=".release" depends=".release.depends, wars, doc">
+    <target name="jar" depends=".wars" />
+
+    <target name=".release" depends=".release.depends, .wars, doc">
         <mkdir dir="${dist.dir}"/>
         <property name="prefix" value="${release}"/>
 
