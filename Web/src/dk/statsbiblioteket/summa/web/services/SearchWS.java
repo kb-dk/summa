@@ -776,7 +776,7 @@ public class SearchWS {
         } catch (XMLStreamException e) {
             throw new RuntimeException(
                     "Got XMLStreamException while constructing XML from "
-                    + "DidYouMeanResponse", e);
+                    + "search response", e);
         }
         return sw.toString();
     }
