@@ -68,7 +68,7 @@ public class StatusWS {
     Configuration conf;
 
     /**
-     * Concstructor for status web service.
+     * Constructor for status web service.
      */
     public StatusWS() {
         log = LogFactory.getLog(StatusWS.class);
