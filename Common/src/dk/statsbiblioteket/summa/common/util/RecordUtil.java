@@ -167,6 +167,27 @@ public class RecordUtil {
         return sw.toString();
     }
 
+    /**
+     * Take an XMLStreamWriter where the XML describing the given records is
+     * added.
+     *
+     * @param out The XML writer.
+     * @param record The record to XMLify.
+     * @param level The level of children we should go into.
+     * @param escapeContent True if content of records should be escaped, false
+     * otherwise.
+     * @throws IOException if XMLStreamWriter experience an error.
+     */
+    public static void toXML(XMLStreamWriter out, int level, Record record,
+                               boolean escapeContent) throws IOException {
+        try {
+            toXML(out, level,  new HashSet<Record>(10), record, escapeContent);
+        } catch(XMLStreamException e) {
+            throw new IOException("Error while creating XML for record '"
+                    + record.getId() + "'.", e);
+        }
+    }
+
     // http://www.w3.org/TR/xmlschema-2/#dateTime
     // 2002-10-10T17:00:00.000
     private static SimpleDateFormat schemaTimestampFormatter =
@@ -190,7 +211,6 @@ public class RecordUtil {
         while (indent.length() < level * 2) {
             indent += "  ";
         }
-
         if (level != 0) {
             out.writeCharacters("\n");
         }

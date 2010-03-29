@@ -182,6 +182,7 @@ public class RecordUtilTest extends TestCase {
             XMLOutputFactory.newInstance();
     private static XMLInputFactory xmlInputFactory =
             XMLInputFactory.newInstance();
+    
     public void testCopyContent() throws Exception {
         String base = "<foo><bar /> <!-- comment <hello> --> aloha "
                       + "<![CDATA[ my&<>CDATA ]]> <empty></empty> </foo>";
@@ -198,5 +199,19 @@ public class RecordUtilTest extends TestCase {
         log.debug(out.toString());
         assertEquals("Copy should strip header", expected, out.toString());
     }
+    
+    public void testToXML() throws Exception {
+        StringWriter out = new StringWriter(1000);        
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(out);
+        
+        Record r1 = createRecordWithChildren();
+        writer.writeStartDocument();
+        RecordUtil.toXML(writer, 0, r1, true);
+        writer.writeEndDocument();
+
+        assertNotNull(out.toString());
+        //System.out.println(out.toString());
+    }
+    
 }
 
