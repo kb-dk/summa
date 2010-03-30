@@ -25,23 +25,31 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * XStorage class, is a configuration storage, where it is possible to on-the
+ * -fly is possible to attach sub storage and configurations. 
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te",
-        comment = "Class and some methods needs Javadoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, hbk")
 public class XStorage implements ConfigurationStorage {
     public static final String DEFAULT_RESOURCE = "xconfiguration.xml";
 
     private static boolean unclearSemanticsWarned = false;
 
     private File storageFile;
+    /* The Storage properties. */
     private XProperties xprops;
     private static Log log = LogFactory.getLog(XStorage.class);
 
@@ -55,10 +63,23 @@ public class XStorage implements ConfigurationStorage {
         syncStorageFile();
     }*/
 
+    /**
+     * Creates a XStorage with the {@link this@nextAvailableConfigurationFile}
+     * configuration file.
+     *
+     * @throws IOException if error occur while fetching next available
+     * configuration file.
+     */
     public XStorage() throws IOException {
         this(nextAvailableConfigurationFile());
     }
 
+    /**
+     * Creates a XStorage with the given configuration.
+     *
+     * @param configuration The configuration for this XStorage.
+     * @throws IOException if error occur while manipulating files on disc.
+     */
     public XStorage(Configuration configuration) throws IOException {
         xprops = new XProperties();
         storageFile = nextAvailableConfigurationFile();
@@ -72,6 +93,12 @@ public class XStorage implements ConfigurationStorage {
         storageFile = nextAvailableConfigurationFile();
     }
 
+    /**
+     * Creates a XStorage with the given configuration file on disc.
+     *
+     * @param configurationFile The configuration file.
+     * @throws IOException if error occur while reading file from disc.
+     */
     public XStorage(File configurationFile) throws IOException {
         storageFile = configurationFile;
         xprops = new XProperties();
@@ -92,17 +119,32 @@ public class XStorage implements ConfigurationStorage {
 
     /**
      * Return the absolute path of the file backing this storage.
-     * @return absolute file path
+     *
+     * @return Absolute file path.
      */
     public String getFilename () {
         return storageFile.getAbsolutePath();
     }
 
+    /**
+     * Put a key-value pair into this configuration.
+     *
+     * @param key The name used to access the stored object.
+     * @param value The actual value to store.
+     * @throws IOException if error occur while manipulating on disc file.
+     */
     public void put(String key, Serializable value) throws IOException {
         xprops.put(key, value);
         syncStorageFile();
     }
 
+    /**
+     * Returns the value to the given key, from the configuration.
+     *
+     * @param key Name of object to look up.
+     * @return serializable object, which is the value of the given key, from
+     * the configuration.
+     */
     public Serializable get(String key) {
         try {
             return (Serializable)xprops.getObject(key);
@@ -116,6 +158,14 @@ public class XStorage implements ConfigurationStorage {
         }
     }
 
+    /**
+     * Returns an iterator over String, Serializable pairs, or key, value from
+     * the configuration.
+     *
+     * @return An iterator over String, Serializable pairs, or key, value from
+     * the configuration.
+     * @throws IOException if error occur while serializing objects.
+     */
     public Iterator<Map.Entry<String, Serializable>> iterator() throws
                                                                 IOException {
         log.warn("Iterators are not fully supported by XStorage. "
@@ -139,25 +189,57 @@ public class XStorage implements ConfigurationStorage {
         return tempMap.entrySet().iterator();
     }
 
+    /**
+     * Remove a given key-value pair for the storage configuration.
+     *
+     * @param key The name of the value to remove from the storage.
+     * @throws IOException if error occurs while updating storage file.
+     */
     public void purge(String key) throws IOException {
         xprops.remove(key);
         syncStorageFile();
     }
 
+    /**
+     * Return the number of properties for this storage.
+     *
+     * @return The number of properties for this storage.
+     */
     public int size() {
         return xprops.size();
     }
 
+    /**
+     * Return true if this configuration makes sub storages possible.
+     * TODO: Should this always return true?
+     *
+     * @return Always true.
+     */
     public boolean supportsSubStorage() {
         return true;
     }
 
+    /**
+     * Create a sub storage configuration and associate it with the given key.
+     *
+     * @param key The name of the sub storage.
+     * @return The sub storage created.
+     * @throws IOException if error occur while creating or retrieving sub
+     * storage.
+     */
     public ConfigurationStorage createSubStorage(String key) throws
                                                              IOException {
         put(key, new XProperties());
         return getSubStorage(key);
     }
 
+    /**
+     * Return a sub storage given a key that matches a sub storage name.
+     *
+     * @param key The name of the sub storage.
+     * @return the sub storage.
+     * @throws IOException if error occur while returning sub strorage.
+     */
     public ConfigurationStorage getSubStorage(String key) throws IOException {
         try {
             Object sub = get(key);
@@ -182,6 +264,15 @@ public class XStorage implements ConfigurationStorage {
         }
     }
 
+    /**
+     * Create 'count' number of sub storages and associated these with the
+     * given 'key'.
+     *
+     * @param key   The key for the list of storages.
+     * @param count The number of storages to create.
+     * @return A list of sub storages.
+     * @throws IOException if error occur while creating sub storages.
+     */
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                             throws IOException {
         ArrayList<XProperties> subProperties =
@@ -196,6 +287,13 @@ public class XStorage implements ConfigurationStorage {
         return storages;
     }
 
+    /**
+     * Get a list of sub storage associated with a the 'key'.
+     *
+     * @param key The key for the list of storages.
+     * @return list of sub storage associated with the given key.
+     * @throws IOException if error occur while getting storages.
+     */
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                  IOException {
         Object sub = get(key);
@@ -218,6 +316,13 @@ public class XStorage implements ConfigurationStorage {
         return storages;
     }
 
+    /**
+     * Get next available configuration file.
+     *
+     * @return The configuration file.
+     * @throws IOException if IOException is cast while doing IO operations on
+     * disc.
+     */
     private static File nextAvailableConfigurationFile () throws IOException {
         final String XCONFIGURATION = "xconfiguration.";
         int count = 0;
@@ -229,6 +334,11 @@ public class XStorage implements ConfigurationStorage {
         return f;
     }
 
+    /**
+     * Sync in memory storage with file on disc.
+     *
+     * @throws IOException if error occur while doing IO operations.
+     */
     private void syncStorageFile () throws IOException {
         if (storageFile == null) {
             log.trace("No sync as the XStorage is memory-based");
