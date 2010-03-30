@@ -15,32 +15,33 @@
 package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
 
 /**
  * Helper class to launch a search engine from the command line.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_OK,
+        author = "mke")
 public class SummaSearcherRunner {
 
     private static MachineStats stats;
-    
+
     /**
      * Create a new SummaSearcher instance as defined by the configuration
      * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
      * <p/>
-     * Any paramters to this method are ignored.
+     * Any parameters to this method are ignored.
      *
-     * @param args ignored
+     * @param args These are ignored.
      */
     public static void main (String[] args) {
         Log log = LogFactory.getLog(SummaSearcherRunner.class);
