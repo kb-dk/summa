@@ -21,11 +21,21 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +50,7 @@ public class Configuration implements Serializable,
     private final static Log log = LogFactory.getLog(Configuration.class);
 
     /**
-     * Fail-fast check for Java version
+     * Fail-fast check for Java version.
      */
     private static transient String version = Environment.checkJavaVersion();
 
@@ -51,46 +61,49 @@ public class Configuration implements Serializable,
      * can be found under {@link #CONF_CONFIGURATION_PROPERTY}.
      */
     public static final String[] DEFAULT_RESOURCES = {
-                                                      "configuration.xml",
-                                                      "configuration.js",
-                                                      "config.xml",
-                                                      "config.js",
-                                                      "properties.xml",
-                                                      "properties.js",
-                                                      "configuration.properties",
-                                                      "config.properties",
-                                                      "config/configuration.xml",
-                                                      "config/configuration.js",
-                                                      "config/config.xml",
-                                                      "config/config.js",
-                                                      "config/properties.xml",
-                                                      "config/properties.js",
-                                                      "config/configuration.properties",
-                                                      "config/config.properties"
+                                              "configuration.xml",
+                                              "configuration.js",
+                                              "config.xml",
+                                              "config.js",
+                                              "properties.xml",
+                                              "properties.js",
+                                              "configuration.properties",
+                                              "config.properties",
+                                              "config/configuration.xml",
+                                              "config/configuration.js",
+                                              "config/config.xml",
+                                              "config/config.js",
+                                              "config/properties.xml",
+                                              "config/properties.js",
+                                              "config/configuration.properties",
+                                              "config/config.properties"
                                                      };
 
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
-    public static final String CONF_CONFIGURATION_PROPERTY = "summa.configuration";
+    public static final String CONF_CONFIGURATION_PROPERTY =
+                                                          "summa.configuration";
 
     /** Optional system property defining which version of the Summa API
-     * applications should adhere to if it can not be determined at compile time.
-     * Default value is {@link #DEFAULT_API_VERSION */
+     * applications should adhere to if it can not be determined at compile
+     * time.
+     * Default value is {@link this#DEFAULT_API_VERSION */
      public static final String CONF_API_VERSION = "summa.api.version";
 
-    /** API version of the Summa release */
+    /** API version of the Summa release. */
      public static final String DEFAULT_API_VERSION =
                       "@summa.api.version@"; // Auto-expanded in compile target
 
     /** System property defining the root directory from which persistent
      * data should be read and stored to. The default value is
-     * {@code $HOME/summa-control/persistent */
+     * {@code $HOME/summa-control/persistent. */
     public static final String CONF_PERSISTENT_DIR = "summa.persistent";
 
     /**
      * Create a {@code Configuraion} with the given {@link ConfigurationStorage}
      * backend.
-     * @param storage the storage backend to use
+     *
+     * @param storage The storage backend to use.
      */
     public Configuration (ConfigurationStorage storage) {
         this.storage = storage;
@@ -99,7 +112,8 @@ public class Configuration implements Serializable,
     /**
      * Create a {@code Configuration} using the same
      * {@link ConfigurationStorage} as a given other {@code Configuration}.
-     * @param conf the {@code Configuration} to share storage with.
+     *
+     * @param conf The {@code Configuration} to share storage with.
      */
     public Configuration (Configuration conf) {
         storage = conf.getStorage();
@@ -116,14 +130,13 @@ public class Configuration implements Serializable,
      * retrieved with {@link Configuration#getStrings}</p>
      * <p>Likewise any {@code String[]} value argument will also be set via
      * {@code Configuration.setStrings}.
-     * @param args <p>the arguments should be {@code String, Serializable} pairs
+     *
+     * @param args <p>The arguments should be {@code String, Serializable} pairs
      *        if the argument count is odd or each even numbered argument
      *        is not a {@code String} an {@code IllegalArgumentException}
-     *        is thrown</p>
-    *
-     *
+     *        is thrown.</p>
      * @return A {@code Configuration} mapping the key value pairs provided
-     *         in the argument list
+     *         in the argument list.
      */
     @SuppressWarnings("unchecked")   // to cast arg to List<String>
     public static Configuration newMemoryBased (Serializable... args) {
@@ -155,8 +168,9 @@ public class Configuration implements Serializable,
 
     /**
      * Store a key-value pair in the {@link ConfigurationStorage}.
-     * @param key name of property to store.
-     * @param value the value to associate with {@code key}.
+     *
+     * @param key Name of property to store.
+     * @param value The value to associate with {@code key}.
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
@@ -174,8 +188,9 @@ public class Configuration implements Serializable,
      * Store a list of Strings in the properties. The strings are converted to
      * an internal format, so they should be retrieved with getStrings instead
      * of just get.
-     * @param key     name of the property to store.
-     * @param strings the Strings to store.
+     *
+     * @param key     Name of the property to store.
+     * @param strings The Strings to store.
      * @throws ConfigurationStorageException if there was an error communicating
      *                                       with the storage backend.
      */
@@ -201,8 +216,9 @@ public class Configuration implements Serializable,
 
     /**
      * Get a stored value by name.
-     * @param key the name of the value to look up.
-     * @return the value assciated with {@code key}.
+     *
+     * @param key The name of the value to look up.
+     * @return The value associated with {@code key}.
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
@@ -216,8 +232,9 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Remove a property from the configuration
-     * @param key the name of the proeprty to remove
+     * Remove a property from the configuration.
+     *
+     * @param key the name of the property to remove.
      */
     public void purge(String key) {
         try {
@@ -238,12 +255,12 @@ public class Configuration implements Serializable,
      * the string value stored in the configuration. It is not an error if
      * the string contains a reference to an unknown property.
      *
-     * @param key the name of the value to look up.
-     * @return the {@code String} representation of the value assciated with
+     * @param key The name of the value to look up.
+     * @return The {@code String} representation of the value associated with
      *         {@code key}. If the value does not exist, an exception is thrown.
      *         The returned string will not containing leading or trailing white
      *         space. As described above any references to system properties
-     *         enclosed in <code>${prop.name}</code> will be escaped
+     *         enclosed in <code>${prop.name}</code> will be escaped.
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      * @throws NullPointerException          if there was no value corresponding
@@ -269,8 +286,8 @@ public class Configuration implements Serializable,
      * <p/>
      * System properties referenced in the fallback value will also be expanded
      *
-     * @param key          the name of the value to look up.
-     * @param defaultValue if the value does not exist, return this instead.
+     * @param key          The name of the value to look up.
+     * @param defaultValue Ff the value does not exist, return this instead.
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      * @return the {@code String} representation of the value associated with
@@ -278,7 +295,7 @@ public class Configuration implements Serializable,
      *         The returned string will not containing leading or trailing white
      *         space. As described above any references to system properties
      *         enclosed in <code>${prop.name}</code> will be escaped. System
-     *         property references in the default value will also be expanded
+     *         property references in the default value will also be expanded.
      */
     public String getString(String key, String defaultValue) {
         Object val = get(key);
@@ -291,9 +308,9 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Look up an integer property
-     * @param key the name of the property to look up
-     * @return value as an integer
+     * Look up an integer property.
+     * @param key The name of the property to look up.
+     * @return Value as an integer.
      * @throws NullPointerException if the property is not found
      * @throws IllegalArgumentException      if the property is found but does
      *                                       not parse as an integer.
@@ -322,10 +339,11 @@ public class Configuration implements Serializable,
     /**
      * Look up an integer property. If it is not defined or does not parse
      * as an integer, return {@code defaultValue}.
-     * @param key          the name of the property to look up
-     * @param defaultValue the value to return if the value for the key could
+     *
+     * @param key          The name of the property to look up.
+     * @param defaultValue The value to return if the value for the key could
      *                     not be extracted.
-     * @return the value for key as an int.
+     * @return The value for key as an int.
      */
     public int getInt (String key, int defaultValue) {
         try {
@@ -343,9 +361,10 @@ public class Configuration implements Serializable,
 
     /**
      * Look up a long property
-     * @param key the name of the property to look up
-     * @return value as a long
-     * @throws NullPointerException          if the property is not found
+     *
+     * @param key The name of the property to look up.
+     * @return Value as a long.
+     * @throws NullPointerException          if the property is not found.
      * @throws IllegalArgumentException      if the property is found but does
      *                                       not parse as a long.
      * @throws ConfigurationStorageException if there is an error communicating
@@ -374,10 +393,11 @@ public class Configuration implements Serializable,
     /**
      * Look up a long property. If it is not defined or does not parse
      * as a long, return {@code defaultValue}.
-     * @param key          the name of the property to look up
-     * @param defaultValue the value to return if the value for the key could
+     *
+     * @param key          The name of the property to look up.
+     * @param defaultValue The value to return if the value for the key could
      *                     not be extracted.
-     * @return the value for key as a long.
+     * @return The value for key as a long.
      */
     public long getLong(String key, long defaultValue) {
         try {
@@ -394,10 +414,11 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Look up a boolean property
-     * @param key the name of the property to look up
-     * @return value as a boolean
-     * @throws NullPointerException if the property is not found
+     * Look up a boolean property.
+     *
+     * @param key The name of the property to look up.
+     * @return Value as a boolean.
+     * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException      if the property is found but does
      *                                       not parse as a boolean.
      * @throws ConfigurationStorageException if there is an error communicating
@@ -449,13 +470,13 @@ public class Configuration implements Serializable,
      * This expansion will not change the actual value stored in the
      * configuration.
      *
-     * @param key the name of the property to look up.
-     * @return value as a list of trimmed Strings.
+     * @param key The name of the property to look up.
+     * @return Aalue s a list of trimmed Strings.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException if the property is found but does not
-     *         parse as a list of Strings
+     *         parse as a list of Strings.
      * @throws ConfigurationStorageException if there is an error communicating
-     *         with the storage backend
+     *         with the storage backend.
      */
     public List<String> getStrings(String key) {
         Object val = get (key);
@@ -504,10 +525,10 @@ public class Configuration implements Serializable,
      * escaped if need be. This will be done in a copy of {@code defaultValues}
      * and the contents of {@code defaultValues} will not be changed.
      *
-     * @param key the name of the property to look up.
-     * @param defaultValues the values to return if there is no list of Strings
+     * @param key The name of the property to look up.
+     * @param defaultValues The values to return if there is no list of Strings
      *                      specified for the given key.
-     * @return value as a list of Strings.
+     * @return Value as a list of Strings.
      */
     public List<String> getStrings(String key, List<String> defaultValues) {
         try {
@@ -538,10 +559,10 @@ public class Configuration implements Serializable,
      * escaped if need be. This will be done in a copy of {@code defaultValues}
      * and the contents of {@code defaultValues} will not be changed.
      *
-     * @param key the name of the property to look up.
-     * @param defaultValues the values to return if there is no list of Strings
+     * @param key The name of the property to look up.
+     * @param defaultValues The values to return if there is no list of Strings
      *                      specified for the given key.
-     * @return value as an array of Strings.
+     * @return Aalue as an array of Strings.
      */
     public String[] getStrings(String key, String[] defaultValues) {
         List<String> result = getStrings(key, defaultValues == null ? null :
@@ -584,19 +605,20 @@ public class Configuration implements Serializable,
      * Parses the value for the key for Strings and Integers and returns them
      * as a list of Pairs.
      * </p><p>
-     * Sample value: a(1),b (2), c(4), d, e(16)
-     * @param key          the name of the property to look up.
-     * @param defaultValue the Integer that should be used when one of the
+     * Sample value: a(1),b (2), c(4), d, e(16).
+     *
+     * @param key          The name of the property to look up.
+     * @param defaultValue The Integer that should be used when one of the
      *                     sub-values isn't specified.
      *                     Example: The value in the property is as specified
      *                     above and the defaultValue is 7. This produces
-     *                     (a, 1), (b, 2), (c, 4), (d, 7), (e, 16)
-     * @return a list of pairs of Strings and Integers.
+     *                     (a, 1), (b, 2), (c, 4), (d, 7), (e, 16).
+     * @return A list of pairs of Strings and Integers.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException if the property is found but does not
-     *         parse as a list of Strings
+     *         parse as a list of Strings.
      * @throws ConfigurationStorageException if there is an error communicating
-     *         with the storage backend
+     *         with the storage backend.
      */
     public List<Pair<String, Integer>> getIntValues(String key,
                                                     Integer defaultValue) {
@@ -621,9 +643,10 @@ public class Configuration implements Serializable,
 
     /**
      * Look up a stored {@link Class}.
-     * @param key the name of the property to look up.
-     * @param classType the class of which the return type should be.
-     * @return the {@link Class} associated with {@code key}.
+     *
+     * @param key The name of the property to look up.
+     * @param classType The class of which the return type should be.
+     * @return The {@link Class} associated with {@code key}.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException      if the property is found but does
      *                                       not map to a known {@link Class}
@@ -647,10 +670,11 @@ public class Configuration implements Serializable,
     /**
      * Static version of getClass. Use this to ensure that the classLoader runs
      * locally and not through RMI.
-     * @param key the name of the property to look up.
-     * @param classType the class of which the return type should be.
-     * @param conf the configuration from where the class-name is located.
-     * @return the {@link Class} associated with {@code key}.
+     *
+     * @param key The name of the property to look up.
+     * @param classType The class of which the return type should be.
+     * @param conf The configuration from where the class-name is located.
+     * @return The {@link Class} associated with {@code key}.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException      if the property is found but does
      *                                       not map to a known {@link Class}
@@ -658,7 +682,8 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public static <T> Class<? extends T> getClass(String key, Class<T> classType,
+    public static <T> Class<? extends T> getClass(String key,
+                                                  Class<T> classType,
                                                   Configuration conf) {
         Object val = conf.get(key);
         if (val == null) {
@@ -692,17 +717,19 @@ public class Configuration implements Serializable,
     /**
      * Like {@link Configuration#getClass(String,Class,Configuration)}. Use this
      * static variant of {@link #getClass} to avoid loading the class over RMI.
-     * @param key the property name to look up
-     * @param classType the class to cast the return value to
-     * @param defaultClass default class to return if {@code key} was not found
-     *                     in {@code conf}
-     * @param conf the {@code Configuration} used to look up {@code key}
+     *
+     * @param key The property name to look up.
+     * @param classType The class to cast the return value to.
+     * @param defaultClass Default class to return if {@code key} was not found
+     *                     in {@code conf}.
+     * @param conf The {@code Configuration} used to look up {@code key}.
      * @return The class defined for the given key or {@code defaultClass} if
-     *         {@code key} is not found in {@code conf}
+     *         {@code key} is not found in {@code conf}.
      */
-    public static <T> Class<? extends T> getClass(String key, Class<T> classType,
-                                                  Class<? extends T> defaultClass,
-                                                  Configuration conf) {
+    public static <T> Class<? extends T> getClass(String key,
+                                                Class<T> classType,
+                                                Class<? extends T> defaultClass,
+                                                Configuration conf) {
         try {
             return Configuration.getClass(key, classType, conf);
         } catch (NullPointerException e) {
@@ -715,11 +742,13 @@ public class Configuration implements Serializable,
     /**
      * Get a class value resorting to a default class if it is not found
      * in the configuration.
-     * @param key the name of the property to look up.
-     * @param classType the class of which the return type should be.
-     * @param defaultValue default class to return of the requested key is not found
-     * @return the {@link Class} associated with {@code key} or the defaultValue
-     *         if {@code key} is not found
+     *
+     * @param key The name of the property to look up.
+     * @param classType The class of which the return type should be.
+     * @param defaultValue Default class to return of the requested key is not
+     *                     found.
+     * @return The {@link Class} associated with {@code key} or the defaultValue
+     *         if {@code key} is not found.
      */
     public <T> Class<? extends T> getClass (String key,
                                             Class<T> classType,
@@ -735,10 +764,10 @@ public class Configuration implements Serializable,
     /**
      * Queries the underlying storage for the value corresponding to the given
      * key. If a value exists, true is returned.
-     * @param key the key for the value.
-     * @return true if a value for the key exists.
-     * @throws IOException if there was a problem communicating with the
-     *                     underlying storage.
+     *
+     * @param key The key for the value.
+     * @return True if a value for the key exists. False is returned if error
+     *         occour in underlaying storage.
      */
     public boolean valueExists(String key) {
         try {
@@ -753,7 +782,8 @@ public class Configuration implements Serializable,
     /**
      * Get an {@link Iterator} over all key-value pairs in the
      * {@link ConfigurationStorage} backend of the {@code Configuration}.
-     * @return the iterator as described above.
+     *
+     * @return The iterator as described above.
      */
     public Iterator<Map.Entry<String,Serializable>> iterator () {
         try {
@@ -768,7 +798,8 @@ public class Configuration implements Serializable,
     /**
      * Return a reference to the {@link ConfigurationStorage} backend of this
      * {@code Configuration}.
-     * @return the storage backend of this {@code Configuration}.
+     *
+     * @return The storage backend of this {@code Configuration}.
      */
     public ConfigurationStorage getStorage () {
         return storage;
@@ -777,7 +808,8 @@ public class Configuration implements Serializable,
     /**
      * Import all properties from a given {@code Configuration} and store them
      * in the {@link ConfigurationStorage} of this {@code Configuration}.
-     * @param conf the configuration from which to import properties
+     *
+     * @param conf The configuration from which to import properties.
      */
     public void importConfiguration (Configuration conf) {
         for (Map.Entry<String, Serializable> entry : conf) {
@@ -797,9 +829,9 @@ public class Configuration implements Serializable,
      * Get an array of {@link String}s formatted like {@code key=value}.
      * Beware that stored objects that does not a have sane string
      * representation will <i>not</i> use their serialized form.
+     * </p><p>This method is mainly for debugging purposes.
      *
-     * <p>This method is mainly for debugging purposes.
-     * @return And array of strings formatted as {@code key=value}
+     * @return And array of strings formatted as {@code key=value}.
      */
     public String[] dump () {
         ArrayList<String> list = new ArrayList<String>();
@@ -810,7 +842,8 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Dump the array described in {@link #dump} as string
+     * Dump the array described in {@link #dump} as string.
+     *
      * @return A string dump of the array described in {@link #dump} with each
      * property on a new line.
      */
@@ -832,7 +865,8 @@ public class Configuration implements Serializable,
 
     /**
      * Load properties from the given file into this config.
-     * @param filename name of file in the classpath
+     *
+     * @param filename Name of file in the classpath
      * @throws IOException if there was a problem loading the file
      */
     public void loadFromXML (String filename) throws IOException {
@@ -851,8 +885,8 @@ public class Configuration implements Serializable,
      * Instantiate a {@link Configurable} class with {@code this} as argument
      * to the Configurable's constructor.
      *
-     * @param configurable the {@code Configurable} class to instantiate.
-     * @return an object instantiated from the given class.
+     * @param configurable he {@code Configurable} class to instantiate.
+     * @return An object instantiated from the given class.
      * @throws Configurable.ConfigurationException if there is a problem
      *                                   instantiating the {@code Configurable}.
      * @throws IllegalArgumentException if the input class in not a
@@ -871,9 +905,10 @@ public class Configuration implements Serializable,
      * </p><p>
      * If no Configuration-taking constructor was found, an attempt is made to
      * instantiate the class with the empty constructor.
-     * @param configurable the {@code Configurable} class to instantiate.
-     * @param conf the configuration to give toth econstructor.
-     * @return an object instantiated from the given class.
+     *
+     * @param configurable The {@code Configurable} class to instantiate.
+     * @param conf The configuration to give to the constructor.
+     * @return An object instantiated from the given class.
      * @throws Configurable.ConfigurationException if there is a problem
      *                                   instantiating the {@code Configurable}.
      * @throws IllegalArgumentException if the input class in not a
@@ -921,9 +956,10 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Does deep comparison of all key-value pairs
-     * @param conf
-     * @return
+     * Does deep comparison of all key-value pairs.
+     *
+     * @param conf the configuration to compare {@link this} with.
+     * @return tur if configurations matches on all key-value pairs.
      */
     public boolean equals (Configuration conf) {
         try {
@@ -949,9 +985,10 @@ public class Configuration implements Serializable,
      * Use of URL means that the configuration is loaded only once and this
      * is static. Use of RMI means that every lookup in the configuration will
      * result in a RMI call.
-     * @param configPropName name of system property containing the address
-     *                       of the system configuration
-     * @return a newly instantiated configuration
+     *
+     * @param configPropName Name of system property containing the address
+     *                       of the system configuration.
+     * @return a newly instantiated configuration.
      */
     public static Configuration getSystemConfiguration (String configPropName) {
         return getSystemConfiguration(configPropName, false);
@@ -966,15 +1003,15 @@ public class Configuration implements Serializable,
      * The configurations tested if {@code allowUnset == true} can be found
      * in {@link #DEFAULT_RESOURCES}.
      *
-     * @param configPropName name of system property containing the address
-     *                       of the system configuration
-     * @param allowUnset if {@code true} scavenge the system for anything looking
-     *                   like a configuration and return an empty one if none
-     *                   where found
-     * @return System configuration or an empty config if none where found
+     * @param configPropName Name of system property containing the address
+     *                       of the system configuration.
+     * @param allowUnset If {@code true} scavenge the system for anything
+     *                   looking like a configuration and return an empty one if
+     *                   none where found.
+     * @return System configuration or an empty config if none where found.
      * @throws ConfigurationException if {@code allowUnset == false} and
      *                                and {@code configPropName} was not set
-     *                                as a system property
+     *                                as a system property.
      */
     public static Configuration getSystemConfiguration (String configPropName,
                                                         boolean allowUnset) {
@@ -985,10 +1022,11 @@ public class Configuration implements Serializable,
 
         if (confLocation == null) {
             if (allowUnset) {
-                log.debug ("System configuraion property '" + configPropName + "' "
-                          + "not set. Looking for configuration resource...");
+                log.debug ("System configuraion property '" + configPropName
+                     + "' " + "not set. Looking for configuration resource...");
 
-                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                ClassLoader loader =
+                                 Thread.currentThread().getContextClassLoader();
                 String confResource = null;
 
                 for (String res : DEFAULT_RESOURCES) {
@@ -997,7 +1035,8 @@ public class Configuration implements Serializable,
                         log.trace ("Configuration resource '" + res + "' not " +
                                    "found");
                     } else {
-                        log.debug ("Found configuration resource '" + res + "'");
+                        log.debug ("Found configuration resource '" + res
+                                + "'");
                         break;
                     }
                 }
@@ -1049,17 +1088,17 @@ public class Configuration implements Serializable,
                 return Configuration.newMemoryBased ();
             } else {
                 throw new ConfigurationException("Required system property '"
-                                                 + configPropName + "' not set");
+                                                + configPropName + "' not set");
             }
         }
-
         return load (confLocation);
     }
 
     /**
      * Get the default system configuration as specified in the system
-     * property {@link #CONF_CONFIGURATION_PROPERTY}
-     * @return a newly instantiated configuration
+     * property {@link #CONF_CONFIGURATION_PROPERTY}.
+     *
+     * @return A newly instantiated configuration.
      */
     public static Configuration getSystemConfiguration () {
         return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY);
@@ -1070,12 +1109,13 @@ public class Configuration implements Serializable,
      * property {@link #CONF_CONFIGURATION_PROPERTY}.</p>
      * <p>If the system configuration is not set, and {@code allowUnset} is
      * true, use an empty memory based configuration instead.</p>
-     * @see #getSystemConfiguration(String, boolean)
-     * @param allowUnset if {@code true}
+     * @see #getSystemConfiguration(String, boolean).
+     *
+     * @param allowUnset If {@code true}.
      * @throws ConfigurationException if {@code allowUnset == false} and the
      *                                system property
-     *                                {@code summa.configuration} is not set
-     * @return a newly instantiated configuration
+     *                                {@code summa.configuration} is not set.
+     * @return a newly instantiated configuration.
      */
     public static Configuration getSystemConfiguration (boolean allowUnset) {
         return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY, allowUnset);
@@ -1089,10 +1129,12 @@ public class Configuration implements Serializable,
      *   <li>{@code http://example.com/myConfig.xml}, a URL</li>
      *   <li>{@code //registryhost:port/servicename}, an RMI address</li>
      *   <li>{@code /home/summa/config/foo.xml}, an absolute path</li>
-     *   <li>{@code config/foo.xml}, loaded as a resource from the classpath</li>
+     *   <li>{@code config/foo.xml}, loaded as a resource from the
+     *       classpath</li>
      * </ul>
-     * @param confLocation Location of configuration as specified above
-     * @return a newly instantiated configuration object
+     *
+     * @param confLocation Location of configuration as specified above.
+     * @return A newly instantiated configuration object.
      */
     public static Configuration load (String confLocation) {
         ConfigurationStorage storage;
@@ -1119,7 +1161,8 @@ public class Configuration implements Serializable,
                 // TODO: Add XStorage and JStorage capabilities
                 storage = new MemoryStorage(storageUrl);
             } catch (Exception e) {
-                throw new ConfigurationException("Unable retrieve configuration from " + confLocation, e);
+                throw new ConfigurationException(
+                       "Unable retrieve configuration from " + confLocation, e);
             }
         } else { /* {if (confLocation.startsWith("/")) {*/
             // Assume this is a regular file
@@ -1142,7 +1185,8 @@ public class Configuration implements Serializable,
                         log.trace("Loaded JStorage from resource");
                     } else {
                         storage = new FileStorage (confLocation);
-                        log.trace("Loaded FileStorage configuration from resource");
+                        log.trace(
+                              "Loaded FileStorage configuration from resource");
                     }
                 }
             } catch (FileNotFoundException e) {
@@ -1178,7 +1222,8 @@ public class Configuration implements Serializable,
                                                      + confLocation
                                                      + "' using XStorage", ex);
                 }
-                //throw new ConfigurationException("Error reading configuration file " + confLocation, e);
+                //throw new ConfigurationException("Error reading configuration"
+                // + " file " + confLocation, e);
             }
         } /*else {
             // Assume this is a resource
@@ -1186,7 +1231,8 @@ public class Configuration implements Serializable,
             try {
                 storage = new FileStorage (confLocation);
             } catch (IOException e) {
-                throw new ConfigurationException("Error reading configuration file " + confLocation, e);
+                throw new ConfigurationException("Error reading configuration "
+                +"file " + confLocation, e);
             }
         }   */
         log.trace("Returning storage of type " + storage.getClass());
@@ -1195,7 +1241,8 @@ public class Configuration implements Serializable,
 
     /**
      * Determines whether the underlying storage supports sub storages.
-     * @return true if sub configurations can be requested.
+     *
+     * @return True if sub configurations can be requested.
      */
     public boolean supportsSubConfiguration() {
         try {
@@ -1209,8 +1256,9 @@ public class Configuration implements Serializable,
 
     /**
      * Constructs a new Configuration around an underlying sub storage.
-     * @param key the key for the underlying sub storage.
-     * @return a sub configuration, based on the sub storage.
+     *
+     * @param key The key for the underlying sub storage.
+     * @return A sub configuration, based on the sub storage.
      * @throws IOException if the sub configuration could not be created.
      */
     public Configuration createSubConfiguration(String key) throws IOException {
@@ -1218,8 +1266,8 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * @param key the key for the underlying sub storage.
-     * @return a sub configuration, based on the sub storage.
+     * @param key The key for the underlying sub storage.
+     * @return A sub configuration, based on the sub storage.
      * @throws IOException if the sub configuration could not be extracted.
      */
     public Configuration getSubConfiguration(String key) throws IOException {
@@ -1234,9 +1282,10 @@ public class Configuration implements Serializable,
     /**
      * Creates a list of sub storages under the given key and returns it wrapped
      * as Configurations.
-     * @param key   the key for the list sub storages.
-     * @param count the number of configurations that the list should contain.
-     * @return a list of sub storages wrapped as Configurations.
+     *
+     * @param key The key for the list sub storages.
+     * @param count The number of configurations that the list should contain.
+     * @return A list of sub storages wrapped as Configurations.
      * @throws IOException if the list could not be created.
      */
     public List<Configuration> createSubConfigurations(String key, int count)
@@ -1252,8 +1301,8 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * @param key the key for the list of sub storages.
-     * @return a list of sub storages wrapped as Configurations.
+     * @param key The key for the list of sub storages.
+     * @return A list of sub storages wrapped as Configurations.
      * @throws IOException if the sub storages could not be retrieved.
      */
     public List<Configuration> getSubConfigurations(String key) throws 
@@ -1280,7 +1329,7 @@ public class Configuration implements Serializable,
      * <p></p>
      * If the configuration does not define the property the system property
      * with the same name will be checked. If that fails too the default
-     * of {@code $HOME/summa-control/persistent will be used
+     * of {@code $HOME/summa-control/persistent will be used.
      *
      * @return A {@code File} pointing to the root directory where persistent
      *         data should be stored
