@@ -20,7 +20,6 @@ import java.rmi.RemoteException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.SearchNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,7 +34,8 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "JavaDoc needed")
 public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
     private static Log log = LogFactory.getLog(SearchNodeAsync.class);
 
@@ -84,7 +84,7 @@ public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
     }
 
     /**
-     * @return the last throws Exception during run, if any.
+     * @return The last throws Exception during run, if any.
      */
     public Exception getE() {
         return e;
