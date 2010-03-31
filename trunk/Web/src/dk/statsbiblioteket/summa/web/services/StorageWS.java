@@ -23,32 +23,69 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.jws.WebMethod;
+import javax.jws.WebService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 /**
  * A class containing methods meant to be exposed as a web service
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mv")
+        author = "mv, hbk")
+@WebService
 public class StorageWS {
-    private Log log;
+    /**
+     * Logger for StorageWS.
+     */
+    private final static Log log = LogFactory.getLog(StorageWS.class);
+
+    /**
+     * Records namespace, used in response.
+     */
+    public static final String RECORDS_NAMESPACE =
+                                "http://statsbiblioteket.dk/summa/2009/Records";
+
+    /**
+     * Record collection tag, used for returning multiple records with method
+     * {@link this#realGetRecords(java.util.List)}.
+     */
+    public static final String RECORDS = "Records";
+    /**
+     * Record collection tags attribute, for specifying time to get records from
+     * storage, used in {@link this#realGetRecords(java.util.List)}.
+     */
+    public static final String QUERYTIME = "querytime";
 
     static StorageReaderClient storage;
     Configuration conf;
+    /**
+     * XML output factory, used for creating output stream when responding with
+     * multiple records. 
+     */
+    private XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
 
+    /**
+     * Constructor for Storage WebService.
+     */
     public StorageWS() {
-        log = LogFactory.getLog(StorageWS.class);
     }
 
     /**
      * Get a single StorageReaderClient based on the system configuration.
+     *
      * @return A StorageReaderClient.
      */
     private synchronized StorageReaderClient getStorageClient() {
@@ -62,17 +99,20 @@ public class StorageWS {
     }
 
     /**
-     * Get the a Configuration object. First trying to load the configuration from the location
-     * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
+     * Get the a Configuration object. First trying to load the configuration
+     * from the location specified in the JNDI property
+     * java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
-     * @return The Configuration object
+     *
+     * @return The Configuration object.
      */
     private Configuration getConfiguration() {
         if (conf == null) {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                String paramValue =
+                          (String) context.lookup("java:comp/env/confLocation");
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
@@ -81,39 +121,111 @@ public class StorageWS {
                 conf = Configuration.getSystemConfiguration(true);
             }
         }
-
         return conf;
     }
 
     /**
-     * Get the contents of a record (including all parent/child relations) from storage.
-     * @param id the record id.
-     * @return A String with the contents of the record (and the parent/child relations)
-     * or null if unable to retrieve record.
+     * Get the contents of a record (including all parent/child relations) from
+     * storage.
+     *
+     * @param id The record id.
+     * @return A String with the contents of the record (and the parent/child
+     * relations) or null if unable to retrieve record.
      */
+    @WebMethod
     public String getRecord(String id) {
         return realGetRecord(id, true, false);
     }
 
     /**
-     * Get the contents of a record (including all parent/child relations) from storage.
+     * Get the contents of a record (including all parent/child relations) from
+     * storage.
      * It will be returned in a format compatible with old Summa versions.
-     * @param id the record id.
-     * @return A String with the contents of the record (and the parent/child relations)
-     * or null if unable to retrieve record.
+     *
+     * @param id The record id.
+     * @return A String with the contents of the record (and the parent/child
+     * relations) or null if unable to retrieve record.
      */
+    @WebMethod
     public String getLegacyRecord(String id) {
         return realGetRecord(id, true, true);
     }
 
     /**
-     * Get the contents of a record from storage.
-     * @param id the record id.
-     * @param expand whether or not to include all parent/child relations when getting the record
-     * @param legacyMerge whether or not to return to record in a merged format sutiable for legacy use
-     * @return A String with the contents of the record or null if unable to retrieve record.
+     * Get all records specified by the supplied set of id's. This method gives
+     * no new functionality, but is intended to be faster.
+     *
+     * @param ids List of all record id's to fetch from storage.
+     * @return XML block to return directly to web-service.
      */
-    private String realGetRecord(String id, boolean expand, boolean legacyMerge) {
+    @WebMethod
+    public String getRecords(String[] ids) {
+        List<String> list = Arrays.asList(ids);
+        log.info("getRecords, fetching " + list.size()
+                                                    + " records from storage.");
+        return realGetRecords(list);
+    }
+
+    /**
+     * Private helper method to get all records, this is intended as a way to
+     * get an XML block for web service, given a list of Strings (id's).
+     *
+     * @param ids Id's of records to fetch from storage.
+     * @return List of Records specified by the given list of id's.
+     */
+    private String realGetRecords(List<String> ids) {
+        StringWriter sw = new StringWriter(5000);
+        long startTime, time=0;
+        String retXML;
+        XMLStreamWriter writer;
+
+        log.debug("realGetRecords(ids[size: '" + ids.size() + "'])");
+
+        try {
+            QueryOptions queryOptions = null;
+            startTime = System.currentTimeMillis();
+            List<Record> records = getStorageClient().getRecords(ids,
+                                                                  queryOptions);
+            time = System.currentTimeMillis() - startTime;
+
+            writer = xmlOutputFactory.createXMLStreamWriter(sw);
+
+            writer.writeStartElement(RECORDS);
+            writer.setDefaultNamespace(RECORDS_NAMESPACE);
+            writer.writeAttribute(QUERYTIME, String.valueOf(time));
+            for(Record r: records) {
+                RecordUtil.toXML(writer, 0, r, true);
+            }
+            writer.writeEndElement();
+
+            retXML = sw.toString();
+        } catch(IOException e) {
+            log.error("Error getting #" + ids.size() + " records from "
+                    + "storage. Error was: " + e);
+            retXML = null;
+        } catch(XMLStreamException e) {
+            log.error("Error converting records to XML");
+            retXML = null;
+        }
+
+        log.debug(String.format("Finished realGetRecords() in %dms", time));
+
+        return retXML;
+    }
+
+    /**
+     * Get the contents of a record from storage.
+     *
+     * @param id The record id.
+     * @param expand Whether or not to include all parent/child relations when
+     * getting the record.
+     * @param legacyMerge Whether or not to return to record in a merged format
+     * suitable for legacy use.
+     * @return A String with the contents of the record or null if unable to
+     * retrieve record.
+     */
+    private String realGetRecord(String id, boolean expand,
+                                                          boolean legacyMerge) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "realGetRecord('%s', expand=%b, legacyMerge=%b)",
@@ -122,28 +234,30 @@ public class StorageWS {
         long startTime = System.currentTimeMillis();
 
         String retXML;
-        Record record;
         QueryOptions q = null;
 
         try {
             if (expand) {
                 q = new QueryOptions(null, null, -1, -1);
             }
-            record = getStorageClient().getRecord(id, q);
+            Record record = getStorageClient().getRecord(id, q);
 
             if (record == null) {
                 retXML = null;
             } else {
                 if (legacyMerge) {
-                    MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(getConfiguration());
+                    MarcMultiVolumeMerger merger =
+                                  new MarcMultiVolumeMerger(getConfiguration());
                     retXML = merger.getLegacyMergedXML(record);
                 } else {
                     retXML = RecordUtil.toXML(record, escapeContent);
                 }
             }
         } catch (IOException e) {
-            log.error("Error while getting record with id: " + id + ". Error was: ", e);
-            // an error occured while retrieving the record. We simply return null to indicate the record was not found.
+            log.error("Error while getting record with id: " + id
+                    + ". Error was: ", e);
+            // an error occurred while retrieving the record. We simply return
+            // null to indicate the record was not found.
             retXML = null;
         }
 
