@@ -169,6 +169,18 @@ public class StorageWS {
     /**
      * Private helper method to get all records, this is intended as a way to
      * get an XML block for web service, given a list of Strings (id's).
+     * Sample:
+       <pre>
+<?xml version="1.0" ?>
+<Records xmlns="http://statsbiblioteket.dk/summa/2009/Records" querytime="626">
+    <record id="id1" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.395" mtime="2010-03-31T09:54:53.395">
+        <content>data</content>
+    </record>
+    <record id="id2" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.437" mtime="2010-03-31T09:54:53.437">
+        <content>data</content>
+    </record>
+</Records>
+      </pre>
      *
      * @param ids Id's of records to fetch from storage.
      * @return List of Records specified by the given list of id's.
@@ -189,15 +201,17 @@ public class StorageWS {
             time = System.currentTimeMillis() - startTime;
 
             writer = xmlOutputFactory.createXMLStreamWriter(sw);
-
-            writer.writeStartElement(RECORDS);
+            writer.writeStartDocument();
             writer.setDefaultNamespace(RECORDS_NAMESPACE);
+            writer.writeStartElement(RECORDS);
+            writer.writeDefaultNamespace(RECORDS_NAMESPACE);
             writer.writeAttribute(QUERYTIME, String.valueOf(time));
             for(Record r: records) {
-                RecordUtil.toXML(writer, 0, r, true);
+                RecordUtil.toXML(writer, 1, r, true);
             }
             writer.writeEndElement();
-
+            writer.writeEndDocument();
+            writer.flush();
             retXML = sw.toString();
         } catch(IOException e) {
             log.error("Error getting #" + ids.size() + " records from "
