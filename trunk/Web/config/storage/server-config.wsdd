@@ -34,15 +34,25 @@
         <parameter name="className" value="org.apache.axis.Version"/>
     </service>
     -->
-
+    
     <service name="StorageWS" provider="java:RPC" style="wrapped" use="literal">
+        <namespace>http://statsbiblioteket.dk/summa/storage</namespace>
+        
         <parameter name="typeMappingVersion" value="1.2"/>
 
         <documentation>Storage web service for the Summa system</documentation>
-        <parameter name="className" value="dk.statsbiblioteket.summa.web.services.StorageWS"/>
+        <parameter name="className" value="dk.statsbiblioteket.summa.web.services.StorageWS" />
 
-        <parameter name="allowedMethods" value="getRecord getLegacyRecord"/>
-        <namespace>http://statsbiblioteket.dk/summa/storage</namespace>
+        <parameter name="allowedMethods" value="getRecord getLegacyRecord getRecords"/>
+
+        <operation name="getRecords">
+            <documentation>
+                This method returns a collection of records given an array of string (ids) or null in case it is unable to fetch the record.
+
+                ids: Array containing strings with id's of the record to fetch.
+            </documentation>
+            <parameter name="ids" type="StringArray" />
+        </operation>
 
         <operation name="getRecord">
             <documentation>
@@ -63,6 +73,12 @@
             </documentation>
             <parameter name="id" type="tns:string" />
         </operation>
+        <typeMapping languageSpecificType="java:java.lang.String[]"
+                     qname="StringArray"
+                     serializer="org.apache.axis.encoding.ser.ArraySerializerFactory"
+                     deserializer="org.apache.axis.encoding.ser.ArrayDeserializerFactory"
+                     encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+
     </service>
     <transport name="http">
         <requestFlow>
