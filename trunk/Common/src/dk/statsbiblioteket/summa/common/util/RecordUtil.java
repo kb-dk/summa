@@ -193,10 +193,21 @@ public class RecordUtil {
     private static SimpleDateFormat schemaTimestampFormatter =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
 
-    // synchronized due to schemaTimestampFormatter
+    /**
+     * Take a record an transform it into XMl.
+     * Note: synchronized due to {@link this#schemaTimestampFormatter}
+     *
+     * @param out the output XML stream.
+     * @param level Level of indention.
+     * @param processed Set of already processed records.
+     * @param record the record to transform into XML.
+     * @param escapeContent true if content should be escaped. False otherwise.
+     * @throws XMLStreamException if error occur while used XML stream to create
+     * XML result.
+     */
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.QA_NEEDED,
-            author = "We traverse the tree and ignore already dumped records, "
+            comment = "We traverse the tree and ignore already dumped records, "
                      + "but the order is just pulled from thin air")
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private synchronized static void toXML(
