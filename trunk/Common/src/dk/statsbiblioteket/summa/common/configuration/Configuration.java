@@ -52,7 +52,7 @@ public class Configuration implements Serializable,
     /**
      * Fail-fast check for Java version.
      */
-    private static transient String version = Environment.checkJavaVersion();
+    //private static transient String version = Environment.checkJavaVersion();
 
     private ConfigurationStorage storage;
 
@@ -1064,26 +1064,26 @@ public class Configuration implements Serializable,
                 }
 
                 try {
-                    storage = new XStorage (confResource);
-                    log.debug ("Loaded '" + confResource + "' as XProperties");
+                    storage = new XStorage(confResource);
+                    log.debug("Loaded '" + confResource + "' as XProperties");
                     return new Configuration (storage);
                 } catch (Exception e) {
-                    log.info ("Failed to load '" + confResource
+                    log.info("Failed to load '" + confResource
                               + "' as XProperties:" + e.getMessage ());
-                    log.debug ("Failed to load '" + confResource
+                    log.debug("Failed to load '" + confResource
                                + "' as XProperties:" + e.getMessage (), e);
                 }
 
                 try {
                     storage = new FileStorage (confResource);
-                    log.debug ("Loaded '" + confResource + "' as standard " +
+                    log.debug("Loaded '" + confResource + "' as standard " +
                                "properties");
-                    return new Configuration (storage);
+                    return new Configuration(storage);
                 } catch (Exception e) {
-                    log.info ("Failed to load '" + confResource + "'", e); 
+                    log.info("Failed to load '" + confResource + "'", e);
                 }
 
-                log.info ("Failed to load any configuration." +
+                log.info("Failed to load any configuration." +
                           "Using empty configuration");
                 return Configuration.newMemoryBased ();
             } else {
@@ -1091,7 +1091,7 @@ public class Configuration implements Serializable,
                                                 + configPropName + "' not set");
             }
         }
-        return load (confLocation);
+        return load(confLocation);
     }
 
     /**
@@ -1266,6 +1266,8 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Get configuration for given 'key'.
+     *
      * @param key The key for the underlying sub storage.
      * @return A sub configuration, based on the sub storage.
      * @throws IOException if the sub configuration could not be extracted.
@@ -1301,6 +1303,8 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Return a list of configurations for sub storages.
+     * 
      * @param key The key for the list of sub storages.
      * @return A list of sub storages wrapped as Configurations.
      * @throws IOException if the sub storages could not be retrieved.
@@ -1318,7 +1322,7 @@ public class Configuration implements Serializable,
             return Collections.unmodifiableList(configurations);
         } catch (NullPointerException e) {
             throw new IOException(String.format(
-                    "Unable to extract subconfigurations for key '%s'", key),
+                    "Unable to extract sub-configurations for key '%s'", key),
                                   e);
         }
     }
@@ -1332,9 +1336,9 @@ public class Configuration implements Serializable,
      * of {@code $HOME/summa-control/persistent will be used.
      *
      * @return A {@code File} pointing to the root directory where persistent
-     *         data should be stored
+     *         data should be stored.
      */
-    public File getPeristentDir () {
+    public File getPersistentDir () {
         try {
             return new File (getString(CONF_PERSISTENT_DIR));
         } catch (NullPointerException e) {
