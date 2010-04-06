@@ -173,7 +173,11 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     private void getRecords() {
         // get a local copy of all records id.
-        QueryOptions queryOptions = new QueryOptions(false, null, 0, 0);
+        QueryOptions.ATTRIBUTES[] attributesNeeded =
+             new QueryOptions.ATTRIBUTES[] {QueryOptions.ATTRIBUTES.RECORDID,
+                                            QueryOptions.ATTRIBUTES.RECORDBASE};
+        QueryOptions queryOptions = new QueryOptions(false, null, 0, 0, null,
+                                                              attributesNeeded);
         try {
             long iteratorKey =
                  readableStorage.getRecordsModifiedAfter(0, base, queryOptions);
