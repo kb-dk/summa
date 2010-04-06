@@ -214,12 +214,10 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
 
     private void skipComments(XMLStreamReader reader) throws
                                                             XMLStreamException {
-        log.debug("*** Checking for comments");
         while (reader.getEventType() == XMLStreamReader.COMMENT) {
             if (!reader.hasNext()) {
                 return;
             }
-            log.debug("**** Skipping comment");
             reader.next();
         }
     }
