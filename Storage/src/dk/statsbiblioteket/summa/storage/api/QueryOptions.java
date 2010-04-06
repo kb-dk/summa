@@ -16,7 +16,7 @@ package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
 
@@ -77,6 +77,16 @@ import java.io.Serializable;
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
 public class QueryOptions implements Serializable {
+    public static enum ATTRIBUTES {
+        RECORDID,
+        RECORDBASE,
+        RECORDCONTENT,
+        RECORDCREATIONTIME,
+        RECORDMODIFICATIONTIME,
+        RECORDMETA,
+    }
+    
+
     /**
      * Iff {@code true} match only deleted records, and if {@code false} match
      * only records that are not deleted.
@@ -103,7 +113,36 @@ public class QueryOptions implements Serializable {
      * recursive expansion up to the root record.
      */
     protected int parentHeight;
+
+    /**
+     *
+     */
+    protected ATTRIBUTES[] attributes = null;
+
     protected StringMap meta;
+
+    /**
+     * Constructor for an immutable filter that can be passed to
+     * {@link ReadableStorage}, for further constraints on which records to
+     * fetch. This constructor makes it possible to define attributes from
+     * record to be fetched from storage.
+     *
+     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
+     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param childDepth The child depth for records to fetch
+     * {@link this#childDepth}.
+     * @param parentHeight The parent heigth for records to fetch
+     * {@link this#childDepth}.
+     * @param meta A local StringMap for storing meta values for these query
+     * options.
+     * @param attributes Attributes to fetch from storage.
+     */
+    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
+                        int childDepth, int parentHeight, StringMap meta,
+                        ATTRIBUTES[] attributes) {
+        this(deletedFilter, indexableFilter, childDepth, parentHeight, meta);
+        this.attributes = attributes;
+    }
 
     /**
      * Constructor for an immutable filter that can be passed to
@@ -279,6 +318,56 @@ public class QueryOptions implements Serializable {
         }
 
         return true;
+    }
+
+    /**
+     * Return true if QueryOptions is created to only allow a sub-part of a
+     * record. Eg. only attribute id is needed for the record.
+     * Note: To get new record, call {@link this#getNewRecord(Record)}.
+     *
+     * @return true if these QueryOptions says only a sup-part of record is
+     * needed. False otherwise.
+     */
+    public boolean newRecordNeeded() {
+        return attributes != null;
+    }
+
+    /**
+     * This method is used for only fetching a sub-part of a {@link Record} from
+     * storage, this is used for faster retrieving a large amount of records
+     * over network.
+     *
+     * @param r the record which we want a sub-part of.
+     * @return new {@link Record} with the specified attributes.
+     */
+    public Record getNewRecord(Record r) {
+        String base = null;
+        byte[] content = null;
+        long ct = 0;
+        long mt = 0;
+        String id = null;
+        StringMap meta = null;
+        boolean indexable = false;
+        boolean deleted = false;
+        for(ATTRIBUTES attribute: attributes) {
+            switch(attribute) {
+                case RECORDBASE:
+                    base = r.getBase();
+                case RECORDCONTENT:
+                    content = r.getContent(r.isContentCompressed());
+                case RECORDCREATIONTIME:
+                    ct = r.getCreationTime();
+                case RECORDMODIFICATIONTIME:
+                    mt = r.getModificationTime();
+                case RECORDID:
+                    id = r.getId();
+                case RECORDMETA:
+                    meta = r.getMeta();
+
+            }
+        }
+        return new Record(id, base, r.isDeleted(), r.isIndexable(), content, ct,
+                mt, null, null, meta, r.isContentCompressed());
     }
 }
 
