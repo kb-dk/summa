@@ -14,11 +14,12 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.Record;
 
@@ -300,6 +301,11 @@ public class ResultSetCursor implements Cursor {
 
         while (resultSetHasNext && !options.allowsRecord(r)) {
             r = db.scanRecord(resultSet, this);
+        }
+
+        // We don't need all information from a record.
+        if(options.newRecordNeeded()) {
+            r = options.getNewRecord(r);
         }
 
         if (options.allowsRecord(r)) {
