@@ -38,7 +38,8 @@
 </p>
 <p>
     <b>Live updates</b>: <form action="<%= rssUrl %>" method="get">RSS Status Feed<br/>
-        Granularity: <select name="granularity">
+        <label for="granularity">Granularity</label>:
+        <select name="granularity" id="granularity">
             <option>year</option>
             <option>month</option>
             <option selected="selected">day</option>
@@ -46,7 +47,8 @@
             <option>minute</option>
             <option>second</option>
         </select>
-        Ignore changes newer than: <input type="text" name="ignorenewerthan" size="5" />
+        <label for="ignorenewerthan">Ignore changes newer than</label>:
+        <input type="text" name="ignorenewerthan" id="ignorenewerthan" size="5" />
         <input type="submit" value="Subscribe" />
     </form>
 </p>
