@@ -37,7 +37,18 @@
     <%= SummaConstants.getVersion() %>
 </p>
 <p>
-    Live updates: <a class="rsslink" href="<%= rssUrl %>">RSS Status Feed</a>
+    <b>Live updates</b>: <form action="<%= rssUrl %>" method="get">RSS Status Feed<br/>
+        Granularity: <select name="granularity">
+            <option>year</option>
+            <option>month</option>
+            <option selected="selected">day</option>
+            <option>hour</option>
+            <option>minute</option>
+            <option>second</option>
+        </select>
+        Ignore changes newer than: <input type="text" name="ignorenewerthan" size="5" />
+        <input type="submit" value="Subscribe" />
+    </form>
 </p>
 <%= stats.toString() %>
 </div>
