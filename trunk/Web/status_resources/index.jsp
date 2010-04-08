@@ -49,6 +49,7 @@
         </select>
         <label for="ignorenewerthan">Ignore changes newer than</label>:
         <input type="text" name="ignorenewerthan" id="ignorenewerthan" size="5" />
+        seconds. 
         <input type="submit" value="Subscribe" />
     </form>
 </p>
