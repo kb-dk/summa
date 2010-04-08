@@ -26,10 +26,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Status builder.
@@ -185,6 +182,63 @@ public class StatusBuilder {
         return "OK".equals(searcherStatus) &&
                "OK".equals(storageStatus) &&
                "OK".equals(suggestStatus);
+    }
+
+    /**
+     * Get last update.
+     *         2010-03-25T11:15:20.426
+     * Fixme: code isn't nice or fast.
+     *
+     * @param granularity The Granularity of the dateString. Should be {year,
+     * month, day, hour, minute, second}.
+     * @param date The date object, which should be granulariated.
+     * @return return last update time with a given granularity.
+     */
+    public String getLastUpdate(String granularity, Date date) {
+        String output = "";
+
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(date);
+
+        // Year
+        output += cal.get(Calendar.YEAR);
+        if(granularity.equals("year")) {
+            return output;
+        }
+
+        // Month
+        output += "-" + cal.get(Calendar.MONTH);
+        if(granularity.equals("month")) {
+            return output;
+        }
+
+        // Day
+        output += "-" + cal.get(Calendar.DAY_OF_MONTH);
+        if(granularity.equals("day")) {
+            return output;
+        }
+
+        // Hour
+        output += "T" + cal.get(Calendar.HOUR_OF_DAY);
+        if(granularity.equals("hour")) {
+            return output;
+        }
+
+        // Min 
+        output += ":" + cal.get(Calendar.MINUTE);
+        if(granularity.equals("minute")) {
+            return output;
+        }
+
+        // Sec
+        output += ":" + cal.get(Calendar.SECOND);
+        if(granularity.equals("second")) {
+            return output;
+        }
+
+        // Day
+        output += ";" + cal.get(Calendar.MILLISECOND);
+        return output;
     }
 
     /**
