@@ -78,6 +78,16 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     public static final String DEFAULT_DIDYOUMEAN_APRIORI_FIELD = "freetext";
 
     /**
+     * The configuration file in the configuration file. This is a boolean which
+     * in case of true, throws a fatel exception in managedOpen, if no index
+     * exists.
+     */
+    public static final String CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
+                             "summa.support.didyoumean.closeonnonexistingindex";
+    public static final boolean DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
+                                                                           true;
+
+    /**
      * The configuration field in configuration file for the Did-You-Mean
      * analyzer.
      */
@@ -147,6 +157,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     private boolean creatingIndex = true;
 
+    private boolean closeOnNonExistingIndex;
     /**
      * Constructor for DidYouMeanSearchNode. Get needed configuration values.
      *
@@ -156,6 +167,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public DidYouMeanSearchNode(Configuration config) throws IOException {
         super(config);
+
+        closeOnNonExistingIndex =
+               config.getBoolean(CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX,
+                                 DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX);
 
         // Get AprioriField.
         aprioriField = config.getString(CONF_DIDYOUMEAN_APRIORI_FIELD,
@@ -248,6 +263,15 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                             "IOException when opening directoryIndexFaced.", e);    
             }
         } else {
+            if(closeOnNonExistingIndex) {
+                String error =
+                        "There does not exists an index in given location '"
+                                                              + location + "'.";
+
+                log.fatal(error);
+                closeIndexes();
+                throw new RemoteException(error);
+            }
             log.info("Creating new Did-You-Mean index.");
             try {
                 ngramIndexFactory = new DirectoryIndexFacade(directory);
@@ -292,6 +316,15 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     @Override
     protected void managedClose() throws RemoteException {
         log.debug("Close");
+        closeIndexes();
+    }
+
+    /**
+     * Private helper method to close indexes.
+     *
+     * @throws RemoteException if IOException is encountered doing close. 
+     */
+    private void closeIndexes() throws RemoteException {
         try {
             aprioriIndex.close();
             // TODO tokenSuggester.close();
