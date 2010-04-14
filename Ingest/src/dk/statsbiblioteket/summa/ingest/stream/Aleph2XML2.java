@@ -178,11 +178,24 @@ public class Aleph2XML2 extends ObjectFilterImpl {
     public static final String CONF_ID_DELIMITER =
             "summa.aleph2xml.iddelimiter";
     public static final String DEFAULT_ID_DELIMITER = "-";
+
+    public static final String CONF_CHARSET = "summa.aleph2xml.inputcharset";
+    public static final String DEFAULT_CHARSET = "utf-8";
+
+
+    public static final String CONF_DIVIDER = "summa.aleph2xml.divider";
+    public static final String DEFAULT_DIVIDER = "$$";
+
     private String idDelimiter = DEFAULT_ID_DELIMITER;
+    private String inputCharset = DEFAULT_CHARSET;
 
     public Aleph2XML2(Configuration conf){
         super(conf);
         idDelimiter = conf.getString(CONF_ID_DELIMITER, idDelimiter);
+        inputCharset = conf.getString(CONF_CHARSET, inputCharset);
+        log.debug(String.format(
+                "Created filter with delimiter='%s', input charset='%s'",
+                idDelimiter, inputCharset));
     }
 
     /**
@@ -205,8 +218,14 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         }
         log.debug("Wrapping the Stream in " + payload
                   + " in a Aleph2XMLInputStream");
-        payload.setStream(new Aleph2XMLInputStream(payload.getStream(),
-                                                     payload.toString()));
+        try {
+            payload.setStream(new Aleph2XMLInputStream(
+                    payload.getStream(), payload.toString(), inputCharset));
+        } catch (UnsupportedEncodingException e) {
+            throw new PayloadException("The charset " + inputCharset
+                                       + " is not supported by this JVM",
+                                       e, payload);
+        }
         return true;
     }
 
@@ -249,8 +268,11 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         private boolean notReadYet = true; // Nothing has been read from source
         private boolean eofReached = false;
 
-        public Aleph2XMLInputStream(InputStream source, String debugID) {
-            this.source = new BufferedReader(new InputStreamReader(source));
+        public Aleph2XMLInputStream(
+                InputStream source, String debugID, String charset)
+                                           throws UnsupportedEncodingException {
+            this.source =
+                    new BufferedReader(new InputStreamReader(source, charset));
             this.debugID = debugID;
         }
 
@@ -366,15 +388,16 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             String ind2 = "";
             boolean inCAT = false;
             if (fieldTag.length() >= 3) {
-                if (fieldTag.length() > 3) {
+                if (fieldTag.length() > 5) {
                     try{
                         ind1 = fieldTag.substring(3,4);
                         ind2 = fieldTag.substring(4,5);
                     } catch (StringIndexOutOfBoundsException e){
                         log.warn(String.format(
                                 "StringIndexOutOfBounds while extracting ind1 "
-                                + "and ind2 from line '%s' from %s",
-                                line, debugID), e);
+                                + "and ind2 from fieldTag '%s' from line '%s' " 
+                                + "from %s",
+                                fieldTag, line, debugID), e);
                         isOK = false;
                     }
                 } else if (fieldTag.equals("CAT")) {
@@ -384,6 +407,9 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                             append("\" ind1=\"\" ind2=\"\" >\n").
                             append(SUBFIELD_START).append("r\">d").
                             append(SUBFIELD_END).append(DATA_END);
+                } else {
+                    log.debug("Skipping unknown fieldTag '" + fieldTag
+                              + "' from line '" + line + "' from " + debugID);
                 }
                 fieldTag = fieldTag.substring(0,3);
             } else {
