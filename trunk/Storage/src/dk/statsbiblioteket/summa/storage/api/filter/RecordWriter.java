@@ -361,7 +361,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
         batcher.add(record);
         profiler.beat();
-        log.info("Record '" + record.getId() + "' ok through RecordWriter.");
+        log.trace("Record '" + record.getId() + "' ok through RecordWriter.");
         return true;
     }
 

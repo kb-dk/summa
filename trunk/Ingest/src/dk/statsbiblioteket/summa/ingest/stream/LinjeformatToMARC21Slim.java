@@ -71,6 +71,10 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
      * The namespace for MARC21Slim.
      */
     public static final String MARC21SLIM = "http://www.loc.gov/MARC21/slim";
+    private static final String FIELD =    "datafield";
+    private static final String TAG =      "tag";
+    private static final String SUBFIELD = "subfield";
+    private static final String CODE =     "code";
 
     /**
      * The charset to use when reading the input.
@@ -293,8 +297,8 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         }
         // TODO: Special-case leader
         writer.writeCharacters("  ");
-        writer.writeStartElement("field");
-        writer.writeAttribute("tag", tokens[0]);
+        writer.writeStartElement(FIELD);
+        writer.writeAttribute(TAG, tokens[0]);
         writer.writeAttribute("ind1", "0");
         writer.writeAttribute("ind2", "0");
         writer.writeCharacters("\n");
@@ -333,8 +337,8 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
                 continue;
             }
             writer.writeCharacters("    ");
-            writer.writeStartElement("subfield");
-            writer.writeAttribute("code", Character.toString(token.charAt(0)));
+            writer.writeStartElement(SUBFIELD);
+            writer.writeAttribute(CODE, Character.toString(token.charAt(0)));
             if (token.length() > 1) {
                 writer.writeCharacters(token.substring(1, token.length()));
             }
@@ -389,6 +393,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         }
         if ((content.charAt(index) == '¤')    // Sort sign
             || (content.charAt(index) == '@') // Escape escape
+            || (content.charAt(index) == '*') // Standard divider
             || (content.charAt(index) == 'å') // aa (we just copy)
             || (content.charAt(index) == 'Å') // Aa (we just copy)
             || (divider.length() == 1         // Divider

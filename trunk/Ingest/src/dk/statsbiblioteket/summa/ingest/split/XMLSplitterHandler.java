@@ -255,7 +255,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             && (target.recordNamespace == null
                 || target.recordNamespace.equals(uri))) {
             // Record XML end reached
-            log.debug("Record XML collected, creating Record");
+            log.trace("Record XML collected, creating Record");
             if ("".equals(id.toString())) {
                 if ("".equals(target.idElement)) {
                     makeRandomID(id);
