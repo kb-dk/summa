@@ -66,6 +66,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         this.bases = bases;
         payloadMatcher = new PayloadMatcher(Configuration.newMemoryBased());
         fired = false;
+        feedback = false; // Normally this filter is very fast
 
         log.info("Created ClearBaseFilter directly on Storage for bases: "
                  + Strings.join(bases, ", "));

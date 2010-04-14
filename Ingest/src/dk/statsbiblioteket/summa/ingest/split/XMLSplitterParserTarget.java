@@ -149,7 +149,7 @@ public class XMLSplitterParserTarget {
             postfix = "";
         }
         id = prefix + id + postfix;
-        log.debug("Correcting id '" + payload.getId() + "' to '" + id + "'");
+        log.trace("Correcting id '" + payload.getId() + "' to '" + id + "'");
         payload.setID(id);
         if (payload.getRecord() != null) {
             payload.getRecord().setId(payload.getId());
