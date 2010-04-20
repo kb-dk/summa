@@ -54,6 +54,9 @@ import java.rmi.RemoteException;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke, hbk")
 public class DidYouMeanSearchNode extends SearchNodeImpl {
+    /**
+     * Enum type for Lucene directory.
+     */
     private static enum DIRECTORYTYPE {
         fsDirectory,
         ramDirectory
@@ -84,6 +87,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public static final String CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
                              "summa.support.didyoumean.closeonnonexistingindex";
+    /**
+     * Default value for
+     * {@link this#CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
+     */
     public static final boolean DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
                                                                            true;
 
@@ -99,6 +106,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public static final Class<? extends Analyzer> DEFAULT_DIDYOUMEAN_ANALYZER =
                                             SummaStandardAnalyzer.class;
+    
     /**
      * The configuration field in configuration file for the Did-You-Mean
      * directory type.
@@ -110,15 +118,21 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     public static final String CONF_DIDYOUMEAN_DIRECTORY =
                                            "summa.support.didyoumean.directory";
+    /**
+     * Default value for {@link this#CONF_DIDYOUMEAN_DIRECTORY}.
+     */
     public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
 
     /**
      * Where to place the Did-You-Mean index in the persistant storage.
      * Note: only used in combination with fsDirectory.
      */
-    public static final String CONF_DIDYOUMEAN_PLACEMENT =
-                                            "summa.support.didyoumen.placement";
-    public static final String DEFAULT_DIDYOUMEAN_PLACEMENT = "didyoumean";
+    public static final String CONF_DIDYOUMEAN_LOCATION =
+                                            "summa.support.didyoumean.location";
+    /**
+     * Default value for {@link this#CONF_DIDYOUMEAN_LOCATION}.
+     */
+    public static final String DEFAULT_DIDYOUMEAN_LOCATION = "didyoumean";
 
     /**
      * Local directory version.
@@ -157,6 +171,9 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
      */
     private boolean creatingIndex = true;
 
+    /**
+     * If true, we close when we find no index.
+     */
     private boolean closeOnNonExistingIndex;
     /**
      * Constructor for DidYouMeanSearchNode. Get needed configuration values.
@@ -188,8 +205,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
         // determining the placement for the Did-You-Mean index.
-        String placement = config.getString(CONF_DIDYOUMEAN_PLACEMENT,
-                                                  DEFAULT_DIDYOUMEAN_PLACEMENT);
+        String placement = config.getString(CONF_DIDYOUMEAN_LOCATION,
+                DEFAULT_DIDYOUMEAN_LOCATION);
         didyoumeanIndex = Resolver.getPersistentFile(new File(placement));
 
         switch(type) {
