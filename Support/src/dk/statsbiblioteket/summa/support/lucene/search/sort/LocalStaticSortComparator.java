@@ -91,28 +91,28 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
      * for the given field in the given index and is cached. The getOrder keeps
      * track of versions, so it should be safe to call with different readers.
      * @param reader     the reader to use as basis for the order.
-     * @param fieldname  the field name to use for ordering.
+     * @param fieldName  the field name to use for ordering.
      * @return positions to the terms in the field in order.
      * @throws java.io.IOException if the field in the reader could not be sorted.
      */
     protected synchronized int[] getOrder(
-            final IndexReader reader, String fieldname) throws IOException {
-        fieldname = fieldname.intern();
+            final IndexReader reader, String fieldName) throws IOException {
+        fieldName = fieldName.intern();
         checkCacheConsistency(reader);
 
         int maxDoc = reader.maxDoc();
-        log.trace("Checking cache for '" + fieldname + "'");
-        if (orders.containsKey(fieldname)) {
-            return orders.get(fieldname);
+        log.trace("Checking cache for '" + fieldName + "'");
+        if (orders.containsKey(fieldName)) {
+            return orders.get(fieldName);
         }
 
-        log.debug("Building new cache for field '" + fieldname + "'");
+        log.debug("Building new cache for field '" + fieldName + "'");
         Profiler profiler = new Profiler();
         // Build a list of pairs
-        Pair[] sorted = getPairs(reader, fieldname);
+        Pair[] sorted = getPairs(reader, fieldName);
         // Sort the list
 
-        log.trace("Sorting positions for '" + fieldname + "'");
+        log.trace("Sorting positions for '" + fieldName + "'");
         Arrays.sort(sorted, new Comparator<Pair>() {
             public int compare(Pair o1, Pair o2) {
                 if (o1 == null) {
@@ -131,7 +131,7 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
         provideFeedback(sorted);
 
         // Convert to position-list
-        log.trace("Converting positions for '" + fieldname
+        log.trace("Converting positions for '" + fieldName
                   + "' to compact form");
         int[] positions = new int[maxDoc];
         int position = 1;
@@ -148,9 +148,9 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
             }
         }
 
-        orders.put(fieldname, positions);
+        orders.put(fieldName, positions);
         log.debug(String.format("Created cache for '%s' for %d documents in %s",
-                                fieldname, maxDoc, profiler.getSpendTime()));
+                                fieldName, maxDoc, profiler.getSpendTime()));
         return positions;
     }
 
