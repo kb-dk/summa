@@ -105,6 +105,19 @@ public class LuceneManipulator implements IndexManipulator {
             "summa.index.lucene.consolidate.maxsegments";
     public static final int DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE = 5;
 
+    /**
+     * If true, deletes are expunged from the index upon commit. If subsequent
+     * index manipulators relies on the docIDs to be consistent after deletes,
+     * this needs to be true. If there is no such need - e.g. if the subsequent
+     * manipulators build their index from scratch after commit - this should be
+     * set to false, at it makes commits *much* faster.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_EXPUNGE_DELETES_ON_COMMIT =
+            "summa.index.lucene.expungedeletesoncommit";
+    public static final boolean DEFAULT_EXPUNGE_DELETES_ON_COMMIT = true;
+
     /** The index descriptor, used for providing Analyzers et al. */
     private LuceneIndexDescriptor descriptor;
     /** The general index folder, which contains the concrete index-parts. */
@@ -125,6 +138,7 @@ public class LuceneManipulator implements IndexManipulator {
     private double buffersizeMB = DEFAULT_BUFFER_SIZE_MB;
     private int maxMergeOnConsolidate = DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
     private int writerThreads = DEFAULT_WRITER_THREADS;
+    private boolean expungeDeleted = DEFAULT_EXPUNGE_DELETES_ON_COMMIT;
 
     private boolean orderChanged = false;
     // WriterCallables automatically reappears in available after use
@@ -151,6 +165,8 @@ public class LuceneManipulator implements IndexManipulator {
                     "The number of writer threads must be > 0. It was "
                     + writerThreads);
         }
+        expungeDeleted = conf.getBoolean(
+                CONF_EXPUNGE_DELETES_ON_COMMIT, expungeDeleted);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         available = new ArrayBlockingQueue<WriterCallable>(writerThreads);
         for (int i = 0 ; i < writerThreads ; i++) {
@@ -160,9 +176,10 @@ public class LuceneManipulator implements IndexManipulator {
         log.info(String.format(
                 "LuceneManipulator created. bufferSizePayloads is %d"
                 + ", bufferSizeMB is %f"
-                + ", maxMergeOnConsolidate is %d, writerThreads is %d",
+                + ", maxMergeOnConsolidate is %d, writerThreads is %d, "
+                + "expungeDeletedOnCommit=%b",
                 bufferSizePayloads, buffersizeMB, maxMergeOnConsolidate,
-                writerThreads));
+                writerThreads, expungeDeleted));
     }
 
     public synchronized void open(File indexRoot) throws IOException {
@@ -450,16 +467,24 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
 
+        log.debug("commit: Flushing index at '"
+                  + indexRoot + "' with docCount " + writer.maxDoc());
         flushPending();
         orderChanged = false;
-        log.debug("commit: Flushing index and expunging deleted at '"
-                  + indexRoot + "' with docCount " + writer.maxDoc());
+        if (expungeDeleted) {
+            log.trace("commit: Expunging deleted documents from '"
+                      + indexRoot + "'");
+            writer.expungeDeletes();
+        } else {
+            log.trace("commit: Skipping the expunge deleted documents step");
+        }
+        log.trace("commit: Lucene committing index at '" + indexRoot + "'");
         writer.commit();
-        writer.expungeDeletes();
-        log.trace(String.format(
-                "Commit finished for '%s' in %s ms with docCount %d",
+        log.debug(String.format(
+                "Commit finished for '%s' in %s ms with docCount %d and "
+                + "expungeDeleted=%b",
                 indexRoot , (System.currentTimeMillis() - startTime),
-                writer.maxDoc()));
+                writer.maxDoc(), expungeDeleted));
     }
 
     /* Note: Sets executor = null */
