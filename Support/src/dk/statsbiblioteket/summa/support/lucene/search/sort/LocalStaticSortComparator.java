@@ -50,7 +50,8 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
 
     /**
      * Create a comparator based on the sorting rules for the given language.
-     * @param language a two-letter ISO-639 language code. A list is located at
+     * 
+     * @param language A two-letter ISO-639 language code. A list is located at
      *                http://www.loc.gov/standards/iso639-2/php/English_list.php
      */
     public LocalStaticSortComparator(String language) {
@@ -90,10 +91,12 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
      * Returns an array of term-positions in sorted order. The array is specific
      * for the given field in the given index and is cached. The getOrder keeps
      * track of versions, so it should be safe to call with different readers.
-     * @param reader     the reader to use as basis for the order.
-     * @param fieldName  the field name to use for ordering.
-     * @return positions to the terms in the field in order.
-     * @throws java.io.IOException if the field in the reader could not be sorted.
+     *
+     * @param reader     The reader to use as basis for the order.
+     * @param fieldName  The field name to use for ordering.
+     * @return positions To the terms in the field in order.
+     * @throws java.io.IOException if the field in the reader could not be
+     * sorted.
      */
     protected synchronized int[] getOrder(
             final IndexReader reader, String fieldName) throws IOException {
