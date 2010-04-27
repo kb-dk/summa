@@ -98,15 +98,15 @@ public class DocumentResponse implements Response, DocumentKeys {
         private List<Field> fields = new ArrayList<Field>(50);
 
         /**
-         * @param id        a source-specific id for the Record.
+         * @param id        A source-specific id for the Record.
          *                  For Lucene searchers this would be an integer.
-         * @param source    a designation for the searcher that provided the
+         * @param source    A designation for the searcher that provided the
          *                  Record. This is currently only used for debugging
          *                  and thus there are no formal requirements for the
          *                  structure of the value.
-         * @param score     a ranking-score for the Record. Higher scores means
+         * @param score     A ranking-score for the Record. Higher scores means
          *                  more fitting to the query.
-         * @param sortValue the value used for sorting. It is legal to provide
+         * @param sortValue The value used for sorting. It is legal to provide
          *                  null here, if score is to be used for sorting.
          */
         public Record(String id, String source, float score, String sortValue) {
@@ -180,7 +180,7 @@ public class DocumentResponse implements Response, DocumentKeys {
 
     /**
      * Add a Record to the SearchResult. The order of Records is significant.
-     * @param record a record that should belong to the search result.
+     * @param record A record that should belong to the search result.
      */
     public void addRecord(Record record) {
         if (record == null) {
@@ -203,7 +203,7 @@ public class DocumentResponse implements Response, DocumentKeys {
      * In case of differences in the overall search result structures, such as
      * sortKey having different values, this result wins and a human-readable
      * warning is returned.
-     * @param other the search result that should be merged into this.
+     * @param other The search result that should be merged into this.
      */
     public void merge(Response other) {
         log.trace("merge called");
@@ -287,7 +287,7 @@ public class DocumentResponse implements Response, DocumentKeys {
      * dictated by this value.<br />
      * score is the score-value returned by the index implementation.<br />
      * searchTime is the number of milliseconds it took to perform the search.
-     * @return the search-result as XML, suitable for web-services et al.
+     * @return The search-result as XML, suitable for web-services et al.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String toXML() {
@@ -336,7 +336,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     }
 
     /**
-     * @return the amount of added Records.
+     * @return The amount of added Records.
      */
     public int size() {
         return records.size();
