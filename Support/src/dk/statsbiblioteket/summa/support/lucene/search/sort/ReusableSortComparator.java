@@ -20,13 +20,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortComparator;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.Collator;
 import java.util.Locale;
@@ -85,7 +85,7 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     /**
      * Create a comparator based on the sorting rules for the given language.
-     * @param language a two-letter ISO-639 language code. A list is located at
+     * @param language A two-letter ISO-639 language code. A list is located at
      *                http://www.loc.gov/standards/iso639-2/php/English_list.php
      */
     public ReusableSortComparator(String language) {
@@ -97,7 +97,7 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     /**
      * Create a comparator using the given Collator.
-     * @param collator the collator to use for sorting.
+     * @param collator The collator to use for sorting.
      */
     public ReusableSortComparator(Collator collator) {
         log.debug("Creating ReusableSortComparator with custom Collator "
@@ -110,8 +110,8 @@ public abstract class ReusableSortComparator extends SortComparator {
      * {@link dk.statsbiblioteket.util.CachedCollator} from
      * that. If no statistics can be loaded, the CachedCollator uses the default
      * statistics.
-     * @param locale the Locale to use for the Collator.
-     * @return a collator, preferably based on char statistics.
+     * @param locale The Locale to use for the Collator.
+     * @return > collator, preferably based on char statistics.
      */
     protected Collator createCollator(Locale locale) {
         try {
@@ -154,7 +154,9 @@ public abstract class ReusableSortComparator extends SortComparator {
                       + " hardcoded defaults", e);
             return new CachedCollator(locale, summaChars, true);
         }
-    }// inherit javadocs
+    }
+
+    // inherit javadocs
     @Override
     public abstract ScoreDocComparator newComparator(
             IndexReader reader, String fieldname)
@@ -164,7 +166,7 @@ public abstract class ReusableSortComparator extends SortComparator {
      * Checks is the reader has changed and thus if cached structures should be
      * discarded. This should be called whenever a ScoreDocComparator is
      * requested.
-     * @param reader the reader that the sorter should work on.
+     * @param reader Te reader that the sorter should work on.
      */
     protected synchronized void checkCacheConsistency(IndexReader reader) {
         String newIndexVersion = indexVersion + "_" + reader.maxDoc();
