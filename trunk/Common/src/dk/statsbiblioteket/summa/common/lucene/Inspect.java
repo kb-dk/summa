@@ -87,7 +87,7 @@ public class Inspect {
         openIndex(indexLocation);
         System.out.println("Simple Lucene Index inspection tool. Commands:");
         System.out.print(COMMANDS + ": ");
-        String command = "";
+        String command;
         while (!"QUIT".equals(command = in.readLine())) {
             if (STATS.equals(command)) {
                 stats();
@@ -199,7 +199,7 @@ public class Inspect {
         Profiler pf = new Profiler();
         pf.setExpectedTotal(hits.length());
         for (int i = 0 ; i < hits.length() ; i++) {
-            Document doc = hits.doc(i);
+            //Document doc = hits.doc(i);
 //            Document doc = ir.document(hits.id(i));
 /*            for (String field: fieldnames) {
                 doc.getValues(field);
@@ -227,7 +227,7 @@ public class Inspect {
         Profiler pf = new Profiler();
         pf.setExpectedTotal(topDocs.totalHits);
         for (int i = 0 ; i < topDocs.totalHits ; i++) {
-            Document doc = ir.document(topDocs.scoreDocs[i].doc);
+            //Document doc = ir.document(topDocs.scoreDocs[i].doc);
 //            Document doc = ir.document(hits.id(i));
 /*            for (String field: fieldnames) {
                 doc.getValues(field);
