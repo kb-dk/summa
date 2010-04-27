@@ -16,32 +16,6 @@
  * The State and University Library of Denmark
  * CVS:  $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  */
-/* $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
- * $Revision: 1.10 $
- * $Date: 2007/10/05 10:20:22 $
- * $Author: te $
- *
- * The Summa project.
- * Copyright (C) 2005-2007  The State and University Library
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
- */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -53,11 +27,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base implementation of a facet structure, where the tags are generic.
- * Resolving tags to queryes and representations are delegated to implementing
+ * Resolving tags to queries and representations are delegated to implementing
  * classes. The same goes for sort-order of the tags.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -244,7 +224,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
     /**
      * Shortcut for sortTags and sortFacets methods.
-     * @param tagSortOrder the sort order for the tags.
+     * @param tagSortOrder The sort order for the tags.
      */
     protected void sort(TagSortOrder tagSortOrder) {
         sortTags(tagSortOrder);
@@ -264,7 +244,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                             }
                         });
                     break;
-                case popularity:
+                case popularity:                    
                     Collections.sort(facet.getValue(),
                         new Comparator<FlexiblePair<T, Integer>>() {
                             public int compare(FlexiblePair<T, Integer> o1,
@@ -317,10 +297,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     /**
-     * This should be overridden when subclassing, if the tags order is not
+     * This should be overridden when extending, if the tags order is not
      * natural.
-     * @param o1 the first object to compare.
-     * @param o2 the second object to compare.
+     * @param o1 The first object to compare.
+     * @param o2 The second object to compare.
      * @return -1, 0 or 1, depending on order.
      */
     protected int compareTags(FlexiblePair<T, Integer> o1,
@@ -329,10 +309,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     /**
-     * This should be overridden when subclassing, if the tags does not resolve
+     * This should be overridden when extending, if the tags does not resolve
      * naturally to Strings.
-     * @param facet the facet that contains the tag.
-     * @param tag the tag to convert to String.
+     * @param facet The facet that contains the tag.
+     * @param tag The tag to convert to String.
      * @return a String-representation of the Tag.
      */
     protected String getTagString(String facet, T tag) {
@@ -341,10 +321,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         return String.valueOf(tag);
     }
     /**
-     * This should be overridet when subclassing, if the tags does not resolve
+     * This should be overridden when extending, if the tags does not resolve
      * naturally to queries.
-     * @param facet the facet that contains the tag.
-     * @param tag the tag to convert to a query.
+     * @param facet The facet that contains the tag.
+     * @param tag The tag to convert to a query.
      * @return a query for the tag in the facet.
      */
     protected String getQueryString(String facet, T tag) {
@@ -355,7 +335,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * Assign the list of tags to the given Facet. Any existing Facet will be
      * overwritten.
-     * @param facet the Facet to assign to.
+     * @param facet The Facet to assign to.
      * @param tags a list of pars, where the first element is the tag and the
      *             second element is the tag-count.
      */
@@ -367,12 +347,12 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * Adds the list of tags to the given Facet. If the Facet does not exist, it
      * will be created. Each Tag will be added to the tags for the Facet.
      * If a Tag already exists in the list, the tagCounts will be added for
-     * that Tag. This requires iteration throgh the tags, so consider using
+     * that Tag. This requires iteration through the tags, so consider using
      * {@link #assignTags} if the uniqueness of the Tags is known.<br />
      * Note that the SortOrder for the FlexiblePairs may be reset by this
      * method.
-     * @param facet the Facet to assign to.
-     * @param tags a list of pars, where the first element is the tag and the
+     * @param facet The Facet to assign to.
+     * @param tags A list of pars, where the first element is the tag and the
      *             second element is the tag-count.
      */
     public void addTags(String facet, List<FlexiblePair<T, Integer>> tags) {
@@ -390,10 +370,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * is added to the existing tagCount. Note that this iterates through all
      * Tags in the given Facet, thus being somewhat inefficient. Consider using
      * {@link #assignTag} if the Tag is known to be unique within the Facet.
-     * @param facet    the Facet to add the Tag to. If it does not exist, a new
+     * @param facet    The Facet to add the Tag to. If it does not exist, a new
      *                 Facet is created.
-     * @param tag      the Tag to add to the Facet.
-     * @param tagCount the tagCount for the Tag.
+     * @param tag      The Tag to add to the Facet.
+     * @param tagCount The tagCount for the Tag.
      */
     public void addTag(String facet, T tag, int tagCount) {
         List<FlexiblePair<T, Integer>> tags = map.get(facet);
@@ -417,10 +397,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * Assigns a given Tag to a given Facet. There is no checking for duplicate
      * Tags, so ensuring consistency is up to the caller. Consider using
      * {@link #addTag} if it is unknown whether the tag is unique.
-     * @param facet    the Facet to assign the Tag to. If it does not exist,
+     * @param facet    The Facet to assign the Tag to. If it does not exist,
      *                 a new Facet is created.
-     * @param tag      the Tag to assign to the Facet.
-     * @param tagCount the tagCount for the Tag.
+     * @param tag      The Tag to assign to the Facet.
+     * @param tagCount The tagCount for the Tag.
      */
     public void assignTag(String facet, T tag, int tagCount) {
         List<FlexiblePair<T, Integer>> tags = map.get(facet);
@@ -444,7 +424,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
     /**
      * Constructs a list of the Tags under the given Facet.
-     * @param facet the facet to get Tags for.
+     * @param facet The facet to get Tags for.
      * @return all the Tags under the given Facet or null if the Facet does not
      *         exist.
      */
@@ -463,7 +443,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * Escape the tag for use in a query. Currently this means placing a
      * backslash in front of quotes.
-     * @param cleanTag the tag to escape.
+     * @param cleanTag The tag to escape.
      * @return the escaped tag.
      */
     protected String queryEscapeTag(String cleanTag) {
