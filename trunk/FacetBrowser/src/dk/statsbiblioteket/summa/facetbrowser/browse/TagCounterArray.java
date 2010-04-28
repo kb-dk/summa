@@ -91,8 +91,8 @@ public class TagCounterArray implements TagCounter, Runnable {
      * The emptyFacet will always contain a counter of length 1. It is used as
      * a dummy placeholder for deleted tags, in order to avoid a conditional in
      * the tight inner loop.
-     * @param tagHandler an properly initialized tagHandler.
-     * @param emptyFacet the id for the empty facet. This must be greater than
+     * @param tagHandler An properly initialized tagHandler.
+     * @param emptyFacet The id for the empty facet. This must be greater than
      *                   or equal to the number of proper facets in TagHandler.
      *                   The first dimension of {@link #tags} is determined by
      *                   this, so high values are to be avoided.
@@ -175,8 +175,8 @@ public class TagCounterArray implements TagCounter, Runnable {
      * performance is king. Error-checking is done solely by catching
      * exceptions.
      * Note: due to performance reasons, this is not thread-safe.
-     * @param facetID the ID for the Facet.
-     * @param tagID   the ID for the Tag.
+     * @param facetID The ID for the Facet.
+     * @param tagID   The ID for the Tag.
      */
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
@@ -346,11 +346,8 @@ public class TagCounterArray implements TagCounter, Runnable {
         ArrayList<FlexiblePair<Integer, Integer>> niceList =
                 new ArrayList<FlexiblePair<Integer,
                                            Integer>>(sTags);
-        for (int i = 0 ; i < sTags ; i++) {
-            niceList.add(popResult[i]);
-        }
-        result.assignTags(tagHandler.getFacetNames().get(facetID),
-                          niceList);
+        niceList.addAll(Arrays.asList(popResult).subList(0, sTags));
+        result.assignTags(tagHandler.getFacetNames().get(facetID), niceList);
     }
 
     // Too slow
@@ -512,7 +509,7 @@ public class TagCounterArray implements TagCounter, Runnable {
 }
      * </p><p>
      * Warning: This violates encapsulation. Use with extreme care!
-     * @return the internal tag counter structure.
+     * @return The internal tag counter structure.
      */
     public int[][] getTags() {
         return tags;
