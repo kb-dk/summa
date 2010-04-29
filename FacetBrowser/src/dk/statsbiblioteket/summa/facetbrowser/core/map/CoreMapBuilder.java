@@ -107,6 +107,35 @@ public class CoreMapBuilder extends CoreMap32 {
         mapSize = Math.max(docID+1, mapSize);
     }
 
+    // TODO: Optimize this by bypassing array creation
+    public void add(int docID, int facetID, int tagID) {
+        ensureSpace(docID);
+        if (map[docID] == null) {
+            map[docID] = new int[calculateValue(facetID, tagID)];
+        } else {
+            map[docID] = ArrayUtil.mergeArrays(
+                    map[docID], new int[calculateValue(facetID, tagID)],
+                    true, SORT_VALUES);
+        }
+        mapSize = Math.max(docID+1, mapSize);
+    }
+
+    @Override
+    public void add(int[] docIDs, int length, int facetID, int tagID) {
+        final int[] values = new int[]{calculateValue(facetID, tagID)};
+        for (int i = 0; i < length; i++) {
+            int docID = docIDs[i];
+            ensureSpace(docID);
+            if (map[docID] == null) {
+                map[docID] = values;
+            } else {
+                map[docID] = ArrayUtil.mergeArrays(
+                        map[docID], values, true, SORT_VALUES);
+            }
+            mapSize = Math.max(docID + 1, mapSize);
+        }
+    }
+
     private synchronized void ensureSpace(int docID) {
         if (docID < map.length) {
             return;

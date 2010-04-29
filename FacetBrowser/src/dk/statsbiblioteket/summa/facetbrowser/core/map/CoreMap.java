@@ -153,6 +153,40 @@ public interface CoreMap {
     public void add(int docID, int facetID, int[] tagIDs);
 
     /**
+     * Adds the tagID corresponding to a given facet for a given document.
+     * If there is already an existing mapping of the given facet/pair for the
+     * document, that pair is ignored.
+     * </p><p>
+     * It is expected that this method is used for building the core map.
+     * @param docID   the document to update. This needs to be equal to or one
+     *                more than the previous docID. The first docID must be 0.
+     * @param facetID the facet to update. This needs to be greater than the
+     *                previous facetID, unless the docID is one greater than
+     *                the previous docID.
+     * @param tagID   the id for the tag in the facet for the document.
+     */
+    public void add(int docID, int facetID, int tagID);
+
+    /**
+     * Adds the tagID corresponding to a given facet for the given documents.
+     * If there is already an existing mapping of the given facet/pair for the
+     * document, that pair is ignored.
+     * </p><p>
+     * It is expected that this method is used for building the core map.
+     * </p><p>
+     * Note: For assignment of the same tagIDs to multiple docIDs this is
+     * the recommended (and fastest) method.
+     * @param docIDs  the documents to update. This needs to be equal to or one
+     *                more than the previous docID.
+     * @param length  the number of docIDs to process from docIDs.
+     * @param facetID the facet to update. This needs to be greater than the
+     *                previous facetID, unless the docID is one greater than
+     *                the previous docID.
+     * @param tagID   the id for the tag in the facet for the document.
+     */
+    public void add(int[] docIDs, int length, int facetID, int tagID);
+
+    /**
      * Get an array with the tagIDs for the given facet for the given document.
      * A TagHandler is needed to transform the tagIDs to Strings, this can be
      * done with {@link TagHandler#getTagName(int, int)} .
