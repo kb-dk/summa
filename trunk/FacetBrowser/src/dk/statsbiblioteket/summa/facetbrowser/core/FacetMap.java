@@ -27,10 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides a mapping between document-IDs and facet/tags. Basic addition
@@ -49,6 +46,12 @@ public class FacetMap {
     private TagHandler tagHandler;
     private Structure structure;
     private boolean readOnly;
+
+    private long statAddDocIDs = 0;
+    private long statAdjustPositions = 0;
+    private long statAdjustPositionNS = 0;
+    private long statInsertTagNS = 0;
+    private long statCoreMapAddNS = 0;
 
     public FacetMap(Structure structure,
                     CoreMap coreMap, TagHandler tagHandler, boolean readOnly) {
@@ -139,9 +142,13 @@ public class FacetMap {
     }
 
     public void add(int docID, String facet, String tag) throws IOException {
+        statAddDocIDs++;
         int facetID = structure.getFacetID(facet);
+        statInsertTagNS -= System.nanoTime();
         int tagID = tagHandler.insertTag(facetID, tag);
+        statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
+            statAdjustPositions++;
             coreMap.adjustPositions(facetID, tagID, 1);
         } else {
             tagID = (tagID * -1) - 1;
@@ -150,17 +157,24 @@ public class FacetMap {
     }
 
     public void add(int[] docIDs, int docCount, String facet, String tag) {
-        int facetID = structure.getFacetID(facet);
+        add(docIDs, docCount, structure.getFacetID(facet), tag);
+    }
+
+    public void add(int[] docIDs, int docCount, int facetID, String tag) {
+        statAddDocIDs++;
+        statInsertTagNS -= System.nanoTime();
         int tagID = tagHandler.insertTag(facetID, tag);
+        statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
+            statAdjustPositionNS -= System.nanoTime();
             coreMap.adjustPositions(facetID, tagID, 1);
+            statAdjustPositionNS += System.nanoTime();
         } else {
             tagID = (tagID * -1) - 1;
         }
-        int[] tagIDs = new int[]{tagID};
-        for (int i = 0 ; i < docCount ; i++) {
-            coreMap.add(docIDs[i], facetID, tagIDs);
-        }
+        statCoreMapAddNS -= System.nanoTime();
+        coreMap.add(docIDs, docCount, facetID, tagID);
+        statCoreMapAddNS += System.nanoTime();
     }
 
     /**
@@ -233,6 +247,26 @@ public class FacetMap {
     }
 
     /**
+     * Clears collected statistics.
+     */
+    public void clearStats() {
+        // TODO: Clear
+
+    }
+
+    /**
+     * @return human readable statistics for the map (added tags etc.).
+     */
+    public String getStats() {
+        return String.format(
+                "#addDocIDs=%d, #adjustPositions=%d, adjustPositionsMS=%d, "
+                + "insertTagMS=%d, coreMapAddMS=%d",
+                statAddDocIDs, statAdjustPositions,
+                statAdjustPositionNS / 1000000, statInsertTagNS / 1000000,
+                statCoreMapAddNS / 1000000);
+    }
+
+    /**
      * @return the number of mapped documents.
      */
     public int getDocCount() {
@@ -267,7 +301,3 @@ public class FacetMap {
     }
 
 }
-
-
-
-

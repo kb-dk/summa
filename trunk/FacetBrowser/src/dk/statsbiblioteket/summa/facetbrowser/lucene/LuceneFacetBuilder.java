@@ -154,6 +154,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             try {
                 coreMap = new CoreMapBuilder(Configuration.newMemoryBased(),
                                              structure);
+                facetMap.clearStats();
                 facetMap.setCoreMap(coreMap);
                 if (docsToTerms) {
                     buildDocsToTerms(ir);
@@ -161,6 +162,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 if (termsToDocs) {
                     buildTermsToDocs(ir);
                 }
+                log.info("Finished facetMap-stage with call statistics: "
+                         + facetMap.getStats());
                 log.debug("Using copyTo to fill the standard "
                           + "CoreMapBitStuffed");
                 coreMap.copyTo(oldMap);
@@ -368,9 +371,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
         facetMap.addToDocument(docID, facetTags);
     }
 
-    private int BUFFER_SIZE = 1000;
-    private int[] docBuffer = new int[BUFFER_SIZE];
-    private int[] freqBuffer = new int[BUFFER_SIZE];
+    private static final int BUFFER_SIZE = 1000;
+    private final int[] docBuffer = new int[BUFFER_SIZE];
+    private final int[] freqBuffer = new int[BUFFER_SIZE];
     // TODO: Only fill fields that has not previously been filled
     private synchronized void buildTermsToDocs(IndexReader ir) throws
                                                                IOException {
@@ -383,6 +386,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
         for (Map.Entry<String, FacetStructure> entry:
                 structure.getFacets().entrySet()) {
             FacetStructure facet = entry.getValue();
+            final int facetID = structure.getFacetID(facet.getName());
             log.debug("buildTermsToDocs() for facet " + ++currentFacet + "/"
                       + totalFacets + ": " + facet.getName());
             long termCount = 0;
@@ -402,10 +406,11 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     if (term.text() == null || "".equals(term.text())) {
                         continue; // Skip blank tags
                     }
-                    TermDocs termDocs = ir.termDocs(term);
+                    final TermDocs termDocs = ir.termDocs(term);
                     if (termDocs == null) {
                         continue;
                     }
+                    final String termText = term.text();
                     int docCount;
                     while ((docCount = termDocs.read(docBuffer, freqBuffer))
                            > 0) {
@@ -414,8 +419,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                             log.trace("Adding " + docCount + " references to "
                                       + facet.getName() + ":" + term.text());
                         }
-                        facetMap.add(docBuffer, docCount, facet.getName(), 
-                                     term.text());
+                        facetMap.add(docBuffer, docCount, facetID, termText);
                         refCount += docCount;
                     }
                     /* Mind-numbingly slow due to repeated term lookups
@@ -427,7 +431,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
             }
             log.debug("Found " + termCount + " terms for facet "
                       + facet.getName() + " with " + refCount
-                      + " references in " + profiler.getSpendTime());
+                      + " references in " + profiler.getSpendTime() 
+                      + ". Cummulative stats: " + facetMap.getStats());
         }
         log.debug(
                 "Finished buildTermsToDocs in " + totalProfiler.getSpendTime());

@@ -165,5 +165,43 @@ public abstract class CoreMap32 extends CoreMapImpl {
            the new gap-size */
         setValues(docID, newValues);
     }
+
+    public void add(int docID, int facetID, int tagID) {
+        if (facetID >= structure.getFacets().size()) {
+            throw new IllegalArgumentException(String.format(
+                    "This core map only allows %d facets. The ID for the facet "
+                    + "in add was %d", FACET_LIMIT, facetID));
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("add(%d, %d, single tag %d) called",
+                                    docID, facetID, tagID));
+        }
+
+        int facetTagValue = calculateValue(facetID, tagID);
+        int[] existingValues = getValues(docID);
+        for (int existingValue: existingValues) {
+            if (existingValue == facetTagValue) {
+                return; // No merging of existing
+            }
+        }
+
+        /* Get the existing values for the docID and add the new value */
+        int[] newValues = ArrayUtil.mergeArrays(
+                getValues(docID), new int[]{facetTagValue}, true, SORT_VALUES);
+
+        /* Make room in values for the new data and change the index to reflect
+           the new gap-size */
+        setValues(docID, newValues);
+    }
+
+    // TODO: Optimize by doing calculations locally
+    @Override
+    public void add(int[] docIDs, int length, int facetID, int tagID) {
+        for (int i = 0; i < length; i++) {
+            int docID = docIDs[i];
+            add(docID, facetID, tagID);
+        }
+    }
 }
 
