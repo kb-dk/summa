@@ -149,11 +149,15 @@ public class FacetMap {
         statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
             statAdjustPositions++;
+            statAdjustPositionNS -= System.nanoTime();
             coreMap.adjustPositions(facetID, tagID, 1);
+            statAdjustPositionNS += System.nanoTime();
         } else {
             tagID = (tagID * -1) - 1;
         }
+        statCoreMapAddNS -= System.nanoTime();
         coreMap.add(docID, facetID, new int[]{tagID});
+        statCoreMapAddNS += System.nanoTime();
     }
 
     public void add(int[] docIDs, int docCount, String facet, String tag) {
@@ -166,6 +170,7 @@ public class FacetMap {
         int tagID = tagHandler.insertTag(facetID, tag);
         statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
+            statAdjustPositions++;
             statAdjustPositionNS -= System.nanoTime();
             coreMap.adjustPositions(facetID, tagID, 1);
             statAdjustPositionNS += System.nanoTime();
