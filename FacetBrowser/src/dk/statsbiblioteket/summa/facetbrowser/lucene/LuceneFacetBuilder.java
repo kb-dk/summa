@@ -198,30 +198,14 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.debug("Filling " + facetName
                       + " (" + ++counter + "/"
                       + tagHandler.getFacetNames().size() + ")");
-            String lastTerm = null;
-            boolean duplicateDetected = false;
             for (String fieldName: facet.getFields()) {
+                log.debug("Extracting tags for facet " + facetName + " field "
+                          + fieldName);
                 Term searchTerm = new Term(fieldName, "");
                 TermEnum terms = ir.terms(searchTerm);
                 while (true) {
                     Term term = terms.term();
-                    if (term == null) {
-                        break;
-                    }
-                    if (term.text().equals(lastTerm)) {
-                        if (!duplicateDetected) {
-                            log.debug("Found the term duplicate " + term.field()
-                                      + ":" + term.text()
-                                      + ". Ignoring further duplicates from "
-                                      + "this field");
-                            duplicateDetected = true;
-                        }
-                        if (!terms.next()) {
-                            break;
-                        }
-                        continue;
-                    }
-                    if (!term.field().equals(fieldName)) {
+                    if (term == null || !term.field().equals(fieldName)) {
                         break;
                     }
                     String shortTerm = term.text();
@@ -231,7 +215,6 @@ public class LuceneFacetBuilder extends BuilderImpl {
                         }
                         continue; // We skip empty tags
                     }
-                    lastTerm = shortTerm;
                     if (log.isTraceEnabled()) {
                         log.trace("Adding tag '" + shortTerm
                                   + "' from field '" + fieldName
@@ -252,7 +235,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                       tagHandler.getTagCount(facetName) + " tags");
         }
         if (dirtyAdd) {
-            log.trace("Cleaning up tag handler");
+            log.debug("Cleaning up tag handler");
             tagHandler.cleanup();
         }
         log.info(String.format(
