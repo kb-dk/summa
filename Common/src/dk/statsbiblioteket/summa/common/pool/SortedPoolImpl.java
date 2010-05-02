@@ -317,6 +317,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      */
     protected void removeDuplicates() {
         log.trace("Removing duplicated");
+        long startTime = System.currentTimeMillis();
         int initial = size();
         E last = null;
         int index = 0;
@@ -333,8 +334,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             last = current;
         }
         log.debug(String.format(
-                "Removed %d duplicates from a total of %d values",
-                initial - size(), initial));
+                "Removed %d duplicates from a total of %d values in %dms",
+                initial - size(), initial,
+                System.currentTimeMillis() - startTime));
     }
 
 
@@ -432,12 +434,21 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      */
     public void cleanup() {
         log.trace("cleanup called");
-        long startTime = System.nanoTime();
+        long startTime = System.currentTimeMillis();
+
+        long sortTime = System.currentTimeMillis();
         sort();
+        sortTime = System.currentTimeMillis() - sortTime;
+
+        long duplicateTime = System.currentTimeMillis();
         removeDuplicates();
+        duplicateTime = System.currentTimeMillis() - duplicateTime;
         //noinspection DuplicateStringLiteralInspection
-        log.trace("cleanup finished for " + size() + " elements in "
-                  + (System.nanoTime()-startTime) / 1000000.0 + "ms");
+        log.debug(String.format(
+                "cleanup of %s finished for %d elements in %dms " 
+                + "(%dms for sort, %dms for duplicate removal)",
+                poolName, size(), System.currentTimeMillis() - startTime,
+                sortTime, duplicateTime));
     }
 
     /**
