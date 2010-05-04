@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,15 +81,92 @@ public class CollatorFactory {
     }
 
     /**
+     * Takes a RuleBasedCollator and removed special handling of AA, Aa, aA and
+     * aa (old danish writing for å). Normally AA is equivalent to Å when
+     * sorting with Locale "da". This method removes that rule so that AA is
+     * treated as ti A's.
+     * @param collator a RuleBasedCollator.
+     * @return a Collator that treats double-a's as two a's.
+     */
+    public static Collator adjustAASorting(Collator collator) {
+        String AA = ", AA , Aa , aA , aa";
+        if (!(collator instanceof RuleBasedCollator)) {
+            log.warn(String.format(
+                    "adjustAASorting expected a RuleBasedCollator but got %s. "
+                    + "Unable to update Collator", collator.getClass()));
+            return collator;
+        }
+        String rules = ((RuleBasedCollator)collator).getRules();
+        if (rules.indexOf(AA) == -1) {
+            log.debug("adjustAASorting: The received Collator already treats "
+                      + "aa as 2*a");
+            return collator;
+        }
+        try {
+            RuleBasedCollator newCollator = new RuleBasedCollator(
+                    rules.replace(AA, ""));
+            log.trace("adjustAASorting: Successfully updated Collator to "
+                      + "treat aa as 2*a");
+            return newCollator;
+        } catch (ParseException e) {
+            throw new RuntimeException(
+                    "ParseException while parsing\n" + rules, e);
+        }
+
+    }
+
+    /**
      * Create a Collator from the given Locale, prioritizing space before other
-     * characters.
-     * @param locale the wanted Locale for the Collator.
-     * @return a new Collator.
+     * characters. If the locale is "da", the Collator also treats aa as 2*a.
+     * @param locale the wanted Locale for the Collator..
+     * @return a new Collator with tweaked rules.
+     * @see {@link #fixCollator(java.text.Collator)}
+     * @see {@link #adjustAASorting(java.text.Collator)}
      */
     // TODO: Make this produce fixed CachedCollators
     public static Collator createCollator(Locale locale) {
-        Collator collator = Collator.getInstance(locale);
-        return fixCollator(collator, false);
+        Collator collator = fixCollator(Collator.getInstance(locale), false);
+        if ("da".equals(locale.getLanguage())) {
+            collator = adjustAASorting(collator);
+        }
+        return collator;
+    }
+
+    /**
+     * Calls {@link #createCollator(java.util.Locale)} and wraps the Collator as
+     * a CachedCollator if cached == true. This increases creation time but
+     * makes the Collator markedly faster.
+     * </p><p>
+     * Note: The CachedCollator will be created with default cache-characters
+     * {@link CachedCollator#COMMON_SUMMA_EXTRACTED}.
+     * @param locale the wanted Locale for the Collator..
+     * @param cache if true, the Collator is cached.
+     * @return a new optionally cached cached Collator with tweaked rules.
+     * @see {@link #fixCollator(java.text.Collator)}
+     * @see {@link #adjustAASorting(java.text.Collator)}
+     */
+    public static Collator createCollator(Locale locale, boolean cache) {
+        return createCollator(
+            locale,  CachedCollator.COMMON_SUMMA_EXTRACTED, cache);
+    }
+
+    /**
+     * Calls {@link #createCollator(java.util.Locale)} and wraps the Collator as
+     * a CachedCollator if cached == true. This increases creation time but
+     * makes the Collator markedly faster.
+     * </p><p>
+     * @param locale the wanted Locale for the Collator..
+     * @param cacheChars the characters that are considered safe to sort by on
+     *                   an indidual character basis.
+     * @param cache if true, the Collator is cached.
+     * @return a new optionally cached cached Collator with tweaked rules.
+     * @see {@link #fixCollator(java.text.Collator)}
+     * @see {@link #adjustAASorting(java.text.Collator)}
+     */
+    public static Collator createCollator(
+        Locale locale, String cacheChars, boolean cache) {
+        Collator collator = createCollator(locale);
+        return cache ? new CachedCollator(collator, cacheChars) : collator;
     }
 
     /**

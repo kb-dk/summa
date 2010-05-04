@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -128,7 +129,7 @@ public abstract class ReusableSortComparator extends SortComparator {
                     //noinspection DuplicateStringLiteralInspection
                     log.debug("Could not locate " + second + ". Defaulting to "
                               + "hardcoded Summa char statistics");
-                    return new CachedCollator(locale, summaChars, true);
+                    return CollatorFactory.createCollator(locale, true);
                 }
             }
             InputStream is = url.openStream();
@@ -136,23 +137,23 @@ public abstract class ReusableSortComparator extends SortComparator {
                                 + "know the URL '" + url + "'";
             ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
             Streams.pipe(is, out);
-            Collator collator =
-                    new CachedCollator(locale, out.toString("utf-8"), true);
+            Collator collator = CollatorFactory.createCollator(
+                locale, out.toString("utf-8"), true);
             log.debug("Created CachedCollator based on stored char statistics "
                       + "from '" + url + "'");
             return collator;
         } catch(UnsupportedEncodingException e) {
             log.error("Exception converting to UTF-8, defaulting to hardcoded "
                       + "defaults", e);
-            return new CachedCollator(locale, summaChars, true);
+            return CollatorFactory.createCollator(locale, summaChars, true);
         } catch(IOException e) {
             log.error("IOException getting statistics for collator, defaulting "
                       + "to hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars, true);
+            return CollatorFactory.createCollator(locale, summaChars, true);
         } catch(Exception e) {
             log.error("Exception getting statistics for collator, defaulting to"
                       + " hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars, true);
+            return CollatorFactory.createCollator(locale, summaChars, true);
         }
     }
 

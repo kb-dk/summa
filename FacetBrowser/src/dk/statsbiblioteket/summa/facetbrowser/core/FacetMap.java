@@ -148,6 +148,12 @@ public class FacetMap {
         int tagID = tagHandler.insertTag(facetID, tag);
         statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
+            if (statAdjustPositions == 0) {
+                log.debug(String.format(
+                        "First adjustPositions encountered with " 
+                        + "facet %s and tag '%s'",
+                        facet, tag));
+            }
             statAdjustPositions++;
             statAdjustPositionNS -= System.nanoTime();
             coreMap.adjustPositions(facetID, tagID, 1);
@@ -170,6 +176,14 @@ public class FacetMap {
         int tagID = tagHandler.insertTag(facetID, tag);
         statInsertTagNS += System.nanoTime();
         if (tagID >= 0) {
+            if (statAdjustPositions == 0) {
+                log.debug(String.format(
+                        "First adjustPositions encountered with " 
+                        + "facetID %d and tag '%s'. "
+                        + "Current tag-count for the facet is %d",
+                        facetID, tag, tagHandler.getTagCount(
+                                tagHandler.getFacetNames().get(facetID))));
+            }
             statAdjustPositions++;
             statAdjustPositionNS -= System.nanoTime();
             coreMap.adjustPositions(facetID, tagID, 1);

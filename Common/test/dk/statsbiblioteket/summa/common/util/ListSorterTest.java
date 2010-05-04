@@ -50,8 +50,8 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
 
     public void testCollator() throws Exception {
         ListSorter ls = new ListSorter();
-        Collator myCollator = new CachedCollator(
-            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
+        Collator myCollator =
+            CollatorFactory.createCollator(new Locale("da"), true);
         List<String> test = Arrays.asList("Foo", "bar");
         ls.sort(test, myCollator);
         assertTrue("bar should be the first element", 
@@ -93,8 +93,8 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         int WARMUP = 5;
         int RUNS = 10;
         List<String> randomWords = getRandomWords(NUM_WORDS, MAX_WORD_LENGTH);
-        Collator collator = new CachedCollator(
-            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
+        Collator collator =
+            CollatorFactory.createCollator(new Locale("da"), true);
         ListSorter ls = new ListSorter();
         System.out.println("Created " + NUM_WORDS + " words. Warming up");
         for (int i = 0 ; i < WARMUP ; i++) {
@@ -136,8 +136,8 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         List<String> copy = new ArrayList<String>(random.size());
         copy.addAll(random);
 
-        Collator collator = new CachedCollator(
-            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
+        Collator collator =
+            CollatorFactory.createCollator(new Locale("da"), true);
         ListSorter ls = new ListSorter();
         Collections.sort(random, collator);
         ls.sort(copy, collator);

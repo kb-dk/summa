@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.text.Collator;
+import java.text.RuleBasedCollator;
 import java.util.*;
 
 public class CollatorFactoryTest extends TestCase {
@@ -90,6 +91,23 @@ public class CollatorFactoryTest extends TestCase {
         Collections.sort(sorted, comparator);
         assertEquals(message,
                      Strings.join(expected, ", "), Strings.join(sorted, ", "));
+    }
+
+
+
+    public void testAAsorting() throws Exception {
+        Collator plain = Collator.getInstance(new Locale("da"));
+        assertTrue("Aalborg should be after Assens",
+                   plain.compare("Aalborg", "Assens") > 0);
+
+        Collator aa = CollatorFactory.adjustAASorting(plain);
+        assertTrue("Aalborg should now come before Assens",
+                   aa.compare("Aalborg", "Assens") < 0);
+
+        Collator factoried = CollatorFactory.createCollator(
+            new Locale("da"), true);
+        assertTrue("Aalborg should now come before Assens",
+                   factoried.compare("Aalborg", "Assens") < 0);
     }
 
     public void testSpaceSort() throws Exception {
