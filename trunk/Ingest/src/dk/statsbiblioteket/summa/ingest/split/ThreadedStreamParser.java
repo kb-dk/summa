@@ -146,7 +146,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         //noinspection DuplicateStringLiteralInspection
         runningThread = new Thread(new Runnable() {
             public void run() {
-                log.debug("run() entered");
+                log.trace("run() entered");
                 try {
                     protectedRun();
                     sourcePayload.close();
