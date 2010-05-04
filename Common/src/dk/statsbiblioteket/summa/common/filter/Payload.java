@@ -241,10 +241,10 @@ public class Payload {
                            Logging.LogLevel.TRACE, this);
         if (stream != null) {
             try {
-                log.debug("Closing embedded stream for " + this);
+                log.trace("Closing embedded stream for " + this);
                 stream.close();
             } catch (IOException e) {
-                log.error("Exception closing embedded strean for " + this, e);
+                log.error("Exception closing embedded stream for " + this, e);
             }
         }
     }
