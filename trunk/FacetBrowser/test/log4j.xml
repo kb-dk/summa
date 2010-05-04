@@ -35,7 +35,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
         <param name="Target" value="System.out"/>
-        <param name="Threshold" value="info"/>
+        <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
         </layout>
@@ -55,21 +55,21 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.common.pool.DiskPool">
+    <logger name="dk.statsbiblioteket.summa.common.pool">
         <level value="debug"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse">
+    <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="trace"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa">
+<!--    <logger name="dk.statsbiblioteket.summa">
         <level value="info"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
-
+    -->
     <!-- all loggers inherit the root logger - so don't include the root appenders
     in the other loggers (will duplicate log entries in the log file) -->
     <root>

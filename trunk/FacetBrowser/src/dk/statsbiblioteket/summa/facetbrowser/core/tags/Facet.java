@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 import dk.statsbiblioteket.summa.common.pool.CollatorSortedPool;
 import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
 import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.InvalidPropertiesException;
@@ -140,9 +141,7 @@ public class Facet implements CollatorSortedPool {
                     structure.getLocale(),
                     // TODO: Consider if it is safe to use summa_extracted here
                     // Maybe check for locale == "da"?
-                    new CachedCollator(
-                            new Locale(structure.getLocale()),
-                            CachedCollator.COMMON_SUMMA_EXTRACTED, true));
+                    CollatorFactory.createCollator(new Locale("da"), true));
         }
         return collators.get(structure.getLocale());
     }

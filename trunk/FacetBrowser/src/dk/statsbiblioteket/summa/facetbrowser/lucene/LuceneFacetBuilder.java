@@ -157,7 +157,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 facetMap.clearStats();
                 facetMap.setCoreMap(coreMap);
                 if (docsToTerms) {
-                    buildDocsToTerms(ir);
+                    buildDocsToTerms(ir);      
                 }
                 if (termsToDocs) {
                     buildTermsToDocs(ir);
@@ -361,7 +361,6 @@ public class LuceneFacetBuilder extends BuilderImpl {
     private synchronized void buildTermsToDocs(IndexReader ir) throws
                                                                IOException {
         log.debug("buildTermsToDocs() started");
-        long startTime = System.currentTimeMillis();
         int currentFacet = 0;
         int totalFacets = structure.getFacets().entrySet().size();
         Profiler totalProfiler = new Profiler();
@@ -413,7 +412,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 } while (terms.next());
             }
             log.debug("Found " + termCount + " terms for facet "
-                      + facet.getName() + " with " + refCount
+                      + facet.getName() + " (sort locale " + facet.getLocale()
                       + " references in " + profiler.getSpendTime() 
                       + ". Cummulative stats: " + facetMap.getStats());
         }

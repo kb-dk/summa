@@ -462,6 +462,7 @@
     <option name="projectName" value="Summa" />
   </component>
   <component name="ProjectDictionaryState">
+    <dictionary name="henrik" />
     <dictionary name="te">
       <words>
         <w>freetext</w>
@@ -469,7 +470,6 @@
         <w>summa</w>
       </words>
     </dictionary>
-    <dictionary name="henrik" />
   </component>
   <component name="ProjectModuleManager">
     <modules>

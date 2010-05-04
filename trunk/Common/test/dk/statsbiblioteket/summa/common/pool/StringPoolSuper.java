@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
@@ -66,8 +67,8 @@ public abstract class StringPoolSuper extends TestCase {
         Files.delete(poolDir);
     }
 
-    protected Collator defaultCollator = new CachedCollator(
-            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
+    protected Collator defaultCollator =
+        CollatorFactory.createCollator(new Locale("da"), true);
     protected static File poolDir = new File(
             System.getProperty("java.io.tmpdir"), "pooltest");
     private List<SortedPool<String>> pools =
