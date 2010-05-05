@@ -14,7 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import dk.statsbiblioteket.summa.common.configuration.storage.*;
+import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -1270,14 +1274,23 @@ public class Configuration implements Serializable,
      *
      * @param key The key for the underlying sub storage.
      * @return A sub configuration, based on the sub storage.
-     * @throws IOException if the sub configuration could not be extracted.
+     * @throws NullPointerException if the sub configuration could not be
+     * extracted.
+     * @throws SubConfigurationsNotSupportedException if sub configuration isn't
+     * supported.
      */
-    public Configuration getSubConfiguration(String key) throws IOException {
+    public Configuration getSubConfiguration(String key) 
+          throws NullPointerException, SubConfigurationsNotSupportedException {
         try {
+            if(!storage.supportsSubStorage()) {
+                throw new SubConfigurationsNotSupportedException("Storage '"
+                        + storage.toString()
+                        + "' doesn't support sub configuration");
+            }
             return new Configuration(storage.getSubStorage(key));
-        } catch (NullPointerException e) {
-            throw new IOException(String.format(
-                    "Unable to extract subConfiguration '%s'", key), e);
+        } catch (IOException e) {
+            throw new NullPointerException(String.format(
+                    "Unable to extract subConfiguration '%s'", key));
         }
     }
 
@@ -1307,23 +1320,29 @@ public class Configuration implements Serializable,
      * 
      * @param key The key for the list of sub storages.
      * @return A list of sub storages wrapped as Configurations.
-     * @throws IOException if the sub storages could not be retrieved.
+     * @throws NullPointerException if the sub storages could not be retrieved.
+     * @throws SubConfigurationsNotSupportedException if one of the storages
+     * doesn't support sub configurations.
      */
     public List<Configuration> getSubConfigurations(String key) throws 
-                                                                IOException {
+                  NullPointerException, SubConfigurationsNotSupportedException {
         try {
             List<ConfigurationStorage> storages =
                     storage.getSubStorages(key);
             List<Configuration> configurations =
                     new ArrayList<Configuration>(storages.size());
             for (ConfigurationStorage storage: storages) {
+                if(!storage.supportsSubStorage()) {
+                    throw new SubConfigurationsNotSupportedException("Storage '"
+                        + storage.toString()
+                        + "' doesn't support sub configurations");
+                }
                 configurations.add(new Configuration(storage));
             }
             return Collections.unmodifiableList(configurations);
-        } catch (NullPointerException e) {
-            throw new IOException(String.format(
-                    "Unable to extract sub-configurations for key '%s'", key),
-                                  e);
+        } catch (IOException e) {
+            throw new NullPointerException(String.format(
+                    "Unable to extract sub-configurations for key '%s'", key));
         }
     }
 

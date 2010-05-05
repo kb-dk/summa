@@ -18,9 +18,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +45,8 @@ public class LuceneIndexUtils {
 
     /**
      * The subfolder in the index root containing the lucene index.
-     * This will be appended to {@link #indexRoot}.
+     * This will be appended to indexRoot. TODO indexRoot should be a link, to
+     * what?
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String LUCENE_FOLDER = "lucene";
@@ -79,7 +79,11 @@ public class LuceneIndexUtils {
         try {
             descConf =
                     conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR
+                      + "' from properties. Configuration don't support "
+                      + "sub configurations", e);
+        } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
             log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR
                       + "' from properties", e);

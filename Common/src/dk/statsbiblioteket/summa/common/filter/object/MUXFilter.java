@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
@@ -133,7 +134,10 @@ public class MUXFilter implements ObjectFilter, Runnable {
         List<Configuration> filterConfs;
         try {
             filterConfs = conf.getSubConfigurations(CONF_FILTERS);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
                     "Unable to extract Filter configurations from key %s",
                     CONF_FILTERS), e);
