@@ -14,8 +14,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Logs;
@@ -123,7 +122,10 @@ public class Structure implements Configurable, Serializable {
         try {
             descriptorConf =
                     conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
             throw new ConfigurationException(String.format(
                     "Unable to extract sub configuration %s",
@@ -144,12 +146,15 @@ public class Structure implements Configurable, Serializable {
         List<Configuration> facetConfs;
         try {
             facetConfs = conf.getSubConfigurations(CONF_FACETS);
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
         } catch (ClassCastException e) {
             throw new ConfigurationException(String.format(
                     "Could not extract a list of Configurations from "
                     + "configuration with key '%s' due to a ClassCastException",
                     CONF_FACETS), e);
-        } catch (IOException e) {
+        } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
                     "Could not access Configuration for key '%s'", CONF_FACETS),
                                              e);

@@ -215,7 +215,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         return runs * 1000 / (System.currentTimeMillis() - startTime);
     }
 
-    private Configuration getCreatorConf() throws IOException {
+    private Configuration getCreatorConf() throws Exception {
         File descriptorLocation = File.createTempFile("descriptor", ".xml");
         descriptorLocation.deleteOnExit();
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);

@@ -14,9 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
@@ -325,7 +323,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             try {
                 termProvider = new TermProviderImpl(
                         conf.getSubConfiguration(CONF_TERMSTAT_CONFIGURATION));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                throw new ConfigurationException(
+                        "Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 throw new ConfigurationException(String.format(
                         "Exception extracting sub-configuration '%s'",
                         CONF_TERMSTAT_CONFIGURATION), e);
@@ -352,7 +353,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           + CONF_MORELIKETHIS_CONF + "'");
                 return;
             }
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             log.error(String.format(
                     "The key '%s' existed, but did not resolve to a sub "
                     + "configuration. The configuration for MoreLikeThis "

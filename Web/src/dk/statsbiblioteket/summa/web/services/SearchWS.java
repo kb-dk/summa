@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
@@ -70,18 +70,21 @@ public class SearchWS {
     private static XMLOutputFactory xmlOutputFactory =
                                                  XMLOutputFactory.newInstance();
 
-    /**
-     * Did-You-Mean XML namespace.
-     */
+    /** Did-You-Mean XML namespace. */
     public static final String NAMESPACE =
                             "http://statsbiblioteket.dk/summa/2009/SearchError";
+    /** XML tag for search error response. */
     public static final String SEARCH_ERROR_RESPONSE = "searcherror";
+    /** XML name tag. */
     public static final String NAME_TAG = "name";
+    /** XML error tag. */
     public static final String ERROR_TAG = "error";
+    /** XML message tag. */
     public static final String MESSAGE_TAG = "message";
+    /** XML version attribute. */
     public static final String VERSION_TAG = "version";
+    /** XML version attribute value. */
     public static final String VERSION = "1.0";
-
 
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
@@ -89,6 +92,7 @@ public class SearchWS {
 
     /**
      * Get a single SearchClient based on the system configuration.
+     *
      * @return A SearchClient.
      */
     private synchronized SearchClient getSearchClient() {
@@ -96,7 +100,9 @@ public class SearchWS {
             try {
                 searcher = new SearchClient(getConfiguration()
                                       .getSubConfiguration("summa.web.search"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for search.", e);
             }
         }
@@ -105,6 +111,7 @@ public class SearchWS {
 
     /**
      * Get a single SearchClient for Suggest based on the system configuration.
+     *
      * @return A SearchClient to be used for Suggest.
      */
     private synchronized SearchClient getSuggestClient() {
@@ -112,7 +119,9 @@ public class SearchWS {
             try {
                 suggester = new SearchClient(getConfiguration()
                                      .getSubConfiguration("summa.web.suggest"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for suggest.", e);
             }
         }
@@ -122,6 +131,7 @@ public class SearchWS {
     /**
      * Get a single DidYouMeanClient for Did-you-Mean service, based on the
      * system configuration.
+     *
      * @return A DidYouMeanClient which can be used for Did-You-Mean services.
      */
     private synchronized SearchClient getDidYouMeanClient() {
@@ -129,7 +139,9 @@ public class SearchWS {
             try {
                 didyoumean = new SearchClient(getConfiguration()
                                   .getSubConfiguration("summa.web.didyoumean"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for didYouMean.", e);
             }
         }
@@ -141,6 +153,7 @@ public class SearchWS {
      * from the location specified in the JNDI property
      * java:comp/env/confLocation, and if that fails, then the System
      * Configuration will be returned.
+     *
      * @return The Configuration object.
      */
     private Configuration getConfiguration() {
@@ -165,8 +178,9 @@ public class SearchWS {
     /**
      * Given search query and maximum number of result, this method returns a
      * XML block containing the suggestions given by the did-you-mean service.
-     * @param query user given search query.
-     * @param maxSuggestions maximum number of returned suggestions.
+     *
+     * @param query User given search query.
+     * @param maxSuggestions Maximum number of returned suggestions.
      * @return XML block containing the suggestions given the did-you-mean
      * services.
      */
@@ -211,6 +225,7 @@ public class SearchWS {
     /**
      * Given a prefix this method returns other queries that start with the same
      * prefix.
+     *
      * @param prefix The prefix that the returned queries must start with.
      * @param maxSuggestions The maximum number of queries to be returned.
      * @return An XML string containing the result or an error description.
@@ -257,7 +272,8 @@ public class SearchWS {
      * Returns any suggestions added or updated within the last
      * {@code ageSeconds} returning a maximum of {@code maxSuggestions}
      * results.
-     * @param ageSeconds number of seconds to look back
+     *
+     * @param ageSeconds Number of seconds to look back
      * @param maxSuggestions The maximum number of queries to be returned.
      * @return An XML string containing the result or an error description.
      */
@@ -304,8 +320,9 @@ public class SearchWS {
      * query that the user actually enters are committed - ie. it might not be
      * a good idea to commit queries that come from the user clicking facets,
      * etc.
-     * @param query the query to commit to the database.
-     * @param hitCount the number of hits that resulted from the query. If this
+     *
+     * @param query The query to commit to the database.
+     * @param hitCount The number of hits that resulted from the query. If this
      * is 0 then the query is removed from the Suggestion database.
      */
     @WebMethod
@@ -324,10 +341,24 @@ public class SearchWS {
         }
     }
 
+    // TODO Should be implemented
+    public String getFields(String[] ids, String fieldName) {
+        log.trace("getFields([" + ids + "], '" + fieldName + "')");
+        long startTime = System.currentTimeMillis();
+        String retXML = null;
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(DocumentKeys.SEARCH_QUERY, ids);
+        req.put(DocumentKeys.SEARCH_MAX_RECORDS, ids.length);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        return retXML;
+    }
 
     /**
      * Returns a given field from the search index for a specific recordId. This
      * could for instance be used to get the shortformat for a specific record.
+     *
      * @param id The recordId to look up.
      * @param fieldName The name of the field to return.
      * @return An XML string containing the result or an error description.
@@ -386,12 +417,13 @@ public class SearchWS {
      * </p><p>
      * If the term cannot be located, the nearest matching position will be
      * used instead.
-     * @param field  the field to perform a lookup on. Currently this must be
+     *
+     * @param field  The field to perform a lookup on. Currently this must be
      *               the name of a facet.
-     * @param term   the term to search for. This can be multiple words.
-     * @param delta  the offset relative to the term position.
-     * @param length the maximum number of terms to return.
-     * @return an XML string containing the result or an error description.
+     * @param term   The term to search for. This can be multiple words.
+     * @param delta  The offset relative to the term position.
+     * @param length The maximum number of terms to return.
+     * @return An XML string containing the result or an error description.
      */
     @WebMethod
     public String indexLookup(String field, String term,
@@ -426,7 +458,8 @@ public class SearchWS {
     }
 
     /**
-     * Gives a search result of records that "are similar to" a given record. 
+     * Gives a search result of records that "are similar to" a given record.
+     *
      * @param id The recordID of the record that should be used as base for the
      * MoreLikeThis query.
      * @param numberOfRecords The maximum number of records to return.
@@ -467,6 +500,7 @@ public class SearchWS {
      * A simple way to query the index returning results sorted by relevance.
      * The same as calling simpleSearchSorted while specifying a normal sort on
      * relevancy.
+     *
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
      * @param startIndex Where to start returning records from (used to
@@ -492,6 +526,7 @@ public class SearchWS {
      * This increases processing time, so do not turn it on as default.
      * example: "<:explain:>foo" will explain why the documents matching foo
      * was selected.
+     *
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
      * @param startIndex Where to start returning records from (used to
@@ -524,7 +559,8 @@ public class SearchWS {
      * This increases processing time, so do not turn it on as default.
      * example: "<:explain:>foo" will explain why the documents matching foo
      * was selected.
-     * @param filter the filter to use before querying.
+     *
+     * @param filter The filter to use before querying.
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
      * @param startIndex Where to start returning records from (used to
@@ -618,6 +654,12 @@ public class SearchWS {
         return retXML;
     }
 
+    /**
+     * Cleanup a query string.
+     *
+     * @param queryString The query string, which should be cleaned.
+     * @return A cleaned query string.
+     */
     private String cleanQuery(String queryString) {
         if (queryString == null) {
             return null;
@@ -629,6 +671,12 @@ public class SearchWS {
         return queryString;
     }
 
+    /**
+     * Extract options from 'query' message.
+     *
+     * @param query The message from which we should extract options.
+     * @return A String array containing all options.
+     */
     private String[] extractOptions(String query) {
         if (query == null) {
             return null;
@@ -642,6 +690,7 @@ public class SearchWS {
 
     /**
      * A simple way to query the facet browser.
+     *
      * @param query The query to perform.
      * @return An XML string containing the facet result or an error
      * description.
@@ -679,6 +728,7 @@ public class SearchWS {
      *
      * This is all optional. If no facets are specified, the default facets are
      * requested.
+     *
      * @return An XML string containing the facet result or an error
      * description.
      */
@@ -740,6 +790,17 @@ public class SearchWS {
         return retXML;
     }
 
+    /**
+     * Local helper method for creating an XML output response. This response
+     * can be used directly as it comes.
+     *
+     * @param responseName The response name.
+     * @param message The response error message.
+     * @param exception The exception catched while creating the original error
+     * message.
+     * @return An XML string which can be returned from the server in case of
+     * errors.
+     */
     private String getErrorXML(String responseName, String message,
                                                           Exception exception) {
         StringWriter sw = new StringWriter(2000);

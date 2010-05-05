@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -77,7 +77,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
         List<Configuration> searcherConfs;
         try {
              searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new ConfigurationException(
                     "Unable to extract sub-configurations for "
                     + CONF_SEARCHERS, e);
