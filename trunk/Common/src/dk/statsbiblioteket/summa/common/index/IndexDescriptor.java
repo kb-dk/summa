@@ -14,9 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
@@ -876,7 +874,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         Configuration id;
         try {
             id = conf.getSubConfiguration(CONF_DESCRIPTOR);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
                     "Unable to extract %s from configuration", CONF_DESCRIPTOR),
                                              e);

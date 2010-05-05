@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -25,7 +26,11 @@ import dk.statsbiblioteket.util.reader.ReplaceReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -185,7 +190,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
             try {
                  ruleConfs = conf.getSubConfigurations(CONF_RULES);
                 log.debug(String.format("%d rules found", ruleConfs.size()));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                throw new ConfigurationException(
+                        "Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 throw new ConfigurationException(String.format(
                         "IOException while extracting sub properties for %s",
                         CONF_RULES), e);

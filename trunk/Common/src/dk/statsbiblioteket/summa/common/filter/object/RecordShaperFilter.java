@@ -15,14 +15,14 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.List;
 import java.util.ArrayList;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.logging.Log;
@@ -188,7 +188,10 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             List<Configuration> confs;
             try {
                 confs = conf.getSubConfigurations(CONF_META);
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                throw new ConfigurationException(
+                        "Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 throw new ConfigurationException(String.format(
                         "Unable to extract sub configurations with key %s from"
                         + " configuration", CONF_META), e);

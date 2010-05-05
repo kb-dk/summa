@@ -15,12 +15,12 @@
 package dk.statsbiblioteket.summa.common.filter;
 
 import java.io.StringWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -78,7 +78,10 @@ public class FilterControl extends StateThread implements Configurable,
         List<Configuration> chainConfs;
         try {
             chainConfs = configuration.getSubConfigurations(CONF_CHAINS);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
                     "Could not locate a list of chain-Configurations at key %s",
                     CONF_CHAINS), e);

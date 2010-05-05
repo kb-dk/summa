@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Logs;
@@ -79,7 +80,10 @@ public class FilterSequence implements ObjectFilter {
         List<Configuration> filterConfigurations;
         try {
             filterConfigurations = conf.getSubConfigurations(CONF_FILTERS);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             List<String> filterNames;
             try {
                 filterNames = conf.getStrings(CONF_FILTERS);
