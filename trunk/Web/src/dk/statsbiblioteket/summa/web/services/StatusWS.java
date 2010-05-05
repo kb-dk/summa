@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -88,7 +88,9 @@ public class StatusWS {
             try {
                 storage = new StorageReaderClient(getConfiguration()
                                      .getSubConfiguration("summa.web.storage"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for storage.", e);
             }
         }
@@ -104,7 +106,9 @@ public class StatusWS {
             try {
                 searcher = new SearchClient(getConfiguration()
                                       .getSubConfiguration("summa.web.search"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for search.", e);
             }
         }
@@ -120,7 +124,9 @@ public class StatusWS {
             try {
                 suggester = new SearchClient(getConfiguration()
                                      .getSubConfiguration("summa.web.suggest"));
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.error("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.error("Failed to load subConfiguration for suggest.", e);
             }
         }

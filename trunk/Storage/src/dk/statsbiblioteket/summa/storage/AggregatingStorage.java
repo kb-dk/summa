@@ -15,8 +15,7 @@
 package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Logs;
@@ -401,8 +400,12 @@ public class AggregatingStorage extends StorageBase {
         log = LogFactory.getLog(this.getClass().getName());
         log.debug("Creating aggregating storage");
 
-        List<Configuration> subConfs =
-                                   conf.getSubConfigurations(CONF_SUB_STORAGES);
+        List<Configuration> subConfs;
+        try {
+            subConfs = conf.getSubConfigurations(CONF_SUB_STORAGES);
+        } catch(Exception e) {
+            throw new IOException("", e);
+        }
 
         if (subConfs.size() == 0) {
             log.warn("No sub storages configured");
@@ -445,11 +448,11 @@ public class AggregatingStorage extends StorageBase {
             try {
                 storageConf = subConf.getSubConfiguration(
                                                        CONF_SUB_STORAGE_CONFIG);
-            } catch (IOException e) {
+            } catch (SubConfigurationsNotSupportedException e) {
+                log.warn("Storage doesn't support sub configurations");
+            } catch (NullPointerException e) {
                 log.warn("No sub-sub-config for aggregated storage for bases '"
-                          + Strings.join(bases, ", ") + "'. We can't tell if "
-                          + "this is an error. See https://gforge.statsbibliote"
-                          + "ket.dk/tracker/index.php?func=detail&aid=1487");
+                          + Strings.join(bases, ", ") + "'");
             }
 
             if (storageConf != null) {

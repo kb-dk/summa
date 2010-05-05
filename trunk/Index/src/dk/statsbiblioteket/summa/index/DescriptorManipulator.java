@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.Files;
@@ -56,7 +56,10 @@ public class DescriptorManipulator implements IndexManipulator {
         try {
             descriptorConf =
                     conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        }  catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
             throw new ConfigurationException(String.format(
                     "Unable to extract sub configuration %s",

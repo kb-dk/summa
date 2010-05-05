@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.workflow;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.*;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -129,7 +129,10 @@ public class WorkflowManager implements WorkflowStep {
 
         try {
             stepConfs = conf.getSubConfigurations(CONF_STEPS);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new ConfigurationException("Sub configurations not supported "
                                              + "by configuration instance, or "
                                              + "key " + CONF_STEPS

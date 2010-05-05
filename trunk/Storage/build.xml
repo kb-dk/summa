@@ -142,7 +142,7 @@
     </target>
 
     <target name="runtest" depends=".compiletest">
-        <delete dir="${test.report.dir}" />
+        <!--<delete dir="${test.report.dir}" />
         <mkdir dir="${test.report.dir}" />
         <junit printsummary="yes" dir="${basedir}" fork="true">
             <classpath refid="test.lib.path" />
@@ -160,14 +160,15 @@
             <fileset dir=".">
                 <include name="xconfiguration.*.xml" />
             </fileset>
-        </delete>
+        </delete>-->
     </target>
 
     <target name="createjunitoutput" depends="runtest">
-        <junitreport todir="${test.report.dir}">
+        <mkdir dir="${test.report.dir}" />
+        <!--<junitreport todir="${test.report.dir}">
             <fileset dir="${test.report.dir}" />
             <report todir="${test.report.dir}" />
-        </junitreport>
+        </junitreport>-->
     </target>
 
     <target name="cleancompiletest" depends="clean, .compiletest" />

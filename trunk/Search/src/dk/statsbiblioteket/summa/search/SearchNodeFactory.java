@@ -16,12 +16,12 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,7 +108,10 @@ public class SearchNodeFactory {
         Configuration sub;
         try {
             sub = conf.getSubConfiguration(key);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new RemoteException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new RemoteException(String.format(
                     "Could not extract the sub configuration '%s'", key));
         }
@@ -135,7 +138,10 @@ public class SearchNodeFactory {
         List<Configuration> nodeConfs;
         try {
             nodeConfs = conf.getSubConfigurations(CONF_NODES);
-        } catch (IOException e) {
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new Configurable.ConfigurationException(
+                    "Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
             throw new Configurable.ConfigurationException(String.format(
                     "Could not extract a list of XProperties for SearchNodes "
                     + "from configuration with key '%s'", CONF_NODES), e);
