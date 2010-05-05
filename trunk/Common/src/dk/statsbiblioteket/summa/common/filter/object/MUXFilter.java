@@ -256,6 +256,9 @@ public class MUXFilter implements ObjectFilter, Runnable {
         if (feederCandidate == null) {
             log.warn("Unable to locate a MUXFilterFeeder for " + payload
                      + ". The Payload will be discarded");
+            Logging.logProcess(
+                "MUXFilter", "Unable to locate feeder. Discarding Payload",
+                Logging.LogLevel.WARN, payload);
         }
         return feederCandidate;
     }
