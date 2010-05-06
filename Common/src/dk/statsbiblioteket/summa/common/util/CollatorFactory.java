@@ -166,7 +166,9 @@ public class CollatorFactory {
     public static Collator createCollator(
         Locale locale, String cacheChars, boolean cache) {
         Collator collator = createCollator(locale);
-        return cache ? new CachedCollator(collator, cacheChars) : collator;
+        return collator;
+        // TODO: Re-introduce CachedCollator when it has been fixed properly
+        //return cache ? new CachedCollator(collator, cacheChars) : collator;
     }
 
     /**

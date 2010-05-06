@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -24,6 +25,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.text.Collator;
 import java.util.Locale;
 
@@ -106,15 +108,26 @@ public class FacetTest extends TestCase {
                      datSize, new File(TMP_FACET, "foo.dat").length());
     }
 
-    public static final String PROBLEMATIC = "ah\n"
-                                             + "aa\n"
-                                             + "ạ\n"
-                                             + "ị";
+    public static final String PROBLEMATIC = "ah\naa\nạ\nị";
+    public static final String PROBLEMATIC2 = "ur\nú";
+
+    public void testCleanMultiple() throws UnsupportedEncodingException {
+        for (byte b: CachedCollator.COMMON_SUMMA_EXTRACTED.getBytes("utf-8")) {
+            if (b > 0xE0) {
+                System.out.println("'" + b + "': " + Integer.toString(b));
+            }
+        }
+        System.out.println("Problematic 2");
+        for (char c: PROBLEMATIC2.toCharArray()) {
+            System.out.println("'" + c + "': " + Integer.toString(c));
+        }
+    }
 
     public void testSpecialCaseLocale() throws Exception {
         File INPUT = new File(TMP_FACET, "problem.dat");
-        Files.saveString(PROBLEMATIC, INPUT);
+        Files.saveString(PROBLEMATIC2, INPUT);
         String[] terms = Files.loadString(INPUT).split("\n");
+//        String[] terms = Files.loadString(new File("/home/te/tmp/llfo.dat.reducedfail")).split("\n");
         System.out.println("Got " + terms.length + " terms from " + INPUT);
 
         FacetStructure structure = new FacetStructure(
@@ -139,15 +152,17 @@ public class FacetTest extends TestCase {
         long datSize = new File(TMP_FACET, "foo.dat").length();
         assertTrue("The datFile should contain something", datSize > 0);
 
-        System.out.println("The content of the data file is\n"
-                           + Files.loadString(new File(TMP_FACET, "foo.dat")));
+//        System.out.println("The content of the data file is\n"
+//                           + Files.loadString(new File(TMP_FACET, "foo.dat")));
 
+        System.out.println("Checking order explicitly");
         Collator collator =
             CollatorFactory.createCollator(new Locale("da"), false);
         String lastTag = null;
         for (String tag: facet) {
             if (lastTag != null) {
-                assertTrue("The order should be " + lastTag + " < " + tag,
+                assertTrue("The faulty order was '" + lastTag + "' < '" + tag
+                           + "'",
                            collator.compare(lastTag, tag) < 0);
             }
             lastTag = tag;
