@@ -24,6 +24,7 @@
     <orderEntry type="module" module-name="Storage" />
     <orderEntry type="library" name="lucene-core" level="project" />
     <orderEntry type="library" name="marc4j" level="project" />
+    <orderEntry type="library" name="heritrix" level="project" />
   </component>
   <component name="org.mevenide.idea.module.ModuleSettings">
     <favoriteGoals>

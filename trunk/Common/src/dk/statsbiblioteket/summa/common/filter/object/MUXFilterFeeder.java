@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
@@ -238,7 +239,8 @@ public class MUXFilterFeeder implements Runnable {
 
     @Override
     public String toString() {
-        return "MUXFilterFeeder(" + filterName + ", " + filter + ")";
+        return "MUXFilterFeeder(" + filterName + ", " + filter + ", bases: " 
+               + Strings.join(bases, ", ") + ")";
     }
 
     /**
