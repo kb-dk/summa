@@ -45,6 +45,8 @@
                 <available file="${summa.lib.derby}"/>
                 <available file="${summa.lib.postgres}"/>
                 <available file="${summa.lib.h2}"/>
+                <available file="${summa.lib.heritrix}"/>
+                <available file="${summa.lib.heritrix.fastutil}"/>
             </and>
         </condition>
         <fail unless="hasLibs" message="Some the required libs seem to be missing. Please check the contents of the `lib´ directory against the summa.lib.* properties listed in the `build.properties´ file"/>
@@ -307,6 +309,8 @@
             <zipfileset src="${summa.lib.postgres}"/>
             <zipfileset src="${summa.lib.sbutil}"/>
             <zipfileset src="${summa.lib.tika}"/>
+            <zipfileset src="${summa.lib.heritrix}"/>
+            <zipfileset src="${summa.lib.heritrix.fastutil}"/>
         </jar>
     </target>
 

@@ -100,6 +100,8 @@
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.marc4j}}"/>
                 <available file="${summa.lib.marc4j.normalizer}}"/>
+                <available file="${summa.lib.heritrixj}}"/>
+                <available file="${summa.lib.heritrix.fastutil}}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -195,6 +197,8 @@
         <copy file="${basedir}/../${summa.lib.marc4j}" tofile="${summa.lib.marc4j}"/>
         <copy file="${basedir}/../${summa.lib.marc4j.normalizer}" tofile="${summa.lib.marc4j.normalizer}"/>
         <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
+        <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
+        <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>
     </target>
 
 
