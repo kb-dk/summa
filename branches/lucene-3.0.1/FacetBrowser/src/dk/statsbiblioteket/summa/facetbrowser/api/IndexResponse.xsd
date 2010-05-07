@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/IndexResponse"
+            elementFormDefault="qualified"
+            xmlns:index="http://statsbiblioteket.dk/summa/2009/IndexResponse">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the result of an index lookup.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="indexresponse">
+        <xsd:annotation>
+            <xsd:documentation>
+                The index response is a list of terms making up the index itself
+                together with the following attributes:
+                field:  The field the lookup was performed on.
+                term:   The term used to find the origo in the index.
+                caseSensitive: Whether sorting and lookup was case sensitive.
+                delta:  The offset from the origo, defining the start position.
+                length: The maximum wanted number of terms in the index.
+                        Note that the length is equal to or less the number of
+                        terms in the returned index response.
+                origo:  The position in the list of terms that best matches the
+                        term used for lookup.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="index" type="index:index" minOccurs="1" maxOccurs="1"/>
+            </xsd:sequence>
+            <xsd:attribute name="field" type="xsd:string" use="required"/>
+            <xsd:attribute name="term" type="xsd:string" use="required"/>
+            <xsd:attribute name="caseSensitive" type="xsd:boolean" use="required"/>
+            <xsd:attribute name="delta" type="xsd:int" use="required"/>
+            <xsd:attribute name="length" type="xsd:int" use="required"/>
+            <xsd:attribute name="origo" type="xsd:int" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="index">
+        <xsd:annotation>
+            <xsd:documentation>
+                The list of terms making up the index.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="term" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

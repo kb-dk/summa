@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/SuggestResponse"
+            elementFormDefault="qualified"
+            xmlns:suggest="http://statsbiblioteket.dk/summa/2009/SuggestResponse">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the Suggest Response. Simple triples of queries,
+            hitCount and queryCount.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="QueryResponse">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="suggestions" minOccurs="1" maxOccurs="1">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="suggestion" type="suggest:SuggestionType" minOccurs="0" maxOccurs="unbounded"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="optional"/>
+            <xsd:attribute name="query" type="xsd:string" use="optional">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        The id-attribute is highly recommended for ease of
+                        debugging, but the authoritative id is taken from the
+                        Record object.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="maxResults" type="xsd:int" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="SuggestionType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="hits" type="xsd:int" use="required"/>
+                <xsd:attribute name="queryCount" type="xsd:int" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
