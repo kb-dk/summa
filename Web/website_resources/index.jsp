@@ -21,6 +21,7 @@
     String form_filter = "";
     String form_query = "";
     String form_sort = "";
+    boolean doDidYouMean = false;
 
     String query = request.getParameter("query");
     if ("".equals(query)) {
@@ -46,6 +47,11 @@
         form_sort = sort.replaceAll("\"", "&quot;");
     }
 
+    if(request.getParameter("dodidyoumean") != null) {
+        doDidYouMean = true;
+    }
+
+
     if (query != null || filter != null) {
         int per_page = 10;
         int current_page;
@@ -62,10 +68,13 @@
         URL didyoumean_xslt = new File(basepath + "xslt/didyoumean.xsl").toURI().toURL();
         Properties didyoumean_prop = new Properties();
         // didyoumean_prop.put("query", query == null ? "" : query);
-        String xml_didyoumean_result = (String)services.execute(
-                "summadidyoumean", query, 10);
+        String xml_didyoumean_result = null;
+        if(doDidYouMean) {
+            xml_didyoumean_result = (String)services.execute(
+                    "summadidyoumean", query, 10);
+        }
         if (xml_didyoumean_result == null) {
-            didyoumean_html = "No contact to Did You Mean service";
+            didyoumean_html = "No DidYouMean search/services";
         } else {
             //XSLT.clearTransformerCache();
             didyoumean_html = XSLT.transform(didyoumean_xslt, xml_didyoumean_result, didyoumean_prop, false);
@@ -219,7 +228,8 @@
                 Filter sorted search<br />
                 <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
                 <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
-                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
+                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" /><br />
+                <label for="dodidyoumean">Do Didyoumean Search:</label> <input type="checkbox" name="dodidyoumean" id="dodidyoumean" /><br />
                 <input type="submit" value="Search" />
                 <input type="hidden" name="userfiltersortsearch" value="true" />
             </div>
