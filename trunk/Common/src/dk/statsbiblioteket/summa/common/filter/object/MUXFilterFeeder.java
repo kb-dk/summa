@@ -239,8 +239,8 @@ public class MUXFilterFeeder implements Runnable {
 
     @Override
     public String toString() {
-        return "MUXFilterFeeder(" + filterName + ", " + filter + ", bases: " 
-               + Strings.join(bases, ", ") + ")";
+        return "MUXFilterFeeder(" + filterName + ", " + filter + ", bases: "
+               + (bases == null ? "N/A" : Strings.join(bases, ", ")) + ")";
     }
 
     /**
