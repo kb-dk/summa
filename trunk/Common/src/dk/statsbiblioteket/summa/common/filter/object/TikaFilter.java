@@ -14,12 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.Checksums;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.config.TikaConfig;
@@ -36,10 +38,8 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 import java.net.URL;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
 
 /**
  * A {@link Filter} passing an input stream through Apache Tika's automatic
@@ -47,6 +47,9 @@ import java.io.ByteArrayInputStream;
  * a simple XHTML format.
  * <p/>
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
 public class TikaFilter extends ObjectFilterImpl {
 
     private static final Log log = LogFactory.getLog(TikaFilter.class);
@@ -111,8 +114,15 @@ public class TikaFilter extends ObjectFilterImpl {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        InputStream raw;
         if (payload.getStream() == null) {
-            throw new PayloadException("Payload has no input stream", payload);
+            Logging.logProcess("TikaFilter", "Using Record content as source",
+                               Logging.LogLevel.DEBUG, payload);
+            raw = new ByteArrayInputStream(payload.getRecord().getContent());
+        } else {
+            Logging.logProcess("TikaFilter", "Using embedded Stream as source",
+                               Logging.LogLevel.DEBUG, payload);
+            raw = payload.getStream();
         }
 
         // Tika uses the Metadata object both for input params and extracted
@@ -130,7 +140,7 @@ public class TikaFilter extends ObjectFilterImpl {
         handler.setResult(new StreamResult(out));
 
         try {
-            parser.parse(payload.getStream(), handler, meta);
+            parser.parse(raw, handler, meta);
         } catch (Exception e) {
             throw new PayloadException("Failed to parse stream for payload "
                                        + payload + ": " + e.getMessage(), e);
@@ -177,7 +187,6 @@ public class TikaFilter extends ObjectFilterImpl {
         payload.setRecord(record);
 
         return true;
-
     }
 
     // Lifted from org.apache.tika.cli.TikaCLI v0.3
