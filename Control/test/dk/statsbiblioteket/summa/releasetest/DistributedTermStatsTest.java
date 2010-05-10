@@ -225,7 +225,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         close(searchers);
     }
 
-    private List<File> createThreeIndexes() throws IOException {
+    private List<File> createThreeIndexes() throws Exception {
         List<Pair<String, List<Pair<String, String>>>> corpus =
         new ArrayList<Pair<String, List<Pair<String, String>>>>(10);
         ArrayList<File> locations = new ArrayList<File>(corpus.size());
@@ -375,7 +375,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
      * @see {@link #createSearchers}.
      */
     private static SummaSearcher createAggregator(List<SummaSearcher> searchers)
-                                                            throws IOException {
+                                                            throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         List<Configuration> connections = conf.createSubConfigurations(
                 SummaSearcherAggregator.CONF_SEARCHERS, searchers.size());
@@ -390,7 +390,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     }
 
     public static List<SummaSearcher> createSearchers(List<File> locations)
-            throws IOException {
+            throws Exception {
         return createSearchers(null, locations);
     }
 
@@ -404,7 +404,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
      * @throws IOException if a searcher could not be created.
      */
     public static List<SummaSearcher> createSearchers(File termStatLocation,
-            List<File> locations) throws IOException {
+            List<File> locations) throws Exception {
         List<SummaSearcher> searchers = new ArrayList<SummaSearcher>(
                 locations.size());
         Configuration conf = Configuration.load(
@@ -438,7 +438,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static File createIndex(
             File indexDescriptor, File destination, 
             List<Pair<String, List<Pair<String, String>>>> corpus)
-                                                            throws IOException {
+                                                            throws Exception {
         
         Configuration indexConf = Configuration.load(
                 "data/distribution/index_configuration.xml");
