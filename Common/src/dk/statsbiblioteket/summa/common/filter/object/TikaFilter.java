@@ -25,13 +25,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.config.TikaConfig;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.sax.XHTMLContentHandler;
 import org.apache.tika.metadata.Metadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
@@ -145,6 +141,16 @@ public class TikaFilter extends ObjectFilterImpl {
         } catch (Exception e) {
             throw new PayloadException("Failed to parse stream for payload "
                                        + payload + ": " + e.getMessage(), e);
+        } catch (NoClassDefFoundError e) {
+            log.error("Could not locate class while performing Tika-parse. "
+                      + "This likely due to a missing support library, so the "
+                      + "current " +payload + " is skipped and overall "
+                      + "processing is continued. However, the support library "
+                      + "should be located to improve Tika capabilities", e);
+            throw new PayloadException(
+                "Failed to parse stream for payload "
+                + payload + " as a library could not be found: "
+                + e.getMessage(), e);
         }
 
         try {
