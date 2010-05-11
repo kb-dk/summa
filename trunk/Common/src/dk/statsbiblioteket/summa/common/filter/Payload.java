@@ -286,7 +286,8 @@ public class Payload {
     public String toString() {
         return "Payload(" + getId() + ")"
                + (getData(ORIGIN) == null ?
-                  "" : " with origin '" + getData(ORIGIN) + "'");
+                  "" : " with origin '" + getData(ORIGIN) + "'")
+            + (hasData() ? " with " + getData().size() + " meta data" : "");
     }
 }
 
