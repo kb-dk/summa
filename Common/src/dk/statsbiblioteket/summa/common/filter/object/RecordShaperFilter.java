@@ -123,6 +123,16 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String CONF_ID_HASH_PREFIX = "record.id.hash.prefix";
 
     /**
+     * The minimum length of the existing ID before hashing of the ID is
+     * activated. This requires {@link #CONF_ID_HASH} to be defined.
+     * </p><p>
+     * Optional. Default is 0 (all IDs are hashed).
+     */
+    public static final String CONF_ID_HASH_MINLENGTH =
+        "record.id.hash.minlength";
+    public static final int DEFAULT_ID_HASH_MINLENGTH = 0;
+
+    /**
      * If assigned, the result of this regexp, matched against the record
      * content, will be used with  {@link #CONF_BASE_TEMPLATE} to specify
      * the new base for the Record.
@@ -180,6 +190,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private boolean discardOnErrors = DEFAULT_DISCARD_ON_ERRORS;
     private String idHash = null;
     private String idHashPrefix = "";
+    private int idHashMinLength = DEFAULT_ID_HASH_MINLENGTH;
 
     /* (key, (regexp, template))* */
     private List<Pair<String, Pair<Pattern, String>>> assignMetas =
@@ -236,6 +247,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             log.warn("ID hash '" + idHash + "' function not supported");
         }
         idHashPrefix = conf.getString(CONF_ID_HASH_PREFIX, idHashPrefix);
+        idHashMinLength = conf.getInt(CONF_ID_HASH_MINLENGTH, idHashMinLength);
         log.info(String.format(
                 "Created an assign meta filter with %d meta extractions",
                 assignMetas.size()));
@@ -287,15 +299,17 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             }
             payload.getRecord().getMeta().put(assignMeta.getKey(), result);
         }
-        if (idHash != null) {
+        if (idHash != null && payload.getId().length() > idHashMinLength) {
+            String oldID = payload.getId();
             if ("md5".equals(idHash)) {
-                payload.setID(idHashPrefix + md5sum(payload.getId()));
+                payload.setID(idHashPrefix + md5sum(oldID));
             } else {
                 Logging.logProcess(
                     "RecordShaperFilter",
                     "ID hash function '" + idHash 
                     + "' not supported", Logging.LogLevel.WARN, payload);
             }
+            log.trace("Hashed id '" + oldID + "' to " + payload.getId());
         }
         return true;
     }
