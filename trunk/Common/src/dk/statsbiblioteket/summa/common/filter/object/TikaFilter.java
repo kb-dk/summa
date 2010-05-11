@@ -46,6 +46,7 @@ import java.net.URL;
  * content type sniffer extracting metadata and converting the document to
  * a simple XHTML format.
  * <p/>
+ * The resulting XHTML is stored as content and meta-data as Record meta-data.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -144,6 +145,12 @@ public class TikaFilter extends ObjectFilterImpl {
         } catch (Exception e) {
             throw new PayloadException("Failed to parse stream for payload "
                                        + payload + ": " + e.getMessage(), e);
+        }
+
+        try {
+            raw.close();
+        } catch (IOException e) {
+            log.warn("Exception while closing stream from " + payload, e);
         }
 
         byte[] recordContent = out.toByteArray();
