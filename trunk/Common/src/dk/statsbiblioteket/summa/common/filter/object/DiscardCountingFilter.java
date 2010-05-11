@@ -86,6 +86,9 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
         if (min != -1 && encountered < min) {
             return true;
         }
+        if (min != -1 && encountered == min) {
+            log.debug("Mininum " + min + " reached. Future Payloads will pass");
+        }
         if (max != -1 && passed >= max) {
             return true;
         }
@@ -97,6 +100,10 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
             }
         }
         passed++;
+        if (max == passed) {
+            log.debug("Maximum " + max + " reached. Future Payloads will be " 
+                      + "discarded");
+        }
         return false;
     }
 }
