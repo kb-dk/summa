@@ -14,11 +14,15 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.List;
@@ -104,6 +108,21 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String DEFAULT_ID_TEMPLATE = "$0";
 
     /**
+     * If defined, the ID is hashed with the given function. This takes place
+     * after the optional ID regexp.
+     * </p><p>
+     * Optional. Valid values are undefined or md5.
+     */
+    public static final String CONF_ID_HASH = "record.id.hash";
+
+    /**
+     * Prefixes hashed IDs.
+     * </p><p>
+     * Optional.
+     */
+    public static final String CONF_ID_HASH_PREFIX = "record.id.hash.prefix";
+
+    /**
      * If assigned, the result of this regexp, matched against the record
      * content, will be used with  {@link #CONF_BASE_TEMPLATE} to specify
      * the new base for the Record.
@@ -159,6 +178,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private Pair<Pattern, String> assignBase;
     private Pair<Pattern, String> assignContent;
     private boolean discardOnErrors = DEFAULT_DISCARD_ON_ERRORS;
+    private String idHash = null;
+    private String idHashPrefix = "";
 
     /* (key, (regexp, template))* */
     private List<Pair<String, Pair<Pattern, String>>> assignMetas =
@@ -206,6 +227,15 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                                                    DEFAULT_META_TEMPLATE))));
             }
         }
+        idHash = conf.getString(CONF_ID_HASH, idHash);
+        if ("".equals(idHash)) {
+            idHash = null;
+        }
+        if (idHash != null && !"md5".equals(idHash)) {
+            idHash = null;
+            log.warn("ID hash '" + idHash + "' function not supported");
+        }
+        idHashPrefix = conf.getString(CONF_ID_HASH_PREFIX, idHashPrefix);
         log.info(String.format(
                 "Created an assign meta filter with %d meta extractions",
                 assignMetas.size()));
@@ -257,7 +287,34 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             }
             payload.getRecord().getMeta().put(assignMeta.getKey(), result);
         }
+        if (idHash != null) {
+            if ("md5".equals(idHash)) {
+                payload.setID(idHashPrefix + md5sum(payload.getId()));
+            } else {
+                Logging.logProcess(
+                    "RecordShaperFilter",
+                    "ID hash function '" + idHash 
+                    + "' not supported", Logging.LogLevel.WARN, payload);
+            }
+        }
         return true;
+    }
+
+    static MessageDigest md = null;
+    private static String md5sum (String text) {
+        try {
+            if (md == null) {
+                md = MessageDigest.getInstance("MD5");                
+            }
+            md.reset();
+            md.update(text.getBytes("UTF-8"));
+            return new BigInteger(1, md.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            log.error(e.getMessage(),e);
+        } catch (UnsupportedEncodingException e) {
+            log.error(e.getMessage(),e);
+        }
+        return text;
     }
 
     protected String getMatch(
