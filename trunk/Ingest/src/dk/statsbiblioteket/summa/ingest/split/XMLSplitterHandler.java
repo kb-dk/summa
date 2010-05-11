@@ -73,6 +73,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     private boolean inRecord;
     /* Inside an id-block */
     private boolean inId;
+    /* Inside CData */
+    private boolean inCData;
     /* Record content */
     private StringWriter sw;
     private StringWriter id;
@@ -88,6 +90,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     void prepareScanForNextRecord() {
         //parser.reset(); // Don't reset, as it erases namespace context
         inRecord = false;
+        inCData = false;
         inId = false;
         sw = new StringWriter(10000);
         id = new StringWriter(100);
@@ -312,8 +315,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             id.append(chars);
         }
 
-        // Append escaped characters to the body
-        sw.append(XMLUtil.encode(chars));
+        // Append escaped characters to the body if not in CData
+        sw.append(inCData ? XMLUtil.encode(chars) : chars);
     }
 
 
