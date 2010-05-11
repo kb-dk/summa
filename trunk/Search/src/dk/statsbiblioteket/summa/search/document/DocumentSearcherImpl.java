@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -62,7 +64,10 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         log.trace("Constructing DocumentSearcherImpl");
         resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
         if (conf.valueExists(CONF_NONESCAPED_FIELDS)) {
-            nonescapedFields.addAll(conf.getStrings(CONF_NONESCAPED_FIELDS));
+            List<String> nonEscaped = conf.getStrings(CONF_NONESCAPED_FIELDS);
+            nonescapedFields.addAll(nonEscaped);
+            log.debug("The following fields are unescaped: "
+                      + Strings.join(nonEscaped, ", "));
         }
         fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
 

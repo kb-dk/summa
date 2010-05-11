@@ -246,6 +246,19 @@ public class LuceneSearchNodeTest extends TestCase {
         searcher.close();
     }
 
+    public void testNonEscape() throws Exception {
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
+        makeIndex();
+        Thread.sleep(2000); // 2 * Min retention time
+        // Search should work now
+        ResponseCollection response = searcher.search(request);
+        searcher.close();
+        System.out.println("Got response\n" + response.toXML());
+    }
+
     private File makeIndex() throws Exception {
         File index = new File(testRoot, IndexCommon.getTimestamp());
         File sourceIndex = new File(sourceDir, "index");
