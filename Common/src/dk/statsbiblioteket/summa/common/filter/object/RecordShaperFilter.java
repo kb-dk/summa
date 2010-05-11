@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.List;
@@ -183,6 +184,16 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             "record.meta.template";
     public static final String DEFAULT_META_TEMPLATE = "$0";
 
+    /**
+     * If true. String key/value pairs from Payload meta data are copied to
+     * Record meta data. This copying takes place before other manipulations.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_COPY_META = "record.meta.copy";
+    public static final boolean DEFAULT_COPY_META = false;
+
+
     /* regexp -> template */
     private Pair<Pattern, String> assignId;
     private Pair<Pattern, String> assignBase;
@@ -191,6 +202,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private String idHash = null;
     private String idHashPrefix = "";
     private int idHashMinLength = DEFAULT_ID_HASH_MINLENGTH;
+    private boolean copyMeta = DEFAULT_COPY_META;
 
     /* (key, (regexp, template))* */
     private List<Pair<String, Pair<Pattern, String>>> assignMetas =
@@ -200,6 +212,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         super(conf);
         discardOnErrors = conf.getBoolean(
                 CONF_DISCARD_ON_ERRORS, discardOnErrors);
+        copyMeta = conf.getBoolean(CONF_COPY_META, copyMeta);
         if (conf.valueExists(CONF_CONTENT_REGEXP)) {
             assignContent = new Pair<Pattern, String>(
                     Pattern.compile(conf.getString(CONF_CONTENT_REGEXP)),
@@ -258,6 +271,17 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         String content = payload.getRecord().getContentAsUTF8();
+        if (copyMeta && payload.getRecord() != null && payload.hasData()) {
+            int counter = 0;
+            for (Map.Entry entry: payload.getData().entrySet()) {
+                if (entry.getKey() instanceof String &&
+                    entry.getValue() instanceof String) {
+                    payload.getRecord().getMeta().put(
+                        (String)entry.getKey(), (String)entry.getValue());
+                    counter++;
+                }
+            }
+        }
         if (assignId != null) {
             String newId = getMatch(assignId, content, payload, "ID");
             if (newId != null && !"".equals(newId)) {
