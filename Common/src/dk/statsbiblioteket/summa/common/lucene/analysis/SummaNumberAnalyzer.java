@@ -25,6 +25,7 @@ import java.io.StringReader;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
+import org.apache.lucene.util.*;
 
 /**
  * This Analyzer wraps a StandardAnalyzer after stripping off typical seprator
@@ -57,7 +58,7 @@ public class SummaNumberAnalyzer extends Analyzer {
 
         public TokenStreamContext() {
             buf = new StringBuffer();
-            standardAnalyzer = new StandardAnalyzer();
+            standardAnalyzer = new StandardAnalyzer(Version.LUCENE_30);
             seq = new CharSequenceReader(buf);
         }
     }
@@ -91,8 +92,7 @@ public class SummaNumberAnalyzer extends Analyzer {
         } catch (IOException e) {
             log.error("", e);
         }
-        return new StandardAnalyzer(
-                new String[]{}).tokenStream(fieldName,
+        return new StandardAnalyzer(Version.LUCENE_30).tokenStream(fieldName,
                                             new StringReader(b.toString()));
     }
 

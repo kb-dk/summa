@@ -183,7 +183,7 @@ public class SearchPerformance {
                 //noinspection DuplicateStringLiteralInspection
                 System.setProperty("org.apache.lucene.FSDirectory.class",
                                    FSDirectory.class.getName());
-                FSDirectory dir = FSDirectory.getDirectory(location);
+                FSDirectory dir = new NIOFSDirectory(location);
                 return new IndexSearcher(IndexReader.open(dir, readOnly));
             } catch (IOException e) {
                 throw new IOException("Unable to load index from '" + location
@@ -193,7 +193,7 @@ public class SearchPerformance {
         if (PARAM_DIR_RAM.equals(dirType)) {
             log.debug("Creating RAMDirectory(" + location + ")");
             try {
-                RAMDirectory dir = new RAMDirectory(location);
+                RAMDirectory dir = new RAMDirectory(new NIOFSDirectory(location));
                 return new IndexSearcher(IndexReader.open(dir, readOnly));
             } catch (IOException e) {
                 throw new IOException("Unable to load index into RAM from '"
@@ -206,7 +206,7 @@ public class SearchPerformance {
                 //noinspection DuplicateStringLiteralInspection
                 System.setProperty("org.apache.lucene.FSDirectory.class",
                                    NIOFSDirectory.class.getName());
-                FSDirectory dir = FSDirectory.getDirectory(location);
+                FSDirectory dir = new NIOFSDirectory(location);
                 return new IndexSearcher(IndexReader.open(dir, readOnly));
             } catch (IOException e) {
                 throw new IOException("Unable to load index with NIO from '"

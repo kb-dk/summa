@@ -16,7 +16,7 @@ package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.FieldComparatorSource;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -29,8 +29,8 @@ import java.util.Locale;
 public class SortFactory {
     private static final Logger log = Logger.getLogger(SortFactory.class);
 
-    private Map<String, SortComparator> comparators =
-            new HashMap<String, SortComparator>(10);
+    private Map<String, FieldComparatorSource> comparators =
+            new HashMap<String, FieldComparatorSource>(10);
     protected static final Object comparatorSync = new Object();
 
     /**
@@ -91,7 +91,7 @@ public class SortFactory {
      */
     public SortFactory(COMPARATOR comparator, int buffer,
                        String field, String sortLanguage,
-                      Map<String, SortComparator> comparators) {
+                      Map<String, FieldComparatorSource> comparators) {
         this.field = field;
         this.sortLanguage = sortLanguage;
         this.comparators = comparators;
@@ -127,8 +127,8 @@ public class SortFactory {
     }
 
     private Sort makeDefaultSorters(boolean reverse) {
-        normalSort = new Sort(field, false);
-        reverseSort = new Sort(field, true);
+        normalSort = new Sort(new SortField(field, Locale.getDefault(), false));
+        reverseSort = new Sort(new SortField(field, Locale.getDefault(), true));
         return reverse ? reverseSort : normalSort;
     }
 
@@ -139,7 +139,7 @@ public class SortFactory {
         return new SortField(field, getComparator(), reverse);
     }
 
-    private SortComparator getComparator() {
+    private FieldComparatorSource getComparator() {
         synchronized (comparatorSync) {
             if (!comparators.containsKey(sortLanguage)) {
                 /* Language specified, so create localized sorters */

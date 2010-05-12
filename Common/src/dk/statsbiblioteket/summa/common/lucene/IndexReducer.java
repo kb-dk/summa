@@ -21,6 +21,7 @@ import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.store.*;
 
 /**
  * Simple reduction of an existing index by deletion of documents.
@@ -84,7 +85,7 @@ public class IndexReducer {
 
         long starttime = System.currentTimeMillis();
         if (fraction != 1.0) {
-            IndexReader ir = IndexReader.open(location);
+            IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
             int docCount = ir.maxDoc();
             System.out.println("Reducing '" + location + "' to " + fraction
                                + " size (" + ir.maxDoc() + " => "
@@ -110,7 +111,9 @@ public class IndexReducer {
         }
 
         System.out.println("Opening index writer...");
-        IndexWriter iw = new IndexWriter(location, new SimpleAnalyzer(), false);
+        IndexWriter iw = new IndexWriter(new NIOFSDirectory(location),
+                            new SimpleAnalyzer(), false, 
+                            IndexWriter.MaxFieldLength.UNLIMITED);
         System.out.println("Optimizing index...");
         iw.optimize();
         iw.close();

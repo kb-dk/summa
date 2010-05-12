@@ -48,6 +48,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -326,7 +327,7 @@ public class AutoDiscoverTest extends TestCase {
             Thread.sleep(100);
 
             try {
-                IndexReader luceneIndex = IndexReader.open(index);
+                IndexReader luceneIndex = IndexReader.open(new NIOFSDirectory(index));
                 if (luceneIndex.maxDoc() == docCount) {
                     foundDocs = true;
                 } else {

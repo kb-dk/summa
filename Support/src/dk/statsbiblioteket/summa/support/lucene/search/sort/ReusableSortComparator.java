@@ -15,14 +15,12 @@
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -66,7 +64,7 @@ import java.util.Locale;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class ReusableSortComparator extends SortComparator {
+public abstract class ReusableSortComparator extends FieldComparatorSource {
     private static Log log = LogFactory.getLog(ReusableSortComparator.class);
 
     protected String language = "NotDefined";
@@ -159,8 +157,8 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     // inherit javadocs
     @Override
-    public abstract ScoreDocComparator newComparator(
-            IndexReader reader, String fieldname)
+    public abstract FieldComparator newComparator(
+            String fieldname, int numHits, int sortPos, boolean reversed)
             throws IOException;
 
     /**
@@ -184,7 +182,7 @@ public abstract class ReusableSortComparator extends SortComparator {
      */
     protected abstract void indexChanged();
 
-    @Override
+    /*@Override
     protected Comparable getComparable(String termtext) {
         throw new UnsupportedOperationException(
                 "Not implemented as it should not be called");
@@ -192,6 +190,6 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     public String getLanguage() {
         return language;
-    }
+    } */
 }
 

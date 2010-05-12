@@ -23,6 +23,7 @@ import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.lucene.store.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -49,7 +50,7 @@ public class LuceneTestHelper extends TestCase {
 
     public static List<String> getIDs(File location) throws IOException {
         List<String> ids = new ArrayList<String>(100);
-        IndexReader reader = IndexReader.open(location);
+        IndexReader reader = IndexReader.open(new NIOFSDirectory(location));
         try {
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 if (!reader.isDeleted(i)) {

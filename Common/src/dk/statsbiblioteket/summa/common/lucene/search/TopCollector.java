@@ -14,16 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
+import java.io.IOException;
 import java.io.StringWriter;
 
-import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Scorer;
 
 /**
  * TopCollector that uses simple array-copying instead of the more fancy
  * PriorityQueue. For some cases, the array-juggling is slightly faster.
  * Use this as an alternative to TopDocs-returning searches.
  */
-public class TopCollector extends HitCollector {
+public class TopCollector extends Collector {
     int maxHits;
     int[] ids;
     float[] scores;
@@ -115,6 +118,27 @@ public class TopCollector extends HitCollector {
             sw.append("...");
         }
         return sw.toString();
+    }
+
+    @Override
+    public void setScorer(Scorer scorer) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void collect(int i) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setNextReader(IndexReader indexReader, int i)
+            throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
 

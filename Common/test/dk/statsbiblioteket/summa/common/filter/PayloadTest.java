@@ -76,10 +76,10 @@ public class PayloadTest extends TestCase {
         Document document = new Document();
         document.add(new Field("whatever",
                                Integer.toString(random.nextInt(1000)),
-                               Field.Store.NO, Field.Index.UN_TOKENIZED));
+                               Field.Store.NO, Field.Index.NOT_ANALYZED));
         document.add(new Field("ettu",
                                Integer.toString(random.nextInt(1000)),
-                               Field.Store.YES, Field.Index.UN_TOKENIZED));
+                               Field.Store.YES, Field.Index.NOT_ANALYZED));
         Payload payload = new Payload(record);
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
         Document insertedDocument =

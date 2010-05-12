@@ -20,7 +20,6 @@ package dk.statsbiblioteket.summa.common.lucene;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Random;
 
 import dk.statsbiblioteket.util.Profiler;
@@ -29,6 +28,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.store.*;
+import org.apache.lucene.util.*;
+import sun.reflect.generics.reflectiveObjects.*;
 
 /**
  * Builds a Lucene index and provides running feedback on index speed.
@@ -74,9 +76,10 @@ public class BuildPerformance {
         System.out.println("Building index in '" + indexLocation + "' with "
                            + documents + " documents with " + fieldCount
                            + " fields with max term length " + maxTermLength);
-        IndexWriter writer = new IndexWriter(indexLocation,
-                                             new StandardAnalyzer(),
-                                             true);
+        IndexWriter writer = new IndexWriter(new NIOFSDirectory(indexLocation),
+                                      new StandardAnalyzer(Version.LUCENE_30),
+                                      true,
+                                      IndexWriter.MaxFieldLength.UNLIMITED);
         writer.setMaxBufferedDocs(1000);
         int feedback = Math.max(1, documents / 100);
         Profiler profiler = new Profiler();
@@ -108,7 +111,7 @@ public class BuildPerformance {
         for (String field: fields) {
             randomWords(maxTermLength);
             document.add(new Field(field, randomWords(maxTermLength),
-                              Field.Store.YES, Field.Index.UN_TOKENIZED,
+                              Field.Store.YES, Field.Index.NOT_ANALYZED,
                               Field.TermVector.NO));
         }
         return document;

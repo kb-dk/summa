@@ -18,9 +18,9 @@ import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import junit.framework.TestCase;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.WhitespaceTokenizer;
+import org.apache.lucene.analysis.tokenattributes.*;
 
 import java.io.StringReader;
 
@@ -34,17 +34,17 @@ public class SummaAnalyzerTest extends TestCase {
 
     static void assertTokens(TokenStream tokenizer, String... tokens)
                                                                throws Exception{
-        Token tok = new Token();
+        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);
         int count = 0;
 
-        while ((tok = tokenizer.next(tok)) != null) {
+        while (tokenizer.incrementToken()) {
             if (count >= tokens.length) {
                 fail("Too many tokens from tokenizer, found " + (count+1)
                      + ". Expected " + tokens.length + ".");
             }
 
             assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         tokens[count], tok.term());
+                         tokens[count], term.term());
             count++;
 
         }

@@ -179,7 +179,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     }
 
     private void extendFacets(Configuration facetConf, String name,
-                              List<String> fields) throws IOException {
+                              List<String> fields) throws Exception {
         List<Configuration> facets =
                 facetConf.getSubConfigurations(Structure.CONF_FACETS);
         List<Configuration> newFacets =

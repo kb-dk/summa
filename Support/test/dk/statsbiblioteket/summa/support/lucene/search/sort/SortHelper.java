@@ -17,8 +17,8 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.*;
+import org.apache.lucene.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,9 +67,9 @@ public class SortHelper {
      */
     public static File createIndex(String[] terms) throws IOException {
         File root = new File(System.getProperty("java.io.tmpdir"));
-        Directory dir = FSDirectory.getDirectory(root);
+        Directory dir = new NIOFSDirectory(root);
         IndexWriter writer = new IndexWriter(
-                dir, new StandardAnalyzer(), true,
+                dir, new StandardAnalyzer(Version.LUCENE_30), true,
                 new IndexWriter.MaxFieldLength(10000));
         int counter = 0;
         int feedback = Math.max(1, Math.min(100, terms.length / 100));
@@ -111,8 +111,10 @@ public class SortHelper {
     public static List<String> getSortResult(String query,
             String[] sortTerms, SortFactory sortFactory) throws Exception {
         File root = createIndex(sortTerms);
-        IndexSearcher searcher = new IndexSearcher(root.toString());
-        QueryParser qp = new QueryParser("all", new StandardAnalyzer());
+        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(root),
+                                                   true);
+        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
+                                     new StandardAnalyzer(Version.LUCENE_30));
         TopDocs result = searcher.search(
                 qp.parse(query), null, 10000,
                 sortFactory.getSort(searcher.getIndexReader()));
@@ -170,8 +172,9 @@ public class SortHelper {
             File index, String query, int hits, SortFactory sortFactory)
             throws IOException, ParseException {
         System.gc();
-        IndexSearcher searcher = new IndexSearcher(index.getAbsolutePath());
-        QueryParser qp = new QueryParser("all", new StandardAnalyzer());
+        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(index));
+        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
+                                     new StandardAnalyzer(Version.LUCENE_30));
         Sort sort = sortFactory.getSort(searcher.getIndexReader());
         TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
         System.gc();
@@ -202,8 +205,9 @@ public class SortHelper {
     public static long timeSortedSearch(
             File index, String query, int hits, SortFactory sortFactory,
             int searches) throws IOException, ParseException {
-        IndexSearcher searcher = new IndexSearcher(index.getAbsolutePath());
-        QueryParser qp = new QueryParser("all", new StandardAnalyzer());
+        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(index));
+        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
+                                     new StandardAnalyzer(Version.LUCENE_30));
         Sort sort = sortFactory.getSort(searcher.getIndexReader());
 
         long searchTime = 0;

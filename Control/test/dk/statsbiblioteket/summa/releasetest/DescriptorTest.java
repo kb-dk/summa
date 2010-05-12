@@ -72,7 +72,7 @@ public class DescriptorTest extends NoExitTestCase {
         }
     }
 
-    private Configuration getStaticSearcherConfiguration() throws IOException {
+    private Configuration getStaticSearcherConfiguration() throws Exception {
         URL descriptorLocation = Resolver.getURL(
                 "data/descriptor/DescriptorTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
@@ -332,7 +332,7 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private void updateIndexConfiguration(
-            Configuration conf, URL descriptorLocation) throws IOException {
+            Configuration conf, URL descriptorLocation) throws Exception {
         URL xsltLocation = Resolver.getURL(
                 "data/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",

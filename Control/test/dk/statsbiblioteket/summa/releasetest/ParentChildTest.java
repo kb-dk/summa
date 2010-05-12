@@ -207,7 +207,7 @@ public class ParentChildTest extends NoExitTestCase {
         return result;
     }
 
-    private void performIngest()  throws IOException, InterruptedException {
+    private void performIngest()  throws Exception {
         Configuration ingestConf =Configuration.load(
                 "data/parent-child/horizon_ingest_configuration.xml");
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
@@ -253,7 +253,7 @@ public class ParentChildTest extends NoExitTestCase {
         storage.stop();
     }
 
-    private void performIndex() throws IOException, InterruptedException {
+    private void performIndex() throws Exception {
         log.info("Starting index");
         Configuration indexConf = getIndexConfiguration();
 
@@ -266,7 +266,7 @@ public class ParentChildTest extends NoExitTestCase {
         index.stop();
     }
 
-    public Configuration getIndexConfiguration() throws IOException {
+    public Configuration getIndexConfiguration() throws Exception {
         Configuration indexConf = Configuration.load(Resolver.getURL(
                         "data/parent-child/index_configuration.xml").
                 getFile());

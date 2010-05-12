@@ -17,19 +17,19 @@ package dk.statsbiblioteket.summa.support.lucene.search.sort;
 import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.CachedCollator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.IndexSearcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.text.Collator;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 /**
  * Tests multiple sort-implementations for Lucene for correctness.
@@ -59,7 +59,7 @@ public class MultipassSortComparatorTest extends TestCase {
                 SortHelper.BASIC_TERMS, new SortHelper.SortFactory() {
             @Override
             Sort getSort(IndexReader reader) {
-                return new Sort(SortHelper.SORT_FIELD);
+                return new Sort(new SortField(SortHelper.SORT_FIELD, SortField.STRING));
             }
         });
         String[] expected = Arrays.copyOf(
@@ -75,7 +75,7 @@ public class MultipassSortComparatorTest extends TestCase {
                 SortHelper.TRICKY_TERMS, new SortHelper.SortFactory() {
             @Override
             Sort getSort(IndexReader reader) {
-                return new Sort(SortHelper.SORT_FIELD);
+                return new Sort(new SortField(SortHelper.SORT_FIELD, SortField.STRING));
             }
         });
         String[] expected = Arrays.copyOf(
