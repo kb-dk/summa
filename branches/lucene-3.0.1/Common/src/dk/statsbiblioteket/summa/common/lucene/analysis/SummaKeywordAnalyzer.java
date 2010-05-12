@@ -28,6 +28,7 @@ import java.text.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttributeImpl;
 
 /**
@@ -77,10 +78,9 @@ public class SummaKeywordAnalyzer extends Analyzer {
     public TokenStream tokenStream(String fieldName, Reader reader) {
         StringBuffer buf = new StringBuffer();
         TokenStream ts =
-                new SummaStandardAnalyzer().tokenStream(fieldName, reader);
+                     new SummaStandardAnalyzer().tokenStream(fieldName, reader);
 
-
-        TermAttributeImpl term = ts.getAttribute(TermAttributeImpl.class);
+        TermAttribute term = ts.getAttribute(TermAttribute.class);
         try {
             ts.reset();
 
@@ -88,7 +88,8 @@ public class SummaKeywordAnalyzer extends Analyzer {
                 buf.append(term.termBuffer(), 0, term.termLength())
                     .append(' ');
             }
-
+            ts.end();
+            ts.close();
             // We have an extra whitespace at the end. Strip it
             buf.setLength(buf.length() == 0 ? 0 : buf.length() - 1);
         } catch (IOException e) {
@@ -114,18 +115,21 @@ public class SummaKeywordAnalyzer extends Analyzer {
             ctx.buf.setLength(0); // Reset the StringBuffer
         }
 
-        TokenStream ts = ctx.summaStandardAnalyzer.reusableTokenStream(fieldName,
-                                                                       reader);
+        TokenStream ts =
+               ctx.summaStandardAnalyzer.reusableTokenStream(fieldName, reader);
+        ts.reset();
 
         // FIXME: Here we are buffering the whole stream. Insane.
-        TermAttributeImpl term = ts.getAttribute(TermAttributeImpl.class);
+        TermAttribute term = ts.getAttribute(TermAttribute.class);
+
         try {
             while (ts.incrementToken()){
                 ctx.buf.append(term.termBuffer(), 0, term.termLength())
                        .append(' ');
             }
-
             // We have an extra whitespace at the end. Strip it
+            ts.end();
+            ts.close();
             ctx.buf.setLength(ctx.buf.length() == 0 ? 0 : ctx.buf.length() - 1);
         } catch (IOException e) {
             log.error("Error reading next token from TokenStream: "
