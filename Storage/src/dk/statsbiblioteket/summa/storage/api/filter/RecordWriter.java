@@ -141,6 +141,7 @@ public class RecordWriter extends ObjectFilterImpl {
         private Thread watcher;
         private WritableStorage storage;
         private QueryOptions qOptions;
+        private long totalCommits = 0;
 
         private long byteSize = 0;
 
@@ -229,10 +230,13 @@ public class RecordWriter extends ObjectFilterImpl {
                          + " size " + byteSize/1024 + "KB";
                 log.debug(String.format("Committing %s.", stats));
                 long start = System.nanoTime();
+                totalCommits += records.size();
                 storage.flushAll(records, qOptions);
                 log.info(String.format(
-                        "Committed %s in %sms. Last commit was %sms ago",
+                        "Committed %s in %sms. Total commits: %d. "
+                        + "Last commit was %sms ago",
                         stats, (System.nanoTime() - start)/1000000D,
+                        totalCommits,
                          (System.nanoTime() - lastCommit)/1000000D));
                 lastCommit = System.nanoTime();
             } catch (Exception e) {
