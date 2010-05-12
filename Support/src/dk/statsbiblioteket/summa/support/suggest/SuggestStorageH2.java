@@ -27,6 +27,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.util.*;
 import org.h2.jdbcx.JdbcDataSource;
 
@@ -900,15 +901,17 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private String join(TokenStream toks, String delimiter) {
         StringBuilder buf = threadLocalBuilder.get();
         try {
-            Token tok = toks.getAttribute(Token.class);
+            TermAttribute term = toks.getAttribute(TermAttribute.class);
             toks.reset();
             //Token tok = new Token();
             while (toks.incrementToken()) {
                 if (buf.length() != 0) {
                     buf.append(delimiter);
                 }
-                buf.append(tok.termBuffer(), 0, tok.termLength());
+                buf.append(term.termBuffer(), 0, term.termLength());
             }
+            toks.end();
+            toks.close();
             return buf.toString();
         } catch (IOException e) {
             // This should *never* happen because we read from a local String,

@@ -39,7 +39,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.store.*;
+import org.apache.lucene.store.NIOFSDirectory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
@@ -262,6 +262,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         assertEquals("The recordID of the single indexed document should match",
                      DOC_ID, reader.document(0).getField(
                 IndexUtils.RECORD_FIELD).stringValue());
+        reader.close();
         // Check for analyzer
         // Search for Jens with default / different prefixes
     }

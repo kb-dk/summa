@@ -32,8 +32,6 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.FieldComparator;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 import java.text.Collator;
@@ -140,8 +138,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             String fieldname, int numHits, int sortPos, boolean reversed)
             throws IOException {
 
-        final BitsArray order = getOrderFast(null /*reader*/, fieldname);
-//        System.out.println("Multi: " + Logs.expand(order, 20));
+        //final BitsArray order = getOrderFast(null /*reader*/, fieldname);
         return new FieldComparator() {
             /*public int compare (ScoreDoc i, ScoreDoc j) {
                 try {

@@ -15,14 +15,13 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.WhitespaceTokenizer;
 
 import java.io.StringReader;
 
 import junit.framework.TestCase;
-import org.apache.lucene.analysis.tokenattributes.*;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
  * Test cases for {@link SummaKeywordAnalyzer}
