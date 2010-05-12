@@ -23,6 +23,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.store.*;
+import org.apache.lucene.util.Version;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
@@ -141,9 +143,10 @@ public class IndexBuilder {
         // Delete the old
         deleteDir(new File(INDEX_LOCATION));
 
-        IndexWriter writer = new IndexWriter(new File(INDEX_LOCATION),
-                                             new StandardAnalyzer(),
-                                             true);
+        IndexWriter writer = new IndexWriter(
+                                new NIOFSDirectory(new File(INDEX_LOCATION)),
+                                new StandardAnalyzer(Version.LUCENE_30),
+                                true, IndexWriter.MaxFieldLength.UNLIMITED);
         writer.setUseCompoundFile(false);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(REPLICATIONCOUNT);
@@ -190,36 +193,36 @@ public class IndexBuilder {
     private static Document createDocument(String[] comic, String id) {
         Document doc = new Document();
         doc.add(new Field(TITLE, comic[0],
-                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.Store.YES, Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         doc.add(new Field(ID, id,
-                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.Store.YES, Field.Index.NOT_ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         doc.add(new Field(AUTHOR, comic[1],
-                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.Store.YES, Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         doc.add(new Field(STATIC, STATIC_CONTENT,
-                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.Store.YES, Field.Index.NOT_ANALYZED,
                           Field.TermVector.YES));
         doc.add(new Field(AUTHOR_NORMALISED, comic[1],
-                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.Store.YES, Field.Index.NOT_ANALYZED,
                           Field.TermVector.YES));
         doc.add(new Field(GENRE, comic[2],
-                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.Store.YES, Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         doc.add(new Field(STATUS, comic[3],
                           Field.Store.YES, //or NO?
-                          Field.Index.TOKENIZED,
+                          Field.Index.ANALYZED,
                           Field.TermVector.NO));
         doc.add(new Field(VARIABLE, "Variable_" +
                                     random.nextInt(REPLICATIONCOUNT/2),
                           Field.Store.YES,
-                          Field.Index.TOKENIZED,
+                          Field.Index.ANALYZED,
                           Field.TermVector.NO));
         doc.add(new Field(FREETEXT, comic[0] + " " + comic[1] + " "+
                                     comic[2],
                           Field.Store.YES, //or NO?
-                          Field.Index.TOKENIZED,
+                          Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         return doc;
     }

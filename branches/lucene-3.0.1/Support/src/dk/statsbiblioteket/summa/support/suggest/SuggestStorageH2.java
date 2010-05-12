@@ -27,6 +27,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.util.*;
 import org.h2.jdbcx.JdbcDataSource;
 
 import java.io.File;
@@ -899,8 +900,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private String join(TokenStream toks, String delimiter) {
         StringBuilder buf = threadLocalBuilder.get();
         try {
-            Token tok = new Token();
-            while (toks.next(tok) != null) {
+            Token tok = toks.getAttribute(Token.class);
+            toks.reset();
+            //Token tok = new Token();
+            while (toks.incrementToken()) {
                 if (buf.length() != 0) {
                     buf.append(delimiter);
                 }

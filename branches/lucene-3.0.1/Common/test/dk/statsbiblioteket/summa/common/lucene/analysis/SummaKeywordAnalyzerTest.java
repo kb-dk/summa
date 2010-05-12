@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.WhitespaceTokenizer;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
+import org.apache.lucene.analysis.tokenattributes.*;
 
 /**
  * Test cases for {@link SummaKeywordAnalyzer}
@@ -33,17 +34,17 @@ public class SummaKeywordAnalyzerTest extends TestCase {
 
     static void assertTokens(TokenStream tokenizer, String... tokens)
                                                                throws Exception{
-        Token tok = new Token();
+        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);
         int count = 0;
 
-        while ((tok = tokenizer.next(tok)) != null) {
+        while (tokenizer.incrementToken()) {
             if (count >= tokens.length) {
                 fail("Too many tokens from tokenizer, found " + (count+1)
                      + ". Expected " + tokens.length + ".");
             }
 
             assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         tokens[count], tok.term());
+                         tokens[count], term.term());
             count++;
         }
 

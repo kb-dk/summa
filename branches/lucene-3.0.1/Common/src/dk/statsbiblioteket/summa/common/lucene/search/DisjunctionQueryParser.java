@@ -16,7 +16,6 @@ package dk.statsbiblioteket.summa.common.lucene.search;
 
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,6 +30,12 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.MultiPhraseQuery;
+import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.util.Version;
 
 /**
  * This query parser handles expansion of non-qualified query terms and group
@@ -52,7 +57,7 @@ public class DisjunctionQueryParser extends QueryParser {
 
     public DisjunctionQueryParser(LuceneIndexDescriptor descriptor) {
         // TODO: Handle update of analyzer
-        super(null, descriptor.getQueryAnalyzer());
+        super(Version.LUCENE_30, null, descriptor.getQueryAnalyzer());
         setDefaultOperator(
                 descriptor.getDefaultOperator() == IndexDescriptor.OPERATOR.and
                 ? Operator.AND : Operator.OR);

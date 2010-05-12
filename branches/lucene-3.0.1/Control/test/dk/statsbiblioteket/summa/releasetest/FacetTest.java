@@ -75,7 +75,7 @@ public class FacetTest extends NoExitTestCase {
         }
     }
 
-    public static Configuration getSearcherConfiguration() throws IOException {
+    public static Configuration getSearcherConfiguration() throws Exception {
         URL descriptorLocation = Resolver.getURL(
                 "data/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",

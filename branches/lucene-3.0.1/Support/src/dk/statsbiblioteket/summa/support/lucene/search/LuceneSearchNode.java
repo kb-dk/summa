@@ -14,7 +14,10 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
@@ -44,12 +47,28 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanFilter;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.DocIdSet;
+import org.apache.lucene.search.DocIdSetIterator;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.FilterClause;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryWrapperFilter;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.similar.MoreLikeThis;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.DocIdBitSet;
 import org.apache.lucene.util.OpenBitSetDISI;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -449,8 +468,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     }
 
     private IndexReader getIndexreader(URL location) throws IOException {
-        IndexReader reader = IndexReader.open(FSDirectory.getDirectory(
-                Resolver.urlToFile(location).getAbsolutePath()), true);
+        IndexReader reader = IndexReader.open(new NIOFSDirectory(
+                 new File(Resolver.urlToFile(location).getAbsolutePath())), true);
         return termProvider == null ? reader :
                new SummaIndexReader(reader, termProvider);
     }
@@ -992,7 +1011,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                       + bits.getClass() + ", iterating and counting (slow)");
             // We'll have to count
             DocIdSetIterator bitIt =  bits.iterator();
-            while (bitIt.next()) {
+            while (bitIt.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
                 count++;
             }
         }

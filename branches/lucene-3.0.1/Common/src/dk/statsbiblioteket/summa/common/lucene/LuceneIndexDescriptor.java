@@ -167,7 +167,7 @@ public class LuceneIndexDescriptor
         if (baseFieldName.equals(STORED)) {
             return makeField(baseFieldName,
                              Field.Index.NO,
-                             Field.Store.COMPRESS,
+                             Field.Store.YES,
                              Field.TermVector.NO,
                              new SummaStandardAnalyzer());
         }
@@ -254,21 +254,22 @@ public class LuceneIndexDescriptor
         if (index.equals(Field.Index.NO)) {
             field.setDoIndex(false);
             field.setAnalyze(false);
-        } else if (index.equals(Field.Index.NO_NORMS)) {
+        } else if (index.equals(Field.Index.NOT_ANALYZED_NO_NORMS)) {
             throw new UnsupportedOperationException(
                     "Storing with no norms is not supported. Offending field "
                     + "has name '" + name + "'");
-        } else if (index.equals(Field.Index.TOKENIZED)) {
+        } else if (index.equals(Field.Index.ANALYZED)) {
             field.setDoIndex(true);
             field.setAnalyze(true);
-        } else if (index.equals(Field.Index.UN_TOKENIZED)) {
+        } else if (index.equals(Field.Index.NOT_ANALYZED)) {
             field.setDoIndex(true);
             field.setAnalyze(false);
         }
-        if (store.equals(Field.Store.COMPRESS)) {
-            field.setDoStore(true);
-            field.setDoCompress(true);
-        } else if (store.equals(Field.Store.NO)) {
+        /*if (store.equals(Field.Store.COMPRESS)) {
+                field.setDoStore(true);
+                field.setDoCompress(true);
+              } else*/
+        if (store.equals(Field.Store.NO)) {
             field.setDoStore(false);
             field.setDoCompress(false);
         } else if (store.equals(Field.Store.YES)) {

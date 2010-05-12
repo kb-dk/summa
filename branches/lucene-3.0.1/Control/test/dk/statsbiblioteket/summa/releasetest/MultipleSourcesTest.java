@@ -235,14 +235,12 @@ public class MultipleSourcesTest extends NoExitTestCase {
      * Storage defined in the relevant setups.
      *
      */
-    public static void performIngest() throws IOException,
-                                              InterruptedException {
+    public static void performIngest() throws Exception {
         List<String> sources = getSources();
         performIngest(sources);
     }
 
-    private static void performIngest(List<String> sources) throws IOException,
-                                                          InterruptedException {
+    private static void performIngest(List<String> sources) throws Exception {
         Profiler profiler = new Profiler();
         log.info("Ingesting test data");
         assertTrue("There should be at least one source", sources.size() > 0);
@@ -252,8 +250,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         log.info("Finished ingesting test data in " + profiler.getSpendTime());
     }
 
-    private static void performIngest(String source) throws IOException,
-                                                          InterruptedException {
+    private static void performIngest(String source) throws Exception {
         log.info("Ingesting source " + source);
         Configuration ingestConf =Configuration.load(
                 new File(INGEST_CONFIGURATIONS_ROOT,
@@ -311,7 +308,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         return sources;
     }
 
-    private void performMUXIndex() throws IOException, InterruptedException {
+    private void performMUXIndex() throws Exception {
         log.info("Starting index");
         Configuration indexConf = getIndexConfiguration();
 
@@ -335,7 +332,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         }
     }
 
-    private Configuration getIndexConfiguration() throws IOException {
+    private Configuration getIndexConfiguration() throws Exception {
         Configuration indexConf = Configuration.load(Resolver.getURL(
                         "data/multiple/index_configuration.xml").
                 getFile());

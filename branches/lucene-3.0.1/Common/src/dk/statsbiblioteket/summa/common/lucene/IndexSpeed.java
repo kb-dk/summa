@@ -35,6 +35,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
 
 /**
  * A class for testing index speed under various circumstances. This is more of
@@ -46,7 +48,6 @@ import org.apache.lucene.search.Query;
         author = "te")
 public class IndexSpeed {
     private static final Log log = LogFactory.getLog(IndexSpeed.class);
-    private static final String version = "$Rev$";
 
     private static int maxdocs = Integer.MAX_VALUE-1;
     private static int ramBuffer = 8;
@@ -184,7 +185,7 @@ public class IndexSpeed {
                 while (running && counter < maxdocs) {
                     if (System.currentTimeMillis() >= nextOpening) {
                         long beginTime = System.nanoTime();
-                        writer.flush();
+                        writer.commit();
                         nextOpening+= searchinterval;
                         if (searcher == null || !reopen) {
                             if (searcher != null) {
@@ -205,7 +206,8 @@ public class IndexSpeed {
                             }
                         }
                         if (warm) {
-                            searcher.search(everything);
+                            searcher.search(everything, null,
+                                            Integer.MAX_VALUE);
                         }
                         openingtime += System.nanoTime() - beginTime;
                         openingCounter++;
@@ -255,31 +257,31 @@ public class IndexSpeed {
         public void run() {
             Field uniqueField =
                     new Field("unique", "d-1",
-                              Field.Store.YES, Field.Index.UN_TOKENIZED);
+                              Field.Store.YES, Field.Index.NOT_ANALYZED);
             Field semiRandomField =
                     new Field("semirandom", SEMI_RANDOMS[0],
-                              Field.Store.YES, Field.Index.UN_TOKENIZED);
+                              Field.Store.YES, Field.Index.NOT_ANALYZED);
             Field randomField =
                     new Field("random", getRandom(),
-                              Field.Store.NO, Field.Index.TOKENIZED);
-            Document document = new Document();
+                              Field.Store.NO, Field.Index.ANALYZED);
+            Document document;
             int id;
             while ((id = ping()) != -1) {
                 if (!docReuse) {
                     document = new Document();
                     uniqueField = new Field(
                             "unique", "d" + id,
-                            Field.Store.YES, Field.Index.UN_TOKENIZED);
+                            Field.Store.YES, Field.Index.NOT_ANALYZED);
                     semiRandomField = new Field(
                             "semirandom",
                             SEMI_RANDOMS[random.nextInt(SEMI_RANDOMS.length)],
-                            Field.Store.YES, Field.Index.UN_TOKENIZED);
+                            Field.Store.YES, Field.Index.NOT_ANALYZED);
                     document.add(uniqueField);
                     document.add(semiRandomField);
                     if (termlength > 0) {
                         randomField = new Field("random", getRandom(),
                                                 Field.Store.NO,
-                                                Field.Index.TOKENIZED);
+                                                Field.Index.ANALYZED);
                         document.add(randomField);
                     }
                 } else {
@@ -302,7 +304,7 @@ public class IndexSpeed {
                         log.trace("Skipping doc-add due to no write switch");
                     }
                     if (flush > 0 && id % flush == 0) {
-                        writer.flush();
+                        writer.commit();
                     }
                 } catch (IOException e) {
                     log.error("Exception writing document, aborting", e);
@@ -324,8 +326,9 @@ public class IndexSpeed {
         feedbackInterval = Math.min(Math.max(100, maxdocs / 100),
                                     feedbackInterval);
         log.info("Building " + meta);
-        writer = new IndexWriter(new File(indexLocation),
-                                 new StandardAnalyzer(), true);
+        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
+                                 new StandardAnalyzer(Version.LUCENE_30), true,
+                                 IndexWriter.MaxFieldLength.UNLIMITED);
         writer.setRAMBufferSizeMB(ramBuffer);
 /*        if (flush) {
             writer.setMaxBufferedDocs(1);
@@ -361,8 +364,9 @@ public class IndexSpeed {
         writer.close(true);
         System.out.print("Optimizing... ");
         Profiler optimizeProfiler = new Profiler();
-        writer = new IndexWriter(new File(indexLocation),
-                                 new StandardAnalyzer(), false);
+        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
+                                 new StandardAnalyzer(Version.LUCENE_30),
+                                 false, IndexWriter.MaxFieldLength.UNLIMITED);
         writer.optimize(true);
         System.out.println("Finished optimizing in "
                            + optimizeProfiler.getSpendTime()

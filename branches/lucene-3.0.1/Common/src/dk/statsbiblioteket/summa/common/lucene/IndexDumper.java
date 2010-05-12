@@ -22,14 +22,12 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.MapFieldSelector;
 import org.apache.lucene.document.Field;
 import dk.statsbiblioteket.util.Strings;
-
+import org.apache.lucene.store.*;
 
 /**
  * Simple dump of stored fields in the index.
@@ -61,7 +59,7 @@ public class IndexDumper {
     }
 
     public static void listFields(File location) throws IOException {
-        IndexReader ir = IndexReader.open(location);
+        IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
         Collection fieldNames = ir.getFieldNames(IndexReader.FieldOption.ALL);
         System.out.println(String.format(
                 "Fields in '%s': %s", 
@@ -78,7 +76,7 @@ public class IndexDumper {
      */
     public static void dump(File location, String delimiter,
                              List<String> fields) throws IOException {
-        IndexReader ir = IndexReader.open(location);
+        IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
         FieldSelector selector = new MapFieldSelector(fields);
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
             if (ir.isDeleted(i)) {

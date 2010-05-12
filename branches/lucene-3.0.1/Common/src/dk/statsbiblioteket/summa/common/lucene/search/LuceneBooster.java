@@ -21,11 +21,17 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
 
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -185,6 +191,7 @@ public class LuceneBooster {
         }
         expandBoosts(boosts);
         boolean applied = false;
+        // TODO update with all types of Querys in Lucene 3.0.1
         if (query instanceof BooleanQuery) {
             log.trace("applyBoost: BooleanQuery found");
             for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
@@ -208,16 +215,15 @@ public class LuceneBooster {
             }
         } else if (query instanceof DisjunctionMaxQuery) {
             log.trace("applyBoost: DisjunctionMaxQuery found");
-            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
-            while (iterator.hasNext()) {
-                applied = applied | applyBoost((Query)iterator.next(), boosts);
+            for (Object o : ((DisjunctionMaxQuery) query)) {
+                applied = applied | applyBoost((Query) o, boosts);
             }
         } else if (query instanceof ConstantScoreQuery) {
             log.trace("applyBoost: ConstantScoreQuery ignored");
-        } else if (query instanceof ConstantScoreRangeQuery) {
-            log.trace("applyBoost: ConstantScoreRangeQuery ignored");
-        } else if (query instanceof RangeQuery) {
-            log.trace("applyBoost: RangeQuery ignored");
+        } else if (query instanceof NumericRangeQuery) {
+            log.trace("applyBoost: NumericRangeQuery ignored");
+        } else if (query instanceof TermRangeQuery) {
+            log.trace("applyBoost: TermRangeQuery ignored");
         } else {
             log.warn("applyBoost: Unexpected Query '" + query.getClass()
                      + "' ignored");

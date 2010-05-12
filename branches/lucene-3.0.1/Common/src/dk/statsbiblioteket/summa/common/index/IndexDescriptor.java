@@ -111,10 +111,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public static final int DEFAULT_CHECK_INTERVAL = -1;
 
     /**
-     * The property-key for a substorage containing the properties for the
-     * IndexDescriptor. This is used for inlining descriptor setup in other
-     * configurations.
-     */
+         * The property-key for a substorage containing the properties for the
+         * IndexDescriptor. This is used for inlining descriptor setup in other
+         * configurations.
+         */
     public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
 
     /**

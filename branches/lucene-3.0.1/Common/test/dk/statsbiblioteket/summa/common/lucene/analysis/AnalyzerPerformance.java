@@ -15,16 +15,13 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.*;
-import dk.statsbiblioteket.util.Strings;
+
 import junit.framework.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Token;
-import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.*;
 
-import java.io.Writer;
 import java.io.CharArrayWriter;
-import java.io.StringReader;
 
 /**
  * Performance tests for the analyzers
@@ -74,10 +71,11 @@ public class AnalyzerPerformance extends TestCase {
     }
 
     public static void dumpTokens(TokenStream t, Appendable out) throws Exception {
-        Token tok = new Token();
+        //Token tok = new Token();
 
-        while ((tok = t.next(tok)) != null) {
-            out.append(tok.term());
+        TermAttribute term = t.getAttribute(TermAttribute.class);
+        while (t.incrementToken()) {
+            out.append(term.term());
             out.append('\n');
         }
     }
