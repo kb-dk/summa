@@ -24,12 +24,10 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Reader;
 import java.io.IOException;
-import java.text.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttributeImpl;
 
 /**
  * This KeywordAnalyzer strips off the _ character, that the QueryParser
@@ -70,8 +68,8 @@ public class SummaKeywordAnalyzer extends Analyzer {
     /**
      * Gets the tokenStream for the field named by fieldName.
      *
-     * @param fieldName
-     * @param reader
+     * @param fieldName The field name that defines the token stream returned.
+     * @param reader  The reader.
      * @return a KeywordAnalyzer tokenStream
      */
     @Override
