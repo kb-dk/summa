@@ -41,8 +41,8 @@ import java.io.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SanitiseUnicode extends ObjectFilterImpl {
-    private static Log log = LogFactory.getLog(SanitiseUnicode.class);
+public class SanitiseUnicodeFilter extends ObjectFilterImpl {
+    private static Log log = LogFactory.getLog(SanitiseUnicodeFilter.class);
 
     /**
      * The replacement character when an invalid unicode character is
@@ -57,7 +57,7 @@ public class SanitiseUnicode extends ObjectFilterImpl {
     private char replacement = '?';
     private boolean replace = true;
 
-    public SanitiseUnicode(Configuration conf) {
+    public SanitiseUnicodeFilter(Configuration conf) {
         super(conf);
         feedback = false;
         String re = conf.getString(
