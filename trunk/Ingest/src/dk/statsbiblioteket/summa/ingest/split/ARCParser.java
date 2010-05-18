@@ -33,8 +33,10 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.io.*;
+import java.util.Map;
 
 /**
  * Receives a stream in the ARC file format and extracts the content, along with
@@ -74,6 +76,7 @@ public class ARCParser extends ThreadedStreamParser {
 //        tstamp,        // ISO-compact: YYYYMMDDHHmmSS
         isodate,       // YYYYMMDD
         isotime,       // HHmmSS
+        //response,      // 200, 404, 503...
         url,           // Origin as stated in ARC
         ipaddress,     // What site resolved to at harvest time
         site;          // Site minus www extracted from url
@@ -94,7 +97,8 @@ public class ARCParser extends ThreadedStreamParser {
         removeHTTPHeaders = conf.getBoolean(
                 CONF_EXTRACT_HTTP_HEADERS, removeHTTPHeaders);
         log.debug("ARCParser constructed"
-                  + (useFileHack ? " with filehack enabled" : ""));
+                  + (useFileHack ? " with filehack enabled" : "")
+                  + " and removeHTTPHeaders=" + removeHTTPHeaders);
     }
 
     private long runCount = 0;
@@ -206,15 +210,92 @@ public class ARCParser extends ThreadedStreamParser {
                     log.trace(HTTP_PREFIX + tokens[0] + " = " + tokens[1]);
                 }
                 counter++;
+                if ("Last-Modified".equals(tokens[0])) {
+                    handleLastModified(
+                        payload, tokens[1], HTTP_PREFIX + tokens[0]);
+                }
+            } else {
+                if (line.startsWith("HTTP/")) { // HTTP/1.1 200 OK
+                    String[] statusTokens = line.split(" ", 3);
+                    if (statusTokens.length == 3) {
+                        payload.getData().put(
+                            HTTP_PREFIX + "status", statusTokens[2]);
+                        payload.getData().put(
+                            HTTP_PREFIX + "status.code", statusTokens[1]);
+                    }
+                }
             }
         }
         log.trace("Extracted " + counter + " HTTP headers");
         return line != null;
     }
 
+    private static final String[] MONTHS = new String[]{
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+        "Nov", "Dec"};
+    private void handleLastModified( //   Sun, 14 Dec 2008 13:23:54 GMT
+                                     //  2008-09-02T12:12:31MEST
+        Payload payload, String date, String prefix) {
+        String[] tokens = date.split(" ");
+        String isotime;
+        String isodate;
+        if (tokens.length < 5) {
+            tokens = date.split("T", 2);
+            if (tokens.length != 2 || tokens[1].length() < 8) {
+                log.debug("Unknown date format '" + date + "' for " + payload);
+                return;
+            }
+            isodate = tokens[0];
+            isotime = tokens[1].substring(0, 8);
+        } else {
+            try {
+                int monthIndex = -1;
+                String month = tokens[2].substring(0, 3);
+                for (int i = 0 ; i < MONTHS.length ; i++) {
+                    if (MONTHS[i].equals(month)) {
+                        monthIndex = i+1;
+                    }
+                }
+                if (monthIndex == -1) {
+                    log.debug("Unable to determine month index for month '"
+                              + month + "' from date '" + date
+                              + "' from " + payload);
+                    return;
+                }
+                isodate = String.format(
+                    "%s-%s-%s",
+                    tokens[3],
+                    align(monthIndex, 2),
+                    align(Integer.parseInt(tokens[1]), 2));
+                isotime = tokens[4];
+            } catch (Exception e) { // Minor problem, so we do not stack trace
+                log.debug("Unable to parse date '" + date + "' for " + payload
+                          + ": " + e.getMessage());
+                return;
+            }
+        }
+        payload.getData().put(prefix + ".isodate", isodate);
+        payload.getData().put(prefix + ".isotime", isotime);
+    }
+    private String align(int number, int digits) {
+        String result = Integer.toString(number);
+        while (result.length() < digits) {
+            result = "0" + result;
+        }
+        return result;
+    }
+
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private void fillPayloadFromHeader(
             Payload payload, ArchiveRecordHeader header, String arcFilename) {
+
+/*        StringWriter sw = new StringWriter(1000);
+        for (Object entryO: header.getHeaderFields().entrySet()) {
+            Map.Entry entry = (Map.Entry)entryO;
+            sw.append(entry.getKey() + ": " + entry.getValue() + "\n");
+        }
+        log.debug("Headers for " + header.getUrl() + "\n" + sw.toString());
+  */
         payload.setID("arc_" + header.getUrl());
         addData(payload, ARC.arcname, arcFilename);
         addData(payload, ARC.arcoffset, header.getOffset());
