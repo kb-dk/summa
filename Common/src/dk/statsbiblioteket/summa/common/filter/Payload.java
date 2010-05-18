@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.filter;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
@@ -288,6 +289,35 @@ public class Payload {
                + (getData(ORIGIN) == null ?
                   "" : " with origin '" + getData(ORIGIN) + "'")
             + (hasData() ? " with " + getData().size() + " meta data" : "");
+    }
+
+    public CharSequence toString(boolean verbose) {
+        if (!verbose) {
+            return toString();
+        }
+        StringBuffer sb = new StringBuffer(100);
+        sb.append("Payload(").append(getId()).append(")");
+        sb.append(getData(ORIGIN) == null ?
+                  "" : " with origin '" + getData(ORIGIN));
+        sb.append(". MetaData:");
+        if (data == null) {
+            sb.append(" none");
+        } else {
+            for (Map.Entry entry: getData().entrySet()) {
+                sb.append(" ");
+                sb.append(entry.getKey().toString()).append(":");
+                if (entry.getValue() instanceof String) {
+                    if (((String) entry.getValue()).length() > 30) {
+                        sb.append(((String) entry.getValue()).substring(0, 30));
+                        sb.append("... (");
+                        sb.append(((String) entry.getValue()).length());
+                        sb.append(" characters)");
+                    }
+                    sb.append(entry.getValue().toString());
+                }
+            }
+        }
+        return sb.toString();
     }
 }
 
