@@ -13,15 +13,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-/**
- * SanitiseUnicode Tester.
- *
- * @author <Authors name>
- * @since <pre>05/18/2010</pre>
- * @version 1.0
- */
-public class SanitiseUnicodeTest extends TestCase {
-    public SanitiseUnicodeTest(String name) {
+public class SanitiseUnicodeFilterTest extends TestCase {
+    public SanitiseUnicodeFilterTest(String name) {
         super(name);
     }
 
@@ -34,7 +27,7 @@ public class SanitiseUnicodeTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(SanitiseUnicodeTest.class);
+        return new TestSuite(SanitiseUnicodeFilterTest.class);
     }
 
     byte[] faulty = new byte[]{0x00, 0x0A, 0x20, (byte)0x88};
@@ -43,8 +36,8 @@ public class SanitiseUnicodeTest extends TestCase {
     public void testPlainRecord() throws Exception {
         PayloadFeederHelper feeder = new PayloadFeederHelper(
             Arrays.asList(new Payload(new Record("foo", "bar", faulty))));
-        SanitiseUnicode sanitiser =
-            new SanitiseUnicode(Configuration.newMemoryBased());
+        SanitiseUnicodeFilter sanitiser =
+            new SanitiseUnicodeFilter(Configuration.newMemoryBased());
         sanitiser.setSource(feeder);
         Payload standardResult = sanitiser.next();
         check("Standard record",
@@ -54,9 +47,9 @@ public class SanitiseUnicodeTest extends TestCase {
     public void testRecordNoReplace() throws Exception {
         PayloadFeederHelper feeder = new PayloadFeederHelper(
             Arrays.asList(new Payload(new Record("foo", "bar", faulty))));
-        SanitiseUnicode sanitiser =
-            new SanitiseUnicode(Configuration.newMemoryBased(
-                SanitiseUnicode.CONF_REPLACEMENT_CHAR, ""));
+        SanitiseUnicodeFilter sanitiser =
+            new SanitiseUnicodeFilter(Configuration.newMemoryBased(
+                SanitiseUnicodeFilter.CONF_REPLACEMENT_CHAR, ""));
         sanitiser.setSource(feeder);
         Payload noReplaceResult = sanitiser.next();
         check("Standard record no replace",
@@ -66,8 +59,8 @@ public class SanitiseUnicodeTest extends TestCase {
     public void testPlainStream() throws Exception {
         PayloadFeederHelper feeder = new PayloadFeederHelper(
             Arrays.asList(new Payload(new ByteArrayInputStream(faulty))));
-        SanitiseUnicode sanitiser =
-            new SanitiseUnicode(Configuration.newMemoryBased());
+        SanitiseUnicodeFilter sanitiser =
+            new SanitiseUnicodeFilter(Configuration.newMemoryBased());
         sanitiser.setSource(feeder);
         Payload standardResult = sanitiser.next();
         ByteArrayOutputStream receiver = new ByteArrayOutputStream();
