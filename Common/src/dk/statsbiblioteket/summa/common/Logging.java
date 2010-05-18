@@ -50,6 +50,7 @@ public class Logging {
      */
     public static final String PROCESS_LOG_NAME = "process";
     private static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
+    private static final int MAX_CONTENT = 1000;
 
     /**
      * Special logging for process-related messages. Process-related messages
@@ -100,10 +101,8 @@ public class Logging {
         if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG)
              || level == LogLevel.TRACE)) {
             fullMessage = (origin == null ? "" : origin + ": ") + message + ". "
-                          + payload + (payload.getRecord() != null ?
-                                       ". Content:\n"
-                                       + payload.getRecord().getContentAsUTF8()
-                                       : ". No content");
+                          + payload + ". Content:\n"
+                          + getContentSnippet(payload);
         } else {
             fullMessage = (origin == null ? "" : origin + ": ") + message + ". "
                           + payload;
@@ -114,6 +113,15 @@ public class Logging {
         } else {
             log(fullMessage,processLog, level, cause);
         }
+    }
+
+    private static String getContentSnippet(Payload payload) {
+        if (payload == null || payload.getRecord() == null) {
+            return "null";
+        }
+        String content = payload.getRecord().getContentAsUTF8();
+        return content.length() > MAX_CONTENT ?
+        content.substring(0, MAX_CONTENT) : content;
     }
 
     public static void logProcess(String origin, String message, LogLevel level,

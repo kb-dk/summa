@@ -151,6 +151,15 @@ public class TikaFilter extends ObjectFilterImpl {
                 "Failed to parse stream for payload "
                 + payload + " as a library could not be found: "
                 + e.getMessage(), e);
+        } catch (StackOverflowError e) {
+            log.warn("Received stack overflow while parsing " + parser
+                     + ". No shutdown is requested as Tika is prone to such "
+                     + "Errors. Consider raising the stack size or weeding "
+                     + "input if this Error occurs frequently");
+            throw new PayloadException(
+                "Failed to parse stream for payload "
+                + payload + " due to a stack overflow Error: "
+                + e.getMessage(), e);
         }
 
         try {
