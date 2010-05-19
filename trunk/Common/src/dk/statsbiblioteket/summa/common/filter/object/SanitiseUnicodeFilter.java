@@ -22,12 +22,17 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Treats the Record.content or Payload.stream as UTF-8 and ensures that only
@@ -54,8 +59,19 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
     public static final String CONF_REPLACEMENT_CHAR = "sanitise.replacement";
     public static final String DEFAULT_REPLACEMENT_CHAR = "?";
 
+    /**
+     * If true, meta-data for Payload and Record is also sanitised.
+     * </p><p>
+     * Optional. Default is true;
+     */
+    public static final String CONF_FIX_META = "sanitise.fixmeta";
+    public static final boolean DEFAULT_FIXMETA = true;
+
     private char replacement = '?';
     private boolean replace = true;
+    private boolean fixMeta = DEFAULT_FIXMETA;
+    private long processed = 0;
+    private long fixed = 0;
 
     public SanitiseUnicodeFilter(Configuration conf) {
         super(conf);
@@ -72,10 +88,14 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
         } else {
             replacement = re.charAt(0);
         }
+        fixMeta = conf.getBoolean(CONF_FIX_META, fixMeta);
     }
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        if (fixMeta) {
+            fixMeta(payload);
+        }
         if (payload.getRecord() != null) {
             byte[] content = payload.getRecord().getContent();
             if (content == null || content.length == 0) {
@@ -111,6 +131,54 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
         return true;
     }
 
+    @Override
+    public void close(boolean success) {
+        super.close(success);
+        log.info("Closing down. Fixed invalid code points: "
+                 + fixed + "/" + processed);
+    }
+
+    private void fixMeta(Payload payload) {
+        if (payload.getRecord() != null) {
+            StringMap map = payload.getRecord().getMeta();
+            Set<String> keys = new HashSet<String>(map.keySet());
+            for (String key: keys) {
+                map.put(key, fixText(map.get(key)));
+            }
+        }
+        ConvenientMap map = payload.getData();
+        Set<String> keys = new HashSet<String>(map.keySet());
+        for (String key: keys) {
+            Object value = map.get(key);
+            if (value instanceof String) {
+                map.put(key, fixText((String)value));
+            }
+        }
+    }
+
+    private StringBuffer buffer = new StringBuffer(100);
+    // Only illegal chars, no handling of space and tags
+    private String fixText(String input) {
+        buffer.setLength(0);
+        for (char c: input.toCharArray()) {
+            if (isValid(c)) {
+                buffer.append(c);
+            } else if (replace) {
+                buffer.append(replacement);
+            }
+        }
+        return buffer.toString();
+    }
+
+    private boolean isValid(int i) {
+        processed++;
+        boolean valid = i == 0x09 || i == 0x0A || i == 0x0D || i >= 0x20;
+        if (!valid) {
+            fixed++;
+        }
+        return valid;
+    }
+
     private class FixUnicodeStream extends InputStream {
         private InputStream source;
 
@@ -131,10 +199,6 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
                 break;
             }
             return c;
-        }
-
-        private boolean isValid(int i) {
-            return i == 0x09 || i == 0x0A || i == 0x0D || i >= 0x20;
         }
 
         // Delegation
