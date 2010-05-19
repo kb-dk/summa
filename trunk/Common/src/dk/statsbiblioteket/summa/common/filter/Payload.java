@@ -307,8 +307,8 @@ public class Payload {
                 sb.append(" ");
                 sb.append(entry.getKey().toString()).append(":");
                 if (entry.getValue() instanceof String) {
-                    if (((String) entry.getValue()).length() > 30) {
-                        sb.append(((String) entry.getValue()).substring(0, 30));
+                    if (((String) entry.getValue()).length() > 40) {
+                        sb.append(((String) entry.getValue()).substring(0, 20));
                         sb.append("... (");
                         sb.append(((String) entry.getValue()).length());
                         sb.append(" characters)");

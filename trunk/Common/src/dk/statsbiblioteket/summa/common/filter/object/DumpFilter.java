@@ -197,7 +197,7 @@ public class DumpFilter extends ObjectFilterImpl {
         String fileName = getFileName(payload);
 
         StringWriter meta = new StringWriter(1000);
-        meta.append(payload.toString());
+        meta.append(payload.toString(true));
         try {
             if (payload.getRecord() != null) {
                 meta.append("\n").append(payload.getRecord().toString(true));
