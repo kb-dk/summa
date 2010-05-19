@@ -59,6 +59,16 @@ public class SnippetFilter extends ObjectFilterImpl {
     public static final int DEFAULT_SKIP_FIRST = 0;
 
     /**
+     * If defined, skipping is stopped if the given String is encountered.
+     * Snippet-collection will commence after the given String has been
+     * processed.
+     * </p><p>
+     * Optional. Default is not defined.
+     */
+    public static final String CONF_SKIP_BREAKER = "snippet.skipbreaker";
+    public static final String DEFAULT_SKIP_BREAKER = null;
+
+    /**
      * Where to store the snippet. This is either a key for meta-data (stored
      * in Payliad if the input is a Stream and Record if the input is
      * Record.content) or the special destinations {@code $CONTENT} or
@@ -88,7 +98,7 @@ public class SnippetFilter extends ObjectFilterImpl {
     private String destination = DEFAULT_DESTINATION;
     private boolean preserve = DEFAULT_PRESERVE_STREAM;
     private int skipFirst = DEFAULT_SKIP_FIRST;
-    private StringBuffer buffer;
+    private String skipBreaker = DEFAULT_SKIP_BREAKER;
 
     public SnippetFilter(Configuration conf) {
         super(conf);
@@ -96,12 +106,21 @@ public class SnippetFilter extends ObjectFilterImpl {
         destination = conf.getString(CONF_DESTINATION, destination);
         preserve = conf.getBoolean(CONF_PRESERVE_STREAM, preserve);
         skipFirst = conf.getInt(CONF_SKIP_FIRST, skipFirst);
+        skipBreaker = conf.getString(CONF_SKIP_BREAKER, skipBreaker);
+        if ("".equals(skipBreaker)) {
+            log.warn(CONF_SKIP_BREAKER + " was empty. Skip break is disabled");
+            skipBreaker = null;
+        }
         buffer = new StringBuffer(Math.min(10000, maxLength));
         log.info(String.format(
             "Constructed SnippetFilter with maxLength=%d, destination=%s",
             maxLength, destination));
     }
 
+    // State for the snippet generator
+    private StringBuffer buffer;
+    private int skipsLeft = 0;
+    private int skipBreakPos = 0;
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (DESTINATION_CONTENT.equals(destination) &&
@@ -125,42 +144,44 @@ public class SnippetFilter extends ObjectFilterImpl {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("UTF-8 not supported", e);
         }
-        int skipsLeft = skipFirst;
+        skipsLeft = skipFirst;
+        skipBreakPos = 0;
         buffer.setLength(0);
         int last = 0;
-        int ic;
+        int current;
         try {
-            while ((ic = in.read()) != -1 && buffer.length() < maxLength) {
-                preserveChar(forward, ic);
-                if ((char)ic == '\n') { // Newline to space
-                    ic = ' ';
+            while ((current = in.read()) != -1 && buffer.length() < maxLength) {
+                preserveChar(forward, current);
+                skipBreakCheck(current);
+                if (((char)current == '\n') || ((char)current == '\r')) { // Newline to space
+                    current = ' ';
                 }
-                if ((last == ' ' && ic == last)) { // Skip multiple spaces
+                if ((last == ' ' && current == ' ')) { // Skip multiple spaces
                     continue;
                 }
-                char c = (char)ic;
-                if (c == '<') {
+                if (current == '<') {
                     if (buffer.length() > 0 && last != ' ') {
                         if (--skipsLeft < 0) {
                             buffer.append(" ");
                         }
                     }
                     //noinspection StatementWithEmptyBody
-                    while ((ic = in.read()) != -1 && ic != '>') {
-                        preserveChar(forward, ic);
+                    while ((current = in.read()) != -1 && current != '>') {
+                        preserveChar(forward, current);
+                        skipBreakCheck(current);
                     }
-                    if (ic == -1) {
+                    preserveChar(forward, current);
+                    skipBreakCheck(current);
+                    if (current == -1) {
                         break;
-                    } else preserveChar(forward, ic);
-                    ic = ' '; // Tags count as space
-                } else if (c != ' ' || last != ' ') {
-                    if (--skipsLeft < 0) {
-                        buffer.append(c);
                     }
+                    current = ' '; // Tags count as space
+                } else if (--skipsLeft < 0) {
+                    buffer.append((char)current);
                 }
-                last = ic;
+                last = current;
             }
-            preserveChar(forward, ic);
+            preserveChar(forward, current);
         } catch (IOException e) {
             throw new PayloadException("Unable to extract snippet", e, payload);
         }
@@ -201,6 +222,21 @@ public class SnippetFilter extends ObjectFilterImpl {
                 new ReaderInputStream(in, "utf-8")));
         }
         return true;
+    }
+
+    private void skipBreakCheck(int ic) {
+        if (skipsLeft <= 0 || skipBreaker == null) {
+            return;
+        }
+        if (((char)ic) == skipBreaker.charAt(skipBreakPos)) {
+            skipBreakPos++;
+            if (skipBreakPos == skipBreaker.length()) {
+                log.trace("SkipBreaker " + skipBreaker + " matched");
+                skipsLeft = 0;
+            }
+        } else {
+            skipBreakPos = 0; // Start over
+        }
     }
 
     private void preserveChar(Writer forward, int ic) {

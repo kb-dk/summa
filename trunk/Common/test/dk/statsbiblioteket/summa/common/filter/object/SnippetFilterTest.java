@@ -85,4 +85,17 @@ public class SnippetFilterTest extends TestCase {
         assertEquals("The extracted snippet should be as expected",
                      "world ", snippet);
     }
+
+    public void testSkipBreak() throws Exception {
+        String input = "<foo>hello<bar />     world</invalid>";
+        Configuration conf = Configuration.newMemoryBased(
+            SnippetFilter.CONF_MAX_LENGTH, 500,
+            SnippetFilter.CONF_SKIP_FIRST, 8,
+            SnippetFilter.CONF_SKIP_BREAKER, "<bar />"
+        );
+        String snippet = filter(conf, input);
+
+        assertEquals("The extracted snippet should be as expected",
+                     "world ", snippet);
+    }
 }
