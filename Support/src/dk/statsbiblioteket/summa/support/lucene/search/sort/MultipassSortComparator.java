@@ -85,6 +85,9 @@ import java.util.Map;
  * </p><p>
  * Important: This is experimental and will not work with multi searchers, as
  * no global sortValue can be derived from the internal order structure.
+ * @deprecated this implementation has been superseded by
+ * https://issues.apache.org/jira/browse/LUCENE-2369 which uses aproximately
+ * the same amount of time for start up and has much lower memory requirements.  
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
