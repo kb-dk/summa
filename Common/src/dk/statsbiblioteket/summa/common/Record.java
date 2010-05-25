@@ -24,7 +24,12 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * A Record is the atom data unit in Summa. Is is used for ingesting to the
