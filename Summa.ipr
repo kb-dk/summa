@@ -462,6 +462,7 @@
     <option name="projectName" value="Summa" />
   </component>
   <component name="ProjectDictionaryState">
+    <dictionary name="henrik" />
     <dictionary name="te">
       <words>
         <w>freetext</w>
@@ -469,7 +470,6 @@
         <w>summa</w>
       </words>
     </dictionary>
-    <dictionary name="henrik" />
   </component>
   <component name="ProjectModuleManager">
     <modules>
@@ -486,7 +486,7 @@
       <module fileurl="file://$PROJECT_DIR$/Workflow/Workflow.iml" filepath="$PROJECT_DIR$/Workflow/Workflow.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6 (1)" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/classes" />
   </component>
   <component name="RMI Configuration">
@@ -593,28 +593,36 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.10.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.5.0.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.10-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.5.0-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.4.10-src.zip!/sbutil-0.4.10/src" />
+        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.5.0-src.zip!/sbutil-0.5.0/src" />
       </SOURCES>
     </library>
     <library name="lucene-core">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/lucene-core-3.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/lucene-core-3.1-dev-LUCENE-2335.jar!/" />
       </CLASSES>
-      <JAVADOC />
-      <SOURCES />
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-core-3.1-dev-LUCENE-2335-apidocs.zip!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-core-3.1-dev-LUCENE-2335-src.zip!/java" />
+      </SOURCES>
     </library>
     <library name="lucene-queries">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/lucene-queries-3.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/lucene-queries-3.1-dev-LUCENE-2335.jar!/" />
       </CLASSES>
-      <JAVADOC />
-      <SOURCES />
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-queries-3.1-dev-LUCENE-2335-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-core-3.1-dev-LUCENE-2335-src.zip!/java" />
+      </SOURCES>
     </library>
     <library name="postgres">
       <CLASSES>
