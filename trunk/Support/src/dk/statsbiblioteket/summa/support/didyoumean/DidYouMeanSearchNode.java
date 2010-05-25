@@ -55,133 +55,133 @@ import java.rmi.RemoteException;
         author = "mke, hbk")
 public class DidYouMeanSearchNode extends SearchNodeImpl {
     /**
-     * Enum type for Lucene directory.
-     */
+         * Enum type for Lucene directory.
+         */
     private static enum DIRECTORYTYPE {
         fsDirectory,
         ramDirectory
     }
 
     /**
-     * Log factory.
-     */
+         * Log factory.
+         */
     private static final Log log =
                                   LogFactory.getLog(DidYouMeanSearchNode.class);
 
     /**
-     * The configuration field in configuration file for the apriorifield.
-     */
+         * The configuration field in configuration file for the apriorifield.
+         */
     public static final String CONF_DIDYOUMEAN_APRIORI_FIELD =
                                         "summa.support.didyoumean.apriorifield";
     /**
-     * The default value for
-     * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_APRIORI_FIELD}.
-     * The value is 'freetext'.
-     */
+         * The default value for
+         * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_APRIORI_FIELD}.
+         * The value is 'freetext'.
+         */
     public static final String DEFAULT_DIDYOUMEAN_APRIORI_FIELD = "freetext";
 
     /**
-     * The configuration file in the configuration file. This is a boolean which
-     * in case of true, throws a fatel exception in managedOpen, if no index
-     * exists.
-     */
+         * The configuration file in the configuration file. This is a boolean which
+         * in case of true, throws a fatel exception in managedOpen, if no index
+         * exists.
+         */
     public static final String CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
                              "summa.support.didyoumean.closeonnonexistingindex";
     /**
-     * Default value for
-     * {@link this#CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
-     */
+         * Default value for
+         * {@link this#CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
+         */
     public static final boolean DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
                                                                            true;
 
     /**
-     * The configuration field in configuration file for the Did-You-Mean
-     * analyzer.
-     */
+         * The configuration field in configuration file for the Did-You-Mean
+         * analyzer.
+         */
     public static final String CONF_DIDYOUMEAN_ANALYZER =
                                         "summa.support.didyoumean.analyzer";
     /**
-     * Default value of {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_ANALYZER},
-     * the value is {@link SummaStandardAnalyzer}
-     */
+         * Default value of {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_ANALYZER},
+         * the value is {@link SummaStandardAnalyzer}
+         */
     public static final Class<? extends Analyzer> DEFAULT_DIDYOUMEAN_ANALYZER =
                                             SummaStandardAnalyzer.class;
     
     /**
-     * The configuration field in configuration file for the Did-You-Mean
-     * directory type.
-     * Possibilities:
-     * <ul>
-     *  <li>fsDirectory</li>
-     *  <li>ramDirectory</li>
-     * </ul>
-     */
+         * The configuration field in configuration file for the Did-You-Mean
+         * directory type.
+         * Possibilities:
+         * <ul>
+         *  <li>fsDirectory</li>
+         *  <li>ramDirectory</li>
+         * </ul>
+         */
     public static final String CONF_DIDYOUMEAN_DIRECTORY =
                                            "summa.support.didyoumean.directory";
     /**
-     * Default value for {@link this#CONF_DIDYOUMEAN_DIRECTORY}.
-     */
+         * Default value for {@link this#CONF_DIDYOUMEAN_DIRECTORY}.
+         */
     public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
 
     /**
-     * Where to place the Did-You-Mean index in the persistant storage.
-     * Note: only used in combination with fsDirectory.
-     */
+         * Where to place the Did-You-Mean index in the persistant storage.
+         * Note: only used in combination with fsDirectory.
+         */
     public static final String CONF_DIDYOUMEAN_LOCATION =
                                             "summa.support.didyoumean.location";
     /**
-     * Default value for {@link this#CONF_DIDYOUMEAN_LOCATION}.
-     */
+         * Default value for {@link this#CONF_DIDYOUMEAN_LOCATION}.
+         */
     public static final String DEFAULT_DIDYOUMEAN_LOCATION = "didyoumean";
 
     /**
-     * Local directory version.
-     */
+         * Local directory version.
+         */
     private Directory directory = null;
 
     /**
-     * Local variable for apriori field.
-     */
+         * Local variable for apriori field.
+         */
     private String aprioriField = null;
 
     /**
-     * Local value for Analyzer.
-     */
+         * Local value for Analyzer.
+         */
     private Analyzer analyzer = null;
 
     /**
-     * Local TokenPhraseSuggester
-     */
+         * Local TokenPhraseSuggester
+         */
     private TokenPhraseSuggester phraseSuggester = null;
     
     /**
-     * Local IndexReader.
-     */
+         * Local IndexReader.
+         */
     private IndexReader aprioriIndex = null;
 
     /**
-     * Private copy of the local location of the didyoumean index on disc. Not
-     * used when using RAMDirectory.
-     */
+         * Private copy of the local location of the didyoumean index on disc. Not
+         * used when using RAMDirectory.
+         */
     private File didyoumeanIndex;
 
     /**
-     * True if we are creating index, false otherwise. Used to stop searching
-     * when creating index.
-     */
+         * True if we are creating index, false otherwise. Used to stop searching
+         * when creating index.
+         */
     private boolean creatingIndex = true;
 
     /**
-     * If true, we close when we find no index.
-     */
+         * If true, we close when we find no index.
+         */
     private boolean closeOnNonExistingIndex;
     /**
-     * Constructor for DidYouMeanSearchNode. Get needed configuration values.
-     *
-     * @param config The configuration for this instance.
-     * @throws IOException if error opening FSDirectory or value of
-     *  {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_DIRECTORY} isn't valid.
-     */
+         * Constructor for DidYouMeanSearchNode. Get needed configuration values.
+         *
+         * @param config The configuration for this instance.
+         * @throws IOException if error opening FSDirectory or value of
+         *  {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_DIRECTORY} isn't valid.
+         */
     public DidYouMeanSearchNode(Configuration config) throws IOException {
         super(config);
 
@@ -206,7 +206,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
         // determining the placement for the Did-You-Mean index.
         String placement = config.getString(CONF_DIDYOUMEAN_LOCATION,
-                DEFAULT_DIDYOUMEAN_LOCATION);
+                                            DEFAULT_DIDYOUMEAN_LOCATION);
         didyoumeanIndex = Resolver.getPersistentFile(new File(placement));
 
         switch(type) {
@@ -228,26 +228,26 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Nothing is done at warmup.
-     * 
-     * @param request As specified in
-     * {@link dk.statsbiblioteket.summa.search.SearchNode#warmup(String)}.
-     */
+         * Nothing is done at warmup.
+         *
+         * @param request As specified in
+         * {@link dk.statsbiblioteket.summa.search.SearchNode#warmup(String)}.
+         */
     @Override
     protected void managedWarmup(String request) {
         // Not needed.
     }
 
     /**
-     * Create needed locale indexes: AprioriIndex, TokenSuggester and
-     * PhraseSuggester. If index is already created we uses old index.
-     *
-     * @param location As specified in
-     * {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
-     * Note: not used, we uses {@link Resolver#getPersistentFile}.
-     * @throws RemoteException is thrown if an IOException is cast during
-     * creation of a local data structure.
-     */
+         * Create needed locale indexes: AprioriIndex, TokenSuggester and
+         * PhraseSuggester. If index is already created we uses old index.
+         *
+         * @param location As specified in
+         * {@link dk.statsbiblioteket.summa.search.SearchNode#open(String)}.
+         * Note: not used, we uses {@link Resolver#getPersistentFile}.
+         * @throws RemoteException is thrown if an IOException is cast during
+         * creation of a local data structure.
+         */
     @Override
     protected void managedOpen(String location) throws RemoteException {
         location = location.concat(File.separator + "lucene"  + File.separator);
@@ -326,10 +326,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Closes open indexes.
-     * @throws RemoteException if IOException is catched when closing the
-     * indexes.
-     */
+        * Closes open indexes.
+        * @throws RemoteException if IOException is catched when closing the
+        * indexes.
+        */
     @Override
     protected void managedClose() throws RemoteException {
         log.debug("Close");
@@ -337,10 +337,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Private helper method to close indexes.
-     *
-     * @throws RemoteException if IOException is encountered doing close. 
-     */
+         * Private helper method to close indexes.
+         *
+         * @throws RemoteException if IOException is encountered doing close.
+         */
     private void closeIndexes() throws RemoteException {
         try {
             aprioriIndex.close();
@@ -354,29 +354,29 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Manage the search, by giving the local phraseSuggester the 'query' and
-     * 'number of suggestion'. When creating or opening we return an empty
-     * response.
-     * Note:
-     * <ul>
-     *  <li>'number of suggestion' can be overidden in 'request' contains
-     *      {@link DidYouMeanKeys#SEARCH_MAX_RESULTS} is set.</li>
-     *  <li>'query' is found in the 'request' key
-     *      {@link DidYouMeanKeys#SEARCH_QUERY}.</li>
-     * </ul>
-     * Side-effect:
-     * <ul>
-     *  <li>The resulting XML is added to the 'response' parameter.</li>
-     * </ul>
-     *  
-     * @param request As specified in
-     * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
-     *                 dk.statsbiblioteket.summa.search.api.ResponseCollection)}
-     * @param responses As specified in
-     * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
-     *                                                      ResponseCollection)}
-     * @throws RemoteException dictated by overriding method.
-     */
+         * Manage the search, by giving the local phraseSuggester the 'query' and
+         * 'number of suggestion'. When creating or opening we return an empty
+         * response.
+         * Note:
+         * <ul>
+         *  <li>'number of suggestion' can be overidden in 'request' contains
+         *      {@link DidYouMeanKeys#SEARCH_MAX_RESULTS} is set.</li>
+         *  <li>'query' is found in the 'request' key
+         *      {@link DidYouMeanKeys#SEARCH_QUERY}.</li>
+         * </ul>
+         * Side-effect:
+         * <ul>
+         *  <li>The resulting XML is added to the 'response' parameter.</li>
+         * </ul>
+         *
+         * @param request As specified in
+         * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+         *                 dk.statsbiblioteket.summa.search.api.ResponseCollection)}
+         * @param responses As specified in
+         * {@link dk.statsbiblioteket.summa.search.SearchNode#search(Request,
+         *                                                      ResponseCollection)}
+         * @throws RemoteException dictated by overriding method.
+         */
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
