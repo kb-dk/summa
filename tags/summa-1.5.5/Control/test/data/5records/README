@@ -1,0 +1,11 @@
+These files are simple test-data containing a total of 5 well-formed XML-blocks
+with Records. One of the files contains 0 Records and one of the files is not
+well-formed XML.
+
+The Records are stored in "record"-elements with the id-tag "id". A sample
+record is
+
+<record id="recordA">
+<mycontent atag="tagvalueA">contentA</mycontent>
+<morecontent><subcontent>subA</subcontent></morecontent>
+</record>

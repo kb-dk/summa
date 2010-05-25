@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor"
+            elementFormDefault="qualified"
+            xmlns:facet="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+    <!--
+     Note: This only describes the core. Lucene and Facet are extensions
+    -->
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the Facet part of a Summa Index Descriptor.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <!-- TODO: Specify the facet-namespace in the names below -->
+
+    <xsd:element name="facets">
+        <xsd:annotation>
+            <xsd:documentation>
+                Facets always refers to fields or groups.
+                That reference is the only mandatory attribute as
+                everything else has sensible defaults.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="facet" type="facet:FacetType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="FacetType">
+        <xsd:annotation>
+            <xsd:documentation>
+                ref: A reference to a field or a group.
+                     If a field is specified that field will be the base for the
+                     facet. If a group is specified, all fields in that group
+                     will be used as base.
+                     ref is the only mandatory attribute as all other attributes
+                     has sensible defaults.
+                name: The name of the facet as it will be exposed externally.
+                     If no name is specified, the string from ref will be used.
+                maxTags: The maximum number of tags to calculate for this facet.
+                     This cannot be overruled in the search query.
+                defaultTags: The number of tags to calculate for this facet if
+                     no explicit number is specified in the search query. This
+                     can be overridden in the search query, but cannot exceed
+                     maxTags.
+                sort: Two possible values: POPULARITY and ALPHA.
+                    POPULARITY is a descending sort based on the number of
+                    documents from the search result that contains the tag.
+                    ALPHA if ascending alphanumeric sort. If a sortLocale is
+                    specified, it is used for sorting. If no sortLocale is
+                    specified, sort is done by unicode position.
+                sortLocale: the locale to use for sorting if sort==ALPHA.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="ref" type="xsd:string" use="required"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="maxTags" type="xsd:int" use="optional"/>
+        <xsd:attribute name="defaultTags" type="xsd:int" use="optional"/>
+        <xsd:attribute name="sort" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="ALPHA"/>
+                    <xsd:enumeration value="POPULARITY"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
+        <xsd:anyAttribute processContents="lax"/>
+    </xsd:complexType>
+</xsd:schema>
