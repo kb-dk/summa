@@ -190,7 +190,7 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
     }
 
     @Override
-    protected void indexChanged() {
+    public void indexChanged(IndexReader reader) {
         log.debug("Index has changed. Dropping caches");
         orders.clear();
     }

@@ -446,6 +446,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
         try {
             searcher = new IndexSearcher(getIndexreader(urlLocation));
+            sortPool.indexChanged(searcher.getIndexReader());
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
             createMoreLikeThis();

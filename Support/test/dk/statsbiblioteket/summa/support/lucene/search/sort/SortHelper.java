@@ -130,6 +130,9 @@ public class SortHelper {
 
     public abstract static class SortFactory {
         abstract Sort getSort(IndexReader reader) throws IOException;
+        void indexChanged(IndexReader reader) throws IOException {
+            // Optional
+        }
     }
 
     /**
@@ -175,6 +178,7 @@ public class SortHelper {
         IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(index));
         QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
                                      new StandardAnalyzer(Version.LUCENE_30));
+        sortFactory.indexChanged(searcher.getIndexReader());
         Sort sort = sortFactory.getSort(searcher.getIndexReader());
         TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
         System.gc();

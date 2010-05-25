@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.FieldComparatorSource;
@@ -29,8 +30,8 @@ import java.util.Locale;
 public class SortFactory {
     private static final Logger log = Logger.getLogger(SortFactory.class);
 
-    private Map<String, FieldComparatorSource> comparators =
-            new HashMap<String, FieldComparatorSource>(10);
+    private Map<String, ReusableSortComparator> comparators =
+            new HashMap<String, ReusableSortComparator>(10);
     protected static final Object comparatorSync = new Object();
 
     /**
@@ -50,7 +51,7 @@ public class SortFactory {
      *         Cons: Long startup-time if low memory-usage is requested.
      */
     public static enum COMPARATOR {
-        lucene, localstatic, multipass;
+        lucene, localstatic, multipass, exposed;
         public static COMPARATOR parse(String value) {
             if (value == null) {
                 return DEFAULT_COMPARATOR;
@@ -63,6 +64,9 @@ public class SortFactory {
             }
             if (value.toLowerCase().equals(multipass.toString())) {
                 return multipass;
+            }
+            if (value.toLowerCase().equals(exposed.toString())) {
+                return exposed;
             }
             return DEFAULT_COMPARATOR;
         }
@@ -91,7 +95,7 @@ public class SortFactory {
      */
     public SortFactory(COMPARATOR comparator, int buffer,
                        String field, String sortLanguage,
-                      Map<String, FieldComparatorSource> comparators) {
+                      Map<String, ReusableSortComparator> comparators) {
         this.field = field;
         this.sortLanguage = sortLanguage;
         this.comparators = comparators;
@@ -165,6 +169,12 @@ public class SortFactory {
                                         sortLanguage, buffer));
                         break;
                     }
+                    case exposed: {
+                        comparators.put(
+                                sortLanguage,
+                                new ExposedSortComparator(sortLanguage));
+                        break;
+                    }
                     default: {
                         throw new IllegalStateException(
                                 "Unknown compatator " + comparator);
@@ -179,6 +189,18 @@ public class SortFactory {
 
     public String getSortLanguage() {
         return sortLanguage;
+    }
+
+    /**
+     * Must be called before any sort comparators can be returned and must be
+     * called whenever the underlying index changes.
+     * @param reader the new reader to use for sorting.
+     */
+    public void indexChanged(IndexReader reader) {
+        for (Map.Entry<String, ReusableSortComparator> source:
+            comparators.entrySet()) {
+            source.getValue().indexChanged(reader);
+        }
     }
 }
 
