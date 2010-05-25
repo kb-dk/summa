@@ -1,3 +1,646 @@
+2010-05-19 11:56  toke-sb
+
+	* [r2336]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SnippetFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SnippetFilterTest.java:
+	  
+	  Feature: Added optional skip breaker to SnippetFilter
+
+2010-05-19 11:26  toke-sb
+
+	* [r2335]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Logging: Made DumpFilter log meta data for Payloads
+	  Logging: Introduced optionally verbose toString for Payload
+
+2010-05-19 11:25  toke-sb
+
+	* [r2334]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeFilter.java:
+	  
+	  Feature: Made SanitiseUnicodeFilter handle meta data as well as
+	  content and streams
+
+2010-05-18 12:25  toke-sb
+
+	* [r2333]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java:
+	  
+	  Logging: Added optionally verbose toString for Payload
+
+2010-05-18 09:49  toke-sb
+
+	* [r2332]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicode.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeFilter.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeFilterTest.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeTest.java[DEL]:
+	  
+	  Refactor: Renamed SanitiseUnicode to SanitiseUnicodeFilter
+
+2010-05-18 09:47  toke-sb
+
+	* [r2331] Common/src/dk/statsbiblioteket/summa/common/Logging.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SnippetFilter.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SnippetFilterTest.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCParser.java:
+	  
+	  Bugfix: Made the SnippetFilter properly collapse spaces
+	  Feature: Made the Snippetfilter optionally skip the first x
+	  characters
+
+2010-05-18 09:21  toke-sb
+
+	* [r2330]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicode.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeTest.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/SnippetFilterTest.java[ADD]:
+	  
+	  Feature: Introduced unicode / UTF-8 sanitiser to handle
+	  non-controlled input such as web content
+
+2010-05-12 13:25  toke-sb
+
+	* [r2327]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Logging: Made the RecordWriter output the total number of
+	  committed Records as part of standard feedback
+
+2010-05-11 14:06  toke-sb
+
+	* [r2323]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java:
+	  
+	  Logging: Extended toString for Payload
+
+2010-05-11 13:26  toke-sb
+
+	* [r2322]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilter.java:
+	  
+	  Feature: RecordShaperFilter can now copy meta data from Payload
+	  to Record
+
+2010-05-11 13:09  toke-sb
+
+	* [r2321]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardCountingFilter.java:
+	  
+	  Logging: Made DiscardCountingFilter notify when min and max is
+	  reched
+
+2010-05-11 13:04  toke-sb
+
+	* [r2320]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardCountingFilter.java[ADD]:
+	  
+	  feature: Introduced DiscardCountingFilter to thin input data in
+	  order to speed up testing
+
+2010-05-11 12:35  toke-sb
+
+	* [r2319]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilter.java:
+	  
+	  Feature: Extended RecordShaperFilter with optional md5 summing of
+	  id when the ID is more than a given length
+
+2010-05-11 12:29  toke-sb
+
+	* [r2318]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilter.java:
+	  
+	  Feature: Extended RecordShaperFilter with optional md5 summing of
+	  id
+
+2010-05-11 11:31  toke-sb
+
+	* [r2317]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java:
+	  
+	  Feature: Made the TikaFilter more robust by logging Class not
+	  found errors instead of bombing out
+
+2010-05-11 08:51  toke-sb
+
+	* [r2316]
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcherImpl.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Unit-test: Debug-triggered unit-test for field nonescaping in
+	  LuceneSearchNodeTest
+	  JavaDoc: DEBUG-level log og nonescaped fields in
+	  DocumentSearcherImpl
+
+2010-05-11 08:50  toke-sb
+
+	* [r2315]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java:
+	  
+	  Bugfix: The splitter double-encoded CDATA-blocks
+
+2010-05-11 07:14  toke-sb
+
+	* [r2314]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java:
+	  
+	  JavaDoc: Minor addition to the class documentation regarding the
+	  destination of Tika-parsed data
+
+2010-05-10 11:29  toke-sb
+
+	* [r2312]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java:
+	  
+	  Feature: Extended TikaFilter to handle input as both Payload
+	  Stream and Record.content
+
+2010-05-10 09:08  toke-sb
+
+	* [r2311]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilterFeeder.java:
+	  
+	  BugFix: The toString for MUXFilterFeeder threw an Exception when
+	  no bases was defined
+
+2010-05-07 09:50  hkirk
+
+	* [r2308] Web/website_resources/index.jsp:
+	  
+	  Feature: In the test interface, it is now possible to turn
+	  didyoumean search on/off. It is off by default, and is turned on
+	  by a checkbox.
+
+2010-05-07 09:29  toke-sb
+
+	* [r2307] Ingest/build.xml, build.properties, build.xml:
+	  
+	  Bugfix: The build system was not upgraded to heritrix
+
+2010-05-06 14:14  toke-sb
+
+	* [r2306]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilterFeeder.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CollatorFactory.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/tags/FacetTest.java,
+	  Ingest/Ingest.iml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCParser.java[ADD],
+	  Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.10-apidocs.zip[ADD],
+	  lib/apidocs/sbutil-0.4.8-apidocs.zip[DEL],
+	  lib/fastutil-5.0.3-heritrix-subset-1.0.jar[ADD],
+	  lib/heritrix-1.14.3.jar[ADD],
+	  lib/license/heritrix-1.14.3-license.txt[ADD],
+	  lib/sbutil-0.4.10.jar[ADD], lib/sbutil-0.4.8.jar[DEL],
+	  lib/src/sbutil-0.4.10-src.zip[ADD],
+	  lib/src/sbutil-0.4.8-src.zip[DEL]:
+	  
+	  Added ARC support
+
+2010-05-05 13:32  toke-sb
+
+	* [r2305]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java:
+	  
+	  Logging: Made the MUXFilter log on progress when no feeder can be
+	  found for a given Payload
+
+2010-05-05 11:04  hkirk
+
+	* [r2304]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/FilterSequence.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexUtils.java:
+	  
+	  Feature: Fix to Bug #9 on tracker. Updated Configuration to use
+	  SubConfiguraionNotSupportedException, and fixed usages of
+	  Configurations.
+
+2010-05-05 10:54  hkirk
+
+	* [r2303]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/SubConfigurationsNotSupportedException.java[ADD],
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  Index/src/dk/statsbiblioteket/summa/index/DescriptorManipulator.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/DocumentCreatorTest.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeFactory.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherAggregator.java,
+	  Storage/build.xml,
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java,
+	  Workflow/src/dk/statsbiblioteket/summa/workflow/WorkflowManager.java:
+	  
+	  Feature: added sub configuraion not supported exception to trunk.
+
+2010-05-04 10:48  toke-sb
+
+	* [r2302]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Logging: Dropped some debugs to traces to make the logs cleaner
+
+2010-05-04 09:40  hkirk
+
+	* [r2301] lib/h2-1.2.132.jar[ADD]:
+	  
+	  Feature: bumbed H2 to 1.2.132.
+
+2010-05-04 09:23  toke-sb
+
+	* [r2300]
+	  Common/src/dk/statsbiblioteket/summa/common/util/CollatorFactory.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/CollatorSortedPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuper.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/CollatorFactoryTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ListSorterTest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/Facet.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/tags/FacetTest.java[ADD],
+	  FacetBrowser/test/log4j.xml, Summa.ipr,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java:
+	  
+	  Bugfix: Sorting of the characters 'aa', which are Collator-wise
+	  treated as 'å' in danish, was inconsistent and resulted in
+	  unnecessary rebuilding of facet structures with sortLocale "da".
+	  All Summa-code has been cleaned up to use CollatorFactory for
+	  creation of Collators.
+
+2010-05-02 17:15  toke-sb
+
+	* [r2299]
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPoolImpl.java:
+	  
+	  Logging: Added verbose time measurement logging to
+	  SortedPoolImpl.clean()
+
+2010-05-02 14:11  toke-sb
+
+	* [r2298]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Cleanup: Removed redundand duplication detection in
+	  LuceneFacetBuilder and made logging slightly more verbose
+
+2010-04-30 08:04  toke-sb
+
+	* [r2297]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java:
+	  
+	  Logging: Added missing counter for build statistics in FacetMap
+
+2010-04-29 10:07  toke-sb
+
+	* [r2296]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMap32.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBuilder.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Optimization: Removed redundant calculations from inner loops of
+	  the facet building system at the cost of exposing inner workings
+	  in CoreMap
+	  Logging: Added statistics collection and logging in FacetMap
+
+2010-04-28 11:58  hkirk
+
+	* [r2295]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java:
+	  
+	  Bugfix: removed warnings and fixed code style
+
+2010-04-27 12:54  hkirk
+
+	* [r2294]
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java:
+	  
+	  Bugfix: Haven't touched anything except from a little JavaDoc
+
+2010-04-27 12:49  hkirk
+
+	* [r2293]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java:
+	  
+	  Bugfix: Code cleanup
+
+2010-04-27 12:21  hkirk
+
+	* [r2292]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java:
+	  
+	  Bugfix: General code cleanup
+
+2010-04-27 06:32  hkirk
+
+	* [r2291]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/Inspect.java:
+	  
+	  Bugfix: removed warnings.
+
+2010-04-26 08:27  hkirk
+
+	* [r2290]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java:
+	  
+	  Bugfix: code style
+
+2010-04-21 09:13  toke-sb
+
+	* [r2289]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java:
+	  
+	  Performance: Added option to skip "expunge deleted" for the
+	  LuceneManipulator
+
+2010-04-20 11:59  hkirk
+
+	* [r2288]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java:
+	  
+	  Bugfix: typo
+
+2010-04-20 06:57  hkirk
+
+	* [r2287]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Bugfix: Added java doc.
+	  Bugfix: Fixed typo in setting
+
+2010-04-14 14:27  toke-sb
+
+	* [r2286]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTarget.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/LinjeformatToMARC21Slim.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Logging and cleanup: Lowered the log-level for sveneral
+	  statements that filled the log with low-priority messages at too
+	  high a log level
+
+2010-04-14 09:20  toke-sb
+
+	* [r2285]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/LinjeformatToMARC21Slim.java[ADD],
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/LinjeformatToMARC21SlimTest.java[ADD]:
+	  
+	  Feature: Added nearly conforming parser for danMARC2 Linjeformat.
+	  Special chars not mapped directly to Unicode are ignored
+	  Testing: Added test for the parser for danMARC2 Linjeformat
+
+2010-04-14 09:18  toke-sb
+
+	* [r2284]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/Aleph2XML2.java:
+	  
+	  Feature: Added option for specifying input charset and subfield
+	  divider for Aleph2XML
+
+2010-04-13 08:34  hkirk
+
+	* [r2283] Summa.ipr:
+	  
+	  Added new h2 lib to project file
+
+2010-04-12 11:43  hkirk
+
+	* [r2282]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Feature: Added configuration
+	  'summa.support.didyoumean.closeonnonexistingindex', when set to
+	  true (which is the default value) managedOpen logs a fatal and
+	  throws an RemoteException, when a didyoumean index doen't exists.
+
+2010-04-08 13:03  hkirk
+
+	* [r2281] build.properties, lib/h2-1.2.126.jar[DEL]:
+	  
+	  Updated Summa to used H2 version 1.2.32. This version fixes among
+	  other things that large transactions don't run out of heapspace.
+
+2010-04-08 09:16  hkirk
+
+	* [r2280] Web/status_resources/index.jsp,
+	  Web/status_resources/rss.jsp:
+	  
+	  Feature: support for granularity and ignore-changes-newer-than
+	  for rss feed.
+
+2010-04-08 09:15  hkirk
+
+	* [r2279]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java:
+	  
+	  Feature: Support granularity for date string.
+
+2010-04-07 12:28  hkirk
+
+	* [r2278] Web/build.xml:
+	  
+	  Bugfix: Cleanup didn't clean depended modules
+
+2010-04-07 11:03  hkirk
+
+	* [r2277] Web/status_resources/index.jsp:
+	  
+	  Bugfix: fixed html warnings.
+
+2010-04-07 10:59  hkirk
+
+	* [r2276] Web/status_resources/index.jsp:
+	  
+	  Feature: added possibility for choosing granuality and
+	  ignore-newer-than when choosing rss feed
+
+2010-04-06 11:20  toke-sb
+
+	* [r2275]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Logging: Removed debug-oriented logging from
+	  StreamingDocumentCreator
+
+2010-04-06 11:11  hkirk
+
+	* [r2274]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java:
+	  
+	  Bugfix: Updated UpdateFromFulldumpFilter to only get Id, base
+	  from records, which should make it faster
+
+2010-04-06 11:08  hkirk
+
+	* [r2273]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/ResultSetCursor.java:
+	  
+	  Featuer: it is now possible to query getModifiedRecords for just
+	  id, base and get these fast. This is due to an added feature in
+	  QueryOptions, which allow specification of which attributes we
+	  should return.
+
+2010-04-06 08:43  hkirk
+
+	* [r2272] Web/config/storage/server-config.wsdd:
+	  
+	  Bugfix: update line length in wsdd file
+
+2010-03-31 12:17  hkirk
+
+	* [r2271] Web/config/storage/server-config.wsdd:
+	  
+	  Feature: added support for getting multipled records in one go.
+
+2010-03-31 08:25  hkirk
+
+	* [r2270]
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java:
+	  
+	  Bugfix: added javaDoc
+
+2010-03-31 08:21  hkirk
+
+	* [r2269]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: updated javadoc
+
+2010-03-31 08:20  hkirk
+
+	* [r2268]
+	  Web/src/dk/statsbiblioteket/summa/web/services/GetRecordsResponse.xsd[ADD]:
+	  
+	  Featuer: added schema for GetRecordsResonse
+
+2010-03-31 07:58  hkirk
+
+	* [r2267]
+	  Web/src/dk/statsbiblioteket/summa/web/services/GetRecordsResponseSample.xml[ADD]:
+	  
+	  Feature: added getRecords sample
+
+2010-03-31 07:44  hkirk
+
+	* [r2266]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Feature: Made it possible to used StorageWS to get multiple
+	  records in one go
+
+2010-03-31 07:43  hkirk
+
+	* [r2265]
+	  Web/test/dk/statsbiblioteket/summa/web/services/StorageWSTest.java[ADD]:
+	  
+	  Feature: unittest for StorageWS
+
+2010-03-31 07:04  hkirk
+
+	* [r2264]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bugfix: Code style and JavaDoc
+
+2010-03-30 12:19  hkirk
+
+	* [r2263]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/XStorage.java:
+	  
+	  Bugfix: wrote javadoc and update QAInfo to QA_NEEDED
+
+2010-03-30 08:21  hkirk
+
+	* [r2262]
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeAsync.java:
+	  
+	  Bugfix: documentation
+
+2010-03-30 08:20  hkirk
+
+	* [r2261]
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java:
+	  
+	  Bugfix: documentation. QA
+
+2010-03-30 07:46  hkirk
+
+	* [r2260]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bugfix: Code style and comments
+
+2010-03-29 10:44  hkirk
+
+	* [r2259]
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/RecordUtilTest.java:
+	  
+	  Feature: added toXML method and testcase. Method takes an
+	  XMLStreamWriter as input, which are used to dump record XML.
+
+2010-03-29 06:56  hkirk
+
+	* [r2258]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Typo
+
+2010-03-29 06:53  hkirk
+
+	* [r2257]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Bugfix: fixed error in exception message.
+
+2010-03-25 13:35  hkirk
+
+	* [r2256] Web/build.xml:
+	  
+	  Bugfix: Removed recursion from .depends, which lead to stack
+	  overflow :(
+
+2010-03-25 10:48  hkirk
+
+	* [r2255]
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageIterator.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageReaderClient.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/rmi/RemoteStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/PagingCursor.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/ResultSetCursor.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/AggregatingStorageTest.java:
+	  
+	  Bugfix: Fixed bug in AggregatingStorage where MergingContext
+	  should use a variable from IteratorContext but redeclared it.
+	  Bugfix: When receiving an NoSuchElementException in
+	  StorageReaderClient over RMI, is packed inside a RemoteException.
+	  This is now checked when recieving an RemoteException over RMI.
+
+2010-03-24 12:20  hkirk
+
+	* [r2253] ChangeLog,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  NEWS, build.properties:
+	  
+	  Update for Summa 1.5.4 release
+
 2010-03-24 09:23  hkirk
 
 	* [r2252] Common/build.xml, Control/build.xml,

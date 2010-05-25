@@ -29,13 +29,13 @@ public class SummaConstants {
      * Current Summa version,
      * Note: Auto generated.
      */
-    public static final String SUMMAVERSION = "1.5.4";
+    public static final String SUMMAVERSION = "1.5.5";
 
     /**
      * Last revision for Summa release,
      * Note: Auto generated.
      */
-    public static final int SUMMAVERSIONREVISION = 2253;
+    public static final int SUMMAVERSIONREVISION = 2340;
 
     /**
      * Get version string, used to present the Summa version and the revision
