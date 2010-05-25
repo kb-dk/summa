@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import org.apache.log4j.Logger;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.*;
 
 import java.util.HashMap;
@@ -41,8 +42,8 @@ public class SortPool {
      * Comparators does the heavy lifting when sorting. They are shared between
      * sortFactories.
      */
-    private Map<String, FieldComparatorSource> comparators =
-            new HashMap<String, FieldComparatorSource>(10);
+    private Map<String, ReusableSortComparator> comparators =
+            new HashMap<String, ReusableSortComparator>(10);
 
     private boolean naturalOrder = false;
     private SortFactory.COMPARATOR comparatorImplementation;
@@ -140,6 +141,17 @@ public class SortPool {
     public void setNaturalOrder(boolean useNaturalOrder) {
         log.debug("useNaturalOrder: " + useNaturalOrder);
         naturalOrder = useNaturalOrder;
+    }
+
+    /**
+     * Must be called before any sort comparators can be returned and must be
+     * called whenever the underlying index changes.
+     * @param reader the new reader to use for sorting.
+     */
+    public void indexChanged(IndexReader reader) {
+        for (Map.Entry<String, SortFactory> factory: sortFactories.entrySet()) {
+            factory.getValue().indexChanged(reader);
+        }
     }
 }
 

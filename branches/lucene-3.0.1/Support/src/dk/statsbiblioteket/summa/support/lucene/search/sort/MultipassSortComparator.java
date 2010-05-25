@@ -129,7 +129,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
 
     @Override
-    protected void indexChanged() {
+    public void indexChanged(IndexReader reader) {
         log.debug("Index changed. Clearing sort order caches");
         orders.clear();
     }

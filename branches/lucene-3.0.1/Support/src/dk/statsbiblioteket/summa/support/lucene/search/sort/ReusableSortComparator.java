@@ -165,22 +165,23 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
      * Checks is the reader has changed and thus if cached structures should be
      * discarded. This should be called whenever a ScoreDocComparator is
      * requested.
-     * @param reader Te reader that the sorter should work on.
+     * @param reader The reader that the sorter should work on.
      */
     protected synchronized void checkCacheConsistency(IndexReader reader) {
         String newIndexVersion = indexVersion + "_" + reader.maxDoc();
         if (newIndexVersion.equals(indexVersion)) {
             return;
         }
-        indexChanged();
+        indexChanged(reader);
         this.indexVersion = newIndexVersion;
     }
 
     /**
      * Called when the index has changed and cached structures should be
      * discarded.
+     * @param reader the new Reader to use as basis for sorting.
      */
-    protected abstract void indexChanged();
+    public abstract void indexChanged(IndexReader reader);
 
     /*@Override
     protected Comparable getComparable(String termtext) {
