@@ -21,6 +21,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * NativeRunner Tester.
+ *
+ * @deprecated {@link dk.statsbiblioteket.summa.common.util.NativeRunner} is deprecated.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -38,7 +40,7 @@ public class NativeRunnerTest extends TestCase {
         super.tearDown();
     }
 
-    public void testSimpleCall() throws Exception {
+    public void oldTestSimpleCall() throws Exception {
         NativeRunner runner = new NativeRunner("true");
         assertEquals("The execution of true should work fine",
                      0, runner.executeNoCollect());

@@ -50,8 +50,8 @@ public class SummaAnalyzer extends Analyzer {
     private static class TokenStreamContext {
 
         /**
-         * The topmost tokenstream tokens should be read from.
-         */
+                 * The topmost tokenstream tokens should be read from.
+                 */
         public TokenStream tokenStream;
 
         /**
@@ -60,7 +60,7 @@ public class SummaAnalyzer extends Analyzer {
          * underlying Reader
          */
         public LinkedList<ReplaceReader> filters =
-                                                new LinkedList<ReplaceReader>();
+                new LinkedList<ReplaceReader>();
     }
 
     /**
@@ -95,15 +95,15 @@ public class SummaAnalyzer extends Analyzer {
 
         transliteratorFactory =
                 new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
-                                  transliterationRules,
-                                  keepDefaultTransliterations,
-                                  Rules.ALL_TRANSLITERATIONS)));
+                        transliterationRules,
+                        keepDefaultTransliterations,
+                        Rules.ALL_TRANSLITERATIONS)));
         tokenReplacerFactory =
                 new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
-                                  tokenRules,
-                                  keepDefaultTokenRules,
-                                  Rules.DEFAULT_REPLACE_RULES)));
-     }
+                        tokenRules,
+                        keepDefaultTokenRules,
+                        Rules.DEFAULT_REPLACE_RULES)));
+    }
 
     /**
      * The TokenStream returned is a TransliteratorTokenizer where input have
@@ -114,10 +114,10 @@ public class SummaAnalyzer extends Analyzer {
      * @param reader - containin the text
      * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
      */
-     public TokenStream tokenStream(String fieldName, Reader reader) {
+    public TokenStream tokenStream(String fieldName, Reader reader) {
 
         TokenStreamContext ctx = prepareReusableTokenStream(fieldName,
-                                                            reader);
+                reader);
         return ctx.tokenStream;
     }
 
@@ -128,13 +128,13 @@ public class SummaAnalyzer extends Analyzer {
         if (ignoreCase) {
             ctx.filters.add(new LowerCasingReader(reader));
             ctx.filters.add(tokenReplacerFactory.getReplacer(
-                                                        ctx.filters.getLast()));
+                    ctx.filters.getLast()));
         } else {
             ctx.filters.add(tokenReplacerFactory.getReplacer(reader));
         }
 
         ctx.filters.add(transliteratorFactory.getReplacer(
-                                                        ctx.filters.getLast()));
+                ctx.filters.getLast()));
 
         ctx.tokenStream = new WhitespaceTokenizer(ctx.filters.getLast());
 
@@ -143,7 +143,7 @@ public class SummaAnalyzer extends Analyzer {
 
     @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader)
-                                                            throws IOException {
+            throws IOException {
         // This method fetches a stored *thread local* TokenStreamContext
         // this means that we have one unique token stream per thread
 

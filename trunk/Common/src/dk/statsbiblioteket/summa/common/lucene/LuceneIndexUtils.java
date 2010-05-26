@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import org.apache.commons.logging.Log;
@@ -27,7 +29,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.RangeQuery;
+import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.PrefixQuery;
@@ -137,7 +139,7 @@ public class LuceneIndexUtils {
             TermQuery termQuery = (TermQuery)query;
             sw.append(termQuery.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof RangeQuery) {
+        } else if (query instanceof TermRangeQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof WildcardQuery) {

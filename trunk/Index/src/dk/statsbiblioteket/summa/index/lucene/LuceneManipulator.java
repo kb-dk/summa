@@ -30,8 +30,8 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.LockObtainFailedException;
+import org.apache.lucene.store.*;
+import org.apache.lucene.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -136,7 +136,8 @@ public class LuceneManipulator implements IndexManipulator {
 
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
     private double buffersizeMB = DEFAULT_BUFFER_SIZE_MB;
-    private int maxMergeOnConsolidate = DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
+    private int maxMergeOnConsolidate =
+                                    DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
     private int writerThreads = DEFAULT_WRITER_THREADS;
     private boolean expungeDeleted = DEFAULT_EXPUNGE_DELETES_ON_COMMIT;
 
@@ -195,7 +196,7 @@ public class LuceneManipulator implements IndexManipulator {
                                       + concrete + "'");
             }
         }
-        indexDirectory = FSDirectory.getDirectory(
+        indexDirectory = new NIOFSDirectory(
                 new File(indexRoot, LuceneIndexUtils.LUCENE_FOLDER));
 /*        if (IndexReader.indexExists(indexDirectory)) {
             log.debug("Extracting existing RecordIDs from index at '"
@@ -225,7 +226,8 @@ public class LuceneManipulator implements IndexManipulator {
                         "checkWriter: Opening writer for existing index at '%s",
                           indexDirectory.getFile()));
                 writer = new IndexWriter(
-                        indexDirectory, new StandardAnalyzer(), false,
+                        indexDirectory,
+                        new StandardAnalyzer(Version.LUCENE_30), false,
                         IndexWriter.MaxFieldLength.UNLIMITED);
                 writer.setMergeFactor(80); // TODO: Verify this
                 // We want to avoid implicit merging of segments as is messes
@@ -234,7 +236,8 @@ public class LuceneManipulator implements IndexManipulator {
                 log.debug("No existing index at '" + indexDirectory.getFile()
                           + "', creating new index");
                 writer = new IndexWriter(
-                        indexDirectory, new StandardAnalyzer(), true,
+                        indexDirectory,
+                        new StandardAnalyzer(Version.LUCENE_30), true,
                         IndexWriter.MaxFieldLength.UNLIMITED);
             }
 
@@ -244,7 +247,7 @@ public class LuceneManipulator implements IndexManipulator {
             writer.setRAMBufferSizeMB(buffersizeMB);
             // Old style merging to preserve order of documents
             writer.setMergeScheduler(new SerialMergeScheduler());
-            writer.setMergePolicy(new LogByteSizeMergePolicy());
+            writer.setMergePolicy(new LogByteSizeMergePolicy(writer));
         } catch (CorruptIndexException e) {
             throw new IOException(String.format(
                     "Corrupt index found at '%s'", indexDirectory.getFile()),e);

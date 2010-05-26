@@ -14,14 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -32,14 +34,18 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A description of the layout of the index, such as default fields, groups
@@ -54,7 +60,7 @@ import java.util.*;
  * The IndexDescriptor has groups, which schema.xml does not, and is otherwise
  * somewhat simpler. It is envisioned that SOLR's classes for indexing and
  * querying can be used in Summa instead of raw Lucene at some point in time.
- * @see {@url http://wiki.apache.org/solr/SchemaXml}
+ * @see  <a href="http://wiki.apache.org/solr/SchemaXml">Solr Schema XML</a>.
  * </p><p>
  * The IndexDescriptor is abstract. Besides implementing the abstract methods,
  * sub classes will normally need to override {@link #createBaseField(String)}.
@@ -111,10 +117,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public static final int DEFAULT_CHECK_INTERVAL = -1;
 
     /**
-     * The property-key for a substorage containing the properties for the
-     * IndexDescriptor. This is used for inlining descriptor setup in other
-     * configurations.
-     */
+         * The property-key for a substorage containing the properties for the
+         * IndexDescriptor. This is used for inlining descriptor setup in other
+         * configurations.
+         */
     public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
 
     /**
@@ -395,18 +401,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.trace("parse called");
         if (xml == null) {
             throw new IllegalArgumentException("The xml for parse was null");
-        }                           
-        Document document = parseXMLToDocument(xml);
+        }
+        Document document = DOM.stringToDOM(xml);
 
         parseDefaultLanguage(document);
-
-/*        uniqueKey = ParseUtil.getValue(
-                xPath, document, "id:IndexDescriptor/id:uniqueKey",
-                uniqueKey);
-        if ("".equals(uniqueKey)) {
-            throw new ParseException("Unique key specified to empty string",
-                                     -1);
-        }*/
 
         parseDefaultSearchFields(document);
 
@@ -439,9 +437,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             throw (ParseException)new ParseException(
                     "Could not create document builder", -1).initCause(e);
         }
-        Document document;
+        
         try {
-            document = builder.parse(new InputSource(
+            return builder.parse(new InputSource(
                     new ByteArrayInputStream(xml.getBytes("utf-8"))));
         } catch (SAXException e) {
             throw (ParseException) new ParseException(
@@ -456,28 +454,21 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                     "Could not create ByteArrayInputStream from xml '"
                     + xml + "'", -1).initCause(e);
         }
-        return document;
     }
 
     private void parseDefaultSearchFields(Document document) throws ParseException {
         NodeList defaultNodes;
+
         final String DEFAULT_EXPR =
-                "id:IndexDescriptor/id:defaultSearchFields/id:field";
-        try {
-            defaultNodes = (NodeList)xPath.evaluate(DEFAULT_EXPR, document,
-                                                    XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expression '%s' for selecting default search fields was"
-                    + " invalid", DEFAULT_EXPR), -1);
-        }
+                "/IndexDescriptor/defaultSearchFields/field";
+        defaultNodes = DOM.selectNodeList(document, DEFAULT_EXPR);
+
         defaultFields = new ArrayList<String>(defaultNodes.getLength());
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + defaultNodes.getLength()
                   + " default search field nodes");
         for (int i = 0 ; i < defaultNodes.getLength(); i++) {
-            String dField = ParseUtil.getValue(xPath, defaultNodes.item(i),
-                                               "@ref", (String)null);
+            String dField = DOM.selectString(defaultNodes.item(i), "@ref", null);
             if (dField == null) {
                 log.warn("No ref-attribute for field in defaultSearchFields");
             } else {
@@ -493,41 +484,31 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     private void parseDefaultLanguage(Document document) throws ParseException {
-        defaultLanguage = ParseUtil.getValue(
-                xPath, document, "id:IndexDescriptor/id:defaultLanguage",
-                defaultLanguage);
+        defaultLanguage = DOM.selectString(document,
+                                       "/IndexDescriptor/defaultLanguage",
+                                       defaultLanguage);
     }
 
     private void parseGroups(Document document) throws ParseException {
         NodeList groupNodes;
         //noinspection DuplicateStringLiteralInspection
-        final String GROUP_EXPR = "/id:IndexDescriptor/id:groups/id:group";
-        try {
-            groupNodes = (NodeList)xPath.evaluate(GROUP_EXPR, document,
-                                                  XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expression '%s' for selecting groups was invalid",
-                    GROUP_EXPR), -1);
-        }
+        final String GROUP_EXPR = "/IndexDescriptor/groups/group";
+
         //noinspection DuplicateStringLiteralInspection
+        groupNodes = DOM.selectNodeList(document, GROUP_EXPR);
         log.trace("Located " + groupNodes.getLength() + " group nodes");
+
         for (int i = 0 ; i < groupNodes.getLength(); i++) {
+            log.debug(groupNodes.item(i).getNodeName());
             addGroup(new IndexGroup<F>(groupNodes.item(i), this));
         }
     }
 
     private void parseFields(Document document) throws ParseException {
         NodeList fieldNodes;
-        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
-        try {
-            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
-                                                 XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expression '%s' for selecting fields was invalid",
-                    FIELD_EXPR), -1);
-        }
+        final String FIELD_EXPR = "/IndexDescriptor/fields/field";
+
+        fieldNodes = DOM.selectNodeList(document, FIELD_EXPR);
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + fieldNodes.getLength() + " field nodes");
         for (int i = 0 ; i < fieldNodes.getLength(); i++) {
@@ -536,9 +517,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     private void parseQueryParser(Document document) throws ParseException {
-        String dop = ParseUtil.getValue(xPath, document,
-                "id:IndexDescriptor/id:QueryParser/@defaultOperator",
-                defaultOperator.toString());
+        //String dop = ParseUtil.getValue(xPath, document,
+        //        "id:IndexDescriptor/id:QueryParser/@defaultOperator",
+        //        defaultOperator.toString());
+        String dop = DOM.selectString(document,
+                               "/IndexDescriptor/QueryParser/@defaultOperator",
+                               defaultOperator.toString());
         if ("or".equals(dop.toLowerCase())) {
             defaultOperator = OPERATOR.or;
         } else if ("and".equals(dop.toLowerCase())) {
@@ -549,7 +533,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
     }
 
-    private XPath xPath = createXPath();
+    /*private XPath xPath = createXPath();
     private XPath createXPath() {
         DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
         nsCon.setNameSpace(DESCRIPTOR_NAMESPACE, DESCRIPTOR_NAMESPACE_PREFIX);
@@ -557,7 +541,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         XPath xPath = factory.newXPath();
         xPath.setNamespaceContext(nsCon);
         return xPath;
-    }
+    } */
 
     /**
      * Stores an XML representation of this IndexDescriptor to the given
@@ -756,9 +740,6 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.debug("getField: No field with name '" + fieldName
                   + "' found. Returning null");
         return null;
-//        throw new IllegalArgumentException(String.format(
-//                "Could not locate a field based on name '%s' and language "
-//                + "'%s'", fieldName, language));
     }
     /**
      * Returns the field where the name (no alias-lookup) matches the fieldName.

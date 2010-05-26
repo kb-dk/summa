@@ -14,14 +14,38 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.*;
+
+import java.io.*;
 
 /**
  * HitCollector that simply disregards the result. Used to measure performance.
  */
-public class DiscardingCollector extends HitCollector {
+public class DiscardingCollector extends Collector {
     public void collect(int i, float v) {
         // Do nothing
+    }
+
+    @Override
+    public void setScorer(Scorer scorer) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void collect(int i) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setNextReader(IndexReader indexReader, int i)
+            throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
 

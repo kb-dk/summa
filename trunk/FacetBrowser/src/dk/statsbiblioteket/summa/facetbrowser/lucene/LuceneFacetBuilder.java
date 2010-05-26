@@ -36,6 +36,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.store.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -138,7 +139,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
         log.debug(String.format("Opening IndexReader(%s)", luceneIndex));
         IndexReader ir;
         try {
-            ir = IndexReader.open(luceneIndex);
+            ir = IndexReader.open(new NIOFSDirectory(luceneIndex));
         } catch (Exception e) {
             throw new IOException(String.format(
                     "Could not open IndexReader for location '%s'",

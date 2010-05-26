@@ -154,10 +154,10 @@ public class LuceneFacetBuilderTest extends TestCase {
         Payload payload = makePayload("foo", 0);
         Document doc = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
         doc.add(new Field(IndexBuilder.TITLE, "foobar",
-                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.Store.YES, Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         doc.add(new Field(IndexBuilder.TITLE, "foobar", // Yes, again
-                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.Store.YES, Field.Index.ANALYZED,
                           Field.TermVector.WITH_POSITIONS_OFFSETS));
         builder.update(payload);
         log.debug("Updated with payload, checking for change");

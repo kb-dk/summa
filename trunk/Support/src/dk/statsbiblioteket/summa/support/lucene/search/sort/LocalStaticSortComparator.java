@@ -20,9 +20,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.FieldComparator;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -60,19 +58,21 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
 
     // inherit javadocs
     @Override
-    public ScoreDocComparator newComparator(
-            final IndexReader reader, final String fieldname)
+    public FieldComparator newComparator(
+            String fieldname, int numHits, int sortPos, boolean reversed)
             throws IOException {
+            final boolean r = reversed;
+            final int[] slots = new int[numHits];
+            final String fieldName = fieldname;
+        //final int[] order = getOrder(reader, fieldname);
 
-        final int[] order = getOrder(reader, fieldname);
-/*        StringWriter sw = new StringWriter(100);
-        sw.append(order.length + "(");
-        for (int i = 0 ; i < Math.min(10, order.length) ; i++) {
-            sw.append(Integer.toString(order[i]));
-        }
-        sw.append(")");
-        System.out.println("Multi: " + sw);*/
-        return new ScoreDocComparator() {
+        return new FieldComparator() {
+            IndexReader reader = null;
+            int docbase = 0;
+            int bottom;
+
+
+            /*
             public int compare (ScoreDoc i, ScoreDoc j) {
                 return order[i.doc] - order[j.doc];
             }
@@ -83,6 +83,38 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
 
             public int sortType(){
                 return SortField.CUSTOM;
+            } */
+
+            @Override
+            public int compare(int i, int i1) {
+                return (!r) ? i - i1 : i1 - i;
+            }
+
+            @Override
+            public void setBottom(int i) {
+                bottom = i;
+            }
+
+            @Override
+            public int compareBottom(int i) throws IOException {
+                return (!r) ? i - bottom : bottom - i; 
+            }
+
+            @Override
+            public void copy(int i, int i1) throws IOException {
+                slots[i] = i1;
+            }
+
+            @Override
+            public void setNextReader(IndexReader indexReader, int i)
+                    throws IOException {
+                //slots = getOrder(reader, fieldName);
+                docbase = i;
+            }
+
+            @Override
+            public Comparable value(int i) {
+                return slots[i];
             }
         };
     }
@@ -158,7 +190,7 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
     }
 
     @Override
-    protected void indexChanged() {
+    public void indexChanged(IndexReader reader) {
         log.debug("Index has changed. Dropping caches");
         orders.clear();
     }

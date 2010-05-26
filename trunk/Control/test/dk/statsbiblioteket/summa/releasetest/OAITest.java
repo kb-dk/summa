@@ -151,8 +151,7 @@ public class OAITest extends NoExitTestCase {
         return new SummaSearcherImpl(searchConf);
     }
 
-    public static void performOAIIndex() throws IOException,
-                                                InterruptedException {
+    public static void performOAIIndex() throws Exception {
         log.info("Starting index");
         Configuration indexConf = Configuration.load(Resolver.getURL(
                 "test-facet-index-1/config/configuration.xml").
@@ -194,8 +193,7 @@ public class OAITest extends NoExitTestCase {
         index.stop();
     }
 
-    public static FilterService performOAIIngest() throws IOException,
-                                                          InterruptedException {
+    public static FilterService performOAIIngest() throws Exception {
         log.info("Starting ingest");
         Configuration ingestConf = Configuration.load(Resolver.getURL(
                 "test-ingest-oai/config/configuration.xml").getFile());

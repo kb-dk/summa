@@ -14,7 +14,11 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.summa.common.util.*;
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
+import dk.statsbiblioteket.summa.common.util.IntArray2D;
+import dk.statsbiblioteket.summa.common.util.ResourceTracker;
+import dk.statsbiblioteket.summa.common.util.ResourceTrackerImpl;
+import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
 import dk.statsbiblioteket.util.Profiler;
@@ -26,14 +30,16 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.FieldCache;
+import org.apache.lucene.search.FieldComparator;
 
 import java.io.IOException;
 import java.text.Collator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A SortComparator that utilized multipass-scans of the corpus in order to
@@ -79,6 +85,9 @@ import java.util.*;
  * </p><p>
  * Important: This is experimental and will not work with multi searchers, as
  * no global sortValue can be derived from the internal order structure.
+ * @deprecated this implementation has been superseded by
+ * https://issues.apache.org/jira/browse/LUCENE-2369 which uses aproximately
+ * the same amount of time for start up and has much lower memory requirements.  
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -118,22 +127,23 @@ public class MultipassSortComparator extends ReusableSortComparator {
         this.sortBufferSize = sortBufferSize;
     }
 
+
     @Override
-    protected void indexChanged() {
+    public void indexChanged(IndexReader reader) {
         log.debug("Index changed. Clearing sort order caches");
         orders.clear();
     }
 
     // inherit javadocs
     @Override
-    public ScoreDocComparator newComparator(
-            final IndexReader reader, final String fieldname)
+    public FieldComparator newComparator(
+            //final IndexReader reader, final String fieldname)
+            String fieldname, int numHits, int sortPos, boolean reversed)
             throws IOException {
 
-        final BitsArray order = getOrderFast(reader, fieldname);
-//        System.out.println("Multi: " + Logs.expand(order, 20));
-        return new ScoreDocComparator() {
-            public int compare (ScoreDoc i, ScoreDoc j) {
+        //final BitsArray order = getOrderFast(null /*reader*/, fieldname);
+        return new FieldComparator() {
+            /*public int compare (ScoreDoc i, ScoreDoc j) {
                 try {
                     return order.getAtomic(i.doc) - order.getAtomic(j.doc);
                 } catch (ArrayIndexOutOfBoundsException e) {
@@ -153,6 +163,37 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
             public int sortType(){
                 return SortField.CUSTOM;
+            } */
+            // TODO implement
+            @Override
+            public int compare(int i, int i1) {
+                return i - i1;
+            }
+
+            @Override
+            public void setBottom(int i) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public int compareBottom(int i) throws IOException {
+                return 0;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void copy(int i, int i1) throws IOException {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void setNextReader(IndexReader indexReader, int i)
+                    throws IOException {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public Comparable value(int i) {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
         };
     }

@@ -15,14 +15,12 @@
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -66,7 +64,7 @@ import java.util.Locale;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class ReusableSortComparator extends SortComparator {
+public abstract class ReusableSortComparator extends FieldComparatorSource {
     private static Log log = LogFactory.getLog(ReusableSortComparator.class);
 
     protected String language = "NotDefined";
@@ -159,32 +157,33 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     // inherit javadocs
     @Override
-    public abstract ScoreDocComparator newComparator(
-            IndexReader reader, String fieldname)
+    public abstract FieldComparator newComparator(
+            String fieldname, int numHits, int sortPos, boolean reversed)
             throws IOException;
 
     /**
      * Checks is the reader has changed and thus if cached structures should be
      * discarded. This should be called whenever a ScoreDocComparator is
      * requested.
-     * @param reader Te reader that the sorter should work on.
+     * @param reader The reader that the sorter should work on.
      */
     protected synchronized void checkCacheConsistency(IndexReader reader) {
         String newIndexVersion = indexVersion + "_" + reader.maxDoc();
         if (newIndexVersion.equals(indexVersion)) {
             return;
         }
-        indexChanged();
+        indexChanged(reader);
         this.indexVersion = newIndexVersion;
     }
 
     /**
      * Called when the index has changed and cached structures should be
      * discarded.
+     * @param reader the new Reader to use as basis for sorting.
      */
-    protected abstract void indexChanged();
+    public abstract void indexChanged(IndexReader reader);
 
-    @Override
+    /*@Override
     protected Comparable getComparable(String termtext) {
         throw new UnsupportedOperationException(
                 "Not implemented as it should not be called");
@@ -192,6 +191,6 @@ public abstract class ReusableSortComparator extends SortComparator {
 
     public String getLanguage() {
         return language;
-    }
+    } */
 }
 

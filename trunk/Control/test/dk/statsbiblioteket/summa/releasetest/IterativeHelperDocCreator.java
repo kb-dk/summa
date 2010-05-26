@@ -54,17 +54,17 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
             throw new IllegalArgumentException("No id defined for Payload");
         }
         luceneDoc.add(new Field(IndexUtils.RECORD_FIELD, id, 
-                                Field.Store.YES, Field.Index.UN_TOKENIZED));
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
         luceneDoc.add(new Field("title", "Title_" + id,
-                                Field.Store.YES, Field.Index.UN_TOKENIZED));
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
         luceneDoc.add(new Field("onlystore", "Stored_" + id,
                                 Field.Store.YES, Field.Index.NO));
         luceneDoc.add(new Field("onlyindex", "Indexed_" + id,
-                                Field.Store.NO, Field.Index.UN_TOKENIZED));
+                                Field.Store.NO, Field.Index.NOT_ANALYZED));
         luceneDoc.add(new Field("someField", "SomeField_" + id,
-                                Field.Store.YES, Field.Index.UN_TOKENIZED));
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
         luceneDoc.add(new Field("duplicate", "Static",
-                                Field.Store.YES, Field.Index.UN_TOKENIZED));
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         processedIDs.add(id);
         return true;

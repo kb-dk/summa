@@ -54,6 +54,7 @@ import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
+import org.apache.lucene.store.*;
 
 /**
  * Index-building unit-test with focus on iterative building, including
@@ -377,7 +378,7 @@ public class IterativeTest extends NoExitTestCase {
         IndexReader ir = getIndexReader();
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
             if (!ir.isDeleted(i)) {
-                ids.collect(i, 1.0f);
+                ids.collect(i);
             }
         }
         ir.close();
@@ -452,7 +453,7 @@ public class IterativeTest extends NoExitTestCase {
 
     private IndexReader getIndexReader() throws IOException {
         File indexLocation = getIndexLocation();
-        return IndexReader.open(new File(indexLocation, "lucene"));
+        return IndexReader.open(new NIOFSDirectory(new File(indexLocation, "lucene")));
     }
 
     private File getIndexLocation() {
@@ -465,8 +466,7 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex(conf);
     }
 
-    private void updateIndexConsolidate() throws IOException,
-                                                 InterruptedException {
+    private void updateIndexConsolidate() throws Exception {
         Configuration conf = getIndexConfiguration();
         // Ensure that consolidate is called
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).

@@ -66,8 +66,8 @@ public final class IndexAlias implements Comparable {
         for (int i = 0 ; i < children.getLength(); i++) {
             Node child = children.item(i);
             //noinspection DuplicateStringLiteralInspection
-            if (child.getLocalName() != null
-                && child.getLocalName().equals("alias")) {
+            if (child.getNodeName() != null
+                && child.getNodeName().equals("alias")) {
                 Node nameNode = child.getAttributes().getNamedItem("name");
                 if (nameNode == null || nameNode.getNodeValue().equals("")) {
                     log.trace("Undefined name in alias. Skipping");

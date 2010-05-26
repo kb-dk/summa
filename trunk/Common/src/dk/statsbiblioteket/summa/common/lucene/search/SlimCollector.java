@@ -18,8 +18,12 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Scorer;
+
+import java.io.IOException;
 
 /**
  * A Lucene HitCollector, that only collects document IDs. This collector
@@ -34,7 +38,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te")
-public class SlimCollector extends HitCollector {
+public class SlimCollector extends Collector {
     private static final double growthFactor = 2;
     private int[] content;
     private int pos = 0;
@@ -43,6 +47,7 @@ public class SlimCollector extends HitCollector {
     public SlimCollector() {
         content = new int[DEFAULT_INITIAL_CAPACITY];
     }
+
     public SlimCollector(int initialCapacity) {
         content = new int[initialCapacity];
     }
@@ -96,6 +101,29 @@ public class SlimCollector extends HitCollector {
     public void clean() {
         pos = 0;
     }
+
+    // TODO implement these functions for Lucene 3.0.1 upgrade.
+    @Override
+    public void setScorer(Scorer scorer) throws IOException {
+        //Ignore score
+    }
+
+    @Override
+    public void collect(int i) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setNextReader(IndexReader indexReader, int i)
+            throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;
+    }
+
 }
 
 

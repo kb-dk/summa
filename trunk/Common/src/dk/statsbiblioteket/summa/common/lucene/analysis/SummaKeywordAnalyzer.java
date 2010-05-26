@@ -24,13 +24,13 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Reader;
 import java.io.IOException;
-import java.io.StringReader;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
- * This KeywordAnalyzer strips off the _ character, that the Queryparser
+ * This KeywordAnalyzer strips off the _ character, that the QueryParser
  * substitutes with " " before wrapping a KeyWordAnalyzer.
  *
  * @see org.apache.lucene.analysis.KeywordAnalyzer
@@ -68,29 +68,32 @@ public class SummaKeywordAnalyzer extends Analyzer {
     /**
      * Gets the tokenStream for the field named by fieldName.
      *
-     * @param fieldName
-     * @param reader
+     * @param fieldName The field name that defines the token stream returned.
+     * @param reader  The reader.
      * @return a KeywordAnalyzer tokenStream
      */
     @Override
-    public TokenStream tokenStream(String fieldName, Reader reader){
+    public TokenStream tokenStream(String fieldName, Reader reader) {
         StringBuffer buf = new StringBuffer();
         TokenStream ts =
-                new SummaStandardAnalyzer().tokenStream(fieldName, reader);
+                     new SummaStandardAnalyzer().tokenStream(fieldName, reader);
 
-        Token t = new Token();
+        TermAttribute term = ts.getAttribute(TermAttribute.class);
         try {
-            while ((t = ts.next(t)) != null){
-                buf.append(t.termBuffer(), 0, t.termLength())
+            ts.reset();
+
+            while(ts.incrementToken()) {
+                buf.append(term.termBuffer(), 0, term.termLength())
                     .append(' ');
             }
-
+            ts.end();
+            ts.close();
             // We have an extra whitespace at the end. Strip it
             buf.setLength(buf.length() == 0 ? 0 : buf.length() - 1);
         } catch (IOException e) {
-            log.error("",e);
+            log.error("IOException when reading from TokenStream in "
+                      + "SummaKeyWordAnalyzer" ,e);
         }
-//        System.out.println(">>> " + buf.toString());
         return new KeywordAnalyzer().tokenStream(fieldName,
                                                  new CharSequenceReader(buf));
     }
@@ -110,25 +113,27 @@ public class SummaKeywordAnalyzer extends Analyzer {
             ctx.buf.setLength(0); // Reset the StringBuffer
         }
 
-        TokenStream ts = ctx.summaStandardAnalyzer.reusableTokenStream(fieldName,
-                                                                       reader);
+        TokenStream ts =
+               ctx.summaStandardAnalyzer.reusableTokenStream(fieldName, reader);
+        ts.reset();
 
         // FIXME: Here we are buffering the whole stream. Insane.
-        Token t = ctx.t;
+        TermAttribute term = ts.getAttribute(TermAttribute.class);
+
         try {
-            while ((t = ts.next(t)) != null){
-                ctx.buf.append(t.termBuffer(), 0, t.termLength())
+            while (ts.incrementToken()){
+                ctx.buf.append(term.termBuffer(), 0, term.termLength())
                        .append(' ');
             }
-
             // We have an extra whitespace at the end. Strip it
+            ts.end();
+            ts.close();
             ctx.buf.setLength(ctx.buf.length() == 0 ? 0 : ctx.buf.length() - 1);
         } catch (IOException e) {
             log.error("Error reading next token from TokenStream: "
                       + e.getMessage(), e);
         }
 
-//        System.out.println("**** " + ctx.buf.toString());
         return ctx.keywordAnalyzer.reusableTokenStream(fieldName,
                                                        ctx.seq.reset(ctx.buf));
     }

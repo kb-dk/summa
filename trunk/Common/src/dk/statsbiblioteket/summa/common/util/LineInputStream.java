@@ -60,7 +60,7 @@ public class LineInputStream extends InputStream {
      */
     public LineInputStream(InputStream source) {
         this.source = source;
-        log.debug(
+        log.trace(
                 "Constructed LineInputStream with default charset " + charset);
     }
 

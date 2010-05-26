@@ -17,10 +17,11 @@ package dk.statsbiblioteket.summa.search.document;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.*;
 import org.apache.lucene.util.OpenBitSet;
 
-import java.io.StringWriter;
+import java.io.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -32,7 +33,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DocIDCollector extends HitCollector {
+public class DocIDCollector extends Collector {
     private static Log log = LogFactory.getLog(DocIDCollector.class);
 
     private ArrayBlockingQueue<DocIDCollector> queue = null;
@@ -68,9 +69,25 @@ public class DocIDCollector extends HitCollector {
     }
 
     @Override
-    public void collect(int doc, float score) {
+    public void setScorer(Scorer scorer) throws IOException {
+        // ignored
+    }
+
+    @Override
+    public void collect(int doc) {
         bits.set(doc);
         docCount++;
+    }
+
+    @Override
+    public void setNextReader(IndexReader indexReader, int i)
+            throws IOException {
+        // ignored
+    }
+
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;
     }
 
     /**
