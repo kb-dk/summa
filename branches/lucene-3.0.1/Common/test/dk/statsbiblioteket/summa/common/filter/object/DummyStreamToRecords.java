@@ -14,8 +14,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
-import junit.framework.*;
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,7 +27,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
 
     public static final String CONF_DATA_SIZE = "dummystreamtorecords.datasize";
 
-    private StreamFilter source;
+    private ObjectFilter source;
     private int dataSize = 100;
     private Record record;
     private static AtomicInteger idCounter = new AtomicInteger();
@@ -58,10 +57,10 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
     }
 
     public void setSource(Filter source) {
-        if (source instanceof StreamFilter) {
-            this.source = (StreamFilter)source;
+        if (source instanceof ObjectFilter) {
+            this.source = (ObjectFilter)source;
         } else {
-            throw new UnsupportedOperationException("Only StreamFilter is legal"
+            throw new UnsupportedOperationException("Only ObjectFilter is legal"
                                                     + " as source");
         }
     }
@@ -102,10 +101,15 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         if (record != null) {
             return;
         }
+
         ByteArrayOutputStream content = new ByteArrayOutputStream(dataSize);
         int value;
-        while ((value = source.read()) != Payload.EOF) {
-            content.write(value);
+        if (source.hasNext()) {
+            record = source.next().getRecord();
+        } else {
+            record = null;
+        }
+        /*    content.write(value);
             if (content.size() == dataSize) break;
         }
         if (content.size() > 0) {
@@ -113,7 +117,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
                                 "Dummy", content.toByteArray());
         } else {
             record = null;
-        }
+        } */
     }
 
     public void close(boolean success) {

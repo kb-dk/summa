@@ -15,12 +15,13 @@
 package dk.statsbiblioteket.summa.common.filter.stream;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Random;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.BitUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,18 +29,18 @@ import org.apache.commons.logging.LogFactory;
 /**
  * A simple reader that produces dummy output. Used for testing.
  */
-public class DummyReader extends StreamFilter {
+public class DummyReader implements ObjectFilter {
     private static Log log = LogFactory.getLog(DummyReader.class);
 
     public static final String CONF_BODY_COUNT = "dummyreader.bodycount";
     public static final String CONF_BODY_SIZE  = "dummyreader.bodysize";
 
-    private int bodyCount = 2;
+    private int bodyCount = 3;
     private int bodySize = 2000;
 
     private int bodysLeft;
     private Random random = new Random();
-    private ArrayList<Integer> content;
+    private byte[] content;
 
     /**
      * Constructs a DummyReader with the properties<br />
@@ -50,11 +51,11 @@ public class DummyReader extends StreamFilter {
     public DummyReader(Configuration configuration) {
         bodyCount = configuration.getInt(CONF_BODY_COUNT, bodyCount);
         bodySize =  configuration.getInt(CONF_BODY_SIZE,  bodySize);
-        bodysLeft = bodyCount-1;
+        bodysLeft = bodyCount;
         content = createContent();
 
         log.info("Constructed DummyReader with bodyCount " + bodyCount
-                 + " and bodySize " + bodySize);
+                 + " and bodySize " + bodySize + ", content '" + content + "'");
     }
 
     public void setSource(Filter source) {
@@ -62,47 +63,53 @@ public class DummyReader extends StreamFilter {
     }
 
     public boolean pump() throws IOException {
-        return read() != Payload.EOF;
+        return hasNext();
     }
 
     public void close(boolean success) {
         log.info("Closing Dummyreader with success " + success);
     }
 
-    private ArrayList<Integer> createContent() {
-        ArrayList<Integer> content = new ArrayList<Integer>(bodySize + 8);
-        byte[] theLong = BitUtil.longToBytes(bodySize);
-        for (byte l: theLong) {
-            content.add(0xff & l);
+    private byte[] createContent() {
+        byte[] size = BitUtil.longToBytes(bodySize);
+        byte[] theLong = new byte[bodySize + 8];
+        for(int i=0; i < 8; i++) {
+            theLong[i] = size[i];
         }
-        while (content.size() < bodySize + 8) {
-            content.add(random.nextInt(256));
+        for(int i=8; i < bodySize+8; i++) {
+            theLong[i] = (byte)random.nextInt(256);
         }
-        return content;
+        return theLong;
     }
 
     /**
-     * @return a random byte.
-     * @throws IOException if a read is performed when there are no bytes left.
-     */
-    public int read() throws IOException {
+     * @return a payload with a random content.
+      */
+    @Override
+    public Payload next() {
         if (content == null) {
-            return Payload.EOF;
+            return null;
         }
-        if (content.size() > 0) {
-            // Inside a body
-            return content.remove(0);
+        Payload p = new Payload(new Record("Dummy", "DummyBase", content));
+        bodysLeft --;
+        if(bodysLeft == 0) {
+            content = null;
         }
-        if (bodysLeft > 0) {
-            // Change to next body
-            bodysLeft--;
-            content = createContent();
-            return content.remove(0);
-        }
-        // No more bodies or bytes
-        //noinspection AssignmentToNull
-        content = null;
-        return Payload.EOF;
+        return p;
+    }
+
+    /**
+     *
+     * @return  true if more content.
+     */
+    @Override
+    public boolean hasNext() {
+        return (content != null);
+    }
+
+    @Override
+    public void remove() {
+        
     }
 }
 

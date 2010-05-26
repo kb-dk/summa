@@ -238,6 +238,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         File manConfLocation = File.createTempFile("configuration", ".xml");
         manConfLocation.deleteOnExit();
         Files.saveString(String.format(
+
                 DocumentCreatorTest.CREATOR_SETUP, descLocation),
                          manConfLocation);
         Configuration conf = new Configuration(new XStorage(manConfLocation));

@@ -101,8 +101,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             "summa.support.lucene.clauses.max";
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
 
-    private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
-
     /**
      * A sub-configuration for the MoreLikeThis functionality. All tweaks to
      * MoreLikeThis must go into this sub configuration.
@@ -307,8 +305,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         super(conf);
         log.info("Constructing LuceneSearchNode");
         this.conf = conf;
-        maxBooleanClauses =
-                conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
+        int maxBooleanClauses =
+                conf.getInt(CONF_MAX_BOOLEAN_CLAUSES,
+                            DEFAULT_MAX_BOOLEAN_CLAUSES);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
         BooleanQuery.setMaxClauseCount(maxBooleanClauses);
         // TODO: Add override-switch to state where to get the descriptor
@@ -735,7 +734,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
             FieldSelector selector = new SetBasedFieldSelector(
                     new HashSet<String>(Arrays.asList(fields)),
-                    new HashSet(5));
+                    new HashSet<String>(5));
 
 
             if (request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)

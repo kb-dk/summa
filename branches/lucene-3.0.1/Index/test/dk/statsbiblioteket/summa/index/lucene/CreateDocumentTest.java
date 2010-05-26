@@ -27,7 +27,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
+import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.XMLTransformerTest;
 import dk.statsbiblioteket.util.Streams;
@@ -67,8 +67,8 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         XMLTransformer transformer = new XMLTransformer(conf);
         transformer.setSource(this);
 
-        DocumentCreator creator =
-                new DocumentCreator(Configuration.newMemoryBased());
+        StreamingDocumentCreator creator =
+                new StreamingDocumentCreator(Configuration.newMemoryBased());
         creator.setSource(transformer);
 
         assertTrue("The chain must have an element", creator.hasNext());

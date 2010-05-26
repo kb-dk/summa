@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;

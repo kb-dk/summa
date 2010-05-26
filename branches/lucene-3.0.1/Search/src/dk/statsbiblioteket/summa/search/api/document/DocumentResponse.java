@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.search.api.document;
 
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -162,7 +162,7 @@ public class DocumentResponse implements Response, DocumentKeys {
             }
             sw.append("    <field name=\"").append(name).append("\">");
             if (escapeContent) {
-                sw.append(ParseUtil.encode(content)).append("</field>\n");
+                sw.append(XMLUtil.encode(content)).append("</field>\n");
             } else {
                 sw.append(content).append("</field>\n");
             }
@@ -175,7 +175,7 @@ public class DocumentResponse implements Response, DocumentKeys {
             return;
         }
         sw.append(" ").append(name).append("=\"");
-        sw.append(ParseUtil.encode(value)).append("\"");
+        sw.append(XMLUtil.encode(value)).append("\"");
     }
 
     /**
@@ -306,7 +306,7 @@ public class DocumentResponse implements Response, DocumentKeys {
         if (resultFields != null) {
             sw.append(" fields=\"");
             for (int i = 0 ; i < resultFields.length ; i++) {
-                sw.append(ParseUtil.encode(resultFields[i]));
+                sw.append(XMLUtil.encode(resultFields[i]));
                 if (i < resultFields.length-1) {
                     sw.append(", ");
                 }
