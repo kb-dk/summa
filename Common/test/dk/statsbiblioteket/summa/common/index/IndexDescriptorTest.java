@@ -62,10 +62,12 @@ public class IndexDescriptorTest extends TestCase {
             + "    </groups>\n"
             + "    <fields>\n"
             + "        <field name=\"text\" indexed=\"true\" stored=\"true\"/>\n"
-            + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" indexBoost=\"2.0\" queryBoost=\"1.5\" sortLocale=\"da\" inFreeText=\"true\" required=\"true\">\n"
+            + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" indexBoost=\"2.0\" "
+            + "               queryBoost=\"1.5\" sortLocale=\"da\" required=\"true\" inFreeText=\"true\" >\n"
             + "            <alias name=\"forfatter\" lang=\"da\"/>\n"
             + "        </field>\n"
-            + "        <field name=\"author_inv\" parent=\"text\" indexed=\"false\" stored=\"false\" multiValued=\"false\" indexBoost=\"2.5\" sortLocale=\"de\" sortCache=\"active\" inFreeText=\"false\" required=\"false\"/>\n"
+            + "        <field name=\"author_inv\" parent=\"text\" indexed=\"false\" stored=\"false\" multiValued=\"false\" "
+            + "               indexBoost=\"2.5\" sortLocale=\"de\" sortCache=\"active\" inFreeText=\"false\" required=\"false\" />\n"
             + "        <field name=\"author_inherit\" parent=\"author\"/>\n"
             + "        <field name=\"title\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"titel\" indexed=\"false\" stored=\"true\"/>\n"
@@ -74,9 +76,9 @@ public class IndexDescriptorTest extends TestCase {
             + "    <defaultLanguage>no</defaultLanguage>\n"
             + "    <uniqueKey>superid</uniqueKey>\n"
             + "    <defaultSearchFields>"
-            + "<field ref=\"superid\"/>"
-            + "<field ref=\"nostore\"/>"
-            + "</defaultSearchFields>\n"
+            + "        <field ref=\"superid\"/>"
+            + "        <field ref=\"nostore\"/>"
+            + "    </defaultSearchFields>\n"
             + "    <QueryParser defaultOperator=\"AND\"/>\n"
             + "</IndexDescriptor>";
 
@@ -142,10 +144,10 @@ public class IndexDescriptorTest extends TestCase {
         // It's okay to have more fields than expected (default fields)
         assertTrue("All expected Fields should be present",
                    gotFields.containsAll(expectedFields));
+        String intro = "The field author should have the correct ";
 
         IndexField<Object, Object, Object> a = id.getField("author");
         assertNotNull("The field author should have a parent", a.getParent());
-        String intro = "The field author should have the correct ";
         assertEquals(intro + "parent", "text", a.getParent().getName());
         assertEquals(intro + "indexed", true, a.isDoIndex());
         assertEquals(intro + "stored", true, a.isDoStore());

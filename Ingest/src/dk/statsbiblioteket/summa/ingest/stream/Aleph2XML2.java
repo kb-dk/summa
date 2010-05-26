@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -183,8 +183,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
     public static final String DEFAULT_CHARSET = "utf-8";
 
 
-    public static final String CONF_DIVIDER = "summa.aleph2xml.divider";
-    public static final String DEFAULT_DIVIDER = "$$";
+    //public static final String CONF_DIVIDER = "summa.aleph2xml.divider";
+    //public static final String DEFAULT_DIVIDER = "$$";
 
     private String idDelimiter = DEFAULT_ID_DELIMITER;
     private String inputCharset = DEFAULT_CHARSET;
@@ -206,7 +206,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
      */
     private String prepareString(String content) {
         content = content.trim();
-        content = ParseUtil.encode(content);
+        content = XMLUtil.encode(content);
         // some records has this illegal char in the record - remove it
         return content.replaceAll("\\p{Cntrl}","");
     }
@@ -238,7 +238,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">"
                 + "\n<record>";*/
         private static final String HEADER =
-                ParseUtil.XML_HEADER
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n";
         private static final String FOOTER = "</collection>\n";
 

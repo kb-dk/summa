@@ -163,15 +163,15 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         NamedNodeMap attributes = node.getAttributes();
         for (int i = 0 ; i < attributes.getLength() ; i++) {
             Node attribute = attributes.item(i);
-            if (attribute.getLocalName().equals("ref")) {
+            if (attribute.getNodeName().equals("ref")) {
                 ref = attribute.getNodeValue();
-            } else if (attribute.getLocalName().equals("name")) {
+            } else if (attribute.getNodeName().equals("name")) {
                 name = attribute.getNodeValue();
-            } else if (attribute.getLocalName().equals("maxTags")) {
+            } else if (attribute.getNodeName().equals("maxTags")) {
                 maxTags = Integer.parseInt(attribute.getNodeValue());
-            } else if (attribute.getLocalName().equals("defaultTags")) {
+            } else if (attribute.getNodeName().equals("defaultTags")) {
                 defaultTags = Integer.parseInt(attribute.getNodeValue());
-            } else if (attribute.getLocalName().equals("sort")) {
+            } else if (attribute.getNodeName().equals("sort")) {
                 sort = attribute.getNodeValue();
                 if (!sort.equals(FacetStructure.SORT_ALPHA)
                     && !sort.equals(FacetStructure.SORT_POPULARITY)) {
@@ -183,12 +183,12 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                             FacetStructure.SORT_POPULARITY));
                 }
             } else //noinspection DuplicateStringLiteralInspection
-                if (attribute.getLocalName().equals("sortLocale")) {
+                if (attribute.getNodeName().equals("sortLocale")) {
                 sortLocale = attribute.getNodeValue();
             } else {
                     log.info(String.format(
                             "Unknown attribute '%s' in facet definition '%s'",
-                            attribute.getLocalName(), name));
+                            attribute.getNodeName(), name));
                 }
         }
         if (ref == null || "".equals(ref)) {

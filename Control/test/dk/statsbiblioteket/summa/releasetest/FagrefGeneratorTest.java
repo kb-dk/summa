@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Files;
@@ -181,10 +182,10 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     private void extendFacets(Configuration facetConf, String name,
                               List<String> fields) throws Exception {
         List<Configuration> facets =
-                facetConf.getSubConfigurations(Structure.CONF_FACETS);
+                facetConf.getSubConfigurations(IndexDescriptor.CONF_DESCRIPTOR);
         List<Configuration> newFacets =
                 facetConf.createSubConfigurations(
-                        Structure.CONF_FACETS, facets.size() + 1);
+                        IndexDescriptor.CONF_DESCRIPTOR, facets.size() + 1);
         for (int i = 0 ; i < facets.size() ; i++) {
             newFacets.get(i).set(
                     FacetStructure.CONF_FACET_NAME,

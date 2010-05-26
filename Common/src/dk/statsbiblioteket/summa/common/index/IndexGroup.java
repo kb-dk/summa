@@ -16,8 +16,6 @@ package dk.statsbiblioteket.summa.common.index;
 
 import java.util.Set;
 import java.util.HashSet;
-import java.util.TreeSet;
-import java.util.Arrays;
 import java.io.StringWriter;
 import java.text.ParseException;
 
@@ -196,9 +194,10 @@ public class IndexGroup<F extends IndexField> {
         NodeList children =  node.getChildNodes();
         for (int i = 0 ; i < children.getLength(); i++) {
             Node child = children.item(i);
+            log.debug("Found child '" + child.getNodeName() + "', in group");
             //noinspection DuplicateStringLiteralInspection
-            if (child.getLocalName() != null
-                && child.getLocalName().equals("field")) {
+            if (child.getNodeName() != null
+                && child.getNodeName().equals("field")) {
                 Node fieldNameNode = child.getAttributes().getNamedItem("ref");
                 if (fieldNameNode == null
                     || fieldNameNode.getNodeValue().equals("")) {

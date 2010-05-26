@@ -14,10 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -193,7 +194,7 @@ public class IndexField<A, T, F> {
      * </p><p>
      * This is used at index-time.
      */
-    private boolean required = false;
+    private boolean required = true;
 
     /**
      * Aliases for this index-field. If alias-expansion is used at query-time,
@@ -388,14 +389,17 @@ public class IndexField<A, T, F> {
                                                                 ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
-        String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
+        //String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
+        String nameVal = DOM.selectString(node, "@name", null);
+
         if (nameVal == null) {
             throw new ParseException("No name defined for field", -1);
         }
 
         if (!nameVal.equals(SUMMA_DEFAULT)) {
-            String parentName = ParseUtil.getValue(xPath, node, "@parent",
-                                                   (String)null);
+            //String parentName = ParseUtil.getValue(xPath, node, "@parent",
+            //                                       (String)null);
+            String parentName = DOM.selectString(node, "@parent", null);
             if (parentName == null) {
                 parentName = SUMMA_DEFAULT;
                 if (fieldProvider.getField(SUMMA_DEFAULT) == null) {
@@ -425,34 +429,48 @@ public class IndexField<A, T, F> {
         }
         name = nameVal;
         aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
-        doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
-                                         doIndex);
-        doStore =     ParseUtil.getValue(xPath, node, "@stored",
-                                         doStore);
-        multiValued = ParseUtil.getValue(xPath, node, "@multiValued",
-                                         multiValued);
-        queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost",
-                                         queryBoost);
-        indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
-                                         indexBoost);
-        analyze =    ParseUtil.getValue(xPath, node, "@analyzed",
-                                        analyze);
-        doCompress =  ParseUtil.getValue(xPath, node, "@compressed",
-                                         doCompress); 
-        sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
-                                         sortLocale);
-        sortCache =  SORT_CACHE.parse(ParseUtil.getValue(
-                xPath, node, "@sortCache", sortCache.toString()));
-        inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
-                                         inFreetext);
-        required =    ParseUtil.getValue(xPath, node, "@required",
-                                         required);
+        //doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
+        //                                 doIndex);
+        doIndex = DOM.selectBoolean(node, "@indexed", doIndex);
+        //doStore =     ParseUtil.getValue(xPath, node, "@stored",
+        //                                 doStore);
+        doStore = DOM.selectBoolean(node, "@stored", doStore);
+        //multiValued = ParseUtil.getValue(xPath, node, "@multiValued",
+        //                                 multiValued);
+        multiValued = DOM.selectBoolean(node, "@multiValued", multiValued);
+        //queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost",
+        //                                 queryBoost);
+        queryBoost = DOM.selectDouble(node, " @queryBoost",
+                              new Float(queryBoost).doubleValue()).floatValue();
+        //indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
+        //                                 indexBoost);
+        indexBoost = DOM.selectDouble(node, "@indexBoost",
+                              new Float(indexBoost).doubleValue()).floatValue();
+        //analyze =    ParseUtil.getValue(xPath, node, "@analyzed",
+        //                                analyze);
+        analyze = DOM.selectBoolean(node, "@analyzed", analyze);
+        //doCompress =  ParseUtil.getValue(xPath, node, "@compressed",
+        //                                 doCompress);
+        doCompress = DOM.selectBoolean(node, "@compressed", doCompress);
+        //sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
+        //                                 sortLocale);
+        sortLocale = DOM.selectString(node, "@sortLocale", sortLocale);
+        //sortCache =  SORT_CACHE.parse(ParseUtil.getValue(
+        //        xPath, node, "@sortCache", sortCache.toString()));
+        sortCache = SORT_CACHE.parse(DOM.selectString(node, "@sortCache",
+                                                         sortCache.toString()));
+        //inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
+        //                                 inFreetext);
+        inFreetext = DOM.selectBoolean(node, "@inFreeText", inFreetext);
+        //required =    ParseUtil.getValue(xPath, node, "@required",
+        //                                 required);
+        required = DOM.selectBoolean(node, "@required", required);
 
         NodeList children = node.getChildNodes();
         for (int i = 0 ; i < children.getLength() ; i++) {
             Node child = children.item(i);
-            if (child.getLocalName() != null
-                && child.getLocalName().equals("analyzer")) {
+            if (child.getNodeName() != null
+                && child.getNodeName().equals("analyzer")) {
                 parseAnalyzer(child);
             }
         }
@@ -460,8 +478,9 @@ public class IndexField<A, T, F> {
     }
 
     private void parseAnalyzer(Node node) throws ParseException {
-        String typeAttr = ParseUtil.getValue(xPath, node, "@type",
-                                             (String)null);
+        //String typeAttr = ParseUtil.getValue(xPath, node, "@type",
+        //                                     (String)null);
+        String typeAttr = DOM.selectString(node, "@type", null);
         boolean parseIndex = false;
         boolean parseQuery = false;
         //noinspection DuplicateStringLiteralInspection

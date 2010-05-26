@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
