@@ -18,31 +18,33 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.StringWriter;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ExtendedFieldCache;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.LucenePackage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.search.FieldCache;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.SimpleFSLockFactory;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -119,7 +121,7 @@ public class Inspect {
     private void cache(String field) throws IOException {
         System.out.println("Populating cache for field '" + field + "'");
         Profiler profiler = new Profiler();
-        String[] result = ExtendedFieldCache.EXT_DEFAULT.getStrings(ir, field);
+        String[] result = FieldCache.DEFAULT.getStrings(ir, field);
         
         String time = profiler.getSpendTime();
         long size = 0;
@@ -191,14 +193,16 @@ public class Inspect {
 
     private void hits() throws IOException {
         IndexSearcher is = new IndexSearcher(ir);
-        Hits hits = is.search(new MatchAllDocsQuery());
+        TopScoreDocCollector topDocs =
+                        TopScoreDocCollector.create(Integer.MAX_VALUE, false);
+        is.search(new MatchAllDocsQuery(), null, topDocs);
         System.gc();
-        int feedback = hits.length() / 100;
-        System.out.println("Iterating through " + hits.length() + " hits, "
+        int feedback = topDocs.getTotalHits() / 100;
+        System.out.println("Iterating through " + topDocs.getTotalHits() + " hits, "
                            + "requesting hits.doc for each one");
         Profiler pf = new Profiler();
-        pf.setExpectedTotal(hits.length());
-        for (int i = 0 ; i < hits.length() ; i++) {
+        pf.setExpectedTotal(topDocs.getTotalHits());
+        for (int i = 0 ; i < topDocs.getTotalHits() ; i++) {
             //Document doc = hits.doc(i);
 //            Document doc = ir.document(hits.id(i));
 /*            for (String field: fieldnames) {
@@ -207,19 +211,22 @@ public class Inspect {
             if (i % feedback == 0) {
                 System.gc();
                 System.out.println("Memory usage at "
-                                   + i + "/" + hits.length() + ": " + getMem());
+                                   + i + "/" + topDocs.getTotalHits() + ": "
+                                   + getMem());
             }
             pf.beat();
         }
-        System.out.println("Finished " + hits.length() + " hits in "
+        System.out.println("Finished " + topDocs.getTotalHits() + " hits in "
                            + pf.getSpendTime());
     }                                                                                                
 
     private void topdocs() throws IOException {
         IndexSearcher is = new IndexSearcher(ir);
-        Hits h = is.search(new MatchAllDocsQuery());
+        TopScoreDocCollector topDocsCol =
+                        TopScoreDocCollector.create(Integer.MAX_VALUE, false);
+        is.search(new MatchAllDocsQuery(), null, topDocsCol);
         TopDocs topDocs = is.search(new MatchAllDocsQuery(), null,
-                                    h.length());
+                                    topDocsCol.getTotalHits());
         System.gc();
         int feedback = topDocs.totalHits / 100;
         System.out.println("Iterating through " + topDocs.totalHits + " hits, "
@@ -357,7 +364,8 @@ public class Inspect {
 
     public void openIndex(String indexLocation) throws IOException {
         System.out.println("Opening index at " + indexLocation);
-        ir = new IndexSearcher(indexLocation).getIndexReader();
+        ir = IndexReader.open(new NIOFSDirectory(new File(indexLocation),
+                                                 new SimpleFSLockFactory()));
         Collection fields =
                 ir.getFieldNames(IndexReader.FieldOption.ALL);
         fieldnames = new ArrayList<String>(fields.size());

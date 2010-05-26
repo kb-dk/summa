@@ -107,7 +107,8 @@ public class LuceneIndexField extends
     public Field.Store getStore() {
         if (isDoStore()) {
             if (isDoCompress()) {
-                return Field.Store.COMPRESS;
+                // TODO fix issue with compression
+                return Field.Store.NO; //Field.Store.COMPRESS;
             } else {
                 return Field.Store.YES;
             }
@@ -123,9 +124,9 @@ public class LuceneIndexField extends
     public Field.Index getIndex() {
         if (isDoIndex()) {
             if (isAnalyze()) {
-                return Field.Index.TOKENIZED;
+                return Field.Index.ANALYZED;
             } else {
-                return Field.Index.UN_TOKENIZED;
+                return Field.Index.NOT_ANALYZED;
             }
         } else {
             return Field.Index.NO;

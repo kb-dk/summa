@@ -14,11 +14,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +36,7 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.*;
 
 /**
  * @deprecated until updated to the new IndexDescriptor.
@@ -468,7 +465,8 @@ public class IndexStatisticsTest extends TestCase {
         int limit = Integer.MAX_VALUE;
         int maxIDs = 5;
         int linelength = 50;
-        IndexReader ir = new IndexSearcher(indexLocation).getIndexReader();
+        IndexReader ir = 
+                  IndexReader.open(new NIOFSDirectory(new File(indexLocation)));
         Map<Character, Pair<Integer, String>> chars =
                 new HashMap<Character, Pair<Integer, String>>(10000);
         int fieldcount = 1;

@@ -18,21 +18,19 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * DistributedIndexStatCreator Tester.
+ * @deprecated {@link dk.statsbiblioteket.summa.common.lucene.index.DistributedIndexStatCreator}
+ * is deprecated
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DistributedIndexStatCreatorTest extends TestCase {
 
-    DistributedIndexStatCreator indexC;
+    //DistributedIndexStatCreator indexC;
     String indexpart;
 
 
@@ -43,21 +41,22 @@ public class DistributedIndexStatCreatorTest extends TestCase {
 
     public void setUp() throws Exception {
         super.setUp();
-        indexC = new DistributedIndexStatCreator();
+        //indexC = new DistributedIndexStatCreator();
         indexpart = "/home/halu/summa_dist";
     }
 
     public void tearDown() throws Exception {
         super.tearDown();
-        indexC = null;
+        //indexC = null;
     }
 
     public static Test suite() {
-        return new TestSuite(DistributedIndexStatCreatorTest.class);
+        return new TestSuite();
+        //return new TestSuite(DistributedIndexStatCreatorTest.class);
     }
 
-    public void testDummy() {
-        assertTrue(true);
+    public void oldTestDummy() {
+        //assertTrue(true);
     }
 
 /*    public void testAdd() throws IOException {

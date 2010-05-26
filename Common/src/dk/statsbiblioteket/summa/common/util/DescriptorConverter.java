@@ -16,9 +16,6 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
@@ -28,10 +25,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.namespace.NamespaceContext;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -45,7 +42,7 @@ import java.util.HashSet;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DescriptorConverter {
-    private static Log log = LogFactory.getLog(DescriptorConverter.class);
+    //private static Log log = LogFactory.getLog(DescriptorConverter.class);
 
     private boolean dumpResolver = true;
     private boolean dumpAnalyzer = true;
@@ -66,7 +63,7 @@ public class DescriptorConverter {
         aliasClash.clear();
         Document doc = getDomDescription(oldDescriptor);
         StringWriter out = new StringWriter(oldDescriptor.length());
-        out.append(ParseUtil.XML_HEADER).append("\n");
+        out.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append("\n");
         out.append("<IndexDescriptor version=\"1.0\" "
                    + "xmlns=\"http://statsbiblioteket.dk/summa/2008/"
                    + "IndexDescriptor\">\n");
@@ -98,14 +95,6 @@ public class DescriptorConverter {
         return b.parse(new InputSource(new StringReader(xml)));
     }
 
-    private XPath getXPath() {
-        NamespaceContext nsCon = new DefaultNamespaceContext();
-        XPathFactory xpfac = XPathFactory.newInstance();
-        XPath xPath = xpfac.newXPath();
-        xPath.setNamespaceContext(nsCon);
-        return xPath;
-    }
-    private XPath xPath = getXPath();
     private List<Node> getNamedChildren(Node node, String childNames) {
         NodeList childNodes = node.getChildNodes();
         List<Node> children = new ArrayList<Node>(childNodes.getLength());

@@ -111,7 +111,7 @@ public class RecordUtil {
      * Record.xsd-format. This includes traversing parents and children.
      * While the XML conforms to the xsd, there is no header (aka declaration)
      * as it is expected that the XML will be further wrapped. To include a
-     * header, prepend {@link ParseUtil#XML_HEADER}.
+     * header, prepend "<?xml version=\"1.0\" encoding=\"UTF-8\"?>.".
      * </p><p>
      * The content of the Record is expected to be an UTF-8 String, which will
      * be entity-escaped. Thus there is no requirements for the content being
@@ -131,7 +131,7 @@ public class RecordUtil {
      * Record.xsd-format. This includes traversing parents and children.
      * While the XML conforms to the xsd, there is no header (aka declaration)
      * as it is expected that the XML will be further wrapped. To include a
-     * header, prepend {@link ParseUtil#XML_HEADER}.
+     * header, prepend "<?xml version=\"1.0\" encoding=\"UTF-8\"?>".
      * </p><p>
      * If escapeContent is true, the content of the Record is expected to be an
      * UTF-8 String, which will be entity-escaped. Thus there is no requirements
@@ -379,7 +379,7 @@ public class RecordUtil {
             //noinspection DuplicateStringLiteralInspection
             throw new ParseException(String.format(
                     "The first event should be start, but it was %s",
-                    ParseUtil.eventID2String(eventType)), 0);
+                    XMLUtil.eventID2String(eventType)), 0);
         }
         reader.next();
         if (!reader.hasNext()) {
@@ -440,7 +440,7 @@ public class RecordUtil {
                     // Ignore text and comments in between fields
                 } else {
                     log.debug("Expected start-elementor chars but got "
-                              + ParseUtil.eventID2String(
+                              + XMLUtil.eventID2String(
                             reader.getEventType()) + " in " + record.getId());
                 }
                 continue;
@@ -694,7 +694,7 @@ public class RecordUtil {
                 continue;
             }
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Skipping event " + ParseUtil.eventID2String(
+            log.trace("Skipping event " + XMLUtil.eventID2String(
                     reader.getEventType()) + " in getRelatives(..., "
                                            + relative + ")");
         }
@@ -726,7 +726,7 @@ public class RecordUtil {
                 continue;
             }
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Skipping event " + ParseUtil.eventID2String(
+            log.trace("Skipping event " + XMLUtil.eventID2String(
                     reader.getEventType()) + " in getMeta");
         }
         //noinspection DuplicateStringLiteralInspection

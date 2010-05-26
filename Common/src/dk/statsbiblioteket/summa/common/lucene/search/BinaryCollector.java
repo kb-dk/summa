@@ -14,17 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import java.io.StringWriter;
-import java.util.Arrays;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.*;
 
-import org.apache.lucene.search.HitCollector;
+import java.io.*;
 
 /**
  * TopCollector that uses simple binary-search with arrays instead of
  * PriorityQueue. For some cases, the binary-search is slightly faster.
  * Use this as an alternative to TopDocs-returning searches.
  */
-public class BinaryCollector extends HitCollector {
+public class BinaryCollector extends Collector {
     int maxHits;
     int[] ids;
     float[] scores;
@@ -32,8 +32,8 @@ public class BinaryCollector extends HitCollector {
     float min = -1;
 
     /**
-     * @param maxHits the maximum number of hits to return.
-     */
+        * @param maxHits the maximum number of hits to return.
+        */
     public BinaryCollector(int maxHits) {
         this.maxHits = maxHits;
         ids = new int[maxHits+1];
@@ -133,6 +133,28 @@ public class BinaryCollector extends HitCollector {
             sw.append("...");
         }
         return sw.toString();
+    }
+
+    // TODO check if these "implementains" make sense.
+    @Override
+    public void setScorer(Scorer scorer) throws IOException {
+        // ignore score
+    }
+
+    @Override
+    public void collect(int i) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setNextReader(IndexReader indexReader, int i)
+            throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;
     }
 }
 

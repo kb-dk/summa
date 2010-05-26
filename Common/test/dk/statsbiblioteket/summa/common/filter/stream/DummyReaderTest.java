@@ -21,6 +21,8 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import java.io.InputStream;
+
 /**
  * DummyReader Tester.
  *
@@ -63,15 +65,18 @@ public class DummyReaderTest extends TestCase {
                 size >>>= 8;
             }
 
-            for (int l: sizeArray) {
-                assertEquals("The length-bytes should match", l, dummy.read());
+            assertTrue("There should be a record", dummy.hasNext());
+
+            byte[] content = dummy.next().getRecord().getContent();
+
+            for (int l=0; l<8; l++) {
+                assertEquals("The length-bytes should match", sizeArray[l], content[l]);
             }
-            for (int i = 0 ; i < BODY_SIZE ; i++) {
-                assertTrue("Content must not be EOF",
-                           dummy.read() != Payload.EOF);
+            for (int i = 8 ; i < BODY_SIZE+8 ; i++) {
+                assertNotNull(content[i]);
             }
         }
-        assertEquals("Last value must be EOF", Payload.EOF, dummy.read());
+        assertFalse("No more records", dummy.hasNext());
     }
 }
 

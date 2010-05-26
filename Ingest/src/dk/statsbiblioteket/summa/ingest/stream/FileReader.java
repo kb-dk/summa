@@ -368,8 +368,7 @@ public class FileReader implements ObjectFilter {
                 File newName = new File(file.getPath() + postfix);
                 try {
                     log.trace("Renaming '" + file + "' to '" + newName + "'");
-                    file.renameTo(newName);
-                    renamed = true;
+                    renamed = file.renameTo(newName);
                 } catch(Exception e) {
                     log.error("Could not rename '" + file
                               + "' to '" + newName + "'", e);

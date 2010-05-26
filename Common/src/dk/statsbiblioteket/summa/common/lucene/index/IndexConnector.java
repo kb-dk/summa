@@ -28,7 +28,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.ParallelReader;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -109,7 +109,7 @@ public class IndexConnector {
 
     /**
      * Create an IndexConnector based on the given configuration. The index
-     * won't be opened before {@link #getReader} or {@link#getSearcher} is
+     * won't be opened before {@link #getReader} or {@link this#getSearcher} is
      * called.
      * @param configuration the setup for Indexreader. See the class
      *                      documentation for details.
@@ -167,7 +167,7 @@ public class IndexConnector {
         switch (INDEXTYPE.multiIndex.getEnum(iTypeS)) {
             case singleIndex:
                 log.info("Constructing Summa reader for '" + linksS + "'");
-                return IndexReader.open(linksS);
+                return IndexReader.open(new NIOFSDirectory(new File(linksS)));
             case multiIndex:
                 IndexReader[] subReaders = new IndexReader[indexKeys.size()];
                 int pos = 0;
@@ -195,7 +195,8 @@ public class IndexConnector {
             case ramIndex:
                 log.info("Loading the index at location '" + linksS
                          + "' into RAM...");
-                RAMDirectory ramDir = new RAMDirectory(linksS);
+                RAMDirectory ramDir = new RAMDirectory(
+                                          new NIOFSDirectory(new File(linksS)));
                 log.info("The index at location '" + linksS + " was loaded into"
                          + " RAM. Constructing RAM-based reader");
                 return IndexReader.open(ramDir);

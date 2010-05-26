@@ -337,7 +337,7 @@ public class CoreMapBitStuffedTest extends TestCase {
         tagCounter.verify();
         DocIDCollector docIDs = new DocIDCollector();
         for (int i = 0 ; i < map.getDocCount() ; i++) {
-            docIDs.collect(i, 1.0f);
+            docIDs.collect(i); // Removed second parameter when converting to 3.0.1
         }
         Profiler profiler = new Profiler();
         for (int run = 0 ; run < RUNS ; run++) {

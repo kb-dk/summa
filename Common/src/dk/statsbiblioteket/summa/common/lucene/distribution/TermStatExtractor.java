@@ -21,9 +21,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -127,8 +129,7 @@ public class TermStatExtractor {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("dumpStats(%s, %s) called",
                                 index, destination));
-        IndexReader ir = IndexReader.open(
-                FSDirectory.getDirectory(index, null));
+        IndexReader ir = IndexReader.open(new NIOFSDirectory(index));
         Profiler profiler = new Profiler();
         TermStat stats = new TermStat(termStatConf);
         stats.create(destination);

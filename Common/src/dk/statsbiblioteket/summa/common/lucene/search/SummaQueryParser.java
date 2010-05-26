@@ -24,7 +24,17 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParserConstants;
 import org.apache.lucene.queryParser.Token;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.search.WildcardQuery;
 
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -386,7 +396,7 @@ public class SummaQueryParser {
             TermQuery termQuery = (TermQuery)query;
             sw.append(termQuery.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof RangeQuery) {
+        } else if (query instanceof TermRangeQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof WildcardQuery) {
@@ -401,7 +411,7 @@ public class SummaQueryParser {
         } else if (query instanceof PhraseQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof ConstantScoreRangeQuery) {
+        } else if (query instanceof NumericRangeQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {

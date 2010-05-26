@@ -18,6 +18,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
+import java.io.*;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -27,6 +28,7 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.store.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -37,7 +39,7 @@ public class StemmingStats extends TestCase {
 
     public void countTermsInFields(String termPrefix) throws Exception {
         int MAX_DUMP = 10;
-        IndexReader ir = new IndexSearcher(INDEX_LOCATION).getIndexReader();
+        IndexReader ir = new IndexSearcher(new NIOFSDirectory(new File(INDEX_LOCATION))).getIndexReader();
         int all = 0;
         int termCount = 0;
         int totalTermCount = 0;

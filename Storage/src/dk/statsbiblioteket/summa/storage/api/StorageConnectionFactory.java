@@ -58,7 +58,7 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
     public static final String CONN_FACT_CLASS = "summa.storage.connectionfactory.class";
 
     private ConnectionFactory<? extends Storage> backend;
-    private ConnectionManager<Storage> connMgr;
+    //private ConnectionManager<Storage> connMgr;
     private Log log;
 
     /**

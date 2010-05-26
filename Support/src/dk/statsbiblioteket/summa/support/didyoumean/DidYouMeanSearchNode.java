@@ -14,7 +14,8 @@
  */
 package dk.statsbiblioteket.summa.support.didyoumean;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -30,13 +31,11 @@ import org.apache.lucene.index.facade.DirectoryIndexFacade;
 import org.apache.lucene.index.facade.IndexFacade;
 import org.apache.lucene.search.didyoumean.Suggestion;
 import org.apache.lucene.search.didyoumean.SuggestionPriorityQueue;
-import org.apache.lucene.search.didyoumean.secondlevel.token.MultiTokenSuggester;
+import org.apache.lucene.search.didyoumean.secondlevel.token.SpanNearTokenPhraseSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.TokenPhraseSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.ngram.NgramTokenSuggester;
 import org.apache.lucene.search.didyoumean.secondlevel.token.ngram.TermEnumIterator;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -186,22 +185,22 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         super(config);
 
         closeOnNonExistingIndex =
-               config.getBoolean(CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX,
-                                 DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX);
+           config.getBoolean(CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX,
+                         DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX);
 
         // Get AprioriField.
         aprioriField = config.getString(CONF_DIDYOUMEAN_APRIORI_FIELD,
-                                              DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
+                                         DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
 
         // Get Anaylyzer class.
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
-                                       CONF_DIDYOUMEAN_ANALYZER, Analyzer.class,
-                                       DEFAULT_DIDYOUMEAN_ANALYZER, config);
+                                 CONF_DIDYOUMEAN_ANALYZER, Analyzer.class,
+                                     DEFAULT_DIDYOUMEAN_ANALYZER, config);
         analyzer = Configuration.create(analyzerClass, config);
 
         // Get directory class.
         String directoryType = config.getString(CONF_DIDYOUMEAN_DIRECTORY,
-                                                  DEFAULT_DIDYOUMEAN_DIRECTORY);
+                                            DEFAULT_DIDYOUMEAN_DIRECTORY);
         DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
         // determining the placement for the Did-You-Mean index.
@@ -214,7 +213,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                 directory = new RAMDirectory();
                 break;
             case fsDirectory:
-                directory = FSDirectory.getDirectory(didyoumeanIndex);
+                directory = new NIOFSDirectory(didyoumeanIndex);
                 break;
             default:
                 String error = "Directory '" + directoryType
@@ -258,17 +257,15 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         // Setup AprioriIndex
         try {
             aprioriIndexFactory = new DirectoryIndexFacade(
-                                     FSDirectory.getDirectory(location));
-            aprioriIndex = aprioriIndexFactory.indexReaderFactory();
+                                     new NIOFSDirectory(new File(location)));
+            //aprioriIndex = aprioriIndexFactory.indexReaderFactory();
         } catch (IOException e) {
             throw new RemoteException(
                                    "IOException when opening Lucene index.", e);
         }
 
         // create DirectoryIndexFacede
-        if(directory instanceof FSDirectory
-           // only check for existing index if using FSDirectory
-           && IndexReader.indexExists(didyoumeanIndex)) {
+        if(directory instanceof FSDirectory) {
             log.info("Using existing index in '"
                                     + didyoumeanIndex.getAbsolutePath() + "'.");
             try {
@@ -284,7 +281,6 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                 String error =
                         "There does not exists an index in given location '"
                                                               + location + "'.";
-
                 log.fatal(error);
                 closeIndexes();
                 throw new RemoteException(error);
@@ -314,10 +310,10 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
         // Setup PhraseSuggester
         try {
-            //phraseSuggester = new TokenPhraseSuggesterImpl(tokenSuggester,
-            //                  aprioriField, false, 3, analyzer, aprioriIndex);
-            phraseSuggester = new MultiTokenSuggester(tokenSuggester,
+            phraseSuggester = new SpanNearTokenPhraseSuggester(tokenSuggester,
                          aprioriField, false, 3, analyzer, aprioriIndexFactory);
+            //phraseSuggester = new MultiTokenSuggester(tokenSuggester,
+            //             aprioriField, false, 3, analyzer, aprioriIndexFactory);
         } catch (IOException e) {
             throw new RemoteException(
                             "IOException while creating phraseSuggester", e);

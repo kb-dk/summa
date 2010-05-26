@@ -30,6 +30,8 @@ import java.util.Arrays;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import org.apache.lucene.store.*;
+import org.apache.lucene.util.*;
 
 @SuppressWarnings({"ALL"})
 public class TermStatExtractorTest extends TestCase {
@@ -144,7 +146,8 @@ public class TermStatExtractorTest extends TestCase {
      */
     private void generateIndex(int docCount, File location) throws Exception {
         IndexWriter writer = new IndexWriter(
-                location, new StandardAnalyzer(),
+                new NIOFSDirectory(location),
+                new StandardAnalyzer(Version.LUCENE_30),
                 true, new IndexWriter.MaxFieldLength(10000));
         for (int i = 0 ; i < docCount ; i++) {
             Document doc = new Document();

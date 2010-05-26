@@ -39,6 +39,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.store.NIOFSDirectory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
@@ -194,7 +195,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private void logIndex() throws Exception {
         try {
             IndexReader reader = IndexReader.open(
-                    new File(location, LuceneIndexUtils.LUCENE_FOLDER));
+                    new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 if (!reader.isDeleted(i)) {
                     try {
@@ -237,6 +238,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         File manConfLocation = File.createTempFile("configuration", ".xml");
         manConfLocation.deleteOnExit();
         Files.saveString(String.format(
+
                 DocumentCreatorTest.CREATOR_SETUP, descLocation),
                          manConfLocation);
         Configuration conf = new Configuration(new XStorage(manConfLocation));
@@ -255,12 +257,13 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
 
         logIndex();        
         IndexReader reader = IndexReader.open(
-                new File(location, LuceneIndexUtils.LUCENE_FOLDER));
+                new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
         assertEquals("The number of documents in the index should match",
                      1, reader.maxDoc());
         assertEquals("The recordID of the single indexed document should match",
                      DOC_ID, reader.document(0).getField(
                 IndexUtils.RECORD_FIELD).stringValue());
+        reader.close();
         // Check for analyzer
         // Search for Jens with default / different prefixes
     }

@@ -65,7 +65,7 @@ public class RecordUtilTest extends TestCase {
         assertNotNull("The schema Record.xsd should be available",
                       schema.getFile());
         ExtraAsserts.assertValidates("single-level Record should validate",
-                                     schema, ParseUtil.XML_HEADER + "\n" + xml);
+                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + xml);
         assertEquals("fromXML(toXML(simpleRecord)) should work",
                      record, RecordUtil.fromXML(xml));
         log.info("Generated XML:\n" + xml);
@@ -90,7 +90,7 @@ public class RecordUtilTest extends TestCase {
         String xml = RecordUtil.toXML(record);
         log.debug("Got content for " + record + ":\n" + xml);
         ExtraAsserts.assertValidates("single-level Record should validate",
-                                     schema, ParseUtil.XML_HEADER + "\n" + xml);
+                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + xml);
         assertEquals("fromXML(toXML(simpleRecord)) for content should work",
                      record.getContentAsUTF8(), 
                      RecordUtil.fromXML(xml).getContentAsUTF8());

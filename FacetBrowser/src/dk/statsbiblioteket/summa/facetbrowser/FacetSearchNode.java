@@ -108,11 +108,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                       + "in the index folders upon calls to open(...)");
         } else {
             log.info(String.format(
-                    "The property %s or %s was defined, so the IndexDescriptor "
+                    "The property %s was defined, so the IndexDescriptor "
                     + "will not be taken from the index-folder. Note that this"
                     + " makes it hard to coordinate major updates to "
                     + "the IndexDescriptor in a production system",
-                    IndexDescriptor.CONF_DESCRIPTOR, Structure.CONF_FACETS));
+                    IndexDescriptor.CONF_DESCRIPTOR));
             Structure structure = new Structure(conf);
             initStructures(structure);
         }

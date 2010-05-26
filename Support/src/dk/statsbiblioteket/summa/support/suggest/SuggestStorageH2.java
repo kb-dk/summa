@@ -25,15 +25,22 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.h2.jdbcx.JdbcDataSource;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -899,13 +906,17 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private String join(TokenStream toks, String delimiter) {
         StringBuilder buf = threadLocalBuilder.get();
         try {
-            Token tok = new Token();
-            while (toks.next(tok) != null) {
+            TermAttribute term = toks.getAttribute(TermAttribute.class);
+            toks.reset();
+            //Token tok = new Token();
+            while (toks.incrementToken()) {
                 if (buf.length() != 0) {
                     buf.append(delimiter);
                 }
-                buf.append(tok.termBuffer(), 0, tok.termLength());
+                buf.append(term.termBuffer(), 0, term.termLength());
             }
+            toks.end();
+            toks.close();
             return buf.toString();
         } catch (IOException e) {
             // This should *never* happen because we read from a local String,
