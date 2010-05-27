@@ -53,10 +53,14 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             "http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor";
     public static final String FACET_NAMESPACE_PREFIX = "fa";
 
-    private final static String FACET_NODE_EXPR =
+    /*private final static String FACET_NODE_EXPR =
             "/" + DESCRIPTOR_NAMESPACE_PREFIX + ":IndexDescriptor/"
-            + FACET_NAMESPACE_PREFIX + ":facets";
-    private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
+            + FACET_NAMESPACE_PREFIX + ":facets";*/
+    private final static String FACET_NODE_EXPR =
+            "/" + "IndexDescriptor/"
+            + "facets";
+    //private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
+    private final static String FACET_EXPR = "facet";
 
     private XPath facetXPath = null;
 
