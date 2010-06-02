@@ -88,15 +88,44 @@ public class SBMARCParser extends MARCParser {
     public static final String CHILD_FIELD_SUBFIELD_SBID = "z";
     public static final String CHILD_FIELD_SUBFIELD_SORT = "v";
 
-    public static final String STATUS_FIELD = "004";
-    public static final String STATUS_FIELD_SUBFIELD = "r";
-    public static final String STATUS_DELETED = "d";
     public static final String TYPE_FIELD_SUBFIELD = "a";
     public static final String TYPE_HOVEDPOST = "h";
     public static final String TYPE_SEKTION = "s";
     public static final String TYPE_BIND = "b";
 
     public static final String CONTROL_DELETE_TAG = "DEL";
+
+    /**
+     * The MARC-field indicating status (new|modified|deleted).
+     * </p><p>
+     * Optional. Default is 004.
+     */
+    public static final String CONF_STATUS_FIELD =
+        "sbmarcparser.status.field";
+    public static final String DEFAULT_STATUS_FIELD = "004";
+
+    /**
+     * The MARC-subfield indicating status (new|modified|deleted).
+     * </p><p>
+     * Optional. Default is r.
+     */
+    public static final String CONF_STATUS_SUBFIELD =
+        "sbmarcparser.status.subfield";
+    public static final String DEFAULT_STATUS_SUBFIELD = "r";
+
+    /**
+     * The code in the status subfield in the status field that indicates that
+     * the record is deleted.
+     * </p><p>
+     * Optional. Default is d.
+     */
+    public static final String CONF_STATUS_DELETED =
+        "sbmarcparser.status.deleted";
+    public static final String DEFAULT_STATUS_DELETED = "d";
+
+    private String statusField = DEFAULT_STATUS_FIELD;
+    private String statusSubfield = DEFAULT_STATUS_SUBFIELD;
+    private String statusDeletedCode = DEFAULT_STATUS_DELETED;
 
     /**
      * The id.
@@ -128,7 +157,12 @@ public class SBMARCParser extends MARCParser {
 
     public SBMARCParser(Configuration conf) {
         super(conf);
-        log.debug("Constructed SBMARCParser");
+        statusField = conf.getString(CONF_STATUS_FIELD, statusField);
+        statusSubfield = conf.getString(CONF_STATUS_SUBFIELD, statusSubfield);
+        statusDeletedCode = conf.getString(
+            CONF_STATUS_DELETED, statusDeletedCode);
+        log.debug("Constructed SBMARCParser with deleted status "
+                  + statusField + statusSubfield + "=" + statusDeletedCode);
         initializeNewParse();
     }
 
@@ -220,13 +254,13 @@ public class SBMARCParser extends MARCParser {
         }
 
         // Status and type
-        if (STATUS_FIELD.equals(dataFieldTag)) {
+        if (statusField.equals(dataFieldTag)) {
             log.trace("Entered " + dataFieldTag + " in " + id
                       + " with subfield " + subFieldCode);
-            if (STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
+            if (statusSubfield.equals(subFieldCode)) {
                 // d = deleted, c = corrected, n = new, "" = new or corrected
                 log.trace("Status for " + id + " is '" + subFieldContent + "'");
-                if (STATUS_DELETED.equals(subFieldContent)) {
+                if (statusDeletedCode.equals(subFieldContent)) {
                     isDeleted = true;
                 }
                 return;
