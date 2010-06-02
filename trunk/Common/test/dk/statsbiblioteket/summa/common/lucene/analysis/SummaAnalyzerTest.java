@@ -75,6 +75,14 @@ public class SummaAnalyzerTest extends TestCase {
         assertTokens(t, "foo");
     }
 
+    public void testLowerCaseOnly() throws Exception {
+        a = new SummaAnalyzer("", false, "", false, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader(
+            "Foo-%4g 123/erW'd;_foo"));
+
+        assertTokens(t, "foo-%4g", "123/erw'd;_foo");
+    }
+
     public void testFooBarCaseFold() throws Exception {
         a = new SummaAnalyzer(null, true, null, true, true);
         TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));

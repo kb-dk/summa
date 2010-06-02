@@ -17,11 +17,7 @@ package dk.statsbiblioteket.summa.common.lucene;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
-import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaNumberAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSymbolRemovingAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.*;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.Logs;
@@ -136,6 +132,13 @@ public class LuceneIndexDescriptor
                              Field.Store.NO,
                              Field.TermVector.NO,
                              new KeywordAnalyzer());
+        }
+        if (baseFieldName.equals(LOWERCASE)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.NO,
+                             new SummaLowercaseAnalyzer());
         }
         if (baseFieldName.equals(STORED_VERBATIM)) {
             return makeField(baseFieldName,
