@@ -196,7 +196,6 @@ public class LuceneIndexDescriptor
         }
 
         log.trace("Extracting nodes with expression '" + MLT_EXPR + "'");
-        System.out.println("Extracting nodes with expression '" + MLT_EXPR + "'");
         NodeList mltNodes = DOM.selectNodeList(document, MLT_EXPR);
 
         moreLikethisFields = new ArrayList<String>(mltNodes.getLength());
