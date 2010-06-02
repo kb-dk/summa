@@ -132,6 +132,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     public static final String KEYWORD = "keyword";
     public static final String STORED_KEYWORD = "storedKeyword";
+    public static final String LOWERCASE = "lowercase";
     public static final String VERBATIM = "verbatim";
     public static final String STORED_VERBATIM = "storedVerbatim";
     public static final String TEXT = "text";
@@ -153,6 +154,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             IndexField.FREETEXT,      // Index
             KEYWORD, STORED_KEYWORD,  // Index / Index, store
             VERBATIM, STORED_VERBATIM,// Index / Index, store
+            LOWERCASE,                // Index
             TEXT,                     // Index
             SORTKEY,                  // Index
             STORED,                   // Store
@@ -364,6 +366,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         if (baseFieldName.equals(IndexField.FREETEXT)
             || baseFieldName.equals(KEYWORD)
             || baseFieldName.equals(VERBATIM)
+            || baseFieldName.equals(LOWERCASE)
             || baseFieldName.equals(TEXT)
             || baseFieldName.equals(SORTKEY)
             || baseFieldName.equals(DATE)) {
