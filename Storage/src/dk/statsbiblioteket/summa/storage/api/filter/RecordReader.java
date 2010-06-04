@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -242,7 +243,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             progressFile = new File(progressFileString);
             log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
-        progressFile = progressFile.getAbsoluteFile();
+        progressFile = Resolver.getPersistentFile(progressFile);
 
         usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE,
                                          DEFAULT_USE_PERSISTENCE);
