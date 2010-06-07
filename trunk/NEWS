@@ -1,4 +1,16 @@
 ========================
+2010-06-07: Summa 1.6.0
+========================
+
+ * Upgrade Lucene to version 3.0.1.
+
+ * Feature: Added lowercase analyzer, see SummaLowercaseAnalyzer
+
+ * Moved progress.xml to root of persistent directory.
+
+ * Known bug: Supplied data to Summix isn't working.
+
+========================
 2010-05-25: Summa 1.5.5
 ========================
 
@@ -19,7 +31,7 @@
    in QueryOptions, which allow specification of which attributes there
    should be returned.
 
- * Feature: added support for getting multipled records in one go.
+ * Feature: added support for getting multiple records in one go.
  	 Sample can be found in:
 	 Web/src/dk/statsbiblioteket/summa/web/services/GetRecordsResponseSample.xml
 	 Schema can be found in:
