@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SearchError xmlns="http://statsbiblioteket.dk/summa/2009/SearchError" name="DidYouMeanResponse" version="1.0">
+    <message>Error message</message>
+    <error>java.lang.OutOfMemoryError: Java heap space
+	at java.nio.HeapCharBuffer.&lt;init&gt;(HeapCharBuffer.java:39)
+	at java.nio.CharBuffer.allocate(CharBuffer.java:312)
+	at java.nio.charset.CharsetDecoder.decode(CharsetDecoder.java:760)
+	at java.nio.charset.Charset.decode(Charset.java:771)
+	at com.intellij.openapi.fileEditor.impl.LoadTextUtil.a(LoadTextUtil.java:356)</error>
+</SearchError>

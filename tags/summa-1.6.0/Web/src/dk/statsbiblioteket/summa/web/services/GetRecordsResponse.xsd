@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/Records"
+            elementFormDefault="qualified"
+            xmlns:records="http://statsbiblioteket.dk/summa/2009/Records">
+    <xsd:import namespace="http://statsbiblioteket.dk/summa/2009/Record"
+            schemaLocation="http://statsbiblioteket.dk/summa/2009/Record"/>
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the GetRecords Response. Returns a list of records.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="Records">
+        <xsd:complexType>
+            <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="record" type="record"/>
+            </xsd:sequence>
+            <xsd:attribute name="querytime" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

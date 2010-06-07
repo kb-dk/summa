@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record xmlns="http://www.loc.gov/MARC21/slim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
+    <leader>00000nam  2200000   4500</leader>
+    <controlfield tag="FMT">BK</controlfield>
+    <controlfield tag="LDR">00000nam  2200000   4500</controlfield>
+    <datafield tag="004" ind1="0" ind2="0">
+        <subfield code="a">s</subfield>
+    </datafield>
+    <datafield tag="008" ind1="0" ind2="0">
+        <subfield code="t">m</subfield>
+    </datafield>
+    <datafield tag="009" ind1="0" ind2="0">
+        <subfield code="a">a</subfield>
+        <subfield code="g">xx</subfield>
+    </datafield>
+    <datafield tag="010" ind1="0" ind2="0">
+        <subfield code="a">2207552</subfield>
+    </datafield>
+    <datafield tag="014" ind1="0" ind2="0">
+        <subfield code="a">223861</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207553</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207554</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207555</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207556</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207557</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207558</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207559</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2430652</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2457124</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2430672</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207561</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207562</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207563</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207564</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2207560</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">2978169</subfield>
+    </datafield>
+    <datafield tag="245" ind1="0" ind2="0">
+        <subfield code="g">&lt;&lt;Abt. 1=1&gt;&gt;</subfield>
+        <subfield code="a">Veröffentlichte Schriften 1910-1976</subfield>
+    </datafield>
+    <datafield tag="001" ind1=" " ind2=" ">
+        <subfield code="a">002207552</subfield>
+        <subfield code="f">a</subfield>
+    </datafield>
+</record>
