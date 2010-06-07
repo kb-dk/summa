@@ -246,6 +246,7 @@ public class StorageWS {
                     id, expand, legacyMerge));
         }
         long startTime = System.currentTimeMillis();
+        long xmlTime = 0;
 
         String retXML;
         QueryOptions q = null;
@@ -259,6 +260,7 @@ public class StorageWS {
             if (record == null) {
                 retXML = null;
             } else {
+                xmlTime = System.currentTimeMillis();
                 if (legacyMerge) {
                     MarcMultiVolumeMerger merger =
                                   new MarcMultiVolumeMerger(getConfiguration());
@@ -266,6 +268,7 @@ public class StorageWS {
                 } else {
                     retXML = RecordUtil.toXML(record, escapeContent);
                 }
+                xmlTime = System.currentTimeMillis() - xmlTime;
             }
         } catch (IOException e) {
             log.error("Error while getting record with id: " + id
@@ -275,10 +278,11 @@ public class StorageWS {
             retXML = null;
         }
 
-        log.trace(String.format(
+        log.debug(String.format(
                 "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d"
-                + " ms", id, expand, legacyMerge, 
-                         System.currentTimeMillis() - startTime));
+                + " ms (%dms spend on XML creation)", id, expand, legacyMerge, 
+                         System.currentTimeMillis() - startTime,
+                         xmlTime));
         return retXML;
     }
 }
