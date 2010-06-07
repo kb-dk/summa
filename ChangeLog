@@ -1,3 +1,255 @@
+2010-06-04 12:16  hkirk
+
+	* [r2353]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java:
+	  
+	  Bug transformation: We are storing the progress file in
+	  persistent instead of inside each bundle.
+
+2010-06-02 14:19  toke-sb
+
+	* [r2352]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaLowercaseAnalyzer.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Summa.ipr:
+	  
+	  Feature: Added lowercase analyzer
+
+2010-06-02 12:10  toke-sb
+
+	* [r2351]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java:
+	  
+	  Feedback: Removed System.out-based logging from
+	  LuceneIndexDescriptor
+
+2010-06-02 11:35  toke-sb
+
+	* [r2350]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/SBMARCParser.java:
+	  
+	  Hack: In order to support a custom status indicator an optional
+	  specification of status-field, subfield and code was introduced
+
+2010-05-27 08:48  hkirk
+
+	* [r2349]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java:
+	  
+	  Bugfix: DOM is disregarding namespaces when parsing XML
+
+2010-05-26 09:13  hkirk
+
+	* [r2348] ., Common/build.xml,
+	  Common/data/LegacyMultiVolumeConverter.xslt,
+	  Common/data/sb-multivolume.xslt.disabled,
+	  Common/scripts/termStats.sh,
+	  Common/scripts/termStatsPerformance.sh,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexAlias.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexGroup.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/LuceneIndexDescriptorSample.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/BuildPerformance.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexDumper.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexReducer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexSpeed.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/Inspect.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexUtils.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaNumberAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexConnector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/BinaryCollector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/DisjunctionQueryParser.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/LuceneBooster.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SlimCollector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/TopCollector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/LuceneTestHelper.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/DescriptorConverter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/IndirectIntSorter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java,
+	  Common/test/configuration.xml,
+	  Common/test/data/horizon/child_book1.xml,
+	  Common/test/data/horizon/child_book2.xml,
+	  Common/test/data/horizon/child_book4.xml,
+	  Common/test/data/horizon/one_book.xml,
+	  Common/test/data/horizon/parent_book1.xml,
+	  Common/test/data/horizon/readme.txt,
+	  Common/test/data/horizon/subchild_book1.xml,
+	  Common/test/data/plainPath/oldconf.xml,
+	  Common/test/data/white2.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/PayloadTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DummyStreamToRecords.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/stream/DummyReader.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/stream/DummyReaderTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/stream/StreamFilterTest.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/index/IndexDescriptorTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/AnalyzerPerformance.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaStandardAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractorTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/index/DistributedIndexStatCreatorTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/index/StemmingStats.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/search/DiscardingCollector.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/NativeRunnerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/RecordUtilTest.java,
+	  Control/config/storage-tool.configuration.xml,
+	  Control/test/data/analyzer/Analyzer_IndexDescriptor.xml,
+	  Control/test/data/auto/data/gurli.margrethe.xml,
+	  Control/test/data/auto/data/hans.jensen.xml,
+	  Control/test/data/auto/data/jens.hansen.xml,
+	  Control/test/data/auto/setup/IndexDescriptor.xml,
+	  Control/test/data/descriptor/DescriptorTest_IndexDescriptor.xml,
+	  Control/test/data/descriptor/DescriptorTest_IndexUpdateConfiguration.xml,
+	  Control/test/data/distribution/index_configuration.xml,
+	  Control/test/data/distribution/index_descriptor.xml,
+	  Control/test/data/distribution/search_configuration.xml,
+	  Control/test/data/generator/generator_configuration.xml,
+	  Control/test/data/multiple/index_configuration.xml,
+	  Control/test/data/multiple/index_descriptor.xml,
+	  Control/test/data/multiple/ingest/csa_ingest_configuration.xml,
+	  Control/test/data/multiple/ingest/doms_ingest_configuration.xml,
+	  Control/test/data/multiple/ingest/etss_ingest_configuration.xml,
+	  Control/test/data/multiple/ingest/tusculanum_ingest_configuration.xml,
+	  Control/test/data/oai/oai_IndexDescriptor.xml,
+	  Control/test/data/parent-child/horizon_ingest_configuration.xml,
+	  Control/test/data/parent-child/horizondump/one_book.xml,
+	  Control/test/data/parent-child/horizondump/parent_book1.xml,
+	  Control/test/data/parent-child/index_descriptor.xml,
+	  Control/test/data/scale/fagref_template.xml,
+	  Control/test/data/scale/scale_index_descriptor.xml,
+	  Control/test/data/scale/xslt/fagref_author.xsl,
+	  Control/test/data/scale/xslt/fagref_index.xsl,
+	  Control/test/data/scale/xslt/fagref_notes.xsl,
+	  Control/test/data/scale/xslt/fagref_short_format.xsl,
+	  Control/test/data/scale/xslt/fagref_subject.xsl,
+	  Control/test/data/scale/xslt/fagref_title.xsl,
+	  Control/test/dk/statsbiblioteket/summa/performance/SearchPerformance.java,
+	  Control/test/dk/statsbiblioteket/summa/performance/bin/performance.sh,
+	  Control/test/dk/statsbiblioteket/summa/performance/config/log4j.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AutoDiscoverTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DescriptorTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FagrefGeneratorTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/IterativeHelperDocCreator.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/IterativeTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/MultipleSourcesTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/OAITest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ParentChildTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java,
+	  Control/test/test-facet-search-1/config/configuration.xml,
+	  Control/test/test-facet-search-1/config/jmx.access,
+	  Control/test/test-facet-search-1/config/jmx.password,
+	  Control/test/test-facet-search-1/config/policy,
+	  Control/test/test-facet-search-1/service.xml,
+	  Control/test/test-index-oai/config/configuration.xml,
+	  Control/test/test-index-oai/config/jmx.access,
+	  Control/test/test-index-oai/config/jmx.password,
+	  Control/test/test-index-oai/config/policy,
+	  Control/test/test-index-oai/service.xml,
+	  Control/test/test-ingest-oai/service.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetIndexDescriptorSample.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.xsd,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponseSample.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/BaseObjects.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/IndexBuilder.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/IndexStatisticsTest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookupTest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/FacetMapTest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffedTest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilderTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/test/data/identity.xslt,
+	  Index/test/data/webpage_xhtml-1.0-strict.xml,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/CreateDocumentTest.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/Aleph2XML2.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/StreamToContentFilter.java,
+	  Samples/Summix/config/suggest-tool.configuration.xml,
+	  Search/src/dk/statsbiblioteket/summa/search/api/SearchResponse.xsd,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocIDCollector.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageConnectionFactory.java,
+	  Summa.ipr,
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.xsd,
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ExposedSortComparator.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReusableSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortFactory.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortPool.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/ExposedSortComparatorTest.java[CPY],
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/SortHelper.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/TestSortComparators.java[CPY],
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java,
+	  Web/build.xml, Web/config/search/log4j.xml,
+	  Web/config/search/web.xml, Web/config/status/log4j.xml,
+	  Web/config/status/web.xml,
+	  Web/website_resources/service/indexlookup.jsp,
+	  Workflow/build.xml, Workflow/test/log4j.xml, build.properties,
+	  doc/art/dataflow-templates.svg,
+	  lib/apidocs/lucene-2.4.0-apidocs.zip[DEL],
+	  lib/apidocs/lucene-backports-2.4.0-apidocs.zip[DEL],
+	  lib/apidocs/lucene-core-3.1-dev-LUCENE-2335-apidocs.zip[CPY],
+	  lib/apidocs/lucene-queries-2.4.0-javadoc.jar[DEL],
+	  lib/apidocs/lucene-queries-3.1-dev-LUCENE-2335-javadoc.jar[CPY],
+	  lib/apidocs/sbutil-0.4.10-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.5.0-apidocs.zip[CPY],
+	  lib/lucene-backports-2.4.0.jar[DEL],
+	  lib/lucene-core-2.4.0.jar[DEL],
+	  lib/lucene-core-3.1-dev-LUCENE-2335.jar[CPY],
+	  lib/lucene-didyoumean-2.4.0.jar[DEL],
+	  lib/lucene-didyoumean-3.0.1.jar[CPY],
+	  lib/lucene-queries-2.4.0.jar[DEL],
+	  lib/lucene-queries-3.1-dev-LUCENE-2335.jar[CPY],
+	  lib/sbutil-0.4.10.jar[DEL], lib/sbutil-0.5.0.jar[CPY],
+	  lib/src/lucene-2.4.0-src.zip[DEL],
+	  lib/src/lucene-backports-2.4.0-src.zip[DEL],
+	  lib/src/lucene-core-3.1-dev-LUCENE-2335-src.zip[CPY],
+	  lib/src/sbutil-0.4.10-src.zip[DEL],
+	  lib/src/sbutil-0.5.0-src.zip[CPY]:
+	  
+	  Merge lucene=3.0.1 r2309:2347 branch into trunk
+
+2010-05-25 11:23  hkirk
+
+	* [r2343] ChangeLog,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  NEWS, build.properties:
+	  
+	  Updated files for 1.5.5 release
+
+2010-05-25 07:33  hkirk
+
+	* [r2341] Common/src/dk/statsbiblioteket/summa/common/Record.java,
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  updated code style
+
 2010-05-19 11:56  toke-sb
 
 	* [r2336]
