@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -68,6 +69,10 @@ public class StorageWS {
      */
     public static final String QUERYTIME = "querytime";
 
+    LinkedList<MarcMultiVolumeMerger> mergers;
+
+    private static final int numMergers = 10;
+
     static StorageReaderClient storage;
     Configuration conf;
     /**
@@ -81,6 +86,10 @@ public class StorageWS {
      * Constructor for Storage WebService.
      */
     public StorageWS() {
+        mergers = new LinkedList<MarcMultiVolumeMerger>();
+        for(int i=0; i<numMergers; i++) {
+            mergers.add(i, new MarcMultiVolumeMerger(getConfiguration()));
+        }
     }
 
     /**
@@ -262,9 +271,12 @@ public class StorageWS {
             } else {
                 xmlTime = System.currentTimeMillis();
                 if (legacyMerge) {
-                    MarcMultiVolumeMerger merger =
-                                  new MarcMultiVolumeMerger(getConfiguration());
-                    retXML = merger.getLegacyMergedXML(record);
+                    MarcMultiVolumeMerger merger = getMerger();
+                    try {
+                        retXML = merger.getLegacyMergedXML(record);
+                    } finally {
+                        releaseMerger(merger);
+                    }
                 } else {
                     retXML = RecordUtil.toXML(record, escapeContent);
                 }
@@ -284,6 +296,14 @@ public class StorageWS {
                          System.currentTimeMillis() - startTime,
                          xmlTime));
         return retXML;
+    }
+
+    private synchronized MarcMultiVolumeMerger getMerger() {
+        return mergers.removeFirst();
+    }
+
+    private synchronized void releaseMerger(MarcMultiVolumeMerger m) {
+        mergers.add(m);
     }
 }
 
