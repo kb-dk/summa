@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.legacy;
 
+import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerImpl;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
 import dk.statsbiblioteket.summa.common.Record;
@@ -27,6 +28,7 @@ import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.URL;
@@ -49,6 +51,8 @@ import java.net.URL;
         author = "te")
 public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(MarcMultiVolumeMerger.class);
+
+    Transformer t = null;
 
     /**
      * The location of the XSLT that is applied to every Record-content.
@@ -208,9 +212,12 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         if (level == 0) {
             output.append(content.subSequence(0, endPos-2));
         } else {
-            byte[] transformed = XSLT.transform(
-            xsltLocation, record.getContent(), null, stripXMLNamespaces).
-                    toByteArray();
+            if(t == null) {
+                t = XSLT.createTransformer(xsltLocation);
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            XSLT.transform(t, new ByteArrayInputStream(record.getContent()), out);
+            byte[] transformed = out.toByteArray();
             BufferedReader read;
             try {
                 read = new BufferedReader(new InputStreamReader(
