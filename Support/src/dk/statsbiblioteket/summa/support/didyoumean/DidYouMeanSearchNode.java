@@ -265,7 +265,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         }
 
         // create DirectoryIndexFacede
-        if(directory instanceof FSDirectory) {
+        if(directory instanceof FSDirectory && didyoumeanIndex.exists()) {
             log.info("Using existing index in '"
                                     + didyoumeanIndex.getAbsolutePath() + "'.");
             try {
