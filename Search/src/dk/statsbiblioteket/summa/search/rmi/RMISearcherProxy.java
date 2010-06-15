@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.rmi.RemoteSearcher;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,6 +35,9 @@ import java.rmi.server.UnicastRemoteObject;
  * A {@link SummaSearcher} implementation exposing an RMI interface,
  * proxying all method calls to a backend {@code SummaSearcher}.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT
+        )        
 public class RMISearcherProxy extends UnicastRemoteObject
                               implements RemoteSearcher {
 
@@ -100,8 +104,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
         if (conf.valueExists (CONF_BACKEND)) {
             backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for "
-                      + "backend");
+            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
+                    + " for backend");
             backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
         }
 
@@ -109,7 +113,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
          * infinite recursion by forcing it into a SummaSearcherImpl */
         if (backendConf.valueExists (CONF_CLASS)) {
             if (this.getClass().getName().equals(
-                                          backendConf.getString (CONF_CLASS))) {
+                                        backendConf.getString (CONF_CLASS))) {
                 log.warn ("Backend set to RMISearcherProxy. Forcing backend " +
                           "class to " + DEFAULT_BACKEND.getName()
                           + " to avoid infinite recursion");
@@ -125,8 +129,10 @@ public class RMISearcherProxy extends UnicastRemoteObject
         backend = SummaSearcherFactory.createSearcher (backendConf);
         log.trace ("Created searcher: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
-        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
+        serviceName = conf.getString (CONF_SERVICE_NAME,
+                                      DEFAULT_SERVICE_NAME);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT,
+                                   DEFAULT_REGISTRY_PORT);
         
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
 
@@ -143,6 +149,12 @@ public class RMISearcherProxy extends UnicastRemoteObject
         }
     }
 
+  /**
+   * Get service port from a given configuration. Helper method.
+   *
+   * @param conf the configuration to retrieve service port from.
+   * @return the service port.
+   */
     private static int getServicePort (Configuration conf) {
         try {
             return conf.getInt(CONF_SERVICE_PORT);
