@@ -124,6 +124,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     protected Map<String, Record> ids = null;
 
+    private boolean recordsGotten = false;
     /**
      * Constructor
      * SideEffect: Fetch a copy of storage ID's for local storage.
@@ -155,16 +156,13 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                      + " ingest-chain performs full ingests from all bases ");
         }
 
-        maxNumberDeletes = config.getInt(CONF_MAX_NUMBER_DELETES
-                                                  , DEFAULT_MAX_NUMBER_DELETES);
+        maxNumberDeletes = config.getInt(CONF_MAX_NUMBER_DELETES,
+                                         DEFAULT_MAX_NUMBER_DELETES);
         numberOfRecordsFromStorage =
-                          config.getInt(CONF_NUMBER_OF_RECORDS_FROM_STORAGE,
-                                   DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
+                     config.getInt(CONF_NUMBER_OF_RECORDS_FROM_STORAGE,
+                               DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
         ids = new HashMap<String, Record>();
-
-        log.info("Getting all records id from storage for base " + base);
-        getRecords();
     }
 
     /**
@@ -217,6 +215,13 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
             throw new PayloadException("null received in Payload in next()"
                                        + ". This should not happen");
         }
+
+        if(!recordsGotten) {
+          log.info("Getting all records id from storage for base " + base);
+          getRecords();
+          recordsGotten = true;
+        }
+
         ids.remove(r.getId());
         Logging.logProcess(
                 "UpdateFromFulldumpFilter", "Marking as existing",
