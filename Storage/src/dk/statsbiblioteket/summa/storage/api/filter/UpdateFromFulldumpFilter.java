@@ -20,7 +20,12 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.storage.api.*;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -200,7 +205,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     }
 
     /**
-     * For each record recieved this filter is unmarking the record in the local
+     * For each record received this filter is un-marking the record in the local
      * storage copy.
      *
      * @param payload the Payload to process.
@@ -217,7 +222,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         }
 
         if(!recordsGotten) {
-          log.info("Getting all records id from storage for base " + base);
+          log.info("Getting all records id from storage for base '"
+                   + base + "'");
           getRecords();
           recordsGotten = true;
         }
@@ -230,7 +236,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     }
 
     /**
-     * Overrided from Filter. Delete non inserted records, if less than
+     * Overridden from Filter. Delete non inserted records, if less than
      * {@link Configuration#getInt(String, int)} with parameters
      * {@link UpdateFromFulldumpFilter#CONF_MAX_NUMBER_DELETES} and
      * {@link UpdateFromFulldumpFilter#DEFAULT_MAX_NUMBER_DELETES}. 
