@@ -25,8 +25,16 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -100,7 +108,7 @@ public class FileReader implements ObjectFilter {
     public static final boolean DEFAULT_REVERSE_SORT = false;
 
     protected File root;
-    private boolean recursive = true;
+    private boolean recursive;
     private boolean reverse_sort = DEFAULT_REVERSE_SORT;
     private Pattern filePattern;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -149,7 +157,8 @@ public class FileReader implements ObjectFilter {
             throw new ConfigurationException(
                     "No root specified for key " + CONF_ROOT_FOLDER);
         }
-        recursive = configuration.getBoolean(CONF_RECURSIVE, recursive);
+        recursive = configuration.getBoolean(CONF_RECURSIVE,
+                                             DEFAULT_RECURSIVE);
         reverse_sort = configuration.getBoolean(
                 CONF_REVERSE_SORT, reverse_sort);
         filePattern = Pattern.compile(configuration.
