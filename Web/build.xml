@@ -249,7 +249,7 @@
             <classpath refid="lib.internal"/>
             <formatter type="xml" usefile="true" />
             <batchtest todir="${test.report.dir}">
-                <formatter type="brief" />
+                <formatter type="xml" />
                 <fileset dir="${test.src.dir}">
 			        <include name="**/*.java" />
                 </fileset>
