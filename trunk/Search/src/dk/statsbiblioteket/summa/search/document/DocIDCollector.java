@@ -43,6 +43,7 @@ public class DocIDCollector extends Collector {
      */
     private OpenBitSet bits = new OpenBitSet(100000);
     private int docCount = 0;
+    private int docBase = 0;
 
     /**
      * Constructs a collector and adds it to the given queue.
@@ -75,14 +76,14 @@ public class DocIDCollector extends Collector {
 
     @Override
     public void collect(int doc) {
-        bits.set(doc);
+        bits.set(docBase + doc);
         docCount++;
     }
 
     @Override
     public void setNextReader(IndexReader indexReader, int i)
             throws IOException {
-        // ignored
+        this.docBase = i;
     }
 
     @Override
