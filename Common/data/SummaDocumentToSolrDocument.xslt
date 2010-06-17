@@ -10,9 +10,6 @@
             <doc>
             <xsl:text>
             </xsl:text>
-            <fields>
-                <xsl:text>
-                </xsl:text>
                 <xsl:element name="field">
                     <xsl:attribute name="name">id</xsl:attribute>
                     <xsl:value-of select="@doc:id"/>
@@ -31,15 +28,14 @@
                         <xsl:attribute name="name">
                             <xsl:value-of select="@doc:name"/>
                         </xsl:attribute>
-                        <xsl:attribute name="boost">
+<!--                        <xsl:attribute name="boost">
                             <xsl:value-of select="@doc:boost"/>
-                        </xsl:attribute>
+                        </xsl:attribute>-->
                         <xsl:value-of select="."/>
                     </xsl:element>
                     <xsl:text>
                     </xsl:text>
                 </xsl:for-each>
-            </fields>
             <xsl:text>
             </xsl:text>
             </doc>
