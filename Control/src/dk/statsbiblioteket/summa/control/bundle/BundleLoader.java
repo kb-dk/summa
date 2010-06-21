@@ -19,11 +19,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +53,7 @@ public class BundleLoader implements Configurable {
     /** The file name used to identify a client */
     public static final String CLIENT_BUNDLE_SPEC = "client.xml";
 
-    private Log log = LogFactory.getLog(BundleLoader.class);;
+    private Log log = LogFactory.getLog(BundleLoader.class);
 
     public BundleLoader (Configuration conf) {
         // Do nothing

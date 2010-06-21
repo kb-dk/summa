@@ -70,7 +70,9 @@
           parents must be specified before their children.
         -->
 
-        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" sortCache="active" inFreeText="true" required="true">
+        <field name="author" parent="text" indexed="true" stored="true"
+               multiValued="true" indexBoost="2.0" queryBoost="1.5"
+               sortLocale="da" sortCache="active" inFreeText="true" required="true">
             <alias name="forfatter" lang="da"/>
         </field>
 

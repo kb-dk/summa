@@ -14,16 +14,20 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import org.apache.commons.cli.*;
-
-import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.util.Environment;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Strings;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 /**
  * Main class for the Summa bundle builder tool.
@@ -36,7 +40,6 @@ public class BundleTool {
     private boolean expandProps;
     private String overrideAutostart;
     private String overrideName;
-    private String bundleName;
     private File specFile;
     private File outputDir;
     private File[] fileDirs;
@@ -50,10 +53,10 @@ public class BundleTool {
 
     public static void main (String[] args) {
         CommandLine cli = null;
-        boolean verbose = false;
-        boolean dryRun = false;
-        boolean sloppy = false;
-        boolean expandProps = false;
+        boolean verbose;
+        boolean dryRun;
+        boolean sloppy;
+        boolean expandProps;
         String overrideAutostart;
         String overrideName;
         String outputDir;
@@ -195,11 +198,12 @@ public class BundleTool {
 
         for (File dir : fileDirs) {
             if (!dir.exists()) {
-                throw new RuntimeException("File source directory '" + fileDirs
+                throw new RuntimeException("File source directory '"
+                                           + fileDirs.toString()
                                            + "' does not exist");
             }
             if (!dir.isDirectory()) {
-                throw new RuntimeException("File source '" + fileDirs
+                throw new RuntimeException("File source '" + fileDirs.toString()
                                            + "' is not a directory");
             }
         }
@@ -213,6 +217,7 @@ public class BundleTool {
     }
 
     public void run () throws IOException {
+      String bundleName;
         if (verbose) {
             println("Building bundle for '" + specFile  + "'");
             println("Output dir: " + outputDir);
