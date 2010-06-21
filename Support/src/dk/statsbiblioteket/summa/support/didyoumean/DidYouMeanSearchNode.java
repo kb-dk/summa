@@ -77,21 +77,23 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
          * {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_APRIORI_FIELD}.
          * The value is 'freetext'.
          */
-    public static final String DEFAULT_DIDYOUMEAN_APRIORI_FIELD = "freetext";
+    public static final String DEFAULT_DIDYOUMEAN_APRIORI_FIELD
+                                                                   = "freetext";
 
     /**
          * The configuration file in the configuration file. This is a boolean which
          * in case of true, throws a fatel exception in managedOpen, if no index
          * exists.
          */
-    public static final String CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
-                             "summa.support.didyoumean.closeonnonexistingindex";
+    public static final String
+                      CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX
+                           = "summa.support.didyoumean.closeonnonexistingindex";
     /**
          * Default value for
          * {@link this#CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
          */
-    public static final boolean DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX =
-                                                                           true;
+    public static final boolean
+                   DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX = true;
 
     /**
          * The configuration field in configuration file for the Did-You-Mean
@@ -103,8 +105,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
          * Default value of {@link DidYouMeanSearchNode#CONF_DIDYOUMEAN_ANALYZER},
          * the value is {@link SummaStandardAnalyzer}
          */
-    public static final Class<? extends Analyzer> DEFAULT_DIDYOUMEAN_ANALYZER =
-                                            SummaStandardAnalyzer.class;
+    public static final Class<? extends Analyzer>
+                DEFAULT_DIDYOUMEAN_ANALYZER = SummaStandardAnalyzer.class;
     
     /**
          * The configuration field in configuration file for the Did-You-Mean
@@ -120,7 +122,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     /**
          * Default value for {@link this#CONF_DIDYOUMEAN_DIRECTORY}.
          */
-    public static final String DEFAULT_DIDYOUMEAN_DIRECTORY = "fsDirectory";
+    public static final String DEFAULT_DIDYOUMEAN_DIRECTORY =
+                                                                  "fsDirectory";
 
     /**
          * Where to place the Did-You-Mean index in the persistant storage.
@@ -252,7 +255,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     @Override
     protected void managedOpen(String location) throws RemoteException {
         location = location.concat(File.separator + "lucene"  + File.separator);
-        log.debug("Opening '" + location + "'");
+        log.debug("Opening Lucene index at '" + location + "'");
 
         IndexFacade ngramIndexFactory;
         // Setup AprioriIndex
@@ -262,12 +265,12 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             //aprioriIndex = aprioriIndexFactory.indexReaderFactory();
         } catch (IOException e) {
             throw new RemoteException(
-                                   "IOException when opening Lucene index.", e);
+                                   "IOException when opening Lucene index", e);
         }
 
         // create DirectoryIndexFacede
         if(directory instanceof FSDirectory && didyoumeanIndex.exists()) {
-            log.info("Using existing index in '"
+            log.info("Using existing DidYouMean index in '"
                                     + didyoumeanIndex.getAbsolutePath() + "'.");
             try {
                 ngramIndexFactory = new DirectoryIndexFacade(directory);
@@ -275,25 +278,26 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                 ngramIndexFactory.indexWriterFactory(null, false).close();
             } catch(IOException e) {
                 throw new RemoteException(
-                            "IOException when opening directoryIndexFaced.", e);    
+                            "IOException when opening directoryIndexFaced", e);
             }
         } else {
             if(closeOnNonExistingIndex) {
                 String error =
-                        "There does not exists an index in given location '"
-                                                              + location + "'.";
+                        "There does not exists an DidYouMean-index in given "
+                              + "location '" + didyoumeanIndex.getAbsolutePath() 
+                              + "'";
                 log.fatal(error);
                 closeIndexes();
                 throw new RemoteException(error);
             }
-            log.info("Creating new Did-You-Mean index.");
+            log.info("Creating new Did-You-Mean index");
             try {
                 ngramIndexFactory = new DirectoryIndexFacade(directory);
                 // Initialize empty index
                 ngramIndexFactory.indexWriterFactory(null, true).close();
             } catch(IOException e) {
                 throw new RemoteException(
-                           "IOException when creating directoryIndexFaced.", e);
+                           "IOException when creating directoryIndexFaced", e);
             }
         }
 
@@ -307,7 +311,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
         } catch(IOException e) {
             throw new RemoteException(
-                                    "IOException when creating ngramIndex.", e);
+                                    "IOException when creating ngramIndex", e);
         }
 
         // Setup PhraseSuggester
@@ -330,7 +334,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
         */
     @Override
     protected void managedClose() throws RemoteException {
-        log.debug("Close");
+        log.debug("Closing DidYouMean");
         closeIndexes();
     }
 
@@ -347,8 +351,11 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
             aprioriIndexFactory.close();
             // TODO directory.close() should be handled by DirectoryIndexFacede
             //directory.close();
+        } catch (NullPointerException e) {
+          log.info("DidYouMean index not opened");
         } catch (IOException e) {
-            throw new RemoteException("IOException while closing indexes.", e);
+          throw new RemoteException("IOException while closing DidYouMean index",
+                                    e);
         }
     }
 
