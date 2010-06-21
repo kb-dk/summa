@@ -174,6 +174,8 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
          * If true, we close when we find no index.
          */
     private boolean closeOnNonExistingIndex;
+    NgramTokenSuggester tokenSuggester;
+    IndexFacade aprioriIndexFactory;
     /**
          * Constructor for DidYouMeanSearchNode. Get needed configuration values.
          *
@@ -251,8 +253,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     protected void managedOpen(String location) throws RemoteException {
         location = location.concat(File.separator + "lucene"  + File.separator);
         log.debug("Opening '" + location + "'");
-        IndexFacade aprioriIndexFactory;
-        NgramTokenSuggester tokenSuggester;
+
         IndexFacade ngramIndexFactory;
         // Setup AprioriIndex
         try {
@@ -298,8 +299,9 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
 
         // Setup TokenSuggester
         try {
-            log.debug("Building token index");            
+            log.debug("Building NgramTokenSuggester index");            
             tokenSuggester = new NgramTokenSuggester(ngramIndexFactory);
+            aprioriIndex = aprioriIndexFactory.indexReaderFactory();
             tokenSuggester.indexDictionary(
                        new TermEnumIterator(aprioriIndex, aprioriField), 2);
 
@@ -340,10 +342,11 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     private void closeIndexes() throws RemoteException {
         try {
             aprioriIndex.close();
-            // TODO tokenSuggester.close();
-            // TODO phraseSuggester.close();
+            tokenSuggester.close();
+            phraseSuggester.close();
+            aprioriIndexFactory.close();
             // TODO directory.close() should be handled by DirectoryIndexFacede
-            directory.close();
+            //directory.close();
         } catch (IOException e) {
             throw new RemoteException("IOException while closing indexes.", e);
         }
