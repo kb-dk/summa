@@ -108,7 +108,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     /**
      * Default value {@link this#CONF_NUMBER_OF_RECORDS_FROM_STORAGE}.
      */
-    public static final int DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE = 100;
+    public static final int DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE
+                                                                          = 100;
 
 
     private String base = null;
@@ -178,7 +179,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         // get a local copy of all records id.
         QueryOptions.ATTRIBUTES[] attributesNeeded =
              new QueryOptions.ATTRIBUTES[] {QueryOptions.ATTRIBUTES.RECORDID,
-                                            QueryOptions.ATTRIBUTES.RECORDBASE};
+                                          QueryOptions.ATTRIBUTES.RECORDBASE};
         QueryOptions queryOptions = new QueryOptions(false, null, 0, 0, null,
                                                               attributesNeeded);
         try {

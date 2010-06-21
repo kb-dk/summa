@@ -53,6 +53,7 @@ public class BundleUtils {
      *                 together with the {@code .jar} extension. For example
      *                 {@code summa-control-api} might become
      *                 {@code summa-control-api-1.3.4.jar}.
+     * @throws IOException if unable to extract Summa version from jarNames. 
      */
     public static void prepareCodeBase(Configuration conf,
                                        BundleRepository repo,
