@@ -171,7 +171,7 @@ public class StorageWS {
     public String getRecords(String[] ids) {
         List<String> list = Arrays.asList(ids);
         log.info("getRecords, fetching " + list.size()
-                                                    + " records from storage.");
+                                         + " records from storage.");
         return realGetRecords(list);
     }
 
