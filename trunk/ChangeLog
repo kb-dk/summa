@@ -1,3 +1,160 @@
+2010-06-22 11:43  hkirk
+
+	* [r2374]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Cleanup
+
+2010-06-21 12:42  hkirk
+
+	* [r2373]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Bugfix: Log message now specify which index to use
+
+2010-06-21 10:47  hkirk
+
+	* [r2372]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptorSample.xml,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleLoader.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleUtils.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java:
+	  
+	  Cleanup: Import, line length, warnings
+
+2010-06-21 10:44  hkirk
+
+	* [r2371]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Bugfix: Cleanup after DidYouMeanSearchNode close() is called,
+	  fixed
+
+2010-06-17 12:30  hkirk
+
+	* [r2370] Common/build.xml, Control/build.xml,
+	  FacetBrowser/build.xml, Index/build.xml, Ingest/build.xml,
+	  Search/build.xml, Support/build.xml, Web/build.xml:
+	  
+	  Update to build files, such that unittests output xml instead of
+	  brief
+
+2010-06-17 12:10  toke-sb
+
+	* [r2369] Common/build.xml,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocIDCollector.java:
+	  
+	  Bugfix: The DocIDCollector did not tahe docBase into account when
+	  collecting IDs for faceting
+	  Build: The ant file for Common was updated to include all XSLTs
+	  in Common/data
+
+2010-06-17 09:43  toke-sb
+
+	* [r2368] Common/data/SummaDocumentToSolrDocument.xslt:
+	  
+	  Tweak: Removed boosting from SummaDocumentToSolrDocument
+
+2010-06-16 07:23  hkirk
+
+	* [r2367]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java:
+	  
+	  Bugfix: codestyle, removed warnings
+
+2010-06-16 07:08  hkirk
+
+	* [r2366]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java:
+	  
+	  Bugfix: codestyle, typos
+
+2010-06-15 13:56  hkirk
+
+	* [r2365]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java:
+	  
+	  Bugfix: Tracker id: 95. If there is no update, there is a big
+	  overhead in fetching all record ids from storage when
+	  initializing the filter. Now we fetch all records first time we
+	  find an update.
+
+2010-06-15 13:52  hkirk
+
+	* [r2364]
+	  Search/src/dk/statsbiblioteket/summa/search/rmi/RMISearcherProxy.java:
+	  
+	  Bugfix: updated with QAinfo and code style
+
+2010-06-10 13:14  hkirk
+
+	* [r2363] lib/lucene-didyoumean-3.0.1.jar:
+	  
+	  Library update, with close methods. Don't now if this is the
+	  rigth way, to override with same version number
+
+2010-06-09 05:42  toke-sb
+
+	* [r2362] Common/data/SummaDocumentToSolrDocument.xslt[CPY]:
+	  
+	  Added XSLT to convert from SummaDocument to SolrDocument
+
+2010-06-08 12:18  hkirk
+
+	* [r2361]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java:
+	  
+	  Bugfix: MarcMultiVolumeMerger now keeps a local XSLT transformer,
+	  instead of using SBUtil's XSLT.transform, which create a new
+	  local transformer. This is because of a pontential memory leak in
+	  the getLegacyRecord call from the StorageWS
+
+2010-06-08 09:56  hkirk
+
+	* [r2360]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: added simple MarcMultiVolumeMerger pool
+
+2010-06-08 09:55  toke-sb
+
+	* [r2359]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Bugfix: DidYouMeanSearchNode was unable to create a
+	  didyoumean-index from scratch
+
+2010-06-08 09:02  hkirk
+
+	* [r2358]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptorToSolrSchema.xsl[ADD]:
+	  
+	  Feature: Added XSLT to transform IndexDescriptor:fields:field to
+	  Solar Schema schema:fields:field
+
+2010-06-07 12:50  toke-sb
+
+	* [r2357]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Logging: Raised log level for getLegacyRecord in StorageWS
+
+2010-06-07 08:34  hkirk
+
+	* [r2355] ChangeLog,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  NEWS, build.properties:
+	  
+	  updated files for Summa 1.6.0 release
+
+2010-06-07 08:23  hkirk
+
+	* [r2354]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java:
+	  
+	  Codestyle: unfolded imports
+
 2010-06-04 12:16  hkirk
 
 	* [r2353]
