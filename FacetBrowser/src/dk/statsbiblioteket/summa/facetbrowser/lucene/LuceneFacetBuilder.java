@@ -199,6 +199,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.debug("Filling " + facetName
                       + " (" + ++counter + "/"
                       + tagHandler.getFacetNames().size() + ")");
+            Profiler facetProfiler = new Profiler();
             for (String fieldName: facet.getFields()) {
                 log.debug("Extracting tags for facet " + facetName + " field "
                           + fieldName);
@@ -233,7 +234,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 }
             }
             log.debug("Facet \"" + facetName + "\" filled with " +
-                      tagHandler.getTagCount(facetName) + " tags");
+                      tagHandler.getTagCount(facetName) + " tags in "
+                      + facetProfiler.getSpendTime());
         }
         if (dirtyAdd) {
             log.debug("Cleaning up tag handler");
@@ -371,7 +373,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             FacetStructure facet = entry.getValue();
             final int facetID = structure.getFacetID(facet.getName());
             log.debug("buildTermsToDocs() for facet " + ++currentFacet + "/"
-                      + totalFacets + ": " + facet.getName());
+                      + totalFacets + ": " + facet.getName() + " starting");
             long termCount = 0;
             long refCount = 0;
             profiler.reset();
