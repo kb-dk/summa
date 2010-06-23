@@ -114,7 +114,7 @@ public class XMLSplitterParserTest extends TestCase {
     + "</foxml:digitalObject>"
     + "</d:digitalObjectBundle>"
     + "</metadata>\n"
-
+    + "<amp>&amp;</amp>\n"
     + "</record>\n"
 
     + "<record xmlns=\"http://www.openarchives.org/OAI/2.0/\">\n"
@@ -206,8 +206,12 @@ public class XMLSplitterParserTest extends TestCase {
         XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
                 new ByteArrayInputStream(singleXML.getBytes("utf-8"));
+        byte[] b = new byte[1000];
 
         parser.open(new Payload(stream));
+
+
+      System.out.println(new String(b));
         assertTrue("parser should have something",
                    parser.hasNext());
         Payload payload = parser.next();
@@ -217,6 +221,8 @@ public class XMLSplitterParserTest extends TestCase {
                     parser.hasNext());
         log.debug("Got Record " + payload.getRecord() + " with content\n" +
                   payload.getRecord().getContentAsUTF8());
+        System.out.println(new String(payload.getRecord().getContent()));
+        assertTrue(new String(payload.getRecord().getContent()).contains("&amp;"));
     }
 
     public void testMultiParse() throws Exception {

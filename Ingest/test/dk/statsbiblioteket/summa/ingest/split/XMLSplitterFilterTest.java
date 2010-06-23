@@ -99,6 +99,17 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
                     parser.hasNext());
     }
 
+    // Test for https://sourceforge.net/apps/trac/summa/ticket/96
+    public void testEntity() throws Exception {
+        Configuration conf = getBasicConfiguration();
+        ObjectFilter parser = new XMLSplitterFilter(conf);
+        parser.setSource(this);
+        startProducer(2);
+        Payload p = parser.next();
+        assertTrue("Payload should stil contain a '&amp;'",
+                  new String(p.getRecord().getContent()).contains("&amp;"));
+    }
+
     private Configuration getBasicConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLSplitterFilter.CONF_BASE, "testbase");
