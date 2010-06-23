@@ -91,6 +91,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
         parser.parse(sourcePayload.getStream(), handler);
         log.debug("Finished parsing " + sourcePayload + " with " + thisRunQueued
                   + " records produced");
+        
     }
 
     public boolean isTerminated() {

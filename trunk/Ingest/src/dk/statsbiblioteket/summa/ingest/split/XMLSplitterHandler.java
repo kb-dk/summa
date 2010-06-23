@@ -14,10 +14,14 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.*;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -314,11 +318,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             // Append the unescaped characters as the id
             id.append(chars);
         }
-
         // Append escaped characters to the body if not in CData
-        sw.append(inCData ? XMLUtil.encode(chars) : chars);
+        sw.append(inCData ? chars: XMLUtil.encode(chars));
     }
-
 
     @Override
     public void ignorableWhitespace(char ch[], int start, int length) throws
@@ -339,6 +341,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     @Override
     public void startCDATA() throws SAXException {
         checkRunning();
+        inCData = true;
         if (!inRecord) {
             return;
         }
@@ -351,6 +354,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             return;
         }
         sw.append("]]>");
+        inCData = false;
     }
 
     /*
