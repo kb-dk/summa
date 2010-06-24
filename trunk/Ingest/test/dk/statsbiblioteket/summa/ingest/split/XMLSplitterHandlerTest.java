@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import com.sun.org.apache.xml.internal.serializer.utils.AttList;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
@@ -26,7 +25,6 @@ import org.xml.sax.Attributes;
 
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -147,7 +145,6 @@ public class XMLSplitterHandlerTest extends TestCase implements
         handler.endCDATA();
         handler.characters("&amp;".toCharArray(), 0, 1);
         handler.endElement("a", "record", "record");
-        // TODO test for start/end CDATA
 
         Record r = received.get(0);
         String content = new String(r.getContent());
