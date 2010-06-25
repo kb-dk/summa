@@ -22,7 +22,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.transform.*;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -48,12 +52,14 @@ public class XHTMLEntityResolverTest extends TestCase {
     public void testNonescapingTransformation() throws Exception {
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer(new StreamSource(
-                new FileInputStream(Resolver.getFile("data/identity.xslt"))));
+                new FileInputStream(Resolver.getFile(
+                        "XHTMLEntityResolver/identity.xslt"))));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Result result = new StreamResult(out);
         try {
             transformer.transform(new StreamSource(new FileInputStream(
-                    Resolver.getFile("data/webpage_xhtml-1.0-strict.xml"))),
+                    Resolver.getFile(
+                            "XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))),
                                   result);
             fail("Transformation of XHTML 1.0 content without DTD-resolving"
                  + " should fail");
@@ -64,16 +70,18 @@ public class XHTMLEntityResolverTest extends TestCase {
     }
 
     public void testEscapingTransformation() throws Exception {
-        testEscapingTransformation("data/webpage_xhtml-1.0-strict.xml");
+        testEscapingTransformation(
+                "XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml");
     }
 
     public void testEscapingTransformation2() throws Exception {
-        testEscapingTransformation("data/tour_test.xml");
+        testEscapingTransformation("XHTMLEntityResolver/tour_test.xml");
     }
 
     public void testEscapingTransformationNondeclared() throws Exception {
         try {
-            testEscapingTransformation("data/webpage_html-nondeclared.html");
+            testEscapingTransformation(
+                    "XHTMLEntityResolver/webpage_html-nondeclared.html");
         } catch(Exception e) {
             fail("Should be fixed");
         }
@@ -83,7 +91,8 @@ public class XHTMLEntityResolverTest extends TestCase {
                                                               throws Exception {
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer(new StreamSource(
-                new FileInputStream(Resolver.getFile("data/identity.xslt"))));
+                new FileInputStream(Resolver.getFile(
+                        "XHTMLEntityResolver/identity.xslt"))));
 
         XMLReader reader = XMLReaderFactory.createXMLReader();
         reader.setEntityResolver(new XHTMLEntityResolver(null));

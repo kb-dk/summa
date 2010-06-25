@@ -95,13 +95,13 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
     private Record createRecord(String filename) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         return new Record(filename, "Dummy", Resolver.getUTF8Content(
-                "data/horizon/" + filename).getBytes("utf-8"));
+                "horizon/" + filename).getBytes("utf-8"));
     }
 
     private Record createAlephRecord(String filename) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         return new Record(filename, "Dummy", Resolver.getUTF8Content(
-                "data/aleph/" + filename).getBytes("utf-8"));
+                "aleph/" + filename).getBytes("utf-8"));
     }
 
     @Override

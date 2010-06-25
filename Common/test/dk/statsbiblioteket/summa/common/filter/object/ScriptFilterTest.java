@@ -20,9 +20,7 @@ import java.io.StringReader;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.util.xml.DOM;
 
 /**
  * Test cases for {@link ScriptFilter}
@@ -127,7 +125,7 @@ public class ScriptFilterTest extends TestCase {
 
     public void testInlineScript() throws Exception {
         ObjectFilter filter = new ScriptFilter(
-                                           Configuration.load("data/inline-js.xml"));
+                                           Configuration.load("inline-js.xml"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
                        new Record("id1", "base1", "test content 1".getBytes()));

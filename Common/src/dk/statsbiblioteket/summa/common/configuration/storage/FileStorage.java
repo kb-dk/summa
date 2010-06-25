@@ -34,7 +34,8 @@ import java.util.*;
         comment = "Class and methods needs better docs, especially for throws")
 public class FileStorage implements ConfigurationStorage {
 
-    public static final String DEFAULT_RESOURCE = "configuration.xml";
+    public static final String DEFAULT_RESOURCE =
+            "data/configurationFiles/configuration.xml";
 
     private HashMap<String,Serializable> map;
     private String filename;

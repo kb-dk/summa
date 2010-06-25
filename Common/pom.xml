@@ -67,10 +67,16 @@
       <resource>
        <directory>data/</directory>
       </resource>
+      <resource>
+       <directory>src</directory>
+       <excludes>
+           <exclude>**/*.java</exclude>
+       </excludes>
+      </resource>
     </resources>
-		<testResources>
+	<testResources>
       <testResource>
-        <directory>${basedir}/test/data/</directory>
+        <directory>${basedir}/test/data/</directory>        
       </testResource>
     </testResources>
   </build>
