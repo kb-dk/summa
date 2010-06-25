@@ -1,0 +1,101 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>filter.name</key>
+            <value class="string">Simple file-based OAI ingest</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+                            <!-- Scan for ARC files and don't rename
+                                 files when we are done with them -->
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Reader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.rootfolder</key>
+                                    <value class="string">data/arc</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.recursive</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.filepattern</key>
+                                    <value class="string">.*\.arc\.gz</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.completedpostfix</key>
+                                    <value class="string"></value>
+                                </entry>
+                            </xproperties>
+
+                            <!-- Split the ARC files into their content -->
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">ARCParser</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.split.StreamController</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.stream.controller.parser</key>
+                                    <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
+                                </entry>
+                            </xproperties>
+
+                            <!-- Analyze the streams with Tika -->
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Tika</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.TikaFilter</value>
+                                </entry>
+                            </xproperties>
+
+                            <!-- Dump the analyzed content to stdout -->
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">StdOut</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.StdOutFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.stdout.escapecontent</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                            </xproperties>
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

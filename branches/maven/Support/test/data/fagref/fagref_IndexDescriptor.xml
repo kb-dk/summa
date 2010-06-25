@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <groups>
+        <group name="au">
+            <field ref="author_person"/>
+        </group>
+        <group name="ti">
+            <field ref="main_titel"/>
+        </group>
+        <group name="su">
+            <field ref="lsu_oai"/>
+        </group>
+        <group name="lma">
+            <field ref="lma_long"/>
+        </group>
+    </groups>
+
+    <fields>
+        <!-- TODO: Check how defaultType="token" works -->
+        <field name="token" indexed="true" inFreeText="true" required="true"/>
+        <!-- TODO: Consider compression of shortformat -->
+        <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
+        <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="main_titel" parent="token" queryBoost="10"/>
+        <field name="lsu_oai" parent="keyword" multiValued="false" queryBoost="10"/>
+        <field name="no" parent="token" queryBoost="7"/>
+        <field name="ma_long" parent="token" multiValued="true"/>
+        <field name="lma_long" parent="keyword"/>
+        <field name="sort_title" parent="keyword" sortLocale="da"/>
+    </fields>
+
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="au"/>
+        <field ref="ti"/>
+        <field ref="su"/>
+        <field ref="lma"/>
+    </defaultSearchFields>
+
+    <!-- Used by MoreLikeThis in LucenesearchNode -->
+    <lu:moreLikethisFields xmlns:lu="http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor">
+        <field ref="freetext"/>
+        <field ref="title"/>
+    </lu:moreLikethisFields>
+</IndexDescriptor>
+<!--
+
+Old style descriptor
+
+<Index:document xmlns:Index="http://statsbiblioteket.dk/2004/Index" Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false" Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="fagreferent" Index:id="jh@example.com">
+  <Index:fields>
+    <Index:field Index:name="shortformat" Index:type="stored" Index:freetext="false"><![CDATA[<shortrecord><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description><dc:title>Fagekspert i urukaisk</dc:title><dc:creator>Jens Hansen</dc:creator><dc:type xml:lang="da">person</dc:type><dc:type xml:lang="en">person</dc:type><dc:identifier>jh@example.com</dc:identifier></rdf:Description></rdf:RDF></shortrecord>]]></Index:field>
+    <Index:group Index:name="au" Index:navn="fo" Index:suggest="true">
+      <Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="10">Jens Hansen</Index:field>
+    </Index:group>
+    <Index:group Index:name="ti" Index:navn="ti" Index:suggest="true">
+      <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10">Fagekspert i urukaisk</Index:field>
+    </Index:group>
+    <Index:field Index:name="sort_title" Index:navn="sort_titel" Index:sortLocale="da" Index:type="keyword">Fagekspert i urukaisk</Index:field>
+    <Index:group Index:name="su" Index:navn="em" Index:suggest="true">
+      <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">Urukai</Index:field>
+      <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">urukaisk</Index:field>
+      <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">Kaslafniansk myrtologi</Index:field>
+      <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">palæontofantisme</Index:field>
+      <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">humus</Index:field>
+    </Index:group>
+    <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="7">Jeg er cand. phil. i urukaisk og besvarer spørgsmål og hjælper med at finde bøger, kumpolumpos, deep-pan-humus og  andre informationskilder indenfor fagområderne ukuraisk og kaslafnisk myrtologi.
+</Index:field>
+  </Index:fields>
+  <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">person</Index:field>
+  <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
+    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">fagekspert</Index:field>
+  </Index:group>
+</Index:document>
+-->
+

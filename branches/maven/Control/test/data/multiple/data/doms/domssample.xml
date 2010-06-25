@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/                             http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2008-05-20T07:30:59Z</responseDate>
+  <request verb="ListRecords" resumptionToken="X614226099/99">http://example.com:7900/oaiprovider/</request>
+  <ListRecords>
+    <record xmlns="http://www.openarchives.org/OAI/2.0/">
+      <header>
+        <identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12</identifier>
+        <datestamp>2008-05-19T09:09:29Z</datestamp>
+      </header>
+      <metadata>
+        <d:digitalObjectBundle xmlns:d="http://fedora.statsbiblioteket.dk/datatypes/digitalObjectBundle/">
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12" PID="doms:aarbog_137e713b09d7827766a12510b1ebcf12" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="Dagfilm Item"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:36:50.108Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:36:50.108Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.108Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="265">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Opel  3,0i Omega Sport</dc:title>
+                    <dc:identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.108Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1716">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dagfilm="http://www.statsbiblioteket.dk/doms-relations/collections/dagfilm/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12">
+                      <oai:itemID>doms:aarbog_137e713b09d7827766a12510b1ebcf12</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:aarbog_type_item"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <dagfilm:isPartOfDayfilm xmlns:dagfilm="http://www.statsbiblioteket.dk/doms-relations/collections/dagfilm" rdf:resource="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm"/>
+                      <dagfilm:hasManufacturer xmlns:dagfilm="http://www.statsbiblioteket.dk/doms-relations/collections/dagfilm" rdf:resource="info:fedora/doms:aarbog_arve_manufacturer"/>
+                      <doms:hasFile rdf:resource="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file"/>
+                      <doms:hasFile rdf:resource="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile"/>
+                      <doms:hasFile rdf:resource="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.108Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="418">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="da">Opel  3,0i Omega Sport</dc:title>
+                    <dc:subject xml:lang="da">Personbiler</dc:subject>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:disseminator BDEF_CONTRACT_PID="doms:indexRepresentation" ID="INDEX_REPRESENTATION" STATE="A" VERSIONABLE="true">
+              <foxml:disseminatorVersion BMECH_SERVICE_PID="doms:aarbog_ItemDigitalObjectBundle" CREATED="2008-05-14T06:36:50.108Z" ID="INDEX_REPRESENTATION.0" LABEL="Digital object bundle for dagfilm collection">
+                <foxml:serviceInputMap>
+                  <foxml:datastreamBinding DATASTREAM_ID="DC" KEY="STARTING_URLS" LABEL="Binding to Default Dublin Core Record to get URL for this object" ORDER="0"/>
+                </foxml:serviceInputMap>
+              </foxml:disseminatorVersion>
+            </foxml:disseminator>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm" PID="doms:aarbog_cykel-sketchen_1987_dayfilm" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="DAYFILM"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:33:26.579Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:33:26.579Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:33:26.579Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="250">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>cykel-sketchen 1987</dc:title>
+                    <dc:identifier>doms:aarbog_cykel-sketchen_1987_dayfilm</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:33:26.579Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1189">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dagfilm="http://www.statsbiblioteket.dk/doms-relations/collections/dagfilm/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm">
+                      <oai:itemID>doms:aarbog_cykel-sketchen_1987_dayfilm</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:aarbog_type_dayfilm"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <dagfilm:isPartOfRevy xmlns:dagfilm="http://www.statsbiblioteket.dk/doms-relations/collections/dagfilm" rdf:resource="info:fedora/doms:aarbog_cykel-sketchen_revy"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_1987_dayfilm/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:33:26.579Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="377">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="da">cykel-sketchen 1987</dc:title>
+                    <dcterms:issued>1987</dcterms:issued>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:disseminator BDEF_CONTRACT_PID="doms:indexRepresentation" ID="INDEX_REPRESENTATION" STATE="A" VERSIONABLE="true">
+              <foxml:disseminatorVersion BMECH_SERVICE_PID="doms:aarbog_DayfilmDigitalObjectBundle" CREATED="2008-05-14T06:33:26.579Z" ID="INDEX_REPRESENTATION.0" LABEL="Digital object bundle for dagfilm collection">
+                <foxml:serviceInputMap>
+                  <foxml:datastreamBinding DATASTREAM_ID="DC" KEY="STARTING_URLS" LABEL="Binding to Default Dublin Core Record to get URL for this object" ORDER="0"/>
+                </foxml:serviceInputMap>
+              </foxml:disseminatorVersion>
+            </foxml:disseminator>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_arve_manufacturer" PID="doms:aarbog_arve_manufacturer" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="Manufacturer"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:28:54.620Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:28:54.620Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_arve_manufacturer/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:54.620Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="232">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Opel</dc:title>
+                    <dc:identifier>doms:aarbog_arve_manufacturer</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_arve_manufacturer/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:54.620Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="903">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_arve_manufacturer">
+                      <oai:itemID>doms:aarbog_arve_manufacturer</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:aarbog_type_manufacturer"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_arve_manufacturer/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:54.620Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="308">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="da">Opel</dc:title>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file" PID="doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="UTF8 File"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:36:50.627Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:36:50.627Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="E" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file/CONTENT" ID="CONTENT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.627Z" ID="CONTENT.0" LABEL="DOMS Fedora File Object Content Datastream" MIMETYPE="text/utf8" SIZE="0">
+                <foxml:contentDigest DIGEST="d41d8cd98f00b204e9800998ecf8427e" TYPE="MD5"/>
+                <foxml:contentLocation REF="http://bitfinder.statsbiblioteket.dk/dagfilm/cykel-sketchen/1987/Personbiler/N-R/Arve__1,8r_Alpha_Sleep.txt" TYPE="URL"/>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.627Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="278">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Arve__1,8r_Alpha_Sleep.txt</dc:title>
+                    <dc:identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.627Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1023">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file">
+                      <oai:itemID>doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:Type_File"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <doms:isFileformat rdf:resource="info:fedora/doms:Fileformat_utf8"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_utf8file/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.627Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="330">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="en">Arve__1,8r_Alpha_Sleep.txt</dc:title>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile" PID="doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="PDF File"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:36:50.515Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:36:50.515Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="E" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile/CONTENT" ID="CONTENT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.515Z" ID="CONTENT.0" LABEL="DOMS Fedora File Object Content Datastream" MIMETYPE="text/pdf" SIZE="0">
+                <foxml:contentDigest DIGEST="d706a15c8e555dd1db4d142a7847f753" TYPE="MD5"/>
+                <foxml:contentLocation REF="http://bitfinder.statsbiblioteket.dk/dagfilm/cykel-sketchen/1987/Personbiler/N-R/Arve__1,8r_Alpha_Sleep.pdf" TYPE="URL"/>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.515Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="277">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Arve__1,8r_Alpha_Sleep.pdf</dc:title>
+                    <dc:identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.515Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1020">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile">
+                      <oai:itemID>doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:Type_File"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <doms:isFileformat rdf:resource="info:fedora/doms:Fileformat_pdf"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_pdffile/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.515Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="330">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="en">Arve__1,8r_Alpha_Sleep.pdf</dc:title>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile" PID="doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="TIFF File"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:36:50.175Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:36:50.175Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="E" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile/CONTENT" ID="CONTENT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.175Z" ID="CONTENT.0" LABEL="DOMS Fedora File Object Content Datastream" MIMETYPE="image/tiff" SIZE="0">
+                <foxml:contentDigest DIGEST="a168bd059d667d71946c3818fedcb8c8" TYPE="MD5"/>
+                <foxml:contentLocation REF="http://bitfinder.statsbiblioteket.dk/dagfilm/cykel-sketchen/1987/Personbiler/N-R/Arve__1,8r_Alpha_Sleep.tiff" TYPE="URL"/>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.175Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="279">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Arve__1,8r_Alpha_Sleep.tiff</dc:title>
+                    <dc:identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.175Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1053">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile">
+                      <oai:itemID>doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:Type_File"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <doms:hasOriginal rdf:resource="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_tifffile/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.175Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="331">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="en">Arve__1,8r_Alpha_Sleep.tiff</dc:title>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_revy" PID="doms:aarbog_cykel-sketchen_revy" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="Revy"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:28:25.881Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:28:25.881Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_revy/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:25.881Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="236">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>cykel-sketchen</dc:title>
+                    <dc:identifier>doms:aarbog_cykel-sketchen_revy</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_revy/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:25.881Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="891">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_cykel-sketchen_revy">
+                      <oai:itemID>doms:aarbog_cykel-sketchen_revy</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:aarbog_type_revy"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_cykel-sketchen_revy/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:28:25.881Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="664">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="da">cykel-sketchen</dc:title>
+                    <dc:description xml:lang="da">Dette en en del af et samarbejdsprojekt mellem Gentofte Bibliotekerne og Statsbiblioteket og har til formål at give elektronisk adgang til efterspurgte ældre årbøger.Projektet er etableret på baggrund af ophavsretslovens §16 og efter aftale med Bonniers Specialmagasiner A/S.</dc:description>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+          <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:fedoraxsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:audit="info:fedora/fedora-system:def/audit#" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile" PID="doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile" fedoraxsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-0.xsd">
+            <foxml:objectProperties>
+              <foxml:property NAME="http://www.w3.org/1999/02/22-rdf-syntax-ns#type" VALUE="FedoraObject"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="Active"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="GIF File"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#createdDate" VALUE="2008-05-14T06:36:50.020Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/view#lastModifiedDate" VALUE="2008-05-14T06:36:50.020Z"/>
+              <foxml:property NAME="info:fedora/fedora-system:def/model#contentModel" VALUE="DOMSOBJECT"/>
+            </foxml:objectProperties>
+            <foxml:datastream CONTROL_GROUP="E" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile/CONTENT" ID="CONTENT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.020Z" ID="CONTENT.0" LABEL="DOMS Fedora File Object Content Datastream" MIMETYPE="image/gif" SIZE="0">
+                <foxml:contentDigest DIGEST="a3100a9fa0f22adf5ff5cf0aaa38965c" TYPE="MD5"/>
+                <foxml:contentLocation REF="http://bitfinder.statsbiblioteket.dk/dagfilm/cykel-sketchen/1987/Personbiler/N-R/Arve__1,8r_Alpha_Sleep.gif" TYPE="URL"/>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile/DC" ID="DC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.020Z" ID="DC.0" LABEL="Default Dublin Core Record" MIMETYPE="text/xml" SIZE="277">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                    <dc:title>Arve__1,8r_Alpha_Sleep.gif</dc:title>
+                    <dc:identifier>doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile</dc:identifier>
+                  </oai_dc:dc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile/RELS-EXT" ID="RELS-EXT" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.020Z" ID="RELS-EXT.0" LABEL="Fedora Object-to-Object Relationship Metadata" MIMETYPE="text/xml" SIZE="1020">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:doms="http://www.statsbiblioteket.dk/doms-relations/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+                    <rdf:Description rdf:about="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile">
+                      <oai:itemID>doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile</oai:itemID>
+                      <doms:hasRights rdf:resource="info:fedora/doms:aarbog_rights"/>
+                      <doms:isObjectType rdf:resource="info:fedora/doms:Type_File"/>
+                      <doms:isPartOfCollection rdf:resource="info:fedora/doms:aarbog_collection"/>
+                      <doms:isFileformat rdf:resource="info:fedora/doms:Fileformat_gif"/>
+                    </rdf:Description>
+                  </rdf:RDF>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+            <foxml:datastream CONTROL_GROUP="X" FEDORA_URI="info:fedora/doms:aarbog_137e713b09d7827766a12510b1ebcf12_giffile/DomsDC" ID="DomsDC" STATE="A" VERSIONABLE="true">
+              <foxml:datastreamVersion CREATED="2008-05-14T06:36:50.020Z" ID="DomsDC.0" LABEL="DOMS Dublin Core Record" MIMETYPE="text/xml" SIZE="330">
+                <foxml:contentDigest DIGEST="none" TYPE="DISABLED"/>
+                <foxml:xmlContent>
+                  <dcterms:qualifieddc xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">
+                    <dc:title xml:lang="en">Arve__1,8r_Alpha_Sleep.gif</dc:title>
+                  </dcterms:qualifieddc>
+                </foxml:xmlContent>
+              </foxml:datastreamVersion>
+            </foxml:datastream>
+          </foxml:digitalObject>
+        </d:digitalObjectBundle>
+      </metadata>
+    </record>
+  </ListRecords>
+</OAI-PMH>

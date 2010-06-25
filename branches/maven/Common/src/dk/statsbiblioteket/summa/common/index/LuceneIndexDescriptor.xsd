@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for Summa search responses.
+            A SearchResponse is a collection of SearchNodeResponses.
+            Notable search nodes in Summa are Lucene- and Facet-nodes.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="morelikethisFields" >
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="field" minOccurs="1" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:attribute name="ref" type="xsd:string"/>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
