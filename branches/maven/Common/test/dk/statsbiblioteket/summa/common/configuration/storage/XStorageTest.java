@@ -34,9 +34,9 @@ import dk.statsbiblioteket.util.XProperties;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XStorageTest extends ConfigurationStorageTestCase {
-    File subLocation = new File("Common/test/dk/statsbiblioteket/summa/"
+    File subLocation = new File(/*"Common/test/dk/statsbiblioteket/summa/"
                                 + "common/configuration/storage/"
-                                + "substorage.xml").getAbsoluteFile();
+                                + */"target/test-classes/configurationFiles/substorage.xml").getAbsoluteFile();
 
     public XStorageTest() throws Exception {
         super(new XStorage());        

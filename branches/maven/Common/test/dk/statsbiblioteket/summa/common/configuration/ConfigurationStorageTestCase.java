@@ -24,12 +24,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke")
 public class ConfigurationStorageTestCase extends TestCase {
 
-    static final String configFilename = "configuration.xml";
+    static final String configFilename =
+            "configurationFiles/configuration.xml";
     public ConfigurationStorage storage;
     public String testName;
 
     public ConfigurationStorageTestCase() throws Exception {
-        this(new FileStorage("configuration.xml"));        
+        this(new FileStorage(configFilename));
     }
 
     public ConfigurationStorageTestCase (ConfigurationStorage storage) {

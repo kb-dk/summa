@@ -42,7 +42,8 @@ public class LuceneIndexDescriptorTest extends TestCase {
 
     public void testMoreLikeThisFields() throws IOException {
         LuceneIndexDescriptor descriptor = new LuceneIndexDescriptor(
-                Resolver.getURL("data/MoreLikeThisDescriptor.xml"));
+                Resolver.getURL(
+                        "LucenIndexDescriptor/MoreLikeThisDescriptor.xml"));
         assertEquals("There should be the right number of MoreLikeThis fields",
                    2, descriptor.getMoreLikethisFields().size());
     }

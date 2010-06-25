@@ -27,20 +27,20 @@ import java.io.StringReader;
  *
  */
 public class JStorageTest extends ConfigurationStorageTestCase {
-
+    private static final String CONFIGURATIONJS = "configuration.js";
     public JStorageTest() {
         super(new JStorage());
     }
 
     public void testLoadFromResource() throws Exception {
-        JStorage js = new JStorage("configuration.js");
+        JStorage js = new JStorage(CONFIGURATIONJS);
         Configuration conf = new Configuration(js);
         checkSampleConfig(conf);
     }
 
     public void testLoadFromSysProp() throws Exception {
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY,
-                           "configuration.js");
+                CONFIGURATIONJS);
         try {
             Configuration conf = Configuration.getSystemConfiguration(false);
             checkSampleConfig(conf);
@@ -73,7 +73,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
     }
 
     public void testLoadNested() throws Exception {
-        JStorage sto = new JStorage("configuration.js");
+        JStorage sto = new JStorage(CONFIGURATIONJS);
         JStorage sub = sto.getSubStorage("summa.test.nested");
 
         assertEquals(1, sub.size());
@@ -81,7 +81,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
     }
 
     public void testIteration() throws Exception {
-        JStorage js = new JStorage("configuration.js");
+        JStorage js = new JStorage(CONFIGURATIONJS);
         Configuration conf = new Configuration(js);
         checkSampleConfig(conf);
 
@@ -92,7 +92,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
     }
 
     public void testLoadSubStorages() throws Exception {
-        JStorage js = new JStorage("configuration.js");
+        JStorage js = new JStorage(CONFIGURATIONJS);
         JStorage sub = js.getSubStorage("summa.test.nested");
         List<ConfigurationStorage> subs =
                                      js.getSubStorages("summa.test.nestedlist");
@@ -108,7 +108,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
     }
 
     public void testListOfStrings() throws Exception {
-        JStorage js = new JStorage("configuration.js");
+        JStorage js = new JStorage(CONFIGURATIONJS);
         List vals = (List)js.get("summa.test.listofstrings");
         assertEquals(Arrays.asList("one", "two", "three"), vals);
     }
@@ -161,7 +161,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         "}", js.toString());
 
         System.out.println("--------------");
-        js = new JStorage("configuration.js");
+        js = new JStorage(CONFIGURATIONJS);
         System.out.println(js.toString());
         System.out.println("--------------");
     }

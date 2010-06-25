@@ -23,7 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class MemoryStorageTest extends ConfigurationStorageTestCase {
 
     public MemoryStorageTest () throws Exception {
-        super (new MemoryStorage("configuration.xml"));
+        super (new MemoryStorage("data/configurationFiles/configuration.xml"));
     }
 
 
