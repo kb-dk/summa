@@ -41,24 +41,29 @@ public class VoidShellContext implements ShellContext {
         this.defaultLine = defaultLine;
     }
 
+    @Override
     public void error(String msg) {
         lineBuffer.clear();
         lastError = msg;
         log.error (msg);
     }
 
+    @Override
     public void info(String msg) {
         log.info (msg);
     }
 
+    @Override
     public void warn(String msg) {
         log.warn (msg);
     }
 
+    @Override
     public void debug(String msg) {
         log.debug (msg);
     }
 
+    @Override
     public String readLine() {
         if (!lineBuffer.empty()) {
             return lineBuffer.pop();
@@ -67,16 +72,24 @@ public class VoidShellContext implements ShellContext {
         return defaultLine;
     }
 
+    @Override
     public void pushLine(String line) {
         lineBuffer.push(line);
     }
 
+    @Override
     public String getLastError() {
         return lastError;
     }
 
+    @Override
     public void prompt(String msg) {
         log.debug("Prompt: " + msg);
+    }
+
+    @Override
+    public void clear(){
+      ;
     }
 }
 

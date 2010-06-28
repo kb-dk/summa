@@ -20,8 +20,7 @@ import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
 import dk.statsbiblioteket.summa.common.shell.Core;
 
 /**
- * Command used to display the last stack trace recorded by the shell
- * {@link Core}.
+ * Command used to display the last stack trace recorded by the shell {@link Core}.
  */
 public class Trace extends Command {
 
@@ -30,7 +29,7 @@ public class Trace extends Command {
     }
 
     public void invoke(ShellContext ctx) throws Exception {
-        throw new TraceNotification (this);
+        throw new TraceNotification(this);
     }
 }
 

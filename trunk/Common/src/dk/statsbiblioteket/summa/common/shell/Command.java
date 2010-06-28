@@ -29,8 +29,34 @@ public abstract class Command {
     private String name;
     private String description;
     private String usage;
+    private String[] aliases = new String[] {};
 
+    /**
+     * Constructs a command with a single command name.
+     * @param name The command name.
+     * @param description Command description.
+     */
     public Command (String name, String description) {
+        constructorHelper(name, description);
+    }
+
+    /**
+     * Create a command with aliases.
+     * @param name The command name
+     * @param aliases The aliases if any.
+     * @param description Command description.
+     */
+    public Command(String name, String description, String[] aliases) {
+        constructorHelper(name, description);
+        System.arraycopy(aliases, 0, this.aliases, 0, aliases.length - 1);
+    }
+
+    /**
+     *  Helper method for the constructors.
+     * @param name The command name.
+     * @param description Command description.
+     */
+    private void constructorHelper(String name, String description) {
         options = new Options();
         this.name = name;
         this.description = description;
@@ -42,19 +68,23 @@ public abstract class Command {
      * Get the string used to invoke this command
      * @return the string used to invoke this command
      */
-    public String getName () {
+    public String getName() {
         return name;
     }
 
-    public String getDescription () {
+    public String[] getAliases() {
+        return aliases;
+    }
+
+    public String getDescription() {
         return description;
     }
 
-    public String getUsage () {
+    public String getUsage() {
         return usage;
     }
 
-    public void setUsage (String usage) {
+    public void setUsage(String usage) {
         this.usage = usage;
     }
 
@@ -66,16 +96,15 @@ public abstract class Command {
      * <p>In case of errors the command should throw an exception</p>
      *
      * @param ctx Context used to print messages and retrieve user feedback
-     * @return {@code true} if the command ran succesfully, {@code false}
-     *         otherwise.
+     * @throws Exception when running a command.
      */
-    public abstract void invoke (ShellContext ctx) throws Exception;
+    public abstract void invoke(ShellContext ctx) throws Exception;
 
     /**
      * Called by the shell {@link Core} to retrieve command line options.
      * @return
      */
-    Options getOptions () {
+    Options getOptions() {
         return options;
     }
 
@@ -86,7 +115,7 @@ public abstract class Command {
      * @param cli the parsed command line to use on next invocation.
      * @param raw the raw command line entered by the user
      */
-    void prepare (CommandLine cli, String raw) {
+    void prepare(CommandLine cli, String raw) {
         this.cli = cli;
         this.raw = raw;
     }
@@ -100,7 +129,7 @@ public abstract class Command {
      * @param helpMsg
      */
     protected void installOption (String shortOpt, String longOpt,
-                               boolean needsValue, String helpMsg) {
+                                           boolean needsValue, String helpMsg) {
         options.addOption(shortOpt, longOpt, needsValue, helpMsg);
     }
 
@@ -109,7 +138,7 @@ public abstract class Command {
      * @param option the long or short name of the switch
      * @return true if the switch has been set
      */
-    protected boolean hasOption (String option) {
+    protected boolean hasOption(String option) {
         return cli.hasOption(option);
     }
 
@@ -119,7 +148,7 @@ public abstract class Command {
      * @return the value supplied on the command line or {@code null} if none
      *         is set.
      */
-    protected String getOption (String option) {
+    protected String getOption(String option) {
         return cli.getOptionValue(option);
     }
 
@@ -127,7 +156,7 @@ public abstract class Command {
      * Get any non-recognized or left over arguments
      * @return an array with the extra arguments
      */
-    protected String[] getArguments () {
+    protected String[] getArguments() {
         return cli.getArgs();
     }
 

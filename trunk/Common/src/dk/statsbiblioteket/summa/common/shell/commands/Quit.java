@@ -25,7 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class Quit extends Command {
 
     public Quit() {
-        super("quit", "Exit the shell");
+            super("quit", "Exit the shell", new String[] {"exit"});
     }
 
     public void invoke(ShellContext ctx) {

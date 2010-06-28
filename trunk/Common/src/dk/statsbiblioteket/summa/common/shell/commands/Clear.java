@@ -16,29 +16,25 @@ package dk.statsbiblioteket.summa.common.shell.commands;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.ClearNotification;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+/**
+ * @author Henrik <mailto:hbk@statsbiblioteket.dk>
+ * @since Jun 28, 2010
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
-public class Help extends Command {
+        author = "hbk")
+public class Clear extends Command {
 
-    public Help () {
-        super("help", "List known commands, or help on a specific command",
-              new String[] {"?"});
-        setUsage("help [command]");
-    }
+  public Clear() {
+    super("clear", "Clears the screen");
+    setUsage("clear");
+  }
 
-    public void invoke(ShellContext ctx) {
-        String[] args = getArguments();
-        if (args.length >= 1) {
-            throw new HelpNotification(this, args[0]);
-        }
-        throw new HelpNotification(this);
-    }
+  @Override
+  public void invoke(ShellContext ctx) throws Exception {
+    throw new ClearNotification(this);
+  }
 }
-
-
-
-

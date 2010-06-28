@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.control.api.feedback;
 
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
-import dk.statsbiblioteket.summa.control.api.feedback.Message;
 
 import java.io.IOException;
 import java.util.Stack;
@@ -44,6 +42,7 @@ public class FeedbackShellContext implements ShellContext {
         log.trace ("Created with feedback " + feedback);
     }
 
+    @Override
     public void error(String msg) {
         lineBuffer.clear();
         lastError = msg;
@@ -57,6 +56,7 @@ public class FeedbackShellContext implements ShellContext {
 
     }
 
+    @Override
     public void info(String msg) {
         try {
             feedback.putMessage(new Message(Message.MESSAGE_PLAIN, msg));
@@ -66,6 +66,7 @@ public class FeedbackShellContext implements ShellContext {
         }
     }
 
+    @Override
     public void warn(String msg) {
         try {
             feedback.putMessage(new Message(Message.MESSAGE_ALERT,
@@ -76,6 +77,7 @@ public class FeedbackShellContext implements ShellContext {
         }
     }
 
+    @Override
     public void debug(String msg) {
         // We use the logging level of the log to determine whether or not
         // to emit debug messages.
@@ -93,6 +95,7 @@ public class FeedbackShellContext implements ShellContext {
         }
     }
 
+    @Override
     public String readLine() {
         if (!lineBuffer.isEmpty()) {
             String line =  lineBuffer.pop();
@@ -111,6 +114,7 @@ public class FeedbackShellContext implements ShellContext {
         }
     }
 
+    @Override
     public void pushLine(String line) {
         if (line == null) {
             throw new NullPointerException("Can not push 'null' line");
@@ -119,10 +123,12 @@ public class FeedbackShellContext implements ShellContext {
         lineBuffer.push(line);
     }
 
+    @Override
     public String getLastError() {
         return lastError;
     }
 
+    @Override
     public void prompt(String msg) {
         try {
             feedback.putMessage(new Message(Message.MESSAGE_PLAIN,
@@ -131,6 +137,11 @@ public class FeedbackShellContext implements ShellContext {
             log.warn("Failed to write prompt '" + msg
                      + "' to feedback", e);
         }
+    }
+
+    @Override
+    public void clear() {
+      ;
     }
 }
 
