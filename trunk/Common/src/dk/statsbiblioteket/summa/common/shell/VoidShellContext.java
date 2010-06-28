@@ -17,8 +17,6 @@ package dk.statsbiblioteket.summa.common.shell;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Stack;
 
 /**
