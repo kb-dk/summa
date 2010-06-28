@@ -85,6 +85,15 @@ public class ShellTest extends TestCase {
                 public void prompt (String prompt) {
                     System.out.print(prompt);
                 }
+
+                @Override
+                public void clear() {
+                  try {
+                    lineIn.clearScreen();
+                  } catch(IOException e) {
+                    error("clearing screen");
+                  }
+                }
             };
 
         core = new Core (ctx, true, true);
@@ -296,6 +305,15 @@ public class ShellTest extends TestCase {
         Core core = new Core (ctx, true, true);
         int exitCode = core.run(new Script(script));
         
+        assertEquals("Issuing the script '" + script
+                     + "' should return with code 0", 0, exitCode);
+    }
+
+    public void testAliases() throws Exception {
+        String script = "exit";
+        Core core = new Core (ctx, true, true);
+        int exitCode = core.run(new Script(script));
+
         assertEquals("Issuing the script '" + script
                      + "' should return with code 0", 0, exitCode);
     }

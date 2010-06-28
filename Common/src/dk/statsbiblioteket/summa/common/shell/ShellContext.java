@@ -80,6 +80,11 @@ public interface ShellContext {
      * @param msg the message to prompt
      */
     public void prompt (String msg);
+
+    /**
+     * Clears the screen for input. 
+     */
+    public void clear();
 }
 
 
