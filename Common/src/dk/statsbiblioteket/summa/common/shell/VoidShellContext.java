@@ -89,7 +89,7 @@ public class VoidShellContext implements ShellContext {
 
     @Override
     public void clear(){
-      ;
+      // Nothing to do.
     }
 }
 

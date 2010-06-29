@@ -21,11 +21,7 @@ import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.PushbackReader;
-import java.io.StringReader;
 
 import junit.framework.TestCase;
 import jline.ConsoleReader;
@@ -191,54 +187,54 @@ public class ShellTest extends TestCase {
         sc = new Script("foo; bar");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         sc = new Script("  foo  ;    bar");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         /* Check compact layout and trailing ; */
         sc = new Script("foo;bar;");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         /* Check newline delimiting */
         sc = new Script("foo\nbar");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         /* Three statements and a trailing \n */
         sc = new Script("foo\nbar\nbaz\n");
         stmts = new String[] {"foo", "bar", "baz"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         /* Check escapes */
         sc = new Script("foo  \\;    bar");
         stmts = new String[] {"foo  ;    bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         sc = new Script("foo  \\n    bar");
         stmts = new String[] {"foo  \n    bar"};
         iter = sc.iterator();
-        for (int i = 0; i < stmts.length; i++) {
-            assertEquals(stmts[i], iter.next());
+        for (String stmt : stmts) {
+            assertEquals(stmt, iter.next());
         }
 
         /* Empty scripts */
@@ -248,8 +244,9 @@ public class ShellTest extends TestCase {
 
         sc = new Script(";");
         iter = sc.iterator();
-        for (String s : sc)
+        for (String s : sc) {
             System.out.println ("TOK"+s);
+        }
         assertFalse(iter.hasNext());
     }
 
@@ -285,7 +282,7 @@ public class ShellTest extends TestCase {
     }
 
     public void testExecCommand () throws Exception {
-        Command exec = new Exec();
+        new Exec();
         Script script = new Script ("foo -s; bar -f 'quiz//'; baz");
 
         script.pushToShellContext(ctx);

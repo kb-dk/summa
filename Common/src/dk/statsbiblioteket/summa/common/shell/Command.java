@@ -102,7 +102,7 @@ public abstract class Command {
 
     /**
      * Called by the shell {@link Core} to retrieve command line options.
-     * @return
+     * @return the command options.
      */
     Options getOptions() {
         return options;
@@ -123,10 +123,10 @@ public abstract class Command {
     /**
      * Called in the constructor of a {@code Command} implementation
      * to add a command line switch.
-     * @param shortOpt
-     * @param longOpt
-     * @param needsValue
-     * @param helpMsg
+     * @param shortOpt The short option to add.
+     * @param longOpt The Long option to add.
+     * @param needsValue true if the options needs a value.
+     * @param helpMsg help message for operation.
      */
     protected void installOption (String shortOpt, String longOpt,
                                            boolean needsValue, String helpMsg) {

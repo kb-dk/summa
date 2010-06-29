@@ -141,7 +141,7 @@ public class FeedbackShellContext implements ShellContext {
 
     @Override
     public void clear() {
-      ;
+      // Nothing to do here.
     }
 }
 
