@@ -30,6 +30,7 @@ import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -228,11 +229,14 @@ public class LuceneBooster {
             log.trace("applyBoost: FuzzyQuery ignored");
         } else if(query instanceof MatchAllDocsQuery) {
             log.trace("applyBoost: MatchAllDocsQuery ignored");
+        } else if (query instanceof PrefixQuery) {
+            log.trace("applyBoost: PrefixQuery ignored");
         } else if(query instanceof MultiTermQuery) {
             log.trace("applyBoost: MultiTermQuery ignored");
         } else if (query instanceof PhraseQuery) {
             log.trace("applyBoost: PhraseQuery ignored");
-        } else {
+        }
+        else {
             log.warn("applyBoost: Unexpected Query '" + query.getClass()
                      + "' ignored");
         }
