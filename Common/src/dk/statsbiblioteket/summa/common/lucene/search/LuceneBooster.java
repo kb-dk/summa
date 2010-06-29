@@ -25,10 +25,13 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.FilteredQuery;
+import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiTermQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -191,7 +194,6 @@ public class LuceneBooster {
         }
         expandBoosts(boosts);
         boolean applied = false;
-        // TODO update with all types of Querys in Lucene 3.0.1
         if (query instanceof BooleanQuery) {
             log.trace("applyBoost: BooleanQuery found");
             for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
@@ -220,10 +222,16 @@ public class LuceneBooster {
             }
         } else if (query instanceof ConstantScoreQuery) {
             log.trace("applyBoost: ConstantScoreQuery ignored");
-        } else if (query instanceof NumericRangeQuery) {
-            log.trace("applyBoost: NumericRangeQuery ignored");
-        } else if (query instanceof TermRangeQuery) {
-            log.trace("applyBoost: TermRangeQuery ignored");
+        }  else if(query instanceof FilteredQuery) {
+            log.trace("applyBoost: FilteredQuery ignored");
+        } else if(query instanceof FuzzyQuery) {
+            log.trace("applyBoost: FuzzyQuery ignored");
+        } else if(query instanceof MatchAllDocsQuery) {
+            log.trace("applyBoost: MatchAllDocsQuery ignored");
+        } else if(query instanceof MultiTermQuery) {
+            log.trace("applyBoost: MultiTermQuery ignored");
+        } else if (query instanceof PhraseQuery) {
+            log.trace("applyBoost: PhraseQuery ignored");
         } else {
             log.warn("applyBoost: Unexpected Query '" + query.getClass()
                      + "' ignored");
