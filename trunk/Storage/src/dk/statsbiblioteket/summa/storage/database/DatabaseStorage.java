@@ -340,10 +340,11 @@ getco     */
     private final Object cachedStatsLock = new Object();
 
     /**
-     * A variation of {@link QueryOptions} used to keep track
-     * of recursion depths for expanding children and parents
+     * A variation of {@link QueryOptions} used to keep track of recursion depths for expanding
+     * children and parents.
      */
     private static class RecursionQueryOptions extends QueryOptions {
+        private static final long serialVersionUID = 16841L; 
 
         private int childRecursionDepth;
         private int parentRecursionHeight;

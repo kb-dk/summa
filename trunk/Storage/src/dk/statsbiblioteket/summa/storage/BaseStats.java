@@ -38,7 +38,8 @@ import java.text.SimpleDateFormat;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BaseStats implements Serializable {
-
+    private static final long serialVersionUID = 7879514L;
+    
     private String baseName;
     private long lastModified;
     private long generationTime;

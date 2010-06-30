@@ -59,7 +59,7 @@ public class MiniConnectionPoolManager {
      * connection becomes available within <code>timeout</code> seconds.
      */
     public static class TimeoutException extends RuntimeException {
-
+        private static final long serialVersionUID = 138468512L;
         public TimeoutException () {
             super ("Timeout while waiting for a free database connection.");
         }
@@ -70,7 +70,7 @@ public class MiniConnectionPoolManager {
      * is an error looking up a connection from the pooling data source.
      */
     public static class ConnectionException extends RuntimeException {
-
+        private static final long serialVersionUID = 8749864L;
         public ConnectionException (String msg) {
             super (msg);
         }

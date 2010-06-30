@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
        state = QAInfo.State.IN_DEVELOPMENT,
        author = "mke")
 public class StorageIterator implements Iterator<Record>, Serializable {
+    private static final long serialVersionUID = 186584L;
     // TODO: Consider making this adjustable
     public static int MAX_QUEUE_SIZE = 110;
 

@@ -66,7 +66,8 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
      * @param conf the configuration for the storage connection. See
      *             {@link #CONN_FACT_CLASS}.
      */
-    public StorageConnectionFactory (Configuration conf) {
+    @SuppressWarnings({"unchecked"})
+    public StorageConnectionFactory(Configuration conf) {
         log = LogFactory.getLog(StorageConnectionFactory.class);
 
         /* Lookup which connection factory to use.
@@ -76,10 +77,10 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
                                               ConnectionFactory.class,
                                               SummaRMIConnectionFactory.class);
 
-        log.debug ("Using backend connection factory '" + backendClass + "'");
+        log.debug("Using backend connection factory '" + backendClass + "'");
 
-        backend = Configuration.create (backendClass, conf);
-        log.trace ("Backend instantiated");
+        backend = Configuration.create(backendClass, conf);
+        log.trace("Backend instantiated");
     }
 
     /**
@@ -91,10 +92,10 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
     }
 
     public Storage createConnection(String connectionId) {
-        log.trace ("Creating connection to '" + connectionId + "' via backend "
+        log.trace("Creating connection to '" + connectionId + "' via backend "
                    + "'" + backend.getClass().getName() + "'");
-        Object o = backend.createConnection (connectionId);
-        log.trace ("Got storage proxy class: " + o);
+        Object o = backend.createConnection(connectionId);
+        log.trace("Got storage proxy class: " + o);
         return (Storage) o;
     }
 }
