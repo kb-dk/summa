@@ -35,6 +35,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DocumentResponse implements Response, DocumentKeys {
+    private static final long serialVersionUID = 268187L;
     private static Log log = LogFactory.getLog(DocumentResponse.class);
 
     /**
@@ -91,6 +92,7 @@ public class DocumentResponse implements Response, DocumentKeys {
      * Contains a representation of each hit from a search.
      */
     public static class Record implements Serializable {
+        private static final long serialVersionUID = 48785612L;
         private float score;
         private String sortValue;
         private String id;
@@ -143,9 +145,10 @@ public class DocumentResponse implements Response, DocumentKeys {
     }
 
     /**
-     * Containt content from a requested Field for a Record.
+     * Contain content from a requested Field for a Record.
      */
     public static class Field implements Serializable {
+        private static final long serialVersionUID = 38486524L;
         private String name;
         private String content;
         private boolean escapeContent;
@@ -261,6 +264,7 @@ public class DocumentResponse implements Response, DocumentKeys {
 
     private static class ScoreComparator implements Comparator<Record>,
                                                    Serializable {
+        private static final long serialVersionUID = 168413841L;
         public int compare(Record o1, Record o2) {
             float diff = o2.getScore() - o1.getScore();
             return diff < 0 ? -1 : diff > 0 ? 1 : 0;

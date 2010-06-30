@@ -40,6 +40,7 @@ import dk.statsbiblioteket.summa.common.util.ConvenientMap;
         state = QAInfo.State.QA_OK,
         author = "te")
 public class Request extends ConvenientMap {
+    private static final long serialVersionUID = 12L;
 
 }
 

@@ -40,7 +40,7 @@ import java.rmi.server.UnicastRemoteObject;
         )        
 public class RMISearcherProxy extends UnicastRemoteObject
                               implements RemoteSearcher {
-
+    private static final long serialVersionUID = 488468553186L; 
     private static final Log log = LogFactory.getLog (RMISearcherProxy.class);
 
     /**

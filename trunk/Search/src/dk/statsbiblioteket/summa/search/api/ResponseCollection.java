@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
         author = "te",
         comment="Better class description needed  ")
 public class ResponseCollection implements Collection<Response>, Serializable {
+    private static final long serialVersionUID = 13841868524L;
     private static Log log = LogFactory.getLog(Response.class);
 
     private Map<String, Response> responses = new HashMap<String, Response>(5);
