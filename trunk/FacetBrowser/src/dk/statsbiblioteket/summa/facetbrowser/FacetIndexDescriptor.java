@@ -126,6 +126,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             throw new ParseException(String.format(
                     "Expressions '%s' and '%s' were  invalid",
                     FACET_NODE_EXPR, FACET_EXPR), -1) {
+                private static final long serialVersionUID = 89785489484L;
                 { initCause(e); } };
         } catch (final NullPointerException e) {
             log.warn(String.format(
@@ -142,7 +143,9 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             throw new ParseException(String.format(
                     "Got NullPointerException while evaluating node with "
                     + "expressions '%s' and '%s' and dom '%s'",
-                    FACET_NODE_EXPR, FACET_EXPR, dom), -1) {{ initCause(e); }};
+                    FACET_NODE_EXPR, FACET_EXPR, dom), -1) {
+                private static final long serialVersionUID = 79877384469L;
+                { initCause(e); }};
         }
         log.trace(String.format("Located %d facet nodes",
                                 facetNodes.getLength()));

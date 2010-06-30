@@ -38,6 +38,7 @@ import java.util.Locale;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class IndexResponse implements Response {
+    private static final long serialVersionUID = 798434168189L;
     private static Log log = LogFactory.getLog(IndexResponse.class);
 
     public static final String INDEX_RESPONSE_NAMESPACE =
@@ -117,6 +118,7 @@ public class IndexResponse implements Response {
 
     private static class SensitiveComparator implements Comparator<String>,
                                                         Serializable {
+        private static final long serialVersionUID = 798341696165L;
         private Collator collator = null;
         public SensitiveComparator(Collator collator) {
             this.collator = collator;
@@ -131,6 +133,7 @@ public class IndexResponse implements Response {
     }
     private static class InSensitiveComparator implements Comparator<String>,
                                                           Serializable {
+        private static final long serialVersionUID = 7984368165L;
         private Collator collator = null;
         public InSensitiveComparator(Collator collator) {
             this.collator = collator;
