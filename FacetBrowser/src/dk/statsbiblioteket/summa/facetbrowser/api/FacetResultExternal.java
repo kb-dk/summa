@@ -18,8 +18,11 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import java.util.*;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -34,6 +37,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultExternal extends FacetResultImpl<String> {
+    private static final long serialVersionUID = 7879716841L;
     private HashMap<String, String[]> fields;
 
     public static final String NAME = "FacetResult";

@@ -50,6 +50,7 @@ import org.apache.log4j.Logger;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetRequest extends Structure {
+    private static final long serialVersionUID = 8798468437L;
     private static Logger log = Logger.getLogger(FacetRequest.class);
 
     private DocIDCollector docIDs;

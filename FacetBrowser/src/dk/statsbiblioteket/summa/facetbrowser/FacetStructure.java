@@ -31,6 +31,7 @@ import java.util.Locale;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class FacetStructure implements Serializable {
+    private static final long serialVersionUID = 719987522941864L;
     private static volatile Logger log = Logger.getLogger(Structure.class);
 
     /**

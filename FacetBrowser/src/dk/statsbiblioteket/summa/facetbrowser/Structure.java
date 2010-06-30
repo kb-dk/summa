@@ -46,6 +46,7 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Structure implements Configurable, Serializable {
+    private static final long serialVersionUID = 96848713588L;
     private static volatile Logger log = Logger.getLogger(Structure.class);
 
     /**
@@ -60,6 +61,7 @@ public class Structure implements Configurable, Serializable {
      * @deprecated Specify {@link IndexDescriptor#CONF_DESCRIPTOR} instead and
      *             set up the facet structure in an IndexDescriptor.
      */
+    @Deprecated
     public static final String CONF_FACETS = "summa.facet.facets";
 
     /**
@@ -264,7 +266,7 @@ public class Structure implements Configurable, Serializable {
                 //noinspection unchecked
                 throw new IllegalArgumentException(String.format(
                         "The facet '%s' did not exist in the facet-list %s", 
-                        facetName, Logs.expand(new ArrayList(
+                        facetName, Logs.expand(new ArrayList<String>(
                         facets.keySet()), 20)));
             }
         }

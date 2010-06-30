@@ -163,6 +163,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         return map;
     }
 
+    @SuppressWarnings({"unchecked"})
     public void merge(Response otherResponse) throws ClassCastException {
         if (!(otherResponse instanceof FacetResult)) {
             throw new ClassCastException(String.format(

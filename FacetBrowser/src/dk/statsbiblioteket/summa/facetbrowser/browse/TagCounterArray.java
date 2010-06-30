@@ -29,6 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -288,6 +289,7 @@ public class TagCounterArray implements TagCounter, Runnable {
         }
     }
 
+    @SuppressWarnings({"unchecked"})
     private void addFirstTagsPopularity(
             final int maxTags, final int[] counterList, final int counterLength,
             FacetResultLocal result, final int facetID) {

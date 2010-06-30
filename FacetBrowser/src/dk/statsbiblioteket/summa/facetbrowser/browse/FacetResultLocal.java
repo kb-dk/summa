@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultLocal extends FacetResultImpl<Integer> {
+    private static final long serialVersionUID = 5648138168468L;
     private static Logger log = Logger.getLogger(FacetResultLocal.class);
 
     private TagHandler tagHandler;
