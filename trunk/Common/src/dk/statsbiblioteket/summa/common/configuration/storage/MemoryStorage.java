@@ -21,7 +21,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * A {@link ConfigurationStorage} implemetation backed by an in-memory
@@ -40,7 +38,7 @@ import java.net.URLConnection;
         author = "mke",
         comment = "Class needs better Javadoc")
 public class MemoryStorage implements ConfigurationStorage {
-
+    public static final long serialVersionUID = 342390483L;
     private Map<String,Serializable> map;
 
     /**
@@ -59,8 +57,8 @@ public class MemoryStorage implements ConfigurationStorage {
     /**
      * Create a new MemoryStorage loading default values from an
      * input stream.
-     * @param in
-     * @throws IOException
+     * @param in Inputstream from which to load XML data.
+     * @throws IOException if error  occours when loading XML from input stream.
      */
     public MemoryStorage (InputStream in) throws IOException {
         this();

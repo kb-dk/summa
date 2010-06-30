@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@Deprecated
 public class ParseUtil {
     private static final Log log = LogFactory.getLog(ParseUtil.class);
     public static final String XML_HEADER =

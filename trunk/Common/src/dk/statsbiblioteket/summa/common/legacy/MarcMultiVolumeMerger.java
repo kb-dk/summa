@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.legacy;
 
-import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerImpl;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
 import dk.statsbiblioteket.summa.common.Record;
@@ -30,7 +29,13 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 /**

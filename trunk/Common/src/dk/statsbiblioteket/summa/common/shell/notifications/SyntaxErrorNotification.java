@@ -21,7 +21,7 @@ package dk.statsbiblioteket.summa.common.shell.notifications;
  *
  */
 public class SyntaxErrorNotification extends Notification {
-
+    private static final long serialVersionUID =  12401241204821039L;
     public SyntaxErrorNotification(String msg) {
         super(msg);
     }

@@ -32,6 +32,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
@@ -326,10 +327,17 @@ public class IndexSpeed {
         feedbackInterval = Math.min(Math.max(100, maxdocs / 100),
                                     feedbackInterval);
         log.info("Building " + meta);
-        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
+        IndexWriterConfig writerConfig =
+               new IndexWriterConfig(Version.LUCENE_30,
+                                     new StandardAnalyzer(Version.LUCENE_30));
+        /* writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
                                  new StandardAnalyzer(Version.LUCENE_30), true,
-                                 IndexWriter.MaxFieldLength.UNLIMITED);
-        writer.setRAMBufferSizeMB(ramBuffer);
+                                 IndexWriter.MaxFieldLength.UNLIMITED); */
+        writerConfig.setRAMBufferSizeMB(ramBuffer);
+        writerConfig.setMaxFieldLength(
+                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
+                                  writerConfig);
 /*        if (flush) {
             writer.setMaxBufferedDocs(1);
         }*/
@@ -364,9 +372,14 @@ public class IndexSpeed {
         writer.close(true);
         System.out.print("Optimizing... ");
         Profiler optimizeProfiler = new Profiler();
+        writerConfig =
+               new IndexWriterConfig(Version.LUCENE_30,
+                                     new StandardAnalyzer(Version.LUCENE_30));
+        writerConfig.setMaxFieldLength(
+                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
-                                 new StandardAnalyzer(Version.LUCENE_30),
-                                 false, IndexWriter.MaxFieldLength.UNLIMITED);
+                                 writerConfig);
         writer.optimize(true);
         System.out.println("Finished optimizing in "
                            + optimizeProfiler.getSpendTime()

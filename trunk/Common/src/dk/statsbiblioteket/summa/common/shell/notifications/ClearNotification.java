@@ -11,7 +11,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hbk")
 public class ClearNotification extends Notification {
-  public ClearNotification(Command cmd) {
+    private static final long serialVersionUID = 7275021L;
+    public ClearNotification(Command cmd) {
         super(cmd);
     }
 }

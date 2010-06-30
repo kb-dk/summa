@@ -24,7 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Notification extends RuntimeException {
-
+    private static final long serialVersionUID = 687987616384L;
     private Command cmd;
 
     public Notification (Command cmd, String msg) {

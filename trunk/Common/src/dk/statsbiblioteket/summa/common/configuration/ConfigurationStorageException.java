@@ -24,6 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ConfigurationStorageException extends RuntimeException {
+    public static final long serialVersionUID = 65735478946L;
     public ConfigurationStorageException (Throwable cause) {
         super (cause);
     }

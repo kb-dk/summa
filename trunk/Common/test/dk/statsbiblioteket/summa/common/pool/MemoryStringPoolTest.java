@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
-import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;

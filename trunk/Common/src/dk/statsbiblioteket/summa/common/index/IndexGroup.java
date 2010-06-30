@@ -225,7 +225,7 @@ public class IndexGroup<F extends IndexField> {
     }
 
     /* Fundamental methods */
-
+    @SuppressWarnings({"unchecked"})
     public boolean equals(Object o) {
         if (this == o) {
             return true;

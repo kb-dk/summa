@@ -30,7 +30,7 @@ import java.net.URL;
  *
  */
 public class JStorage implements ConfigurationStorage {
-
+    public static final long serialVersionUID = 59786486L;
     private ScriptEngineManager engineManager;
     private ScriptEngine engine;
     private String config;
@@ -83,7 +83,7 @@ public class JStorage implements ConfigurationStorage {
     public JStorage(Configuration conf) {
         this();
 
-        // Magic trick to import the given conf
+        // Magic trick to import the given configuration
         new Configuration(this).importConfiguration(conf);
     }
 
@@ -91,16 +91,15 @@ public class JStorage implements ConfigurationStorage {
         init();
         config = "config";
 
-
         // Create new empty config
         eval(config + " = {}");
     }
 
     /**
-     * Used for creating substorages
-     * @param eng
-     * @param engMan
-     * @param conf
+     * Used for creating substorages.
+     * @param eng The scriptEngine.
+     * @param engMan The scriptEngine.
+     * @param conf The configuration.
      */
     private JStorage(ScriptEngine eng, ScriptEngineManager engMan,
                      String conf, boolean createNew){
@@ -356,7 +355,7 @@ public class JStorage implements ConfigurationStorage {
             JStorage js = new JStorage(args[0]);
             BufferedReader in = new BufferedReader(
                                            new InputStreamReader(System.in));
-            String cmd = "";
+            String cmd;
             while (true) {
                 System.out.print("> ");
                 System.out.flush();
@@ -416,6 +415,7 @@ public class JStorage implements ConfigurationStorage {
         return b.toString();
     }
 
+    @SuppressWarnings({"unchecked"})
     private String parseObject(Object o) {
         if (o == null) {
             return "null";
@@ -445,9 +445,9 @@ public class JStorage implements ConfigurationStorage {
     /**
      * Write this JStorage (without config header) to the StringBuilder and
      * return the StringBuilder again
-     * @param prefix
-     * @param buf
-     * @return
+     * @param prefix The prefix to use.
+     * @param buf The String builder.
+     * @return the string builder, containing a text representation of this JStorage.
      */
     protected StringBuilder serialize(String prefix, StringBuilder buf) {
         try {

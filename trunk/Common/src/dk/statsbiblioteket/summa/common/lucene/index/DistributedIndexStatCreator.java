@@ -36,6 +36,7 @@ import java.io.IOException;
  * @version $Id: DistributedIndexStatCreator.java,v 1.3 2007/10/04 13:28:19 te Exp $
  * @deprecated use {@link dk.statsbiblioteket.summa.common.lucene.distribution.TermStatExtractor} instead.
  */
+@Deprecated
 public class DistributedIndexStatCreator {
 
     private ArrayList<IndexReader> indexex;

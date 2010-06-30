@@ -49,6 +49,10 @@ public class NativeRunnerTest extends TestCase {
                      1, runner.executeNoCollect());
     }
 
+    public void testDummy() {
+        // dummy
+    }
+
 /* NativeRunner is deprecated
 
     public void testTimeout() throws Exception {

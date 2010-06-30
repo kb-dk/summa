@@ -38,6 +38,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te")
+@Deprecated
 public class SlimCollector extends Collector {
     private static final double growthFactor = 2;
     private int[] content;
@@ -68,6 +69,7 @@ public class SlimCollector extends Collector {
      * @deprecated use {@link #getDocumentIDsOversize()} instead, to avoid an
      *             array copy.
      */
+    @Deprecated
     public int[] getDocumentIDs() {
         int[] result = new int[pos];
         System.arraycopy(content, 0, result, 0, pos);

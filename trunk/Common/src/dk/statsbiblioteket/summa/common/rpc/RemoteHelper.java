@@ -43,7 +43,6 @@ import java.util.Map;
  * Utility class foor remote invocation.
  */
 public class RemoteHelper {
-
     static private final Log log = LogFactory.getLog (RemoteHelper.class);
     static private final RemoteHelperShutdownHook shutdownHook;
 
@@ -369,7 +368,7 @@ public class RemoteHelper {
      * {@code .jar}-file, by calling {@link RemoteHelper#testCodeBase}.
      */
     public static class InvalidCodeBaseException extends Exception {
-
+        private static final long serialVersionUID = 786138469846L;
         public InvalidCodeBaseException(String msg) {
             super (msg);
         }

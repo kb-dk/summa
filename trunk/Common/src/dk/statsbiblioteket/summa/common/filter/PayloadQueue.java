@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
         comment = "The hard part about this is to ensure that totalSize is"
                   + "true under all conditions")
 public class PayloadQueue extends ArrayBlockingQueue<Payload> {
+    private static final long serialVersionUID = 354681383613L;
     private static Log log = LogFactory.getLog(PayloadQueue.class);
 
     private AtomicLong totalSize = new AtomicLong(0);

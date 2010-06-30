@@ -25,6 +25,7 @@ import java.io.StringReader;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
+import org.apache.lucene.util.Version;
 
 /**
  * The SummaSymbolRemovingAnalyzer is used to generate uniform sortable fields.
@@ -48,7 +49,7 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
         public final CharSequenceReader seq;
 
         public TokenStreamContext() {
-            simpleAnalyzer = new SimpleAnalyzer();
+            simpleAnalyzer = new SimpleAnalyzer(Version.LUCENE_30);
             buf = new StringBuffer();
             seq = new CharSequenceReader(buf);
         }
@@ -81,7 +82,7 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
             log.error("Error reading data for token stream: " + e.getMessage(),
                       e);
         }
-        return new SimpleAnalyzer().tokenStream(fieldName,
+        return new SimpleAnalyzer(Version.LUCENE_30).tokenStream(fieldName,
                                                 new StringReader(b.toString()));
     }
 

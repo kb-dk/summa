@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class IndexException extends RemoteException {
+    private static final long serialVersionUID = 168436846L;
     private String indexLocation = null;
 
     public IndexException(String s) {

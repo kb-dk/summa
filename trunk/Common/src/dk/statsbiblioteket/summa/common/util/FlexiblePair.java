@@ -28,6 +28,7 @@ public class FlexiblePair<T extends Comparable<T>, S extends Comparable<S>>
         implements Comparable<FlexiblePair<T, S>>, Serializable {
     public enum SortType {PRIMARY_ASCENDING, PRIMARY_DESCENDING,
                           SECONDARY_ASCENDING, SECONDARY_DESCENDING}
+    private static final long serialVersionUID = 94819491L;
     protected T key;
     protected S value;
 

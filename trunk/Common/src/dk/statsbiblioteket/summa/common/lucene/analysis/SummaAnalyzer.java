@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import org.apache.lucene.util.Version;
 
 /**
  * The SummaAnalyzer defines a configurable chain for tokenization.
@@ -136,7 +137,8 @@ public class SummaAnalyzer extends Analyzer {
         ctx.filters.add(transliteratorFactory.getReplacer(
                 ctx.filters.getLast()));
 
-        ctx.tokenStream = new WhitespaceTokenizer(ctx.filters.getLast());
+        ctx.tokenStream = new WhitespaceTokenizer(Version.LUCENE_30,
+                                                  ctx.filters.getLast());
 
         return ctx;
     }

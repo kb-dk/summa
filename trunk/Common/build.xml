@@ -135,16 +135,25 @@
     <target name=".getLibs">
         <delete dir="${lib.dir}"/>
         <mkdir dir="${lib.dir}"/>
-        <copy file="${basedir}/../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
-        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-        <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
-        <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
-        <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
-        <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="${basedir}/../${summa.lib.log4j}"
+              tofile="${summa.lib.log4j}"/>
+        <copy file="${basedir}/../${summa.lib.sbutil}"
+              tofile="${summa.lib.sbutil}"/>
+        <copy file="${basedir}/../${summa.lib.commons-logging}"
+              tofile="${summa.lib.commons-logging}"/>
+        <copy file="${basedir}/../${summa.lib.commons-cli}"
+              tofile="${summa.lib.commons-cli}"/>
+        <copy file="${basedir}/../${summa.lib.junit}"
+              tofile="${summa.lib.junit}"/>
+        <copy file="${basedir}/../${summa.lib.lucene}"
+              tofile="${summa.lib.lucene}"/>
         <!--<copy file="${basedir}/../${summa.lib.lucene.backports}" tofile="${summa.lib.lucene.backports}"/>-->
-        <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
-        <copy file="${basedir}/../${summa.lib.jline}" tofile="${summa.lib.jline}"/>
-        <copy file="${basedir}/../${summa.lib.tika}" tofile="${summa.lib.tika}"/>
+        <copy file="${basedir}/../${summa.lib.junit}"
+              tofile="${summa.lib.junit}"/>
+        <copy file="${basedir}/../${summa.lib.jline}"
+              tofile="${summa.lib.jline}"/>
+        <copy file="${basedir}/../${summa.lib.tika}"
+              tofile="${summa.lib.tika}"/>
     </target>
 
 
@@ -175,14 +184,17 @@
                compiler="${compiler}" optimize="${compiler.optimize}"
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
+            <compilerarg value="-Xlint:all"/>
         </javac>
         <copy todir="${build.dir}">
             <fileset dir="${basedir}/data" includes="*.xslt"/>
             <fileset dir="${basedir}/data" includes="*.xsl"/>
         </copy>
         <copy todir="${build.dir}/dk/statsbiblioteket/summa/common/xml">
-            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml" includes="*.dtd"/>
-            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml" includes="*.ent"/>
+            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml"
+                     includes="*.dtd"/>
+            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml"
+                     includes="*.ent"/>
         </copy>
 
         <delete dir="${tmp.dir}"/>
@@ -224,18 +236,23 @@
     <target name=".release" depends=".depends, .jar, doc">
         <mkdir dir="${dist.dir}"/>
         <property name="prefix" value="${release}"/>
-        <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
+        <replaceregexp match="\$Id[^\$]*\$"
+                       replace="${project.name}-${project.version} - build date ${build.time}">
             <fileset dir="${doc.dir}" includes="**/*"/>
          </replaceregexp>
 
         <zip destfile="${dist.dir}/${release}.zip">
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
-            <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
-            <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
-            <zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin" filemode="755">
+            <zipfileset prefix="${prefix}"
+                        file="${basedir}/../${summa.license}"/>
+            <zipfileset prefix="${prefix}/lib" dir="${lib.dir}"
+                        includes="${lib.files}"/>
+            <zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin"
+                        filemode="755">
                 <include name="*"/>
             </zipfileset>
-            <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
+            <zipfileset dir="${doc.dir}"
+                        prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
         </zip>

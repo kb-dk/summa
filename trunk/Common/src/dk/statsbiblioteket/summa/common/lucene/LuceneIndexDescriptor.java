@@ -29,6 +29,7 @@ import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.analysis.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.util.Version;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -52,7 +53,8 @@ public class LuceneIndexDescriptor
 
     private List<String> moreLikethisFields;
 
-    public LuceneIndexDescriptor(Configuration configuration) throws IOException {
+    public LuceneIndexDescriptor(Configuration configuration)
+                                                            throws IOException {
         super(configuration);
     }
 
@@ -174,7 +176,7 @@ public class LuceneIndexDescriptor
                              Field.Index.ANALYZED,
                              Field.Store.NO,
                              Field.TermVector.NO,
-                             new SimpleAnalyzer());
+                             new SimpleAnalyzer(Version.LUCENE_30));
         }
         if (baseFieldName.equals(NUMBER)) {
             return makeField(baseFieldName,

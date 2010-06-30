@@ -21,7 +21,7 @@ import dk.statsbiblioteket.summa.common.shell.Core;
  * Notify the shell {@link Core} that we want a backtrace printed
  */
 public class TraceNotification extends Notification {
-
+    private static final long serialVersionUID = 1234149021L;
     public TraceNotification(Command cmd) {
         super(cmd);
     }

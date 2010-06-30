@@ -17,8 +17,7 @@ package dk.statsbiblioteket.summa.common.index;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.Document;
+import org.apache.commons.logging.LogFactory;   
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -384,7 +383,7 @@ public class IndexField<A, T, F> {
      *                      queried for the parent.
      * @throws ParseException if there was an error parsing.
      */
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    @SuppressWarnings({"DuplicateStringLiteralInspection", "unchecked"})
     public void parse(Node node, FieldProvider fieldProvider) throws
                                                                 ParseException {
         //noinspection DuplicateStringLiteralInspection
@@ -674,7 +673,7 @@ public class IndexField<A, T, F> {
     }
 
     /* Fundamental methods */
-
+    @SuppressWarnings({"unchecked"})
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -714,6 +713,8 @@ public class IndexField<A, T, F> {
                && listCompare(queryFilters, other.getQueryFilters());
     }
 
+    @SuppressWarnings({"unchecked"})
+    // TODO can this be generified?
     private boolean listCompare(List l1, List l2) {
         if (l1 == null) {
             return l2 == null;

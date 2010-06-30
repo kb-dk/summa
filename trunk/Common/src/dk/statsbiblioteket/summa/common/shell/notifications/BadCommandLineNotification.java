@@ -31,8 +31,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BadCommandLineNotification extends Notification {
-
-    private Command cmd;
+    private static final long serialVersionUID = 639012052L;
 
     /**
      * Create a new bad command line exception for a given command

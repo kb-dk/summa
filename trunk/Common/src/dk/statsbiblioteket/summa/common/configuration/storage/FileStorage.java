@@ -33,8 +33,8 @@ import java.util.*;
         author = "mke",
         comment = "Class and methods needs better docs, especially for throws")
 public class FileStorage implements ConfigurationStorage {
-
-    public static final String DEFAULT_RESOURCE = "configuration.xml";
+    public static final long serialVersionUID = 789468461L;
+    //public static final String DEFAULT_RESOURCE = "configuration.xml";
 
     private HashMap<String,Serializable> map;
     private String filename;
@@ -42,7 +42,7 @@ public class FileStorage implements ConfigurationStorage {
     /**
      * Create a file storage backed by the next file of the form configuration.N.xml
      * that doesn't already exist for some natural number N.
-     * @throws IOException
+     * @throws IOException If an error occurs while loading the configuration.
      */
     public FileStorage () throws IOException {
         this(nextAvailableConfigurationFile());
@@ -51,8 +51,8 @@ public class FileStorage implements ConfigurationStorage {
     /**
      * Create a new {@code FileStorage} importing all properties from
      * the provided {@link Configuration}.
-     * @param configuration
-     * @throws IOException
+     * @param configuration The configuration.
+     * @throws IOException if error occurs during configuration import.
      */
     public FileStorage (Configuration configuration) throws IOException {
         this();
@@ -63,7 +63,7 @@ public class FileStorage implements ConfigurationStorage {
      * Create a new {@code FileStorage} loading properties from a file or creating
      * it if it doesn't exist already.
      * @param configuration the file to read and write properties in
-     * @throws IOException
+     * @throws IOException If writing to the specified output stream results in an IOException.
      */
     public FileStorage (File configuration) throws IOException {
         map  = new HashMap<String,Serializable> ();
@@ -79,7 +79,7 @@ public class FileStorage implements ConfigurationStorage {
     /**
      * Read and write to a resource
      * @param resource name of <i>resource</i> to use as hard storage
-     * @throws IOException
+     * @throws IOException If an error occurs while loading the configuration.
      */
     public FileStorage (String resource) throws IOException {
         this (getResourceFile(resource));
@@ -108,12 +108,14 @@ public class FileStorage implements ConfigurationStorage {
     }
 
     /**
-     * Load initial config from an URL and store in a local file
-     * @param initialConfig the localtion from which to import all configuration data, pointing to a usual properties.xml file
-     * @param persistentConfig the absolute path name to store the configuration in
-     * @throws IOException
+     * Load initial config from an URL and store in a local file.
+     * @param initialConfig The localtion from which to import all configuration data, pointing to a
+     * usual properties.xml file.
+     * @param persistentConfig The absolute path name to store the configuration in.
+     * @throws IOException If an error occurs while loading the configuration.
      */
-    public FileStorage (URL initialConfig, String persistentConfig) throws IOException {
+    public FileStorage (URL initialConfig, String persistentConfig)
+                                                            throws IOException {
         this.filename = persistentConfig;
         URLConnection con = initialConfig.openConnection();
         reloadConfig(new BufferedInputStream(con.getInputStream()));

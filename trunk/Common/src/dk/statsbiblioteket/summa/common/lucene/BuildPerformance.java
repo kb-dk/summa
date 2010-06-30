@@ -28,9 +28,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.*;
-import sun.reflect.generics.reflectiveObjects.*;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
 
 /**
  * Builds a Lucene index and provides running feedback on index speed.
@@ -47,6 +47,7 @@ public class BuildPerformance {
      * Builds an index with the given number of documents, the given number
      * of fields and terms with random length up to maximum term size.
      * @param args number of documents, number of fields, maximum term size.
+     * @throws IOException if error occured.
      */
     public static void main(String[] args) throws IOException {
         if (args.length < 3) {
@@ -76,11 +77,15 @@ public class BuildPerformance {
         System.out.println("Building index in '" + indexLocation + "' with "
                            + documents + " documents with " + fieldCount
                            + " fields with max term length " + maxTermLength);
+        IndexWriterConfig writerConfig =
+               new IndexWriterConfig(Version.LUCENE_30, 
+                                     new StandardAnalyzer(Version.LUCENE_30));
+        writerConfig.setMaxFieldLength(
+                                    IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+        writerConfig.setRAMBufferSizeMB(1000);
         IndexWriter writer = new IndexWriter(new NIOFSDirectory(indexLocation),
-                                      new StandardAnalyzer(Version.LUCENE_30),
-                                      true,
-                                      IndexWriter.MaxFieldLength.UNLIMITED);
-        writer.setMaxBufferedDocs(1000);
+                                             writerConfig);
         int feedback = Math.max(1, documents / 100);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(documents);
