@@ -25,7 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke",
         comment="Some methods needs Javadoc")
 public class ClientException extends RuntimeException {
-
+    private static final long serialVersionUID = 685235411384185L; 
     private String id;
 
     public ClientException (String clientId, String message) {

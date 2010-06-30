@@ -19,6 +19,7 @@ package dk.statsbiblioteket.summa.control.api;
  * or has a broken connection.
  */
 public class InvalidClientStateException extends RuntimeException {
+    private static final long serialVersionUID = 112555882L;
 
     private String clientId;
 

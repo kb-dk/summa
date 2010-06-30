@@ -19,7 +19,7 @@ package dk.statsbiblioteket.summa.control.api;
  * {@link dk.statsbiblioteket.summa.control.client.Client}.
  */
 public class NoSuchClientException extends RuntimeException {
-
+    private static final long serialVersionUID = 79733177981955L;
     public NoSuchClientException (String msg) {
         super (msg);
     }

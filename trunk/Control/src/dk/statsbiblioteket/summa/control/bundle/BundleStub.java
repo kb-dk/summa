@@ -85,7 +85,6 @@ public class BundleStub {
     private List<String> libs;
     private List<String> jvmArgs;
     private Log log = LogFactory.getLog (BundleStub.class);
-    private List<String> classPath;
 
     /**
      * It is the responsibilty of the {@link Client} building the
@@ -106,7 +105,7 @@ public class BundleStub {
      * @param jvmArgs Extra arguments to pass to the JVM when spawning the
      *                JVM of the {@link Service or {@link Client} 
      */
-    BundleStub (File bundleDir, String bundleId, String instanceId,
+    BundleStub(File bundleDir, String bundleId, String instanceId,
                 File mainJar, String mainClass,
                 List<String> libs, List<String> jvmArgs) {
         log.trace("Creating BundleStub with instance id '" + instanceId
@@ -249,7 +248,7 @@ public class BundleStub {
     }
 
     public List<String> getClassPath() {
-        List<String> cp = new ArrayList(4+libs.size());
+        List<String> cp = new ArrayList<String>(4+libs.size());
         cp.add (".");
         cp.add ("config");
         cp.add ("data");

@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BadConfigurationException extends RuntimeException {
+    private static final long serialVersionUID = 456874473321589L;
 
     /**
      * @param message message about the exact configuration paramter causing

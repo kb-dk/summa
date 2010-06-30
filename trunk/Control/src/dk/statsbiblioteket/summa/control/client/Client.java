@@ -21,10 +21,27 @@ import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.api.*;
+import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ClientException;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
+import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
+import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
+import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.control.api.ServiceDeploymentException;
+import dk.statsbiblioteket.summa.control.api.ServicePackageException;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.StatusMonitor;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.control.bundle.*;
-import dk.statsbiblioteket.util.*;
+import dk.statsbiblioteket.summa.control.bundle.BundleLoader;
+import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.bundle.BundleStub;
+import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -38,8 +55,8 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.*;
 import java.net.MalformedURLException;
+import java.util.List;
 
 /**
  * <p>Core class for running ClientManager clients.</p>
@@ -52,6 +69,7 @@ import java.net.MalformedURLException;
         author = "mke",
         comment="The class and some methods needs Javadoc")
 public class Client extends UnicastRemoteObject implements ClientMBean {
+    private static final long serialVersionUID = 68791684985L;
     private static Log log = LogFactory.getLog(Client.class);
 
     /** Extension to use for old packages, used for rollback purposes.
@@ -189,7 +207,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                      persistentPath};
         for (String dir: dirs) {
             File dirFile = new File(dir);
-            dirFile.mkdirs();
+            if(!dirFile.mkdirs()) {
+                log.warn("Directory '" + dirFile + "' was not created");
+            }
             if (!dirFile.exists()) {
                 throw new IOException("Could not create directory '"
                                       + dirFile.getAbsoluteFile() + "'");
@@ -378,11 +398,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      *
      * <p>The local file is unpacked to {@code servicePath/bundleId}</p>
      *
-     * @param instanceId the instanceId under which to deploy the service
-     * @param localFile the file to deploy
+     * @param instanceId the instanceId under which to deploy the service.
+     * @param localFile the file to deploy.
      * @param configLocation location for configuration, either an URL,
-     *                       rmi address, or file path
-     * @return the instance id of the deployed service or null on error
+     *                       rmi address, or file path.
      */
     public void deployServiceFromLocalFile(String instanceId, File localFile,
                                            String configLocation) {
@@ -454,7 +473,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         // Move service bundle in place in services/<instanceid>
         log.trace("Moving '" + tmpPkg + "' to '" + pkgFile + "'");
-        tmpPkg.renameTo(pkgFile);
+        if(!tmpPkg.renameTo(pkgFile)) {
+            log.warn("'" + tmpPkg + "' was not renamed to '" + pkgFile + "'");
+        }
+
 
         // FIXME: There is a race condition here, where the JMX files are
         //        readable after unpacking, but before we set read-only
@@ -471,7 +493,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             throw new NoSuchServiceException(this, instanceId, "startService");
         }
 
-        ConnectionContext<Service> connCtx = null;
+        ConnectionContext<Service> connCtx;
 
         setStatusRunning ("Starting service " + instanceId);
         connCtx = serviceMan.get(instanceId);
@@ -515,7 +537,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     /**
      * Start a service up from scratch, booting its JVM and calling start
-     * on its Service interface when it is up
+     * on its Service interface when it is up.
+     *
+     * @param instanceId The instance ID to bootstrap.
+     * @param confLocation The configuration location.
+     * @throws RemoteException if error while connection to instance ID.
      */
     private void bootStrapService (String instanceId, String confLocation)
                                                     throws RemoteException {
@@ -602,12 +628,18 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     /**
      * Start a service given a connection to it. The returned action hints
      * what further action the caller must take.
+     *
+     * @param service The service.
+     * @param confLocation The configuration location.
+     * @throws RemoteException If an error occur while calling remote service.
+     * @return  The action status.
      */
-    private StartAction conditionalServiceStart(Service service, String confLocation)
+    private StartAction conditionalServiceStart(Service service,
+                                                String confLocation)
                                                         throws RemoteException {
         Status status = service.getStatus();
         String instanceId = service.getId();
-        StatusMonitor mon = null;
+        StatusMonitor mon;
 
         switch (status.getCode()) {
             case constructed:
@@ -718,7 +750,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                     break;
                 }
                 // keep waiting on interface
-                continue;
             } catch (MalformedURLException e) {
                 log.error ("Malformed URL for service '" + instanceId
                            + "'. Not registering", e);
@@ -747,7 +778,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             throw new NoSuchServiceException(this, id, "stopService");
         }
 
-        ConnectionContext<Service> connCtx = null;
+        ConnectionContext<Service> connCtx;
         connCtx = serviceMan.get (id);
 
         if (connCtx == null) {
@@ -823,8 +854,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } else {
             Service s = connCtx.getConnection();
             try {
-                Status status = s.getStatus();
-                return status;
+                return s.getStatus();
             } catch (Exception e) {
                 serviceMan.reportError(connCtx, e);
                 throw new InvalidServiceStateException(this, id,
@@ -843,9 +873,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     /**
      * This method will call itselfup to 10 times trying to reconnect
      * if the client connection fails.
-     * @param id the instance id of the service to connect to
-     * @param numRetries external callers should pass 0 here
-     * @return a connection to the service
+     * @param id the instance id of the service to connect to.
+     * @param numRetries external callers should pass 0 here.
+     * @return a connection to the service.
+     * @throws RemoteException if error occur when connection to service.
      */
     private Service getServiceConnection (String id, int numRetries)
                                                         throws RemoteException {
@@ -1058,7 +1089,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public void removeService(String id) throws RemoteException {
         log.info("Removing service '" + id +"'");
 
-        ConnectionContext<Service> connCtx = null;
+        ConnectionContext<Service> connCtx;
         File pkgFile = serviceMan.getServiceDir(id);
         String artifactPkgPath;
 
@@ -1097,7 +1128,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
             log.info("Removing service '" + id + "', backup kept as: "
                      + artifactPkgPath);
-            pkgFile.renameTo(new File(artifactPkgPath));
+            if(!pkgFile.renameTo(new File(artifactPkgPath))) {
+                log.warn("'" + pkgFile + "' was not rename to '"
+                         + artifactPkgPath + "'");
+            }
         } else {
             /* We are not configured to store artifacts,
              * simply delete the service */
@@ -1126,9 +1160,17 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         for (File file: new File[]{policy, password, access}) {
             if (file.exists()) {
                 log.trace("Setting " + file + " read only");
-                file.setReadable(false, false); // disallow all reading
-                file.setReadable(true); // allow user reading
-                file.setWritable(false, false); // disallow all writing
+                boolean failedSet = false;
+                // disallow all reading
+                failedSet = (!file.setReadable(false, false) || failedSet);
+                // allow user reading
+                failedSet = (!file.setReadable(true) || failedSet);
+                // disallow all writing
+                failedSet = (!file.setWritable(false, false) || failedSet);
+                if(failedSet) {
+                    log.warn("Setting user read only permission on '"
+                             + file + "'");
+                }
             }
         }
     }

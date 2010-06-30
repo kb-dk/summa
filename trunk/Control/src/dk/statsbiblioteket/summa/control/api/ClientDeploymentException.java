@@ -18,7 +18,7 @@ package dk.statsbiblioteket.summa.control.api;
  * Thrown when there is an error deploying or starting a client
  */
 public class ClientDeploymentException extends RuntimeException {
-
+    private static final long serialVersionUID = 2555484788L;
     public ClientDeploymentException (String msg) {
         super(msg);
     }
