@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 public class LocalURLRepository extends URLRepository
                                 implements WritableBundleRepository,
                                            Configurable {
+    private static final long serialVersionUID = 8963813327899L;
 
     /**
      * Configuration property defining the directory in which to install
@@ -65,7 +66,7 @@ public class LocalURLRepository extends URLRepository
      * <p>If {@link #CONF_LOCAL_URL} is not set in the configuration
      * the value {@link URLRepository#baseUrl} will be used.
      *
-     * @param conf
+     * @param conf The configurations.
      */
     public LocalURLRepository(Configuration conf) {
         super(conf);
@@ -85,43 +86,47 @@ public class LocalURLRepository extends URLRepository
         }
 
         /* We have file urls, remove the url scheme so we can use File on them */
-        bundlePath = bundlePath.replace ("file://", "");
-        apiPath = apiPath.replace ("file://", "");
+        bundlePath = bundlePath.replace("file://", "");
+        apiPath = apiPath.replace("file://", "");
 
-        bundleDir = new File (bundlePath);
-        apiDir = new File (apiPath);
+        bundleDir = new File(bundlePath);
+        apiDir = new File(apiPath);
 
-        log.trace ("Install bundles in: " + bundleDir);
-        log.trace ("Install API in    : " + apiDir);
+        log.trace("Install bundles in: " + bundleDir);
+        log.trace("Install API in    : " + apiDir);
 
     }
 
     public boolean installBundle(File bundle) throws IOException {
-        bundleDir.mkdirs();
+        if(!bundleDir.mkdirs()) {
+            log.warn("Directory '" + bundleDir + "' was not created");
+        }
 
-        File target = new File (bundleDir, bundle.getName());
-        log.debug ("Installing bundle " + bundle + " into " + target);
+        File target = new File(bundleDir, bundle.getName());
+        log.debug("Installing bundle " + bundle + " into " + target);
 
         if (target.exists()) {
             return false;
         }
 
-        Files.move (bundle, target);
+        Files.move(bundle, target);
 
         return true;
     }
 
     public boolean installApi(File apiFile) throws IOException {
-        apiDir.mkdirs();
+        if(!apiDir.mkdirs()) {
+            log.warn("Directory '" + apiDir + "' was not created");
+        }
 
-        File target = new File (apiDir, apiFile.getName());
-        log.debug ("Installing API " + apiFile + " into " + target);
+        File target = new File(apiDir, apiFile.getName());
+        log.debug("Installing API " + apiFile + " into " + target);
 
         if (target.exists()) {
             return false;
         }
 
-        Files.copy (apiFile, target, false);
+        Files.copy(apiFile, target, false);
 
         return true;
     }

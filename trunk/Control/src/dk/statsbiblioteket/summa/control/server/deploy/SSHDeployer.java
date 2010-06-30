@@ -27,7 +27,6 @@ import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
-import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
 import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
@@ -243,7 +242,9 @@ public class SSHDeployer implements ClientDeployer {
     }
 
     /**
-     * Set file permissions as described in the ClientDeployer interface
+     * Set file permissions as described in the ClientDeployer interface.
+     * @param feedback The feedback object.
+     * @throws IOException if error occurs. 
      */
     private void ensurePermissions(Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");

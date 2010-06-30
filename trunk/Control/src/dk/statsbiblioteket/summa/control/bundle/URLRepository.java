@@ -22,7 +22,14 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +51,7 @@ import java.util.regex.Pattern;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class URLRepository implements BundleRepository {
-
+    private static final long serialVersionUID = 8978138452681L;
     private String tmpDir;
     private Log log = LogFactory.getLog(this.getClass());
 
@@ -97,7 +104,7 @@ public class URLRepository implements BundleRepository {
      *
      * <p>If {@link #CONF_REPO_ADDRESS} is not set in the configuration
      * <code>file://${user.home}/summa-control/repo</code> is used.</p>
-     * @param conf
+     * @param conf  The configuration.
      */
     public URLRepository (Configuration conf) {
         this.tmpDir = conf.getString(CONF_DOWNLOAD_DIR, "tmp");
@@ -139,7 +146,9 @@ public class URLRepository implements BundleRepository {
         File result = new File (tmpDir, filename);
 
         /* Ensure tmpDir exists */
-        new File (tmpDir).mkdirs();
+        if(!new File (tmpDir).mkdirs()) {
+            log.warn("Directory '" + tmpDir + "' wasn't created");
+        }
 
         /* make sure we find an unused filename to store the downloaded pkg in */
         int count = 0;

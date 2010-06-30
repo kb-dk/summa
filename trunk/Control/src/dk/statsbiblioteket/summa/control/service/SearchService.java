@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SearchService extends ServiceBase {
+    private static final long serialVersionUID = 6841583184L;
     private Log log = LogFactory.getLog(SearchService.class);
 
     /**
@@ -71,7 +72,6 @@ public class SearchService extends ServiceBase {
         }
 
         setStatusRunning("Creating Searcher");
-        Class<? extends SummaSearcher> searcherClass;
 
         if (!conf.valueExists (SummaSearcher.CONF_CLASS)) {
             conf.set (SummaSearcher.CONF_CLASS,

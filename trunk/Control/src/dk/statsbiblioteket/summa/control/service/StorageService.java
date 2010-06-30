@@ -38,6 +38,7 @@ import java.io.IOException;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class StorageService extends ServiceBase {
+    private static final long serialVersionUID = 6848318L;
     private Log log = LogFactory.getLog(StorageService.class);
 
     // TODO: This should probably be in a module separate from Control,
