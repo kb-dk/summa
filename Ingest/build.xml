@@ -100,7 +100,7 @@
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.marc4j}}"/>
                 <available file="${summa.lib.marc4j.normalizer}}"/>
-                <available file="${summa.lib.heritrixj}}"/>
+                <available file="${summa.lib.heritrix}}"/>
                 <available file="${summa.lib.heritrix.fastutil}}"/>
             </and>
         </condition>
@@ -209,6 +209,7 @@
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
+            <compilerarg value="-Xlint:all"/>
         </javac>
     </target>
 

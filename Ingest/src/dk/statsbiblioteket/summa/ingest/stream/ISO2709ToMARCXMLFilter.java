@@ -294,6 +294,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
             }*/
         }
 
+        @SuppressWarnings({"unchecked"})
         private void convertControlfields(Record record) {
             for (Object cfObject: record.getControlFields()) {
                 if (!(cfObject instanceof ControlField)) {
