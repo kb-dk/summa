@@ -49,6 +49,7 @@ import org.apache.commons.logging.LogFactory;
         comment="Unfinished")
 public class ControlCore extends UnicastRemoteObject
                implements ControlRMIConnection, ControlCoreMBean, Configurable {
+    private static final long serialVersionUID = 4861381684L;
 
     /**
      * Configuration property defining which port the
@@ -497,24 +498,24 @@ public class ControlCore extends UnicastRemoteObject
     private void setStatus (Status.CODE code, String msg,
                             Logging.LogLevel level) {
         status = new Status(code, msg);
-        Logging.log ("Status: "+ status, log, level);
+        Logging.log("Status: "+ status, log, level);
     }
 
-    private void setStatusIdle () {
-        setStatus (Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
+    private void setStatusIdle() {
+        setStatus(Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
     }
 
-    private void setStatusRunning (String msg) {
-        setStatus (Status.CODE.running, msg, Logging.LogLevel.INFO);
+    private void setStatusRunning(String msg) {
+        setStatus(Status.CODE.running, msg, Logging.LogLevel.INFO);
     }
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         Configuration conf = Configuration.getSystemConfiguration();
         try {
-            ControlCore control = new ControlCore(conf);
+            new ControlCore(conf);
         } catch (Throwable t) {
             t.printStackTrace();
-            System.exit (1);
+            System.exit(1);
         }
     }
 }

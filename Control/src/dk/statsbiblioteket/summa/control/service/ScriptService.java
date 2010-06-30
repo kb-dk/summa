@@ -20,11 +20,20 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
 import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
 
-import javax.script.*;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.ByteArrayInputStream;
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.rmi.RemoteException;
-import java.io.*;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -64,7 +73,7 @@ import org.apache.commons.logging.LogFactory;
  * </pre>
  */
 public class ScriptService extends ServiceBase {
-
+    private static final long serialVersionUID = 481684384L;
     private static final Log log = LogFactory.getLog(ScriptService.class);
 
     /**
@@ -85,7 +94,7 @@ public class ScriptService extends ServiceBase {
      * inlined in your configuration by setting the {@link #CONF_SCRIPT_INLINE}
      * instead of using this property.
      * <p/>
-     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * Either {@link this} or {@link #CONF_SCRIPT_INLINE}
      * <i>must</i> be defined.
      */
     public static final String CONF_SCRIPT_URL =
@@ -272,7 +281,7 @@ public class ScriptService extends ServiceBase {
 
         public synchronized void stop() {
             engine.put("stopped", true);
-            if (thread == null) {
+            if (thread != null) {
                 thread.interrupt();
                 try {
                     thread.join();

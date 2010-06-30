@@ -25,9 +25,7 @@ import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FilterService extends ServiceBase implements FilterChainHandler {
+    private static final long serialVersionUID = 184368481L;
     private Log log = LogFactory.getLog(FilterService.class);
 
     /**

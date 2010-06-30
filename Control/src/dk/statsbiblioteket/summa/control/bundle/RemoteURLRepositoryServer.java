@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 public class RemoteURLRepositoryServer extends UnicastRemoteObject
                                        implements RemoteRepository,
                                                   WritableBundleRepository {
+    private static final long serialVersionUID = 1683681887L;
     private static final Log log =
                              LogFactory.getLog(RemoteURLRepositoryServer.class);
     private WritableBundleRepository localRepo;
@@ -73,7 +74,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * will be passed unmodified to an underlying {@link LocalURLRepository}.
      * <p></p>
      * The {@link #CONF_REPO_ADDRESS} will be passed down to an embedded
-     * {@link
+     *  
      *
      * @param conf configuration from which to read properties. This
      *             configuration will also be passed directly to the underlying

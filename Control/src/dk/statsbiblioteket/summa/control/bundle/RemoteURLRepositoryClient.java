@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * The primary purpose of this is to allow repository listing.
  */
 public class RemoteURLRepositoryClient implements BundleRepository {
-
+    private static final long serialVersionUID = 533894684189L;
     private static final Log log = LogFactory.getLog (RemoteURLRepositoryClient.class);
 
     public static final String DEFAULT_REPO_ADDRESS =
@@ -53,7 +53,7 @@ public class RemoteURLRepositoryClient implements BundleRepository {
      * Create new repository client. The {@code conf} argument should set
      * the {@link URLRepository#CONF_BASE_URL} as this class utilizes
      * a {@link URLRepository} underneath to do bundle downloads.
-     * @param conf
+     * @param conf  The configuration.
      */
     public RemoteURLRepositoryClient (Configuration conf) {
         downloadDir = conf.getString(CONF_DOWNLOAD_DIR,

@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RemoteConsoleFeedback extends UnicastRemoteObject
                                    implements RemoteFeedback {    
-
+    private static final long serialVersionUID = 58799991194L;
     private static Log log = LogFactory.getLog (RemoteConsoleFeedback.class);
 
     private Feedback feedback;

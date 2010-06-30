@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.control.server.deploy;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
@@ -40,7 +39,6 @@ import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer
@@ -74,7 +72,7 @@ public class LocalDeployer implements ClientDeployer {
 
     public void deploy(Feedback feedback) throws Exception {
         File sourceFile = new File(source);
-        File destFile = new File(destination);
+        //File destFile = new File(destination);
 
         /* Calculate destination archive path */
         String archive = sourceFile.getName();
@@ -130,6 +128,8 @@ public class LocalDeployer implements ClientDeployer {
 
     /**
      * Set file permissions as described in the ClientDeployer interface
+     * @param feedback the Feedback object.
+     * @throws IOException If an error occurs.
      */
     private void ensurePermissions(Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");
@@ -251,9 +251,11 @@ public class LocalDeployer implements ClientDeployer {
 
     public static void main (String[] args) throws Exception {
         ClientDeployer d = new LocalDeployer(
-                Configuration.newMemoryBased("summa.control.deployer.target", "localhost:222",
-                                             "summa.control.deployer.bundle.file", "/home/mke/summa-control/repository/test-client-1.bundle",
-                                             "summa.control.client.id", "t3"));
+                Configuration.newMemoryBased("summa.control.deployer.target",
+                                              "localhost:222",
+                                           "summa.control.deployer.bundle.file",
+                      "/home/mke/summa-control/repository/test-client-1.bundle",
+                                              "summa.control.client.id", "t3"));
         d.start(new VoidFeedback());
 
     }

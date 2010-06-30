@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.control.api.feedback;
 
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
-import dk.statsbiblioteket.summa.control.api.feedback.Message;
 
 import java.util.List;
 import java.io.IOException;
@@ -45,6 +43,7 @@ public class ShellContextFeedback implements Feedback {
                 break;
             case Message.MESSAGE_ALERT :
                 ctx.warn (message.getMessage());
+                break;
             case Message.MESSAGE_REQUEST :
                 ctx.prompt(message.getMessage());
                 message.setResponse(ctx.readLine());

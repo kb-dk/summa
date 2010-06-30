@@ -24,7 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke",
         comment="Methods needs Javadoc")
 public class BundleLoadingException extends RuntimeException {
-
+    private static final long serialVersionUID = 86991866841831L;
     public BundleLoadingException () {
         super();
     }
