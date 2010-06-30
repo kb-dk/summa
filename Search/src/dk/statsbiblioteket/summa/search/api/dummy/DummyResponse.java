@@ -24,7 +24,8 @@ import java.util.ArrayList;
  * {@link dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy}.
  */
 public class DummyResponse implements Response {
-
+    private static final long serialVersionUID = 12684L;
+    
     protected String warmUps;
     protected String opens;
     protected String closes;

@@ -22,7 +22,6 @@ import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import org.apache.commons.logging.Log;
@@ -41,7 +40,8 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class SearchNodeAggregator extends ArrayList<SearchNode> implements
-                                                               SearchNode {
+                                                                    SearchNode {
+    private static final long serialVersionUID = 8974858541L; 
     private static Log log = LogFactory.getLog(SearchNodeAggregator.class);
 
     /**
