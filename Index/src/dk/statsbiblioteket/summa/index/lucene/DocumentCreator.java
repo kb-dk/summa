@@ -54,6 +54,7 @@ import java.text.ParseException;
  * {@link dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator}
  * has same functionality and significantly better performance.
  */
+@Deprecated
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,
         state = QAInfo.State.QA_OK, // due to deprecation
         author = "te")

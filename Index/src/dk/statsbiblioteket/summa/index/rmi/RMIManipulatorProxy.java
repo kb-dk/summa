@@ -36,6 +36,7 @@ import java.rmi.server.UnicastRemoteObject;
  */
 public class RMIManipulatorProxy extends UnicastRemoteObject
                                  implements RemoteManipulator {
+    private static final long serialVersionUID = 25681338871L;
 
     /**
      * The class used for the manipulator backend. If this is set it will be

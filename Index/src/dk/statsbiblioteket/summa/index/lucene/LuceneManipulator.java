@@ -75,7 +75,7 @@ public class LuceneManipulator implements IndexManipulator {
     public static final String CONF_BUFFER_SIZE_MB =
             "summa.index.lucene.buffersizemb";
     public static final double DEFAULT_BUFFER_SIZE_MB =
-            IndexWriter.DEFAULT_RAM_BUFFER_SIZE_MB;
+            IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
     /**
      * The number of Threads to use while adding or deleting Documents to the
@@ -219,45 +219,55 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         try {
+
+            IndexWriterConfig writerConfig =
+                        new IndexWriterConfig(Version.LUCENE_30,
+                                     new StandardAnalyzer(Version.LUCENE_30));
+            writerConfig.setMaxFieldLength(
+                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+            if (bufferSizePayloads != -1) {
+                writerConfig.setMaxBufferedDocs(bufferSizePayloads);
+            }
+            writerConfig.setRAMBufferSizeMB(buffersizeMB);
+
+            // Old style merging to preserve order of documents
+            writerConfig.setMergeScheduler(new SerialMergeScheduler());
             log.debug(String.format(
-                    "Checking for index existence at '%s'", indexDirectory));
+                       "Checking for index existence at '%s'", indexDirectory));
             if (IndexReader.indexExists(indexDirectory)) {
                 log.debug(String.format(
                         "checkWriter: Opening writer for existing index at '%s",
-                          indexDirectory.getFile()));
-                writer = new IndexWriter(
-                        indexDirectory,
-                        new StandardAnalyzer(Version.LUCENE_30), false,
-                        IndexWriter.MaxFieldLength.UNLIMITED);
-                writer.setMergeFactor(80); // TODO: Verify this
+                          indexDirectory.getDirectory()));
+                writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
+
+                LogMergePolicy logMergePolicy = new LogDocMergePolicy(writer);
+                logMergePolicy.setMergeFactor(80);
+
+                //writer.setMergeFactor(80); // TODO: Verify this
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering
             } else {
-                log.debug("No existing index at '" + indexDirectory.getFile()
+                log.debug("No existing index at '"
+                          + indexDirectory.getDirectory()
                           + "', creating new index");
-                writer = new IndexWriter(
-                        indexDirectory,
-                        new StandardAnalyzer(Version.LUCENE_30), true,
-                        IndexWriter.MaxFieldLength.UNLIMITED);
+                writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
             }
-
-            if (bufferSizePayloads != -1) {
-                writer.setMaxBufferedDocs(bufferSizePayloads);
-            }
-            writer.setRAMBufferSizeMB(buffersizeMB);
-            // Old style merging to preserve order of documents
-            writer.setMergeScheduler(new SerialMergeScheduler());
+            // Creating index writer
+            writer = new IndexWriter(indexDirectory, writerConfig);
             writer.setMergePolicy(new LogByteSizeMergePolicy(writer));
+
         } catch (CorruptIndexException e) {
             throw new IOException(String.format(
-                    "Corrupt index found at '%s'", indexDirectory.getFile()),e);
+                    "Corrupt index found at '%s'",
+                    indexDirectory.getDirectory()),e);
         } catch (LockObtainFailedException e) {
             throw new IOException(String.format(
-                    "Index at '%s' is locked", indexDirectory.getFile()), e);
+                    "Index at '%s' is locked", indexDirectory.getDirectory()),
+                    e);
         } catch (IOException e) {
             throw new IOException(String.format(
                     "Exception opening index '%s'",
-                    indexDirectory.getFile()), e);
+                    indexDirectory.getDirectory()), e);
         }
     }
 
@@ -291,13 +301,13 @@ public class LuceneManipulator implements IndexManipulator {
         //noinspection DuplicateStringLiteralInspection
         log.trace("clear() called");
         log.trace("clear: Calling close() on any existing index at '"
-                  + indexDirectory.getFile() + "'");
+                  + indexDirectory.getDirectory() + "'");
         close(false);
         log.trace("clear: Removing old folder with Lucene index at '"
-                  + indexDirectory.getFile() + "'");
-        Files.delete(indexDirectory.getFile());
+                  + indexDirectory.getDirectory() + "'");
+        Files.delete(indexDirectory.getDirectory());
         log.trace("clear: Opening new Lucene index at '"
-                  + indexDirectory.getFile() + "'");
+                  + indexDirectory.getDirectory() + "'");
         open(indexRoot);
     }
 
@@ -400,7 +410,8 @@ public class LuceneManipulator implements IndexManipulator {
                     "Encountered IOException '%s' during addition of document "
                     + "'%s' to index. Offending payload was %s. The index "
                     + "location was '%s'. JVM shutdown in %d seconds",
-                    e.getMessage(), id, indexDirectory.getFile(), payload, 5);
+                    e.getMessage(), id, indexDirectory.getDirectory(),
+                    payload, 5);
             log.fatal(message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
@@ -445,7 +456,8 @@ public class LuceneManipulator implements IndexManipulator {
                      "Encountered IOException '%s' during deletion of document "
                      + "'%s' to index. Offending payload was %s. The index "
                      + "location was '%s'. JVM shutdown in %d seconds",
-                     e.getMessage(), id, indexDirectory.getFile(), payload, 5);
+                     e.getMessage(), id, indexDirectory.getDirectory(),
+                     payload, 5);
                 log.fatal(message, e);
                 System.err.println(message);
                 e.printStackTrace(System.err);
@@ -531,7 +543,7 @@ public class LuceneManipulator implements IndexManipulator {
         log.debug(String.format(
                 "Optimizing index at %s to a maximum of %d segments. "
                 + "This might take a while",
-                indexDirectory.getFile(), maxMergeOnConsolidate));
+                indexDirectory.getDirectory(), maxMergeOnConsolidate));
         writer.optimize(maxMergeOnConsolidate, true);
         log.trace("Closing writer");
         closeWriter(); // Is this still necessary?
@@ -549,26 +561,28 @@ public class LuceneManipulator implements IndexManipulator {
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("close(" + flush + ") called for '"
-                  + indexDirectory.getFile() + "'");
+                  + indexDirectory.getDirectory() + "'");
         if (flush) {
             commit();
         } else {
             flushPending();
         }
         if (writer != null) {
-            log.debug("Closing writer for '" + indexDirectory.getFile() + "'");
+            log.debug("Closing writer for '" + indexDirectory.getDirectory()
+                      + "'");
             try {
                 closeWriter();
             } finally {
                 try {
                     if (IndexWriter.isLocked(indexDirectory)) {
-                        log.error("Lucene lock at '" + indexDirectory.getFile()
+                        log.error("Lucene lock at '"
+                                  + indexDirectory.getDirectory()
                                   + "' after close. Attempting removal");
                         IndexWriter.unlock(indexDirectory);
                     }
                 } catch (IOException e) {
                     log.error("Could not remove lock at '"
-                              + indexDirectory.getFile() + "'");
+                              + indexDirectory.getDirectory() + "'");
                 }
             }
             //noinspection AssignmentToNull
@@ -593,17 +607,18 @@ public class LuceneManipulator implements IndexManipulator {
             log.trace("closeWriter: No writer present");
             return;
         }
-        log.debug("closeWriter: Closing '" + indexDirectory.getFile() + "'");
+        log.debug("closeWriter: Closing '" + indexDirectory.getDirectory()
+                  + "'");
         try {
             writer.close();
             //noinspection AssignmentToNull
             writer = null;
         } catch (CorruptIndexException e) {
             throw new IOException("Corrupt index in writer for '"
-                                  + indexDirectory.getFile() + "'", e);
+                                  + indexDirectory.getDirectory() + "'", e);
         } catch (IOException e) {
             throw new IOException("Exception closing writer for '"
-                                  + indexDirectory.getFile() + "'", e);
+                                  + indexDirectory.getDirectory() + "'", e);
         }
     }
 
