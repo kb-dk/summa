@@ -112,6 +112,7 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
      * {@link WaitForStatusStep#CONF_BAD_STATES}
      */
     public static class BadStateException extends RuntimeException {
+        private static final long serialVersionUID = 78465186454L;
 
         private Status stat;
 

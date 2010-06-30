@@ -205,6 +205,7 @@
                compiler="${compiler}" optimize="${compiler.optimize}"
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
+            <compilerarg value="-Xlint:all"/>
         </javac>
     </target>
 
