@@ -24,6 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class PayloadException extends Exception {
+    private static final long serialVersionUID = 2348343L;
     private Payload payload = null;
 
     public PayloadException() {

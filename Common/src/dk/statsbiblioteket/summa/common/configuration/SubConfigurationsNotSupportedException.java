@@ -25,6 +25,7 @@ import sun.reflect.generics.reflectiveObjects.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hbk")
 public class SubConfigurationsNotSupportedException extends Exception {
+    public static final long serialVersionUID = 68748318356L;
     private String msg;
     private Throwable e;
 
@@ -46,6 +47,6 @@ public class SubConfigurationsNotSupportedException extends Exception {
     }
 
     public String toString() {
-        throw new NotImplementedException();
+        return msg + "\n" + e.getCause();
     }
 }

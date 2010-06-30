@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public class Pair <T extends Comparable<T> , S>
         implements Comparable<Pair<T, S>>, Serializable {
+    private static final long serialVersionUID = 340404402L;
     protected T key;
     protected S value;
 

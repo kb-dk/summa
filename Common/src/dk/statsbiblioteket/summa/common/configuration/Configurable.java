@@ -35,6 +35,7 @@ public interface Configurable {
      * one-argument constructor that takes a {@link Configuration}.
      */
     public class ConfigurationException extends RuntimeException {
+        public static final long serialVersionUID = 76846183L;
 
         public ConfigurationException (Throwable cause) {
             super (getCauseMessage(cause));

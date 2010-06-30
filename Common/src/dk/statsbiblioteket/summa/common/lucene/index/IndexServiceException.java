@@ -29,7 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class IndexServiceException extends Exception {
-
+    private static final long serialVersionUID = 8731358486L;
     /**
      * Constructs an IndexServiceException with an error message.
      *

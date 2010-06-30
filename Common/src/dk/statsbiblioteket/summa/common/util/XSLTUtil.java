@@ -34,6 +34,7 @@ import java.net.MalformedURLException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@Deprecated
 public class XSLTUtil {
     private static Log log = LogFactory.getLog(XSLTUtil.class);
 

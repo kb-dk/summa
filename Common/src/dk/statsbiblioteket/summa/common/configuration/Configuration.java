@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 public class Configuration implements Serializable,
                                       Iterable<Map.Entry<String,Serializable>>,
                                       Configurable {
+    public static final long serialVersionUID = 9868468134L;
     private final static Log log = LogFactory.getLog(Configuration.class);
 
     /**
@@ -686,6 +687,7 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
+    @SuppressWarnings({"unchecked"})
     public static <T> Class<? extends T> getClass(String key,
                                                   Class<T> classType,
                                                   Configuration conf) {
@@ -898,6 +900,7 @@ public class Configuration implements Serializable,
      * @deprecated use the static method instead, in order to guard against
      *             unintentional RMI-based creation.
      */
+    @Deprecated
     public <T> T create(Class<T> configurable) {
         return create(configurable, this);
     }

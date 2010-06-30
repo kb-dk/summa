@@ -53,7 +53,7 @@ public class NativeRunner  {
      * The threads that polls the output from the commands. When a thread is
      * finished, it removes itself from this list.
      */
-    private final List threads =
+    private final List<Thread> threads =
             Collections.synchronizedList(new LinkedList<Thread>());
 
     private final int MAXINITIALBUFFER = 1000000;

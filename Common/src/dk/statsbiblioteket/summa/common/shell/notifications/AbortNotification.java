@@ -25,7 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class AbortNotification extends Notification {
-
+    private static final long serialVersionUID = 7124052032L;
     private int returnVal;
 
     public AbortNotification (Command cmd, String msg, int returnVal) {

@@ -32,7 +32,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Persistent structure for TermStats from an index. The structure must be
@@ -469,6 +472,7 @@ public class TermStat {
 
     private HashMap<String, Integer> createCache() {
         return new LinkedHashMap<String, Integer>(cacheSize) {
+            private static final long serialVersionUID = 16846864L;
             @Override
             protected boolean removeEldestEntry(
                     Map.Entry<String, Integer> eldest) {

@@ -58,7 +58,7 @@ import org.apache.commons.logging.LogFactory;
         comment = "Some method-documentations misses parts")
 public class RemoteStorage extends UnicastRemoteObject implements
                                                        RemoteStorageMBean {
-
+    public static final long serialVersionUID = 34581040194821L;
     private final Log log = LogFactory.getLog(RemoteStorage.class);
 
     private String serviceName, registryHost;
@@ -100,7 +100,10 @@ public class RemoteStorage extends UnicastRemoteObject implements
      * Convenience method to create a connection to a remote configuration
      * storage
      * @param rmiPath Path to remote service, fx {@code //host:port/servicename}
-     * @return A proxy for the remote configuration storage
+     * @return A proxy for the remote configuration storage 
+     * @throws NotBoundException if name is not currently bound
+     * @throws RemoteException if registry could not be contacted
+     * @throws MalformedURLException if the name is not an appropriately
      */
     public static ConfigurationStorage getRemote (String rmiPath)
               throws MalformedURLException, NotBoundException, RemoteException {

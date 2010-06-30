@@ -43,6 +43,7 @@ import java.util.List;
         state = QAInfo.State.QA_NEEDED,
         author = "hal, te, mke")
 public class Record implements Serializable, Comparable{
+    public static final long serialVersionUID = 35848318185L;
     private static Log log = LogFactory.getLog(Record.class);
 
     /**

@@ -169,7 +169,8 @@ public class DisjunctionQueryParser extends QueryParser {
             return new DisjunctionMaxQuery(queries, tieBreakerMultiplier);
         }
         //noinspection UseOfObsoleteCollectionType
-        Vector clauses = new Vector(queries.size());
+        Vector<BooleanClause> clauses =
+                                      new Vector<BooleanClause>(queries.size());
         for (Query query: queries) {
             //noinspection unchecked
             clauses.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));

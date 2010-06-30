@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
         author = "te",
         comment = "Some methods needs JavaDoc")
 public class ConvenientMap extends HashMap<String, Serializable> {
+    public static final long serialVersionUID = 384681318L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
 
     public Serializable get(String key) {
@@ -236,6 +237,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
      * @throws ConfigurationStorageException if there is an error communicating
      *         with the storage backend
      */
+    @SuppressWarnings({"unchecked"})
     public List<Pair<String, Integer>> getIntValues(String key,
                                                     Integer defaultValue) {
         Object o = get(key);

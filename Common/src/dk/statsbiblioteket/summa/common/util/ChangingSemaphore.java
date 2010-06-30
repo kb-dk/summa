@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ChangingSemaphore extends Semaphore {
+    private static final long serialVersionUID = 9374781L;
     private static Log log = LogFactory.getLog(ChangingSemaphore.class);
 
     private int overallPermits;

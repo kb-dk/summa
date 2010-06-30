@@ -21,7 +21,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class HelpNotification extends Notification {
-
+    private static final long serialVersionUID = 36846838864L;
     private String targetCmd;
 
     /**

@@ -44,6 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@SuppressWarnings({"unchecked"})
 public abstract class SortedPoolImpl<E extends Comparable<E>>
         extends AbstractList<E> implements SortedPool<E>, Comparator<E> {
     private Log log = LogFactory.getLog(SortedPoolImpl.class);

@@ -46,6 +46,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@SuppressWarnings({"unchecked"})
 public class PriorityQueue<T extends Comparable<? super T>> {
     private T[] heap;
     private int size = 0;

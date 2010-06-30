@@ -29,6 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class StringMap extends HashMap<String, String> {
+    public static final long serialVersionUID = 868318318535L;
     public StringMap(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
     }

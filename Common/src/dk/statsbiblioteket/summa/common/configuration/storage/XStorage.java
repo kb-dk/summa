@@ -44,6 +44,7 @@ import java.util.ArrayList;
         state = QAInfo.State.QA_NEEDED,
         author = "te, hbk")
 public class XStorage implements ConfigurationStorage {
+    public static final long serialVersionUID = 81293421421L;
     public static final String DEFAULT_RESOURCE = "xconfiguration.xml";
 
     private static boolean unclearSemanticsWarned = false;

@@ -21,7 +21,9 @@ import java.io.IOException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.*;
+import org.apache.lucene.util.Version;
 
 /**
  * Simple reduction of an existing index by deletion of documents.
@@ -111,9 +113,14 @@ public class IndexReducer {
         }
 
         System.out.println("Opening index writer...");
+        IndexWriterConfig writerConfig =
+                new IndexWriterConfig(Version.LUCENE_30,
+                                      new SimpleAnalyzer(Version.LUCENE_30));
+        writerConfig.setMaxFieldLength(
+                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         IndexWriter iw = new IndexWriter(new NIOFSDirectory(location),
-                            new SimpleAnalyzer(), false, 
-                            IndexWriter.MaxFieldLength.UNLIMITED);
+                                         writerConfig); 
         System.out.println("Optimizing index...");
         iw.optimize();
         iw.close();

@@ -60,6 +60,7 @@ import dk.statsbiblioteket.summa.common.util.BitUtil;
  * @deprecated {@link ObjectFilter} has been extended to handle streams and
  *             provides a more flexible interface.
  */
+@Deprecated
 public abstract class StreamFilter extends InputStream implements Configurable,
                                                                   Filter {
 
