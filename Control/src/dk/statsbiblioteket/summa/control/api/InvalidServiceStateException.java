@@ -27,6 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class InvalidServiceStateException extends ClientException {
+    private static final long serialVersionUID = 777933331894684L;
     /**
      *
      * @param client the client encountering the exceptional state

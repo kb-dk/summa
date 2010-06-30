@@ -26,6 +26,7 @@ import java.io.Serializable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Message implements Serializable {
+    private static final long serialVersionUID = 277556335411L;
     /**
      * Plain messages should just be displayed and requires no response.
      */
@@ -75,9 +76,9 @@ public class Message implements Serializable {
 
     /**
      * Used mainly to retrieve the response value from sensitive questions
-     * so as password prompts. A byte array is used here to avoid having
+     * such as password prompts. A byte array is used here to avoid having
      * a copy of passwords or other secrets in the string pool.
-     * @return
+     * @return A char[] representation of sensitive data. 
      */
     public char[] getRawResponse () {
         if (response instanceof char[]) {

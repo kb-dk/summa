@@ -26,7 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke",
         comment="The method needs Javadoc")
 public class ServicePackageException extends ClientException {
-
+    private static final long serialVersionUID =9879436518419L; 
     public ServicePackageException (Client client, String id, String msg) {
         super (client, msg + ", for , service '" + id + "'");
     }

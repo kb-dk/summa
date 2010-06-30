@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class NoSuchServiceException extends ClientException {
+    private static final long serialVersionUID = 7993316811168418896L;
     /**
      *
      * @param client the client encountering the exceptional state

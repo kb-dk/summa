@@ -27,6 +27,7 @@ import java.io.Serializable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Status implements Serializable {
+    private static final long serialVersionUID = 6655522311884484L;
     public static enum CODE {
         /**
          * The object does not exist, but can be instantiated. This state

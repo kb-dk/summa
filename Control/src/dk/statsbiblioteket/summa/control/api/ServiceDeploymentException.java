@@ -19,7 +19,7 @@ package dk.statsbiblioteket.summa.control.api;
  * client instance.
  */
 public class ServiceDeploymentException extends RuntimeException {
-
+    private static final long serialVersionUID = 749911387197L;
     public ServiceDeploymentException (String msg) {
         super(msg);
     }
