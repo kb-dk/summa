@@ -53,6 +53,7 @@
     <!-- Internal project dependencies -->
     <path id="lib.internal">
         <pathelement location="../Common/${summa.classes.dir}"/>
+        <pathelement location="../Common/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -195,6 +196,7 @@
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
+            <compilerarg value="-Xlint:all"/>
         </javac>
     </target>
 

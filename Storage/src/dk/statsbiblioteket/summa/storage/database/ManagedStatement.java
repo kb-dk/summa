@@ -106,15 +106,20 @@ public class ManagedStatement implements PreparedStatement {
         stmt.setTimestamp(i, timestamp);
     }
 
-    public void setAsciiStream(int i, InputStream inputStream, int i1) throws SQLException {
+    public void setAsciiStream(int i, InputStream inputStream, int i1)
+                                                           throws SQLException {
         stmt.setAsciiStream(i, inputStream, i1);
     }
 
-    public void setUnicodeStream(int i, InputStream inputStream, int i1) throws SQLException {
+    @Deprecated
+    public void setUnicodeStream(int i, InputStream inputStream, int i1)
+                                                           throws SQLException {
+
         stmt.setUnicodeStream(i, inputStream, i1);
     }
 
-    public void setBinaryStream(int i, InputStream inputStream, int i1) throws SQLException {
+    public void setBinaryStream(int i, InputStream inputStream, int i1)
+                                                           throws SQLException {
         stmt.setBinaryStream(i, inputStream, i1);
     }
 

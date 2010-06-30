@@ -44,6 +44,7 @@ import java.util.List;
         author = "mke, te, hbk")
 public class RMIStorageProxy extends UnicastRemoteObject
                              implements RemoteStorage {
+    private static final long serialVersionUID = 23485L;
 
     /**
      * The class used for the storage backend. If this is set it will be

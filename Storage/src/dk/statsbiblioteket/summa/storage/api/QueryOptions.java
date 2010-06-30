@@ -77,6 +77,7 @@ import java.io.Serializable;
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
 public class QueryOptions implements Serializable {
+    private static final long serialVersionUID = 196854L;
     public static enum ATTRIBUTES {
         RECORDID,
         RECORDBASE,
@@ -353,17 +354,22 @@ public class QueryOptions implements Serializable {
             switch(attribute) {
                 case RECORDBASE:
                     base = r.getBase();
+                    break;
                 case RECORDCONTENT:
                     content = r.getContent(r.isContentCompressed());
+                    break;
                 case RECORDCREATIONTIME:
                     ct = r.getCreationTime();
+                    break;
                 case RECORDMODIFICATIONTIME:
                     mt = r.getModificationTime();
+                    break;
                 case RECORDID:
                     id = r.getId();
+                    break;
                 case RECORDMETA:
                     meta = r.getMeta();
-
+                    break;
             }
         }
         return new Record(id, base, r.isDeleted(), r.isIndexable(), content, ct,
