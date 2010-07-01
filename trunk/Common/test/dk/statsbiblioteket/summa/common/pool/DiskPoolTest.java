@@ -19,8 +19,6 @@ import java.io.File;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
-import dk.statsbiblioteket.summa.common.pool.SortedPool;
 
 /**
  * DiskPool Tester.

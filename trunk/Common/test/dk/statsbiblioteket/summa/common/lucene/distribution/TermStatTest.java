@@ -19,6 +19,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.IOException;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -42,6 +43,11 @@ public class TermStatTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        try {
+                Files.delete(TMP);
+        } catch (IOException e) {
+                fail("Unable to delete the folder " + TMP);
+        }
     }
 
     public static Test suite() {
@@ -49,8 +55,7 @@ public class TermStatTest extends TestCase {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static File TMP = new File(System.getProperty(
-            "java.io.tmpdir"), "termstattemp");
+    private static File TMP = new File("Common/tmp/", "termstattemp");
     public void testPersistence() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         TermStat ts = new TermStat(conf);

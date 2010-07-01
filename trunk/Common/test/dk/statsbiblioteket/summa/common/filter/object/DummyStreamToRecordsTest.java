@@ -25,7 +25,7 @@ public class DummyStreamToRecordsTest extends TestCase {
 
     public void testBasics() throws Exception {
         long BODY_SIZE = 100;
-        int BODY_COUNT = 3;
+        int BODY_COUNT = 7;
         int DATA_SIZE = 51;
 
         int RECORDS = 7;

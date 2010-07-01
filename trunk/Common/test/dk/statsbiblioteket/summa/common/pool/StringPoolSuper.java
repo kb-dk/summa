@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
@@ -27,7 +26,11 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.StringWriter;
 import java.text.Collator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 /**
  * A super-class with tests for String Pools.
@@ -55,7 +58,15 @@ public abstract class StringPoolSuper extends TestCase {
 
     public void setUp() throws Exception {
         super.setUp();
-        poolDir.mkdirs();
+        if(poolDir.exists()) {
+            if(!poolDir.delete()) {
+                System.out.println("Directory '" + poolDir
+                                   + "' was not deleted");
+            }
+        }
+        if(!poolDir.mkdirs()) {
+            System.out.println("Directory '" + poolDir + "' was not created");
+        }
     }
 
     public void tearDown() throws Exception {
