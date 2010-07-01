@@ -219,7 +219,6 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         try {
-
             IndexWriterConfig writerConfig =
                         new IndexWriterConfig(Version.LUCENE_30,
                                      new StandardAnalyzer(Version.LUCENE_30));
@@ -236,14 +235,17 @@ public class LuceneManipulator implements IndexManipulator {
                        "Checking for index existence at '%s'", indexDirectory));
             if (IndexReader.indexExists(indexDirectory)) {
                 log.debug(String.format(
-                        "checkWriter: Opening writer for existing index at '%s",
+                        "checkWriter: Setting configuration for an existing "
+                        +"index at '%s",
                           indexDirectory.getDirectory()));
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
 
-                LogMergePolicy logMergePolicy = new LogDocMergePolicy(writer);
-                logMergePolicy.setMergeFactor(80);
+                writer = new IndexWriter(indexDirectory, writerConfig);
 
-                //writer.setMergeFactor(80); // TODO: Verify this
+                LogMergePolicy logMergePolicy = new LogDocMergePolicy(writer);
+                logMergePolicy.setMergeFactor(80); // TODO: Verify this
+                writer.setMergePolicy(new LogByteSizeMergePolicy(writer)); 
+
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering
             } else {
@@ -251,11 +253,8 @@ public class LuceneManipulator implements IndexManipulator {
                           + indexDirectory.getDirectory()
                           + "', creating new index");
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+                writer = new IndexWriter(indexDirectory, writerConfig);
             }
-            // Creating index writer
-            writer = new IndexWriter(indexDirectory, writerConfig);
-            writer.setMergePolicy(new LogByteSizeMergePolicy(writer));
-
         } catch (CorruptIndexException e) {
             throw new IOException(String.format(
                     "Corrupt index found at '%s'",
