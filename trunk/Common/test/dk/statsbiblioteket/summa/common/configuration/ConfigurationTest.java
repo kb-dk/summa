@@ -292,8 +292,7 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testLoadXConfigurationFromFile() throws Exception {
-        File tmp = new File(new File(System.getProperty("java.io.tmpdir")),
-                                     "tmpstorage.xml");
+        File tmp = new File("Common/tmp/", "tmpstorage.xml");
         Files.copy(Resolver.getFile("data/simple_xstorage.xml"), tmp, true);
 
         Configuration conf = Configuration.load(tmp.toString());
