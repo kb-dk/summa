@@ -22,7 +22,6 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -31,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * RecordShaperFilter Tester.
  *
- * @author <Authors name>
+ * @author te <mailto:te@statsbiblioteket.dk>
  * @since <pre>06/27/2009</pre>
  * @version 1.0
  */
@@ -122,8 +121,11 @@ public class RecordShaperFilterTest extends TestCase {
                 RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
                 RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
 
-        List<Payload> payloads = Arrays.asList(new Payload(new Record(
-                        "id1", "base1", CONTENT.getBytes("utf-8"))));
+        List<Payload> payloads = new ArrayList<Payload>(1);
+
+        payloads.add(new Payload(
+                new Record("id1", "base1", CONTENT.getBytes("utf-8"))
+                                              ));
         RecordShaperFilter assigner = new RecordShaperFilter(conf);
         assigner.setSource(new PayloadFeederHelper(payloads));
         Record record = assigner.next().getRecord();

@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * DumpFilter Tester.
  *
- * @author <Authors name>
+ * @author  tokerefind
  * @since <pre>03/31/2009</pre>
  * @version 1.0
  */
@@ -45,8 +45,10 @@ public class DumpFilterTest extends TestCase {
     private static Log log = LogFactory.getLog(DumpFilterTest.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static final File OUT = new File(new File(System.getProperty(
-            "java.io.tmpdir")), "dumpTest");
+
+    private static final File OUT = new File("Common/tmp/dumpTest"); 
+            /*new File(new File(System.getProperty(
+            "java.io.tmpdir")), "dumpTest");*/
 
     public DumpFilterTest(String name) {
         super(name);
@@ -67,6 +69,11 @@ public class DumpFilterTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        try {
+                Files.delete(OUT);
+        } catch (IOException e) {
+                fail("Unable to delete the folder " + OUT);
+        }
     }
 
     public static Test suite() {

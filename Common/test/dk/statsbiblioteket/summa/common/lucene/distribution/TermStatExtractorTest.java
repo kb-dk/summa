@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import dk.statsbiblioteket.util.Files;
@@ -54,6 +55,11 @@ public class TermStatExtractorTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        try {
+                Files.delete(TEST_DIR);
+        } catch (IOException e) {
+                fail("Unable to delete the folder " + TEST_DIR);
+        }
     }
 
     public static Test suite() {
@@ -135,7 +141,7 @@ public class TermStatExtractorTest extends TestCase {
     }
 
     public static final File TEST_DIR = new File(
-            System.getProperty("java.io.tmpdir"), "termstats");
+            "Common/tmp/", "termstats");
     public static final File INDEX_LOCATION = new File(TEST_DIR, "lucene");
 
     private void generateIndex(int docCount) throws Exception {
