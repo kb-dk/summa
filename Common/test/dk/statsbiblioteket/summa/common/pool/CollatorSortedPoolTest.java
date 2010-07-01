@@ -52,15 +52,13 @@ public class CollatorSortedPoolTest extends TestCase {
     }
     public void testMemoryBasedSorting() throws Exception {
         MemoryStringPool pool = new MemoryStringPool(defaultCollator);
-        pool.open(new File(System.getProperty("java.io.tmpdir"),
-                           "facetTestMem"),
+        pool.open(new File("Common/tmp/", "facetTestMem"),
                   "testpool", false, true);
         testSorting(pool);
     }
     public void testDiskBasedSorting() throws Exception {
         DiskStringPool pool = new DiskStringPool(defaultCollator);
-        pool.open(new File(System.getProperty("java.io.tmpdir"),
-                           "facetTestDisk"),
+        pool.open(new File("Common/tmp/", "facetTestDisk"),
                   "testpool", false, true);
         testSorting(pool);
     }

@@ -40,8 +40,7 @@ public class FileReaderTest extends TestCase {
     }
 
     public static final File root =
-            new File(new File(System.getProperty("java.io.tmpdir")),
-                     "loadertempA");
+            new File("Ingest/tmp/", "loadertempA");
     File sub1 = new File(root, "1");
     File sub2 = new File(root, "2");
     File rootFile10;
@@ -49,8 +48,7 @@ public class FileReaderTest extends TestCase {
     File rootFileFoo20;
 
     public static final File rootDeep =
-            new File(new File(System.getProperty("java.io.tmpdir")),
-                     "rootDeep");
+            new File("Ingest/tmp/", "rootDeep");
 
     @Override
     public void setUp() throws Exception {
