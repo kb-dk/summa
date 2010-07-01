@@ -89,10 +89,12 @@ import java.util.Map;
  * https://issues.apache.org/jira/browse/LUCENE-2369 which uses aproximately
  * the same amount of time for start up and has much lower memory requirements.  
  */
+@Deprecated
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class MultipassSortComparator extends ReusableSortComparator {
+    private static final long serialVersionUID = 684184L;
     private static Log log = LogFactory.getLog(MultipassSortComparator.class);
 
     // The number of bytes for the buffer

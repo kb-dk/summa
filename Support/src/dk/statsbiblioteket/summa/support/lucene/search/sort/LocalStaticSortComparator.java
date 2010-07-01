@@ -37,6 +37,7 @@ import java.util.Map;
  * taking up #documents * 4 bytes.
  */
 public class LocalStaticSortComparator extends ReusableSortComparator {
+    private static final long serialVersionUID = 79846351L;
     private static final Logger log =
             Logger.getLogger(LocalStaticSortComparator.class);
 
@@ -59,11 +60,11 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
     // inherit javadocs
     @Override
     public FieldComparator newComparator(
-            String fieldname, int numHits, int sortPos, boolean reversed)
+            String fieldName, int numHits, int sortPos, boolean reversed)
             throws IOException {
             final boolean r = reversed;
             final int[] slots = new int[numHits];
-            final String fieldName = fieldname;
+            //final String fieldName = fieldname;
         //final int[] order = getOrder(reader, fieldname);
 
         return new FieldComparator() {

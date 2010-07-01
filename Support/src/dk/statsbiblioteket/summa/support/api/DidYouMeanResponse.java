@@ -36,6 +36,7 @@ import java.util.LinkedList;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hbk")
 public class DidYouMeanResponse implements Response {
+    private static final long serialVersionUID = 465846351L;
     /**
      * Did-You-Mean response name.
      */
@@ -214,6 +215,7 @@ public class DidYouMeanResponse implements Response {
      * corpusQuery.
      */
     private static class ResultTuple implements Serializable {
+        private static final long serialVersionUID = 468135846847984L;
         // result
         private String result = null;
         // result score
