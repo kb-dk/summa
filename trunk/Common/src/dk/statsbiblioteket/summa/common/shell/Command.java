@@ -29,7 +29,7 @@ public abstract class Command {
     private String name;
     private String description;
     private String usage;
-    private String[] aliases = new String[] {};
+    private String[] aliases;
 
     /**
      * Constructs a command with a single command name.
@@ -38,6 +38,7 @@ public abstract class Command {
      */
     public Command (String name, String description) {
         constructorHelper(name, description);
+        this.aliases = new String[] {};
     }
 
     /**
@@ -48,7 +49,7 @@ public abstract class Command {
      */
     public Command(String name, String description, String[] aliases) {
         constructorHelper(name, description);
-        System.arraycopy(aliases, 0, this.aliases, 0, aliases.length - 1);
+        this.aliases = aliases;
     }
 
     /**

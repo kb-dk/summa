@@ -78,14 +78,15 @@ public class Core {
      * @param debug if {@code true} debug messages will be printed to the
      *              created shell context if {@code shellCtx} is {@code null}.
      */
-    public Core (ShellContext shellCtx,
-                       final boolean withDefaultCommands, final boolean debug) {
+    public Core (ShellContext shellCtx, final boolean withDefaultCommands,
+                                                          final boolean debug) {
         cliParser = new PosixParser();
         commands = new HashMap<String,Command>();
         aliases = new HashMap<String, String>();
         lastTrace = null;
         header = "Summa Generic Shell v@summa.api.version@";
         prompt = "summa-shell> ";
+        cmdComparator = new SimpleCompletor(new String[] {});
 
         if (shellCtx != null) {
             this.shellCtx = shellCtx;
@@ -175,7 +176,6 @@ public class Core {
     }
 
     private static ConsoleReader createConsoleReader() {
-        cmdComparator = new SimpleCompletor(new String[] {});
         try {
             ConsoleReader reader = new ConsoleReader();
             reader.addCompletor(cmdComparator);
@@ -220,7 +220,9 @@ public class Core {
         aliases.put(cmd.getName(), cmd.getName());
         for(String alias: cmd.getAliases()) {
             aliases.put(alias, cmd.getName());
+            System.out.println("alias: " + alias + ", cmdName: " + cmd.getName());
         }
+        
         cmdComparator.addCandidateString(cmd.getName());
     }
 
