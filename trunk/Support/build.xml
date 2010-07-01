@@ -263,6 +263,7 @@
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
+            <compilerarg value="-Xlint:all"/>
         </javac>
     </target>
 
