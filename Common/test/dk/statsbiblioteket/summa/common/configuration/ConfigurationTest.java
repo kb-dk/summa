@@ -300,6 +300,7 @@ public class ConfigurationTest extends TestCase {
                    conf.getStorage() instanceof XStorage);
         assertTrue("The underlying Storage should support sub storages",
                    conf.supportsSubConfiguration());
+        tmp.delete();
     }
 
     public void testGetSystemConfigError () throws Exception {
@@ -312,8 +313,8 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testGetSystemConfigAuto () throws Exception {
-        Configuration conf = Configuration.getSystemConfiguration ("summa.snafu",
-                                                                   true);
+        Configuration conf =
+                         Configuration.getSystemConfiguration("summa.snafu", true);
 
         int count = 0;
         for (Object o : conf) {

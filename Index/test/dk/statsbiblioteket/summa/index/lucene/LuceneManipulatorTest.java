@@ -44,6 +44,9 @@ import org.apache.lucene.store.NIOFSDirectory;
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private static Log log = LogFactory.getLog(LuceneManipulatorTest.class);
+
+    LuceneManipulator manipulator = null;
+
     public LuceneManipulatorTest(String name) {
         super(name);
     }
@@ -59,6 +62,9 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        if(manipulator != null) {
+            manipulator.close();
+        }
         if (location.exists()) {
             Files.delete(location);
         }
@@ -69,18 +75,18 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     }
 
     public File location =
-            new File(System.getProperty("java.io.tmpdir"), "tempindex");
+            new File("Index/tmp/", "tempindex");
 
     private LuceneManipulator openIndex(int buffer) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(LuceneManipulator.CONF_BUFFER_SIZE_PAYLOADS, buffer);
-        LuceneManipulator manipulator = new LuceneManipulator(conf);
+        manipulator = new LuceneManipulator(conf);
         manipulator.open(location);
         return manipulator;
     }
 
     public void testSimpleIndex() throws Exception {
-        LuceneManipulator manipulator = openIndex(2);
+        manipulator = openIndex(2);
         String[] ids = new String[]{"foo", "bar", "zoo"};
         for (String id: ids) {
             manipulator.update(getPayload(id, false));
@@ -101,7 +107,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     public void testLargeIndex(int docCount) throws Exception {
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(docCount);
-        LuceneManipulator manipulator = openIndex(102);
+        manipulator = openIndex(102);
         String[] ids = new String[docCount];
         for (int i = 0 ; i < docCount ; i++) {
             ids[i] = "doc" + i;
@@ -132,7 +138,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     }
 
     public void testDeletionsIndex() throws Exception {
-        LuceneManipulator manipulator = openIndex(2);
+        manipulator = openIndex(2);
 
         {
             Payload payloadB = getPayload("b", false);
@@ -183,8 +189,8 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                        + "be null", falseDelete.getData(
                     LuceneIndexUtils.META_DELETE_DOCID));
         }
-
         manipulator.close();
+        manipulator = null;
         logIndex();
         String[] expected = new String[]{"a", "b", "c"};
         LuceneTestHelper.verifyContent(
@@ -195,7 +201,8 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private void logIndex() throws Exception {
         try {
             IndexReader reader = IndexReader.open(
-                    new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
+                    new NIOFSDirectory(new File(location,
+                                                LuceneIndexUtils.LUCENE_FOLDER)));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 if (!reader.isDeleted(i)) {
                     try {
@@ -243,7 +250,9 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                          manConfLocation);
         Configuration conf = new Configuration(new XStorage(manConfLocation));
 
-        LuceneManipulator manipulator = new LuceneManipulator(conf);
+        manipulator = new LuceneManipulator(conf);
+        log.info("Opening index at location '" + location + "'");
+        
         manipulator.open(location);
 
         StreamingDocumentCreator creator = new StreamingDocumentCreator(conf);
@@ -253,6 +262,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             manipulator.update(creator.next());
         }
         manipulator.close();
+        manipulator = null;
         log.info("Index created at '" + location + "'. Opening index...");
 
         logIndex();        

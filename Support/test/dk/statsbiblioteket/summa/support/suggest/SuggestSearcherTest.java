@@ -38,8 +38,7 @@ public class SuggestSearcherTest extends TestCase {
     public static final String EXPORT_FILE = "suggest_out.dat";
     private static Log log = LogFactory.getLog(SuggestSearcherTest.class);
 
-    File storageRoot = new File(new File(System.getProperty("java.io.tmpdir")),
-                                         "suggest_storage");
+    File storageRoot = new File("Support/tmp/", "suggest_storage");
     SummaSearcher searcher;
 
 
@@ -134,10 +133,13 @@ public class SuggestSearcherTest extends TestCase {
         put("XTwo", 123, 2);
         put("XThree", 2, 3);
         String xml = get("X");
-        System.out.println(xml);
+        assertTrue(xml.contains("XOne"));
         xml = eat(xml, "XThree");
+        assertFalse(xml.contains("XTree"));
         xml = eat(xml, "XTwo");
+        assertFalse(xml.contains("XTwo"));
         xml = eat(xml, "XOne");
+        assertFalse(xml.contains("XOne"));
 
     }
 
@@ -213,9 +215,9 @@ public class SuggestSearcherTest extends TestCase {
      * The primary purpose of this method is to check for a certain sorted
      * subset of strings within food, in some specific order.
      *
-     * @param food
-     * @param bite
-     * @return
+     * @param food The food.
+     * @param bite The bite.
+     * @return the rest of the food.
      */
     public String eat(String food, String bite) {
         int i = food.indexOf(bite);

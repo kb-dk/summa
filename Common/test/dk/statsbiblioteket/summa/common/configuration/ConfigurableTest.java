@@ -41,18 +41,27 @@ public class ConfigurableTest extends TestCase {
      * Assert that Configuration based on these storages are equal (this is a deep check)
      */
     public void testStorageInstantiations () throws Exception {
-        Configuration base = new Configuration(new FileStorage("configuration.xml"));
+        Configuration base = new Configuration(
+                                          new FileStorage("configuration.xml"));
 
-        Configuration fileConf = new Configuration ((ConfigurationStorage)Configuration.create (FileStorage.class, base));
+        Configuration fileConf = new Configuration(
+                (ConfigurationStorage)Configuration.create(FileStorage.class,
+                                                          base));
         assertTrue (base.equals(fileConf));
 
-        Configuration memConf = new Configuration ((ConfigurationStorage)Configuration.create(MemoryStorage.class, base));
+        Configuration memConf = new Configuration(
+                (ConfigurationStorage)Configuration.create(MemoryStorage.class,
+                                                          base));
         assertTrue (base.equals(memConf));
 
-        Configuration remoteConf = new Configuration ((ConfigurationStorage)Configuration.create(RemoteStorage.class, base));
+        Configuration remoteConf = new Configuration(
+                (ConfigurationStorage)Configuration.create(RemoteStorage.class,
+                                                          base));
         assertTrue (base.equals(remoteConf));
 
-        Configuration jConf = new Configuration ((ConfigurationStorage)Configuration.create(JStorage.class, base));
+        Configuration jConf = new Configuration(
+                (ConfigurationStorage)Configuration.create(JStorage.class,
+                                                          base));
         assertTrue (base.equals(jConf));
     }
 }
