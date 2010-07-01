@@ -652,7 +652,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             throw new ParseException(
                     String.format("Exception while requesting String for '%s' "
                                   + "with default value null", 
-                                  LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+                                LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+                private static final long serialVersionUID = 1L;
                 {
                     initCause(e);
                 }

@@ -68,6 +68,7 @@ import java.util.Locale;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ExposedSortComparator extends ReusableSortComparator {
+    private static final long serialVersionUID = 79546L;
     private static Log log = LogFactory.getLog(ExposedSortComparator.class);
 
     private String language;
