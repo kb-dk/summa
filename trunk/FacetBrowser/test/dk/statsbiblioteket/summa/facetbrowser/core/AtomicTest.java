@@ -31,11 +31,11 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  *
  * AtomicIntArray might be fast enough for updates, but clearing for next run
  * takes far too much time and reallocating every time taxes the garbage
- * collector. Seems like we're stuck with traditional intarrays...
+ * collector. Seems like we're stuck with traditional int-arrays...
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class AtomicTest extends TestCase {
-    private static final int SIZE = 10 * 1000 * 1000;
+    private static final int SIZE = 1 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
