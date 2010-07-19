@@ -27,7 +27,6 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.XMLTransformerTest;
 import dk.statsbiblioteket.util.Streams;
@@ -63,14 +62,16 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         initcontent(GURLI, HANS, JENS);
 
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(XMLTransformer.CONF_XSLT, XMLTransformerTest.xsltFagrefEntryURL);
+        conf.set(XMLTransformer.CONF_XSLT,
+                 XMLTransformerTest.xsltFagrefEntryURL);
         XMLTransformer transformer = new XMLTransformer(conf);
         transformer.setSource(this);
 
         StreamingDocumentCreator creator =
                 new StreamingDocumentCreator(Configuration.newMemoryBased());
         creator.setSource(transformer);
-
+        log.debug("Ready for getting payload from chain");
+        
         assertTrue("The chain must have an element", creator.hasNext());
         Payload gurli = creator.next();
         Document gurliDoc = (Document)gurli.getData(Payload.LUCENE_DOCUMENT);
@@ -78,15 +79,16 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
                       gurliDoc);
         assertNotNull("The Gurli Document should contain the Field "
                      + IndexUtils.RECORD_FIELD,
-                     gurliDoc.getValues(IndexUtils.RECORD_FIELD));
-        String id = null;
+                     gurli.getRecord().getId());
+        String id = null;        
         try {
-            id = gurliDoc.getValues(IndexUtils.RECORD_FIELD)[0];
+            id = gurli.getRecord().getId();
         } catch(Exception e) {
-            fail("Exception from 'gurliDoc.getValues(IndexUtils.RECORD_FIELD)"
-                    + "[0]'");
-            e.printStackTrace();
+            //e.printStackTrace();
+            fail("Exception from 'gurliDoc.getValues("
+                    + IndexUtils.RECORD_FIELD + ")[0]'");
         }
+        // TODO should RecordID be present in gurilDoc as well?
         assertEquals("The Gurli Document should have the correct id",
                      "fagref:" + GURLI, id);
         creator.close(true);
@@ -106,11 +108,13 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
                                        content.getBytes("utf-8"));
             payloads.add(new Payload(record));
         }
+        log.debug("Number of payloads: " + payloads.size());
     }
 
     /* ObjectFilter implementation */
 
     public boolean hasNext() {
+        log.debug("payloads.size() = " + payloads.size());
         return payloads.size() > 0;
     }
 
