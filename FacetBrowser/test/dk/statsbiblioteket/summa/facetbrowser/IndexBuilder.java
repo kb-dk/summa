@@ -44,7 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public class IndexBuilder {
     public static final File INDEX_ROOT =
-            new File(System.getProperty("java.io.tmpdir"), "index_root");
+            new File("Facet/tmp/", "index_root");
     public static final File DESCRIPTOR =
             new File(INDEX_ROOT, "TestIndexDescriptor.xml");
     public static final File DATE_LOCATION =
