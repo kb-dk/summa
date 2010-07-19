@@ -122,6 +122,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                     new ByteArrayInputStream(payload.getRecord().getContent()),
                     "utf-8");
         } catch (XMLStreamException e) {
+            log.debug("Unable to make an XMLStream from Payload");
             throw new PayloadException(
                     "Unable to make an XMLStream from Payload", e, payload);
         }
@@ -135,6 +136,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             processHeader(reader, luceneDoc, payload);
             processBody(reader, luceneDoc, payload);
         } catch (ParseException e) {
+            log.debug("Unable to parse XMLStream from Payload");
             throw new PayloadException(
                     "Unable to parse XMLStream from Payload", e, payload);
         } catch (XMLStreamException e) {
@@ -149,6 +151,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                                Logging.LogLevel.WARN, payload, e);
             throw new PayloadException(message, e, payload);
         } catch (IndexServiceException e) {
+            log.debug("Exception whle updating the Lucene document");
             throw new PayloadException(
                     "Exception whle updating the Lucene document", e, payload);
         }
