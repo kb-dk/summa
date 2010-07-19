@@ -166,8 +166,9 @@ public class XMLTransformer extends ObjectFilterImpl {
 
     /**
      * Transform the content of Record from one XML-block to another, using the
-     * [@link #xsltLocation}.
+     * {@link #xsltLocation}.
      * @param payload the wrapper containing the Record with the content.
+     * @return true if payload is processed correctly, false otherwise.
      */
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
