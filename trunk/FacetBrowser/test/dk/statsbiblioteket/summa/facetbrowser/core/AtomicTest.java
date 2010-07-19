@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class AtomicTest extends TestCase {
-    private static final int SIZE = 100 * 1000 * 1000;
+    private static final int SIZE = 10 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
