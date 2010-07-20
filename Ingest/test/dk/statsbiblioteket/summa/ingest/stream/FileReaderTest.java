@@ -25,7 +25,12 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -131,7 +136,7 @@ public class FileReaderTest extends TestCase {
         Payload payload = reader.next();
         assertNotNull("The payload should have a stream", payload.getStream());
         assertEquals("The payload should have meta-info with file name",
-                     rootFileFoo20.getPath(),
+                     rootFileFoo20.getAbsolutePath(),
                      payload.getStringData(Payload.ORIGIN));
         for (int i = 0 ; i < 20 ; i++) {
             assertTrue("reader should not be empty at position " + i + "/"
