@@ -34,8 +34,7 @@ import java.util.Arrays;
 public class SuggestSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SuggestSearchNodeTest.class);
 
-    File storageRoot = new File(new File(System.getProperty("java.io.tmpdir")),
-                                         "suggest_storage");
+    File storageRoot = new File("Suggest/tmp/", "suggest_storage");
 
 
     @Override
