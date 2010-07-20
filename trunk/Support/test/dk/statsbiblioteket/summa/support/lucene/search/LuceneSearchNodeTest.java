@@ -33,13 +33,18 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.*;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.DocIdSet;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryWrapperFilter;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.BitSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,7 +81,7 @@ public class LuceneSearchNodeTest extends TestCase {
     }
 
     private File testRoot = new File(
-            System.getProperty("java.io.tmpdir"), "summaTestRoot");
+            "Support/tmp/", "summaTestRoot");
 
     File sourceDir = new File(Resolver.getURL(
             "data/fagref/fagref_IndexDescriptor.xml").
