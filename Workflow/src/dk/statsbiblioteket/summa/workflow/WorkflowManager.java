@@ -14,12 +14,11 @@
  */
 package dk.statsbiblioteket.summa.workflow;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
-
 import java.util.List;
 import java.util.ArrayList;
-import java.io.IOException;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -48,7 +47,7 @@ public class WorkflowManager implements WorkflowStep {
     public static final boolean DEFAULT_FAILURE_TOLERANT = false;
 
     /**
-     * Property defining whether the workflow should be looped continously.
+     * Property defining whether the workflow should be looped continuously..
      * Default value is {@link #DEFAULT_LOOP}
      */
     public static final String CONF_LOOP = "summa.workflow.loop";
@@ -76,7 +75,8 @@ public class WorkflowManager implements WorkflowStep {
      * Property containing a list of sub configurations, one for each
      * workflow step to configure. This property <i>must</i> be defined if the
      * {@link #WorkflowManager(Configuration)} constructor is used. If not
-     * a {@link ConfigurationException} will be thrown.
+     * a {@link dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException}
+     * will be thrown.
      * <p/>
      * Each sub configuration <i>must</i> define the {@link #CONF_STEP_CLASS}
      * property. The sub configuration will be passed as-is to the relevant

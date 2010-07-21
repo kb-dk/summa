@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: TagHandler.java,v 1.7 2007/10/04 13:28:18 te Exp $
- */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -50,7 +46,7 @@ public interface TagHandler {
      * If true, the TagHandler should hold the entire structure in memory.
      * </p><p>
      * Optional. Default is false.
-     * @see {@link Facet}.
+     * @see dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet
      */
     public static final String CONF_USE_MEMORY =
             "summa.facet.taghandler.usememory";
@@ -58,7 +54,7 @@ public interface TagHandler {
 
     /**
      * Resolve the id (integer representation) for a given tag name. This method
-     * does not need to be particulary fast, as it should only be used for
+     * does not need to be particularly fast, as it should only be used for
      * building facet information based on an index.
      * @param facetID the integer representation of a Facet (can be resolved
      *                by getFacetID).
@@ -182,7 +178,7 @@ public interface TagHandler {
      * consistency for tagIDs. It should be used for quickly adding a lot
      * of tags for later use.<br />
      * A cleanup must be called after a series of calls to dirtyAddTag.
-     * @see {@link #cleanup}.
+     * @see #cleanup
      * @param facetID the integer representation of a Facet (can be resolved
      *                by getFacetID).
      * @param tagName the String representation of a Tag under the given Facet.
@@ -194,7 +190,7 @@ public interface TagHandler {
      * consistency for tagIDs. It should be used for quickly adding a lot
      * of tags for later use.<br />
      * A cleanup must be called after a series of calls to dirtyAddTag.
-     * @see {@link #cleanup}.
+     * @see #cleanup
      * @param facetName the name of the Facet for the Tag.
      * @param tagName the String representation of a Tag under the given Facet.
      */

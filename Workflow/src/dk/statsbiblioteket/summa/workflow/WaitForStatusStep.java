@@ -34,8 +34,9 @@ import java.util.List;
  * a status code in some defined set of allowed states.
  * <p/>
  * By default the {@link #run} method throws an exception if the state of the
- * monitored object becomes {@link Status.CODE#crashed}, but this is
- * configurable via the  {@link #CONF_BAD_STATES} property.
+ * monitored object becomes
+ * {@link dk.statsbiblioteket.summa.control.api.Status.CODE#crashed}, but this is configurable
+ * via the  {@link #CONF_BAD_STATES} property.
  * <p/>
  * The connection to the monitorable is done via a {@link ConnectionConsumer},
  * meaning that the connection is configured by setting the
@@ -47,8 +48,8 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
 
     /**
      * Property defining a list of strings, of enumeration names of the
-     * {@link Status.CODE} enumeration. If the monitored object reports
-     * any of the status codes listed in this in this property the workflow
+     * {@link dk.statsbiblioteket.summa.control.api.Status.CODE} enumeration. If the monitored
+     * object reports any of the status codes listed in this in this property the workflow
      * step will complete. Default value is {@link #DEFAULT_GOOD_STATES}
      */
     public static final String CONF_GOOD_STATES =
@@ -56,14 +57,14 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
 
     /**
      * Default value for {@link #CONF_GOOD_STATES}. A list containing the
-     * {@code idle} {@link Status.CODE}.
+     * {@code idle} {@link dk.statsbiblioteket.summa.control.api.Status.CODE}.
      */
     public static final List<String> DEFAULT_GOOD_STATES =
                                      Arrays.asList(Status.CODE.idle.toString());
 
     /**
-     * List of {@link Status.CODE} value names. If the monitored object reports
-     * any of the states listed here the workflow step will throw a
+     * List of {@link dk.statsbiblioteket.summa.control.api.Status.CODE} value names. If the
+     * monitored object reports any of the states listed here the workflow step will throw a
      * {@link BadStateException}. Default value is {@link #DEFAULT_BAD_STATES}
      */
     public static final String CONF_BAD_STATES =
@@ -71,7 +72,8 @@ public class WaitForStatusStep extends ConnectionConsumer<Monitorable>
 
     /**
      * Default value for the {@link #CONF_BAD_STATES} property. A list of
-     * strings containing only the {@link Status.CODE} {@code idle}.
+     * strings containing only the {@link dk.statsbiblioteket.summa.control.api.Status.CODE}
+     * {@code idle}.
      */
     public static final List<String> DEFAULT_BAD_STATES =
                                   Arrays.asList(Status.CODE.crashed.toString());

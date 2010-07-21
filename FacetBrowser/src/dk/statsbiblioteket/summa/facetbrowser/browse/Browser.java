@@ -22,10 +22,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.util.List;
 import java.rmi.RemoteException;
 
-
 /**
  * This is tightly connected to
- * {@link dk.statsbiblioteket.summa.common.search.Search}
+ * TODO tightly connecto to what? dk.statsbiblioteket.summa.common.search.Search
+ *
  * as the browser should present the same query possibilities as the search.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -53,7 +53,8 @@ public interface Browser extends FacetCore {
      *         facets.
      * @throws RemoteException if the request could not be handled.
      */
-    public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws RemoteException;
+    public FacetResult getFacetMap(DocIDCollector docIDs, String facets)
+                                                         throws RemoteException;
 
     // TODO: Add index-lookup
 }
