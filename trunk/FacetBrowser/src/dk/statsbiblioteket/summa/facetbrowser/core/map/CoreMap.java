@@ -44,7 +44,7 @@ import java.io.IOException;
         author = "te")
 public interface CoreMap {
     /**
-     * The index-file is part of map persistence. The index is an array of ints
+     * The index-file is part of map persistence. The index is an array of integers
      * specifying the start-position in the values-file. The array is followed
      * by an int pointing to the next free position in values. A value of
      * Integer.MAX_VALUE signifies that the entry is to be skipped.
@@ -54,7 +54,7 @@ public interface CoreMap {
      * The values-file is part of map persistence. The values is an array of
      * longs, specifying the compound pointer
      * [FacetID (32 bits)][TagID (32 bits)].
-     * @see {@link #PERSISTENT_EMPTY_FACET}.
+     * @see #PERSISTENT_EMPTY_FACET
      */
     public static final String VALUES_FILE = "coremap.dat";
 
@@ -243,7 +243,7 @@ public interface CoreMap {
      * </p><p>
      * Note: It is optional if the implementation uses emptyFacet for deletes.
      * @return the emptyFacet, used for tags from deleted documents.
-     * @see {@link TagCounterArray#emptyFacet}.
+     * @see TagCounterArray#emptyFacet
      */
     public int getEmptyFacet();
 

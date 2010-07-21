@@ -12,17 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: CoreMapBitStuffed.java,v 1.6 2007/10/04 13:28:21 te Exp $
-     *
-     * This is a special-purpose array that allocates memory for each assignment.
-     * Pro: Memory-usage is near optimal, compared to a dynamic-length
-     * triple-indexed array.
-     * Con: The state of non-assigned entries is undefined.
-     *      The entries must be added sequentially.
-     *      All entries must be assigned, before querying.
- */
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -48,7 +37,9 @@ import java.io.StringWriter;
  * updating. It should only be used by searchers og indexers for small corpuses.
  * A small corpus means somewhere below 1 million documents with less than
  * 10 million references to tags.
- * @see {@link #add}.
+ * @see #add(int, int, int[])
+ * @see #add(int, int, int)
+ * @see #add(int[], int, int, int) 
  */
 // TODO: Handle emptyFacet translation int<->long for open and store
 // TODO: Experiment with OpenBitSet from the SOLR project for speed

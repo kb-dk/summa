@@ -126,7 +126,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Meta-data for the Record, such as validation-state. Used for filter-
-     * specific data. The map can be accessed by {@link this#getMeta}. It does
+     * specific data. The map can be accessed by {@link #getMeta}. It does
      * not permit null - neither as key, nor value.
      */
     private StringMap meta;
@@ -609,7 +609,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Request a meta-value for the given key. This method is more efficient
-     * than requesting the full map with {@link this#getMeta()}, as it never
+     * than requesting the full map with {@link #getMeta()}, as it never
      * creates a new map.
      * @param key the key for the value.
      * @return the value for the key, or null if the key is not in the map.

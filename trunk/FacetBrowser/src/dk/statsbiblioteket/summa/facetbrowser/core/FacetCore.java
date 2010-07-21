@@ -24,7 +24,7 @@ import java.io.IOException;
  * The core is responsible for loading existing Facet-structures and for
  * handling Facet setup in the form of configuration.
  * </p><p>
- * @see {link Structure} for Configuration parameters.
+ * @see dk.statsbiblioteket.summa.facetbrowser.Structure for Configuration parameters.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

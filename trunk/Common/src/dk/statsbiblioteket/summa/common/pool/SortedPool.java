@@ -143,7 +143,7 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
      * @param value the value to insert in the pool.
      * @return the position of the newly added value. If the value already
      *         exists in the pool, (-position)-1 is returned.
-     * @see {@link #add}.
+     * @see #add(Comparable)
      */
     public int insert(E value);
 
@@ -160,7 +160,7 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
      * Add a value to the pool. This is a wrapper for {@link #insert}.
      * @param value the value to add to the pool.
      * @return true if the value was added.
-     * @see {@link #insert}.
+     * @see #insert(Comparable)
      */
     public boolean add(E value); // Defined in List
 
@@ -170,7 +170,7 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
      * The method intended use is for initial builds of large pools.
      * @param value the value to add to the pool.
      * @return true if the value was added.
-     * @see {@link #insert}.
+     * @see #insert(Comparable) 
      */
     public boolean dirtyAdd(E value);
 

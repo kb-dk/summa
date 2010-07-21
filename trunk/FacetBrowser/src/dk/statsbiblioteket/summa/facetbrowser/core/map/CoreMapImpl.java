@@ -21,7 +21,15 @@ import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -311,7 +319,7 @@ public abstract class CoreMapImpl implements CoreMap {
      * {@link #PERSISTENT_EMPTY_FACET} to {@link #getEmptyFacet()}.
      * @param persistentValue a stored value.
      * @return the facetID from the value.
-     * @see {@link #VALUES_FILE}.
+     * @see #VALUES_FILE
      */
     protected int persistentValueToFacetID(long persistentValue) {
         if (persistentValue == PERSISTENT_EMPTY_FACET) {
@@ -327,7 +335,7 @@ public abstract class CoreMapImpl implements CoreMap {
      *       is 2 billion.
      * @param persistentValue a stored value.
      * @return the tagID from the value.
-     * @see {@link #VALUES_FILE}.
+     * @see #VALUES_FILE
      */
     protected int persistentValueToTagID(long persistentValue) {
         return (int)(persistentValue & PERSISTENT_TAG_MASK);
