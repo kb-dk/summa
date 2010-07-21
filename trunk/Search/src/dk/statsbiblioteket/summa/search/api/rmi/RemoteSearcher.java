@@ -17,17 +17,34 @@ package dk.statsbiblioteket.summa.search.api.rmi;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Interface needed for RMI on {@link RMISearcherProxy} to work
+ * Interface needed for RMI on {@link dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy}
+ * to work.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke")
 public interface RemoteSearcher extends Remote, SummaSearcher {
 
+    /**
+     *  Make a search given a request.
+     *  
+     * @param request contains SearchNode-specific request-data.
+     * @return Collection containing all responses.
+     * @throws RemoteException if there is an error getting responses over RMI.
+     */
     public ResponseCollection search(Request request) throws RemoteException;
 
+    /**
+     * Close this seaercher.
+     * 
+     * @throws RemoteException if an error is experienced during closing of this searcher.
+     */
     public void close() throws RemoteException;
 
 }

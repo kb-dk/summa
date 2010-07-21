@@ -28,7 +28,7 @@ import java.util.List;
 public interface BitsArray extends Collection<Integer>, List<Integer> {
 
     /**
-     * The equivalent to {@link List<Integer>#get(int)} but without auto-boxing.
+     * The equivalent to {@link List#get(int)} but without auto-boxing.
      * This is one of the recommended getters as is is faster than the
      * auto-boxing variant but still with proper range-checking.
      * @param index the index for the value to get.
@@ -37,7 +37,7 @@ public interface BitsArray extends Collection<Integer>, List<Integer> {
     int getAtomic(int index);
 
     /**
-     * The equivalent to {@link List<Integer>#get(int)} but without auto-boxing
+     * The equivalent to {@link List#get(int)} but without auto-boxing
      * and fine-grained range-checking. This is one of the recommended getters
      * as it is the fastest at the cost of range-checking.
      * @param index the index for the value to get. This must be < size.
@@ -46,7 +46,7 @@ public interface BitsArray extends Collection<Integer>, List<Integer> {
     int fastGetAtomic(int index);
 
     /**
-     * The equivalent to {@link List<Integer>#set(int, Integer)} but without
+     * The equivalent to {@link List#set(int, Object)} but without
      * auto-boxing. This getter adjusts size properly.
      * @param index the index for the value to set.
      * @param value the value for the given position.
@@ -54,7 +54,7 @@ public interface BitsArray extends Collection<Integer>, List<Integer> {
     void set(int index, int value);
 
     /**
-     * The equivalent to {@link List<Integer>#set(int, Integer)} but without
+     * The equivalent to {@link List#set(int, Object)} but without
      * auto-boxing and adjustment of size. If this getter is used, only
      * {@link #fastGetAtomic(int)} can be used to get values.
      * @param index the index for the value to set.

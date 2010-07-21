@@ -106,7 +106,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     public static final String CONF_NUMBER_OF_RECORDS_FROM_STORAGE =
     "summa.ingest.stream.updatefromfulldumpfiler.numberofrecordsfromstorage";
     /**
-     * Default value {@link this#CONF_NUMBER_OF_RECORDS_FROM_STORAGE}.
+     * Default value {@link #CONF_NUMBER_OF_RECORDS_FROM_STORAGE}.
      */
     public static final int DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE
                                                                           = 100;
@@ -114,14 +114,14 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
 
     private String base = null;
     /**
-    * Value of {@link this#CONF_MAX_NUMBER_DELETES}
-    * if set otherwise {@link this#DEFAULT_MAX_NUMBER_DELETES }.
+    * Value of {@link #CONF_MAX_NUMBER_DELETES}
+    * if set otherwise {@link #DEFAULT_MAX_NUMBER_DELETES }.
     */
    private int maxNumberDeletes = 0;
 
     /**
-     * Value of {@link this#CONF_MAX_NUMBER_DELETES} if set otherwise
-     * {@link this#DEFAULT_MAX_NUMBER_DELETES }.
+     * Value of {@link #CONF_MAX_NUMBER_DELETES} if set otherwise
+     * {@link #DEFAULT_MAX_NUMBER_DELETES }.
      */
     private int numberOfRecordsFromStorage = 0;
 

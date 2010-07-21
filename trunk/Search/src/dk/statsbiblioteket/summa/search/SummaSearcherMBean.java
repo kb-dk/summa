@@ -23,9 +23,9 @@ http://java.sun.com/j2se/1.5.0/docs/guide/jmx/tutorial/essential.html#wp1053109
     */
 
 /**
- * Exposes the underlying {@link SummaSearcher} as an MBean and extends with
- * several control and statistic mechanisms.
- * @see SummaSearcher
+ * Exposes the underlying {@link dk.statsbiblioteket.summa.search.api.SummaSearcher} as an
+ * MBean and extends with several control and statistic mechanisms.
+ * @see dk.statsbiblioteket.summa.search.api.SummaSearcher
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

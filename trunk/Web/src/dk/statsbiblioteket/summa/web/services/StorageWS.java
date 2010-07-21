@@ -60,12 +60,12 @@ public class StorageWS {
 
     /**
      * Record collection tag, used for returning multiple records with method
-     * {@link this#realGetRecords(java.util.List)}.
+     * {@link #realGetRecords(java.util.List)}..
      */
     public static final String RECORDS = "Records";
     /**
      * Record collection tags attribute, for specifying time to get records from
-     * storage, used in {@link this#realGetRecords(java.util.List)}.
+     * storage, used in {@link #realGetRecords(java.util.List)}.
      */
     public static final String QUERYTIME = "querytime";
 
