@@ -94,16 +94,16 @@ public class BundleStub {
      *   <li>{@code summa.control.client.persistent.dir}</li>
      * </ul>
      *
-     * @param bundleDir Root directory of the bundle
-     * @param bundleId Bundle specific id
-     * @param instanceId id to use for the {@link Service or {@link Client}
-     *                   spawned by {@link #start}
-     * @param mainJar The jar containing the main file of the bundle
-     * @param mainClass The qualified class name of the main class
+     * @param bundleDir Root directory of the bundle.
+     * @param bundleId Bundle specific id.
+     * @param instanceId id to use for the {@link Service} or {@link Client}
+     *                   spawned by {@link #start}.
+     * @param mainJar The jar containing the main file of the bundle.
+     * @param mainClass The qualified class name of the main class.
      * @param libs List of jar files, relative to {@code bundleDir}, to include
      *             in the class path when launching the bundle.
      * @param jvmArgs Extra arguments to pass to the JVM when spawning the
-     *                JVM of the {@link Service or {@link Client} 
+     *                JVM of the {@link Service} or {@link Client}.
      */
     BundleStub(File bundleDir, String bundleId, String instanceId,
                 File mainJar, String mainClass,

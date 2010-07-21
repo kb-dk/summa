@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: SortedPoolImpl.java,v 1.2 2007/10/04 13:28:21 te Exp $
- */
 package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.File;
@@ -414,7 +410,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      * @param value the value to insert in the pool.
      * @return the position of the newly added value. If the value already
      *         exists in the pool, (-position)-1 is returned.
-     * @see {@link SortedPool#insert}.
+     * @see SortedPool#insert
      */
     public int insert(E value) {
         //noinspection DuplicateStringLiteralInspection

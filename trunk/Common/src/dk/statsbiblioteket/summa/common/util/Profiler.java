@@ -78,13 +78,15 @@ public class Profiler {
      */
     public void update () {
         if (startDate == null) {
-            throw new NullPointerException ("Profiler updated without being started");
+            throw new NullPointerException(
+                                      "Profiler updated without being started");
         }
 
         numUpdates = numUpdates + 1;
         double delta_t = System.currentTimeMillis() - lastUpdate;
 
-        meanSpeed = ((numUpdates-1)/numUpdates)*meanSpeed + (1/numUpdates)*delta_t;
+        meanSpeed = ((numUpdates-1)/numUpdates)*meanSpeed
+                + (1/numUpdates)*delta_t;
 
         if  (speed < 1) {speed = delta_t;}
         speed = (speed + delta_t)/2;
@@ -104,7 +106,7 @@ public class Profiler {
     /**
      * Get the actual last speed measured in milliseconds. This number does not
      * take any history into account.
-     * @return
+     * @return the last speed measured in milliseconds.
      */
     public double getLastSpeed () {
         return lastSpeed;
@@ -115,7 +117,7 @@ public class Profiler {
      *
      *   meanSpeed = ((numUpdates-1)/numUpdates)*meanSpeed + (1/numUpdates)*delta_t;
      *
-     * @return
+     * @return the mean speed measured in milliseconds.
      */
     public double getMeanSpeed () {
         return meanSpeed;
@@ -128,7 +130,7 @@ public class Profiler {
      *
      * This significantly weight recent speed counts to be more important
      * and older speed counts to be "forgotten" fast.
-     * @return
+     * @return the speed measured in milliseconds 
      */
     public double getSpeed () {
         return speed;
@@ -136,9 +138,14 @@ public class Profiler {
 
     public String toString () {
         if (stopDate == null) {
-            return "Speed: " + speed + ", MeanSpeed: " + meanSpeed + ", Updates: " + numUpdates + ", Started: " + getStartDateString();
+            return "Speed: " + speed + ", MeanSpeed: " + meanSpeed
+                + ", Updates: " + numUpdates + ", Started: "
+                + getStartDateString();
         } else {
-            return "Speed: " + speed + ", MeanSpeed: " + meanSpeed + ", Updates: " + numUpdates + ", Started: " + getStartDateString() + ", Stopped: " + getStopDateString();
+            return "Speed: " + speed + ", MeanSpeed: " + meanSpeed
+                    + ", Updates: " + numUpdates + ", Started: "
+                    + getStartDateString() + ", Stopped: "
+                    + getStopDateString();
         }
     }
 

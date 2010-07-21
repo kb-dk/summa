@@ -572,7 +572,9 @@
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/log4j-1.2.14.jar!/" />
       </CLASSES>
-      <JAVADOC />
+      <JAVADOC>
+        <root url="http://logging.apache.org/log4j/1.2/apidocs/" />
+      </JAVADOC>
       <SOURCES />
     </library>
     <library name="derby">

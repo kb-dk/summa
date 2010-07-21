@@ -120,8 +120,8 @@ public class CollatorFactory {
      * characters. If the locale is "da", the Collator also treats aa as 2*a.
      * @param locale the wanted Locale for the Collator..
      * @return a new Collator with tweaked rules.
-     * @see {@link #fixCollator(java.text.Collator)}
-     * @see {@link #adjustAASorting(java.text.Collator)}
+     * @see #fixCollator(java.text.Collator)
+     * @see #adjustAASorting(java.text.Collator)
      */
     // TODO: Make this produce fixed CachedCollators
     public static Collator createCollator(Locale locale) {
@@ -142,8 +142,8 @@ public class CollatorFactory {
      * @param locale the wanted Locale for the Collator..
      * @param cache if true, the Collator is cached.
      * @return a new optionally cached cached Collator with tweaked rules.
-     * @see {@link #fixCollator(java.text.Collator)}
-     * @see {@link #adjustAASorting(java.text.Collator)}
+     * @see #fixCollator(java.text.Collator)
+     * @see #adjustAASorting(java.text.Collator)
      */
     public static Collator createCollator(Locale locale, boolean cache) {
         return createCollator(
@@ -160,8 +160,8 @@ public class CollatorFactory {
      *                   an indidual character basis.
      * @param cache if true, the Collator is cached.
      * @return a new optionally cached cached Collator with tweaked rules.
-     * @see {@link #fixCollator(java.text.Collator)}
-     * @see {@link #adjustAASorting(java.text.Collator)}
+     * @see #fixCollator(java.text.Collator)
+     * @see #adjustAASorting(java.text.Collator)
      */
     public static Collator createCollator(
         Locale locale, String cacheChars, boolean cache) {

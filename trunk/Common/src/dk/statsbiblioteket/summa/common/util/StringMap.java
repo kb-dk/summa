@@ -87,7 +87,7 @@ public class StringMap extends HashMap<String, String> {
      * escaped with "/e", "/" is escaped with "/s" and newline is escaped with
      * "/n". Newline is used as delimiter for entries.
      * @return a formal String-representation of the content.
-     * @see {@link #fromFormal} for the reverse function.
+     * @see #fromFormal  for the reverse function.
      */
     public String toFormal() {
         StringWriter sw = new StringWriter(size() * 50);

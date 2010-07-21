@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.common.util;
 import java.util.Collections;
 import java.util.List;
 import java.util.Comparator;
-import java.util.RandomAccess;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -30,8 +29,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * </p><p>
  * A HeapSort is used, which takes O(n*log(n)) time. The HeapSort uses
  * {@link #swap} only to modify the list.
- * @see {@url http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps}.
- * @see {@url http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm}.
+ * @see <a href="http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps">Heap</a>
+ * @see <a href="http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm">HeapSort</a>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

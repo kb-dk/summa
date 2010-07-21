@@ -48,7 +48,7 @@ public class HelpNotification extends Notification {
      * displayed.</p>
      * <p>If the return value is {@code null} a generic help
      * message should be displayed.</p>
-     * @return
+     * @return The name of the command for which help should be displayed.
      */
     public String getTargetCommand () {
         return targetCmd;

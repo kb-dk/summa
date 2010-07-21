@@ -15,13 +15,11 @@
 package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -128,16 +126,14 @@ public class ControlUtils {
     /**
      * Get the address the repository is exposed on. This is the address
      * clients will use to download bundles from.
-     * @param conf
-     * @return
+     * @param conf The configuration.
+     * @return The repository address exposed according to the configuration.
      */
     public static String getRepositoryAddress (Configuration conf) {
-        String address =
-                  conf.getString(BundleRepository.CONF_REPO_ADDRESS,
-                                 "http://"
-                                 + RemoteHelper.getHostname() + ":8080"
-                                 + "/summa-control/repo");
-        return address;
+        return conf.getString(BundleRepository.CONF_REPO_ADDRESS,
+                              "http://"
+                              + RemoteHelper.getHostname() + ":8080"
+                              + "/summa-control/repo");
     }
 
     /**
@@ -172,8 +168,7 @@ public class ControlUtils {
         ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile));
         ByteArrayOutputStream out = new ByteArrayOutputStream ();
         byte[] buf = new byte[2048];
-        int count = 0;
-
+        int count;
 
         ZipEntry entry;
         while ((entry = zip.getNextEntry()) != null) {
