@@ -77,8 +77,8 @@ public class PushFilter implements ObjectFilter {
 
     /**
      * @param conf the configuration for this filter.
-     * @see {@link #CONF_QUEUE_MAXPAYLOADS}.
-     * @see {@link #CONF_QUEUE_MAXBYTES}.
+     * @see #CONF_QUEUE_MAXPAYLOADS
+     * @see #CONF_QUEUE_MAXBYTES
      */
     public PushFilter(Configuration conf) {
         this(conf.getInt(CONF_QUEUE_MAXPAYLOADS, DEFAULT_QUEUE_MAXPAYLOADS),

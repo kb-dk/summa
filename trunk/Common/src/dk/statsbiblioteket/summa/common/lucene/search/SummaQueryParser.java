@@ -129,7 +129,8 @@ public class SummaQueryParser {
 
     /**
      * Create a parser based on the given descriptor. It is recommended to use
-     * the constructor {@link SummaQueryParser(Configuration, IndexDescriptor)}
+     * the constructor
+     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration, dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)} 
      * instead as it allows for customization of the parser.
      * @param descriptor the index descriptor.
      */
@@ -143,7 +144,8 @@ public class SummaQueryParser {
      * construction of an {@link IndexDescriptor}. For performance and
      * stability reasons, it is recommended to share index descriptors, so it
      * is recommended to use the constructor
-     * {@link SummaQueryParser(Configuration, IndexDescriptor)} instead.
+     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration, dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)}
+     * instead.
      * @param conf the configuration for the parser and corresponding index
      *             descriptor.
      */
@@ -354,7 +356,7 @@ public class SummaQueryParser {
     }
   */
     /**
-     * @see {@link LuceneBooster#splitQuery(String)}.
+     * @see LuceneBooster#splitQuery(String)
      * @return true if query-time field-level boosts is supported.
      */
     public boolean isSupportQueryTimeBoosts() {
@@ -362,7 +364,7 @@ public class SummaQueryParser {
     }
 
     /**
-     * @see {@link LuceneBooster#splitQuery(String)}.
+     * @see LuceneBooster#splitQuery(String)
      * @param supportQueryTimeBoosts set to true if query-time field-level
      *                               boosts should be supported.
      */

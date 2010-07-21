@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.*;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +45,10 @@ import java.util.Map;
 /**
  * Trivial implementation of a Lucene IndexDescriptor.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "tke",
+        comment = "Needs JavaDoc")
 public class LuceneIndexDescriptor
         extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
@@ -277,7 +282,7 @@ public class LuceneIndexDescriptor
      * analyzers for the separate fields, which means that it will normally
      * be a {@link PerFieldAnalyzerWrapper}.
      * @return an analyzer for building a Lucene Query tree.
-     * @see {@link SummaQueryParser}.
+     * @see SummaQueryParser
      */
     public Analyzer getQueryAnalyzer() {
         if (queryAnalyzer == null) {
