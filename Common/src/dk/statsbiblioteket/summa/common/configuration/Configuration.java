@@ -92,7 +92,8 @@ public class Configuration implements Serializable,
     /** Optional system property defining which version of the Summa API
      * applications should adhere to if it can not be determined at compile
      * time.
-     * Default value is {@link this#DEFAULT_API_VERSION */
+     * Default value is {@link #DEFAULT_API_VERSION}
+     */
      public static final String CONF_API_VERSION = "summa.api.version";
 
     /** API version of the Summa release. */
@@ -101,7 +102,8 @@ public class Configuration implements Serializable,
 
     /** System property defining the root directory from which persistent
      * data should be read and stored to. The default value is
-     * {@code $HOME/summa-control/persistent. */
+     * {@code $HOME/summa-control/persistent. }
+     */
     public static final String CONF_PERSISTENT_DIR = "summa.persistent";
 
     /**
@@ -965,8 +967,8 @@ public class Configuration implements Serializable,
     /**
      * Does deep comparison of all key-value pairs.
      *
-     * @param conf the configuration to compare {@link this} with.
-     * @return tur if configurations matches on all key-value pairs.
+     * @param conf the configuration to compare this {@link Configuration} with.
+     * @return true if configurations matches on all key-value pairs.
      */
     public boolean equals (Configuration conf) {
         try {
@@ -1355,7 +1357,7 @@ public class Configuration implements Serializable,
      * <p></p>
      * If the configuration does not define the property the system property
      * with the same name will be checked. If that fails too the default
-     * of {@code $HOME/summa-control/persistent will be used.
+     * of {@code $HOME/summa-control/persistent} will be used.
      *
      * @return A {@code File} pointing to the root directory where persistent
      *         data should be stored.

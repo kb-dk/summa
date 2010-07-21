@@ -98,7 +98,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
     public static final String DEFAULT_ENCODING_OUT = "utf-8";
 
     /**
-     * Used at the regexp for a pattern {@link Pattern} wich will be used to
+     * Used at the regexp for a pattern {@link Pattern} which will be used to
      * match substrings.
      * </p><p>
      * Important: Performing regexp-replacement can be slow and requires that
@@ -108,8 +108,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * memory-intensive than regexp replacements.
      * </p><p>
      * The .-character matches any character, except newline. If newline should
-     * be matched by the .-character, prefix the regexp with {@code (?s)}.
-     * </p><p>
+     * be matched by the .-character, prefix the regexp with TODO with what?
      * Optional. Default is null (no regexp replacement).
      */
     public static final String CONF_PATTERN_REGEXP =
@@ -136,7 +135,8 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * single replacement.
      * </p><p>
      * Optional. Default is null (no rule-based replacement).
-     * @see {@link #CONF_RULE_TARGET} and {@link #CONF_RULE_REPLACEMENT}.
+     * @see #CONF_RULE_TARGET
+     * @see #CONF_RULE_REPLACEMENT
      */
     public static final String CONF_RULES = "common.replacefilter.rules";
 

@@ -90,7 +90,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * The maximum number of Payloads in the output queue.
      * </p><p>
      * This property is optional. Default is 100.
-     * @see {@link MUXFilterFeeder#CONF_QUEUE_MAXPAYLOADS}.
+     * @see MUXFilterFeeder#CONF_QUEUE_MAXPAYLOADS
      */
     public static final String CONF_OUTQUEUE_MAXPAYLOADS =
             "summa.muxfilter.outqueue.maxpayloads";

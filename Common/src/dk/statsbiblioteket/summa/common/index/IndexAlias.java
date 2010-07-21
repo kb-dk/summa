@@ -45,7 +45,7 @@ public final class IndexAlias implements Comparable {
      * Generates a new Alias with a given name on a given language.<br>
      * @param name the name of the alias (as used by the queryparser)
      * @param lang the language to bind this name to. This can be null,
-     *             in which case all langs in {@link#isMatch} matches.
+     *             in which case all langs in {@link #isMatch} matches.
      */
     public IndexAlias(String name, String lang) {
         log.trace("Creating alias(" + name + ", " + lang + ")");
@@ -118,7 +118,7 @@ public final class IndexAlias implements Comparable {
     //todo: check the format for the lang attribute
     /**
      *
-     * @param lang
+     * @param lang The language.
      */
     public void setLang(String lang)  {
 
@@ -132,10 +132,11 @@ public final class IndexAlias implements Comparable {
      * {@link String#equals(Object o)}.
      * </p><p>
      * Two equal Aliases will always produce the same hashCode.
-     * @param o
-     * @return
+     * @param o The object to check.
+     * @return true if object are equal to {@code this} false otherwise.
      * @see #hashCode()
      */
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

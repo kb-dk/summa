@@ -12,17 +12,14 @@
  *  limitations under the License.
  *
  */
-/**
- * Created: te 2007-08-28 11:23:44
- * CVS:     $Id: IndexChangeListener.java,v 1.2 2007/10/04 13:28:19 te Exp $
- */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Listens to changes to a Lucene index.
- * @see IndexChanger, IndexChangeEvent
+ * @see IndexChanger
+ * @see IndexChangeEvent
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

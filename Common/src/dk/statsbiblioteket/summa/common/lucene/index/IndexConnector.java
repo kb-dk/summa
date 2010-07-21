@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: IndexConnector.java,v 1.7 2007/10/04 13:28:19 te Exp $
- */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
 import java.io.IOException;
@@ -28,9 +24,10 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.ParallelReader;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.store.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
 /**
  * Main entry for accessing indexes. Readers and Searchers can be requested.
@@ -57,7 +54,8 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "Needs JavaDoc")
 public class IndexConnector {
     private final Log log = LogFactory.getLog(IndexConnector.class);
 
@@ -109,7 +107,7 @@ public class IndexConnector {
 
     /**
      * Create an IndexConnector based on the given configuration. The index
-     * won't be opened before {@link #getReader} or {@link this#getSearcher} is
+     * won't be opened before {@link #getReader} or {@link #getSearcher} is
      * called.
      * @param configuration the setup for Indexreader. See the class
      *                      documentation for details.

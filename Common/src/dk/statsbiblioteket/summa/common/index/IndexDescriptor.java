@@ -59,11 +59,11 @@ import java.util.Map;
  * </p><p>
  * The IndexDescriptor has groups, which schema.xml does not, and is otherwise
  * somewhat simpler. It is envisioned that SOLR's classes for indexing and
- * querying can be used in Summa instead of raw Lucene at some point in time.
- * @see  <a href="http://wiki.apache.org/solr/SchemaXml">Solr Schema XML</a>.
+ * querying can be used in Summa instead of raw Lucene at some point in time. *
  * </p><p>
  * The IndexDescriptor is abstract. Besides implementing the abstract methods,
  * sub classes will normally need to override {@link #createBaseField(String)}.
+ * @see  <a href="http://wiki.apache.org/solr/SchemaXml">Solr Schema XML</a>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -561,7 +561,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * XML-representation usable for persistence. This is the format that
      * {@link #parse} accepts.
      * @return a well-formed XML representation of the descriptor.
-     * @see {@link #parse(String)}.
+     * @see #parse(String)
      */
     public String toXML() {
         StringWriter sw = new StringWriter(10000);
@@ -620,7 +620,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      *       added, it will be the new {@link #defaultField}.
      * @param field the field to add to the descriptor.
      * @return true if the Field was added, else false.
-     * @see {@link #allFields}.
+     * @see #allFields
      */
     public synchronized boolean addField(F field) {
         //noinspection DuplicateStringLiteralInspection
@@ -648,7 +648,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      *       {@link #allFields}.
      * @param group the group to add to the descriptor.
      * @return true if the Group was added, else false.
-     * @see {@link #groups}.
+     * @see #groups 
      */
     public synchronized boolean addGroup(IndexGroup<F> group) {
         //noinspection DuplicateStringLiteralInspection
@@ -712,7 +712,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * @param fieldName the name or alias of the wanted field.
      * @return the field corresponding to the name or alias or null if a field
      *         could not be found.
-     * @see {@link #allFields}.
+     * @see #allFields
      */
     public F getField(String fieldName) {
         return getField(fieldName, null);
@@ -727,7 +727,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      *                  it is ignored.
      * @return the field corresponding to the name or alias or null if a field
      *         could not be found.
-     * @see {@link #allFields}.
+     * @see #allFields
      */
     public F getField(String fieldName, String language) {
         F field = allFields.get(fieldName);
@@ -798,7 +798,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * @param groupName the name or alias of the wanted group.
      * @return the group corresponding to the name or alias or null if no group
      *         could be found.
-     * @see {@link #groups}.
+     * @see #groups
      */
     public IndexGroup<F> getGroup(String groupName) {
         return getGroup(groupName, null);
@@ -813,7 +813,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      *                  it is ignored.
      * @return the group corresponding to the name or alias or null if no group
      *         could be found.
-     * @see {@link #groups}.
+     * @see #groups
      */
     public IndexGroup<F> getGroup(String groupName, String language) {
         IndexGroup<F> group = groups.get(groupName);
