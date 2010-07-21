@@ -72,7 +72,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * <p/>
      * The default value for this property is 100.
      * </p><p>
-     * @see {@link #CONF_BATCH_MAXMEMORY}.
+     * @see #CONF_BATCH_MAXMEMORY
      */
     public static final String CONF_BATCH_SIZE =
             "summa.storage.recordwriter.batchsize";
@@ -91,7 +91,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * contain both records before commit.
      * </p><p>
      * Optional. Default is 2000000 (~2MB).
-     * @see {@link #CONF_BATCH_SIZE}.
+     * @see #CONF_BATCH_SIZE
      */
     public static final String CONF_BATCH_MAXMEMORY =
             "summa.storage.recordwriter.batchmaxmemory";
@@ -301,7 +301,7 @@ public class RecordWriter extends ObjectFilterImpl {
     /**
      * Established an RMI connection to the Storage specified in configuration.
      * @param conf contains setup information.
-     * @see {@link ConnectionConsumer#CONF_RPC_TARGET}.
+     * @see ConnectionConsumer#CONF_RPC_TARGET
      * @throws java.io.IOException if the RecordWriter could not be constructed.
      */
     public RecordWriter(Configuration conf) throws IOException {

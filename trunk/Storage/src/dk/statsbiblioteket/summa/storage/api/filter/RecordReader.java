@@ -210,14 +210,14 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Connects to the Storage specified in the configuration and request an
      * iteration of the Records specified by the properties.
      * @param conf contains setup information.
-     * @see {@link #CONF_BASE}.
-     * @see {@link #CONF_MAX_READ_RECORDS}.
-     * @see {@link #CONF_MAX_READ_SECONDS}.
-     * @see {@link ConnectionConsumer#CONF_RPC_TARGET}.
-     * @see {@link StorageWatcher#CONF_POLL_INTERVAL}.
-     * @see {@link #CONF_PROGRESS_FILE}.
-     * @see {@link #CONF_START_FROM_SCRATCH}.
-     * @see {@link #CONF_USE_PERSISTENCE}.
+     * @see #CONF_BASE
+     * @see #CONF_MAX_READ_RECORDS
+     * @see #CONF_MAX_READ_SECONDS
+     * @see ConnectionConsumer#CONF_RPC_TARGET
+     * @see StorageWatcher#CONF_POLL_INTERVAL
+     * @see #CONF_PROGRESS_FILE
+     * @see #CONF_START_FROM_SCRATCH
+     * @see #CONF_USE_PERSISTENCE
      * @throws java.io.IOException if it was not possible to connect to the
      * Storage or if the filename for the progress file was illegal.
      */

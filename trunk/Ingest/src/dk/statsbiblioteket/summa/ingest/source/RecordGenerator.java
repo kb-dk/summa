@@ -28,9 +28,13 @@ import org.apache.commons.logging.Log;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.*;
 
 /**
  * Generates semi-random Records, usable for testing performance and
@@ -38,7 +42,8 @@ import java.util.*;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "Needs Javadoc")
 public class RecordGenerator implements ObjectFilter {
     private static Log log = LogFactory.getLog(RecordGenerator.class);
 
@@ -581,7 +586,8 @@ public class RecordGenerator implements ObjectFilter {
 
     /**
      * Creates a a String based on a parsed template.
-     * @param tokens a template parsed to {@link RecordToken}s.
+     * @param tokens a template parsed to
+     * {@link dk.statsbiblioteket.summa.ingest.source.RecordGenerator.RecordToken}s.
      * @return pseudo-random content.
      */
     public String expand(List<RecordToken> tokens) {
