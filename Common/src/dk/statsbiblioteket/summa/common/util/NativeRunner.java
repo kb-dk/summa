@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: NativeRunner.java,v 1.2 2007/10/04 13:28:20 te Exp $
- */
 package dk.statsbiblioteket.summa.common.util;
 
 import java.io.InputStream;
@@ -32,12 +28,12 @@ import java.util.Collections;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-
 /**
  * Native command executor.
  *
  * This class is deprecated in favor of sbutil's
  * {@link dk.statsbiblioteket.util.console.ProcessRunner}
+ * @deprecated
  */
 // TODO: Rewrite this to use ProcessBuilder
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -203,7 +199,7 @@ public class NativeRunner  {
      * The OutputStream will either be the OutputStream directly from the
      * execution of the native commands with the method {@link #executeNoCollect}
      * or a cache with the output of the execution of the native commands by
-     * {@link#execute}.
+     * {@link #execute}.
      * @return the output of the native commands.
      */
     public InputStream getProcessOutput() {
@@ -213,7 +209,7 @@ public class NativeRunner  {
      * The OutputStream will either be the error-OutputStream directly from the
      * execution of the native commands with the method {@link #executeNoCollect}
      * or a cache with the error-output of the execution of the native commands
-     * by {@link#execute}.
+     * by {@link #execute}.
      * @return the error-output of the native commands.
      */
     public InputStream getProcessError() {

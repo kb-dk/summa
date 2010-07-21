@@ -90,7 +90,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
                            = "summa.support.didyoumean.closeonnonexistingindex";
     /**
          * Default value for
-         * {@link this#CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
+         * {@link #CONF_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX}.
          */
     public static final boolean
                    DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX = true;
@@ -120,7 +120,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     public static final String CONF_DIDYOUMEAN_DIRECTORY =
                                            "summa.support.didyoumean.directory";
     /**
-         * Default value for {@link this#CONF_DIDYOUMEAN_DIRECTORY}.
+         * Default value for {@link #CONF_DIDYOUMEAN_DIRECTORY}.
          */
     public static final String DEFAULT_DIDYOUMEAN_DIRECTORY =
                                                                   "fsDirectory";
@@ -132,7 +132,7 @@ public class DidYouMeanSearchNode extends SearchNodeImpl {
     public static final String CONF_DIDYOUMEAN_LOCATION =
                                             "summa.support.didyoumean.location";
     /**
-         * Default value for {@link this#CONF_DIDYOUMEAN_LOCATION}.
+         * Default value for {@link #CONF_DIDYOUMEAN_LOCATION}.
          */
     public static final String DEFAULT_DIDYOUMEAN_LOCATION = "didyoumean";
 

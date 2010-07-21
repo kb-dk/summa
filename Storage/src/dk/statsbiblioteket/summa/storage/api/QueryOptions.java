@@ -128,12 +128,12 @@ public class QueryOptions implements Serializable {
      * fetch. This constructor makes it possible to define attributes from
      * record to be fetched from storage.
      *
-     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
-     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param deletedFilter The deleted filter {@link #deletedFilter}.
+     * @param indexableFilter The indexable filter {@link #deletedFilter}.
      * @param childDepth The child depth for records to fetch
-     * {@link this#childDepth}.
+     * {@link #childDepth}.
      * @param parentHeight The parent heigth for records to fetch
-     * {@link this#childDepth}.
+     * {@link #childDepth}.
      * @param meta A local StringMap for storing meta values for these query
      * options.
      * @param attributes Attributes to fetch from storage.
@@ -150,12 +150,12 @@ public class QueryOptions implements Serializable {
      * {@link ReadableStorage}, for further constraints on which records to
      * fetch.
      *
-     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
-     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param deletedFilter The deleted filter {@link #deletedFilter}.
+     * @param indexableFilter The indexable filter {@link #deletedFilter}.
      * @param childDepth The child depth for records to fetch
-     * {@link this#childDepth}.
+     * {@link #childDepth}.
      * @param parentHeight The parent heigth for records to fetch
-     * {@link this#childDepth}.
+     * {@link #childDepth}.
      * @param meta A local StringMap for storing meta values for these query
      * options.
      */
@@ -173,12 +173,12 @@ public class QueryOptions implements Serializable {
      * {@link QueryOptions#QueryOptions(Boolean, Boolean, int, int, StringMap)}
      * with QueryOptions(Boolean, Boolean, int, int, null).
      *
-     * @param deletedFilter The deleted filter {@link this#deletedFilter}.
-     * @param indexableFilter The indexable filter {@link this#deletedFilter}.
+     * @param deletedFilter The deleted filter {@link #deletedFilter}.
+     * @param indexableFilter The indexable filter {@link #deletedFilter}.
      * @param childDepth The child depth for records to fetch
-     * {@link this#childDepth}.
-     * @param parentHeight The parent heigth for records to fetch
-     * {@link this#childDepth}.
+     * {@link #childDepth}.
+     * @param parentHeight The parent height for records to fetch
+     * {@link #childDepth}.
      */
     public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
                         int childDepth, int parentHeight) {
@@ -208,64 +208,64 @@ public class QueryOptions implements Serializable {
     }
 
     /**
-     * Return boolean value for {@link this#deletedFilter}.
+     * Return boolean value for {@link #deletedFilter}.
      *
-     * @return value of {@link this#deletedFilter}.
+     * @return value of {@link #deletedFilter}.
      */
     public Boolean deletedFilter() {
         return deletedFilter;
     }
 
     /**
-     * Return true if this filter has a {@link this#deletedFilter} attribute.
+     * Return true if this filter has a {@link #deletedFilter} attribute.
      *
-     * @return true if this filter has a {@link this#deletedFilter} attribute.
+     * @return true if this filter has a {@link #deletedFilter} attribute.
      */
     public boolean hasDeletedFilter() {
         return deletedFilter != null;
     }
 
     /**
-     * Return boolean value for {@link this#indexableFilter}.
+     * Return boolean value for {@link #indexableFilter}.
      *
-     * @return value of {@link this#indexableFilter}.
+     * @return value of {@link #indexableFilter}.
      */
     public Boolean indexableFilter () {
         return indexableFilter;
     }
 
     /**
-     * Return true if this filter has an {@link this#indexableFilter} defined.
+     * Return true if this filter has an {@link #indexableFilter} defined.
      *
-     * @return true if this filter has an {@link this#indexableFilter} defined.
+     * @return true if this filter has an {@link #indexableFilter} defined.
      */
     public boolean hasIndexableFilter () {
         return indexableFilter != null;
     }
 
     /**
-     * Return boolean value for {@link this#childDepth}.
+     * Return boolean value for {@link #childDepth}.
      *
-     * @return value of {@link this#childDepth}.
+     * @return value of {@link #childDepth}.
      */
     public int childDepth () {
         return childDepth;
     }
 
     /**
-     * Return true if this filter has an {@link this#parentHeight} defined.
+     * Return true if this filter has an {@link #parentHeight} defined.
      *
-     * @return true if this filter has an {@link this#parentHeight} defined.
+     * @return true if this filter has an {@link #parentHeight} defined.
      */
     public int parentHeight () {
         return parentHeight;
     }
 
     /**
-     * Return true if this filter has {@link this@meta} and this StringMap isn't
+     * Return true if this filter has {@link #meta} and this StringMap isn't
      * empty.
      *
-     * @return true {@link this@meta} defined and not empty.
+     * @return true {@link #meta} defined and not empty.
      */
     public boolean hasMeta () {
         return meta != null && !meta.isEmpty();
@@ -324,7 +324,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return true if QueryOptions is created to only allow a sub-part of a
      * record. Eg. only attribute id is needed for the record.
-     * Note: To get new record, call {@link this#getNewRecord(Record)}.
+     * Note: To get new record, call {@link #getNewRecord(Record)}.
      *
      * @return true if these QueryOptions says only a sup-part of record is
      * needed. False otherwise.
@@ -348,8 +348,8 @@ public class QueryOptions implements Serializable {
         long mt = 0;
         String id = null;
         StringMap meta = null;
-        boolean indexable = false;
-        boolean deleted = false;
+        //boolean indexable = false;
+        //boolean deleted = false;
         for(ATTRIBUTES attribute: attributes) {
             switch(attribute) {
                 case RECORDBASE:

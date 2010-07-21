@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: XStorage.java,v 1.3 2007/10/04 13:28:21 te Exp $
- */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -65,7 +61,7 @@ public class XStorage implements ConfigurationStorage {
     }*/
 
     /**
-     * Creates a XStorage with the {@link this@nextAvailableConfigurationFile}
+     * Creates a XStorage with the {@link XStorage#nextAvailableConfigurationFile}
      * configuration file.
      *
      * @throws IOException if error occur while fetching next available
