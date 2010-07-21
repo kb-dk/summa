@@ -36,7 +36,7 @@ public class XMLSplitterFilter extends StreamController {
      * The prefix to prepend to the extracted Record-ids.
      * </p><p>
      * Optional. Default is "".
-     * @see {@link #EXPAND_FOLDER}.
+     * @see #EXPAND_FOLDER
      */
     public static final String CONF_ID_PREFIX =
             "summa.ingest.xmlsplitter.idprefix";
@@ -45,7 +45,7 @@ public class XMLSplitterFilter extends StreamController {
      * The postfix to append to the extracted Record-ids.
      * </p><p>
      * Optional. Default is "".
-     * @see {@link #EXPAND_FOLDER}.
+     * @see #EXPAND_FOLDER
      */
     public static final String CONF_ID_POSTFIX =
             "summa.ingest.xmlsplitter.idpostfix";
@@ -86,7 +86,7 @@ public class XMLSplitterFilter extends StreamController {
      * will not have the postfix appended.
      * </p><p>
      * Default: "true".
-     * @see {@link #CONF_COLLAPSE_PREFIX}.
+     * @see #CONF_COLLAPSE_PREFIX
      */
     public static final String CONF_COLLAPSE_POSTFIX =
             "summa.ingest.xmlsplitter.collapsepostfix";

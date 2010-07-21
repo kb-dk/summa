@@ -107,6 +107,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
        </datafield>
       <datafield tag="004" int1="0" ind2="0">
        ...
+    }
      * </p><p>
      * Optional. Default is false.
      */

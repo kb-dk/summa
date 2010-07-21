@@ -45,6 +45,8 @@ public interface WritableStorage extends Configurable {
     /**
      * Call {@link #flush(Record, QueryOptions)} with a {@code null} options
      * argument
+     * @param record The record to flush.
+     * @throws IOException if error occours during flush.
      */
     void flush(Record record) throws IOException;
 
@@ -65,8 +67,10 @@ public interface WritableStorage extends Configurable {
     void flushAll(List<Record> records, QueryOptions options) throws IOException;
 
     /**
-     * Call {@link #flushAll(List<Record>, QueryOptions)} with a {@code null}
-     * options argument
+     * Call {@link #flush(dk.statsbiblioteket.summa.common.Record, QueryOptions)}
+     * with a {@code null} QueryOptions argument
+     * @param records A list of records to flush.
+     * @throws IOException if error occours during flush.
      */
     void flushAll(List<Record> records) throws IOException;
 
@@ -149,6 +153,7 @@ public interface WritableStorage extends Configurable {
      *                               found in the classpath
      * @throws IllegalArgumentException if {@code jobName} does not match the
      *                                  required regular expression
+     * @return Result of the script.
      */
     String batchJob(String jobName, String base,
                     long minMtime, long maxMtime, QueryOptions options)

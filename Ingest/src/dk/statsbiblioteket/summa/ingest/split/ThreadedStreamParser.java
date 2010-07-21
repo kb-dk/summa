@@ -368,8 +368,8 @@ public abstract class ThreadedStreamParser implements StreamParser {
      * is handled gracefully by logging an appropriate error and skipping
      * to the next available Stream.
      * @throws Exception if the sourcePayload could not be parsed properly.
-     * @see {@link #addToQueue(dk.statsbiblioteket.summa.common.Record)}.
-     * @see {@link #addToQueue(dk.statsbiblioteket.summa.common.filter.Payload)}.
+     * @see #addToQueue(dk.statsbiblioteket.summa.common.Record)
+     * @see #addToQueue(dk.statsbiblioteket.summa.common.filter.Payload)
      */
     protected abstract void protectedRun() throws Exception;
 

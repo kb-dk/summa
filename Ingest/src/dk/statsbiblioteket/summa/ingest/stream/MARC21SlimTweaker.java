@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
     <datafield tag="010" ind1="0" ind2="0">
       <subfield code="a">D33875127X</subfield>
     </datafield>
- ...}. By configuring with {@link #CONF_SUBFIELD_SEPARATOR} {@link 31}, the
+ ...}. By configuring with {@link #CONF_SUBFIELD_SEPARATOR} = 31, the
  * result will be {@code
 <record>
   <leader>00614nam0 32001931  45  </leader>

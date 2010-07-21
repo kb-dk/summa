@@ -14,8 +14,11 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
-import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.IOException;
@@ -29,9 +32,6 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 
 /**
  * StorageBase is an abstract class to facilitate implementations of the
@@ -91,7 +91,7 @@ public abstract class StorageBase implements Storage {
      * @throws IOException on communication errors
      */
     public long getModificationTime (String base) throws IOException {
-        Long lastFlush = null;
+        Long lastFlush;
 
         if (base != null) {
             lastFlush = lastFlushTimes.get(base);
@@ -293,10 +293,10 @@ public abstract class StorageBase implements Storage {
 
     /**
      * Convenience implementation of calling
-     * {@link #flushAll(List<Record>, QueryOptions)} with query options set to
-     * {@code null}
-     * @param records the records to flush
-     * @throws IOException
+     * {@link #flushAll(java.util.List, dk.statsbiblioteket.summa.storage.api.QueryOptions)}  with
+     * QueryOptions set to {@code null}.
+     * @param records the records to flush.
+     * @throws IOException if error occour while flushing records.
      */
     public void flushAll(List<Record> records) throws IOException {
         flushAll(records, null);
@@ -334,8 +334,8 @@ public abstract class StorageBase implements Storage {
      * Private records may only be retrieved if the {@code ALLOW_PRIVATE}
      * meta field is set on the query options passed to the storage when
      * calling {@link #getRecord}(s).
-     * @param id
-     * @return
+     * @param id The ID to check.
+     * @return trur if the ID is a private ID.
      */
     protected boolean isPrivateId(String id) {
         return privateIdMatcher.reset(id).matches();
@@ -349,10 +349,7 @@ public abstract class StorageBase implements Storage {
      *         in {@code opts}
      */
     protected boolean allowsPrivate(QueryOptions opts) {
-        if (opts != null) {
-            return "true".equals(opts.meta(ALLOW_PRIVATE));
-        }
-        return false;
+        return opts != null && "true".equals(opts.meta(ALLOW_PRIVATE));
     }
 }
 

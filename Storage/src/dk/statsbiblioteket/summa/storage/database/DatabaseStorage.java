@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/**
- * Created: te 2007-09-10 10:54:43
- * CVS:     $Id: DatabaseStorage.java,v 1.8 2007/12/04 09:08:19 te Exp $
- */
 package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -1675,13 +1671,13 @@ getco     */
 
     /**
      * Touch (that is, set the 'mtime' to now) the parents
-     * of <code>id</code> recursively upwards
-     * @param id the id of the records which parents to touch
+     * of <code>id</code> recursively upwards.
+     * @param id the id of the records which parents to touch.
      * @param options any query options that may affect how the touching is
-     *                handled
+     *                handled.
      * @param conn the sql connection.
      * @throws IOException if error is experienced when closing statement. 
-     * @throws SQLException if {@link Connection@prepareStatement} fails.
+     * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
     protected void touchParents (String id, QueryOptions options,
                                  Connection conn)
