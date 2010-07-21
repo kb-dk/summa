@@ -47,7 +47,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
      * How often, in milliseconds, the watcher should check for a new index.
      * </p><p>
      * This is optional. Default is 30 seconds (30,000 milliseconds).
-     * @see {@link #CONF_INDEX_WATCHER_MIN_RETENTION}.
+     * @see #CONF_INDEX_WATCHER_MIN_RETENTION
      */
     public static final String CONF_INDEX_WATCHER_CHECK_INTERVAL =
             "summa.indexwatcher.checkinterval";

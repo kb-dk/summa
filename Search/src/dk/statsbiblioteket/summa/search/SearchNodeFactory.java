@@ -82,7 +82,6 @@ public class SearchNodeFactory {
      * @param defaultClass Fallback class if {@link #CONF_NODE_CLASS} is not
      *                     found in {@code conf}
      * @return a newly instantiated {@link SearchNode}
-     * @throws RemoteException if the SearchNode could not be created.
      */
     public static SearchNode createSearchNode(
             Configuration conf, Class<?extends SearchNode> defaultClass) {
@@ -129,8 +128,8 @@ public class SearchNodeFactory {
      * copied to all sub search nodes.
      * @return a list of SearchNodes based on the configuration.
      * @throws RemoteException if the nodes could not be created.
-     * @see {@link IndexDescriptor#CONF_DESCRIPTOR}.
-     * @see {@link IndexDescriptor#copySetupToSubConfigurations}.
+     * @see IndexDescriptor#CONF_DESCRIPTOR
+     * @see IndexDescriptor#copySetupToSubConfigurations
      */
     // TODO: Better JavaDoc
     public static List<SearchNode> createSearchNodes(Configuration conf) throws

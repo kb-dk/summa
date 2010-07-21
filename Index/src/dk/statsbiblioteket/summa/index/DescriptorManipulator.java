@@ -14,7 +14,8 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.Files;
@@ -31,8 +32,7 @@ import java.io.IOException;
  * </p><p>
  * In order for the manipulator to work, the setup for the IndexDescriptor must
  * be included in the configuration.
- * @see {@link
- *      dk.statsbiblioteket.summa.common.index.IndexDescriptor#CONF_DESCRIPTOR}.
+ * @see dk.statsbiblioteket.summa.common.index.IndexDescriptor#CONF_DESCRIPTOR
  *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,

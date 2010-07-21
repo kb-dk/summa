@@ -256,7 +256,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * </p><p>
      * Note: The reloadIndex() does not check for new indexes under the root.
      * @throws RemoteException if the index could not be reloaded.
-     * @see {@link #checkIndex()}.
+     * @see #checkIndex()
      */
     public void reloadIndex() throws RemoteException {
         try {

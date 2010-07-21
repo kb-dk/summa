@@ -14,7 +14,8 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -27,7 +28,11 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Straight forward aggregator for remote SummaSearchers that splits a request
@@ -43,7 +48,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
      * A list of configurations for connections to remote SummaSearchers.
      * Each configuration should contain all relevant {@link SearchClient}
      * properties and optionally {@link #CONF_SEARCHER_DESIGNATION} and
-     * {@link }.
+     * {@link #CONF_SEARCHER_THREADS}.
      * </p><p>
      * Mandatory.
      */
