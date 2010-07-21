@@ -120,7 +120,7 @@ public class RecordUtil {
      * @return the Record as UTF-8 XML, without header.
      * @throws IOException if an error occured during
      *         XML creation op input record.
-     * @see {@link #fromXML}
+     * @see #fromXML
      */
     public static String toXML(Record record) throws IOException {
         return toXML(record, DEFAULT_ESCAPE_CONTENT);
@@ -146,8 +146,11 @@ public class RecordUtil {
      * @return the Record as UTF-8 XML, without header.
      * @throws IOException if an error occured during
      *         XML creation of input record.
-     * @see {@link #fromXML}.
-     * @see {@link RecordUtil#toXML}.
+     * @see #fromXML
+     * @see RecordUtil#toXML(dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see RecordUtil#toXML(dk.statsbiblioteket.summa.common.Record)
+     * @see RecordUtil#toXML(javax.xml.stream.XMLStreamWriter, int, dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see RecordUtil#toXML(javax.xml.stream.XMLStreamWriter, int, java.util.Set, dk.statsbiblioteket.summa.common.Record, boolean)  
      */
     public static String toXML(Record record, boolean escapeContent) throws
                                                      IOException {
@@ -335,7 +338,10 @@ public class RecordUtil {
      * Parses the given XML and creates a Record from it, if possible.
      * @param xml an XML-representation of a Record.
      * @return a Record parsed from the XML.
-     * @see {@link #toXML}
+     * @see #toXML(dk.statsbiblioteket.summa.common.Record)
+     * @see #toXML(dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see #toXML(javax.xml.stream.XMLStreamWriter, int, dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see #toXML(javax.xml.stream.XMLStreamWriter, int, java.util.Set, dk.statsbiblioteket.summa.common.Record, boolean)  
      * @throws IllegalArgumentException if the XML could not be parsed properly.
      */
     public static Record fromXML(String xml) throws IllegalArgumentException {
@@ -347,7 +353,10 @@ public class RecordUtil {
      * This implementation is thread-safe and not synchronized.
      * @param xml an XML-representation of a Record, in UTF-8.
      * @return a Record parsed from the XML.
-     * @see {@link #toXML}
+     * @see #toXML(dk.statsbiblioteket.summa.common.Record)
+     * @see #toXML(dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see #toXML(javax.xml.stream.XMLStreamWriter, int, dk.statsbiblioteket.summa.common.Record, boolean)
+     * @see #toXML(javax.xml.stream.XMLStreamWriter, int, java.util.Set, dk.statsbiblioteket.summa.common.Record, boolean)  
      * @throws IllegalArgumentException if the XML could not be parsed properly.
      */
     public static Record fromXML(Reader xml) throws IllegalArgumentException {

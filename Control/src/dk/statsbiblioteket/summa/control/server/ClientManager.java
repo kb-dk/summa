@@ -226,14 +226,14 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     }
 
     /**
-     * Find out what registry port a client uses
-     * @param instanceId
-     * @param deployConfig
-     * @return
+     * Find out what registry port a client uses.
+     * @param instanceId The instance ID.
+     * @param deployConfig The deployment configuration used.
+     * @return The value for key as an int.
      */
     private int getClientRegistryPort(String instanceId,
                                       Configuration deployConfig) {
-        return deployConfig.getInt (ClientConnection.CONF_REGISTRY_PORT,
+        return deployConfig.getInt(ClientConnection.CONF_REGISTRY_PORT,
 				    ClientConnection.DEFAULT_REGISTRY_PORT);
     }
 
@@ -290,7 +290,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      * Return a list of all clients known by the control server.
      * This amounts to a list of all directories in the control's base dir
      * containing a {@code control.xml} file.
-     * @return
+     * @return A list of all clients known by the control server.
      */
     public List<String> getClients() {
         log.trace ("Getting client list");

@@ -767,7 +767,7 @@ public class BundleSpecBuilder {
     /**
      * Create a bundle stub entirely based on the information found in the bundle
      * spec.
-     * @return
+     * @return Bundle stop based on the information found in the bundle spec.
      */
     public BundleStub getStub () {
         log.trace("getStub called");

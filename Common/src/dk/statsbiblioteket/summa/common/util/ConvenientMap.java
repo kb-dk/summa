@@ -21,7 +21,11 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -141,14 +145,13 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
     }
     /**
-     * Properly reteieves lists of Strings stored as List<String>, String[] or
+     * Properly retrieves lists of Strings stored as List<String>, String[] or
      * as a comma-separated list.
      * @param key the name of the property to look up.
      * @return value as a list of Strings.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException if the property is found but does not
      *         parse as a list of Strings
-     * @see {link #setStrings}.
      */
     public List<String> getStrings(String key) {
         Object val = get(key);

@@ -223,6 +223,12 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     }
 
     private Random random = new Random();
+
+    /**
+     * @param id ID of the payload to get.
+     * @param deleted If true, the record is set 'deleted'.
+     * @return the payload containing the record with the given ID.
+     */
     private Payload getPayload(String id, boolean deleted) {
         Record record = new Record(id, "testbase", new byte[0]);
         Document document = new Document();

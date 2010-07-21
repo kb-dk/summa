@@ -27,7 +27,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.IOException;
@@ -227,9 +226,10 @@ public abstract class ServiceBase extends UnicastRemoteObject
     }
 
     /**
-     * Convenience method to set the status to {@link Status.CODE#running}
-     * with a given message. The status change will be logged on info level.
-     * @param msg the message to set in the status
+     * Convenience method to set the status to
+     * {@link dk.statsbiblioteket.summa.control.api.Status.CODE#running} with a given message.
+     * The status change will be logged on info level.
+     * @param msg the message to set in the status.
      */
     protected void setStatusRunning(String msg) {
         log.trace("setStatusRunning called");

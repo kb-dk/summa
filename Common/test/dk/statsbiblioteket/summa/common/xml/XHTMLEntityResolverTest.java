@@ -60,7 +60,7 @@ public class XHTMLEntityResolverTest extends TestCase {
         } catch (TransformerException e) {
             // Expected
         }
-        System.out.println("Transformation result:\n" + out.toString("utf-8"));
+        //System.out.println("Transformation result:\n" + out.toString("utf-8"));
     }
 
     public void testEscapingTransformation() throws Exception {
@@ -75,6 +75,7 @@ public class XHTMLEntityResolverTest extends TestCase {
         try {
             testEscapingTransformation("data/webpage_html-nondeclared.html");
         } catch(Exception e) {
+            e.printStackTrace();
             fail("Should be fixed");
         }
     }
@@ -110,7 +111,7 @@ public class XHTMLEntityResolverTest extends TestCase {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Result result = new StreamResult(out);
         transformer.transform(source, result);
-        System.out.println("Transformation result:\n" + out.toString("utf-8"));
+        //System.out.println("Transformation result:\n" + out.toString("utf-8"));
     }
 
     public static Test suite() {

@@ -111,8 +111,8 @@ public class UniqueTimestampGenerator {
     /**
      * WARNING: Debug only - this method throws a RuntimeException if it is
      * impossible to create a unique timestamp.
-     * @param systemTime
-     * @return
+     * @param systemTime The system time.
+     * @return a unique long representing the system time.
      */
     long next(long systemTime) {
         updateSalt(systemTime);
@@ -160,7 +160,7 @@ public class UniqueTimestampGenerator {
      * Extract the system time from a timestamp generated with {@link #next()}.
      * @param timestamp the system time as returned by
      * {@link System#currentTimeMillis()} on the creation of {@code timeStamp}
-     * @return
+     * @return a unique time stamp.
      */
     public long systemTime(long timestamp) {
         return timestamp >>> SALT_BITS;
@@ -231,7 +231,8 @@ public class UniqueTimestampGenerator {
      * into a salted timestamp. But beware that a timestamp generated this
      * way may not be unique.
      * @param systemTime string formatted system time as described above
-     * @return number of milliseconds since the Unix Epoch 
+     * @return number of milliseconds since the Unix Epoch
+     * @throws ParseException if unable to parse String. 
      */
     public long parseSystemTime(String systemTime) throws ParseException {
         return dateFormat.parse(systemTime).getTime();

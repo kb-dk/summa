@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id$
- */
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -31,8 +27,8 @@ public class StringTracker extends ResourceTrackerImpl<String> {
 
     /**
      * Basic overhead for a single String.
-     * @see
-     * {@url http://www.javamex.com/tutorials/memory/string_memory_usage.shtml}
+     * @see <a href="http://www.javamex.com/tutorials/memory/string_memory_usage.shtml">
+     * String Memory Usage</a>
      */
     public static final int SINGLE_ENTRY_OVERHEAD = 38; // 32 bit
 

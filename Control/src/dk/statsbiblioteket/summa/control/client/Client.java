@@ -291,9 +291,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #CONF_CLIENT_PORT}
-     * @return the port
-     * @throws ConfigurationException if {@link # CONF_CLIENT_PORT} cannot be read
+     * @param conf the configuration from which to read {@link #CONF_CLIENT_PORT}.
+     * @return The port.
+     * @throws ConfigurationException if {@link #CONF_CLIENT_PORT} cannot be read.
      */
     private static int getServicePort (Configuration conf) {
         try {

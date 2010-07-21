@@ -82,7 +82,7 @@ public class ScriptService extends ServiceBase {
      * compilation. Default is {@code true}
      */
     public static final String CONF_COMPILE =
-                                    "summa.control.service.compilescript";
+                                          "summa.control.service.compilescript";
 
     /**
      * The default value for the {@link #CONF_COMPILE} property
@@ -94,22 +94,22 @@ public class ScriptService extends ServiceBase {
      * inlined in your configuration by setting the {@link #CONF_SCRIPT_INLINE}
      * instead of using this property.
      * <p/>
-     * Either {@link this} or {@link #CONF_SCRIPT_INLINE}
+     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
      * <i>must</i> be defined.
      */
     public static final String CONF_SCRIPT_URL =
-                                    "summa.control.service.scripturl";
+                                              "summa.control.service.scripturl";
 
     /**
      * Contains the entire script to be executed. Alternatively fetch
      * the script from an external resource by setting {@link #CONF_SCRIPT_URL}
      * instead of using this property.
      * <p/>
-     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_URL}
      * <i>must</i> be defined.
      */
     public static final String CONF_SCRIPT_INLINE =
-                                       "summa.control.service.inlinescript";
+                                           "summa.control.service.inlinescript";
 
     /**
      * If the scripting language can not be deducted from the URL supplied
@@ -120,7 +120,7 @@ public class ScriptService extends ServiceBase {
      * Default is <code>js</code> for Javascript.
      */
     public static final String CONF_SCRIPT_LANG =
-                                          "summa.control.service.scriptlang";
+                                             "summa.control.service.scriptlang";
 
     /**
      * Default value for the {@link #CONF_SCRIPT_LANG} property.
@@ -143,8 +143,10 @@ public class ScriptService extends ServiceBase {
 
         Reader script = new InputStreamReader(readScript(conf));
 
-        this.compileScript = conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE);
-        scriptExtension = conf.getString(CONF_SCRIPT_LANG, DEFAULT_SCRIPT_LANG);
+        this.compileScript = conf.getBoolean(CONF_COMPILE,
+                                             DEFAULT_COMPILE);
+        scriptExtension = conf.getString(CONF_SCRIPT_LANG,
+                                         DEFAULT_SCRIPT_LANG);
 
         engineManager = new ScriptEngineManager();
         engine = engineManager.getEngineByExtension(scriptExtension);
