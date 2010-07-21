@@ -57,7 +57,7 @@ public class Structure implements Configurable, Serializable {
      * {@link IndexDescriptor#CONF_DESCRIPTOR} must be specified.
      * If both properties are specified, the descriptor takes precedence.
      * See the FacetIndexDescriptor.xsd for how to setup the facets.
-     * @see {@link FacetStructure}.
+     * @see FacetStructure
      * @deprecated Specify {@link IndexDescriptor#CONF_DESCRIPTOR} instead and
      *             set up the facet structure in an IndexDescriptor.
      */

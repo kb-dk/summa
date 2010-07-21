@@ -65,7 +65,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
     private static Log log = LogFactory.getLog(SuggestSearchNode.class);
 
     /**
-     * The maximum number of results to return. This cannit be overruled in the
+     * The maximum number of results to return. This cannot be overruled in the
      * query.
      * </p><p>
      * Optional. Default is 1000.
@@ -76,10 +76,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * The default number of results to return. This can be overruled in the
-     * query, but cannot exceep {@link #CONF_MAX_RESULTS}.
+     * query, but cannot exceed {@link #CONF_MAX_RESULTS}.
      * </p><p>
      * Optional. Default is 10.
-     * @see {@link SuggestKeys#SEARCH_MAX_RESULTS}.
+     * @see SuggestKeys#SEARCH_MAX_RESULTS
      */
     public static final String CONF_DEFAULT_MAX_RESULTS =
             "summa.support.suggest.defaultmaxresults";

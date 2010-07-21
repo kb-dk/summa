@@ -29,7 +29,7 @@ public interface DocumentKeys {
      * </p><p>
      * The query is the basic request for a DocumentSearcher. It follows the
      * syntax of Lucene.
-     * @see {@link #SEARCH_FILTER}.
+     * @see #SEARCH_FILTER
      * @see {@url http://lucene.apache.org/java/docs/queryparsersyntax.html}.
      */
     public static final String SEARCH_QUERY = "search.document.query";
@@ -39,7 +39,7 @@ public interface DocumentKeys {
      * </p><p>
      * The filter limits the amount of possible documents from a search.
      * It has the exact same syntax as a Query.
-     * @see {@link #SEARCH_QUERY}.
+     * @see #SEARCH_QUERY
      */
     public static final String SEARCH_FILTER = "search.document.filter";
 
@@ -49,14 +49,16 @@ public interface DocumentKeys {
      * Used for paging. States the first hit to return from the whole set of
      * documents matching the filter and the query.
      */
-    public static final String SEARCH_START_INDEX="search.document.startindex";
+    public static final String SEARCH_START_INDEX =
+                                                   "search.document.startindex";
 
     /**
      * Integer ("20"). Optional.
      * </p><p>
      * Used to limit the amount of hits that is returned for a given search.
      */
-    public static final String SEARCH_MAX_RECORDS="search.document.maxrecords";
+    public static final String SEARCH_MAX_RECORDS =
+                                                   "search.document.maxrecords";
 
     /**
      * String ("myfield" or "summa-score"). Optional.
@@ -72,7 +74,8 @@ public interface DocumentKeys {
      * </p><p>
      * If true, sorting is performed in reverse.
      */
-    public static final String SEARCH_REVERSE = "search.document.reversesort";
+    public static final String SEARCH_REVERSE =
+                                                  "search.document.reversesort";
 
     /**
      * Comma-separated Strings ("foo, bar, zoo"). Optional.

@@ -156,7 +156,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      * Lucene MoreLikeThis property.<br />
      * "Returns the maximum word length above which words will be ignored.
      *  Set this to 0 for no maximum word length. The default is
-     * {@link MoreLikeThis#DEFAULT_MAX_WORD_LENGTH"}..
+     * {@link MoreLikeThis#DEFAULT_MAX_WORD_LENGTH}.
      * </p><p>
      * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
      */
@@ -220,8 +220,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      * The constructor for {@link TermProviderImpl} uses this sub configuration.
      * </p><p>
      * Optional.
-     * @see {@link SummaIndexReader}.
-     * @see {@link TermProviderImpl}.
+     * @see SummaIndexReader
+     * @see TermProviderImpl
      */
     public static final String CONF_TERMSTAT_CONFIGURATION =
             "summa.support.lucene.termstatconfiguration";
