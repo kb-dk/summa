@@ -18,7 +18,7 @@ import java.io.File;
 
 /**
  * Listens for changes to indexes.
- * @see {link IndexWatcher}.
+ * @see dk.statsbiblioteket.summa.search.IndexWatcher
  */
 public interface IndexListener {
     /**

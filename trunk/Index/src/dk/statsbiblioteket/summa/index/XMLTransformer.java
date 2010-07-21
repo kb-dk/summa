@@ -53,7 +53,7 @@ import java.net.URL;
  * </p><p>
  * The problem with Errors is that the state of the virtual machine is not
  * guaranteed to be stable when an Error has been thrown. If an Error occurs,
- * the offending Payload is logget at FATAL level and further processing is
+ * the offending Payload is logged at FATAL level and further processing is
  * terminated. If such a controlled crash occurs, it is recommended that the
  * offending records be removed from the workflow. One easy way of doing this is
  * to insert a
@@ -93,7 +93,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * used by the Transformer.
      * </p><p>
      * Optional.
-     * @see {@link dk.statsbiblioteket.summa.common.xml.SummaEntityResolver}.
+     * @see dk.statsbiblioteket.summa.common.xml.SummaEntityResolver
      */
     public static final String CONF_ENTITY_RESOLVER =
             "summa.xmltransformer.entityresolver";
@@ -107,7 +107,7 @@ public class XMLTransformer extends ObjectFilterImpl {
     /**
      * Sets up the transformer stated in the configuration.
      * @param conf contains the location of the XSLT to use.
-     * @see {@link #CONF_XSLT}.
+     * @see #CONF_XSLT
      */
     public XMLTransformer(Configuration conf) {
         super(conf);

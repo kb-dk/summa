@@ -29,8 +29,8 @@ public interface DocumentKeys {
      * </p><p>
      * The query is the basic request for a DocumentSearcher. It follows the
      * syntax of Lucene.
-     * @see #SEARCH_FILTER
-     * @see {@url http://lucene.apache.org/java/docs/queryparsersyntax.html}.
+     * @see #SEARCH_FILTER and
+     * @see <a href="http://lucene.apache.org/java/docs/queryparsersyntax.html">queryparsersyntax</a>
      */
     public static final String SEARCH_QUERY = "search.document.query";
 

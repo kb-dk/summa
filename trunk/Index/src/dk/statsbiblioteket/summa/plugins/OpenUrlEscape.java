@@ -30,8 +30,8 @@ public class OpenUrlEscape {
     /**
      * Escapes the metadata query input 
      *
-     * @param in
-     * @return
+     * @param in the input string.
+     * @return A String with escapeded metadata.
      */
     public static String escape(String in){
         String base= "http://a.dk/?";

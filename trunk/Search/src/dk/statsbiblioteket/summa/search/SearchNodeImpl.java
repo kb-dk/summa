@@ -19,7 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,7 +57,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      * supports warm-up.
      * </p><p>
      * This is optional. If not specified, no warm-up is performed.
-     * @see {@link #CONF_WARMUP_MAXTIME}.
+     * @see #CONF_WARMUP_MAXTIME
      */
     public static final String CONF_WARMUP_DATA =
             "summa.search.warmup.data";
