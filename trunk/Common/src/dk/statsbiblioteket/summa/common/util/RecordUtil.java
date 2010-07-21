@@ -198,7 +198,7 @@ public class RecordUtil {
 
     /**
      * Take a record an transform it into XMl.
-     * Note: synchronized due to {@link this#schemaTimestampFormatter}
+     * Note: synchronized due to {@link #schemaTimestampFormatter}
      *
      * @param out the output XML stream.
      * @param level Level of indention.

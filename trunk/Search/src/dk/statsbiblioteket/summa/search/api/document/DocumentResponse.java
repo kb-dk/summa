@@ -43,16 +43,16 @@ public class DocumentResponse implements Response, DocumentKeys {
      * beginning of the results or at the end, no matter the collator and
      * the sort-direction.<br />
      * If false, the order is up to the collator.
-     * @see {@link #NON_DEFINED_FIELDS_ARE_SORTED_LAST}.
-     * @see {@link #merge(Response)}.
+     * @see #NON_DEFINED_FIELDS_ARE_SORTED_LAST
+     * @see #merge(Response)
      */
     private static final boolean NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED = true;
     /**
      * If true, sorting on field X will put all records without field X after
      * the records with field X, no matter if the search is reversed or not.
      * If false, the records without the sort-field will be put first.
-     * @see {@link #NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED}.
-     * @see {@link #merge(Response)}.
+     * @see #NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED
+     * @see #merge(Response)
      */
     private static final boolean NON_DEFINED_FIELDS_ARE_SORTED_LAST = true;
 
