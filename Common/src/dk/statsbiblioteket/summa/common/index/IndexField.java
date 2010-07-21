@@ -154,17 +154,17 @@ public class IndexField<A, T, F> {
      * field, queryBoost is not used.
      * </p><p>
      * This is used at query-time.
-     * @see {@link #indexBoost}.
+     * @see #indexBoost
      */
     private float queryBoost = DEFAULT_BOOST;
 
     /**
      * The boost used when indexing. This boost will be applied to any
-     * instantiated field. Boosts specified explicitely for a given instantiated
+     * instantiated field. Boosts specified explicitly for a given instantiated
      * field, will be multiplied to this boost.
      * </p><p>
      * This is used at index-time.
-     * @see {@link #queryBoost}.
+     * @see #queryBoost
      */
     private float indexBoost = DEFAULT_BOOST;
 
@@ -173,7 +173,7 @@ public class IndexField<A, T, F> {
      * Note that sorting with locale is a lot heavier than sorting without.
      * </p><p>
      * This is used at search-time.
-     * @see [http://www.loc.gov/standards/iso639-2/php/code_list.php]
+     * @see <a href="http://www.loc.gov/standards/iso639-2/php/code_list.php">Code List</a>
      */
     private String sortLocale = null;
 

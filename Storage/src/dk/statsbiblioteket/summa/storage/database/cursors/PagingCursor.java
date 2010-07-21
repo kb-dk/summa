@@ -137,7 +137,7 @@ public class PagingCursor implements Cursor {
      * Private helper method for {@link PagingCursor#next()}. Get next valid
      * element.
      *
-     * @return 
+     * @return the next valid record.
      */
     private Record nextValidRecord() {
         // Note that ths method does not need to care about filtering out
