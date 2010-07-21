@@ -27,7 +27,7 @@ public interface SuggestKeys {
      * </p><p>
      * The presense of this property means that the request to suggest is a
      * standard search.
-     * @see {@link #SEARCH_UPDATE_QUERY}.
+     * @see #SEARCH_UPDATE_QUERY
      */
     String SEARCH_PREFIX =
             "summa.support.suggest.prefix";
@@ -40,7 +40,7 @@ public interface SuggestKeys {
      * </p><p>
      * The presense of this property means that the request to suggest is a
      * search for the most recently updated suggestions.
-     * @see {@link #SEARCH_UPDATE_QUERY}.
+     * @see #SEARCH_UPDATE_QUERY
      */
     String SEARCH_RECENT =
             "summa.support.suggest.recent";
@@ -72,7 +72,7 @@ public interface SuggestKeys {
      * The maximum number of results to return for the given request.
      * </p><p>
      * Optional. Default is {@link SuggestSearchNode#CONF_DEFAULT_MAX_RESULTS} (10).
-     *           Maximum is {@link SuggestSearchNode##CONF_MAX_RESULTS} (1000).
+     *           Maximum is {@link SuggestSearchNode#CONF_MAX_RESULTS} (1000).
      */
     String SEARCH_MAX_RESULTS = SuggestSearchNode.CONF_MAX_RESULTS;
 }

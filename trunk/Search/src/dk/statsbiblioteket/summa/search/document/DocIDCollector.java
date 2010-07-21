@@ -17,11 +17,13 @@ package dk.statsbiblioteket.summa.search.document;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.*;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Scorer;
 import org.apache.lucene.util.OpenBitSet;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -64,7 +66,7 @@ public class DocIDCollector extends Collector {
     /**
      * Constructs a collector. Normally the other constructor will be used, in
      * order to re-use the collector.
-     * @see {@link #DocIDCollector(ArrayBlockingQueue)}.
+     * @see #DocIDCollector(ArrayBlockingQueue)
      */
     public DocIDCollector() {
     }

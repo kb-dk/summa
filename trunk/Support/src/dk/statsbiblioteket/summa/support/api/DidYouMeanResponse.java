@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.support.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -126,7 +126,7 @@ public class DidYouMeanResponse implements Response {
     /**
      * Should merge multiple responses together, used for distributed searc.
      * @param other the Response to merge into this.
-     * @throws ClassCastException if other can't be cast to {@link this}.
+     * @throws ClassCastException if 'other' can't be casted to {@link DidYouMeanResponse}.
      */
     @Override
     public void merge(Response other) throws ClassCastException {

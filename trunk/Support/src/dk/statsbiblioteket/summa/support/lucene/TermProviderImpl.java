@@ -44,7 +44,7 @@ import java.io.IOException;
  * </p><p>
  * None of the properties are mandatory and the TermProvider will normally work
  * fine with the defaults.
- * @see {@link SummaIndexReader}.
+ * @see SummaIndexReader
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

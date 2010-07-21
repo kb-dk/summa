@@ -12,10 +12,6 @@
  *  limitations under the License.
  *
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: FacetSearchNode.java,v 1.14 2007/10/05 10:20:22 te Exp $
- */
 package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -64,9 +60,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * for the node should thus contain settings for
  * {@link dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest} along
  * with settings for the facets.
- * @see {@link FacetKeys} and
- * {@link dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys} for 
- * query-syntax.
+ *
+ * For query-syntax see:
+ * @see dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys
+ * @see dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
