@@ -45,6 +45,7 @@ import java.util.List;
 public class Record implements Serializable, Comparable{
     public static final long serialVersionUID = 35848318185L;
     private static Log log = LogFactory.getLog(Record.class);
+    private static final byte[] EMPTY_CONTENT = new byte[0];
 
     /**
      * The validation-state can only be stored indirectly using the map
@@ -376,11 +377,14 @@ public class Record implements Serializable, Comparable{
      */
     public void setRawContent(byte[] content, boolean contentCompressed) {
         if (content == null) {
+            content = EMPTY_CONTENT;
+            log.trace("setRawContent(null, ...) was called. "
+                      + "Assigning byte-array of length 0 as content");
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("data must be specified for "
+/*            throw new IllegalArgumentException("data must be specified for "
                                                + "record '" + getId()
                                                + "' from base '" + getBase()
-                                               + "'");
+                                               + "'");*/
         }
         data = content;
         this.contentCompressed = contentCompressed;
