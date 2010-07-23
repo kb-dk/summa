@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
-import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -30,7 +29,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
- * Wraps a ResultSet and the context in was created in as a {@link Cursor}
+ * Wraps a ResultSet and the context in was created in as a {@link Cursor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -278,7 +277,7 @@ public class ResultSetCursor implements Cursor {
     /**
      * Return next valid record from the iterator.
      *
-     * @return next valid record.
+     * @return Next valid record.
      * @throws SQLException if database error occurred while fetching record.
      * @throws IOException if error occurred while fetching record.
      */
@@ -301,14 +300,20 @@ public class ResultSetCursor implements Cursor {
 
         while (resultSetHasNext && !options.allowsRecord(r)) {
             r = db.scanRecord(resultSet, this);
-        }
 
+        }
+        log.debug("Found allowed record (" + r.getId() + ", " + r.getBase()
+                  + ", " + r.isDeleted() + ", " + r.isIndexable());
+        
         // We don't need all information from a record.
         if(options.newRecordNeeded()) {
-            r = options.getNewRecord(r);
+            log.debug("Creating new record (" + r.getId() + ", " + r.getBase()
+                    + ", " + r.isDeleted() + ", " + r.isIndexable());
+            return options.getNewRecord(r);
         }
-
+        
         if (options.allowsRecord(r)) {
+            log.debug("Record ID('" + r.getId() + "'') is allowed");
             return r;
         }
 

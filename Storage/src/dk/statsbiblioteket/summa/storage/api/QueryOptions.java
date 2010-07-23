@@ -306,8 +306,8 @@ public class QueryOptions implements Serializable {
     /**
      * Check whether a given record has the required deletion and indexable
      * flags to match this set of query options
-     * @param r the record to check
-     * @return true iff the record has the required deletion and indexable flags
+     * @param r The record to check.
+     * @return True iff the record has the required deletion and indexable flags.
      */
     public boolean allowsRecord (Record r) {
         if (hasDeletedFilter()) {
@@ -317,7 +317,6 @@ public class QueryOptions implements Serializable {
         if (hasIndexableFilter()) {
             return r.isIndexable() == indexableFilter();
         }
-
         return true;
     }
 
@@ -326,7 +325,7 @@ public class QueryOptions implements Serializable {
      * record. Eg. only attribute id is needed for the record.
      * Note: To get new record, call {@link #getNewRecord(Record)}.
      *
-     * @return true if these QueryOptions says only a sup-part of record is
+     * @return True if these QueryOptions says only a sup-part of record is
      * needed. False otherwise.
      */
     public boolean newRecordNeeded() {
@@ -338,8 +337,8 @@ public class QueryOptions implements Serializable {
      * storage, this is used for faster retrieving a large amount of records
      * over network.
      *
-     * @param r the record which we want a sub-part of.
-     * @return new {@link Record} with the specified attributes.
+     * @param r The record which we want a sub-part of.
+     * @return New {@link Record} with the specified attributes.
      */
     public Record getNewRecord(Record r) {
         String base = null;
@@ -348,8 +347,9 @@ public class QueryOptions implements Serializable {
         long mt = 0;
         String id = null;
         StringMap meta = null;
-        //boolean indexable = false;
-        //boolean deleted = false;
+        boolean indexable = r.isIndexable();
+        boolean deleted = r.isDeleted();
+        boolean contentCompressed = r.isContentCompressed();
         for(ATTRIBUTES attribute: attributes) {
             switch(attribute) {
                 case RECORDBASE:
@@ -372,8 +372,8 @@ public class QueryOptions implements Serializable {
                     break;
             }
         }
-        return new Record(id, base, r.isDeleted(), r.isIndexable(), content, ct,
-                mt, null, null, meta, r.isContentCompressed());
+        return new Record(id, base, deleted, indexable, content, ct,
+                mt, null, null, meta, contentCompressed);
     }
 }
 
