@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>dk.statsbiblioteket.summa</groupId>
+    <artifactId>summa</artifactId>
+    <version>${summaVersion}</version>
+  </parent>
+
+  <groupId>dk.statsbiblioteket.summa</groupId>
+  <artifactId>summa-storage</artifactId>
+  <name>Summa Storage module</name>
+  <version>${summaVersion}</version>
+  <inceptionYear>2010</inceptionYear>
+
+
+  <build>
+    <sourceDirectory>${basedir}/src/</sourceDirectory>
+    <testSourceDirectory>${basedir}/test/</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>config/</directory>
+      </resource>
+      <!-- We have some resource down in code directory -->
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+	<testResources>
+      <testResource>
+        <directory>${basedir}/test/data/</directory>
+      </testResource>
+    </testResources>
+  </build>
+
+    <!-- Dependencies for Summa Storage-->
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>summa-common</artifactId>
+      <version>${summaVersion}</version>
+    </dependency>
+  </dependencies>
+</project>
