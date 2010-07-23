@@ -196,8 +196,8 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 }
             }
             while(tmpRecords.size() == numberOfRecordsFromStorage);
-            log.info("Ids for all '" + i + "' records from storage has been " 
-                     + "locally stored");
+            log.info("Ids for all '" + i + "' records from storage base '"
+                     + base + "' has been locally stored");
         } catch (NoSuchElementException e) {
             // last element ok not to report this error.   
         } catch (IOException e) {
