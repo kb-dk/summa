@@ -1,3 +1,640 @@
+2010-07-23 06:49  hkirk
+
+	* [r2431]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/ResultSetCursor.java:
+	  
+	  Bugfix: Fixed bug where missing records from a fulldump wheren't
+	  deleted, this was due to a mistake in the ResultSetCursor, where
+	  newly created records wasn't returned.
+
+2010-07-22 11:07  toke-sb
+
+	* [r2430] Common/src/dk/statsbiblioteket/summa/common/Record.java:
+	  
+	  Change: Record was changed to accept null as content by assigning
+	  a byte-array of length 0 when null was received. This was done to
+	  support pseudo-records consisting only og id and base
+
+2010-07-21 11:11  hkirk
+
+	* [r2429]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/PagingCursor.java:
+	  
+	  Doc: When running 'ant doc' in the sub-directories, there where
+	  some extra javaDoc warnings, these are removed in this commit.
+
+2010-07-21 10:21  hkirk
+
+	* [r2428]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PushFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexAlias.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexChangeEvent.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexChangeListener.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexChanger.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexConnector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod} and @see {@link myClass} to
+	  @see myClass.
+	  Updated a few missing JavaDoc
+	  
+	  Done cleaning up JavaDoc
+
+2010-07-21 10:12  hkirk
+
+	* [r2427]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/SanitiseUnicodeFilter.java:
+	  
+	  Doc: Updated to Apache License 2.0
+
+2010-07-21 09:57  hkirk
+
+	* [r2426]
+	  Common/src/dk/statsbiblioteket/summa/common/index/SummaDocumentXMLSample.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPoolImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/HelpNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CollatorFactory.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ConvenientMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ListSorter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/Profiler.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/StringMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/StringTracker.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/UniqueTimestampGenerator.java,
+	  Common/test/dk/statsbiblioteket/summa/common/xml/XHTMLEntityResolverTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleSpecBuilder.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleStub.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ClientManager.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlUtils.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ServiceBase.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java,
+	  Summa.ipr:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod} and @see {@link myClass} to
+	  @see myClass.
+	  Updated a few missing JavaDoc
+
+2010-07-21 09:38  hkirk
+
+	* [r2425]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/source/RecordGenerator.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MARC21SlimTweaker.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod} and @see {@link myClass} to
+	  @see myClass.
+	  Updated a few missing JavaDoc
+
+2010-07-21 09:19  hkirk
+
+	* [r2424]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCParserLight.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCRecordStream.java:
+	  
+	  Doc: Updated to Apache License 2.0
+
+2010-07-21 09:12  hkirk
+
+	* [r2423]
+	  Index/src/dk/statsbiblioteket/summa/index/DescriptorManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Index/src/dk/statsbiblioteket/summa/plugins/OpenUrlEscape.java,
+	  Search/src/dk/statsbiblioteket/summa/search/IndexListener.java,
+	  Search/src/dk/statsbiblioteket/summa/search/IndexWatcher.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeFactory.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeImpl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherAggregator.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherImpl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentKeys.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod} and @see {@link myClass} to
+	  @see myClass
+
+2010-07-21 08:55  hkirk
+
+	* [r2422]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  Index,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentKeys.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocIDCollector.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/LuceneKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/TermProviderImpl.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod} and @see {@link myClass} to
+	  @see myClass
+
+2010-07-21 08:36  hkirk
+
+	* [r2421]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java:
+	  
+	  Doc: Updated to Apache License 2.0
+
+2010-07-21 08:35  hkirk
+
+	* [r2420] Common/src/dk/statsbiblioteket/summa/common/Record.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPool.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/Browser.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetCore.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapImpl.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandler.java,
+	  Workflow/src/dk/statsbiblioteket/summa/workflow/WaitForStatusStep.java,
+	  Workflow/src/dk/statsbiblioteket/summa/workflow/WorkflowManager.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod}
+
+2010-07-21 08:01  hkirk
+
+	* [r2419]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/XStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/NativeRunner.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherMBean.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/Request.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/rmi/RemoteSearcher.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/UpdateFromFulldumpFilter.java,
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Doc: Cleaning up in JavaDoc mostly refactered {@link
+	  this#myMethod} to {@link #myMethod}
+
+2010-07-20 06:35  hkirk
+
+	* [r2418]
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java:
+	  
+	  TestFix: Updated file path for index, so it now is inside the
+	  project tree.
+
+2010-07-20 06:29  hkirk
+
+	* [r2417]
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  TestFix: Updated file path for index, so it now is inside the
+	  project tree.
+
+2010-07-20 06:26  hkirk
+
+	* [r2416]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileReaderTest.java:
+	  
+	  TestFix: Fixed meta-info error
+
+2010-07-19 14:06  hkirk
+
+	* [r2415]
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/CreateDocumentTest.java:
+	  
+	  TestFix: updated testProcessPayload test
+
+2010-07-19 14:05  hkirk
+
+	* [r2414]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Documentation: Updated documentation
+
+2010-07-19 14:05  hkirk
+
+	* [r2413]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Logging: added debug logging to processPayload
+
+2010-07-19 14:02  hkirk
+
+	* [r2412] Index/test/data/fagref/fagref_author.xsl,
+	  Index/test/data/fagref/fagref_index.xsl,
+	  Index/test/data/fagref/fagref_notes.xsl,
+	  Index/test/data/fagref/fagref_short_format.xsl,
+	  Index/test/data/fagref/fagref_subject.xsl,
+	  Index/test/data/fagref/fagref_title.xsl:
+	  
+	  Updated fagref xsl documents
+
+2010-07-19 12:08  hkirk
+
+	* [r2411]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/IndexBuilder.java:
+	  
+	  TestFix: updated INDEX_ROOT for test cases in the Facet modul, so
+	  they uses FacetBrowser/tmp instaed of system defined /tmp dir
+
+2010-07-19 11:32  hkirk
+
+	* [r2410]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/IndexBuilder.java:
+	  
+	  TestFix: updated INDEX_ROOT for test cases in the Facet modul, so
+	  they uses Facet/tmp instaed of system defined /tmp dir
+
+2010-07-19 11:22  hkirk
+
+	* [r2409]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/AtomicTest.java:
+	  
+	  TestFix: removed a factor 10, so it can run on server
+
+2010-07-19 11:13  hkirk
+
+	* [r2408]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/AtomicTest.java:
+	  
+	  TestFix: removed a factor 10, so it can run on server
+
+2010-07-01 12:20  hkirk
+
+	* [r2407]
+	  Common/test/dk/statsbiblioteket/summa/common/pool/CollatorSortedPoolTest.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileReaderTest.java:
+	  
+	  Bugfix: Change to use Module/tmp insteade of /tmp/
+
+2010-07-01 12:02  hkirk
+
+	* [r2406]
+	  Support/src/dk/statsbiblioteket/summa/support/api/DidYouMeanResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ExposedSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparator.java:
+	  
+	  Bugfix: Removed warnings after -Xlint:all was added to compile
+	  args
+
+2010-07-01 12:00  hkirk
+
+	* [r2405]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java:
+	  
+	  Bugfix: LogDocMergePolicy used wrongly
+
+2010-07-01 11:46  hkirk
+
+	* [r2404]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurableTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java,
+	  Support/build.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Bugfix: fixed unittests
+
+2010-07-01 09:32  hkirk
+
+	* [r2403]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Bugfix: Fixed unittest data location
+
+2010-07-01 08:51  hkirk
+
+	* [r2402] Common/test/configuration.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DummyStreamToRecordsTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DumpFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractorTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/DiskPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuper.java:
+	  
+	  Bugfix: Fixed a number of tests by using local tmp instead of
+	  global /tmp/ directory
+
+2010-07-01 08:26  hkirk
+
+	* [r2401]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Command.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java:
+	  
+	  Bugfix: fixed NullpointerException when using aliases in
+	  ShellTest
+
+2010-06-30 13:30  hkirk
+
+	* [r2400] Workflow/build.xml,
+	  Workflow/src/dk/statsbiblioteket/summa/workflow/WaitForStatusStep.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in
+	  cleanup of warnings.
+
+2010-06-30 13:27  hkirk
+
+	* [r2399] Web/build.xml:
+	  
+	  added -Xlint:all argumentlist for ant target
+
+2010-06-30 13:10  hkirk
+
+	* [r2398] Storage/build.xml,
+	  Storage/src/dk/statsbiblioteket/summa/storage/BaseStats.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageConnectionFactory.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageIterator.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/ManagedStatement.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/MiniConnectionPoolManager.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 12:32  hkirk
+
+	* [r2397] Search/build.xml,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeAggregator.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/Request.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/ResponseCollection.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/dummy/DummyResponse.java,
+	  Search/src/dk/statsbiblioteket/summa/search/rmi/RMISearcherProxy.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 12:18  hkirk
+
+	* [r2396] Ingest/build.xml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 11:51  hkirk
+
+	* [r2395] Index/build.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/rmi/RMIManipulatorProxy.java:
+	  
+	  Bugfix: LuceneManipulator is updated to Lucene 3.0.1 usage of
+	  IndexWriter/IndexWriterConfig
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 11:11  hkirk
+
+	* [r2394]
+	  Control/src/dk/statsbiblioteket/summa/control/api/BadConfigurationException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientDeploymentException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/InvalidClientStateException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/InvalidServiceStateException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/NoSuchClientException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/NoSuchServiceException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ServiceDeploymentException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ServicePackageException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/Status.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/Message.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleStub.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 09:47  hkirk
+
+	* [r2393] FacetBrowser/build.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetStructure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultExternal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetRequest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetResultLocal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java:
+	  
+	  Cleanup: added -Xlint:all to compile target. This resulted in a
+	  major cleanup of warnings.
+
+2010-06-30 09:08  hkirk
+
+	* [r2392] Control/build.xml,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/ShellContextFeedback.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/rmi/RemoteConsoleFeedback.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleFormatException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleLoadingException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/LocalURLRepository.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/RemoteURLRepositoryClient.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/RemoteURLRepositoryServer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/URLRepository.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/LocalDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/FilterService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/SearchService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/StorageService.java:
+	  
+	  Bugfix: Found a if (thread == null) { thread.interupt(); }
+	  changed to !=, and a fallthrough in ShellContextFeedback.
+	  Cleanup: Removed -Xlint:all warnings except two, cant find a
+	  solution
+
+2010-06-30 08:40  hkirk
+
+	* [r2391] Common/build.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/Record.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configurable.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/ConfigurationStorageException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/SubConfigurationsNotSupportedException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/FileStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/MemoryStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/RemoteStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/XStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/stream/StreamFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexGroup.java,
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/BuildPerformance.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexReducer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexSpeed.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaSymbolRemovingAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/DistributedIndexStatCreator.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexServiceException.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/DisjunctionQueryParser.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SlimCollector.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPoolImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/AbortNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/BadCommandLineNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/ClearNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/HelpNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/Notification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/SyntaxErrorNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/TraceNotification.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ChangingSemaphore.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ConvenientMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/FlexiblePair.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/NativeRunner.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/Pair.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ParseUtil.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/PriorityQueue.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/Profiler.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/StringMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/XSLTUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/MemoryStringPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/NativeRunnerTest.java:
+	  
+	  Bugfix: Removed usage of Lucene 3.0.1 deprecatede classes
+	  Claenup: Removede warnings according to -Xlint:all
+
+2010-06-29 09:51  hkirk
+
+	* [r2390]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/LuceneBooster.java:
+	  
+	  Bugfix: Overlooked PrefixQuery
+
+2010-06-29 09:13  hkirk
+
+	* [r2389]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/LuceneBooster.java:
+	  
+	  Bugfix: updated with Lucene 3.0.1 queries in applyBoost, removed
+	  TODO, due to log polution.
+
+2010-06-29 08:52  hkirk
+
+	* [r2388]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Command.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/VoidShellContext.java,
+	  Common/test/dk/statsbiblioteket/summa/common/shell/ShellTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/FeedbackShellContext.java:
+	  
+	  Bugfix: Added JavaDoc and removed warnings
+
+2010-06-28 14:17  hkirk
+
+	* [r2387]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Command.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/ShellContext.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/VoidShellContext.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/commands/Clear.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/shell/commands/Help.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/commands/Quit.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/commands/Trace.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/notifications/ClearNotification.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/shell/ShellTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/FeedbackShellContext.java:
+	  
+	  Feature: Added 'clear' command to core shell - it obviously is
+	  clearing the shell
+	  Feature: Added support for aliases in cores shell functionality
+	  Feature: Tab-compleation for core shell for known commands and
+	  aliases
+	  There are some drawbacks to these enhancements, namely that the
+	  ShellContext interface has been altered and is less 'clean'.
+
+2010-06-28 10:48  hkirk
+
+	* [r2386]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/VoidShellContext.java:
+	  
+	  Bugfix: code cleanup
+
+2010-06-24 11:22  hkirk
+
+	* [r2380]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandlerTest.java:
+	  
+	  Cleanup
+
+2010-06-24 09:10  hkirk
+
+	* [r2379]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandlerTest.java:
+	  
+	  Test: Added unittest for cdata blocks
+
+2010-06-23 14:38  toke-sb
+
+	* [r2378] Control/test/data/facetperformance[ADD],
+	  Control/test/data/facetperformance/FacetPerformance_IndexConfiguration.xml[CPY],
+	  Control/test/data/facetperformance/FacetPerformance_IndexDescriptor.xml[CPY],
+	  Control/test/data/facetperformance/FacetPerformance_SearchConfiguration.xml[CPY],
+	  Control/test/data/facetperformance/fagref[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_author.xsl[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_index.xsl[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_notes.xsl[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_short_format.xsl[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_subject.xsl[ADD],
+	  Control/test/data/facetperformance/fagref/fagref_title.xsl[ADD],
+	  Control/test/data/facetperformance/fagref_template.xml[CPY],
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetPerformanceTest.java[CPY],
+	  Control/test/log4j.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Testing: Introduced performance test for faceting
+
+2010-06-23 14:30  hkirk
+
+	* [r2377]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParser.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilterTest.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTest.java:
+	  
+	  Bugfix: fix for tracker #96. When handling XML data, which were
+	  inside a CDATA block, this was encoded, when not inside a CDATA
+	  block this was still not xml encode.
+
+2010-06-22 12:03  hkirk
+
+	* [r2375] ChangeLog,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  NEWS, build.properties:
+	  
+	  Commit for 1.6.1 release.
+	  Mostly bugfixes
+
 2010-06-22 11:43  hkirk
 
 	* [r2374]
