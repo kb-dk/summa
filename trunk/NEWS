@@ -1,4 +1,41 @@
 ========================
+2010-07-26: Summa 1.6.2
+========================
+
+ * Major lookover of the Shell components. The following features are 
+   added:
+	 - 'clear' command to core shell - it obviously is clearing the shell.
+	 - Added support for aliases in core shell functionality.
+	 - Tab-completion for core shell for known commands and aliases.
+
+ * Change: Record was changed to accept null as content by assigning 
+   a byte-array of length 0 when null was received. This was done to
+   support pseudo-records consisting only og id and base.
+
+ * Bugfix: Fixed bug where missing records from a fulldump where not
+   deleted, this was due to a mistake in the ResultSetCursor, where
+   newly created records wasn't returned.
+	  
+ * Bugfix: Handling XML CDATA blocks correct. Tracker ID #96.
+
+ * Bugfix: Removed possible NullPointerException in ShellContextFeedback.
+
+ * Bugfix: Updated LuceneBooster with Lucene 3.0.1 queries.
+
+ * Removed warnings from JavaDoc.
+ 
+ * Unittest fixes.
+
+ * Summa now compiles with -Xlint flag, warnings are removed.
+
+ * Update the following classes to correct use of Lucene 3.0.1 IndexWriter/
+   IndexWriterConfig:
+	 - dk.statsbiblioteket.summa.index.lucene.LuceneManipulator
+	 - dk.statsbiblioteket.summa.common.lucene.BuildPerformance
+	 - dk.statsbiblioteket.summa.common.lucene.IndexReducer
+	 - dk.statsbiblioteket.summa.common.lucene.IndexSpeed
+
+========================
 2010-06-22: Summa 1.6.1
 ========================
 
