@@ -1,0 +1,85 @@
+// This is unfinished!
+// This is unfinished!
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/SearchResponse/DocumentResponse"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2009/SearchResponse/DocumentResponse">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the result of a document-search.
+            A document-search returns a list of documents aka records, each
+            represented by a number of attributes. The search is normally
+            triggered by a text-based query. The standard use-case is a Lucene
+            search that returns 20 or so short representations of documents.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="documentresult" type="summa:recordCollection"/>
+
+    <xsd:complexType name="recordCollection">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                Most of the attributes are an echo of the search request:
+                * filter: The filter-query used for the search. Filters normally
+                          differ from plain queries by not affecting ranking.
+                * query:  The plain query used for the search.
+                * startIndex: Where in the list of results this response should
+                              start.
+                * maxRecords: The maximum number of records to return.
+                * sortKey: Which field to use for sorting.
+                           The special value "summa-score" signifies that
+                           sorting is to be done by score aka. relevance.
+                * reverseSort: If true, the sort order is reversed.
+                * fields: The fields to return as part of the result. Valid
+                          fields are those defined in the IndexDescriptor plus
+                          the build-in fields 'recordID' and 'recordBase'.
+                          Normally the field 'shortrecord' will also exist and
+                          contain a Dublin Core based summary of the record.
+                          The shortrecord is not a hard requirement for a
+                          Summa installation though.
+
+                Two attributes are derived from the search itself:
+                * searchTime: The number of milliseconds the search node took
+                              to perform the search. For distributed searching
+                              this will be the maximum time used by any of the
+                              nodes.
+                * hitCount: The total number of matches for the given search
+                            request. This is often used to implement paging.
+            </xsd:documentation>
+        </xsd:annotation>
+
+        <xsd:sequence>
+            <xsd:element name="record" type="summa:record" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+
+        <xsd:attribute name="filter" type="xsd:string" use="optional"/>
+        <xsd:attribute name="query" type="xsd:string" use="optional"/>
+        <xsd:attribute name="startIndex" type="xsd:long" use="optional"/>
+        <xsd:attribute name="maxRecords" type="xsd:long" use="optional"/>
+        <xsd:attribute name="sortKey" type="xsd:string" use="optional"/>
+        <xsd:attribute name="reverseSort" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="fields" type="xsd:string" use="optional"/>
+        <xsd:attribute name="searchTime" type="xsd:long" use="optional"/>
+        <xsd:attribute name="hitCount" type="xsd:long" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="record">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                A representation of a single document/response.
+                for their names.
+
+
+                // TODO:
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice>
+            <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:choice>
+
+        <xsd:attribute name="name" type="xsd:string"   use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

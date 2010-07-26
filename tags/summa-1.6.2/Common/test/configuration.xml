@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Last updated: Thu Jul 01 10:09:23 CEST 2010</comment>
+<entry key="summa.configuration.registry.port">2767</entry>
+<entry key="summa.configuration.registry.host">localhost</entry>
+<entry key="summa.configuration.service.port">2768</entry>
+<entry key="summa.configuration.service.name">ConfigurationStorage</entry>
+</properties>

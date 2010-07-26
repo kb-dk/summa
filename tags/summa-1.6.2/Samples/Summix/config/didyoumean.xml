@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Setup for DidYouMeanSearcher -->
+<xproperties>
+    <xproperties>
+        <!-- RMI service name -->
+        <entry>
+            <key>summa.searcher.rmi.name</key>
+            <value class="string">summa-didyoumean</value>
+        </entry>
+    
+        <!-- Core class to use for the search engine -->
+        <entry>
+            <key>summa.searcher.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy</value>
+        </entry>
+        
+        <!-- What backend class to support the RMI proxy-->
+        <entry>
+            <key>summa.searcher.rmi.backend</key>
+            <value class="string">dk.statsbiblioteket.summa.search.SummaSearcherImpl</value>
+        </entry>
+        
+        <!-- The internal searcher node used by the SummaSearcherImpl -->
+        <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.support.didyoumean.DidYouMeanSearchNode</value>
+        </entry>
+        
+        <!-- SummaSearcher configuration -->
+        <entry>
+            <key>summa.search.numberofconcurrentsearches</key>
+            <value class="int">20</value>
+        </entry>
+        <entry>
+            <key>summa.search.searchqueue.maxsize</key>
+            <value class="int">50</value>
+        </entry>
+        <entry>
+            <key>summa.search.searcheravailability.timeout</key>
+            <value class="int">5000</value>
+        </entry>
+        <!-- Static root dir for didyoumean db, no IndexWatcher -->
+        <entry>
+            <key>summa.search.staticroot</key>
+            <value class="string">index</value>
+        </entry>
+        <!-- Define which directory to use -->
+        <!--<entry>
+            <key>summa.support.didyoumean.directory</key>
+            <value class="string">ramDirectory</value>
+        </entry>-->
+        
+    </xproperties>
+</xproperties>
+
+

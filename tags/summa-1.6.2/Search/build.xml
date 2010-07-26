@@ -1,0 +1,305 @@
+<?xml version="1.0"?>
+<project default="all" name="Search" basedir=".">
+
+    <!--
+       PROPERTIES
+    -->
+
+    <property file="${basedir}/../build.properties"/>
+
+    <property name="project.name" value="summa-search"/>
+    <property name="project.version" value="${summa.version}"/>
+    <property name="release" value="${project.name}-${project.version}"/>
+    <property name="release.war" value="${project.name}.war"/>
+    <property name="release.jar" value="${release}.jar"/>
+    <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
+
+    <property name="src.dir" value="${basedir}/src"/>
+    <property name="test.src.dir" value="${basedir}/test"/>
+
+    <!-- Temporary file and directories -->
+    <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
+    <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
+    <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
+    <property name="tmp.dir" value="${basedir}/tmp"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property  name="test.report.dir" value="${basedir}/test/reports/" />
+
+    <!-- Compilation properties -->
+    <property name="compiler" value="${summa.compiler}"/>
+    <property name="compiler.optimize" value="${summa.compiler.optimize}"/>
+    <property name="compiler.debug" value="${summa.compiler.debug}"/>
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- Path definitions -->
+    <path id="lib.path">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+            <!-- <exclude name="junit*"/> -->
+        </fileset>
+    </path>
+
+    <path id="test.lib.path">
+        <path refid="lib.path" />
+        <pathelement location="${summa.lib.junit}"/>
+        <pathelement location="${build.dir}" />
+        <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+        <pathelement location="${test.src.dir}"/>
+    </path>
+
+    <!-- Internal project dependencies -->
+    <path id="lib.internal">
+        <pathelement location="../Common/${summa.classes.dir}"/>
+        <pathelement location="../Storage/${summa.classes.dir}"/>
+        <pathelement location="../Common/${summa.test.classes.dir}"/>
+        <pathelement location="../Storage/${summa.test.classes.dir}"/>
+    </path>
+
+    <!-- lib.files : set by the .checkDepends target -->
+
+
+    <!--
+       TARGETS
+    -->
+
+    <target name=".phony"><!-- Dummy target --></target>
+
+    <target name=".compileCommon">
+        <ant inheritAll="false" dir="../Common" target="compile"/>
+    </target>
+
+    <target name=".releaseCommon">
+        <ant inheritAll="false" dir="../Common" target="jar"/>
+    </target>
+
+    <target name=".compileStorage">
+        <ant inheritAll="false" dir="../Storage" target="compile"/>
+    </target>
+
+    <target name=".releaseStorage">
+        <ant inheritAll="false" dir="../Storage" target="jar"/>
+    </target>
+
+    <target name=".depends">
+        <!-- Check global dependencies -->
+        <ant inheritall="false" dir=".." target=".depends"/>
+
+        <!-- If we miss some libs we call the getLibs target -->
+        <echo message="Checking for 3rd party libs"/>
+        <condition property="newTask" value=".phony" else=".getLibs">
+            <and>
+                <available file="${summa.lib.lucene}"/>
+                <available file="${summa.lib.lucene.queries}"/>
+                <available file="${summa.lib.junit}"/>
+                <available file="${summa.lib.log4j}"/>
+                <available file="${summa.lib.sbutil}"/>
+                <available file="${summa.lib.commons-logging}"/>
+            </and>
+        </condition>
+        <antcall target="${newTask}"/>
+
+        <!-- Check that Common is compiled -->
+        <echo message="Checking whether Common is compiled"/>
+        <condition property="compileCommonTask" value=".phony" else=".compileCommon">
+            <available file="../Common/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileCommonTask}"/>
+
+        <!-- Check that Storage is compiled -->
+        <echo message="Checking whether Storage is compiled"/>
+        <condition property="compileStorageTask" value=".phony" else=".compileStorage">
+            <available file="../Storage/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileStorageTask}"/>
+
+        <!-- Store space-separated list of lib-filenames in lib.files -->
+        <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
+            <map from="${lib.dir}/" to=""/>
+        </pathconvert>
+    </target>
+
+    <target name=".release.depends" depends=".depends">
+        <!-- Check that Common release is compiled -->
+        <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
+            <available file="../${summa.ilib.common}"/>
+        </condition>
+        <antcall target="${releaseCommonTask}"/>
+
+        <!-- Check that Storage release is compiled -->
+        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
+            <available file="../${summa.ilib.storage}"/>
+        </condition>
+        <antcall target="${releaseStorageTask}"/>
+    </target>
+
+    <target name=".getLibs">
+        <delete dir="${lib.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+
+        <copy file="../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
+        <copy file="../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
+        <copy file="../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
+        <copy file="../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <copy file="../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
+    </target>
+
+    <target name="clean">
+        <echo message="Cleaning depended modules" />
+        <ant dir="../Common" inheritall="false" target="clean"/>
+        <ant dir="../Storage" inheritall="false" target="clean"/>
+        <echo message="Cleaning this module"/>
+        <delete dir="${build.dir}"/>
+        <delete dir="${tmp.dir}"/>
+        <delete file="${release.jar}"/>
+        <delete file="${release.api.jar}"/>
+        <delete dir="${test.report.dir}" />
+        <delete dir="${dist.dir}" />
+    </target>
+
+    <target name="distclean" depends="clean">
+        <delete dir="${lib.dir}"/>
+        <delete dir="${doc.dir}"/>
+    </target>
+
+    <target name=".compiletest" depends="compile">
+        <javac srcdir="${test.src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               verbose="true" compiler="${compiler}" optimize="on" debug="on">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+        </javac>
+    </target>
+
+    <target name="runtest" depends=".compiletest">
+        <delete dir="${test.report.dir}" />
+        <mkdir dir="${test.report.dir}" />
+        <junit printsummary="yes" dir="${basedir}" fork="true">
+            <classpath refid="test.lib.path" />
+            <classpath refid="lib.internal"/>
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${test.report.dir}">
+                <formatter type="xml" />
+                <fileset dir="${test.src.dir}">
+			        <include name="**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+        <delete>
+            <fileset dir=".">
+                <include name="xconfiguration.*.xml" />
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="createjunitoutput" depends="runtest">
+        <junitreport todir="${test.report.dir}">
+            <fileset dir="${test.report.dir}" />
+            <report todir="${test.report.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="cleancompiletest" depends="clean, .compiletest" />
+
+    <target name="compile" depends=".depends">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               compiler="${compiler}" optimize="${compiler.optimize}"
+               debug="${compiler.debug}">
+            <classpath refid="lib.path"/>
+            <classpath refid="lib.internal"/>
+            <compilerarg value="-Xlint:all"/>
+        </javac>
+    </target>
+
+    <target name="doc" depends="compile">
+        <mkdir dir="${doc.dir}"/>
+        <javadoc
+                packagenames="dk.statsbiblioteket.summa.*"
+                destdir="${doc.dir}"
+                author="true"
+                version="true"
+                access="private"
+                windowtitle="Summa Search"
+                additionalparam="-breakiterator">
+            <classpath refid="lib.path"/>
+            <classpath refid="lib.internal"/>
+
+            <packageset dir="${src.dir}">
+                <include name="dk/statsbiblioteket/summa/**"/>
+            </packageset>
+        </javadoc>
+    </target>
+
+    <target name=".jar" depends="compile">
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
+             includes="dk/statsbiblioteket/summa/search/api/**/*"/>
+    </target>
+
+    <target name="jar" depends=".jar">
+        <mkdir dir="${dist.dir}"/>
+        <copy file="${release.jar}" todir="${dist.dir}" />
+        <copy file="${release.api.jar}" todir="${dist.dir}" />
+    </target>
+    
+    <!-- This target has been disabled from the default build because
+         the search service is going to broken for a good while anyway -->
+    <target name=".war" depends=".release.depends, compile">
+        <mkdir dir="${dist.dir}"/>
+        <jar jarfile="${dist.dir}/${release.war}">
+            <zipfileset file="${basedir}/../${summa.license}"/>
+            <zipfileset prefix="WEB-INF" dir="${basedir}/config">
+                <include name="web.xml"/>
+                <include name="server-config.wsdd"/>
+            </zipfileset>
+            <zipfileset prefix="WEB-INF/classes" dir="${basedir}/config">
+                <include name="search.properties.xml"/>
+                <include name="log4j.xml"/>
+            </zipfileset>
+            <zipfileset prefix="WEB-INF/classes" dir="${build.dir}">
+                <include name="**/*"/>
+                <exclude name="**/*.tld;**/*.dtd"/>
+            </zipfileset>
+
+            <!-- libs -->
+            <zipfileset prefix="WEB-INF/lib" dir="${lib.dir}" includes="${lib.files}"/>
+            <zipfileset prefix="WEB-INF/lib" dir="${basedir}" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="WEB-INF" dir="${basedir}/../" includes="${summa.lib.axis.private}"/>
+            <zipfileset prefix="" dir="${basedir}/../" includes="compile-summa.properties"/>
+        </jar>
+    </target>
+
+    <target name=".release" depends=".release.depends, .jar, doc">
+        <mkdir dir="${dist.dir}"/>
+        <property name="prefix" value="${release}"/>
+
+        <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
+            <fileset dir="${doc.dir}" includes="**/*"/>
+         </replaceregexp>
+
+        <zip destfile="${dist.dir}/${release}.zip">
+            <zipfileset prefix="${prefix}" file="${release.jar}"/>
+            <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
+            <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
+
+            <zipfileset prefix="${prefix}/lib"  dir="${lib.dir}" includes="${lib.files}"/>
+            <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.common}"/>
+
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/search.properties.xml"/>
+
+            <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
+                <include name="**/*"/>
+            </zipfileset>
+        </zip>
+        <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
+    </target>
+
+    <target name="release" depends="distclean, .release"/>
+
+    <target name="all" depends="release"/>
+</project>
+
+

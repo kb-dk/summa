@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>test-ingest-service-@summa.version@.jar</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
+    <property name="com.sun.management.jmxremote.port" value="2772"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>Test ingest module 1</description>
+	<bundleId>test-ingest-1</bundleId>
+</bundle>
+
+
