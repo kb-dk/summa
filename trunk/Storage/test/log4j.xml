@@ -11,7 +11,7 @@
 
     <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="FATAL"/>
-        <param name="File" value="home/findex/logs/search_engine_fatal.log"/>
+        <param name="File" value="log/storage_search_engine_fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
         <param name="MaxBackupIndex" value="5"/>
