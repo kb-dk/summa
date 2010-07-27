@@ -22,6 +22,7 @@ import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -32,8 +33,11 @@ import org.apache.commons.cli.ParseException;
 /**
  * Main class for the Summa bundle builder tool.
  */
+@QAInfo(author = "mke, hbk",
+        level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED
+)
 public class BundleTool {
-
     private boolean verbose;
     private boolean dryRun;
     private boolean sloppy;
@@ -44,6 +48,10 @@ public class BundleTool {
     private File outputDir;
     private File[] fileDirs;
 
+    /**
+    * Print a help text for the bundle.
+    * @param options The possible options for this command.
+    */
     private static void printHelp (Options options) {
         String usage = "java -jar summa-bundle.jar [options] <bundle-spec>";
 
@@ -51,6 +59,10 @@ public class BundleTool {
         formatter.printHelp(usage, options);
     }
 
+    /**
+     * The main method for the BundleTool class.
+     * @param args The arguments given on commandline.
+     */
     public static void main (String[] args) {
         CommandLine cli = null;
         boolean verbose;
@@ -151,7 +163,20 @@ public class BundleTool {
         }
     }
 
-
+    /**
+     * Constructor for the BundleTool class. This is used to specify values for the BundleTool, eg. wether or not this
+     * should be verbose, see params for all params.
+     *
+     * @param specFile Specification file for the bundle. Should be a valid specification file.
+     * @param outputDir Directory where to write bundle data.
+     * @param fileDirs File directories to look into for bundle.
+     * @param verbose True if this run should be verbose.
+     * @param dryRun True if this is a dry run.
+     * @param sloppy True if this run should be handle sloppy.
+     * @param expandProps True if properties should be expanded.
+     * @param overrideAutostart String overriding the auto start commands.
+     * @param overrideName True if we should override the bundle name.
+     */
     public BundleTool(File specFile, File outputDir, File[] fileDirs,
                       boolean verbose, boolean dryRun,
                       boolean sloppy, boolean expandProps,
@@ -212,10 +237,18 @@ public class BundleTool {
 
     }
 
+    /**
+     * Shortcut for printing a line to System.out.
+     * @param line The line to print.
+     */
     public void println (String line) {
         System.out.println (line);
     }
 
+    /**
+     * Run the bundle, bundle must have a valid file list.
+     * @throws IOException if error occurs while running bundle.
+     */
     public void run () throws IOException {
       String bundleName;
         if (verbose) {
@@ -308,6 +341,11 @@ public class BundleTool {
 
     }
 
+    /**
+     * Expand the properties given.
+     * 
+     * @param builder The builder from which to expand properties.
+     */
     private void expandProperties(BundleSpecBuilder builder) {
         if (verbose) {
             println("Expanding system properties");
@@ -346,6 +384,11 @@ public class BundleTool {
         }
     }
 
+    /**
+     * Validate the builder.
+     *
+     * @param builder The bulider to validate.
+     */
     private void validate (BundleSpecBuilder builder) {
         builder.checkFileList(fileDirs);
         builder.checkPublicApi();
