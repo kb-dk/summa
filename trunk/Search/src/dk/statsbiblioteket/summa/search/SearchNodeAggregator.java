@@ -38,7 +38,8 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "te")
+        author = "te",
+        comment = "JavaDoc needed.")
 public class SearchNodeAggregator extends ArrayList<SearchNode> implements
                                                                     SearchNode {
     private static final long serialVersionUID = 8974858541L; 
