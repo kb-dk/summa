@@ -194,7 +194,7 @@
         <condition property="compileFacetBrowserTask" value=".phony" else=".compileFacetBrowser">
             <available file="../FacetBrowser/${summa.classes.dir}"/>
         </condition>
-        <antcall target="${compileSupportTask}"/>
+        <antcall target="${compileFacetBrowserTask}"/>
 
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
