@@ -10,8 +10,8 @@
     <relativePath>../</relativePath>
   </parent>
 
-  <artifactId>summa-storage</artifactId>
-  <name>Summa Storage module</name>
+  <artifactId>summa-support</artifactId>
+  <name>Summa Support module</name>
 
   <build>
     <sourceDirectory>${basedir}/src/</sourceDirectory>
@@ -35,49 +35,66 @@
     </testResources>
   </build>
 
-    <!-- Dependencies for Summa Storage -->
+    <!-- Dependencies for Summa Search -->
   <dependencies>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.2.132</version>
     </dependency>
     <dependency>
       <groupId>dk.statsbiblioteket.lucene</groupId>
       <artifactId>lucene-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
+      <groupId>dk.statsbiblioteket.lucene</groupId>
+      <artifactId>lucene-queries</artifactId>
     </dependency>
     <dependency>
-      <groupId>postgresql</groupId>
-      <artifactId>postgresql</artifactId>
+      <groupId>dk.statsbiblioteket.lucene</groupId>
+      <artifactId>lucene-didyoumean</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
     </dependency>
     <dependency>
       <groupId>dk.statsbiblioteket.sbutil</groupId>
       <artifactId>sbutil</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
     </dependency>
-    <!-- local dependencies -->
+    <!-- Local dependencies -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>${summaGroupId}</groupId>
       <artifactId>summa-common</artifactId>
-      <version>${project.version}</version>
+      <version>${summaVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${summaGroupId}</groupId>
+      <artifactId>summa-index</artifactId>
+      <version>${summaVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${summaGroupId}</groupId>
+      <artifactId>summa-search</artifactId>
+      <version>${summaVersion}</version>
+    </dependency>
+      <dependency>
+      <groupId>${summaGroupId}</groupId>
+      <artifactId>summa-ingest</artifactId>
+      <version>${summaVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${summaGroupId}</groupId>
+      <artifactId>summa-facetbrowser</artifactId>
+      <version>${summaVersion}</version>
     </dependency>
   </dependencies>
 </project>
