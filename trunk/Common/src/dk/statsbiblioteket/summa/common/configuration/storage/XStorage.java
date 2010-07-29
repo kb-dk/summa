@@ -34,14 +34,14 @@ import java.util.ArrayList;
 
 /**
  * XStorage class, is a configuration storage, where it is possible to on-the
- * -fly is possible to attach sub storage and configurations. 
+ * -fly attach a sub storage and configurations. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te, hbk")
 public class XStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 81293421421L;
-    public static final String DEFAULT_RESOURCE = "xconfiguration.xml";
+    public static final String DEFAULT_RESOURCE = "xconfiguration.%d.xml";
 
     private static boolean unclearSemanticsWarned = false;
 
@@ -49,16 +49,6 @@ public class XStorage implements ConfigurationStorage {
     /* The Storage properties. */
     private XProperties xprops;
     private static Log log = LogFactory.getLog(XStorage.class);
-
-    /*
-     * Creates a XStorage around a XProperties.
-     * @paramproperties the properties to wrap around.
-     */
-    /*protected XStorage(XProperties properties) throws IOException {
-        this (nextAvailableConfigurationFile());
-        assignFrom(properties);
-        syncStorageFile();
-    }*/
 
     /**
      * Creates a XStorage with the {@link XStorage#nextAvailableConfigurationFile}
@@ -207,8 +197,7 @@ public class XStorage implements ConfigurationStorage {
     }
 
     /**
-     * Return true if this configuration makes sub storages possible.
-     * TODO: Should this always return true?
+     * Return true if this configuration makes sub storage possible.
      *
      * @return Always true.
      */
@@ -262,13 +251,13 @@ public class XStorage implements ConfigurationStorage {
     }
 
     /**
-     * Create 'count' number of sub storages and associated these with the
+     * Create 'count' number of sub storage and associated these with the
      * given 'key'.
      *
-     * @param key   The key for the list of storages.
-     * @param count The number of storages to create.
-     * @return A list of sub storages.
-     * @throws IOException if error occur while creating sub storages.
+     * @param key The key for the list of storage.
+     * @param count The number of storage to create.
+     * @return A list of sub storage.
+     * @throws IOException if error occur while creating sub storage.
      */
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                             throws IOException {
@@ -287,9 +276,9 @@ public class XStorage implements ConfigurationStorage {
     /**
      * Get a list of sub storage associated with a the 'key'.
      *
-     * @param key The key for the list of storages.
+     * @param key The key for the list of storage.
      * @return list of sub storage associated with the given key.
-     * @throws IOException if error occur while getting storages.
+     * @throws IOException if error occur while getting storage.
      */
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                  IOException {
@@ -316,17 +305,17 @@ public class XStorage implements ConfigurationStorage {
     /**
      * Get next available configuration file.
      *
-     * @return The configuration file.
+     * @return The configuration file, which is either 'xconfiguration.xml' or
+     * 'xconfiguration.0.xml', where '0' is a forth-running number. 
      * @throws IOException if IOException is cast while doing IO operations on
      * disc.
      */
     private static File nextAvailableConfigurationFile () throws IOException {
-        final String XCONFIGURATION = "xconfiguration.";
         int count = 0;
-        File f = new File (XCONFIGURATION + count +".xml");
+        File f = new File(String.format(DEFAULT_RESOURCE, count));
         while (f.exists()) {
             count++;
-            f = new File (XCONFIGURATION + count +".xml");
+            f = new File(String.format(DEFAULT_RESOURCE, count));
         }
         return f;
     }

@@ -14,17 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import java.io.File;
-import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.XProperties;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import java.io.File;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * XStorage Tester.
@@ -34,7 +35,8 @@ import dk.statsbiblioteket.util.XProperties;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XStorageTest extends ConfigurationStorageTestCase {
-    File subLocation = new File("Common/test/dk/statsbiblioteket/summa/"
+    public static final File subLocation =
+               new File("Common/test/dk/statsbiblioteket/summa/"
                                 + "common/configuration/storage/"
                                 + "substorage.xml").getAbsoluteFile();
 
@@ -93,6 +95,14 @@ public class XStorageTest extends ConfigurationStorageTestCase {
                 configuration.createSubConfigurations("foo", 1);
         subConfs.get(0).set("bar", "baz");
         System.out.println(new XProperties().getXStream().toXML(xs));
+    }
+
+    public void testnextAvailableConfigurationFile() throws Exception {
+        XStorage xs = new XStorage();
+        Pattern p = Pattern.compile(".*xconfiguration\\.\\d*\\.xml");
+        String name = xs.getFilename();
+        assertTrue(p.matcher(name).find());
+        new File(name).delete();
     }
 }
 
