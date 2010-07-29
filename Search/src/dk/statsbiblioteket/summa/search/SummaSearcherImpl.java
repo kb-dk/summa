@@ -62,6 +62,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      */
     public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
             "summa.search.searchqueue.maxsize";
+    /** Default valeu for {@link #CONF_SEARCH_QUEUE_MAX_SIZE}. */
     public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
 
     /**
@@ -71,7 +72,9 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      */
     public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
             "summa.search.searcheravailability.timeout";
-    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
+    /** Default value for {@link #CONF_SEARCHER_AVAILABILITY_TIMEOUT}. */
+    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT =
+                                                                      5 * 60000;
 
     /**
      * If specified, watching for index changes will be disabled and an open
@@ -80,6 +83,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * Optional. Default is null (disabled).
      */
     public static final String CONF_STATIC_ROOT = "summa.search.staticroot";
+    /** Default value for {@link #CONF_STATIC_ROOT}. */
     public static final String DEFAULT_STATIC_ROOT = null;
 
     private int searcherAvailabilityTimeout =
@@ -110,7 +114,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     public SummaSearcherImpl(Configuration conf) throws RemoteException {
         log.info("Constructing SummaSearcherImpl");
         int searchQueueMaxSize = conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE,
-                                             DEFAULT_SEARCH_QUEUE_MAX_SIZE);
+                                            DEFAULT_SEARCH_QUEUE_MAX_SIZE);
         searcherAvailabilityTimeout =
                 conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
                             searcherAvailabilityTimeout);
@@ -136,6 +140,14 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         log.debug("Finished constructing SummaSearcherImpl");
     }
 
+    /**
+     * Make a search request. And return the apropriate reponse collection.
+     *
+     * @param request Contains SearchNode-specific request-data.
+     * @return Response collection based on the search request.
+     * @throws RemoteException if error occur connection to a remote searcher.
+     */
+    @Override
     public ResponseCollection search(Request request) throws RemoteException {
         if (log.isTraceEnabled()) {
             log.trace("Search called with parameters\n"
@@ -199,9 +211,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         } finally {
             searchQueue.release();
             // TODO: Make this cleaner with no explicit dependency
-            if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+            if (responses.getTransient().containsKey(
+                                                    DocumentSearcher.DOCIDS)) {
                 Object o =
-                        responses.getTransient().get(DocumentSearcher.DOCIDS);
+                         responses.getTransient().get(DocumentSearcher.DOCIDS);
                 if (o instanceof DocIDCollector) {
                     ((DocIDCollector)o).close();
                 }
@@ -215,13 +228,14 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * @throws RemoteException is an exception happened when closing the
      *                         underlying SearchNode.
      */
+    @Override
     public synchronized void close() throws RemoteException {
         if (watcher != null) {
             watcher.stopWatching();
         }
         searchNode.close();
         freeSlots.setOverallPermits(0);
-//        freeSlots.setPermits(searchNode.getFreeSlots());
+        //freeSlots.setPermits(searchNode.getFreeSlots());
     }
 
     /**
@@ -229,6 +243,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * given location.
      * @param indexFolder where the index is located.
      */
+    @Override
     public synchronized void indexChanged(File indexFolder) {
         this.indexFolder = indexFolder;
         long startTime = System.currentTimeMillis();
@@ -283,20 +298,27 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         }
     }
 
-    /* Mutators */
+    /********************** Mutators section *****************/
 
-    public int getSearchQueueMaxSize() {
-        return searchQueue.getOverallPermits();
-    }
+    /**
+     * Set the maximum size of search queries. Accessor
+     * {@link #getSearcherAvailabilityTimeout()}.
+     *
+     * @param searchQueueMaxSize Maximum size of search queries.
+     */
+    @Override
     public void setSearchQueueMaxSize(int searchQueueMaxSize) {
         log.debug(String.format("setSearchQueueMaxSize(%s) called",
                                 searchQueueMaxSize));
         searchQueue.setOverallPermits(searchQueueMaxSize);
     }
 
-    public int getSearcherAvailabilityTimeout() {
-        return searcherAvailabilityTimeout;
-    }
+    /**
+     * Sets this searcher availability timeout. Accessor {@link #getSearcherAvailabilityTimeout()}.
+     *
+     * @param searcherAvailabilityTimeout The availability timeout for this searcher.
+     */
+    @Override
     public void setSearcherAvailabilityTimeout(
             int searcherAvailabilityTimeout) {
         log.debug(String.format("setSearcherAvailabilityTimeout(%d) called",
@@ -304,33 +326,115 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         this.searcherAvailabilityTimeout = searcherAvailabilityTimeout;
     }
 
+    /************** Accessors section ****************/
+
+    /**
+     * Return the availability timeout for this searhcer. Mutator
+     * {@link #setSearcherAvailabilityTimeout(int)}.
+     *
+     * @return This searcher availability timeout.
+     */
+    @Override
+    public int getSearcherAvailabilityTimeout() {
+        return searcherAvailabilityTimeout;
+    }
+
+    /**
+     * Get the maximum size of search queries for this searcher. \
+     * Mutator {@link #setSearchQueueMaxSize(int)}.
+     *
+     * @return The maximum size of search queries for this searcer.
+     */
+    @Override
+    public int getSearchQueueMaxSize() {
+        return searchQueue.getOverallPermits();
+    }
+
+    /**
+     * Return the index location for this searcher.
+     * FIXME why does this method throw RemoteException?
+     *
+     * @return The index location.
+     * @throws RemoteException Should not happen.
+     */
     public String getIndexLocation() throws RemoteException {
         return indexFolder == null ? null : indexFolder.toString();
     }
 
-    /* Statistics */
+    /*************** Statistics section ***************/
 
+    /**
+     * Return the query count from searcher.
+     * @return The query count.
+     * @throws RemoteException if error occur while fetching the Query count remotely.
+     */
+    @Override
     public long getQueryCount() throws RemoteException {
         return queryCount.get();
     }
+
+    /**
+     * Return the latest response time from searcher.
+     * @return Latest response time.
+     */
+    @Override
     public long getLastResponseTime() {
         return lastResponseTime;
     }
+
+    /**
+     * Return the total repsonse time from searcher.
+     * @return Total response time.
+     */
+    @Override
     public long getTotalResponseTime() {
         return totalResponseTime.get();
     }
+
+    /**
+     * Return the average response time from searcher.
+     * @return  Average response time.
+     * @throws RemoteException if error occur while fetching query count remotely.
+     */
+    @Override
     public double getAverageResponseTime() throws RemoteException {
         long qc = queryCount.get();
         return qc == 0 ? Double.NaN : (double)totalResponseTime.get() / qc;
     }
+
+    /**
+     * Return the length of query for this searcher.
+     * @return Query length.
+     * @throws RemoteException if error occur while fetching query length remotely.
+     */
+    @Override
     public int getQueueLength() throws RemoteException {
         return searchQueue.getQueueLength();
     }
+
+    /**
+     * Return the number of current searchers.
+     * TODO implement
+     *
+     * @return Nothing yet, only throws a {@link UnsupportedOperationException} if called.
+     * @throws RemoteException Throws a {@link UnsupportedOperationException} if called.
+     */
+    @Override
     public int getCurrentSearches() throws RemoteException {
         throw new UnsupportedOperationException("Not supported yet");
-//        return searchActiveSemaphore.getQueueLength();
+        //return searchActiveSemaphore.getQueueLength();
     }
-    // Not really thread-safe, but statistically this should work ;-)
+
+    //
+
+    /**
+     * Clear the statistic numbers from this searcher. This means set query count to zero, total
+     * response to zero and last response time to -1.
+     * FIXME Not really thread-safe, but statistically this should work ;-)
+     * 
+     * @throws RemoteException if error occur while fetching query count remotely.
+     */
+    @Override
     public void clearStatistics() throws RemoteException {
         //noinspection AssignmentToNull
         lastResponseTime = -1;
