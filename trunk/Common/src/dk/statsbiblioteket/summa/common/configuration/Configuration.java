@@ -800,13 +800,12 @@ public class Configuration implements Serializable,
      * @return The {@link Class} associated with {@code key} or the defaultValue
      *         if {@code key} is not found.
      */
-    public <T> Class<? extends T> getClass (String key,
-                                            Class<T> classType,
-                                            Class<? extends T> defaultValue) {
+    public <T> Class<? extends T> getClass(String key, Class<T> classType,
+                                              Class<? extends T> defaultValue) {
         try {
             return getClass(key, classType);
         } catch (NullPointerException e) {
-            log.info ("Unable to find class for property '" + key
+            log.info("Unable to find class for property '" + key
                       + "'. Using default '" + defaultValue.getName() + "'");
             return defaultValue;
         }
@@ -823,7 +822,7 @@ public class Configuration implements Serializable,
         try {
             return storage.get(key) != null;
         } catch (IOException e) {
-            log.error ("Failed to detect existence of value '" + key + "': "
+            log.error("Failed to detect existence of value '" + key + "': "
                        + e.getMessage (), e);
             return false;
         }
@@ -835,7 +834,7 @@ public class Configuration implements Serializable,
      *
      * @return The iterator as described above.
      */
-    public Iterator<Map.Entry<String,Serializable>> iterator () {
+    public Iterator<Map.Entry<String,Serializable>> iterator() {
         try {
             return storage.iterator();
         } catch (IOException e) {
@@ -851,7 +850,7 @@ public class Configuration implements Serializable,
      *
      * @return The storage backend of this {@code Configuration}.
      */
-    public ConfigurationStorage getStorage () {
+    public ConfigurationStorage getStorage() {
         return storage;
     }
 
@@ -861,10 +860,10 @@ public class Configuration implements Serializable,
      *
      * @param conf The configuration from which to import properties.
      */
-    public void importConfiguration (Configuration conf) {
+    public void importConfiguration(Configuration conf) {
         for (Map.Entry<String, Serializable> entry : conf) {
             try {
-                storage.put (entry.getKey(), entry.getValue());
+                storage.put(entry.getKey(), entry.getValue());
             } catch (IOException e) {
                 throw new ConfigurationStorageException("Unable to import "
                                                         + "property '"
@@ -883,10 +882,10 @@ public class Configuration implements Serializable,
      *
      * @return And array of strings formatted as {@code key=value}.
      */
-    public String[] dump () {
+    public String[] dump() {
         ArrayList<String> list = new ArrayList<String>();
         for (Map.Entry pair : this) {
-            list.add (pair.getKey() + "=" + pair.getValue());
+            list.add(pair.getKey() + "=" + pair.getValue());
         }
         return list.toArray(new String[list.size()]);
     }
@@ -919,7 +918,7 @@ public class Configuration implements Serializable,
      * @param filename Name of file in the classpath
      * @throws IOException if there was a problem loading the file
      */
-    public void loadFromXML (String filename) throws IOException {
+    public void loadFromXML(String filename) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
         Properties p = new Properties();
@@ -933,15 +932,15 @@ public class Configuration implements Serializable,
 
     /**
      * Instantiate a {@link Configurable} class with {@code this} as argument
-     * to the Configurable's constructor.
+     * to the {@link Configurable}'s constructor.
      *
-     * @param configurable he {@code Configurable} class to instantiate.
+     * @param configurable The {@code Configurable} class to instantiate.
      * @return An object instantiated from the given class.
      * @throws Configurable.ConfigurationException if there is a problem
      *                                   instantiating the {@code Configurable}.
      * @throws IllegalArgumentException if the input class in not a
      *                                  {@code Configurable}.
-     * @deprecated use the static method instead, in order to guard against
+     * @deprecated Use the static method instead, in order to guard against
      *             unintentional RMI-based creation.
      */
     @Deprecated
@@ -965,7 +964,7 @@ public class Configuration implements Serializable,
      * @throws IllegalArgumentException if the input class in not a
      *                                  {@code Configurable}.
      */
-    public static <T> T create (Class<T> configurable, Configuration conf) {
+    public static <T> T create(Class<T> configurable, Configuration conf) {
         Security.checkSecurityManager();
 
         try {
@@ -988,7 +987,7 @@ public class Configuration implements Serializable,
         }
     }
 
-    private static <T> T createNonConfigurable (Class<T> configurable) {
+    private static <T> T createNonConfigurable(Class<T> configurable) {
         Security.checkSecurityManager();
 
         try {
@@ -1009,10 +1008,10 @@ public class Configuration implements Serializable,
     /**
      * Does deep comparison of all key-value pairs.
      *
-     * @param conf the configuration to compare this {@link Configuration} with.
-     * @return true if configurations matches on all key-value pairs.
+     * @param conf The configuration to compare this {@link Configuration} with.
+     * @return True if configurations matches on all key-value pairs.
      */
-    public boolean equals (Configuration conf) {
+    public boolean equals(Configuration conf) {
         try {
             if (conf.getStorage().size() != this.storage.size()) {
                 return false;
@@ -1039,9 +1038,9 @@ public class Configuration implements Serializable,
      *
      * @param configPropName Name of system property containing the address
      *                       of the system configuration.
-     * @return a newly instantiated configuration.
+     * @return A newly instantiated configuration.
      */
-    public static Configuration getSystemConfiguration (String configPropName) {
+    public static Configuration getSystemConfiguration(String configPropName) {
         return getSystemConfiguration(configPropName, false);
     }
 
@@ -1064,16 +1063,16 @@ public class Configuration implements Serializable,
      *                                and {@code configPropName} was not set
      *                                as a system property.
      */
-    public static Configuration getSystemConfiguration (String configPropName,
+    public static Configuration getSystemConfiguration(String configPropName,
                                                         boolean allowUnset) {
-        log.trace ("Getting system config for property '" + configPropName + "'"
+        log.trace("Getting system config for property '" + configPropName + "'"
                    + ". Allowing unset: " + allowUnset);
 
         String confLocation = System.getProperty(configPropName);
 
         if (confLocation == null) {
             if (allowUnset) {
-                log.debug ("System configuraion property '" + configPropName
+                log.debug("System configuraion property '" + configPropName
                      + "' " + "not set. Looking for configuration resource...");
 
                 ClassLoader loader =
@@ -1083,10 +1082,10 @@ public class Configuration implements Serializable,
                 for (String res : DEFAULT_RESOURCES) {
                     confResource = res;
                     if (loader.getResource (res) == null) {
-                        log.trace ("Configuration resource '" + res + "' not " +
+                        log.trace("Configuration resource '" + res + "' not " +
                                    "found");
                     } else {
-                        log.debug ("Found configuration resource '" + res
+                        log.debug("Found configuration resource '" + res
                                 + "'");
                         break;
                     }
@@ -1094,7 +1093,7 @@ public class Configuration implements Serializable,
 
                 /* Use an empty conf, if we did not find one */
                 if (confResource == null) {
-                    log.info ("Did not find any system configuration. " +
+                    log.info("Did not find any system configuration. " +
                               "Using empty configuration");
                     return Configuration.newMemoryBased();
                 }
@@ -1136,7 +1135,7 @@ public class Configuration implements Serializable,
 
                 log.info("Failed to load any configuration." +
                           "Using empty configuration");
-                return Configuration.newMemoryBased ();
+                return Configuration.newMemoryBased();
             } else {
                 throw new ConfigurationException("Required system property '"
                                                 + configPropName + "' not set");
@@ -1151,7 +1150,7 @@ public class Configuration implements Serializable,
      *
      * @return A newly instantiated configuration.
      */
-    public static Configuration getSystemConfiguration () {
+    public static Configuration getSystemConfiguration() {
         return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY);
     }
 
@@ -1166,10 +1165,11 @@ public class Configuration implements Serializable,
      * @throws ConfigurationException if {@code allowUnset == false} and the
      *                                system property
      *                                {@code summa.configuration} is not set.
-     * @return a newly instantiated configuration.
+     * @return A newly instantiated configuration.
      */
-    public static Configuration getSystemConfiguration (boolean allowUnset) {
-        return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY, allowUnset);
+    public static Configuration getSystemConfiguration(boolean allowUnset) {
+        return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY,
+                                   allowUnset);
     }
 
     /**
@@ -1187,7 +1187,7 @@ public class Configuration implements Serializable,
      * @param confLocation Location of configuration as specified above.
      * @return A newly instantiated configuration object.
      */
-    public static Configuration load (String confLocation) {
+    public static Configuration load(String confLocation) {
         ConfigurationStorage storage;
 
         if (confLocation == null) {
@@ -1196,7 +1196,7 @@ public class Configuration implements Serializable,
 
         if (confLocation.startsWith("//")) {
             // This is an rmi path
-            log.debug ("Loading configuration from RMI " + confLocation);
+            log.debug("Loading configuration from RMI " + confLocation);
             try {
                 storage = RemoteStorage.getRemote(confLocation);
             } catch (Exception e) {
@@ -1208,7 +1208,7 @@ public class Configuration implements Serializable,
             // This is an URL
             log.debug ("Loading configuration from URL " + confLocation);
             try {
-                URL storageUrl = new URL (confLocation);
+                URL storageUrl = new URL(confLocation);
                 // TODO: Add XStorage and JStorage capabilities
                 storage = new MemoryStorage(storageUrl);
             } catch (Exception e) {
@@ -1219,7 +1219,7 @@ public class Configuration implements Serializable,
             // Assume this is a regular file
             try {
                 if (confLocation.startsWith("/")) {
-                    log.debug ("Loading configuration from file "
+                    log.debug("Loading configuration from file "
                                + confLocation);
                     if (confLocation.endsWith(".js")) {
                         storage = new JStorage(new File(confLocation));
@@ -1229,13 +1229,13 @@ public class Configuration implements Serializable,
                         log.trace("Loaded FileStorage configuration");
                     }
                 } else {
-                    log.debug ("Loading configuration from resource "
+                    log.debug("Loading configuration from resource "
                                + confLocation);
                     if (confLocation.endsWith(".js")) {
                         storage = new JStorage(confLocation);
                         log.trace("Loaded JStorage from resource");
                     } else {
-                        storage = new FileStorage (confLocation);
+                        storage = new FileStorage(confLocation);
                         log.trace(
                               "Loaded FileStorage configuration from resource");
                     }
@@ -1273,25 +1273,14 @@ public class Configuration implements Serializable,
                                                      + confLocation
                                                      + "' using XStorage", ex);
                 }
-                //throw new ConfigurationException("Error reading configuration"
-                // + " file " + confLocation, e);
             }
-        } /*else {
-            // Assume this is a resource
-            log.debug ("Loading configuration from resource " + confLocation);
-            try {
-                storage = new FileStorage (confLocation);
-            } catch (IOException e) {
-                throw new ConfigurationException("Error reading configuration "
-                +"file " + confLocation, e);
-            }
-        }   */
+        }
         log.trace("Returning storage of type " + storage.getClass());
         return new Configuration(storage);
     }
 
     /**
-     * Determines whether the underlying storage supports sub storages.
+     * Determines whether the underlying storage supports sub storage.
      *
      * @return True if sub configurations can be requested.
      */
