@@ -14,41 +14,41 @@
  */
 package dk.statsbiblioteket.summa.control.server.deploy;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.console.ProcessRunner;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Zips;
-import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
-import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
-import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.control.server.ControlUtils;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.bundle.BundleStub;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.console.ProcessRunner;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer
  *
- * @author mke
+ * @author Mikkel Kamstrup <mailto:mke@statsbiblioteket.dk>
+ * @author Henrik Kirk <mailto:hbk@statsbiblioteket.dk>
  * @since Sep 2, 2009
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        author = "mke, hbk")
 public class LocalDeployer implements ClientDeployer {
     private static final Log log = LogFactory.getLog(SSHDeployer.class);
 
@@ -111,7 +111,7 @@ public class LocalDeployer implements ClientDeployer {
     }
 
     /**
-     * Check to see whether the destination folde rexists. If it doesn't, try
+     * Check to see whether the destination folder exists. If it doesn't, try
      * to create it.
      * @throws IOException if the folder could not be created.
      */
@@ -123,7 +123,10 @@ public class LocalDeployer implements ClientDeployer {
                                   + destination);
         }
 
-        dest.mkdirs();
+        if(!dest.exists() && !dest.mkdirs()) {
+            throw new IOException("Target destination '" + destination
+                    + "' could not be created");
+        }
     }
 
     /**
@@ -176,7 +179,7 @@ public class LocalDeployer implements ClientDeployer {
         InputStream clientSpec;
         try {
             clientSpec = new ByteArrayInputStream
-                    (ControlUtils.getZipEntry(bdlFile, "client.xml"));
+                    (Zips.getZipEntry(bdlFile, "client.xml"));
         } catch(IOException e) {
             throw new IOException("Could not create InputStream for bdlFile '"
                                   + bdlFile + "', client.xml", e);
