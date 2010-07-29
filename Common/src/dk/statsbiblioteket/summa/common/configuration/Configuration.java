@@ -44,9 +44,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment = "Class needs Javadoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 // TODO: Use ConvenientMap for convenience
 public class Configuration implements Serializable,
                                       Iterable<Map.Entry<String,Serializable>>,
@@ -581,21 +580,47 @@ public class Configuration implements Serializable,
                result.toArray(new String[result.size()]);
     }
 
-
+    /**
+     * Pair class. User for keeping connection between two objects.
+     * @param <T> First type for the pair class.
+     * @param <U> Secord type for the pair class.
+     */
     public static class Pair<T, U> {
         private T t;
         private U u;
+
+        /**
+         * Constructor saving the two values for this object.
+         *
+         * @param firstValue First value.
+         * @param secondValue Second value.
+         */
         public Pair(T firstValue, U secondValue) {
             t = firstValue;
             u = secondValue;
         }
+
+        /**
+         * Return the first value.
+         * @return The first value.
+         */
         public T getFirst() {
             return t;
         }
+
+        /**
+         * Return the second value.
+         * @return the second value.
+         */
         public U getSecond() {
             return u;
         }
 
+        /**
+         * Check equality between the two objects {@code this} and {@code o}.
+         * @param o The other Object to check equality against {@code this}.
+         * @return True iff {@code o} is equal to {@code this}. False otherwise.
+         */
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof Pair)) {
@@ -605,6 +630,8 @@ public class Configuration implements Serializable,
             return t.equals(p.getFirst()) && u.equals(p.getSecond()); 
         }
     }
+
+    /** Number pattern. */
     protected Pattern numberPattern =
             Pattern.compile("(.+)\\( *(\\-?[0-9]+) *\\).*");
 
@@ -666,10 +693,25 @@ public class Configuration implements Serializable,
         return getClass(key, classType, this);
     }
 
+    /**
+     * Static version of getClass. Use this to ensure that the classLoader runs
+     * locally and not through RMI.
+     *
+     * @param key The name of the property to look up.
+     * @return The Class associated with key.
+     */
     public Class getClass(String key) {
         return getClass(key, Object.class);
     }
 
+    /**
+     * Static version of getClass. Use this to ensure that the classLoader runs
+     * locally and not through RMI.
+     *
+     * @param key The name of the property to look up
+     * @param conf The configuration from where the class-name is located.
+     * @return The Class associated with key.
+     */
     public static Class getClass (String key, Configuration conf) {
         return Configuration.getClass(key, Object.class, conf);
     }
@@ -1381,8 +1423,3 @@ public class Configuration implements Serializable,
         }
     }
 }
-
-
-
-
-
