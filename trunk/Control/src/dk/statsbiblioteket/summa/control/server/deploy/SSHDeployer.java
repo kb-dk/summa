@@ -14,31 +14,31 @@
  */
 package dk.statsbiblioteket.summa.control.server.deploy;
 
-import java.io.File;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
-import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.bundle.BundleStub;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>{@link ClientDeployer} that uses ssh to copy and start Clients.</p>
@@ -291,7 +291,7 @@ public class SSHDeployer implements ClientDeployer {
         InputStream clientSpec;
         try {
             clientSpec = new ByteArrayInputStream
-                    (ControlUtils.getZipEntry(bdlFile, "client.xml"));
+                    (Zips.getZipEntry(bdlFile, "client.xml"));
         } catch(IOException e) {
             throw new IOException("Could not create InputStream for bdlFile '"
                                   + bdlFile + "', client.xml", e);
