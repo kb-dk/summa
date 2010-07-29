@@ -15,11 +15,11 @@
 package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import sun.reflect.generics.reflectiveObjects.*;
 
 /**
- * Exception used when requesting sub configuration from a storage that dosn't
- * support this.
+ * Exception used when requesting sub configuration from a
+ * {@link dk.statsbiblioteket.summa.common.configuration.Configuration} that
+ * does not support sub configurations.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -29,23 +29,46 @@ public class SubConfigurationsNotSupportedException extends Exception {
     private String msg;
     private Throwable e;
 
+    /**
+     * Constructor for SubConfigurationsNotSupportedException.
+     * @param msg The error message of this exception.
+     */
     public SubConfigurationsNotSupportedException(String msg) {
         this.msg = msg;
     }
 
+    /**
+     * Constructor for SubConfigurationsNotSupportedException.
+     * @param msg The error message for this exception.
+     * @param e The {@link Throwable} which resulted in this exception being
+     * thrown.
+     */
     public SubConfigurationsNotSupportedException(String msg, Throwable e) {
         this.msg = msg;
         this.e = e;
     }
 
+    /**
+     * Getter method for the error message.
+     * @return The error message.
+     */
     public String getMsg() {
         return msg;
     }
 
+    /**
+     * Return the throwable attached to this exception.
+     * @return The throwable attached to this exception.
+     */
     public Throwable getE() {
         return e;
     }
 
+    /**
+     * Pretty print this exception.
+     * @return String describing this object.
+     */
+    @Override
     public String toString() {
         return msg + "\n" + e.getCause();
     }
