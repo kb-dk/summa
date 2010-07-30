@@ -14,6 +14,28 @@
  */
 package dk.statsbiblioteket.summa.common.shell;
 
+import dk.statsbiblioteket.summa.common.shell.commands.Clear;
+import dk.statsbiblioteket.summa.common.shell.commands.Exec;
+import dk.statsbiblioteket.summa.common.shell.commands.Help;
+import dk.statsbiblioteket.summa.common.shell.commands.Quit;
+import dk.statsbiblioteket.summa.common.shell.commands.Trace;
+import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.ClearNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.Notification;
+import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import jline.ConsoleReader;
+import jline.SimpleCompletor;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
 import java.io.IOException;
 import java.rmi.UnmarshalException;
 import java.util.ArrayList;
@@ -24,28 +46,6 @@ import java.util.SortedSet;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-
-import dk.statsbiblioteket.summa.common.shell.commands.Clear;
-import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.ClearNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.Notification;
-import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
-import dk.statsbiblioteket.summa.common.shell.commands.Help;
-import dk.statsbiblioteket.summa.common.shell.commands.Quit;
-import dk.statsbiblioteket.summa.common.shell.commands.Trace;
-import dk.statsbiblioteket.summa.common.shell.commands.Exec;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import jline.ConsoleReader;
-import jline.SimpleCompletor;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 
 /**
  * A generic shell driver.
@@ -71,11 +71,11 @@ public class Core {
      * @param shellCtx the {@link ShellContext} to write output to. If this
      *                 parameter is {@code null} a default shell context will
      *                 be used. 
-     * @param withDefaultCommands if {@code true} install the default commands
+     * @param withDefaultCommands If {@code true} install the default commands
      *                            found in the
      *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
      *                            package.
-     * @param debug if {@code true} debug messages will be printed to the
+     * @param debug If {@code true} debug messages will be printed to the
      *              created shell context if {@code shellCtx} is {@code null}.
      */
     public Core (ShellContext shellCtx, final boolean withDefaultCommands,
@@ -97,6 +97,10 @@ public class Core {
                 private ConsoleReader lineIn = createConsoleReader();
                 private boolean enableDebug = debug;
 
+                /**
+                 * {@inheritDoc}
+                 * @param msg the message to print
+                 */
                 @Override
                 public void error(String msg) {
                     lineBuffer.clear();
@@ -104,16 +108,28 @@ public class Core {
                     System.out.println ("[ERROR] " + msg);
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @param msg The message to print.
+                 */
                 @Override
                 public void info(String msg) {
                     System.out.println (msg);
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @param msg The message to print.
+                 */
                 @Override
                 public void warn(String msg) {
                     System.out.println ("[WARNING] " + msg);
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @param msg The message to print.
+                 */
                 @Override
                 public void debug(String msg) {
                     if (enableDebug) {
@@ -121,6 +137,11 @@ public class Core {
                     }
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @return The next line of input or null if the input stream
+                 * has been closed.
+                 */
                 @Override
                 public String readLine() {
                     if (!lineBuffer.empty()) {
@@ -138,22 +159,37 @@ public class Core {
                     }
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @param line The line of input to add to the buffer.
+                 */
                 @Override
-                public void pushLine (String line) {
+                public void pushLine(String line) {
                     lineBuffer.push(line.trim());                    
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @return The last error.
+                 */
                 @Override
-                public String getLastError () {
+                public String getLastError() {
                     return lastError;
                 }
 
+                /**
+                 * {@inheritDoc}
+                 * @param prompt The message to prompt.
+                 */
                 @Override
-                public void prompt (String prompt) {
+                public void prompt(String prompt) {
                     System.out.print(prompt);
                     System.out.flush();
                 }
 
+                /**
+                 * {@inheritDoc}
+                 */
                 @Override
                 public void clear() {
                   try {
@@ -165,7 +201,7 @@ public class Core {
             };
 
         }
-
+        // Install default commands.
         if (withDefaultCommands) {
             installCommand(new Help());
             installCommand(new Quit());
@@ -175,6 +211,10 @@ public class Core {
         }
     }
 
+    /**
+     * Create a console reader.
+     * @return The console reader, which should be used.
+     */
     private static ConsoleReader createConsoleReader() {
         try {
             ConsoleReader reader = new ConsoleReader();
@@ -207,33 +247,57 @@ public class Core {
         this(true);
     }
 
+    /**
+     * Set the header of this core.
+     * @param header The new header for this core.
+     */
     public void setHeader(String header) {
         this.header = header;
     }
 
+    /**
+     * Return this core's header.
+     * @return The header for this Core
+     */
     public String getHeader() {
         return header;
     }
 
-    public void installCommand (Command cmd) {
+    /**
+     * Install a command into this core.
+     * @param cmd The command to install.
+     */
+    public void installCommand(Command cmd) {
         commands.put(cmd.getName(), cmd);
         aliases.put(cmd.getName(), cmd.getName());
         for(String alias: cmd.getAliases()) {
             aliases.put(alias, cmd.getName());
-            System.out.println("alias: " + alias + ", cmdName: " + cmd.getName());
+            System.out.println("alias: " + alias + ", cmdName: "
+                    + cmd.getName());
         }
-        
         cmdComparator.addCandidateString(cmd.getName());
     }
 
+    /**
+     * Return the shell context used.
+     * @return The used shell context.
+     */
     public ShellContext getShellContext() {
         return shellCtx;
     }
 
+    /**
+     * Accessor for the prompt.
+     * @return The prompt.
+     */
     public String getPrompt() {
         return prompt;
     }
 
+    /**
+     * Mutator for the prompt.
+     * @param prompt The new prompt.
+     */
     public void setPrompt(String prompt) {
         this.prompt = prompt;
     }
@@ -242,8 +306,8 @@ public class Core {
      * A main iteration of the core. The caller is responsible for handling
      * any exceptions from the underlying subsystems.
      * 
-     * @throws Exception if an error happens inside the running {@link Command}.
-     * @throws ParseException if there is an error parsing the command line
+     * @throws Exception Uf an error happens inside the running {@link Command}.
+     * @throws ParseException If there is an error parsing the command line
      *                        as entered by the user.
      */
     private void doMainIteration() throws Exception {
@@ -270,10 +334,10 @@ public class Core {
     /**
      * Parse and run a command.
      *
-     * @param cmdString the command line to run.
-     * @throws Exception any exception from the invoked {@link Command} will
+     * @param cmdString The command line to run.
+     * @throws Exception Any exception from the invoked {@link Command} will
      *                   cascade upwards from this method.
-     * @return true if and only if {@code cmdString} was executed successfully.
+     * @return True if and only if {@code cmdString} was executed successfully.
      */
     boolean invoke(String cmdString) throws Exception {
         String[] tokens;
@@ -306,10 +370,10 @@ public class Core {
      * Return the string tokized by white space respecting phrases enclosed
      * by double-quotes.
      *
-     * @param in the string to tokenize.
-     * @throws SyntaxErrorNotification if there are improperly formatted
+     * @param in The string to tokenize.
+     * @throws SyntaxErrorNotification If there are improperly formatted
      *                                 double-quoted substrings.
-     * @return the string tokens as separated by white space with double-quoted
+     * @return The string tokens as separated by white space with double-quoted
      *         substrings treated as one token.
      */
     public String[] tokenize(String in) {
@@ -334,44 +398,51 @@ public class Core {
                         }
                         continue;
                     } else {
-                        throw new SyntaxErrorNotification ("Unclosed phrase "
+                        throw new SyntaxErrorNotification("Unclosed phrase "
                                                            +"near token "
                                                            + "'" + s + "'");
                     }
                 } else {
-                    throw new SyntaxErrorNotification ("Stray '\"' at line "
+                    throw new SyntaxErrorNotification("Stray '\"' at line "
                                                        + "end");
                 }
 
             }
 
             /* A normal token, split by spaces */
-            for (String ss : s.split(" ")) {
-                if (!ss.equals("")) {
+            for(String ss : s.split(" ")) {
+                if(!ss.equals("")) {
                     result.add(ss.trim());
                 }
             }
         }
-
         return result.toArray(new String[result.size()]);
     }
 
+    /**
+     * Helper function to handle {@link HelpNotification}s.
+     * @param help The help notification.
+     */
     private void handleHelpNotification(HelpNotification help) {
         String target = help.getTargetCommand();
-        if (target == null) {
+        if(target == null) {
             printCommands();
         } else {
-            if (commands.containsKey(target)) {
+            if(commands.containsKey(target)) {
                 Command cmd = commands.get(target);
                 printHelp (cmd, cmd.getDescription());
             } else {
-                shellCtx.error ("No such command: '" + target
+                shellCtx.error("No such command: '" + target
                               + "'.\nThe available commands are:\n");
                 printCommands();
             }
         }
     }
 
+    /**
+     * Helper function to handle {@link TraceNotification}s.
+     * @param help The trace notificatino.
+     */
     private void handleTraceNotification(TraceNotification help) {
         if (lastTrace == null) {
             shellCtx.info("No stack trace recorded");
@@ -381,10 +452,17 @@ public class Core {
         shellCtx.info ("Last recorded stack trace:\n\n\t" + lastTrace + "\n");
     }
 
+    /**
+     * Helper function to handle {@link ClearNotification}s.
+     */
     private void handleClearNotification() {
       shellCtx.clear();
     }
 
+    /**
+     * Helper function to handle {@link SyntaxErrorNotification}s.
+     * @param syntaxErrorNotification The syntax notification.
+     */
     private void handleSyntaxErrorNotification(
                               SyntaxErrorNotification syntaxErrorNotification) {
         shellCtx.error("Syntax error: " + syntaxErrorNotification.getMessage());
@@ -392,8 +470,8 @@ public class Core {
 
     /**
      * Print a help message for a command
-     * @param cmd the command to print help for
-     * @param msg a message, possible empty or null, to print after the
+     * @param cmd The command to print help for.
+     * @param msg A message, possible empty or {@code null}, to print after the
      *            usage instructions.
      **/
     private void printHelp(Command cmd, String msg) {
@@ -409,10 +487,17 @@ public class Core {
         formatter.printHelp(cmd.getUsage(), msg, cmd.getOptions(), "");
     }
 
+    /**
+     * Private helper function for Core help.
+     * @param msg The message.
+     */
     private void printCoreHelp(String msg) {
-        shellCtx.error ("CORE HELP!");
+        shellCtx.error("CORE HELP!");
     }
 
+    /**
+     * Helper function, for printing the commands.
+     */
     private void printCommands() {
         SortedSet<String> sortedCommands =
                                        new TreeSet<String>(commands.keySet());
@@ -428,11 +513,11 @@ public class Core {
      * is {@code null} it will enter interactive mode reading commands from
      * stdin.
      *
-     * @param script a script to execute or {@code null} to enter interactive
-     *               mode
+     * @param script A script to execute or {@code null} to enter interactive
+     *               mode.
      * @return 0 on a clean exit which also indicates the any script passed to
      *         to the core returned without any errors. If this method returns
-     *         non-zero some error occured and the caller must understand the
+     *         non-zero some error occurred and the caller must understand the
      *         error code in its current context.
      */
     public int run(Script script) {
@@ -533,14 +618,7 @@ public class Core {
             }
         }
 
-
         getShellContext().info("Bye.");
         return returnVal;
     }
-
-
 }
-
-
-
-

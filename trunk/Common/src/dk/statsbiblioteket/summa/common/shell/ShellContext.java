@@ -27,59 +27,59 @@ public interface ShellContext {
     /**
      * Clear the line buffer (populated by calling {@link #pushLine(String)})
      * and print an error message to the user.
-     * @param msg the message to print
+     * @param msg The message to print.
      */
-    public void error (String msg);
+    public void error(String msg);
 
     /**
      * Print an info message to the user.
-     * @param msg the message to print
+     * @param msg The message to print.
      */
-    public void info (String msg);
+    public void info(String msg);
 
     /**
      * Print a warning to the user.
-     * @param msg the message to print
+     * @param msg The message to print.
      */
-    public void warn (String msg);
+    public void warn(String msg);
 
     /**
      * Print a debug message to the user.
      * Note that debug messages might be ignored.
-     * @param msg the message to print
+     * @param msg The message to print.
      */
-    public void debug (String msg);
+    public void debug(String msg);
 
     /**
      * Read a line of input. If the input stream has been closed this method
      * returns {@code null}.
-     * @return the next line of input or {@code null} if the input stream has
-     *         been closed
+     * @return The next line of input or {@code null} if the input stream has
+     *         been closed.
      */
-    public String readLine ();
+    public String readLine();
 
     /**
      * Push a line of input into the shell context. This line will
      * be read when any other pending lines have been read with
-     * {@link #readLine}
+     * {@link #readLine}.
      *
-     * @param line the line of input to add to the buffer
+     * @param line The line of input to add to the buffer.
      */
-    public void pushLine (String line);
+    public void pushLine(String line);
 
     /**
      * Get the last error message sent to the shell context.
-     * @return the last error message sent to the shell or {@code null} if
-     *         no errors has been reported
+     * @return The last error message sent to the shell or {@code null} if
+     *         no errors has been reported.
      */
-    public String getLastError ();
+    public String getLastError();
 
     /**
      * Print a prompt string to the user, without a trailing newline.
      * Useful for example when asking for user feedback.
-     * @param msg the message to prompt
+     * @param msg The message to prompt.
      */
-    public void prompt (String msg);
+    public void prompt(String msg);
 
     /**
      * Clears the screen for input. 
