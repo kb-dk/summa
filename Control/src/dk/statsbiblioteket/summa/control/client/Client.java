@@ -61,7 +61,8 @@ import java.util.List;
 /**
  * <p>Core class for running ClientManager clients.</p>
  *
- * <p>The client talks to the ClientManager server via a {@link ControlConnection}.
+ * <p>The client talks to the ClientManager server via a
+ * {@link ControlConnection}.
  * Itself exposes a {@link ClientConnection} over RMI.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -84,19 +85,21 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     public static final String CONF_SERVICE_TIMEOUT =
             "summa.control.client.servicetimeout";
+    /** Default value for {@link #CONF_SERVICE_TIMEOUT}. */
+    public static final int DEFAULT_SERVICE_TIMEOUT = 5;
 
     /**
      * If this property is {@code true} a backup will be stored when
      * removing services via the {@link #removeService(String)} method.
      * The backup is stored in the service's {@code artifacts} directory.
      * <p/>
-     * The default value is {@code false}
+     * The default value is {@code false}.
      */
     public static final String CONF_STORE_ARTIFACTS =
             "summa.control.client.storeartifacts";
 
     /**
-     * Default value for {@link #CONF_STORE_ARTIFACTS} property
+     * Default value for {@link #CONF_STORE_ARTIFACTS} property.
      */
     public static final boolean DEFAULT_STORE_ARTIFACTS = false;
 
@@ -126,11 +129,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     }
 
     /**
-     * Create a client from a {@link Configuration} and expose it over rmi.
-     * The various RMI properties needed are read from the {@code Configuraion}
+     * Create a client from a {@link Configuration} and expose it over RMI.
+     * The various RMI properties needed are read from the {@link Configuration}
      * as defined in {@link ClientConnection}.
-     * @param conf the conf from which to extract rmi  properties
-     * @throws RemoteException if there is an error exposing the rmi service
+     * @param conf The configuration from which to extract RMI  properties.
+     * @throws RemoteException If there is an error exposing the RMI service.
      */
     public Client(Configuration conf) throws IOException {
         super (getServicePort (conf));
@@ -140,7 +143,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         Security.checkSecurityManager();
 
         registryHost = conf.getString(CONF_REGISTRY_HOST, "localhost");
-        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT,
+                                   DEFAULT_REGISTRY_PORT);
         clientId = System.getProperty(CONF_CLIENT_ID);
         clientPort = conf.getInt(CONF_CLIENT_PORT, DEFAULT_CLIENT_PORT);
         id = clientId;
@@ -148,7 +152,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                          DEFAULT_STORE_ARTIFACTS);
 
         if (clientId == null) {
-            throw new BadConfigurationException("System property '" + CONF_CLIENT_ID
+            throw new BadConfigurationException("System property '"
+                                                + CONF_CLIENT_ID
                                                 + "' not set");
         }
 
@@ -185,7 +190,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         validateConfiguration();
 
         /* Service related setup */
-        serviceTimeout = conf.getInt(CONF_SERVICE_TIMEOUT, 5);
+        serviceTimeout = conf.getInt(CONF_SERVICE_TIMEOUT,
+                                     DEFAULT_SERVICE_TIMEOUT);
         serviceMan = new ServiceManager(conf);
 
         /* Find client hostname */
@@ -219,13 +225,18 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         runAutoStartServices ();
     }
 
+    /**
+     * Private helper method, that starts all services in the bundle which has
+     * the auto-start flag set to true.
+     */
     private void runAutoStartServices () {
         setStatusRunning("Starting auto-start services");
         for (String instanceId : serviceMan) {
             BundleSpecBuilder spec = serviceMan.getBundleSpec(instanceId);
 
             if (spec == null) {
-                log.error("Failed to read bundle spec for '" + instanceId + "'");
+                log.error("Failed to read bundle spec for '"
+                          + instanceId + "'");
                 continue;
             }
 
@@ -252,8 +263,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     /**
      * Check that the states set by the configuration are good.
      * Throw an BadConfigurationException if something is ascrew.
-     * @throws dk.statsbiblioteket.summa.control.api.BadConfigurationException if
-     *         the configuration provided to the client is insufficient
+     * @throws BadConfigurationException If the configuration provided to the
+     * client is insufficient.
      */
     private void validateConfiguration() throws BadConfigurationException {
         if (registryHost.equals("")) {
@@ -281,6 +292,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
+    /**
+     * Private helper method, creates a valid RMI address from the given RMI
+     * values registry host, registry port and client ID. 
+     * @return A RMI address.
+     */
     private String getRMIAddress () {
         return "//"+registryHost+":"+registryPort+"/"+ clientId;
     }
@@ -291,9 +307,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #CONF_CLIENT_PORT}.
+     * @param conf The configuration from which to read
+     * {@link #CONF_CLIENT_PORT}.
      * @return The port.
-     * @throws ConfigurationException if {@link #CONF_CLIENT_PORT} cannot be read.
+     * @throws ConfigurationException If {@link #CONF_CLIENT_PORT} cannot be
+     * read.
      */
     private static int getServicePort (Configuration conf) {
         try {
@@ -308,6 +326,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     }
 
+    /**
+     * Stopping all services. Which means killing all service by their ID.
+     * Trying to un-export all remote interface and MBeans.
+     * Finally stopping JVM.
+     */
+    @Override
     public void stop() {
         ConnectionContext<Service> connCtx = null;
 
@@ -355,6 +379,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         new DeferredSystemExit(0);
     }
 
+    /**
+     * Returning status for this client.
+     * @return This clients status.
+     */
+    @Override
     public Status getStatus() {
         if (log.isTraceEnabled()) {
             log.trace("Getting status for client");
@@ -362,12 +391,25 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return status;
     }
 
+    /**
+     * Deploy a service.
+     * @param bundleId The bundle ID for the deployed service.
+     * @param instanceId The instance ID.
+     * @param configLocation The configuration location for the service which
+     * should be deployed.
+     * @return Instance ID.
+     * @throws ServiceDeploymentException If there already exists a service
+     * with the given instance ID.
+     * @throws BundleLoadingException If error retrieve the bundle ID from the
+     * repository. 
+     */
+    @Override
     public String deployService(String bundleId,
                                 String instanceId,
                                 String configLocation) {
 
-        if (serviceMan.knows (instanceId)) {
-            throw new ServiceDeploymentException ("A service with instance id "
+        if (serviceMan.knows(instanceId)) {
+            throw new ServiceDeploymentException("A service with instance id "
                                                   + "'" + instanceId + "' "
                                                   + "already exists");
         }
@@ -381,9 +423,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             tmpBundleFile = repository.get(bundleId);
         } catch (IOException e) {
             setStatusIdle ();
-            throw new BundleLoadingException ("Failed to retrieve '" + bundleId
-                                            + "' from repository: "
-                                            + e.getMessage (), e);
+            throw new BundleLoadingException("Failed to retrieve '" + bundleId
+                                             + "' from repository: "
+                                             + e.getMessage (), e);
         }
 
         deployServiceFromLocalFile(instanceId, tmpBundleFile, configLocation);
@@ -398,24 +440,26 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      *
      * <p>The local file is unpacked to {@code servicePath/bundleId}</p>
      *
-     * @param instanceId the instanceId under which to deploy the service.
-     * @param localFile the file to deploy.
-     * @param configLocation location for configuration, either an URL,
+     * @param instanceId The instanceId under which to deploy the service.
+     * @param localFile The file to deploy.
+     * @param configLocation Location for configuration, either an URL,
      *                       rmi address, or file path.
+     * @throws BundleLoadingException If error while deploy files, eg. deploy
+     * files that already exists.
      */
     public void deployServiceFromLocalFile(String instanceId, File localFile,
                                            String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
-            throw new BundleLoadingException ("Trying to deploy " + localFile
-                                              + " which is already"
-                                              + " in the service directory "
-                                              + servicePath +"."
-                                              + " Aborting deploy.");
+            throw new BundleLoadingException("Trying to deploy " + localFile
+                                             + " which is already"
+                                             + " in the service directory "
+                                             + servicePath +"."
+                                             + " Aborting deploy.");
         } else if (!localFile.exists()) {
-            throw new BundleLoadingException ("Trying to deploy non-existing"
-                                              + " file " + localFile  + ", "
-                                              + "aborting deploy.");
+            throw new BundleLoadingException("Trying to deploy non-existing"
+                                             + " file " + localFile  + ", "
+                                             + "aborting deploy.");
         }
 
         setStatusRunning ("Deploying '" + instanceId + "' from " + localFile);
@@ -477,7 +521,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.warn("'" + tmpPkg + "' was not renamed to '" + pkgFile + "'");
         }
 
-
         // FIXME: There is a race condition here, where the JMX files are
         //        readable after unpacking, but before we set read-only
         //        permissions
@@ -487,6 +530,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         setStatusIdle();
     }
 
+    /**
+     * Start a service.
+     * @param instanceId The instance ID.
+     * @param configLocation The configuration location for the service.
+     * @throws RemoteException If error occur while doing RMI work.
+     */
+    @Override
     public void startService(String instanceId, String configLocation)
                                                         throws RemoteException {
         if (!serviceMan.knows(instanceId)) {
@@ -541,7 +591,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      *
      * @param instanceId The instance ID to bootstrap.
      * @param confLocation The configuration location.
-     * @throws RemoteException if error while connection to instance ID.
+     * @throws RemoteException If error while connecting to instance ID.
      */
     private void bootStrapService (String instanceId, String confLocation)
                                                     throws RemoteException {
@@ -632,11 +682,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param service The service.
      * @param confLocation The configuration location.
      * @throws RemoteException If an error occur while calling remote service.
-     * @return  The action status.
+     * @return The action status.
      */
     private StartAction conditionalServiceStart(Service service,
-                                                String confLocation)
-                                                        throws RemoteException {
+                                   String confLocation) throws RemoteException {
         Status status = service.getStatus();
         String instanceId = service.getId();
         StatusMonitor mon;
@@ -697,6 +746,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return StartAction.STARTED;
     }
 
+    /**
+     * Private helper method, to register an service.
+     * @param stub The bundle stub for this service.
+     * @param configLocation The configuration location.
+     */
     private void registerService(BundleStub stub, String configLocation) {
         log.debug ("Registering service '" + stub.getInstanceId() + "'");
 
@@ -769,6 +823,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     }
 
+    /**
+     * Stops a given service.
+     * @param id The ID of the service to stop.
+     * @throws RemoteException If error occur over RMI, while connecting to
+     * service.
+     */
+    @Override
     public void stopService(String id) throws RemoteException {
         setStatusRunning ("Stopping service " + id);
 
@@ -831,10 +892,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             }
 
         }
-
         setStatusIdle ();
     }
 
+    /**
+     * Return the service status.
+     * @param id The services ID.
+     * @return The status of the service with the given ID.
+     * @throws RemoteException If error occur handling RMI connection.
+     */
+    @Override
     public Status getServiceStatus(String id) throws RemoteException {
         log.trace("Getting service status for " + id);
 
@@ -866,19 +933,26 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
-    public Service getServiceConnection (String id) throws RemoteException {
+    /**
+     * Get connection to the service specified by the ID.
+     * @param id The instance id of the service to connect to.
+     * @return A connection to the service.
+     * @throws RemoteException If error occur when connection to service.
+     */
+    @Override
+    public Service getServiceConnection(String id) throws RemoteException {
         return getServiceConnection(id, 0);
     }
 
     /**
-     * This method will call itselfup to 10 times trying to reconnect
+     * This method will call it self up to 10 times trying to reconnect
      * if the client connection fails.
-     * @param id the instance id of the service to connect to.
-     * @param numRetries external callers should pass 0 here.
-     * @return a connection to the service.
-     * @throws RemoteException if error occur when connection to service.
+     * @param id The instance id of the service to connect to.
+     * @param numRetries External callers should pass 0 here.
+     * @return A connection to the service.
+     * @throws RemoteException If error occur when connection to service.
      */
-    private Service getServiceConnection (String id, int numRetries)
+    private Service getServiceConnection(String id, int numRetries)
                                                         throws RemoteException {
         final int maxRetries = 5;
 
@@ -953,6 +1027,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
+    /**
+     * Getting a list of all services attached to this clien.
+     * @return list of services.
+     */
+    @Override
     public List<String> getServices() {
         log.trace("Getting list of services");
 
@@ -964,13 +1043,25 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return serviceList;
     }
 
+    /**
+     * Return this clients ID.
+     * @return The ID of this client.
+     */
+    @Override
     public String getId() {
-        log.trace ("Getting id");
+        log.trace("Getting id");
         return id;
     }
 
+    /**
+     * Return the repository used by this client to access the bundles. 
+     * @return The bundle repository for this class.
+     * @throws RemoteException If the repository is an RMI repository and error
+     * occurs when connection to it.
+     */
+    @Override
     public BundleRepository getRepository() throws RemoteException {
-        log.trace ("getRepository() called");
+        log.trace("getRepository() called");
 
         /* We special case the case of RMI repositories and return
          * a connection to the server. This allows the consumer
@@ -990,7 +1081,15 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return repository;
     }
 
-    public String getBundleSpec (String instanceId) throws RemoteException {
+    /**
+     * Return the specification of the instance, identified by the given ID.
+     * @param instanceId The instance ID.
+     * @return The specification for the instance.
+     * @throws RemoteException If error occur while connection to instance over
+     * RMI.
+     */
+    @Override
+    public String getBundleSpec(String instanceId) throws RemoteException {
         File specFile;
 
         if (instanceId == null) {
@@ -1018,6 +1117,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
+    /**
+     * Get error report on the specified instance ID.
+     * @param id The instance ID.
+     * @throws RemoteException If error occur while connection to the instance
+     * over RMI.
+     */
+    @Override
     public void reportError(String id) throws RemoteException {
         log.debug ("Got error report on '" + id + "'");
 
@@ -1035,57 +1141,75 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
-    private void setStatus (Status.CODE code, String msg,
+    /**
+     * Set status.
+     * @param code The status code. See {@link Status#code}.
+     * @param msg The message to attach to this status change.
+     * @param level The log level.
+     */
+    private void setStatus(Status.CODE code, String msg,
                             Logging.LogLevel level) {
         status = new Status(code, msg);
-        Logging.log (this +" status: "+ status, log, level);        
+        Logging.log(this +" status: "+ status, log, level);
     }
 
-    private void setStatusIdle () {
-        setStatus (Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
+    /**
+     * Set status idle.
+     */
+    private void setStatusIdle() {
+        setStatus(Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
     }
 
-    private void setStatusRunning (String msg) {
-        setStatus (Status.CODE.running, msg, Logging.LogLevel.INFO);
+    /**
+     * Set status running.
+     * @param msg A message to attach to the status.
+     */
+    private void setStatusRunning(String msg) {
+        setStatus(Status.CODE.running, msg, Logging.LogLevel.INFO);
     }
 
-    public String toString () {
+    /**
+     * Pretty prints this method.
+     * @return A string representation of this method.
+     */
+    @Override
+    public String toString() {
         return "["+id+"@"+getRMIAddress()+"]";
     }
 
     /**
-     * Deploy a local package over another (possibly running) service
-     * @param instanceId if of the package to redeploy
-     * @param tmpPkgFile the downloaded package which to deploy instead of the
-     *                   existing service
+     * Deploy a local package over another (possibly running) service.
+     * @param instanceId Id of the package to redeploy.
+     * @param tmpPkgFile The downloaded package which to deploy instead of the
+     *                   existing service.
      */
-    private void reDeployService (String instanceId, File tmpPkgFile) {
-        File pkgFile = new File (servicePath, instanceId);
+    private void reDeployService(String instanceId, File tmpPkgFile) {
+        File pkgFile = new File(servicePath, instanceId);
 
         setStatusRunning("Redeploying service '" + instanceId
                          + "' from " + tmpPkgFile);
-
 
         try {
             removeService (instanceId);
             Files.copy(tmpPkgFile, pkgFile, false);
             //FIXME: We should really unzip to the location instead
         } catch (RemoteException re){
-            log.error ("Error removing service '" + instanceId
-                       + "', aborting redeploy", re);
+            log.error("Error removing service '" + instanceId
+                      + "', aborting redeploy", re);
         } catch (IOException e) {
-            log.error ("Error redeploying service '" + instanceId + "' from "
-                                    + tmpPkgFile + " to " + pkgFile, e);
+            log.error("Error redeploying service '" + instanceId + "' from "
+                                   + tmpPkgFile + " to " + pkgFile, e);
         }
 
         setStatusIdle();
     }
 
     /**
-     * Stop a service and move its package file to artifacts/
-     * @param id the service to stop and remove
-     * @throws RemoteException upon communication errors with the service
+     * Stop a service and move its package file to artifacts.
+     * @param id The service to stop and remove.
+     * @throws RemoteException Upon communication errors with the service.
      */
+    @Override
     public void removeService(String id) throws RemoteException {
         log.info("Removing service '" + id +"'");
 
@@ -1148,8 +1272,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     /**
      * Set the file permissions correctly for various know trouble makers.
-     * For instance JMX access and passwrod files need read-only permissions.
-     * @param id the id of the service to set permissions for
+     * For instance JMX access and password files need read-only permissions.
+     * @param id The id of the service to set permissions for.
      */
     private void checkPermissions(String id) {
         File bundleDir = serviceMan.getServiceDir(id);
@@ -1175,6 +1299,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
+    /**
+     * Main method for the client shell.
+     * @param args Commandline argument. None is needed.
+     */
     public static void main(String[] args) {
         try {
             Configuration conf = Configuration.getSystemConfiguration(true);
