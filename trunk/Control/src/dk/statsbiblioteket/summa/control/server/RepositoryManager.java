@@ -14,28 +14,36 @@
  */
 package dk.statsbiblioteket.summa.control.server;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.*;
-import dk.statsbiblioteket.util.watch.FolderWatcher;
-import dk.statsbiblioteket.util.watch.FolderListener;
-import dk.statsbiblioteket.util.watch.FolderEvent;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
+import dk.statsbiblioteket.summa.control.bundle.Bundle;
+import dk.statsbiblioteket.summa.control.bundle.BundleFormatException;
+import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.bundle.BundleUtils;
+import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient;
+import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryServer;
+import dk.statsbiblioteket.util.FileAlreadyExistsException;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.watch.FolderEvent;
+import dk.statsbiblioteket.util.watch.FolderListener;
+import dk.statsbiblioteket.util.watch.FolderWatcher;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.util.*;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Helper class for the {@link ControlCore} to manage the resources associated
@@ -47,8 +55,7 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="Unfinished")
+        author = "mke")
 public class RepositoryManager implements Configurable,
                                           Iterable<String> {
 
@@ -58,21 +65,27 @@ public class RepositoryManager implements Configurable,
      * {@link RemoteURLRepositoryClient}.
      */
     public static final String CONF_CLIENT_REPO =
-                                           "summa.control.repository.clientclass";
+                                         "summa.control.repository.clientclass";
+    /** Default value for {@link #CONF_CLIENT_REPO}. */
+    public static final Class<? extends BundleRepository>
+                       DEFAULT_CLIENT_REPO = RemoteURLRepositoryClient.class;
 
     /**
      * Configuration property defining the class the repository manager should
      * use itself. The default is {@link RemoteURLRepositoryServer}.
      */
     public static final String CONF_SERVER_REPO =
-                                           "summa.control.repository.serverclass";
+                                         "summa.control.repository.serverclass";
+    /** Default value for {@link #CONF_SERVER_REPO}. */
+    public static final Class<? extends WritableBundleRepository>
+                       DEFAULT_SERVER_REPO = RemoteURLRepositoryServer.class;
 
     /**
      * Configuration property defining the directory used for incoming bundles
      * to be stored in the repository.
      */
     public static final String CONF_INCOMING_DIR =
-                                          "summa.control.repository.incoming.dir";
+                                        "summa.control.repository.incoming.dir";
 
     /**
      * Configuration property defining the gracetime for the
@@ -81,7 +94,9 @@ public class RepositoryManager implements Configurable,
      * transfered to the repository. Default is 3000.
      */
     public static final String CONF_WATCHER_GRACETIME =
-                                     "summa.control.repository.watcher.gracetime";
+                                   "summa.control.repository.watcher.gracetime";
+    /** Default value for {@link #CONF_WATCHER_GRACETIME}. */
+    public static final int DEFAULT_WATCHER_GRACETIME = 3000;
 
     /**
      * Configuration property defining the number of seconds between each
@@ -89,7 +104,9 @@ public class RepositoryManager implements Configurable,
      * Default is 5.
      */
     public static final String CONF_WATCHER_POLL_INTERVAL =
-                                  "summa.control.repository.watcher.pollinterval";
+                                "summa.control.repository.watcher.pollinterval";
+    /** Default value for {@link #CONF_WATCHER_POLL_INTERVAL}. */
+    public static final int DEFAULT_WATCHER_POLL_INTERVAL = 5;
 
     private File controlBaseDir;
     private String address;
@@ -101,14 +118,32 @@ public class RepositoryManager implements Configurable,
     private FolderWatcher incomingWatcher;
     private Random random;
 
+    /**
+     * Listener, which is used to watch for updates in the incoming/ directory.
+     * If new bundles are added, this is class is also responsible for the
+     * handling of these.
+     */
     private class IncomingListener implements FolderListener {
-
+        /** The repository manager. */
         private RepositoryManager repo;
 
-        public IncomingListener (RepositoryManager repo) {
+        /**
+         * Constructs a IncomingListerner, with an attached
+         * {@link RepositoryManager}, which is used to check the new bundles.
+         * @param repo The {@link RepositoryManager} used by this listener.
+         */
+        public IncomingListener(RepositoryManager repo) {
             this.repo = repo;
         }
 
+        /**
+         * Callend on a folder changed event. It moves files from the incoming
+         * directory to repository, if bundle file is valid. Otherwise it
+         * reports an error in the log and place and error bundle file next to
+         * the bundle file with a '.error' extension. 
+         * @param event The event which triggered this change.
+         */
+        @Override
         public void folderChanged(FolderEvent event) {
             if (event.getEventType() != FolderEvent.EventType.added) {
                     log.debug("Ignoring folder event: " + event.getEventType()
@@ -117,18 +152,28 @@ public class RepositoryManager implements Configurable,
                 return;
              }
 
-            for (File changed : event.getChangeList()) {
-                if (changed.getName().endsWith(Bundle.BUNDLE_EXT)) {
+            for(File changed : event.getChangeList()) {
+                if(changed.getName().endsWith(Bundle.BUNDLE_EXT)) {
                     log.debug ("Detected incoming .bundle file '"
                              + changed + "'");
                     try {
                         repo.importBundle(changed);
                     } catch (Exception e) {
-                        log.error ("Failed to import bundle '" + changed + "'",
-                                   e);
+                        final String errorMsg = "Failed to import bundle '"
+                                                        + changed + "'";
+                        File errorFile = new File(changed.getAbsolutePath()
+                                                   + ".error");
+                        log.error(errorMsg, e);
+                        try {
+                            Files.saveString(errorMsg + "\n" + e.toString(),
+                                           errorFile);
+                        } catch(IOException fileE) {
+                            log.warn("Failed to write error to '"
+                                        + errorFile + "'", fileE);
+                        }
                     }
                 } else {
-                    log.debug ("Ignoring changed non-.bundle file in '"
+                    log.debug("Ignoring changed non-.bundle file in '"
                               + event.getWatchedFolder() + "': "
                               + changed);
                 }
@@ -136,7 +181,16 @@ public class RepositoryManager implements Configurable,
         }
     }
 
-    public RepositoryManager (Configuration conf) {
+    /**
+     * Sets up a Repository manager, given a configuration. This means setting
+     * up:
+     * - Control base dir
+     * - Writable bundle repository
+     * - Folder watcher for incoming bundles.
+     *
+     * @param conf The configuration.
+     */
+    public RepositoryManager(Configuration conf) {
         /* Configure base path */
         controlBaseDir = ControlUtils.getControlBaseDir(conf);
 
@@ -144,51 +198,53 @@ public class RepositoryManager implements Configurable,
         Class<? extends WritableBundleRepository> repoClass =
                 conf.getClass(CONF_SERVER_REPO,
                               WritableBundleRepository.class,
-                              RemoteURLRepositoryServer.class);
-        repo = Configuration.create (repoClass, conf);
+                              DEFAULT_SERVER_REPO);
+        repo = Configuration.create(repoClass, conf);
 
-        random = new Random ();
+        random = new Random();
 
-        /* Configure Client Repo Class */
-        clientRepoClass = conf.getClass (CONF_CLIENT_REPO,
-                                         BundleRepository.class,
-                                         RemoteURLRepositoryClient.class);
-        log.debug ("Using client repository class: "
+        /* Configure Client Repository Class */
+        clientRepoClass = conf.getClass(CONF_CLIENT_REPO,
+                                        BundleRepository.class,
+                                        DEFAULT_CLIENT_REPO);
+        log.debug("Using client repository class: "
                    + clientRepoClass.getName());
 
         /* Configure public address */
         address = ControlUtils.getRepositoryAddress(conf);
-        log.debug ("Using repository address: '" + address + "'");
+        log.debug("Using repository address: '" + address + "'");
 
-        clientDownloadDir = conf.getString(BundleRepository.CONF_DOWNLOAD_DIR,
-                                           "tmp");
+        clientDownloadDir =
+                  conf.getString(BundleRepository.CONF_DOWNLOAD_DIR, "tmp");
 
         incomingDir = ControlUtils.getIncomingDir(conf);
         try {
             incomingWatcher =
                new FolderWatcher(incomingDir,
-                                 conf.getInt(CONF_WATCHER_POLL_INTERVAL, 5),
-                                 conf.getInt(CONF_WATCHER_GRACETIME, 3000));
+                                 conf.getInt(CONF_WATCHER_POLL_INTERVAL,
+                                            DEFAULT_WATCHER_POLL_INTERVAL),
+                                 conf.getInt(CONF_WATCHER_GRACETIME,
+                                             DEFAULT_WATCHER_GRACETIME));
             incomingWatcher.addFolderListener(new IncomingListener(this));
 
         } catch (IOException e) {
-            log.error ("Failed to initialize monitor for incming files on '"
-                       + incomingDir + "'. Will not be able to pick up any new " +
-                       "bundles from the incoming folder.");
+            log.error("Failed to initialize monitor for incming files on '"
+                      + incomingDir + "'. Will not be able to pick up any new "
+                      + "bundles from the incoming folder.");
         }
     }
 
     /**
      * Return true <i>iff</i> the bundle with the given id exists in the
      * repository.
-     * @param bundleId id of the bundle to look up
-     * @return whether or not the bundle is present in the repository
+     * @param bundleId Id of the bundle to look up.
+     * @return Whether or not the bundle is present in the repository.
      */
-    public boolean hasBundle (String bundleId) {
+    public boolean hasBundle(String bundleId) {
         try {
             return repo.get(bundleId).exists();
         } catch (IOException e) {
-            log.warn ("Error checking for existence of bundle '" + bundleId
+            log.warn("Error checking for existence of bundle '" + bundleId
                      + "'", e);
             return false;
         }
@@ -196,13 +252,13 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Return a file handle for the given bundle.
-     * @param bundleId the id of the bundle to look up
-     * @return a File handle for the bundle or {@code null} if the bundle does
+     * @param bundleId The id of the bundle to look up.
+     * @return A File handle for the bundle or {@code null} if the bundle does
      *         not exist.
      */
-    public File getBundle (String bundleId) {
+    public File getBundle(String bundleId) {
         try {
-            File bundleFile = repo.get (bundleId);
+            File bundleFile = repo.get(bundleId);
 
             if (bundleFile.exists()) {
                 return bundleFile;
@@ -211,7 +267,7 @@ public class RepositoryManager implements Configurable,
 
         } catch (IOException e) {
             // We return null below
-            log.warn ("Error fetching bundle file '" + bundleId + "'", e);
+            log.warn("Error fetching bundle file '" + bundleId + "'", e);
         }
 
         return null;
@@ -223,12 +279,13 @@ public class RepositoryManager implements Configurable,
      * For easy handling of bundle spec see
      * {@link dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder}
      *
-     * @param bundleId the bundle id of the bundle to inspect
-     * @return string representation of the bundle spec
-     * @throws IOException on communication errors with the repository
+     * @param bundleId The bundle id of the bundle to inspect.
+     * @return string representation of the bundle spec.
+     * @throws BundleLoadingException If requested bundle don't exists in
+     * repository.
      */
-    public byte[] getBundleSpec (String bundleId) {
-        File clientBundle = getBundle (bundleId);
+    public byte[] getBundleSpec(String bundleId) {
+        File clientBundle = getBundle(bundleId);
 
         if (clientBundle == null) {
             throw new BundleLoadingException("No such bundle in repository: "
@@ -241,15 +298,15 @@ public class RepositoryManager implements Configurable,
     /**
      * Return the class Clients should use to obtain packages from this
      * repository.
-     * @return a class implementing {@link BundleRepository}
+     * @return A class implementing {@link BundleRepository}.
      */
-    public Class<? extends BundleRepository> getClientRepositoryClass () {
+    public Class<? extends BundleRepository> getClientRepositoryClass() {
         return clientRepoClass;
     }
 
     /**
      * Iterate through the bundle ids of all bundles present in this repository.
-     * @return and iterator over all bundle ids
+     * @return An iterator over all bundle ids.
      */
     public Iterator<String> iterator() {
         return getBundles().iterator();
@@ -257,38 +314,47 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Get a list of all available bundle ids.
-     * @return list of bundle ids
+     * @return List of bundle ids.
      */
-    public List<String> getBundles () {
-        log.trace ("Got getBundles() request");
+    public List<String> getBundles() {
+        log.trace("Got getBundles() request");
         try {
-            return repo.list (".*");
+            return repo.list(".*");
         } catch (IOException e) {
-            log.warn ("Error getting bundle list", e);
+            log.warn("Error getting bundle list", e);
             return new ArrayList<String>();
         }
     }
 
-    public Configuration getClientRepositoryConfig () {
+    /**
+     * Return the Client repository configuration. Values included is
+     * {@link BundleRepository#CONF_DOWNLOAD_DIR},
+     * {@link BundleRepository#CONF_REPO_ADDRESS}, and
+     * {@link ClientConnection#CONF_REPOSITORY_CLASS}.
+     *
+     * @return The Client repository configuration.
+     */
+    public Configuration getClientRepositoryConfig() {
         Configuration conf = Configuration.newMemoryBased();
 
-        conf.set (BundleRepository.CONF_DOWNLOAD_DIR, clientDownloadDir);
-        conf.set (ClientConnection.CONF_REPOSITORY_CLASS, clientRepoClass.getName());
-        conf.set (BundleRepository.CONF_REPO_ADDRESS, address);
+        conf.set(BundleRepository.CONF_DOWNLOAD_DIR, clientDownloadDir);
+        conf.set(ClientConnection.CONF_REPOSITORY_CLASS,
+                 clientRepoClass.getName());
+        conf.set(BundleRepository.CONF_REPO_ADDRESS, address);
 
         return conf;
     }
 
     /**
      * Add a bundle to the repository.
-     * @param prospectBundle the bundle to import into the repository
-     * @throws BundleLoadingException if the bundle is not accepted into the
-     *                                repository
-     * @throws FileAlreadyExistsException if the bundle already exists in the
-     *                                    repository
+     * @param prospectBundle The bundle to import into the repository
+     * @throws BundleLoadingException If the bundle is not accepted into the
+     *                                repository.
+     * @throws FileAlreadyExistsException If the bundle already exists in the
+     *                                    repository.
      */
-    public void importBundle (File prospectBundle) throws IOException {
-        log.info ("Preparing to import bundle file '" + prospectBundle + "'");
+    public void importBundle(File prospectBundle) throws IOException {
+        log.info("Preparing to import bundle file '" + prospectBundle + "'");
         File stagingBundle;
         BundleSpecBuilder builder;
 
@@ -309,7 +375,7 @@ public class RepositoryManager implements Configurable,
 
         /* Apply any needed customizations to the bundle before submission
          * to the repo */
-        updateBundle (builder, stagingBundle);
+        updateBundle(builder, stagingBundle);
 
         /* Extract publicApi declarations and store them in the designated
          * public API location */
@@ -317,7 +383,7 @@ public class RepositoryManager implements Configurable,
 
         /* Rebuild the .bundle file */
         File packedBundle = builder.buildBundle(stagingBundle,
-                                                new File (controlBaseDir, "tmp"));
+                                              new File (controlBaseDir, "tmp"));
 
 
         /* Add to repo */
@@ -340,6 +406,8 @@ public class RepositoryManager implements Configurable,
     /**
      * Update any parameters needed by the bundle. Currently this method does
      * not do anything
+     * @param builder The specification bundle builder.
+     * @param bundle The bundle to update.
      */
     private void updateBundle(BundleSpecBuilder builder, File bundle) {
         log.trace ("Updating bundle " + bundle);
@@ -366,7 +434,10 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Extract any publicApi declarations from a bundle and store them in the
-     * location designated for public API jar files
+     * location designated for public API jar files.
+     * @param builder The specification bundle builder used to extract the
+     * public API from the bundle.
+     * @param bundle The file in which the bundle is.
      */
     private void extractPublicApi(BundleSpecBuilder builder, File bundle) {
         log.trace ("Extracting API declarations for " + bundle);
@@ -391,34 +462,33 @@ public class RepositoryManager implements Configurable,
                     log.info("API file: " + apiFile + " already installed");
                 }
             } catch (IOException e) {
-                throw new BundleLoadingException("Error when installing API file "
-                                                 + apiFile + ": " + e.getMessage(),
-                                                 e);
+                throw new
+                        BundleLoadingException("Error when installing API file "
+                                               + apiFile + ": "
+                                               + e.getMessage(), e);
             }
-
-
         }
-
         log.trace ("API extraction complete for bundle: " + bundle);
     }
 
     /**
      * Check that the contents of a bundle file are valid.
-     * @param bundleFile the file to check
-     * @param update if {@code true} {@code bundleFile} will be updated
-     *               with any missing parameters from the Control server
-     * @throws BundleLoadingException if there is an error reading the bundle
-     *                                file
-     * @throws BundleFormatException if the bundle is readable, but the spec
-     *                               is bad
-     * @throws java.io.IOException of there are errors handling the bundle file
+     * @param bundleFile The file to check.
+     * @param update If {@code true} {@code bundleFile} will be updated
+     *               with any missing parameters from the Control server.
+     * @throws BundleLoadingException If there is an error reading the bundle
+     *                                file.
+     * @throws BundleFormatException If the bundle is readable, but the spec
+     *                               is bad.
+     * @throws java.io.IOException If there are errors handling the bundle file.
      * @return Temporary directory containing the unpacked bundle used by the
      *         inspection.
      *         If {@code update == true} the bundle spec of the temporary bundle
      *         will also be updated. The method consumer is responsible for
-     *         deleting the temporary bundle
+     *         deleting the temporary bundle.
      */
-    public File checkBundle (File bundleFile, boolean update) throws IOException {
+    public File checkBundle(File bundleFile, boolean update)
+                                                            throws IOException {
         /* Unzip bundle to staging area */
         File stagingDir = new File (controlBaseDir, "tmp");
         stagingDir = new File (stagingDir, "" + random.nextInt());
@@ -430,7 +500,11 @@ public class RepositoryManager implements Configurable,
             log.debug ("Staging dir already exists. Deleting.");
             Files.delete (stagingDir);
         }
-        stagingDir.mkdirs();
+        if(!stagingDir.exists() && !stagingDir.mkdirs()) {
+            String error = "Error creating non-existing staging directory '"
+                                                             + stagingDir + "'";
+            throw new BundleLoadingException(error);
+        }
         Zips.unzip(bundleFile.getAbsolutePath(),
                    stagingDir.getAbsolutePath(), true);
 
@@ -439,8 +513,8 @@ public class RepositoryManager implements Configurable,
         try {
             builder = BundleSpecBuilder.open (stagingDir);
         } catch (IOException e) {
-            String error = "Failed to read bundle descriptor from '" + stagingDir
-                         + "': " + e.getMessage()
+            String error = "Failed to read bundle descriptor from '"
+                         + stagingDir + "': " + e.getMessage()
                          + "\nRemoved from incoming queue.";
             try {
                 Files.delete (bundleFile);
@@ -530,11 +604,10 @@ public class RepositoryManager implements Configurable,
      * in the {@code incoming} directory, since it will delete any
      * violating files.</p>
      *
-     * @param prospectBundle the file to check
-     * @throws dk.statsbiblioteket.summa.control.bundle.BundleLoadingException
-     *         if the bundle is not eligible for import
+     * @param prospectBundle The file to check.
+     * @throws BundleLoadingException If the bundle is not eligible for import.
      */
-    private void checkBundleFile (File prospectBundle) throws
+    private void checkBundleFile(File prospectBundle) throws
                                                         BundleLoadingException {
         String error = null;
         Exception exc = null;
@@ -550,7 +623,7 @@ public class RepositoryManager implements Configurable,
                      + " Removing the directory from incoming dir '"
                      + incomingDir + "'";
             try {
-                Files.delete (prospectBundle);
+                Files.delete(prospectBundle);
             } catch (Exception e) {
                 error += "\n\nFailed to delete garbage file '"
                            + prospectBundle + "':";
@@ -568,7 +641,7 @@ public class RepositoryManager implements Configurable,
                        + "files must have the '" + Bundle.BUNDLE_EXT + "'"
                        + " extension. Removing from incoming dir.");
             try {
-                Files.delete (prospectBundle);
+                Files.delete(prospectBundle);
             } catch (Exception e) {
                 error += "\n\nFailed to delete garbage file '"
                            + prospectBundle + "'";
@@ -577,9 +650,9 @@ public class RepositoryManager implements Configurable,
         }
 
         /* Construct error message */
-        if (error != null && exc == null) {
+        if(error != null && exc == null) {
             throw new BundleLoadingException(error);
-        } else if (error != null && exc != null) {
+        } else if(error != null) {
             throw new BundleLoadingException(error, exc);
         }
 
@@ -588,9 +661,9 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Like {@link BundleRepository#expandApiUrl(String)}.
-     * @param jarFileName the name of jar file to expand the API URL for
-     * @return the fully qualified URL to the jar file or {@code null} if the
-     *         requested jar file is not present in the API section of the repo
+     * @param jarFileName The name of jar file to expand the API URL for.
+     * @return The fully qualified URL to the jar file or {@code null} if the
+     *         requested jar file is not present in the API section of the repo.
      */
     public String expandPublicApi (String jarFileName) {
         try {
@@ -602,11 +675,11 @@ public class RepositoryManager implements Configurable,
         }
     }
 
+    /**
+     * Simple getter for the repository used.
+     * @return The used repository.
+     */
     public BundleRepository getRepository() {
         return repo;
     }
 }
-
-
-
-
