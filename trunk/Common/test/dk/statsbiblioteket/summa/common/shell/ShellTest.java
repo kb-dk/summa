@@ -14,17 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.shell;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
 import dk.statsbiblioteket.summa.common.shell.commands.Exec;
+import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import jline.ConsoleReader;
+import junit.framework.TestCase;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
-import java.io.IOException;
-
-import junit.framework.TestCase;
-import jline.ConsoleReader;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -43,19 +42,19 @@ public class ShellTest extends TestCase {
                 public void error(String msg) {
                     lineBuffer.clear();
                     lastError = msg;
-                    System.out.println ("[ERROR] " + msg);
+                    //System.out.println ("[ERROR] " + msg);
                 }
-
+                // TODO should add msg to lineBuffer and test on this one
                 public void info(String msg) {
-                    System.out.println (msg);
+                    //System.out.println(msg);
                 }
 
                 public void warn(String msg) {
-                    System.out.println ("[WARNING] " + msg);
+                    //System.out.println("[WARNING] " + msg);
                 }
 
                 public void debug(String msg) {
-                    System.out.println ("[DEBUG] " + msg);
+                    //System.out.println("[DEBUG] " + msg);
                 }
 
                 public String readLine() {
@@ -70,16 +69,16 @@ public class ShellTest extends TestCase {
                     }
                 }
 
-                public void pushLine (String line) {
+                public void pushLine(String line) {
                     lineBuffer.push(line.trim());
                 }
 
-                public String getLastError () {
+                public String getLastError() {
                     return lastError;
                 }
 
-                public void prompt (String prompt) {
-                    System.out.print(prompt);
+                public void prompt(String prompt) {
+                    //System.out.print(prompt);
                 }
 
                 @Override
@@ -92,20 +91,20 @@ public class ShellTest extends TestCase {
                 }
             };
 
-        core = new Core (ctx, true, true);
+        core = new Core(ctx, true, true);
     }
 
     private static ConsoleReader createConsoleReader() {
         try {
             return new ConsoleReader();
         } catch (IOException e) {
-            throw new RuntimeException("Unnable to create ConsoleReader: "
+            throw new RuntimeException("Unable to create ConsoleReader: "
                                        + e.getMessage(), e);
         }
     }
 
     public void tearDown () throws Exception {
-
+        super.tearDown();
     }
 
     public void testTokenizer () throws Exception {
@@ -151,31 +150,26 @@ public class ShellTest extends TestCase {
         cmd = "\"foo";
         try {
             core.tokenize(cmd);
-            fail ("Tokenizing '" + cmd + "' should raise an exception");
+            fail("Tokenizing '" + cmd + "' should raise an exception");
         } catch (SyntaxErrorNotification e) {
             // success
-            System.out.println ("Got expected error: " + e.getMessage());
         }
 
         cmd = "foo\"";
         try {
             core.tokenize(cmd);
-            fail ("Tokenizing '" + cmd + "' should raise an exception");
+            fail("Tokenizing '" + cmd + "' should raise an exception");
         } catch (SyntaxErrorNotification e) {
             // success
-            System.out.println ("Got expected error: " + e.getMessage());
         }
 
         cmd = "f\"oo";
         try {
             core.tokenize(cmd);
-            fail ("Tokenizing '" + cmd + "' should raise an exception");
+            fail("Tokenizing '" + cmd + "' should raise an exception");
         } catch (SyntaxErrorNotification e) {
             // success
-            System.out.println ("Got expected error: " + e.getMessage());
         }
-
-
     }
 
     public void testScript () throws Exception {
@@ -244,8 +238,9 @@ public class ShellTest extends TestCase {
 
         sc = new Script(";");
         iter = sc.iterator();
+        //noinspection UnusedDeclaration
         for (String s : sc) {
-            System.out.println ("TOK"+s);
+            // Do nothing
         }
         assertFalse(iter.hasNext());
     }
@@ -283,7 +278,7 @@ public class ShellTest extends TestCase {
 
     public void testExecCommand () throws Exception {
         new Exec();
-        Script script = new Script ("foo -s; bar -f 'quiz//'; baz");
+        Script script = new Script("foo -s; bar -f 'quiz//'; baz");
 
         script.pushToShellContext(ctx);
 
@@ -356,9 +351,4 @@ public class ShellTest extends TestCase {
 
         System.exit(exitCode);
     }
-
 }
-
-
-
-
