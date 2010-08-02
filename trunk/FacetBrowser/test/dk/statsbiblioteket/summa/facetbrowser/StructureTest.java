@@ -99,7 +99,7 @@ public class StructureTest extends TestCase {
 
     public void testConfig() throws Exception {
         URL confLocation = Resolver.getURL(
-                "dk/statsbiblioteket/summa/facetbrowser/StructureTestData.xml");
+                "data/StructureTestData.xml");
         Configuration conf = Configuration.load(confLocation.getFile());
         Structure structure = new Structure(conf);
 
