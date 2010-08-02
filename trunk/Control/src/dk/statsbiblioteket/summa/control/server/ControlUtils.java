@@ -17,68 +17,74 @@ package dk.statsbiblioteket.summa.control.server;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
- * Various utils for general use in the {@link ControlCore} and related
+ * Various util methods for general use in the {@link ControlCore} and related
  * classes.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_OK,
+        author = "mke")
 public class ControlUtils {
-
     private static final Log log = LogFactory.getLog (ControlUtils.class);
+
+    /** Class of the SSH deployer. */
+    public static final String SSHDEPLOYER =
+                  "dk.statsbiblioteket.summa.control.server.deploy.SSHDeployer";
+    /** Class of the Local deployer. */
+    public static final String LOCALDEPLOYER =
+                "dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer";
 
     /**
      * <p>Work out what base dir to use given a configuration. This is
-     * extracted from the {@link ControlCore#CONF_CONTROL_BASE_DIR} property.</p>
+     * extracted from the {@link ControlCore#CONF_CONTROL_BASE_DIR} property.
+     * </p>
      *
      * <p>If the directory does not exist it will be created.</p>
      *
-     * @param conf configuration to extract the properties from
-     * @return base directory for installation
+     * @param conf Configuration to extract the properties from.
+     * @return Base directory for installation.
      */
-    public static File getControlBaseDir (Configuration conf) {
-        String basePath = conf.getString (ControlCore.CONF_CONTROL_BASE_DIR,
+    public static File getControlBaseDir(Configuration conf) {
+        String basePath = conf.getString(ControlCore.CONF_CONTROL_BASE_DIR,
                                           System.getProperty("user.home")
                                         + File.separator
                                         + "summa-control");
-        File baseDir = new File (basePath);
+        File baseDir = new File(basePath);
         if (!baseDir.exists()) {
             if (baseDir.mkdirs()) {
                 log.debug("Created control base directory '" + baseDir + "'");
             }
         }
 
-        log.trace ("Calculated control base dir '" + baseDir + "'");
+        log.trace("Calculated control base dir '" + baseDir + "'");
         return baseDir;
     }    
 
     /**
-     * <p>Work out what default base dir to deploy clients to. This is
+     * <p>Work out what default base directory to deploy clients to. This is
      * extracted from the {@link ClientConnection#CONF_CLIENT_BASEPATH}
      * property.</p>
      *
-     * Note that system properties enclosed in <code>${}</code> will <i>not</i>
-     * be escaped. This way one can pass the property into a remote
+     * Note that system properties enclosed in <code>${user.home}</code> will
+     * <i>not</i> be escaped. This way one can pass the property into a remote
      * configuration and have it magically work.
      *
-     * @param conf configuration to extract the properties from
-     * @return base directory for installation, without system properties
-     *         escaped
+     * @param conf Configuration to extract the properties from.
+     * @return Base directory for installation, without system properties
+     *         escaped.
      */
-    public static String getClientBasePath (Configuration conf) {
-        // We want the string without any ${}s escaped, so we fecth it directly
+    public static String getClientBasePath(Configuration conf) {
+        // We want the string without any ${}s escaped, so we fetch it directly
         // from the underlying configuration storage
         ConfigurationStorage storage = conf.getStorage();
         String basePath = null;
@@ -95,8 +101,7 @@ public class ControlUtils {
             basePath = "${user.home}" + File.separator + "summa-control";
         }
 
-
-        log.trace ("Calculated default client base dir '" + basePath + "'");
+        log.trace("Calculated default client base dir '" + basePath + "'");
         return basePath;
     }
 
@@ -106,18 +111,18 @@ public class ControlUtils {
      *
      * <p>If the directory does not exist it will be created.</p>
      *
-     * @param conf configuration to extract the properties from
-     * @return file pointing at the directory for incoming bundles
+     * @param conf Configuration to extract the properties from.
+     * @return File pointing at the directory for incoming bundles.
      */
-    public static File getIncomingDir (Configuration conf) {
-        String incPath = conf.getString (RepositoryManager.CONF_INCOMING_DIR,
-                                         new File(getControlBaseDir(conf),
+    public static File getIncomingDir(Configuration conf) {
+        String incPath = conf.getString(RepositoryManager.CONF_INCOMING_DIR,
+                                        new File(getControlBaseDir(conf),
                                                    "incoming").toString());
 
-        File incDir = new File (incPath);
+        File incDir = new File(incPath);
         if (!incDir.exists()) {
             if (incDir.mkdirs()) {
-                log.debug ("Created dir for incoming bundles '" + incDir + "'");
+                log.debug("Created dir for incoming bundles '" + incDir + "'");
             }
         }
         return incDir;
@@ -126,10 +131,11 @@ public class ControlUtils {
     /**
      * Get the address the repository is exposed on. This is the address
      * clients will use to download bundles from.
+     * 
      * @param conf The configuration.
      * @return The repository address exposed according to the configuration.
      */
-    public static String getRepositoryAddress (Configuration conf) {
+    public static String getRepositoryAddress(Configuration conf) {
         return conf.getString(BundleRepository.CONF_REPO_ADDRESS,
                               "http://"
                               + RemoteHelper.getHostname() + ":8080"
@@ -137,51 +143,21 @@ public class ControlUtils {
     }
 
     /**
-     * Translate abbreviated deployer class name to fully qualified class name
-     * @param shortDesc deployer abbrev.
-     * @return the fulle qualified class name
-     * @throws BadConfigurationException if the deployer is not known
+     * Translate abbreviated deployer class name to fully qualified class name.
+     *
+     * @param shortDesc Deployer abbrev.
+     * @return The fully qualified class name.
+     * @throws BadConfigurationException If the deployer class is not known.
      */
-    public static String getDeployerClassName (String shortDesc) {
+    public static String getDeployerClassName(String shortDesc) {
         if ("ssh".equals (shortDesc)) {
-            return "dk.statsbiblioteket.summa.control.server.deploy.SSHDeployer";
+            return SSHDEPLOYER;
         } else if ("local".equals (shortDesc)) {
-            return "dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer";
+            return LOCALDEPLOYER;
         } else {
             throw new BadConfigurationException("Unknown deployment transport "
                                                + "'" + shortDesc + "'");
         }
-    }
-
-    /**
-     * Read the (unzipped) contents of a single zip entry within a zip file.
-     * <p></p>
-     * TODO: Move this method to Zips in sbutil
-     * @param zipFile zip file to read from
-     * @param entryName name of entry withing the zip file
-     * @return a byte array with the unpacked data, or null if the entry is
-     *         not found within the zip file
-     * @throws IOException if there is an error reading the zip file
-     */
-    public static byte[] getZipEntry (File zipFile, String entryName)
-            throws IOException {
-        ZipInputStream zip = new ZipInputStream(new FileInputStream(zipFile));
-        ByteArrayOutputStream out = new ByteArrayOutputStream ();
-        byte[] buf = new byte[2048];
-        int count;
-
-        ZipEntry entry;
-        while ((entry = zip.getNextEntry()) != null) {
-            if (entry.getName().equals(entryName)) {
-                while ((count = zip.read(buf, 0, buf.length)) != -1) {
-                    out.write(buf, 0, count);
-                }
-                return out.toByteArray();
-            } else {
-                zip.closeEntry();
-            }
-        }
-        return null;
     }
 }
 
