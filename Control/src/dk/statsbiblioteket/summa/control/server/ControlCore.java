@@ -53,7 +53,7 @@ import java.util.Map;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
-        comment="Unfinished, needs JavaDoc")
+        comment="Needs JavaDoc")
 public class ControlCore extends UnicastRemoteObject
                implements ControlRMIConnection, ControlCoreMBean, Configurable {
     private static final long serialVersionUID = 4861381684L;
@@ -196,6 +196,11 @@ public class ControlCore extends UnicastRemoteObject
                            DEFAULT_CONTROL_CORE_PORT);
     }
 
+    /**
+     * Return connection to client, with the specified instanceID.
+     * @param instanceId Unique id of the client to connect to.
+     * @return The client connection.
+     */
     @Override
     public ClientConnection getClient(String instanceId) {
         setStatus(Status.CODE.running,
@@ -241,6 +246,10 @@ public class ControlCore extends UnicastRemoteObject
         return client;
     }
 
+    /**
+     * Deploy a client with the given configuraion.
+     * @param conf Configuration used to instantiate deployer.
+     */
     @Override
     public void deployClient(Configuration conf) {
         setStatusRunning("Deploying client");
@@ -293,10 +302,10 @@ public class ControlCore extends UnicastRemoteObject
         BundleSpecBuilder spec = BundleSpecBuilder.open(
                                    new ByteArrayInputStream(bundleSpecContent));
 
-	// Push all properties from the client spec into the control file
-	for(Map.Entry<String,Serializable> prop : spec.getProperties()){
-	    conf.set(prop.getKey(), prop.getValue());
-	}
+        // Push all properties from the client spec into the control file
+        for(Map.Entry<String,Serializable> prop : spec.getProperties()){
+            conf.set(prop.getKey(), prop.getValue());
+        }
 
         // Write client control file
         clientManager.register(instanceId,
@@ -308,6 +317,11 @@ public class ControlCore extends UnicastRemoteObject
         setStatusIdle();
     }
 
+    /**
+     * Start a client based on the given configuration. This method checks if
+     * client is deployed and is already started.
+     * @param conf Configuration object passed to the client deployer.
+     */
     @Override
     public void startClient(Configuration conf) {
         setStatusRunning("Starting client");
@@ -389,6 +403,10 @@ public class ControlCore extends UnicastRemoteObject
         log.info ("Client '" + instanceId + "' deployed");
     }
 
+    /**
+     * Stops the client, with the specified instance Id.
+     * @param instanceId Id of the client to stop.
+     */
     @Override
     public void stopClient(String instanceId) {
         setStatusRunning("Stopping '" + instanceId + "'");
@@ -415,6 +433,11 @@ public class ControlCore extends UnicastRemoteObject
 
     }
 
+    /**
+     * Private helper method, this return true if the client is running.
+     * @param instanceId The instanceID for the client to check.
+     * @return True iff the client is already running.
+     */
     private boolean isClientRunning(String instanceId) {
         try {
             ClientConnection client = getClient(instanceId);
@@ -426,7 +449,6 @@ public class ControlCore extends UnicastRemoteObject
         } catch (InvalidClientStateException e){
             return false;
         }
-
         return false;
     }
 
@@ -443,10 +465,10 @@ public class ControlCore extends UnicastRemoteObject
      * {@link ClientDeployer#CONF_DEPLOYER_BUNDLE} and set in the
      * configuration.</p>
      *
-     * @param conf the configuration to validate
-     * @throws BadConfigurationException if any one of  the required properties
+     * @param conf The configuration to validate.
+     * @throws BadConfigurationException If any one of  the required properties
      *                                   listed in {@link ClientDeployer} is not
-     *                                   present
+     *                                   present.
      */
     private void validateClientConf(Configuration conf) {
         log.trace("validateClientConf called");
@@ -504,6 +526,10 @@ public class ControlCore extends UnicastRemoteObject
         }        
     }
 
+    /**
+     * Returning all known client names.
+     * @return all known client names.
+     */
     @Override
     public List<String> getClients() {
         setStatus(Status.CODE.running, "Getting client list",
@@ -513,6 +539,10 @@ public class ControlCore extends UnicastRemoteObject
         return list;
     }
 
+    /**
+     * Returning all available bundles.
+     * @return All available bundles.
+     */
     @Override
     public List<String> getBundles() {
         setStatus(Status.CODE.running, "Getting bundle list",
@@ -523,27 +553,54 @@ public class ControlCore extends UnicastRemoteObject
 
     }
 
+    /**
+     * Return the configuration, used to deploy the client with the given
+     * instance Id.
+     * @param instanceId Instance id of the client to look up the configuration
+     *                   from.
+     * @return The deployed configuration for the instance.
+     * @throws RemoteException If error occur while connecting to the client.
+     */
     @Override
     public Configuration getDeployConfiguration(String instanceId)
             throws RemoteException {
         return clientManager.getDeployConfiguration(instanceId);
     }
 
+    /**
+     * Get status of the control core.
+     * @return Status for this instance.
+     * @throws RemoteException Does not throw {@link java.rmi.RemoteException}.
+     */
     @Override
     public Status getStatus() throws RemoteException {
         return status;
     }
 
+    /**
+     * Update the status.
+     *
+     * @param code The {@link Status#code} it should update to.
+     * @param msg The message for logging.
+     * @param level The log level.
+     */
     private void setStatus(Status.CODE code, String msg,
                                                        Logging.LogLevel level) {
         status = new Status(code, msg);
         Logging.log("Status: "+ status, log, level);
     }
 
+    /**
+     * Set status Idle.
+     */
     private void setStatusIdle() {
         setStatus(Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
     }
 
+    /**
+     * Set status Running.
+     * @param msg The message to attach to this status change.
+     */
     private void setStatusRunning(String msg) {
         setStatus(Status.CODE.running, msg, Logging.LogLevel.INFO);
     }
