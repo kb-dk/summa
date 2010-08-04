@@ -435,9 +435,11 @@ public class StorageTool {
     }
 
     /**
-     *
-     * @param args
-     * @throws Exception
+     * Main method for the Storage Tool, arguments given to this should be the
+     * command that should be run and possible arguments to this command.
+     * @param args Command line arguments telling which command to run and
+     * possible some arguments needed by this command.
+     * @throws Exception If error occur while processing result.
      */
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
