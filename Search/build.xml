@@ -162,6 +162,9 @@
     <target name="distclean" depends="clean">
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
+        <delete>
+            <fileset dir="." file="summa-search-*.jar" />
+        </delete>
     </target>
 
     <target name=".compiletest" depends="compile">

@@ -38,7 +38,7 @@ public class SuggestSearcherTest extends TestCase {
     public static final String EXPORT_FILE = "suggest_out.dat";
     private static Log log = LogFactory.getLog(SuggestSearcherTest.class);
 
-    File storageRoot = new File("Support/tmp/", "suggest_storage");
+    File storageRoot = new File("test/tmp/", "suggest_storage");
     SummaSearcher searcher;
 
 

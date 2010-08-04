@@ -12,7 +12,7 @@
     <property name="project.name" value="summa-common"/>
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
-    <property name="release.jar" value="${release}.jar"/>
+    <property name="release.jar" value="${release}.jar"/>    
 
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
@@ -91,13 +91,16 @@
         <delete dir="${test.report.dir}" />
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
-        <delete dir="${test.report.dir}" />
     </target>
 
     <target name="distclean" depends="clean">
         <delete dir="${dist.dir}" />
         <delete dir="${lib.dir}" />
         <delete dir="${doc.dir}" />
+        <delete dir="${test.report.dir}" />
+        <delete>
+            <fileset dir="." file="summa-common-*.jar" />
+        </delete>
     </target>
 
     <target name=".compiletest" depends="compile">

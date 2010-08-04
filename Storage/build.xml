@@ -121,16 +121,19 @@
         <echo message="Cleaning this module"/>
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
+        <delete dir="${test.report.dir}" />
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
-        <delete dir="${test.report.dir}" />
-        <delete dir="${dist.dir}"/>
     </target>
 
     <target name="distclean" depends="clean">
-
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
+        <delete dir="home"/>
+        <delete dir="${dist.dir}"/>
+        <delete>
+            <fileset dir="." file="summa-storage-*.jar" />
+        </delete>
     </target>
 
     <target name=".compiletest" depends="compile">

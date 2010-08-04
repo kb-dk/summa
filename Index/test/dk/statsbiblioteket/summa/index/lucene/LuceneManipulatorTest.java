@@ -14,32 +14,32 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Streams;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.NIOFSDirectory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Streams;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexReader;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.store.NIOFSDirectory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
@@ -75,7 +75,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     }
 
     public File location =
-            new File("Index/tmp/", "tempindex");
+            new File("test/tmp/", "tempindex");
 
     private LuceneManipulator openIndex(int buffer) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
