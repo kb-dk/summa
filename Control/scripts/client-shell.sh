@@ -149,3 +149,4 @@ fi
 
 $COMMAND
 
+exit $?

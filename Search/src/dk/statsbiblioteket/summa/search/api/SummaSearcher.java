@@ -12,7 +12,6 @@
  *  limitations under the License.
  *
  */
-
 package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;

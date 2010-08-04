@@ -153,4 +153,6 @@ fi
 
 $COMMAND "$@"
 
+exit $?
+
 #popd > /dev/null

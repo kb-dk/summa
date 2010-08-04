@@ -147,5 +147,8 @@ if [ ! -z $PRINT_CONFIG ]; then
 fi
 
 $COMMAND
+exitCode=$?
 
 popd > /dev/null
+
+exit $exitCode

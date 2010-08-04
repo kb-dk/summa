@@ -148,3 +148,5 @@ if [ ! -z $PRINT_CONFIG ]; then
 fi
 
 $COMMAND
+
+exit $?
