@@ -259,16 +259,22 @@
 
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
-        <delete dir="${test.report.dir}" />
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
         <delete file="${release.api.jar}"/>
     </target>
 
     <target name="distclean" depends="clean">
+        <delete dir="log"/>
+        <delete dir="test/tmp"/>
+        <delete dir="test/log"/>
         <delete dir="${dist.dir}"/>
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
+        <delete dir="${test.report.dir}" />
+        <delete>
+            <fileset dir="." file="summa-control-*.jar" />
+        </delete>
     </target>
 
     <target name=".compiletest" depends="compile">

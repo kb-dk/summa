@@ -81,7 +81,7 @@ public class LuceneSearchNodeTest extends TestCase {
     }
 
     private File testRoot = new File(
-            "Support/tmp/", "summaTestRoot");
+            "test/tmp/", "summaTestRoot");
 
     File sourceDir = new File(Resolver.getURL(
             "data/fagref/fagref_IndexDescriptor.xml").

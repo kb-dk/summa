@@ -45,7 +45,7 @@ public class FileReaderTest extends TestCase {
     }
 
     public static final File root =
-            new File("Ingest/tmp/", "loadertempA");
+            new File("test/tmp/", "loadertempA");
     File sub1 = new File(root, "1");
     File sub2 = new File(root, "2");
     File rootFile10;
@@ -53,7 +53,7 @@ public class FileReaderTest extends TestCase {
     File rootFileFoo20;
 
     public static final File rootDeep =
-            new File("Ingest/tmp/", "rootDeep");
+            new File("test/tmp/", "rootDeep");
 
     @Override
     public void setUp() throws Exception {

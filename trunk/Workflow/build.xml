@@ -146,6 +146,7 @@
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete dir="${tmp.dir}"/>
+        <delete file="${release.jar}"/>
         <delete dir="${test.report.dir}" />
     </target>
 
@@ -153,6 +154,10 @@
         <delete dir="${dist.dir}"/>
         <delete dir="${lib.dir}"/>
         <delete dir="${doc.dir}"/>
+        <delete dir="log/"/>
+        <delete>
+            <fileset dir="." file="summa-workflow-*.jar" />
+        </delete>
     </target>
 
     <target name=".compiletest" depends="compile">
