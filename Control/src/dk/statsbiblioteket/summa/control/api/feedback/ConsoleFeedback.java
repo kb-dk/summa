@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.control.api.feedback;
 
-import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
-import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -28,25 +26,32 @@ import java.util.List;
  * console.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="Some methods neeeds Javadoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class ConsoleFeedback implements Feedback {
-
+    // Console input reader
     private Console in;
+    // Output stream
     private PrintWriter out;
 
-    public ConsoleFeedback () {
+    /**
+     * Constructs a Console Feedback object.
+     */
+    public ConsoleFeedback() {
         in = System.console();
         
         if (in == null) {
             throw new RuntimeException("Unable to get system console");
         }
-
         out = System.console().writer();
     }
 
-    public ConsoleFeedback (Configuration conf) {
+    /**
+     * Calls the {@link ConsoleFeedback#ConsoleFeedback()} constructer,
+     * configuration is not used.
+     * @param conf Not used Configuration.
+     */
+    public ConsoleFeedback(Configuration conf) {
         this();
     }
 
@@ -55,12 +60,18 @@ public class ConsoleFeedback implements Feedback {
      * requested responses.
      * @param messages the messages to display and get responses for.
      */
+    @Override
     public void putMessages(List<Message> messages) {
         for (Message message: messages) {
             putMessage(message);
         }
     }
 
+    /**
+     * Put message on the writer. Different messages are treated differently. 
+     * @param message The message to display and collect a response for.
+     */
+    @Override
     public void putMessage(Message message) {
         switch (message.getMessageType()) {
             case Message.MESSAGE_PLAIN:
@@ -86,7 +97,3 @@ public class ConsoleFeedback implements Feedback {
         }
     }
 }
-
-
-
-
