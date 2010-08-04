@@ -14,41 +14,64 @@
  */
 package dk.statsbiblioteket.summa.storage.api.tools;
 
-import java.io.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.net.URL;
-import java.net.MalformedURLException;
-
-
-import dk.statsbiblioteket.summa.storage.api.*;
-
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
-import javax.xml.transform.*;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke, hbk")
 public class StorageTool {
+    public static final String DEFAULT_RPC_TARGET =
+                                              "//localhost:28000/summa-storage";
 
-    public static void printRecord (Record rec, boolean withContents) {
-        printRecord (rec, System.out, withContents);
+    /**
+     * Helper method for printing a record on {@link System@out} with or without
+     * content.
+     * @param rec The record to print.
+     * @param withContents True if this record should be printed with its
+     * content false otherwise.
+     */
+    public static void printRecord(Record rec, boolean withContents) {
+        printRecord(rec, System.out, withContents);
     }
 
-    public static void printRecord (Record rec, OutputStream out, boolean withContents) {
+    /**
+     * Helper method for printing a {@link Record} to a defined output stream.
+     * @param rec The record which should be printed.
+     * @param out The output stream.
+     * @param withContents True if this record should be printed with its
+     * content false otherwise.
+     */
+    public static void printRecord(Record rec, OutputStream out,
+                                                         boolean withContents) {
         PrintWriter output = new PrintWriter (out, true);
 
         if (rec == null) {
@@ -56,20 +79,29 @@ public class StorageTool {
             return;
         }
 
-        output.println (rec.toString(true));
+        output.println(rec.toString(true));
 
-        if (withContents) {
+        if(withContents) {
             output.println(rec.getContentAsUTF8());
         }
-
     }
 
-    private static void actionGet (String[] argv, StorageReaderClient storage)
+    /**
+     * Method for the 'get' command. This method retrieves the record(s) from
+     * storage and print this(these) to {link System#out}.
+     *
+     * @param argv Arguments from commandline. Should be a list of ids. 
+     * @param storage The storage to connect to, to retrieve the records.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionGet(String[] argv, StorageReaderClient storage)
                                                              throws IOException{
-        if (argv.length == 1) {
+        if(argv.length == 1) {
             System.err.println("You must specify at least one record id to "
                                + "the 'get' action");
-            return;
+            return 1;
         }
 
         // Allow this call to access private storage records, like __holdings__
@@ -77,9 +109,7 @@ public class StorageTool {
         options.meta("ALLOW_PRIVATE", "true");
 
         List<String> ids = new ArrayList<String>(argv.length - 1);
-        for (int i = 1; i < argv.length; i++) {
-            ids.add(argv[i]);
-        }
+        ids.addAll(Arrays.asList(argv).subList(1, argv.length));
 
         System.err.println("Getting record(s): " + Strings.join(ids, ", "));
         long startTime = System.currentTimeMillis();
@@ -91,25 +121,35 @@ public class StorageTool {
             printRecord(r, true);
             System.out.println ("===================");
         }
+        return 0;
     }
 
-    private static void actionTouch (String[] argv,
-                                     StorageReaderClient reader,
-                                     StorageWriterClient writer)
+    /**
+     * This action, touches a record, thereby update the last modified
+     * timestamp for this record.
+     *
+     * @param argv Command line arguments, needs to specify at least one
+     * record.
+     * @param reader Storage reader client.
+     * @param writer Storage writer client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicating with storage.
+     */
+    private static int actionTouch(String[] argv, StorageReaderClient reader,
+                                    StorageWriterClient writer)
                                                              throws IOException{
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to"
                                + " the 'touch' action");
-            return;
+            return 1;
         }
 
         List<String> ids = new ArrayList<String>(argv.length - 1);
-        for (int i = 1; i < argv.length; i++) {
-            ids.add(argv[i]);
-        }
+        ids.addAll(Arrays.asList(argv).subList(1, argv.length));
 
         System.err.println("Getting records " + Logs.expand(ids, 10) + "");
-        List<Record> recs = reader.getRecords (ids, null);
+        List<Record> recs = reader.getRecords(ids, null);
 
         for (Record r : recs) {
             System.err.println("Touching '" + r.getId() + "'");
@@ -117,11 +157,21 @@ public class StorageTool {
             r.touch();
             writer.flush(r);
         }
+        return 0;
     }
 
-    private static void actionPeek (String[] argv, StorageReaderClient storage)
+    /**
+     * This action peeks into the storage, which mean printing all records from
+     * either the specified base or all records.
+     * @param argv Command line arguments, specifying the base or nothing,
+     * which results in all record being printed.
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionPeek(String[] argv, StorageReaderClient storage)
                                                              throws IOException{
-
         int numPeek;
         String base;
 
@@ -130,7 +180,7 @@ public class StorageTool {
             base = null;
         } else {
             base = argv[1];
-            System.err.println ("Getting records from base '" + base + "'");
+            System.err.println("Getting records from base '" + base + "'");
         }
 
         if (argv.length <= 2) {
@@ -138,7 +188,6 @@ public class StorageTool {
         } else {
             numPeek = Integer.parseInt(argv[2]);
         }
-
 
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
@@ -151,7 +200,7 @@ public class StorageTool {
         Record rec;
         int count = 0;
         while (records.hasNext()) {
-            rec = records.next ();
+            rec = records.next();
             printRecord(rec, true);
 
             count++;
@@ -161,7 +210,7 @@ public class StorageTool {
         }
 
         if (count == 0) {
-            System.err.println ("Base '" + base + "' is empty");
+            System.err.println("Base '" + base + "' is empty");
         }
 
         if (base != null) {
@@ -173,9 +222,19 @@ public class StorageTool {
                                + (System.currentTimeMillis() - startTime)
                                + " ms (incl. iterator lookup time)");
         }
+        return 0;
     }
 
-    private static void actionDump(String[] argv, StorageReaderClient storage)
+    /**
+     * This action dumps the storage records data. It can either be for all
+     * bases or just one, specified on the command line.
+     * @param argv Command line argument specifying the base.
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionDump(String[] argv, StorageReaderClient storage)
                                                             throws IOException {
         String base;
         long count = 0;
@@ -185,7 +244,7 @@ public class StorageTool {
             base = null;
         } else {
             base = argv[1];
-            System.err.println ("Dumping base '" + base + "'");
+            System.err.println("Dumping base '" + base + "'");
         }
 
         long startTime = System.currentTimeMillis();
@@ -198,7 +257,7 @@ public class StorageTool {
         Record rec;
         while (records.hasNext()) {
             count++;
-            rec = records.next ();
+            rec = records.next();
             System.out.println(rec.getContentAsUTF8());
         }
 
@@ -212,12 +271,19 @@ public class StorageTool {
                                + (System.currentTimeMillis() - startTime)
                                + " ms (including iterator lookup time)");
         }
-
-
+        return 0;
     }
 
-    private static void actionHoldings(
-                String[] argv, StorageReaderClient storage) throws IOException {
+    /**
+     * Get the holdings, for a storage. This is info about the different bases,
+     * like number of records, last modified time stamp.
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicatinh to storage.
+     */
+    private static int actionHoldings(StorageReaderClient storage)
+                                                            throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
@@ -227,15 +293,23 @@ public class StorageTool {
         System.out.println(xml);
         System.err.println(String.format("Retrieved holdings in %sms",
                                          (System.currentTimeMillis() - start)));
+        return 0;
     }
 
-    private static void actionBatchJob(
-          String[] argv, StorageReaderClient reader, StorageWriterClient writer)
-                                                            throws IOException {
+    /**
+     * This action runs a single batch job on the storage.
+     * @param argv Specifying the batch job to run.
+     * @param writer The storage writer client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionBatchJob(String[] argv,
+                                StorageWriterClient writer) throws IOException {
 
         if (argv.length < 2) {
             System.err.println("You must provide exactly one job name to run");
-            return;
+            return 1;
         }
 
         String jobName = argv[1];
@@ -248,24 +322,34 @@ public class StorageTool {
 
         long start = System.currentTimeMillis();
         String result =
-                writer.batchJob(jobName, base, minMtime, maxMtime, null);
+                       writer.batchJob(jobName, base, minMtime, maxMtime, null);
 
         // We flush() the streams in order not to interweave the output
         System.err.println("Result:\n----------");
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format(
-                           "----------\nRan job '%s' in %sms",
+        System.err.println(String.format("----------\nRan job '%s' in %sms",
                            jobName, (System.currentTimeMillis() - start)));
+        return 1;
     }
 
-    private static void actionXslt (String[] argv, StorageReaderClient storage)
+    /**
+     * This action, applies a single XSLT to a single record, both must be
+     * specified on the command line.
+     * @param argv Command line arguments, should specify both a record id and
+     * a URL to an XSLT.
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error
+     * occur.
+     * @throws IOException if error occur while communicating to storage.
+     */
+    private static int actionXslt(String[] argv, StorageReaderClient storage)
                                                              throws IOException{
         if (argv.length <= 2) {
             System.err.println("You must specify a record id and a URL "
                                + "for the XSLT to apply");
-            return;
+            return 1;
         }
 
         String recordId = argv[1];
@@ -275,7 +359,7 @@ public class StorageTool {
 
         if (r == null) {
             System.err.println("No such record '" + recordId + "'");
-            return;
+            return 2;
         }
 
         System.out.println(r.toString(true) + "\n");
@@ -293,24 +377,28 @@ public class StorageTool {
             t.transform(so, input);
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+            return 3;
         }
 
         System.out.println("Contents transformed with: " + xsltUrl + ":\n");
         System.out.println(new String(out.toByteArray()));
-
-
+        return 0;
     }
 
-    public static Transformer compileTransformer (String xsltUrl) {
+    /**
+     * Helper method for compiling a transformer from a XSLT URL.
+     * @param xsltUrl The URL pointing to the XSLT.
+     * @return A transformer based on the XSLT.
+     */
+    public static Transformer compileTransformer(String xsltUrl) {
         Transformer transformer;
-        TransformerFactory tfactory = TransformerFactory.newInstance();
+        TransformerFactory tFactory = TransformerFactory.newInstance();
         InputStream in = null;
 
         try {
             URL url = Resolver.getURL(xsltUrl);
             in = url.openStream();
-            transformer = tfactory.newTransformer(
+            transformer = tFactory.newTransformer(
                     new StreamSource(in, url.toString()));
         } catch (Exception e) {
             throw new RuntimeException("Error compiling XSLT: "
@@ -325,27 +413,36 @@ public class StorageTool {
                                    + "stream for '" + xsltUrl + "'");
             }
         }
-
         return transformer;
     }
 
-    private static void printUsage () {
-        System.err.println ("USAGE:\n\t" +
+    /**
+     * Print usage to {@link System#err}.
+     */
+    private static void printUsage() {
+        System.err.println("USAGE:\n\t" +
                             "storage-tool.sh <action> [arg]...");
-        System.err.println ("Actions:\n"
-                            + "\tget  <record_id>\n"
-                            + "\tpeek [base] [max_count=5]\n"
-                            + "\ttouch <record_id> [record_id...]\n"
-                            + "\txslt <record_id> <xslt_url>\n"
-                            + "\tdump [base]     (dump storage on stdout)\n"
-                            + "\tholdings\n"
-                            + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)");
+        System.err.println("Actions:\n"
+                           + "\tget  <record_id>\n"
+                           + "\tpeek [base] [max_count=5]\n"
+                           + "\ttouch <record_id> [record_id...]\n"
+                           + "\txslt <record_id> <xslt_url>\n"
+                           + "\tdump [base]     (dump storage on stdout)\n"
+                           + "\tholdings\n"
+                           + "\tbatchjob <jobname> [base] [minMtime] "
+                                       +"[maxMtime]   "
+                                       + "(empty base string means all bases)");
     }
 
-    public static void main (String[] args) throws Exception {
+    /**
+     *
+     * @param args
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             printUsage();
-            System.exit (1);
+            System.exit(1);
         }
 
         Configuration conf;
@@ -358,7 +455,7 @@ public class StorageTool {
         try {
             conf = Configuration.getSystemConfiguration(false);
         } catch (Configurable.ConfigurationException e) {
-            System.err.println ("Unable to load system config: " + e.getMessage()
+            System.err.println("Unable to load system config: " + e.getMessage()
                                 +".\nUsing default configuration");
             conf = Configuration.newMemoryBased();
         }
@@ -368,44 +465,39 @@ public class StorageTool {
             rpcVendor = System.getProperty(ConnectionConsumer.CONF_RPC_TARGET);
 
             if (rpcVendor != null) {
-                conf.set (ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
+                conf.set(ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
             } else {
-                conf.set (ConnectionConsumer.CONF_RPC_TARGET,
-                          "//localhost:28000/summa-storage");
+                conf.set(ConnectionConsumer.CONF_RPC_TARGET,
+                          DEFAULT_RPC_TARGET);
             }
         }
 
-
         System.err.println("Using storage on: "
-                           + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
+                       + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
 
         StorageReaderClient reader = new StorageReaderClient (conf);
         StorageWriterClient writer = new StorageWriterClient (conf);
 
+        int exitCode;
         if ("get".equals(action)) {
-            actionGet(args, reader);
+            exitCode = actionGet(args, reader);
         } else if ("peek".equals(action)) {
-            actionPeek(args, reader);
+            exitCode = actionPeek(args, reader);
         } else if ("touch".equals(action)) {
-            actionTouch(args, reader, writer);
+            exitCode = actionTouch(args, reader, writer);
         } else if ("xslt".equals(action)) {
-            actionXslt(args, reader);
+            exitCode = actionXslt(args, reader);
         } else if ("dump".equals(action)){
-            actionDump(args, reader);
+            exitCode = actionDump(args, reader);
         } else if ("holdings".equals(action)) {
-            actionHoldings(args, reader);
+            exitCode = actionHoldings(reader);
         } else if ("batchjob".equals(action)) {
-            actionBatchJob(args, reader, writer);
+            exitCode = actionBatchJob(args, writer);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
-            System.exit (2);
+            exitCode = 2;
         }
+        System.exit(exitCode);
     }
-
 }
-
-
-
-
-

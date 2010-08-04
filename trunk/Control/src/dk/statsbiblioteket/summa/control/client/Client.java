@@ -66,9 +66,8 @@ import java.util.List;
  * Itself exposes a {@link ClientConnection} over RMI.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="The class and some methods needs Javadoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class Client extends UnicastRemoteObject implements ClientMBean {
     private static final long serialVersionUID = 68791684985L;
     private static Log log = LogFactory.getLog(Client.class);
@@ -1200,7 +1199,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.error("Error redeploying service '" + instanceId + "' from "
                                    + tmpPkgFile + " to " + pkgFile, e);
         }
-
         setStatusIdle();
     }
 
@@ -1267,7 +1265,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                                      + " dir " + pkgFile, e);
             }
         }
-
     }
 
     /**
@@ -1312,12 +1309,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.fatal("Caught toplevel exception, bailing out.", e);
             System.err.println ("Client caught toplevel exception. "
                                 + "Bailing out: " + e.getMessage());
-            System.exit (1);
+            System.exit(1);
         }
-
     }
 }
-
-
-
-

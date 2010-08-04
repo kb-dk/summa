@@ -181,4 +181,8 @@ fi
 
 $COMMAND
 
+exitCode=$?
+
 popd > /dev/null
+
+exit $exitCode

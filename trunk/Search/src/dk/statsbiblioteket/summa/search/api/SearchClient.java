@@ -14,16 +14,15 @@
  */
 package dk.statsbiblioteket.summa.search.api;
 
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * A helper class utilizing a stateless connection to a search engine exposing
@@ -65,7 +64,9 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
         SummaSearcher searcher = getConnection();
 
         if (searcher == null) {
-            log.warn("The searcher retrieved from getConnection was null");
+            final String msg =
+                           "The searcher retrieved from getConnection was null";
+            log.warn(msg);
         }
         try {
             return searcher.search(request);

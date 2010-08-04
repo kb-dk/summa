@@ -41,17 +41,25 @@ import java.io.IOException;
  * any Client local or remotely via the configured RPC mechanism.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "mke")
 public class ClientShell {
 
     private ConnectionManager<ClientConnection> connManager;
     private ClientConnection client;
+    // The core shell object, used by this client shell.
     private Core shell;
 
-    public ClientShell (String target) throws Exception {
-        shell = new Core ();
-        shell.setPrompt ("client-shell> ");
+    /**
+     * Constructs a {@link ClientShell} instance, sets up connection to the
+     * client, instantiate the shell core, and install client commands.
+     *
+     * @param target Target client. This is the Id for the client to connect to.
+     * @throws Exception If unable to connect to client.
+     */
+    public ClientShell(String target) throws Exception {
+        shell = new Core();
+        shell.setPrompt("client-shell> ");
 
         Configuration conf = Configuration.getSystemConfiguration(true);
 
@@ -69,16 +77,24 @@ public class ClientShell {
 
         connManager = new ConnectionManager<ClientConnection>(connFact);
 
-        shell.getShellContext().info ("Looking up client '" + target + "'");
+        shell.getShellContext().info("Looking up client '" + target + "'");
         ConnectionContext<ClientConnection> ctx = connManager.get(target);
         client = ctx.getConnection();
-        connManager.release (ctx);
+        connManager.release(ctx);
 
 
         if (client == null) {
             throw new IOException("Unable to connect to client: " + target);
         }
+        installCommands(target);
+    }
 
+    /**
+     * Private helper method for installing commands
+     * @param target Target client.
+     */
+    private void installCommands(String target) {
+        // Instal client commands
         shell.installCommand(new StatusCommand(connManager, target));
         shell.installCommand(new DeployCommand(connManager, target));
         shell.installCommand(new StartServiceCommand(connManager, target));
@@ -97,10 +113,10 @@ public class ClientShell {
     /**
      * Look up a {@link ClientConnection} given its instanceId.
      * This is done by looking it up via the Control server.
-     * @param conf configuration used to look up the address of the
-     *             Control server
-     * @param target instance id of the client
-     * @return a connection to the client
+     * @param conf Configuration used to look up the address of the
+     *             Control server.
+     * @param target Instance id of the client.
+     * @return a connection to the client.
      */
     private ClientConnection getClientConnection(Configuration conf,
                                                  String target,
@@ -142,25 +158,41 @@ public class ClientShell {
         return client; 
     }
 
-    public int run (Script script) {
+    /**
+     * Run the supplied script.
+     * @param script The script to run.
+     * @return The return value of the scripts. 0 means no error occur executing
+     * the script, a non-zero value means some error occured.
+     */
+    public int run(Script script) {
         int returnVal = shell.run(script);
         connManager.close();
 
         return returnVal;
     }
 
-    public static void printUsage () {
-        System.err.println ("USAGE:\n\tclient-shell <instanceId|client-address> "
-                            + "[script commands]\n");
-        System.err.println ("For example:\n\tclient-shell //localhost:27000/c2\nOr:\n\tclient-shell client-1 status");
+    /**
+     * Prints the usage of the client shell to {@link System#err}.
+     */
+    public static void printUsage() {
+        System.err.println("USAGE:\n\tclient-shell <instanceId|client-address> "
+                           + "[script commands]\n");
+        System.err.println("For example:\n\tclient-shell //localhost:27000/c2\n"
+                           + "Or:\n\tclient-shell client-1 status");
     }
 
-    public static void main (String[] args) {
+    /**
+     * Main method, used to start Client shell as a standalone shell.
+     * @param args Commandline arguments. The first argument is needed and
+     * specify the client Id. Any arguments after this is optional and are
+     * translated into a possible series of commands and executed. 
+     */
+    public static void main(String[] args) {
         Script script = null;
 
         if (args.length == 0) {
-                printUsage ();
-                System.exit (1);
+            printUsage();
+            System.exit(1);
         }
 
         if (args.length > 1) {
@@ -174,12 +206,5 @@ public class ClientShell {
             e.printStackTrace();
             System.exit(1);
         }
-
-
     }
-
 }
-
-
-
-
