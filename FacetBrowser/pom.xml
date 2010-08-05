@@ -15,8 +15,7 @@
   <!-- TODO remove src/dk/statsbiblioteket/summa/common/legacy/ -->
 
   <build>
-    <sourceDirectory>${basedir}/src/</sourceDirectory>
-    <testSourceDirectory>${basedir}/test/</testSourceDirectory>
+    <sourceDirectory>src/</sourceDirectory>
     <resources>
       <resource>
         <directory>config/</directory>
@@ -34,6 +33,40 @@
         <directory>${basedir}/test/data/</directory>
       </testResource>
     </testResources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <testSourceDirectory>test/</testSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+          <includes>
+            <include>**/*</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>api</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>api</classifier>
+              <includes>
+                <include>**/api/**/*</include>
+                </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
     <!-- Dependencies for Summa Search -->
