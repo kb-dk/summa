@@ -14,8 +14,7 @@
   <name>Summa Workflow module</name>
 
   <build>
-    <sourceDirectory>${basedir}/src/</sourceDirectory>
-    <testSourceDirectory>${basedir}/test/</testSourceDirectory>
+    <sourceDirectory>src/</sourceDirectory>
     <resources>
       <resource>
         <directory>config/</directory>
@@ -33,6 +32,15 @@
         <directory>${basedir}/test/data/</directory>
       </testResource>
     </testResources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <testSourceDirectory>test/</testSourceDirectory>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
     <!-- Dependencies for Summa Search -->
@@ -67,21 +75,24 @@
     <dependency>
       <groupId>${summaGroupId}</groupId>
       <artifactId>summa-storage</artifactId>
+      <classifier>api</classifier>
       <version>${summaVersion}</version>
     </dependency>
     <dependency>
       <groupId>${summaGroupId}</groupId>
       <artifactId>summa-search</artifactId>
+      <classifier>api</classifier>
       <version>${summaVersion}</version>
     </dependency>
       <dependency>
       <groupId>${summaGroupId}</groupId>
       <artifactId>summa-control</artifactId>
+      <classifier>api</classifier>
       <version>${summaVersion}</version>
     </dependency>
     <dependency>
       <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-facetbrowser</artifactId>
+      <artifactId>summa-ingest</artifactId>
       <version>${summaVersion}</version>
     </dependency>
   </dependencies>
