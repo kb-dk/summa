@@ -15,6 +15,10 @@
   <description>Creates summa WAR files for deployment in Web container.</description>
   <packaging>war</packaging>
 
+  <build>
+    <finalName>${artifactId}</finalName>
+  </build>  
+
   <dependencies>
     <dependency>
       <groupId>axis</groupId>

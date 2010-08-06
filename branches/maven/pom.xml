@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <properties>
-    <summaVersion>1.6.2</summaVersion>
+    <summaVersion>1.6.2-TEST</summaVersion>
     <summaGroupId>dk.statsbiblioteket.summa</summaGroupId>
   </properties>
 
@@ -148,7 +148,12 @@
           <optimize>true</optimize>
           <source>1.6</source>
           <target>1.6</target>
+          <compilerArgument>-Xlint</compilerArgument>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -165,6 +170,7 @@
     <module>Control</module>
     <module>Workflow</module>
     <module>Web</module>
+    <module>Samples/Summix/</module>
   </modules>
 
     <!-- plugin to generate html output for test cases -->
@@ -203,7 +209,13 @@
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0</url>                               
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
+  <repositories>
+    <repository>
+      <id>https://summa.svn.sourceforge.net/svnroot/summa</id>
+      <url>https://summa.svn.sourceforge.net/svnroot/summa</url>
+    </repository>
+  </repositories>
 </project>

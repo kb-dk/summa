@@ -12,8 +12,10 @@
 
   <artifactId>summa-search</artifactId>
   <name>Summa Search module</name>
+  <!-- TODO What about config -->
 
   <build>
+    <!-- Source -->
     <sourceDirectory>src/</sourceDirectory>
     <resources>
       <resource>
@@ -27,30 +29,26 @@
         </excludes>
       </resource>
     </resources>
-	<testResources>
+    <!-- Tests -->
+    <testSourceDirectory>test/</testSourceDirectory>
+    <testResources>
       <testResource>
-        <directory>${basedir}/test/data/</directory>
+        <directory>data/</directory>
       </testResource>
     </testResources>
+    <!-- Jars -->
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <testSourceDirectory>test/</testSourceDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-
+        <!-- Build normal Jar -->
         <configuration>
           <classesDirectory>${project.build.outputDirectory}</classesDirectory>
           <includes>
             <include>**/*</include>
           </includes>
         </configuration>
-
+        <!-- Build API jar -->
         <executions>
           <execution>
             <id>api</id>
@@ -70,7 +68,7 @@
     </plugins>
   </build>
 
-    <!-- Dependencies for Summa Search -->
+  <!-- Dependencies for Summa Search -->
   <dependencies>
     <dependency>
       <groupId>dk.statsbiblioteket.lucene</groupId>
@@ -96,6 +94,7 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
     </dependency>
+    <!-- Module dependencies -->
     <dependency>
       <groupId>${summaGroupId}</groupId>
       <artifactId>summa-common</artifactId>

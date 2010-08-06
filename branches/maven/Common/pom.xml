@@ -12,6 +12,7 @@
 
   <artifactId>summa-common</artifactId>
   <name>Summa Common module</name>
+  <description>Common source code for the Summa modules.</description>
 
   <dependencies>
     <dependency>
@@ -49,28 +50,28 @@
   </dependencies>
 
   <build>
+    <!-- Source -->
     <sourceDirectory>src/</sourceDirectory>
     <resources>
       <resource>
         <directory>data/</directory>
       </resource>
     </resources>
-	<testResources>
+    <!-- Tests -->
+    <testSourceDirectory>test/</testSourceDirectory>
+    <testResources>
       <testResource>
-        <directory>test/data/</directory>
+        <directory>data/</directory>
+      </testResource>
+      <testResource>
+          <directory>src/</directory>
+          <excludes>
+            <exclude>**/*.java</exclude>
+          </excludes>
       </testResource>
     </testResources>
+    <!-- Jars -->
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <testSourceDirectory>test/</testSourceDirectory>
-          <excludes>
-              <exclude>**/SampleDataLoader.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
