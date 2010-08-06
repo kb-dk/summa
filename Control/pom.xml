@@ -12,6 +12,7 @@
 
   <artifactId>summa-control</artifactId>
   <name>Summa Control module</name>
+  <description>This module, handles code that are used for controlling running Summa components.</description>
     
   <dependencies>
     <dependency>
@@ -54,6 +55,7 @@
       <artifactId>tika</artifactId>
       <version>0.3</version>
     </dependency>
+    <!-- Local dependencies -->
     <dependency>
       <groupId>${summaGroupId}</groupId>
       <artifactId>summa-common</artifactId>
@@ -91,7 +93,12 @@
     </dependency>
   </dependencies>
 
+  <!-- TODO doc/ to documentation -->
+  <!-- TODO what about config/ -->
+  <!-- TODO make contol zip -->
+    
   <build>
+    <!-- Source -->
     <sourceDirectory>src/</sourceDirectory>
     <resources>
       <resource>
@@ -99,36 +106,31 @@
       </resource>
       <!-- We have some resource down in code directory -->
       <resource>
-        <directory>src</directory>
+        <directory>src/</directory>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
     </resources>
+    <!-- Tests -->
+    <testSourceDirectory>test/</testSourceDirectory>
 	<testResources>
       <testResource>
-        <directory>${basedir}/test/data/</directory>
+        <directory>data/</directory>
       </testResource>
     </testResources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <testSourceDirectory>test/</testSourceDirectory>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        
+        <!-- Main jar file contains all java classes -->
         <configuration>
           <classesDirectory>${project.build.outputDirectory}</classesDirectory>
           <includes>
             <include>**/*</include>
           </includes>
         </configuration>
-
+        <!-- The Api Jar -->
         <executions>
           <execution>
             <id>api</id>

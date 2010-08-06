@@ -21,4 +21,14 @@
     <module>Modules/Status</module>
     <module>Modules/Website</module>
   </modules>
+
+  <build>
+      <sourceDirectory>src</sourceDirectory>
+      <testSourceDirectory>test/</testSourceDirectory>
+      <testResources>
+          <testResource>
+              <directory>data</directory>
+          </testResource>
+      </testResources>
+  </build>
 </project>
