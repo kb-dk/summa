@@ -31,7 +31,7 @@ public class SampleDataLoader extends TestCase {
 
     static final List<String> data = Arrays.asList(
             Strings.flushLocal(getSystemResourceAsStream(
-                                                    "data/lgpl-2.1-german.txt"))
+                                                    "lgpl-2.1-german.txt"))
             // Add more sample data sources here
     );
 
