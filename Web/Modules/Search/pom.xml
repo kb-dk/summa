@@ -11,7 +11,7 @@
   </parent>
 
   <artifactId>summa-web-search</artifactId>
-  <name>Summa Web Search odule</name>
+  <name>Summa Web Search module</name>
   <description>Creates summa WAR files for deployment in Web container.</description>
   <packaging>war</packaging>
 
