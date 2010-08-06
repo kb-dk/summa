@@ -118,16 +118,21 @@ public class RecordShaperFilterTest extends TestCase {
 //    "(?m)<foo.*>.*<bar .*class=\"id\".*>(.+)</bar>";
 
     public void testMultiline() throws Exception {
-        Configuration conf = Configuration.newMemoryBased(
-                RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
-                RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
+        try {
+            Configuration conf = Configuration.newMemoryBased(
+                    RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
+                    RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
 
-        List<Payload> payloads = Arrays.asList(new Payload(new Record(
-                        "id1", "base1", CONTENT.getBytes("utf-8"))));
-        RecordShaperFilter assigner = new RecordShaperFilter(conf);
-        assigner.setSource(new PayloadFeederHelper(payloads));
-        Record record = assigner.next().getRecord();
-        assertEquals("The ID should match", "21", record.getId());
+            List<Payload> payloads = Arrays.asList(new Payload(new Record(
+                            "id1", "base1", CONTENT.getBytes("utf-8"))));
+            RecordShaperFilter assigner = new RecordShaperFilter(conf);
+            assigner.setSource(new PayloadFeederHelper(payloads));
+            Record record = assigner.next().getRecord();
+            assertEquals("The ID should match", "21", record.getId());
+        } catch(Exception e) {
+            e.printStackTrace();
+            fail("No exception is expected here");
+        }
     }
 
     public void testMultilineBaseUse() throws Exception {

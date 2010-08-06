@@ -48,8 +48,13 @@ public class DummyStreamToRecordsTest extends TestCase {
         DummyStreamToRecords recorder = new DummyStreamToRecords(conf);
         recorder.setSource(reader);
         for (int i = 0 ; i < RECORDS ; i++) {
-            assertNotNull("We should be able to get Record " + (i+1),
+            try {
+                assertNotNull("We should be able to get Record " + (i+1),
                           recorder.next().getRecord());
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("No exception is expected here");
+            }
         }
 
         assertFalse("After depleting, the hasNext should be false",
