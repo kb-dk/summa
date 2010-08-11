@@ -30,26 +30,32 @@ import java.util.ArrayList;
 import java.net.URL;
 
 /**
- * A {@link ConfigurationStorage} implemetation backed by an in-memory
+ * A {@link ConfigurationStorage} implementation backed by an in-memory
  * {@link HashMap}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment = "Class needs better Javadoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class MemoryStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 342390483L;
     private Map<String,Serializable> map;
 
     /**
-     * Create a new empty {@code ConfigurationStorage} backed by an in-memeory
+     * Create a new empty {@code ConfigurationStorage} backed by an in-memory
      * {@link HashMap}.
      */
-    public MemoryStorage () {
-        map = new HashMap<String,Serializable> (100);
+    public MemoryStorage() {
+        map = new HashMap<String,Serializable>(100);
     }
 
-    public MemoryStorage (Configuration config) {
+    /**
+     * Creates a new empty {@code ConfigurationStorage} with the given
+     * configurations.
+     * Backend by an in-memory {@link java.util.HashMap}.
+     * 
+     * @param config The configuration for this MemoryStorage.
+     */
+    public MemoryStorage(Configuration config) {
         this();
         new Configuration(this).importConfiguration(config);
     }
@@ -57,17 +63,18 @@ public class MemoryStorage implements ConfigurationStorage {
     /**
      * Create a new MemoryStorage loading default values from an
      * input stream.
-     * @param in Inputstream from which to load XML data.
-     * @throws IOException if error  occours when loading XML from input stream.
+     * 
+     * @param in {@link InputStream} from which to load XML data.
+     * @throws IOException If error occurs when loading XML from input stream.
      */
-    public MemoryStorage (InputStream in) throws IOException {
+    public MemoryStorage(InputStream in) throws IOException {
         this();
         Properties p = new Properties();
 
         p.loadFromXML(in);
 
         for (Map.Entry entry : p.entrySet()) {
-            map.put ((String)entry.getKey(), (Serializable)entry.getValue());
+            map.put((String)entry.getKey(), (Serializable)entry.getValue());
         }
     }
 
@@ -76,10 +83,10 @@ public class MemoryStorage implements ConfigurationStorage {
      * an initial set of properties from an {@link URL} (with content in
      * Java property xml format).
      *
-     * @param initialConfig location of the initial resource
-     * @throws IOException if there are errors fetching the external resource
+     * @param initialConfig Location of the initial resource.
+     * @throws IOException If there are errors fetching the external resource.
      */
-    public MemoryStorage (URL initialConfig) throws IOException {
+    public MemoryStorage(URL initialConfig) throws IOException {
         this(initialConfig.openConnection().getInputStream());
     }
 
@@ -88,38 +95,82 @@ public class MemoryStorage implements ConfigurationStorage {
      * an initial set of properties from a system resource (with content in
      * Java property xml format).
      *
-     * @param initialResource the name of the resource to import
-     * @throws IOException if there is an error reading the resource
+     * @param initialResource The name of the resource to import.
+     * @throws IOException If there is an error reading the resource.
      */
-    public MemoryStorage (String initialResource) throws IOException {
+    public MemoryStorage(String initialResource) throws IOException {
         this(ClassLoader.getSystemResource(initialResource));
 
     }
 
+    /**
+     * Add the value to the configurations.
+     *
+     * @param key The name used to access the stored object.
+     * @param value The actual value to store.
+     */
+    @Override
     public void put(String key, Serializable value) {
-        map.put (key, value);
+        map.put(key, value);
     }
 
+    /**
+     * Get the object assigned to this key.
+     *
+     * @param key Name of object to look up.
+     * @return Object assigned to the given key.
+     */
+    @Override
     public Serializable get(String key) {
         return map.get(key);
     }
 
+    /**
+     * Return a iterator over the key, value pairs in this memory storage.
+     * @return Itarator over the key, value pairs in this storage.
+     */
+    @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() {
         return map.entrySet().iterator();
     }
 
+    /**
+     * Remove a value and its key from this storage.
+     * @param key The name of the value to remove from the storage.
+     */
+    @Override
     public void purge(String key) {
         map.remove(key);
     }
 
-    public int size () {
+    /**
+     * The size of this storage.
+     * @return The size of this storage.
+     */
+    @Override
+    public int size() {
         return map.size();
     }
 
+    /**
+     * True since this implementation of
+     * {@link dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage}
+     * supports sub storage.
+     * @return True.
+     */
+    @Override
     public boolean supportsSubStorage() {
         return true;
     }
 
+    /**
+     * Return a sub storage. 
+     * @param key The name of the sub storage.
+     * @return A Configuration storage, which is one of the sub storage.
+     * @throws IOException If sub storage doesn't exists og this is of the wrong
+     * type.
+     */
+    @Override
     public ConfigurationStorage getSubStorage(String key) throws IOException {
         try {
             Object sub = get(key);
@@ -136,11 +187,28 @@ public class MemoryStorage implements ConfigurationStorage {
         }
     }
 
+    /**
+     * Creates a new sub storage.
+     * @param key The name of the sub storage.
+     * @return The created storage.
+     * @throws IOException If error occur and the new storage wasn't inserted
+     * correctly.
+     */
+    @Override
     public ConfigurationStorage createSubStorage(String key) throws
                                                                    IOException {
         put(key, new MemoryStorage());
         return getSubStorage(key);
     }
+
+    /**
+     * Create a specific number of sub storage and add those to the list.
+     * @param key The key for the list of storage.
+     * @param count The number of storage to create.
+     * @return A list of all created sub storage.
+     * @throws IOException if error occur while added sub storage.
+     */
+    @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                             throws IOException {
         ArrayList<MemoryStorage> subProperties =
@@ -154,8 +222,16 @@ public class MemoryStorage implements ConfigurationStorage {
         put(key, subProperties);
         return storages;
     }
+
+    /**
+     * Return all sub storage with the given key.
+     * @param key The key for the list of storage.
+     * @return A list of sub storage.
+     * @throws IOException If error occur while fetching sub storage.
+     */
+    @Override
     public List<ConfigurationStorage> getSubStorages(String key) throws
-                                                                 IOException {
+                                                                   IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
             //noinspection DuplicateStringLiteralInspection
@@ -178,7 +254,3 @@ public class MemoryStorage implements ConfigurationStorage {
         return storages;
     }
 }
-
-
-
-
