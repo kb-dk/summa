@@ -21,22 +21,21 @@ import jline.ConsoleReader;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
+import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ShellTest extends TestCase {
-
     Core core;
     ShellContext ctx;
 
     public void setUp () throws Exception {        
         ctx = new ShellContext () {
                 private Stack<String> lineBuffer = new Stack<String>();
-                private ConsoleReader lineIn =  createConsoleReader();
+                private ConsoleReader lineIn = null; ///createConsoleReader();
                 private String lastError = null;
 
                 public void error(String msg) {
@@ -177,7 +176,7 @@ public class ShellTest extends TestCase {
         String[] stmts;
         Iterator<String> iter;
 
-        /* Check semi-colon delimiting */
+        // Check semi-colon delimiting
         sc = new Script("foo; bar");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
@@ -192,7 +191,7 @@ public class ShellTest extends TestCase {
             assertEquals(stmt, iter.next());
         }
 
-        /* Check compact layout and trailing ; */
+        // Check compact layout and trailing ;
         sc = new Script("foo;bar;");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
@@ -200,7 +199,7 @@ public class ShellTest extends TestCase {
             assertEquals(stmt, iter.next());
         }
 
-        /* Check newline delimiting */
+        // Check newline delimiting
         sc = new Script("foo\nbar");
         stmts = new String[] {"foo", "bar"};
         iter = sc.iterator();
@@ -208,7 +207,7 @@ public class ShellTest extends TestCase {
             assertEquals(stmt, iter.next());
         }
 
-        /* Three statements and a trailing \n */
+        // Three statements and a trailing \n
         sc = new Script("foo\nbar\nbaz\n");
         stmts = new String[] {"foo", "bar", "baz"};
         iter = sc.iterator();
@@ -216,7 +215,7 @@ public class ShellTest extends TestCase {
             assertEquals(stmt, iter.next());
         }
 
-        /* Check escapes */
+        // Check escapes
         sc = new Script("foo  \\;    bar");
         stmts = new String[] {"foo  ;    bar"};
         iter = sc.iterator();
@@ -231,7 +230,7 @@ public class ShellTest extends TestCase {
             assertEquals(stmt, iter.next());
         }
 
-        /* Empty scripts */
+        // Empty scripts 
         sc = new Script("\n");
         iter = sc.iterator();
         assertFalse(iter.hasNext());
