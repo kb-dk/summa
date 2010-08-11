@@ -116,10 +116,13 @@ public class QueryOptions implements Serializable {
     protected int parentHeight;
 
     /**
-     *
+     * Array of attributes.
      */
     protected ATTRIBUTES[] attributes = null;
 
+    /**
+     * String map of all metadata.
+     */
     protected StringMap meta;
 
     /**
@@ -132,7 +135,7 @@ public class QueryOptions implements Serializable {
      * @param indexableFilter The indexable filter {@link #deletedFilter}.
      * @param childDepth The child depth for records to fetch
      * {@link #childDepth}.
-     * @param parentHeight The parent heigth for records to fetch
+     * @param parentHeight The parent heighh for records to fetch
      * {@link #childDepth}.
      * @param meta A local StringMap for storing meta values for these query
      * options.
@@ -154,7 +157,7 @@ public class QueryOptions implements Serializable {
      * @param indexableFilter The indexable filter {@link #deletedFilter}.
      * @param childDepth The child depth for records to fetch
      * {@link #childDepth}.
-     * @param parentHeight The parent heigth for records to fetch
+     * @param parentHeight The parent height for records to fetch
      * {@link #childDepth}.
      * @param meta A local StringMap for storing meta values for these query
      * options.
@@ -197,7 +200,7 @@ public class QueryOptions implements Serializable {
     /**
      * Create a clone of {@code original}.
      *
-     * @param original a non-{@code null} QueryOptions object
+     * @param original A non-{@code null} QueryOptions object.
      */
     public QueryOptions(QueryOptions original) {
         this(original.deletedFilter(),
@@ -210,7 +213,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return boolean value for {@link #deletedFilter}.
      *
-     * @return value of {@link #deletedFilter}.
+     * @return value Of {@link #deletedFilter}.
      */
     public Boolean deletedFilter() {
         return deletedFilter;
@@ -219,7 +222,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return true if this filter has a {@link #deletedFilter} attribute.
      *
-     * @return true if this filter has a {@link #deletedFilter} attribute.
+     * @return True if this filter has a {@link #deletedFilter} attribute.
      */
     public boolean hasDeletedFilter() {
         return deletedFilter != null;
@@ -228,7 +231,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return boolean value for {@link #indexableFilter}.
      *
-     * @return value of {@link #indexableFilter}.
+     * @return Value of {@link #indexableFilter}.
      */
     public Boolean indexableFilter () {
         return indexableFilter;
@@ -237,7 +240,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return true if this filter has an {@link #indexableFilter} defined.
      *
-     * @return true if this filter has an {@link #indexableFilter} defined.
+     * @return True if this filter has an {@link #indexableFilter} defined.
      */
     public boolean hasIndexableFilter () {
         return indexableFilter != null;
@@ -246,7 +249,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return boolean value for {@link #childDepth}.
      *
-     * @return value of {@link #childDepth}.
+     * @return Value of {@link #childDepth}.
      */
     public int childDepth () {
         return childDepth;
@@ -255,7 +258,7 @@ public class QueryOptions implements Serializable {
     /**
      * Return true if this filter has an {@link #parentHeight} defined.
      *
-     * @return true if this filter has an {@link #parentHeight} defined.
+     * @return True if this filter has an {@link #parentHeight} defined.
      */
     public int parentHeight () {
         return parentHeight;
@@ -265,7 +268,7 @@ public class QueryOptions implements Serializable {
      * Return true if this filter has {@link #meta} and this StringMap isn't
      * empty.
      *
-     * @return true {@link #meta} defined and not empty.
+     * @return True {@link #meta} defined and not empty.
      */
     public boolean hasMeta () {
         return meta != null && !meta.isEmpty();
@@ -273,28 +276,28 @@ public class QueryOptions implements Serializable {
 
     /**
      * Return the underlying {@link StringMap} used to store the meta values
-     * for these query options
-     * @return the underlying StringMap or {@code null} if the options does
-     *         not have any meta values associated with them
+     * for these query options.
+     * @return The underlying StringMap or {@code null} if the options does
+     *         not have any meta values associated with them.
      */
     public StringMap meta() {
         return meta;
     }
 
     /**
-     * Get a meta-value on these query options
-     * @param key the meta key to look up
-     * @return the meta value or {@code null} if no value corresponds to
-     *         {@code key}
+     * Get a meta-value on these query options.
+     * @param key The meta key to look up.
+     * @return The meta value or {@code null} if no value corresponds to
+     *         {@code key}.
      */
     public String meta(String key) {
         return meta == null ? null : meta.get(key);
     }
 
     /**
-     * Set a meta-value on these query options
-     * @param key the key to store the value under
-     * @param value the value to associate with {@code key}
+     * Set a meta-value on these query options.
+     * @param key The key to store the value under.
+     * @param value The value to associate with {@code key}.
      */
     public void meta(String key, String value) {
         if (meta == null) {
@@ -305,9 +308,10 @@ public class QueryOptions implements Serializable {
 
     /**
      * Check whether a given record has the required deletion and indexable
-     * flags to match this set of query options
+     * flags to match this set of query options.
      * @param r The record to check.
-     * @return True iff the record has the required deletion and indexable flags.
+     * @return True iff the record has the required deletion and indexable
+     * flags.
      */
     public boolean allowsRecord (Record r) {
         if (hasDeletedFilter()) {
@@ -376,4 +380,3 @@ public class QueryOptions implements Serializable {
                 mt, null, null, meta, contentCompressed);
     }
 }
-

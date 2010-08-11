@@ -154,7 +154,11 @@ public class RecordTest extends TestCase {
         assertFalse(r1_2.equals(r2));
     }
 
-    public void testEmptyConstructor() {
-        Record r = new Record();   
+    public void testConstructorsWithEmptyContent() {
+        Record r = new Record();
+        assertNotNull(r);
+        r = new Record("test", "test-base", true, false, null, 0, 0, null, null,
+                       null, false);
+        assertNotNull(r);
     }
 }

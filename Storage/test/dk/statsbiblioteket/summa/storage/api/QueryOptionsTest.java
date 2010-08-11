@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 /**
  * Test cases for {@link QueryOptions}
  *
- * @author mke
+ * @author Mikkel Kamstrup <mailto:mke@statsbiblioteket.dk>
  * @since Jan 8, 2010
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -73,5 +73,39 @@ public class QueryOptionsTest extends TestCase {
         assertTrue(opt.hasMeta());
     }
 
-}
+    public void testGetNewRecord() {
+        QueryOptions opt = new QueryOptions(null, null, 0, 0, null,
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDBASE,
+                                                QueryOptions.ATTRIBUTES.RECORDMETA,
+                                                QueryOptions.ATTRIBUTES.RECORDID}
+                );
 
+        Record r = opt.getNewRecord(new Record("test", "test-base", true, false,
+                                    null, 0, 0, null, null, null, false));
+        assertNotNull(r);
+
+        opt = new QueryOptions(null, null, 0, 0, null,
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDBASE,
+                                                QueryOptions.ATTRIBUTES.RECORDMETA}
+                );
+        try {
+            r = opt.getNewRecord(r);
+            fail("This should fail with illegal arguement exception");
+        } catch(Exception e) {
+            // okay
+        }
+
+        opt = new QueryOptions(null, null, 0, 0, null,
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDID,
+                                                QueryOptions.ATTRIBUTES.RECORDMETA}
+                );
+        try {
+            r = opt.getNewRecord(r);
+            fail("This should fail with illegal arguement exception");
+        } catch(Exception e) {
+            // okay
+        }
+
+    }
+
+}
