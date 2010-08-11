@@ -43,12 +43,20 @@ public class ConfigurationTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
+        if(!new File("Common/tmp/").mkdirs()) {
+            fail("Error creating 'Common/tmp/'");
+        }
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        if(!new File("Common/tmp/").delete()) {
+            fail("Error deleting 'Common/tmp/'");
+        }
     }
 
     public void testSetGet() throws Exception {
@@ -62,7 +70,7 @@ public class ConfigurationTest extends TestCase {
         assertEquals("getStrings on a value without ,s should have size 1",
                      1, l.size());
         assertEquals("getStrings on a value without ,s should return the expected",
-                     "2768", l.get(0));
+                     "3268", l.get(0));
     }
 
     public void testGetStringsSingleAgain() throws Exception {
@@ -87,7 +95,7 @@ public class ConfigurationTest extends TestCase {
     public void testGetString() throws Exception {
         Configuration conf = new Configuration(new FileStorage("configuration.xml"));
         String s = conf.getString ("summa.configuration.service.port");
-        assertEquals("getString should return expected value", "2768", s);
+        assertEquals("getString should return expected value", "3268", s);
     }
 
     public void testGetStringWithDefault () throws Exception {
@@ -226,7 +234,7 @@ public class ConfigurationTest extends TestCase {
         assertNotNull(conf.getStorage());
 
         try {
-            conf = Configuration.getSystemConfiguration(false);
+            Configuration.getSystemConfiguration(false);
             fail ("Should not be able to retrieve system config when not set");
         } catch (Configurable.ConfigurationException e) {
             // expected
@@ -241,7 +249,6 @@ public class ConfigurationTest extends TestCase {
         for (Map.Entry<String, Serializable> entry: conf) {
             count ++;
         }
-
         assertEquals(count, 0);
     }
 
@@ -293,6 +300,7 @@ public class ConfigurationTest extends TestCase {
 
     public void testLoadXConfigurationFromFile() throws Exception {
         File tmp = new File("Common/tmp/", "tmpstorage.xml");
+        System.out.println(tmp.getAbsolutePath());
         Files.copy(Resolver.getFile("data/simple_xstorage.xml"), tmp, true);
 
         Configuration conf = Configuration.load(tmp.toString());
@@ -300,7 +308,9 @@ public class ConfigurationTest extends TestCase {
                    conf.getStorage() instanceof XStorage);
         assertTrue("The underlying Storage should support sub storages",
                    conf.supportsSubConfiguration());
-        tmp.delete();
+        if(!tmp.delete()) {
+            System.err.println("Error deleting '" + tmp.getName() + "'");
+        }
     }
 
     public void testGetSystemConfigError () throws Exception {
@@ -362,7 +372,7 @@ public class ConfigurationTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           val);
 
-        List<Configuration.Pair<String,Integer>> expected = Arrays.asList(
+        Arrays.asList(
                 new Configuration.Pair<String,Integer>("a",1),
                 new Configuration.Pair<String,Integer>("b",2)
         );
@@ -471,11 +481,18 @@ public class ConfigurationTest extends TestCase {
         //TODO: Test goes here...
     }
 
+    public void testImportConfiguration() throws Exception {
+        Configuration conf = Configuration.getSystemConfiguration(true);
+        assertNotNull(conf);
+        assertNotNull(conf.getStorage());
+        try {
+            conf.importConfiguration(conf);
+        } catch(ConfigurationStorageException e) {
+            fail("should not produces an exception");
+        }
+    }
+
     public static Test suite() {
         return new TestSuite(ConfigurationTest.class);
     }
 }
-
-
-
-
