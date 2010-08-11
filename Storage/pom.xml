@@ -18,8 +18,8 @@
     <!-- Source -->
     <sourceDirectory>src/</sourceDirectory>
     <resources>
-      <resource>
-        <directory>config/</directory>
+      <resource>                                                                                                                      
+        <directory>data/</directory>
       </resource>
       <!-- We have some resource down in code directory -->
       <resource>
