@@ -54,15 +54,20 @@ import java.util.TreeSet;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Core {
-
+    // Commands usable in this shell
     private HashMap<String, Command> commands;
+    // Alises availeble in this shell
     private HashMap<String, String> aliases;
+    // The last trace
     private String lastTrace;
-    private String header, prompt;
-    private ShellContext shellCtx;
-    private CommandLineParser cliParser;
-    private static SimpleCompletor cmdComparator;
 
+    private String header, prompt;
+    // The {@link ShellContext} implementation used.
+    private ShellContext shellCtx;
+    // The {@link CommandLineParser} used.
+    private CommandLineParser cliParser;
+    // Command comprator.
+    private static SimpleCompletor cmdComparator;
 
     /**
      * Create a new shell {@code Core} outputting to a custom
@@ -78,7 +83,7 @@ public class Core {
      * @param debug If {@code true} debug messages will be printed to the
      *              created shell context if {@code shellCtx} is {@code null}.
      */
-    public Core (ShellContext shellCtx, final boolean withDefaultCommands,
+    public Core(ShellContext shellCtx, final boolean withDefaultCommands,
                                                           final boolean debug) {
         cliParser = new PosixParser();
         commands = new HashMap<String,Command>();
@@ -91,7 +96,7 @@ public class Core {
         if (shellCtx != null) {
             this.shellCtx = shellCtx;
         } else {
-            this.shellCtx = new ShellContext () {
+            this.shellCtx = new ShellContext() {
                 private Stack<String> lineBuffer = new Stack<String>();
                 private String lastError = null;
                 private ConsoleReader lineIn = createConsoleReader();
@@ -105,7 +110,7 @@ public class Core {
                 public void error(String msg) {
                     lineBuffer.clear();
                     lastError = msg;
-                    System.out.println ("[ERROR] " + msg);
+                    System.out.println("[ERROR] " + msg);
                 }
 
                 /**
@@ -114,7 +119,7 @@ public class Core {
                  */
                 @Override
                 public void info(String msg) {
-                    System.out.println (msg);
+                    System.out.println(msg);
                 }
 
                 /**
@@ -123,7 +128,7 @@ public class Core {
                  */
                 @Override
                 public void warn(String msg) {
-                    System.out.println ("[WARNING] " + msg);
+                    System.out.println("[WARNING] " + msg);
                 }
 
                 /**
@@ -192,14 +197,14 @@ public class Core {
                  */
                 @Override
                 public void clear() {
-                  try {
-                    lineIn.clearScreen();
-                  } catch(IOException e) {
-                    error("Clearing screen");
-                  }
+                    try {
+                        lineIn.clearScreen();
+                    } catch(IOException e) {
+                        error("Error clearing screen");
+                        error(e.toString());
+                    }
                 }
             };
-
         }
         // Install default commands.
         if (withDefaultCommands) {
