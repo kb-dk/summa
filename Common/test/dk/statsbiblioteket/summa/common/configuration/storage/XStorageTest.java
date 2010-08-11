@@ -36,12 +36,10 @@ import java.util.regex.Pattern;
         author = "te")
 public class XStorageTest extends ConfigurationStorageTestCase {
     public static final File subLocation =
-               new File("Common/test/dk/statsbiblioteket/summa/"
-                                + "common/configuration/storage/"
-                                + "substorage.xml").getAbsoluteFile();
+               new File("Common/test/data/substorage.xml").getAbsoluteFile();
 
     public XStorageTest() throws Exception {
-        super(new XStorage());        
+        super(new XStorage());
     }
 
     public void setUp() throws Exception {

@@ -14,15 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * MemoryStorage Tester.
  *
- * @author <Authors name>
+ * @author Toke <mailto:te@statsbblioteket.dk>
  * @since <pre>09/03/2008</pre>
  * @version 1.0
  */
@@ -31,10 +32,12 @@ public class MemoryStorageTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -53,17 +56,31 @@ public class MemoryStorageTest extends TestCase {
         xs.put("seven", 7);
         xs.createSubStorage("submarine").put("eight", 8);
         assertEquals("The storage should contain the number 7",
-                     new Integer(7), (Integer)xs.get("seven"));
+                     7, xs.get("seven"));
         ConfigurationStorage sub = xs.getSubStorage("submarine");
         assertNotNull("There should be a sub storage named submarine", sub);
-        assertEquals("The sub storage should contain 8", new Integer(8), (Integer)sub.get("eight"));
+        assertEquals("The sub storage should contain 8", 8, sub.get("eight"));
     }
 
     public static Test suite() {
         return new TestSuite(MemoryStorageTest.class);
     }
+
+    public void testMemoryStorageWithConf() throws Exception {
+        // TODO Recreate error described in 
+        // '#6 	Importing Sub Configurations is Broken'
+        try {
+            XStorage xs = new XStorage(XStorageTest.subLocation);
+            Configuration c = new Configuration(xs);
+
+            c.importConfiguration(new Configuration(xs));
+
+            MemoryStorage ms = new MemoryStorage(c);
+            ms.createSubStorage("storage");
+            ConfigurationStorage cs = ms.getSubStorage("storage");
+        } catch(Exception e) {
+            e.printStackTrace();
+            fail("Exception thrown");
+        }
+    }
 }
-
-
-
-
