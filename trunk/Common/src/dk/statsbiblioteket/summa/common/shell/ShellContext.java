@@ -20,7 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Simple interface to provide user feedback and read input
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "hal")
 public interface ShellContext {
 
@@ -86,7 +86,3 @@ public interface ShellContext {
      */
     public void clear();
 }
-
-
-
-
