@@ -50,13 +50,54 @@ public class ShellContextImpl implements ShellContext {
     private Stack<String> lineBuffer = new Stack<String>();
     String lastError = "";
 
-    public ShellContextImpl(ConsoleReader consoleReader, PrintStream error,
-                                                             PrintStream info) {
+    /**
+     * Creates a {@link ShellContext} where errors is printed on the error
+     * stream, info, warn and if {@code debug} is true also debug is printed on
+     * info stream.
+     * @param consoleReader The console reader.
+     * @param error The error stream.
+     * @param info The info stream.
+     * @param debug If {@link true} debug message are printed on the info print
+     * stream.
+     */
+    public ShellContextImpl(final ConsoleReader consoleReader,
+                            final PrintStream error, final PrintStream info,
+                                                                boolean debug) {
+        this(consoleReader);
+        if(debug) {
+            initStreams(error, info, info, info);
+        } else {
+            initStreams(error, info, info, null);
+        }
+    }
+
+    /**
+     * Default constructor, this initialize the {@link ConsoleReader} and sets
+     * all streams to null. If any streams are needed, call
+     * {@link #initStreams(java.io.PrintStream, java.io.PrintStream, java.io.PrintStream, java.io.PrintStream)}
+     * after construction via this method. 
+     * Note: This constructor can also be used with the intention of creating a
+     * silent shell.
+     * @param consoleReader The console reader to user.
+     */
+    public ShellContextImpl(final ConsoleReader consoleReader) {
         this.lineIn = consoleReader;
+        initStreams(null, null, null, null);
+    }
+
+    /**
+     * Private helper method, initialize streams.
+     * @param error The error stream.
+     * @param info The info stream.
+     * @param warn The warn stream.
+     * @param debug The debug stream.
+     */
+    private void initStreams(final PrintStream error, final PrintStream info,
+                             final PrintStream warn, final PrintStream debug) {
         this.error = error;
         this.info = info;
-        this.debug = info;
-        this.warn = info;
+        this.debug = debug;
+        this.warn = warn;
     }
 
     /**
@@ -66,7 +107,9 @@ public class ShellContextImpl implements ShellContext {
     @Override
     public void error(String msg) {
         lastError = msg;
-        error.println("[ERROR] " + msg);
+        if(error != null) {
+            error.println("[ERROR] " + msg);
+        }
     }
 
     /**
@@ -75,7 +118,9 @@ public class ShellContextImpl implements ShellContext {
      */
     @Override
     public void info(String msg) {
-        info.println("[INFO] " + msg);
+        if(info != null) {
+            info.println(msg);
+        }
     }
 
     /**
@@ -84,7 +129,9 @@ public class ShellContextImpl implements ShellContext {
      */
     @Override
     public void warn(String msg) {
-        warn.println("[WARN] " + msg);
+        if(warn != null) {
+            warn.println("[WARN] " + msg);
+        }
     }
 
     /**
@@ -93,7 +140,9 @@ public class ShellContextImpl implements ShellContext {
      */
     @Override
     public void debug(String msg) {
-        debug.println("[DEBUG] " + msg);
+        if(debug != null) {
+            debug.println("[DEBUG] " + msg);
+        }
     }
 
     /**
@@ -138,7 +187,7 @@ public class ShellContextImpl implements ShellContext {
      */
     @Override
     public void prompt(String msg) {
-        info.println(msg);
+        info.print(msg);
         info.flush();
     }
 
