@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
-import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
@@ -96,115 +95,8 @@ public class Core {
         if (shellCtx != null) {
             this.shellCtx = shellCtx;
         } else {
-            this.shellCtx = new ShellContext() {
-                private Stack<String> lineBuffer = new Stack<String>();
-                private String lastError = null;
-                private ConsoleReader lineIn = createConsoleReader();
-                private boolean enableDebug = debug;
-
-                /**
-                 * {@inheritDoc}
-                 * @param msg the message to print
-                 */
-                @Override
-                public void error(String msg) {
-                    lineBuffer.clear();
-                    lastError = msg;
-                    System.out.println("[ERROR] " + msg);
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @param msg The message to print.
-                 */
-                @Override
-                public void info(String msg) {
-                    System.out.println(msg);
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @param msg The message to print.
-                 */
-                @Override
-                public void warn(String msg) {
-                    System.out.println("[WARNING] " + msg);
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @param msg The message to print.
-                 */
-                @Override
-                public void debug(String msg) {
-                    if (enableDebug) {
-                        System.out.println ("[DEBUG] " + msg);
-                    }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @return The next line of input or null if the input stream
-                 * has been closed.
-                 */
-                @Override
-                public String readLine() {
-                    if (!lineBuffer.empty()) {
-                        return lineBuffer.pop();
-                    }
-
-                    try {
-                        String line = lineIn.readLine();
-                        if (line != null) {
-                            return line.trim();
-                        }
-                        return null;
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to read input", e);
-                    }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @param line The line of input to add to the buffer.
-                 */
-                @Override
-                public void pushLine(String line) {
-                    lineBuffer.push(line.trim());                    
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @return The last error.
-                 */
-                @Override
-                public String getLastError() {
-                    return lastError;
-                }
-
-                /**
-                 * {@inheritDoc}
-                 * @param prompt The message to prompt.
-                 */
-                @Override
-                public void prompt(String prompt) {
-                    System.out.print(prompt);
-                    System.out.flush();
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void clear() {
-                    try {
-                        lineIn.clearScreen();
-                    } catch(IOException e) {
-                        error("Error clearing screen");
-                        error(e.toString());
-                    }
-                }
-            };
+            this.shellCtx = new ShellContextImpl(createConsoleReader(),
+                                                 System.err, System.out, debug);
         }
         // Install default commands.
         if (withDefaultCommands) {
