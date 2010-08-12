@@ -52,8 +52,8 @@ public class NativeRunner  {
     private final List<Thread> threads =
             Collections.synchronizedList(new LinkedList<Thread>());
 
-    private final int MAXINITIALBUFFER = 1000000;
-    private final int THREADTIMEOUT = 1000; // Milliseconds
+    private static final int MAXINITIALBUFFER = 1000000;
+    private static final int THREADTIMEOUT = 1000; // Milliseconds
 
     private String[] commands;
     private String[] environment;
