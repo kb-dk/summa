@@ -44,20 +44,18 @@ import java.io.StringWriter;
 // TODO: Handle emptyFacet translation int<->long for open and store
 // TODO: Experiment with OpenBitSet from the SOLR project for speed
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class CoreMapBitStuffed extends CoreMap32 {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
 
-//    private static final int VERSION = 10000;
-
     private static final Object META_REFERENCE_COUNT = "references";
     private static final int CONTENT_INITIAL_SIZE = 10000;
     private static final int MIN_GROWTH_SIZE = 1000;
-//    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
     private static final double CONTENT_GROWTHFACTOR = 1.5;
 
     private boolean shift = DEFAULT_SHIFT_ON_REMOVE;
+    private static final String NULL = "null";
 
     /**
      * Mapping from docID => start position in {@link #values}. The end position
@@ -85,9 +83,9 @@ public class CoreMapBitStuffed extends CoreMap32 {
 
     /**
      * Creates a core map awaiting {@link #open}.
-     * @param conf      configuration for the CoreMap.
+     * @param conf      Configuration for the CoreMap.
      *                  See {@link CoreMap} for details.
-     * @param structure the structure for the Facets.
+     * @param structure The structure for the Facets.
      */
     public CoreMapBitStuffed(Configuration conf, Structure structure) {
         super(conf, structure);
@@ -100,14 +98,13 @@ public class CoreMapBitStuffed extends CoreMap32 {
         }
         log.trace("Constructed CoreMapBitStuffed with shifting: " + shift);
     }
-    
-//    private void init(int docCount, int facetCount) {
-  //      docCapacity = docCount;
-    //    finalIndex = docCount -1;
-//        index = new int[docCapacity + 1];
-//    }
 
-
+    /**
+     * {@inheritDoc}
+     * @param docID A document ID.
+     * @param newValues New values for the local values {@link #values}.
+     * @return A delta value.
+     */
     @Override
     public int setValues(int docID, int[] newValues) {
         fitStructure(docID, newValues);
@@ -125,13 +122,14 @@ public class CoreMapBitStuffed extends CoreMap32 {
 
         /* Insert values */
         System.arraycopy(newValues, 0, values, index[docID], newValues.length);
-/*        int position = 0;
-        for (Integer value: newValues) {
-            values[index[docID] + position++] = value;
-        }*/
         return valueDelta;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param docID A document ID.
+     * @return True if the document behind the id has any tags.
+     */
     @Override
     public boolean hasTags(int docID) {
         return docID < getDocCount() && index[docID] != index[docID + 1];
@@ -140,7 +138,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
     /**
      * Helper for assignValues that makes room in the values-array and adjusts
      * the positions in the index.
-     * @param docID      the position from where to make room.
+     * @param docID      The position from where to make room.
      * @param valueDelta The delta for values to adjust.
      */
     private void prepareIndexAndValues(int docID, int valueDelta) {
@@ -170,30 +168,6 @@ public class CoreMapBitStuffed extends CoreMap32 {
             }
             highestDocID = docID;
         }
-/*        if (docID > index.length - 2) {
-            int newSize = Math.min(
-                    index.length + MAX_GROWTH_SIZE, Math.max(
-                    index.length + MIN_GROWTH_SIZE,
-                    (int)(index.length * CONTENT_GROWTHFACTOR)));
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Expanding index array from " + index.length
-                      + " to " + newSize);
-            int[] exp = new int[newSize];
-            System.arraycopy(index, 0, exp, 0, index.length);
-            index = exp;
-        }
-        // Check value capacity
-        if (valuePos + tagIDs.length >= values.length) {
-            int newSize = (int)Math.max(
-                    values.length * CONTENT_GROWTHFACTOR,
-                    values.length + tagIDs.length + 1);
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Expanding value array from " + values.length
-                      + " to " + newSize);
-            int[] exp = new int[newSize];
-            System.arraycopy(values, 0, exp, 0, values.length);
-            values = exp;
-        }*/
     }
 
     /**
@@ -227,7 +201,11 @@ public class CoreMapBitStuffed extends CoreMap32 {
         return array;
     }
 
-//    private int EMPTY_VALUE = calculateValue(getEmptyFacet(), 0);
+    /**
+     * {@inheritDoc}
+     * @param docID The docID top remove.
+     */
+    @Override
     public void remove(int docID) {
         if (docID > highestDocID) {
             throw new IllegalArgumentException(String.format(
@@ -240,9 +218,11 @@ public class CoreMapBitStuffed extends CoreMap32 {
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Shifting index down 1 position from " + docID);
-        for (int indexPos = docID ; indexPos <= highestDocID ; indexPos++) {
-            index[indexPos] = index[indexPos + 1];
-        }
+
+        //for (int indexPos = docID ; indexPos <= highestDocID ; indexPos++) {
+        //    index[indexPos] = index[indexPos + 1];
+        //}
+        System.arraycopy(index, docID+1, index, docID, highestDocID+1);
         highestDocID--;
     }
 
@@ -258,6 +238,11 @@ public class CoreMapBitStuffed extends CoreMap32 {
         sw.append("]");
         return sw.toString();
     }
+
+    /**
+     * Expcse the internal state of the index.
+     * @return String representation of the internal state of the index.
+     */
     protected String exposeInternalState() {
         StringWriter sw = new StringWriter(500);
         // TODO: Make a better toString (make a List with array as backing)
@@ -275,6 +260,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
      * @return an array of facetIDs, belonging to the given facet for the given
      *         document-ID.
      */
+    @Override
     public int[] get(int docID, int facetID) {
         if (docID > highestDocID) {
             //noinspection DuplicateStringLiteralInspection
@@ -296,12 +282,16 @@ public class CoreMapBitStuffed extends CoreMap32 {
     }
 
     private static final int[] EMPTY = new int[0];
+
+    /**
+     * {@inheritDoc}
+     * @param docID The document ID to get the values from.
+     * @return The values for the document behind the given ID.
+     */
     @Override
     public int[] getValues(int docID) {
         if (docID > highestDocID) {
             //noinspection DuplicateStringLiteralInspection
-/*            log.warn(String.format("Requested %d out of %d documents",
-                                   docID, getDocCount()));*/
             return EMPTY;
         }
         //noinspection DuplicateStringLiteralInspection
@@ -315,6 +305,12 @@ public class CoreMapBitStuffed extends CoreMap32 {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws IOException if error occur while storing meta-/index-/values-
+     * data.
+     */
+    @Override
     public void store() throws IOException {
         log.info("Storing integer-based map with docCount " + getDocCount());
         storeMeta();
@@ -322,11 +318,24 @@ public class CoreMapBitStuffed extends CoreMap32 {
         storeValues(valuePos);
         log.debug("Finished storing integer-based map");
     }
+
+    /**
+     * {@inheritDoc}
+     * @param meta Meta data for the facet/tag structure.
+     */
     @Override
     protected void enrichMetaBeforeStore(XProperties meta) {
         meta.put(META_REFERENCE_COUNT, valuePos);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param location The location of the core map.
+     * @param forceNew Ignore existing persistent data and create a new map.
+     * @return True if the opening of the location was done without errors.
+     * @throws IOException If error occur while opening location.
+     */
+    @Override
     public boolean open(File location, boolean forceNew) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.info(String.format("open(%s, %b) called", location, forceNew));
@@ -365,10 +374,25 @@ public class CoreMapBitStuffed extends CoreMap32 {
         return true;
     }
 
+    /**
+     * {@inheritDoc}     ??
+     * @return The doc ID with the highest ID plus one.
+     */
+    @Override
     public int getDocCount() {
         return highestDocID + 1;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param tagCounter Counts the occurrences of the tags in the given
+     *                   documents.
+     * @param docIDs     Ids for the documents from which the tags should be
+     *                   counted.
+     * @param startPos   Only use the docIDs from this position (inclusive).
+     * @param endPos     Only use the docIDs up to this position (inclusive).
+     */
+    @Override
     public void markCounterLists(
             final TagCounter tagCounter, final DocIDCollector docIDs,
             final int startPos, final int endPos) {
@@ -398,8 +422,8 @@ public class CoreMapBitStuffed extends CoreMap32 {
                             "Index out of bounds for doc %d with "
                             + "index.length=%s, values.length=%s. Ignoring "
                             + "subsequent out-of-bounds for this search",
-                            hitID, index == null ? "null" : index.length,
-                            values == null ? "null" : values.length), ex);
+                            hitID, index == null ? NULL : index.length,
+                            values == null ? NULL : values.length), ex);
                     outOfBoundsHandled = true;
                 }
             }
@@ -441,8 +465,8 @@ public class CoreMapBitStuffed extends CoreMap32 {
                             "Index out of bounds for doc %d with "
                             + "index.length=%s, values.length=%s. Ignoring "
                             + "subsequent out-of-bounds for this search",
-                            hitID, index == null ? "null" : index.length,
-                            values == null ? "null" : values.length), ex);
+                            hitID, index == null ? NULL : index.length,
+                            values == null ? NULL : values.length), ex);
                     outOfBoundsHandled = true;
                 }
             }
@@ -451,8 +475,13 @@ public class CoreMapBitStuffed extends CoreMap32 {
         log.trace("Marking finished");
     }
 
-
-
+    /**
+     * {@inheritDoc}
+     * @param facetID  The ID for the facet with affected tags.
+     * @param position The lowest position for affected tags.
+     * @param delta    The amount that the position should be adjusted with.
+     */
+    @Override
     public void adjustPositions(int facetID, int position, int delta) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adjusting position for facetID " + facetID + " tags >= "
@@ -468,12 +497,22 @@ public class CoreMapBitStuffed extends CoreMap32 {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @param index The index for the value to get.
+     * @return {@inheritDoc}
+     */
     @Override
     protected long getPersistentValue(int index) {
         return getPersistentValue(values[index] >>> FACETSHIFT,
                                   values[index] & TAG_MASK);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param position The position of the value in the values array/list.
+     * @param value    The value as defined in {@link #VALUES_FILE}.
+     */
     @Override
     protected void putValue(int position, long value) {
         if (log.isTraceEnabled()) {
@@ -485,16 +524,31 @@ public class CoreMapBitStuffed extends CoreMap32 {
                                     persistentValueToTagID(value));
     }
 
+    /**
+     * {@inheritDoc}
+     * @return The {@link #FACET_LIMIT}.
+     */
     public int getEmptyFacet() {
         return FACET_LIMIT;
     }
 
+    /**
+     * Answers the question, whether the given paramters (dimension, maxContent)
+     * can be handled.
+     * @param dimension2 Number of dimension.
+     * @param maxContent Size of the maximal content.
+     * @return True if these numbers can be handled.
+     */
     public static boolean canHandle(int dimension2, int maxContent) {
         int limitDim2 = (int) StrictMath.pow(2, FACETBITS);
         int limitMax = (int) StrictMath.pow(2, FACETSHIFT);
         return dimension2 <= limitDim2 && maxContent <= limitMax;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void clear() {
         highestDocID = -1;
         index = new int[CONTENT_INITIAL_SIZE];
@@ -503,13 +557,20 @@ public class CoreMapBitStuffed extends CoreMap32 {
         values = new int[CONTENT_INITIAL_SIZE];
     }
 
+    /**
+     * {@inheritDoc}
+     * @return This is the same as a call to {@link #exposeInternalState()}.
+     */
     @Override
     public String toString() {
         return exposeInternalState();
     }
 
+    /**
+     * Set the {@link #shift} of this class.
+     * @param shift The new value of the {@link #shift}.
+     */
     public void setShift(boolean shift) {
         this.shift = shift;
     }
 }
-
