@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
@@ -23,36 +22,24 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Creates an index with fagref pseudodata, taxing the facet builder.
@@ -71,14 +58,12 @@ public class FacetPerformanceTest extends NoExitTestCase {
     @Override
     public void setUp () throws Exception {
         super.setUp();
-//        cleanup();
         TMP.mkdirs();
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-  //      cleanup();
     }
 
     private void cleanup() throws Exception {
@@ -151,16 +136,17 @@ public class FacetPerformanceTest extends NoExitTestCase {
     }
 
     public void testIndexBuildTime() throws Exception {
-        int[] RECORDS = new int[]{1000, 10000, 100000, 1000000};
+        // Can be change for performance test, not to commit to SVN
+        int[] RECORDS = new int[]{1000, 10000}; //, 100000, 1000000};
         for (int records: RECORDS) {
             cleanup();
-            System.out.println(
+            log.info(
                 records + " records: " + measureIndexTime(records));
         }
     }
 
     public void testInterativeBuild() throws Exception {
-        System.out.println("Update of a single record: " + measureIndexTime(1));
+        log.info("Update of a single record: " + measureIndexTime(1));
     }
 
     private void waitForService(FilterService service, int timeout)
@@ -196,5 +182,4 @@ public class FacetPerformanceTest extends NoExitTestCase {
         log.info(responses.toXML());
         searcher.close();
     }
-
 }
