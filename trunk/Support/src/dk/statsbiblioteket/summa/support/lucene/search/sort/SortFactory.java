@@ -26,6 +26,7 @@ import java.util.Locale;
 
 /**
  * Lazy container with sorters for fields.
+ * TODO Should not used deprecated MultipassSortComparator
  */
 public class SortFactory {
     private static final Logger log = Logger.getLogger(SortFactory.class);
@@ -56,23 +57,26 @@ public class SortFactory {
             if (value == null) {
                 return DEFAULT_COMPARATOR;
             }
-            if (value.toLowerCase().equals(lucene.toString())) {
+            if (value.equalsIgnoreCase(lucene.toString())) {
                 return lucene;
             }
-            if (value.toLowerCase().equals(localstatic.toString())) {
+            if (value.equalsIgnoreCase(localstatic.toString())) {
                 return localstatic;
             }
-            if (value.toLowerCase().equals(multipass.toString())) {
+            if (value.equalsIgnoreCase(multipass.toString())) {
                 return multipass;
             }
-            if (value.toLowerCase().equals(exposed.toString())) {
+            if (value.equalsIgnoreCase(exposed.toString())) {
                 return exposed;
             }
             return DEFAULT_COMPARATOR;
         }
     }
 
+    /** The Default comparator. */
     public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.localstatic;
+
+    /** Default buffer size is 100MB. */
     public static final int DEFAULT_BUFFER = 100 * 1024 * 1024; // 100MB
 
     private String field;
@@ -103,6 +107,12 @@ public class SortFactory {
         this.buffer = buffer;
     }
 
+    /**
+     * Return the sort for the field, given a language.
+     * @param reverse True if the sort should be reversed.
+     * @return The sort for the field. Returns a default sorter if sort language
+     * is undefined or there is an error creating the {@link Sort} object.
+     */
     public synchronized Sort getSort(boolean reverse) {
         log.trace("getSort for field '" + field + "' with language '"
                   + sortLanguage + "' called");
@@ -130,12 +140,23 @@ public class SortFactory {
         return reverse ? reverseSort : normalSort;
     }
 
+    /**
+     * Create default sorter.
+     * @param reverse Reverse the default sorter.
+     * @return A default sorter.
+     */
     private Sort makeDefaultSorters(boolean reverse) {
         normalSort = new Sort(new SortField(field, Locale.getDefault(), false));
         reverseSort = new Sort(new SortField(field, Locale.getDefault(), true));
         return reverse ? reverseSort : normalSort;
     }
 
+    /**
+     * Return the sort field.
+     * @param reverse True if the sort field be reversed.
+     * @return A {@link SortField} for the field, with the sort language locale,
+     * if defined.
+     */
     private SortField getSortField(boolean reverse) {
         if (comparator == COMPARATOR.lucene) {
             return new SortField(field, new Locale(sortLanguage), reverse);
@@ -143,6 +164,13 @@ public class SortFactory {
         return new SortField(field, getComparator(), reverse);
     }
 
+    /**
+     * Used to get the right comparator for the field, given a field and sort
+     * language.                      ??
+     * @return Field comparator source, which is a
+     * {@link org.apache.lucene.search.FieldComparator} for a custom field
+     * sorting.
+     */
     private FieldComparatorSource getComparator() {
         synchronized (comparatorSync) {
             if (!comparators.containsKey(sortLanguage)) {
@@ -187,6 +215,12 @@ public class SortFactory {
 
     /* Accessors */
 
+    /**
+     * Return the sort language, which defines the sort locale used by this
+     * sort factory.
+     * @return The sort language, which defines the sort locale used by this
+     * sort factory.
+     */
     public String getSortLanguage() {
         return sortLanguage;
     }
@@ -203,4 +237,3 @@ public class SortFactory {
         }
     }
 }
-
