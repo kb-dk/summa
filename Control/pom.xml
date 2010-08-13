@@ -1,152 +1,171 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-   <parent>
-    <groupId>${summaGroupId}</groupId>
-    <artifactId>summa</artifactId>
-    <version>${summaVersion}</version>
-    <relativePath>../</relativePath>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>${summaGroupId}</groupId>
+        <artifactId>summa</artifactId>
+        <version>${summaVersion}</version>
+        <relativePath>../</relativePath>
+    </parent>
 
-  <artifactId>summa-control</artifactId>
-  <name>Summa Control module</name>
-  <description>This module, handles code that are used for controlling running Summa components.</description>
-    
-  <dependencies>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.14</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-cli</groupId>
-      <artifactId>commons-cli</artifactId>
-      <version>1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>dk.statsbiblioteket.sbutil</groupId>
-      <artifactId>sbutil</artifactId>
-      <version>0.5.0</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-    </dependency>
-    <dependency>
-      <groupId>jline</groupId>
-      <artifactId>jline</artifactId>
-      <version>0.9.94</version>
-    </dependency>
-    <dependency>
-      <groupId>dk.statsbiblioteket.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>3.1-dev-LUCENE-2335</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tika</groupId>
-      <artifactId>tika</artifactId>
-      <version>0.3</version>
-    </dependency>
-    <!-- Local dependencies -->
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-common</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-ingest</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-storage</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-index</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-search</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-support</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-    <dependency>
-      <groupId>${summaGroupId}</groupId>
-      <artifactId>summa-facetbrowser</artifactId>
-      <version>${summaVersion}</version>
-    </dependency>
-  </dependencies>
+    <artifactId>summa-control</artifactId>
+    <name>Summa Control module</name>
+    <description>This module, handles code that are used for controlling running Summa components.</description>
 
-  <!-- TODO doc/ to documentation -->
-  <!-- TODO what about config/ -->
-  <!-- TODO make contol zip -->
-    
-  <build>
-    <!-- Source -->
-    <sourceDirectory>src/</sourceDirectory>
-    <resources>
-      <resource>
-        <directory>data/</directory>
-      </resource>
-      <!-- We have some resource down in code directory -->
-      <resource>
-        <directory>src/</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-    <!-- Tests -->
-    <testSourceDirectory>test/</testSourceDirectory>
-	<testResources>
-      <testResource>
-        <directory>data/</directory>
-      </testResource>
-    </testResources>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <!-- Main jar file contains all java classes -->
-        <configuration>
-          <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-          <includes>
-            <include>**/*</include>
-          </includes>
-        </configuration>
-        <!-- The Api Jar -->
-        <executions>
-          <execution>
-            <id>api</id>
-            <phase>package</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>api</classifier>
-              <includes>
-                <include>**/api/**/*</include>
-                </includes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.sbutil</groupId>
+            <artifactId>sbutil</artifactId>
+            <version>0.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>0.9.94</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>3.1-dev-LUCENE-2335</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika</artifactId>
+            <version>0.3</version>
+        </dependency>
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-common</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-ingest</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-storage</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-index</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-search</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-support</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>${summaGroupId}</groupId>
+            <artifactId>summa-facetbrowser</artifactId>
+            <version>${summaVersion}</version>
+        </dependency>
+    </dependencies>
+
+    <!-- TODO doc/ to documentation -->
+    <!-- TODO what about config/ -->
+    <!-- TODO make contol zip -->
+
+    <build>
+        <!-- Source -->
+        <sourceDirectory>src/</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>data/</directory>
+            </resource>
+            <!-- We have some resource down in code directory -->
+            <resource>
+                <directory>src/</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <!-- Tests -->
+        <testSourceDirectory>test/</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>data/</directory>
+            </testResource>
+        </testResources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- Main jar file contains all java classes -->
+                <configuration>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <includes>
+                        <include>**/*</include>
+                    </includes>
+                </configuration>
+                <!-- The Api Jar -->
+                <executions>
+                    <execution>
+                        <id>api</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>api</classifier>
+                            <includes>
+                                <include>**/api/**/*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/control_package.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
