@@ -104,7 +104,7 @@ public class URLRepository implements BundleRepository {
      *
      * <p>If {@link #CONF_REPO_ADDRESS} is not set in the configuration
      * <code>file://${user.home}/summa-control/repo</code> is used.</p>
-     * @param conf  The configuration.
+     * @param conf The configuration.
      */
     public URLRepository (Configuration conf) {
         this.tmpDir = conf.getString(CONF_DOWNLOAD_DIR, "tmp");
@@ -132,18 +132,30 @@ public class URLRepository implements BundleRepository {
                  + apiBaseUrl);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param bundleId Bundle id of the bundle to retrieve
+     * @return {@inheritDoc}
+     * @throws IOException From file handling.
+     */
+    @Override
     public File get(String bundleId) throws IOException {
-        log.trace ("Getting '" + bundleId + " from URLRepository");
-        URL bundleUrl = new URL (baseUrl + bundleId + ".bundle");
+        log.trace("Getting '" + bundleId + " from URLRepository");
+        URL bundleUrl = new URL(baseUrl + bundleId + ".bundle");
         return download(bundleUrl);
-
     }
 
-    private File download (URL url) throws IOException {
+    /**
+     * Private helper method, this method fetches the file, behind the URL.
+     * @param url URL to fetch.
+     * @return The file represented by the URL.
+     * @throws IOException If error occur while fetching data form the URL.
+     */
+    private File download(URL url) throws IOException {
         log.trace("Preparing to download " + url);
         String filename = url.getPath();
-        filename = filename.substring (filename.lastIndexOf("/") + 1);
-        File result = new File (tmpDir, filename);
+        filename = filename.substring(filename.lastIndexOf('/') + 1);
+        File result = new File(tmpDir, filename);
 
         /* Ensure tmpDir exists */
         if(!new File (tmpDir).mkdirs()) {
@@ -158,17 +170,16 @@ public class URLRepository implements BundleRepository {
             count++;
         }
 
-        log.debug ("Downloading " + url + " to " + result);
+        log.debug("Downloading " + url + " to " + result);
         InputStream con = new BufferedInputStream(url.openStream());
         OutputStream out = new BufferedOutputStream(
                                                  new FileOutputStream (result));
 
-        Streams.pipe (con, out);
+        Streams.pipe(con, out);
 
-        log.debug ("Done downloading " + url + " to " + result);
+        log.debug("Done downloading " + url + " to " + result);
 
         return result;
-
     }
 
     /**
@@ -176,11 +187,12 @@ public class URLRepository implements BundleRepository {
      * {@code file://} repositories, but for remote repositories it requires
      * the existence of a {@code bundles.list} file with the repo contents.
      *
-     * @param regex regex returned bundles must match
-     * @return a list of bundles matching {@code regex}
+     * @param regex Regex returned bundles must match
+     * @return A list of bundles matching {@code regex}
      * @throws IOException
      */
-    public List<String> list (String regex) throws IOException {
+    @Override
+    public List<String> list(String regex) throws IOException {
         log.trace ("Got list() request for '" + regex + "'");
 
         if (baseUrl.startsWith("file://")) {
@@ -190,29 +202,43 @@ public class URLRepository implements BundleRepository {
         }
     }
 
-    public List<String> listDir (String regex) throws IOException {
+    /**
+     * List all bundle files in a directory matching a given regular expression.
+     *
+     * @param regex Regular expression.
+     * @return A list of bundle files matching the given regular expression.
+     * @throws IOException From errors with file handling.
+     */
+    public List<String> listDir(String regex) throws IOException {
         File baseDir = Resolver.urlToFile(new URL(baseUrl));
         Pattern pat = Pattern.compile(regex);
-        List<String> result = new ArrayList <String> (10);
+        List<String> result = new ArrayList<String>(10);
 
         for (String bdl : baseDir.list()) {
             if (!bdl.endsWith(".bundle")) {
-                log.trace ("Skipping non-.bundle '" + bdl + "'");
+                log.trace("Skipping non-.bundle '" + bdl + "'");
                 continue;
             }
             bdl = bdl.replace (".bundle", "");
             if (pat.matcher(bdl).matches()) {
-                result.add (bdl);
-                log.trace ("Match: " + bdl);
+                result.add(bdl);
+                log.trace("Match: " + bdl);
             } else {
-                log.trace ("No match: " + bdl);
+                log.trace("No match: " + bdl);
             }
         }
-
         return result;
     }
 
-    public List<String> listUrl (String regex) throws IOException {
+    /**
+     * Download a bundles.list file from {@link #baseUrl}, these bundles is
+     * listed if the match given regular expression.
+     * @param regex Regular expression, to narrow down result list.
+     * @return A list of bundles from the bundles.list fetched form the
+     * {@link #baseUrl}.
+     * @throws IOException Error can occur fetching bundles.list or reading it.
+     */
+    public List<String> listUrl(String regex) throws IOException {
         log.debug("Downloading bundle list: " + baseUrl + "bundles.list");
         URL url = new URL(baseUrl + "bundles.list");
         ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
@@ -221,44 +247,46 @@ public class URLRepository implements BundleRepository {
         String[] bundles = bundleList.split("\\s");
 
         Pattern pat = Pattern.compile(regex);
-        List<String> result = new ArrayList <String> (10);
+        List<String> result = new ArrayList<String>(10);
 
         for (String bdl : bundles) {
             if (!bdl.endsWith(".bundle")) {
-                log.trace ("Skipping non-.bundle '" + bdl + "'");
+                log.trace("Skipping non-.bundle '" + bdl + "'");
                 continue;
             }
-            bdl = bdl.replace (".bundle", "");
+            bdl = bdl.replace(".bundle", "");
             if (pat.matcher(bdl).matches()) {
-                result.add (bdl);
-                log.trace ("Match: " + bdl);
+                result.add(bdl);
+                log.trace("Match: " + bdl);
             } else {
-                log.trace ("No match: " + bdl);
+                log.trace("No match: " + bdl);
             }
         }
-
         return result;
     }
 
-    public String expandApiUrl (String jarFileName) throws IOException {
+    /**
+     * Expand an API from a JAR path name.
+     * @param jarFileName Path to .jar file to look up an API URL for
+     * @return The API URL from the jar file.
+     * @throws IOException from file handling.
+     */
+    @Override
+    public String expandApiUrl(String jarFileName) throws IOException {
         // By contract we must return URLs as is
         if (jarFileName.startsWith("http://") ||
             jarFileName.startsWith("https://")||
             jarFileName.startsWith("ftp://")  ||
             jarFileName.startsWith("sftp://")) {
-            log.trace ("Returning AIP URL of jar file as is: " + jarFileName);
+            log.trace("Returning AIP URL of jar file as is: " + jarFileName);
             return jarFileName;
         }
 
         /* Only take the basename into account */
-        jarFileName = new File (jarFileName).getName();
+        jarFileName = new File(jarFileName).getName();
 
         String result = apiBaseUrl + jarFileName;
-        log.trace ("API URL of " + jarFileName + " is: " + result);
+        log.trace("API URL of " + jarFileName + " is: " + result);
         return result;
     }
 }
-
-
-
-
