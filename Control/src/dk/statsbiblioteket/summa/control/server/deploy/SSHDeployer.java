@@ -97,6 +97,13 @@ public class SSHDeployer implements ClientDeployer {
         feedbackLogin = login + ":" + port;
     }
 
+    /**
+     * Deploy a client via SSH. 
+     * @param feedback Callback for communication with the user.
+     * @throws Exception If error occur while deploying source to destination,
+     * source is null or permission is not updated correctly.
+     */
+    @Override
     public void deploy(Feedback feedback) throws Exception {
         log.info("Deploying client");
 
@@ -207,10 +214,10 @@ public class SSHDeployer implements ClientDeployer {
     /**
      * Check to see whether the destination folde rexists. If it doesn't, try
      * to create it.
-     * @param login       the login for the destination machine.
-     * @param port        the port for the destination machine (normally 22).
-     * @param destination the folder that should be created.
-     * @throws Exception if the folder could not be created.
+     * @param login       The login for the destination machine.
+     * @param port        The port for the destination machine (normally 22).
+     * @param destination The folder that should be created.
+     * @throws Exception If the folder could not be created.
      */
     private void makeDestination(String login, int port, String destination)
             throws Exception {
@@ -244,7 +251,7 @@ public class SSHDeployer implements ClientDeployer {
     /**
      * Set file permissions as described in the ClientDeployer interface.
      * @param feedback The feedback object.
-     * @throws IOException if error occurs. 
+     * @throws IOException If error occurs.
      */
     private void ensurePermissions(Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");
@@ -281,6 +288,13 @@ public class SSHDeployer implements ClientDeployer {
         log.trace("File permissions fixed for client '" + clientId + "'");
     }
 
+    /**
+     * Starts a service over ssh, given the configuration. See
+     * {@link ClientDeployer}.
+     * @param feedback Callback for communication with the user.
+     * @throws Exception If service is not started.
+     */
+    @Override
     public void start(Feedback feedback) throws Exception {
         log.info("Starting service");
 
@@ -377,21 +391,31 @@ public class SSHDeployer implements ClientDeployer {
         /**
          ssh bar@zoo java -Dsumma.control.configuration=//example.com/myConfServer -jar /path/to/somewhere/runClient.jar
          */
-
     }
 
+    /**
+     * {@inheritDoc}
+     * @return Return a string representation on the form 'user@host:/dir'.
+     */
+    @Override
     public String getTargetHost() {
         // Extract hostname from a string like user@host:/dir
-        int split = login.indexOf("@");
+        int split = login.indexOf('@');
         split += 1;
         String hostname = login.substring(split);
-        split = hostname.indexOf(":");
+        split = hostname.indexOf(':');
         if (split == -1) {
             return hostname;
         }
         return hostname.substring(0, split);
     }
 
+    /**
+     * Get a property by its key, from the configuration.
+     * @param key The key.
+     * @return The value attached to this key.
+     * @throws IllegalArgumentException If keys is {@code null}.
+     */
     private String getProperty(String key) {
         String value = configuration.getString(key);
         if (key == null) {
@@ -402,6 +426,12 @@ public class SSHDeployer implements ClientDeployer {
         return value;
     }
 
+    /**
+     * This method try to probe target system for its JvM path.
+     * @return JVM path on target system.
+     * @throws ClientDeploymentException If we are unable to detect any JRE on
+     * target system.
+     */
     private String probeJVMPath() {
         final String[] rootProspects = new String[] {"/usr/java/",
                                              "/usr/lib/jvm/"};
@@ -449,21 +479,34 @@ public class SSHDeployer implements ClientDeployer {
                                             + feedbackLogin);
     }
 
+    /**
+     * @return The login for the target system.
+     */
     public String getLogin() {
         return login;
     }
 
+    /**
+     * @return Port for ssh connection on target system.
+     */
     public int getPort() {
         return port;
     }
 
-    public static void main (String[] args) throws Exception {
+    /**
+     * Main method, starts a new SSH deployer with a predefined configuration,
+     * which connects to localhost:22 and looks for this path
+     * '/home/mke/summa-control/repository/test-client-1.bundle'.
+     * @param args Arguments not used for this main method.
+     * @throws Exception If error occur while connecting.
+     */
+    public static void main(String[] args) throws Exception {
         ClientDeployer d = new SSHDeployer(
-                Configuration.newMemoryBased("summa.control.deployer.target", "localhost:222",
-                                             "summa.control.deployer.bundle.file", "/home/mke/summa-control/repository/test-client-1.bundle",
-                                             "summa.control.client.id", "t3"));
+                Configuration.newMemoryBased(
+                        "summa.control.deployer.target", "localhost:222",
+                        "summa.control.deployer.bundle.file",
+                      "/home/mke/summa-control/repository/test-client-1.bundle",
+                        "summa.control.client.id", "t3"));
         d.start(new VoidFeedback());
-
     }
 }
-

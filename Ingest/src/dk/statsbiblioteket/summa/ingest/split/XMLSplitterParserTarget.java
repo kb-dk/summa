@@ -75,8 +75,8 @@ public class XMLSplitterParserTarget {
         } else if (idElement.contains("#")) {
             if (!idElement.endsWith("#") || idElement.startsWith("#")) {
                 String oldIdElement = idElement;
-                idTag = idElement.substring(idElement.indexOf("#")+1);
-                idElement = idElement.substring(0, idElement.indexOf("#"));
+                idTag = idElement.substring(idElement.indexOf('#')+1);
+                idElement = idElement.substring(0, idElement.indexOf('#'));
                 log.debug("split idElement '" + oldIdElement
                           + "' into '" + idElement + "' # '" + idTag + "'");
             } else {
@@ -114,7 +114,7 @@ public class XMLSplitterParserTarget {
 
     /**
      * Adjusts the id for the Payload to fit prefix and postfix.
-     * @param payload the Payload to adjust the id for.
+     * @param payload The Payload to adjust the id for.
      */
     public void adjustID(Payload payload) {
         String id = payload.getId();
@@ -156,4 +156,3 @@ public class XMLSplitterParserTarget {
         }
     }
 }
-

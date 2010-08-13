@@ -326,7 +326,7 @@ public class RecordUtil {
      */
     public static String removeDeclaration(String xml) {
         int start = xml.indexOf("<?xml");
-        int end = xml.indexOf(">");
+        int end = xml.indexOf('>');
         if (start == -1 || start > 8 || end < start) {
             // At the beginning, compensating for BOM
             return xml;
