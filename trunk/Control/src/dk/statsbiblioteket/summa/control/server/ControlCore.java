@@ -51,9 +51,8 @@ import java.util.Map;
  * The core class for the Control server.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="Needs JavaDoc")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class ControlCore extends UnicastRemoteObject
                implements ControlRMIConnection, ControlCoreMBean, Configurable {
     private static final long serialVersionUID = 4861381684L;
@@ -247,8 +246,8 @@ public class ControlCore extends UnicastRemoteObject
     }
 
     /**
-     * Deploy a client with the given configuraion.
-     * @param conf Configuration used to instantiate deployer.
+     * Deploy a client with the given configuration.
+     * @param conf Configuration used to instantiate deployed service.
      */
     @Override
     public void deployClient(Configuration conf) {
@@ -292,8 +291,8 @@ public class ControlCore extends UnicastRemoteObject
                                                 + e.getMessage(), e);
         }
 
-        /* Client is deployed. Store everything we need to know about this
-         * deployment */
+        // Client is deployed. Store everything we need to know about this
+        // deployment
 
         // First extract the bundle spec
         String bundleId =
@@ -320,7 +319,7 @@ public class ControlCore extends UnicastRemoteObject
     /**
      * Start a client based on the given configuration. This method checks if
      * client is deployed and is already started.
-     * @param conf Configuration object passed to the client deployer.
+     * @param conf Configuration object passed to the client deployed.
      */
     @Override
     public void startClient(Configuration conf) {
@@ -494,7 +493,7 @@ public class ControlCore extends UnicastRemoteObject
                                                 + "exist");
         }
 
-        /* Set bundle file prop if it is not already set */
+        // Set bundle file prop if it is not already set
         String bdlFileProp =
                 conf.getString (ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
                                 bdlFile.getAbsolutePath());
@@ -528,7 +527,7 @@ public class ControlCore extends UnicastRemoteObject
 
     /**
      * Returning all known client names.
-     * @return all known client names.
+     * @return All known client names.
      */
     @Override
     public List<String> getClients() {

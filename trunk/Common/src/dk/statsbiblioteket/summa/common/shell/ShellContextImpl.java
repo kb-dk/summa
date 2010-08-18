@@ -47,8 +47,11 @@ public class ShellContextImpl implements ShellContext {
     /** The used console reader. */
     private ConsoleReader lineIn;
 
+    /** Line buffer, that means a stack for multiple commands. */
     private Stack<String> lineBuffer = new Stack<String>();
-    String lastError = "";
+
+    /** Last error message. */
+    String lastError = null;
 
     /**
      * Creates a {@link ShellContext} where errors is printed on the error
@@ -187,8 +190,10 @@ public class ShellContextImpl implements ShellContext {
      */
     @Override
     public void prompt(String msg) {
-        info.print(msg);
-        info.flush();
+        if(info != null) {
+            info.print(msg);
+            info.flush();
+        }
     }
 
     /**

@@ -17,7 +17,12 @@ package dk.statsbiblioteket.summa.control.server.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.api.*;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
+import dk.statsbiblioteket.summa.control.api.InvalidClientStateException;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
@@ -26,35 +31,48 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Created by IntelliJ IDEA. User: mikkel Date: Jan 31, 2008 Time: 11:09:01 AM
- * To change this template use File | Settings | File Templates.
+ *
  */
+@QAInfo(author = "mke",
+        level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED)
 public class ClientsCommand extends Command {
-
     private ConnectionManager<ControlConnection> cm;
     private String controlAddress;
 
-    public ClientsCommand (ConnectionManager<ControlConnection> cm,
+    /**
+     * Creates a client command.
+     * @param cm The control manager connection, used to obtain connection to
+     * the control server.
+     * @param controlAddress Address to the control server instance.
+     */
+    public ClientsCommand(ConnectionManager<ControlConnection> cm,
                            String controlAddress) {
-        super ("clients", "list all deployed clients");
+        super("clients", "list all deployed clients");
 
-        installOption("s", "status", false, "Look up status for each client (slow)");
-        installOption("e", "extended", false, "Get deployment metadata about each client");
+        installOption("s", "status", false,
+                                       "Look up status for each client (slow)");
+        installOption("e", "extended", false,
+                                   "Get deployment metadata about each client");
 
         this.cm = cm;
         this.controlAddress = controlAddress;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param ctx Context used to print messages and retrieve user feedback
+     */
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
-         /* Connect to the Control and send getClients request */
-
+        // Connect to the Control and send getClients request
         boolean doStatus = hasOption("s");
         boolean doExtended = hasOption("e");
 
         ConnectionContext<ControlConnection> connCtx = null;
         try {
-            connCtx = cm.get (controlAddress);
-            if (connCtx == null) {
+            connCtx = cm.get(controlAddress);
+            if(connCtx == null) {
                 ctx.error ("Failed to connect to Control server at '"
                            + controlAddress + "'");
                 return;
@@ -65,15 +83,15 @@ public class ClientsCommand extends Command {
 
             /* Header */
             String header = "Deployed clients";
-            if (doStatus) {
+            if(doStatus) {
                 header += "\tStatus";
             }
-            if (doExtended) {
+            if(doExtended) {
                 header += "\tBundle, Address";
             }
-            ctx.info (header);
+            ctx.info(header);
 
-            /* Generate report, sorting alphabetically by client id */
+            // Generate report, sorting alphabetically by client id
             SortedSet<String> sortedClients = new TreeSet<String>(clients);
             for (String client : sortedClients) {
                 String msg = "\t" + client;
@@ -82,8 +100,9 @@ public class ClientsCommand extends Command {
                         ClientConnection conn = control.getClient(client);
 
                         if (conn == null) {
-                            msg += "\t" + new Status(Status.CODE.not_instantiated,
-                                                     "No connection to client");
+                            msg += "\t"
+                                    + new Status(Status.CODE.not_instantiated,
+                                                 "No connection to client");
                         } else {
                             msg += "\t" + conn.getStatus();
                         }
@@ -95,14 +114,18 @@ public class ClientsCommand extends Command {
                 }
                 if (doExtended) {
                     try {
-                        Configuration conf = control.getDeployConfiguration(client);
+                        Configuration conf =
+                                         control.getDeployConfiguration(client);
 
-                        String bundleId = conf.getString (ClientDeployer.CONF_DEPLOYER_BUNDLE,
-                                                          "ERROR");
-                        String host = conf.getString (ClientConnection.CONF_REGISTRY_HOST,
-                                                      "ERROR");
-                        String port = conf.getString (ClientConnection.CONF_REGISTRY_PORT,
-                                                      "ERROR");
+                        String bundleId = conf.getString(
+                                        ClientDeployer.CONF_DEPLOYER_BUNDLE,
+                                        "ERROR");
+                        String host = conf.getString(
+                                         ClientConnection.CONF_REGISTRY_HOST,
+                                         "ERROR");
+                        String port = conf.getString(
+                                         ClientConnection.CONF_REGISTRY_PORT,
+                                         "ERROR");
                         String address = "ERROR";
                         if (!"ERROR".equals(host) && !"ERROR".equals(port)) {
                             address = "//" + host + ":" + port + "/" + client;
@@ -111,22 +134,17 @@ public class ClientsCommand extends Command {
                         msg += "\t" + bundleId + ", " + address;
                     } catch (Exception e) {
                         msg += "\tError";
-                        ctx.error ("When contacting '" + client + "': "
-                                   +e.getMessage());
+                        ctx.error("When contacting '" + client + "': "
+                                  +e.getMessage());
                     }
                 }
-
                 ctx.info(msg);
             }
-
         } finally {
+            // Close connection
             if (connCtx != null) {
-                cm.release (connCtx);
+                cm.release(connCtx);
             }
         }
     }
 }
-
-
-
-
