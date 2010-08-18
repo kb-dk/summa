@@ -69,6 +69,27 @@ public class Core {
     private static SimpleCompletor cmdComparator;
 
     /**
+     * Create a new shell {@code Core} outputting to a default
+     * {@link ShellContext}.
+     *
+     * @param withDefaultCommands if {@code true} install the default commands
+     *                            found in the
+     *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
+     *                            package.
+     */
+    public Core(boolean withDefaultCommands) {
+        this(null, withDefaultCommands, false);
+    }
+
+    /**
+     * Create a new shell {@code Core} with the default command set found in
+     * {@link dk.statsbiblioteket.summa.common.shell.commands}.
+     */
+    public Core() {
+        this(true);
+    }
+
+    /**
      * Create a new shell {@code Core} outputting to a custom
      * {@link ShellContext}.
      *
@@ -112,7 +133,7 @@ public class Core {
      * Create a console reader.
      * @return The console reader, which should be used.
      */
-    private static ConsoleReader createConsoleReader() {
+    public static ConsoleReader createConsoleReader() {
         try {
             ConsoleReader reader = new ConsoleReader();
             reader.addCompletor(cmdComparator);
@@ -121,27 +142,6 @@ public class Core {
             throw new RuntimeException("Unable to create ConsoleReader: "
                                        + e.getMessage(), e);
         }
-    }
-
-    /**
-     * Create a new shell {@code Core} outputting to a default
-     * {@link ShellContext}.
-     *
-     * @param withDefaultCommands if {@code true} install the default commands
-     *                            found in the
-     *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
-     *                            package.
-     */
-    public Core(boolean withDefaultCommands) {
-        this(null, withDefaultCommands, false);
-    }
-
-    /**
-     * Create a new shell {@code Core} with the default command set found in
-     * {@link dk.statsbiblioteket.summa.common.shell.commands}.
-     */
-    public Core() {
-        this(true);
     }
 
     /**
@@ -169,8 +169,6 @@ public class Core {
         aliases.put(cmd.getName(), cmd.getName());
         for(String alias: cmd.getAliases()) {
             aliases.put(alias, cmd.getName());
-            System.out.println("alias: " + alias + ", cmdName: "
-                    + cmd.getName());
         }
         cmdComparator.addCandidateString(cmd.getName());
     }
@@ -216,16 +214,16 @@ public class Core {
         cmdString = shellCtx.readLine();
 
         /* Check if the input stream has been closed an exit the shell if so */
-        if (cmdString == null) {
+        if(cmdString == null) {
             throw new AbortNotification("Input steam closed", 0);
         }
 
         /* Ignore empty commands, and re-print the prompt */
-        if ("".equals(cmdString)) {
+        if("".equals(cmdString)) {
             return;
         }
 
-        invoke (cmdString);
+        invoke(cmdString);
     }
 
     /**
@@ -247,7 +245,6 @@ public class Core {
             shellCtx.error("No such command '" + cmdString +"'");
             return false;
         }
-
         String[] args = new String[tokens.length-1];
         // Copy arguments from command array to args array
         System.arraycopy(tokens, 1, args, 0, tokens.length - 1);
@@ -306,7 +303,7 @@ public class Core {
 
             }
 
-            /* A normal token, split by spaces */
+            // A normal token, split by spaces
             for(String ss : s.split(" ")) {
                 if(!ss.equals("")) {
                     result.add(ss.trim());
@@ -425,16 +422,15 @@ public class Core {
         if (script != null) {
             scriptIter = script.iterator();
         }
-
         /* Print a greeting if running interactively */
-        if (scriptIter == null) {
+        if(scriptIter == null) {
             getShellContext().info(getHeader());
         }
 
-        while (true) {
+        while(true) {
             try {
-                /* If the shell is scripted feed the next script line to the
-                 * parser*/
+                // If the shell is scripted feed the next script line to the
+                // parser
                 if (scriptIter != null) {
                     if (getShellContext().getLastError() != null) {
                         throw new AbortNotification("Error executing '"

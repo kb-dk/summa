@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.shell.ShellContextImpl;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
@@ -47,19 +48,34 @@ public class ClientShell {
 
     private ConnectionManager<ClientConnection> connManager;
     private ClientConnection client;
+    // Client prompt greating.
+    private static final String SHELLPROMPT = "client-shell> ";
     // The core shell object, used by this client shell.
     private Core shell;
+
+    /**
+     * Instantiate a silent client shell. No recomended to used as an
+     * interactive shell.
+     * @param target Target client. This is the Id for the client to connect to.
+     * @throws Exception If unable to connect to client.
+     */
+    public ClientShell(String target) throws Exception {
+        this(target, new Core(new ShellContextImpl(Core.createConsoleReader(),
+                                                   System.err, null, false),
+                              true, false ));
+    }
 
     /**
      * Constructs a {@link ClientShell} instance, sets up connection to the
      * client, instantiate the shell core, and install client commands.
      *
      * @param target Target client. This is the Id for the client to connect to.
+     * @param core The {@link Core} object to use.
      * @throws Exception If unable to connect to client.
      */
-    public ClientShell(String target) throws Exception {
-        shell = new Core();
-        shell.setPrompt("client-shell> ");
+    public ClientShell(String target, Core core) throws Exception {
+        shell = core;
+        shell.setPrompt(SHELLPROMPT);
 
         Configuration conf = Configuration.getSystemConfiguration(true);
 
@@ -82,7 +98,6 @@ public class ClientShell {
         client = ctx.getConnection();
         connManager.release(ctx);
 
-
         if (client == null) {
             throw new IOException("Unable to connect to client: " + target);
         }
@@ -90,11 +105,24 @@ public class ClientShell {
     }
 
     /**
-     * Private helper method for installing commands
+     * Private helper method for installing commands, see:
+     * @see StatusCommand
+     * @see DeployCommand
+     * @see StartServiceCommand
+     * @see StopServiceCommand
+     * @see PingCommand
+     * @see IdCommand
+     * @see RepositoryCommand
+     * @see KillCommand
+     * @see RestartServiceCommand
+     * @see RemoveServiceCommand
+     * @see SpecCommand
+     * @see WaitCommand
+     *
      * @param target Target client.
      */
     private void installCommands(String target) {
-        // Instal client commands
+        // Install client commands
         shell.installCommand(new StatusCommand(connManager, target));
         shell.installCommand(new DeployCommand(connManager, target));
         shell.installCommand(new StartServiceCommand(connManager, target));
@@ -116,7 +144,10 @@ public class ClientShell {
      * @param conf Configuration used to look up the address of the
      *             Control server.
      * @param target Instance id of the client.
-     * @return a connection to the client.
+     * @param ctx The shell context used.
+     * @return A connection to the client.
+     * @throws IOException If error occur while creating connection to control
+     * server address.
      */
     private ClientConnection getClientConnection(Configuration conf,
                                                  String target,
@@ -124,8 +155,9 @@ public class ClientShell {
                                                             throws IOException {
         ConnectionFactory<ControlConnection> connFact =
                          new GenericConnectionFactory<ControlConnection>(conf);
-        String controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
-                                               "//localhost:27000/summa-control");
+        String controlAddress =
+                           conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
+                                          "//localhost:27000/summa-control");
 
         ctx.prompt("Looking up Control server at " + controlAddress + " ... ");
         ControlConnection control = connFact.createConnection(controlAddress);
@@ -154,7 +186,6 @@ public class ClientShell {
             ctx.warn("Client reports id '" + clientId
                      + "'. Expected '" + target + "'");
         }
-
         return client; 
     }
 
@@ -178,7 +209,7 @@ public class ClientShell {
         System.err.println("USAGE:\n\tclient-shell <instanceId|client-address> "
                            + "[script commands]\n");
         System.err.println("For example:\n\tclient-shell //localhost:27000/c2\n"
-                           + "Or:\n\tclient-shell client-1 status");
+                           + "Or:\n\tclient-shell client-1 [-v] status");
     }
 
     /**
@@ -189,18 +220,23 @@ public class ClientShell {
      */
     public static void main(String[] args) {
         Script script = null;
+        ClientShell shell = null;
 
         if (args.length == 0) {
             printUsage();
             System.exit(1);
         }
-
-        if (args.length > 1) {
-            script = new Script(args, 1);
-        }
-
         try {
-            ClientShell shell = new ClientShell(args[0]);
+            if(args.length > 2 && args[1].equals("-v")) {
+                shell = new ClientShell(args[0]);
+                script = new Script(args, 2);
+            } else if (args.length > 1) {
+                script = new Script(args, 1);
+            }
+            if(shell == null) {
+                shell = new ClientShell(args[0], new Core());
+            }
+
             System.exit(shell.run(script));
         } catch (Exception e) {
             e.printStackTrace();
