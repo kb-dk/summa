@@ -32,67 +32,71 @@ public class ShellTest extends TestCase {
     Core core;
     ShellContext ctx;
 
+    @Override
     public void setUp () throws Exception {        
         ctx = new ShellContext () {
-                private Stack<String> lineBuffer = new Stack<String>();
-                private ConsoleReader lineIn = null; ///createConsoleReader();
-                private String lastError = null;
+            private Stack<String> lineBuffer = new Stack<String>();
+            private ConsoleReader lineIn = null; ///createConsoleReader();
+            private String lastError = null;
 
-                public void error(String msg) {
-                    lineBuffer.clear();
-                    lastError = msg;
-                    //System.out.println ("[ERROR] " + msg);
-                }
-                // TODO should add msg to lineBuffer and test on this one
-                public void info(String msg) {
-                    //System.out.println(msg);
-                }
-
-                public void warn(String msg) {
-                    //System.out.println("[WARNING] " + msg);
-                }
-
-                public void debug(String msg) {
-                    //System.out.println("[DEBUG] " + msg);
-                }
-
-                public String readLine() {
-                    if (!lineBuffer.empty()) {
-                        return lineBuffer.pop();
-                    }
-
-                    try {
-                        return lineIn.readLine().trim();
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to read input", e);
-                    }
+            @Override
+            public void error(String msg) {
+                lineBuffer.clear();
+                lastError = msg;
+                //System.out.println ("[ERROR] " + msg);
+            }
+            // TODO should add msg to lineBuffer and test on this one
+            @Override
+            public void info(String msg) {
+                //System.out.println(msg);
+            }
+            @Override
+            public void warn(String msg) {
+                //System.out.println("[WARNING] " + msg);
+            }
+            @Override
+            public void debug(String msg) {
+                //System.out.println("[DEBUG] " + msg);
+            }
+            @Override
+            public String readLine() {
+                if (!lineBuffer.empty()) {
+                    return lineBuffer.pop();
                 }
 
-                public void pushLine(String line) {
-                    lineBuffer.push(line.trim());
+                try {
+                    return lineIn.readLine().trim();
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to read input", e);
                 }
+            }
+            @Override
+            public void pushLine(String line) {
+                lineBuffer.push(line.trim());
+            }
+            @Override
+            public String getLastError() {
+                return lastError;
+            }
+            @Override
+            public void prompt(String prompt) {
+                //System.out.print(prompt);
+            }
 
-                public String getLastError() {
-                    return lastError;
-                }
-
-                public void prompt(String prompt) {
-                    //System.out.print(prompt);
-                }
-
-                @Override
-                public void clear() {
-                  try {
-                    lineIn.clearScreen();
-                  } catch(IOException e) {
-                    error("clearing screen");
-                  }
-                }
+            @Override
+            public void clear() {
+              try {
+                lineIn.clearScreen();
+              } catch(IOException e) {
+                error("clearing screen");
+              }
+            }
             };
 
         core = new Core(ctx, true, true);
     }
 
+    @SuppressWarnings("unused")
     private static ConsoleReader createConsoleReader() {
         try {
             return new ConsoleReader();
@@ -102,6 +106,7 @@ public class ShellTest extends TestCase {
         }
     }
 
+    @Override
     public void tearDown () throws Exception {
         super.tearDown();
     }
