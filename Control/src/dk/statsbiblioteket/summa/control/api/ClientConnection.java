@@ -26,16 +26,16 @@ import java.io.IOException;
  * A connection to a running {@link Client} used to deploy 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "mke")
 public interface ClientConnection extends Monitorable {
-
     /** <p>Property defining the id under which the client should report itself
      * via {@link #getId}. This is also known as the client's <i>instance
      * id.</i></p>
      *
      * <p>The client will install itself under
-     * <{@code summa.control.client.basepath}>/<{@code summa.control.client.id}></p>
+     * <{@code summa.control.client.basepath}>/<{@code summa.control.client.id}>
+     * </p>
      *
      * <p>The client's RMI service will also run under this name.</p> 
      * */
@@ -50,7 +50,7 @@ public interface ClientConnection extends Monitorable {
      * <p>The default value is {@code summa-control}</p>
      */
     public static final String CONF_CLIENT_BASEPATH =
-                                                  "summa.control.client.basepath";
+                                                "summa.control.client.basepath";
 
     /** <p>Property defining the port on which the client's rmi service
      * should run</p>
@@ -65,43 +65,46 @@ public interface ClientConnection extends Monitorable {
      */
     public static final int DEFAULT_CLIENT_PORT = 27002;
 
-    /** <p>Property defining the port on which the client should contact or create
-     * an rmi registry, see {@link #CONF_REGISTRY_HOST}</p>
+    /** <p>Property defining the port on which the client should contact or
+     * create a rmi registry, see {@link #CONF_REGISTRY_HOST}</p>
      *
      * <p>Default is 27000</p>
      */
     public static final String CONF_REGISTRY_PORT =
-                                             "summa.control.client.registry.port";
+                                           "summa.control.client.registry.port";
 
     /**
      * Default value for {@link #CONF_REGISTRY_PORT}
      */
     public static final int DEFAULT_REGISTRY_PORT = 27000;
 
-    /** <p>Property defining the host on which the client can find the rmi registry.
+    /** <p>Property defining the host on which the client can find the rmi
+     * registry.
      * If this is set to {@code localhost} the client will create the registry
      * if it is not already running</p>
      *
      * <p>Default is localhost</p>
      */
     public static final String CONF_REGISTRY_HOST =
-                                            "summa.control.client.registry.host";
+                                           "summa.control.client.registry.host";
 
-    /** <p>Property containing the class of {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
+    /** <p>Property containing the class of
+     * {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
      * a {@link Client} should use for fetching bundles.</p>
      *
      * <p>Default is to use a
-     * {@link dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient}</p>
+     * {@link dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient}
+     * </p>
      */
     public static final String CONF_REPOSITORY_CLASS =
-                                          "summa.control.client.repository.class";
+                                        "summa.control.client.repository.class";
 
     /**
-     * Property defining the path uner which persisten files for Clients as
+     * Property defining the path under which persistent files for Clients as
      * well as Services should be stored.
      */
     public static final String CONF_CLIENT_PERSISTENT_DIR =
-            Resolver.SYSPROP_PERSISTENT_DIR;
+                                                Resolver.SYSPROP_PERSISTENT_DIR;
 
     /**
      * Stop the client specified in the base configuration for the
@@ -109,32 +112,34 @@ public interface ClientConnection extends Monitorable {
      *
      * This call should stop the JVM of the client. Ie, call {@link System#exit}
      * 
-     * @throws IOException in case of communication errors.
+     * @throws IOException In case of communication errors.
      */
     public void stop() throws IOException;
 
     /**
      * Get the status for the client.
-     * @return null if the client could not be contacted, else a client-specific
+     *
+     * @return Null if the client could not be contacted, else a client-specific
      * string.
-     * @throws IOException in case of communication errors.
+     * @throws IOException In case of communication errors.
      */
     public Status getStatus() throws IOException;
 
     /**
      * Fetches the service bundle with a given bundle id from the configured
-     * {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} and deploys it according to the bundle's
-     * configuration and instance id.
-     * @param bundleId          The <i>bundle id</i> for the service
+     * {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
+     * and deploys it according to the bundle's configuration and instance id.
+     *
+     * @param bundleId          The <i>bundle id</i> for the service.
      * @param instanceId        The <i>instance id</i> to deploy the service
-     *                          under
-     * @param configLocation    deploy-specific properties. This should not be
+     *                          under.
+     * @param configLocation    Deploy-specific properties. This should not be
      *                         confused with the properties for
      *                         {@link #startService}, although it is probably
      *                         easiest just to merge the two configurations to
      *                         one.
-     * @return the instance id of the deployed service or null on errors
-     * @throws IOException in case of communication errors.
+     * @return The instance id of the deployed service or null on errors.
+     * @throws IOException In case of communication errors.
      */
     public String deployService(String bundleId,
                                 String instanceId,
@@ -143,20 +148,22 @@ public interface ClientConnection extends Monitorable {
 
     /**
      * Remove a given service from the client. If the service is already
-     * running it will be stopped with a call to {@link #stopService(String)}
-     * @param instanceId the instance if of the service to stop
-     * @throws IOException on communication errors
-     * @throws NoSuchServiceException if the service {@code instanceId}is not
-     *                                installed in the client
+     * running it will be stopped with a call to {@link #stopService(String)}.
+     *
+     * @param instanceId The instance if of the service to stop.
+     * @throws IOException On communication errors.
+     * @throws NoSuchServiceException If the service {@code instanceId}is not
+     *                                installed in the client.
      */
     public void removeService(String instanceId) throws IOException;
 
     /**
      * Start the given service with the given configuration. If the service
      * is not deployed an error is thrown.
-     * @param id               the <i>instance id</i> for the service.
-     * @param configLocation    service-specific properties.
-     * @throws IOException in case of communication errors.
+     *
+     * @param id               The <i>instance id</i> for the service.
+     * @param configLocation    Service-specific properties.
+     * @throws IOException In case of communication errors.
      */
     public void startService(String id, String configLocation)
                              throws IOException;
@@ -168,8 +175,9 @@ public interface ClientConnection extends Monitorable {
      * <p>A service is allowed to either exit its JVM or enter the state
      * {@link Status.CODE#stopped} in which all of its connections and
      * pipes should be flushed and closed.</p>
-     * @param id               the <i>instance id</i> for the service.
-     * @throws IOException in case of communication errors.
+     *
+     * @param id               The <i>instance id</i> for the service.
+     * @throws IOException In case of communication errors.
      */
     public void stopService(String id) throws IOException;
 
@@ -178,24 +186,25 @@ public interface ClientConnection extends Monitorable {
      * an error is thrown.</p>
      * <p>If the service is deployed, but not running an
      * {@link InvalidServiceStateException} is thrown</p>.
-     * @param id the <i>instance id</i> for the service.
-     * @return   the status for the service.
-     * @throws IOException in case of communication errors
-     * @throws InvalidServiceStateException if the service is deployed but not
-     *                                      running
-     * @throws NoSuchServiceException if the service is not known by the client
+     *
+     * @param id The <i>instance id</i> for the service.
+     * @return   The status for the service.
+     * @throws IOException In case of communication errors.
+     * @throws InvalidServiceStateException If the service is deployed but not
+     *                                      running.
+     * @throws NoSuchServiceException If the service is not known by the client.
      */
     public Status getServiceStatus(String id) throws IOException;
 
     /**
      * Return a connection to a service given by its instance id.
      *
-     * @param id the instance id of the service to look up
-     * @return a proxy for the service object
-     * @throws IOException in case of communication errors
-     * @throws InvalidServiceStateException if the service is not running or
-     *                                      has a broken connection
-     * @throws NoSuchServiceException if the client does not know of a service
+     * @param id The instance id of the service to look up.
+     * @return A proxy for the service object.
+     * @throws IOException In case of communication errors.
+     * @throws InvalidServiceStateException If the service is not running or
+     *                                      has a broken connection.
+     * @throws NoSuchServiceException If the client does not know of a service
      *                                with the id {@code id}.
      */
     public Service getServiceConnection (String id) throws IOException;
@@ -203,48 +212,53 @@ public interface ClientConnection extends Monitorable {
     /**
      * Iterate through the deployed services and collect a list of the ids
      * for said services.
-     * @return a list of all the deployed services.
-     * @throws IOException in case of communication errors.
+     *
+     * @return A list of all the deployed services.
+     * @throws IOException In case of communication errors.
      */
     public List<String> getServices() throws IOException;
 
     /**
      * Return the id of the client as set through the configuration property
-     * {@link #CONF_CLIENT_ID}
-     * @return the id
-     * @throws IOException in case of communication errors.
+     * {@link #CONF_CLIENT_ID}.
+     *
+     * @return The id.
+     * @throws IOException In case of communication errors.
      */
     public String getId() throws IOException;
 
     /**
-     * Get the {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} the client uses.
+     * Get the
+     * {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
+     * the client uses.
+     *
+     * @return The bundle repository the used by client.
+     * @throws IOException In case of communication errors.
      */
     public BundleRepository getRepository () throws IOException;
 
     /**
      * Get the contents of the bundle spec of a deployed service.
      * If {@code instanceId} is {@code null} the bundle spec of the
-     * running client will be returned
-     * @param instanceId the instance id of the bundle to inspect, or
-     *        {@code null} to get the bundle spec for the running client
-     * @return the contents of the bundle spec file
-     * @throws IOException on communication errors
-     * @throws NoSuchServiceException if the client does not know of a service
-     *                                with the id {@code instanceId}
+     * running client will be returned.
+     *
+     * @param instanceId The instance id of the bundle to inspect, or
+     *        {@code null} to get the bundle spec for the running client.
+     * @return The contents of the bundle spec file
+     * @throws IOException On communication errors.
+     * @throws NoSuchServiceException If the client does not know of a service
+     *                                with the id {@code instanceId}.
      */
     public String getBundleSpec (String instanceId) throws IOException;
 
     /**
      * Report to the client that the given service is acting up and
      * that it should check its connection to the service.
-     * @param id the service to report
-     * @throws IOException on communication errors with the client
-     * @throws NoSuchServiceException if a service by the given id doesn't
-     *                                exist
+     * 
+     * @param id The service to report.
+     * @throws IOException On communication errors with the client.
+     * @throws NoSuchServiceException If a service by the given id doesn't
+     *                                exist.
      */
     public void reportError (String id) throws IOException;
 }
-
-
-
-
