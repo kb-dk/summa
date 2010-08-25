@@ -477,7 +477,7 @@ public class Configuration implements Serializable,
      * configuration.
      *
      * @param key The name of the property to look up.
-     * @return Aalue s a list of trimmed Strings.
+     * @return Value s a list of trimmed Strings.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException if the property is found but does not
      *         parse as a list of Strings.
@@ -551,7 +551,7 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Wrapper for the list-baset {@link #getStrings(String, List)} method.
+     * Wrapper for the list-based {@link #getStrings(String, List)} method.
      * <p/>
      * Any references to system properties will be expanded. System properties
      * are referenced in standard Ant-style syntax, eg:<br/>
@@ -568,7 +568,7 @@ public class Configuration implements Serializable,
      * @param key The name of the property to look up.
      * @param defaultValues The values to return if there is no list of Strings
      *                      specified for the given key.
-     * @return Aalue as an array of Strings.
+     * @return Value as an array of Strings.
      */
     public String[] getStrings(String key, String[] defaultValues) {
         List<String> result = getStrings(key, defaultValues == null ? null :
@@ -583,7 +583,7 @@ public class Configuration implements Serializable,
     /**
      * Pair class. User for keeping connection between two objects.
      * @param <T> First type for the pair class.
-     * @param <U> Secord type for the pair class.
+     * @param <U> Second type for the pair class.
      */
     public static class Pair<T, U> {
         private T t;
@@ -628,6 +628,15 @@ public class Configuration implements Serializable,
             }
             Pair p = (Pair)o;
             return t.equals(p.getFirst()) && u.equals(p.getSecond()); 
+        }
+
+        /**
+         * {@inheritDoc}
+         * @return Sum of the two objects hash code.p 
+         */
+        @Override
+        public int hashCode() {
+            return t.hashCode()+u.hashCode();
         }
     }
 
@@ -816,7 +825,7 @@ public class Configuration implements Serializable,
      *
      * @param key The key for the value.
      * @return True if a value for the key exists. False is returned if error
-     *         occour in underlaying storage.
+     *         occur in underlaying storage.
      */
     public boolean valueExists(String key) {
         try {
@@ -918,6 +927,7 @@ public class Configuration implements Serializable,
      * @param filename Name of file in the classpath
      * @throws IOException if there was a problem loading the file
      */
+    @SuppressWarnings("unused")
     public void loadFromXML(String filename) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
@@ -1008,24 +1018,52 @@ public class Configuration implements Serializable,
     /**
      * Does deep comparison of all key-value pairs.
      *
-     * @param conf The configuration to compare this {@link Configuration} with.
+     * @param o The configuration to compare this {@link Configuration} with.
      * @return True if configurations matches on all key-value pairs.
      */
-    public boolean equals(Configuration conf) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Configuration)) return false;
+
+        Configuration conf = (Configuration) o;
+
         try {
             if (conf.getStorage().size() != this.storage.size()) {
                 return false;
             }
         } catch (IOException e) {
-            return false;
+            throw new RuntimeException("IOException when comparing "
+                    +"Configurations objects", e);
         }
-
+        // TODO override equals in classes implementing ConfigurationStorage.
         for (Map.Entry<String, Serializable> entry : conf) {
             if (! this.get(entry.getKey()).equals(entry.getValue())) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Generate hashCode of the hashCode for all key-value pairs in the storage.
+     * @return {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        try {
+            // TODO override hashCode in classes implementing ConfigurationStorage
+            hashCode += 47 * storage.size();
+            Iterator<Map.Entry<String, Serializable>> iter = storage.iterator();
+            while(iter.hasNext()) {
+                hashCode += iter.next().hashCode();
+            }
+        } catch(IOException e) {
+            throw new RuntimeException("IOException when computing hashCode for"
+                    +" Configurations objects", e);
+        }
+        return hashCode;
     }
 
     /**
@@ -1072,7 +1110,7 @@ public class Configuration implements Serializable,
 
         if (confLocation == null) {
             if (allowUnset) {
-                log.debug("System configuraion property '" + configPropName
+                log.debug("System configuration property '" + configPropName
                      + "' " + "not set. Looking for configuration resource...");
 
                 ClassLoader loader =
@@ -1178,7 +1216,7 @@ public class Configuration implements Serializable,
      * <b>Examples:</b>
      * <ul>
      *   <li>{@code http://example.com/myConfig.xml}, a URL</li>
-     *   <li>{@code //registryhost:port/servicename}, an RMI address</li>
+     *   <li>{@code //registryHost:port/serviceName}, an RMI address</li>
      *   <li>{@code /home/summa/config/foo.xml}, an absolute path</li>
      *   <li>{@code config/foo.xml}, loaded as a resource from the
      *       classpath</li>
@@ -1331,20 +1369,20 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Creates a list of sub storages under the given key and returns it wrapped
+     * Creates a list of sub storage under the given key and returns it wrapped
      * as Configurations.
      *
-     * @param key The key for the list sub storages.
+     * @param key The key for the list sub storage.
      * @param count The number of configurations that the list should contain.
-     * @return A list of sub storages wrapped as Configurations.
+     * @return A list of sub storage wrapped as Configurations.
      * @throws IOException if the list could not be created.
      */
     public List<Configuration> createSubConfigurations(String key, int count)
                                                             throws IOException {
         List<ConfigurationStorage> storages =
-                storage.createSubStorages(key, count);
+                                          storage.createSubStorages(key, count);
         List<Configuration> configurations =
-                new ArrayList<Configuration>(storages.size());
+                                  new ArrayList<Configuration>(storages.size());
         for (ConfigurationStorage storage: storages) {
             configurations.add(new Configuration(storage));
         }
@@ -1352,12 +1390,12 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Return a list of configurations for sub storages.
+     * Return a list of configurations for sub storage.
      * 
-     * @param key The key for the list of sub storages.
-     * @return A list of sub storages wrapped as Configurations.
-     * @throws NullPointerException if the sub storages could not be retrieved.
-     * @throws SubConfigurationsNotSupportedException if one of the storages
+     * @param key The key for the list of sub storage.
+     * @return A list of sub storage wrapped as Configurations.
+     * @throws NullPointerException if the sub storage could not be retrieved.
+     * @throws SubConfigurationsNotSupportedException if one of the storage
      * doesn't support sub configurations.
      */
     public List<Configuration> getSubConfigurations(String key) throws 
@@ -1393,6 +1431,7 @@ public class Configuration implements Serializable,
      * @return A {@code File} pointing to the root directory where persistent
      *         data should be stored.
      */
+    @SuppressWarnings("unused")
     public File getPersistentDir () {
         try {
             return new File (getString(CONF_PERSISTENT_DIR));
