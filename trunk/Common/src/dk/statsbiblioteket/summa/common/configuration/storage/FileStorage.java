@@ -19,11 +19,24 @@ import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * A {@link ConfigurationStorage} backed by a file.
@@ -36,12 +49,16 @@ public class FileStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 789468461L;
     //public static final String DEFAULT_RESOURCE = "configuration.xml";
 
+    public static final String DEFAULT_RESOURCE =
+            "data/configurationFiles/configuration.xml";
+
     private HashMap<String,Serializable> map;
     private String filename;
 
     /**
-     * Create a file storage backed by the next file of the form configuration.N.xml
-     * that doesn't already exist for some natural number N.
+     * Create a file storage backed by the next file of the form
+     * configuration.N.xml that doesn't already exist for some natural number N.
+     *
      * @throws IOException If an error occurs while loading the configuration.
      */
     public FileStorage () throws IOException {
@@ -60,17 +77,19 @@ public class FileStorage implements ConfigurationStorage {
     }
 
     /**
-     * Create a new {@code FileStorage} loading properties from a file or creating
-     * it if it doesn't exist already.
+     * Create a new {@code FileStorage} loading properties from a file or
+     * creating it if it doesn't exist already.
      * @param configuration the file to read and write properties in
-     * @throws IOException If writing to the specified output stream results in an IOException.
+     * @throws IOException If writing to the specified output stream results in
+     * an IOException.
      */
     public FileStorage (File configuration) throws IOException {
         map  = new HashMap<String,Serializable> ();
         this.filename = configuration.getAbsolutePath();
 
         if (! new File(filename).exists()) {
-            new Properties().storeToXML (new FileOutputStream(filename), "Created: " + new Date().toString());
+            new Properties().storeToXML (new FileOutputStream(filename),
+                    "Created: " + new Date().toString());
         }
 
         reloadConfig();
@@ -88,7 +107,8 @@ public class FileStorage implements ConfigurationStorage {
     }
 
     private static File getResourceFile(String resource) {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
+        URL url = Thread.currentThread().getContextClassLoader()
+                                                         .getResource(resource);
 
         if (url == null) {
             if (new File(resource).exists()) {
@@ -109,9 +129,10 @@ public class FileStorage implements ConfigurationStorage {
 
     /**
      * Load initial config from an URL and store in a local file.
-     * @param initialConfig The localtion from which to import all configuration data, pointing to a
-     * usual properties.xml file.
-     * @param persistentConfig The absolute path name to store the configuration in.
+     * @param initialConfig The location from which to import all configuration
+     * data, pointing to a usual properties.xml file.
+     * @param persistentConfig The absolute path name to store the configuration
+     * in.
      * @throws IOException If an error occurs while loading the configuration.
      */
     public FileStorage (URL initialConfig, String persistentConfig)
@@ -149,16 +170,19 @@ public class FileStorage implements ConfigurationStorage {
         }
 
         try {
-            OutputStream out = new BufferedOutputStream (new FileOutputStream(filename));
+            OutputStream out =
+                       new BufferedOutputStream(new FileOutputStream(filename));
             p.storeToXML (out, "Last updated: " + new Date().toString());
             out.close();
         } catch (IOException e) {
-            throw new ConfigurationStorageException("Unable to write output file " + filename, e);
+            final String error = "Unable to write output file " + filename;
+            throw new ConfigurationStorageException(error, e);
         }
 
     }
 
-    public synchronized void put(String key, Serializable value) throws IOException {
+    public synchronized void put(String key, Serializable value)
+                                                                throws IOException {
         if (key == null){
 	  throw new NullPointerException("Can not store value with 'null' key");
 	}
@@ -223,7 +247,3 @@ public class FileStorage implements ConfigurationStorage {
         throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 }
-
-
-
-

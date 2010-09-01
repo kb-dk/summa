@@ -67,7 +67,8 @@ public class XStorageTest extends ConfigurationStorageTestCase {
                      new Integer(7), (Integer)xs.get("seven"));
         ConfigurationStorage sub = xs.getSubStorage("submarine");
         assertNotNull("There should be a sub storage named submarine", sub);
-        assertEquals("The sub storage should contain 8", new Integer(8), (Integer)sub.get("eight"));
+        assertEquals("The sub storage should contain 8", new Integer(8),
+                     (Integer)sub.get("eight"));
     }
 
     public void testConfigurationWrap() throws Exception {

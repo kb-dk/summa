@@ -78,6 +78,10 @@ public class NativeRunnerTest extends TestCase {
     public static Test suite() {
         return new TestSuite(NativeRunnerTest.class);
     }
+
+    public void testNon() {
+      // 
+    }
 }
 
 

@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>${summaGroupId}</groupId>
+        <artifactId>summa</artifactId>
+        <version>${summaVersion}</version>
+    </parent>
+
+    <artifactId>summa-common</artifactId>
+    <name>Summa Common module</name>
+    <description>Common source code for the Summa modules.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.sbutil</groupId>
+            <artifactId>sbutil</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jline</groupId>
+            <artifactId>jline</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- Source -->
+        <sourceDirectory>src/</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>data/</directory>
+            </resource>
+        </resources>
+        <!-- Tests -->
+        <testSourceDirectory>test/</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>data/</directory>
+            </testResource>
+            <testResource>
+                <directory>test/data/</directory>
+            </testResource>
+        </testResources>
+    </build>
+</project>

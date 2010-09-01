@@ -39,6 +39,8 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ConfigurationTest extends TestCase {
+    private static final String CONFIGURATIONXML = "configurationFiles/configuration.xml";
+    private static final String SIMPLEXSTORAGEXML = "configurationFiles/simple_xstorage.xml";
     public ConfigurationTest(String name) {
         super(name);
     }
@@ -65,7 +67,8 @@ public class ConfigurationTest extends TestCase {
 
     public void testGetStringsSingle() throws Exception {
         Configuration conf = new Configuration(
-                                        new FileStorage("configuration.xml"));
+                                        new FileStorage(CONFIGURATIONXML
+                                                ));
         List<String> l = conf.getStrings ("summa.configuration.service.port");
         assertEquals("getStrings on a value without ,s should have size 1",
                      1, l.size());
@@ -93,7 +96,8 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testGetString() throws Exception {
-        Configuration conf = new Configuration(new FileStorage("configuration.xml"));
+        Configuration conf = new Configuration(new FileStorage(
+                CONFIGURATIONXML));
         String s = conf.getString ("summa.configuration.service.port");
         assertEquals("getString should return expected value", "3268", s);
     }
@@ -105,13 +109,16 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testToString () throws Exception {
-        Configuration conf = new Configuration(new FileStorage("configuration.xml"));
+        Configuration conf = new Configuration(new FileStorage(
+                CONFIGURATIONXML));
         System.out.println(conf.toString());
     }
 
     public void testSimpleEquals () throws Exception {
-        Configuration c1 = new Configuration(new FileStorage("configuration.xml"));
-        Configuration c2 = new Configuration(new FileStorage("configuration.xml"));
+        Configuration c1 = new Configuration(new FileStorage(
+                CONFIGURATIONXML));
+        Configuration c2 = new Configuration(new FileStorage(
+                CONFIGURATIONXML));
         assertTrue("Empty configurations should equal", c1.equals(c2));
     }
 
@@ -197,11 +204,12 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testGetSystemConfigLocal () throws Exception {
-        String confPath = "configuration.xml";//Thread.currentThread().getContextClassLoader().getResource("configuration.xml").toString();
+        String confPath = CONFIGURATIONXML;//Thread.currentThread().getContextClassLoader().getResource("configuration.xml").toString();
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, confPath);
 
         Configuration conf = Configuration.getSystemConfiguration();
-        Configuration originalConf = new Configuration (new FileStorage("configuration.xml"));
+        Configuration originalConf = new Configuration (new FileStorage(
+                CONFIGURATIONXML));
 
         assertTrue("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
@@ -219,7 +227,8 @@ public class ConfigurationTest extends TestCase {
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, serviceUrl);
 
         Configuration testConf = Configuration.getSystemConfiguration();
-        Configuration originalConf = new Configuration (new FileStorage("configuration.xml"));
+        Configuration originalConf = new Configuration (new FileStorage(
+                CONFIGURATIONXML));
 
         assertTrue("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
@@ -293,7 +302,8 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testLoadXConfiguration() throws Exception {
-        Configuration conf = Configuration.load("data/simple_xstorage.xml");
+        Configuration conf = Configuration.load(
+                SIMPLEXSTORAGEXML);
         assertTrue("The underlying Storage should be an XStorage",
                    conf.getStorage() instanceof XStorage);
     }
@@ -301,7 +311,8 @@ public class ConfigurationTest extends TestCase {
     public void testLoadXConfigurationFromFile() throws Exception {
         File tmp = new File("Common/tmp/", "tmpstorage.xml");
         System.out.println(tmp.getAbsolutePath());
-        Files.copy(Resolver.getFile("data/simple_xstorage.xml"), tmp, true);
+        Files.copy(Resolver.getFile(
+                SIMPLEXSTORAGEXML), tmp, true);
 
         Configuration conf = Configuration.load(tmp.toString());
         assertTrue("The underlying Storage should be an XStorage", 
@@ -376,7 +387,7 @@ public class ConfigurationTest extends TestCase {
                 new Configuration.Pair<String,Integer>("a",1),
                 new Configuration.Pair<String,Integer>("b",2)
         );
-
+        // TODO check expected
         List<Configuration.Pair<String,Integer>> result =
                                              conf.getIntValues("foo.bar", 3);
 
@@ -452,16 +463,16 @@ public class ConfigurationTest extends TestCase {
 
     public void testPathEscape() {
         assertTrue("mykey should exist in XProperties in plainPath",
-                   Configuration.load("data/plainPath/simpleconf.xml").
+                   Configuration.load("plainPath/simpleconf.xml").
                            valueExists("mykey"));
         assertTrue("mykey should exist in XProperties in special#%Path",
-                   Configuration.load("data/special#%Path/simpleconf.xml").
+                   Configuration.load("special#%Path/simpleconf.xml").
                            valueExists("mykey"));
         assertTrue("myOldKey should exist in Properties in plainPath",
-                   Configuration.load("data/plainPath/oldconf.xml").
+                   Configuration.load("plainPath/oldconf.xml").
                            valueExists("myOldKey"));
         assertTrue("myOldKey should exist in Properties in special#%Path",
-                   Configuration.load("data/special#%Path/oldconf.xml").
+                   Configuration.load("special#%Path/oldconf.xml").
                            valueExists("myOldKey"));
     }
 

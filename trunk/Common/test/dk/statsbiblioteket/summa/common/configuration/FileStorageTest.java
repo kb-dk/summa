@@ -25,7 +25,7 @@ import java.io.File;
 public class FileStorageTest extends ConfigurationStorageTestCase {
 
     public FileStorageTest () throws Exception {
-        super (new FileStorage("configuration.xml"));
+        super (new FileStorage("data/configurationFiles/configuration.xml"));
     }
 
     public void testEmptyConstructor () throws Exception {
@@ -54,9 +54,4 @@ public class FileStorageTest extends ConfigurationStorageTestCase {
         storage.purge (persitenceTestKey);
 
     }
-
 }
-
-
-
-

@@ -37,17 +37,17 @@ public class XHTMLEntityResolver extends SummaEntityResolver {
 
     public static final String[][] XHTML_RESOURCES = new String[][] {
             {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd",
-                    "dk/statsbiblioteket/summa/common/xml/xhtml1-strict.dtd"},
+                    "xhtml1-strict.dtd"},
             {"xhtml-lat1.ent",
-                    "dk/statsbiblioteket/summa/common/xml/xhtml-lat1.ent"},
+                    "xhtml-lat1.ent"},
             {"xhtml-special.ent",
-                    "dk/statsbiblioteket/summa/common/xml/xhtml-special.ent"},
+                    "xhtml-special.ent"},
             {"xhtml-symbol.ent",
-                    "dk/statsbiblioteket/summa/common/xml/xhtml-symbol.ent"},
+                    "xhtml-symbol.ent"},
             {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd",
-                    "dk/statsbiblioteket/summa/common/xml/xhtml1-frameset.dtd"},
+                    "xhtml1-frameset.dtd"},
             {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd",
-                "dk/statsbiblioteket/summa/common/xml/xhtml1-transitional.dtd"}
+                    "xhtml1-transitional.dtd"}
     };
 
     public XHTMLEntityResolver(Configuration conf) {

@@ -40,7 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * FIXME: Missing class docs for dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer
+ * FIXME: Missing class docs for LocalDeployer
  *
  * @author Mikkel Kamstrup <mailto:mke@statsbiblioteket.dk>
  * @author Henrik Kirk <mailto:hbk@statsbiblioteket.dk>
@@ -48,7 +48,8 @@ import java.util.List;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke, hbk")
+        author = "mke, hbk",
+        comment = "Needs JavaDoc")
 public class LocalDeployer implements ClientDeployer {
     private static final Log log = LogFactory.getLog(SSHDeployer.class);
 

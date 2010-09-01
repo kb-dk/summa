@@ -101,7 +101,8 @@ public class LuceneSearchNodeTest extends TestCase {
         configuration = configuration.replace(
                 "/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml",
                 descLocation.getAbsolutePath());
-        File confLocation = new File(testRoot, "configuration.xml");
+        File confLocation = new File(testRoot,
+                "data/configurationFiles/configuration.xml");
         Files.saveString(configuration, confLocation);
 
         assertNotNull("The configuration should be available", confLocation);

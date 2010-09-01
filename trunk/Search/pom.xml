@@ -1,0 +1,108 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>${summaGroupId}</groupId>
+        <artifactId>summa</artifactId>
+        <version>${summaVersion}</version>
+        <relativePath>../</relativePath>
+    </parent>
+
+    <artifactId>summa-search</artifactId>
+    <name>Summa Search module</name>
+    <!-- TODO What about config -->
+
+    <build>
+        <!-- Source -->
+        <sourceDirectory>src/</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>config/</directory>
+            </resource>
+            <!-- We have some resource down in code directory -->
+            <resource>
+                <directory>src</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <!-- Tests -->
+        <testSourceDirectory>test/</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>data/</directory>
+            </testResource>
+        </testResources>
+        <!-- Jars -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- Build normal Jar -->
+                <configuration>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <includes>
+                        <include>**/*</include>
+                    </includes>
+                </configuration>
+                <!-- Build API jar -->
+                <executions>
+                    <execution>
+                        <id>api</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>api</classifier>
+                            <includes>
+                                <include>**/api/**/*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Dependencies for Summa Search -->
+    <dependencies>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.sbutil</groupId>
+            <artifactId>sbutil</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <!-- Module dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-storage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

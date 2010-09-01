@@ -21,15 +21,19 @@ package dk.statsbiblioteket.summa.common.pool;
 import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
-import dk.statsbiblioteket.summa.common.pool.SortedPoolImpl;
-import dk.statsbiblioteket.summa.common.pool.ValueConverter;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Comparator;
+import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * The DiskPool uses the local filesystem for the storage of values. An index

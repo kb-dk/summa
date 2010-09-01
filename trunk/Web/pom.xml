@@ -1,0 +1,97 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>${summaGroupId}</groupId>
+        <artifactId>summa</artifactId>
+        <version>${summaVersion}</version>
+    </parent>
+
+    <artifactId>summa-web</artifactId>
+    <name>Summa Web module</name>
+    <description>Creates summa WAR files for deployment in Web container.</description>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>Modules/Search</module>
+        <module>Modules/Storage</module>
+        <module>Modules/Status</module>
+        <module>Modules/Website</module>
+    </modules>
+
+    <build>
+        <sourceDirectory>src/</sourceDirectory>
+        <testSourceDirectory>test/</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>data</directory>
+            </testResource>
+        </testResources>
+    </build>
+    
+    <dependencies>
+        <dependency>
+            <groupId>axis</groupId>
+            <artifactId>axis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>axis</groupId>
+            <artifactId>axis-jaxrpc</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>axis</groupId>
+          <artifactId>axis-saaj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>axis</groupId>
+            <artifactId>axis-wsdl4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.sbutil</groupId>
+            <artifactId>sbutil</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <!-- local dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-storage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-facetbrowser</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-search</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-support</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -30,7 +30,7 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
     public RemoteStorage direct_storage;
 
     public RemoteStorageTest () throws Exception {
-        super (new FileStorage("configuration.xml"));
+        super (new FileStorage("configurationFiles/configuration.xml"));
         testName = this.getClass().getSimpleName();
     }
 
@@ -63,7 +63,3 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
         ;
     }
 }
-
-
-
-

@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.Strings;
-import junit.framework.*;
 
 import java.util.List;
 import java.util.Arrays;
@@ -31,7 +30,7 @@ public class SampleDataLoader extends TestCase {
 
     static final List<String> data = Arrays.asList(
             Strings.flushLocal(getSystemResourceAsStream(
-                                                    "data/lgpl-2.1-german.txt"))
+                                                    "lgpl-2.1-german.txt"))
             // Add more sample data sources here
     );
 
@@ -50,6 +49,4 @@ public class SampleDataLoader extends TestCase {
     public static Reader getDataReader(int i) {
         return new StringReader(data.get(i));
     }
-
 }
-
