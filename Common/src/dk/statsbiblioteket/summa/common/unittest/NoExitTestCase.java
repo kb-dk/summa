@@ -14,10 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.unittest;
 
-import java.security.Permission;
-
-import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+
+import java.security.Permission;
 
 /**
  * Sets up a security manager that allows everything, except exitXM
@@ -67,33 +67,33 @@ public class NoExitTestCase extends TestCase {
         allowExit = true;
     }
 
+    public void testDummy() {
+        // dummy method
+    }
+
     /**
      * Checks to see is a SecurityManager is assigned to the running VM. If not,
      * a new SecurityManager is created. The new manager selectively enables or
      * disables exitVM.
      */
     private void checkSecurityManager() {
-//        if (1 == 1 || System.getSecurityManager() == null) {
-            System.setSecurityManager(new SecurityManager() {
-                @Override
-                public void checkPermission(Permission perm) {
-                    checkPermission(perm, null);
-                }
-                @Override
-                public void checkPermission(Permission perm, Object context) {
-                    if (perm.getName().startsWith("exitVM")) {
-                        // exitVM.1
-                        exitCode = Integer.valueOf(perm.getName().
-                                split("\\.")[1]);
-                        exitHasBeenRequested = true;
-                        if (!allowExit) {
-                            throw new SecurityException(EXIT_MESSAGE);
-                        }
+        System.setSecurityManager(new SecurityManager() {
+            @Override
+            public void checkPermission(Permission perm) {
+                checkPermission(perm, null);
+            }
+            @Override
+            public void checkPermission(Permission perm, Object context) {
+                if (perm.getName().startsWith("exitVM")) {
+                    // exitVM.1
+                    exitCode = Integer.valueOf(perm.getName().
+                            split("\\.")[1]);
+                    exitHasBeenRequested = true;
+                    if (!allowExit) {
+                        throw new SecurityException(EXIT_MESSAGE);
                     }
                 }
-            });
-//        }
+            }
+        });
     }
-
 }
-
