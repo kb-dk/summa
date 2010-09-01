@@ -35,10 +35,11 @@ public class ConfigurableTest extends TestCase {
     }
 
     /**
-     * Try and instantiate each {@link ConfigurationStorage} as a {@link Configurable}
-     * through {@link Configuration#create}.
+     * Try and instantiate each {@link ConfigurationStorage} as a
+     * {@link Configurable} through {@link Configuration#create}.
      *
-     * Assert that Configuration based on these storages are equal (this is a deep check)
+     * Assert that Configuration based on these storage are equal (this is a
+     * deep check)
      */
     public void testStorageInstantiations () throws Exception {
         Configuration base = new Configuration(
@@ -65,7 +66,3 @@ public class ConfigurableTest extends TestCase {
         assertTrue (base.equals(jConf));
     }
 }
-
-
-
-

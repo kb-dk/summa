@@ -23,7 +23,6 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
-import java.io.StringWriter;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -51,7 +50,7 @@ public class LineInputStreamTest extends TestCase {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void testRealFile() throws Exception {
         FileInputStream is = new FileInputStream(Resolver.getFile(
-                "data/white.xml"));
+                "LineInputStream/white.xml"));
         LineInputStream lis = new LineInputStream(is);
         String line;
         int lc = 0;

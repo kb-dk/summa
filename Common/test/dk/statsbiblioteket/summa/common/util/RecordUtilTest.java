@@ -56,7 +56,7 @@ public class RecordUtilTest extends TestCase {
     }
 
     private static final URL schema = Resolver.getURL(
-            "dk/statsbiblioteket/summa/common/Record.xsd");
+            "Record.xsd");
     public void testSingleRecord() throws Exception {
         Record record = new Record(
                 "foo&<", "/>baze",

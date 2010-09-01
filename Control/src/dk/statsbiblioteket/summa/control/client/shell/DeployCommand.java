@@ -41,7 +41,7 @@ public class DeployCommand extends RemoteCommand<ClientConnection> {
         removeCommand = new RemoveServiceCommand(connMgr, clientAddress);
         restartCommand = new RestartServiceCommand(connMgr, clientAddress);
 
-        setUsage ("deploy [options] <bundle-id> <instanceId>");
+        setUsage("deploy [options] <bundle-id> <instanceId>");
 
         installOption("c", "configuration", true, "The location of the "
                                                   + "configuration to use."

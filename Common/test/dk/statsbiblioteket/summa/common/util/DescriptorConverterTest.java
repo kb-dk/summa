@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 public class DescriptorConverterTest extends TestCase {
     private static Log log = LogFactory.getLog(DescriptorConverterTest.class);
     private static final String OLD_DESCRIPTOR =
-           "dk/statsbiblioteket/summa/common/index/IndexDescriptorOldStyle.xml";
+            "IndexDescriptorOldStyle.xml";
 
     public DescriptorConverterTest(String name) {
         super(name);
