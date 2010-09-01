@@ -15,12 +15,14 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.TestCase;
 
-import java.util.List;
-import java.util.Arrays;
-import static java.lang.ClassLoader.getSystemResourceAsStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.lang.ClassLoader.getSystemResourceAsStream;
 
 /**
  * Load test data into memory so we have it around. This is done to
