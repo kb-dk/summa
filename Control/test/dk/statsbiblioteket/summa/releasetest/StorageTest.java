@@ -44,9 +44,14 @@ public class StorageTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(StorageTest.class);
 
     @Override
-    public void setUp () throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
     }
 
 /*    public void testReopen() throws Exception {

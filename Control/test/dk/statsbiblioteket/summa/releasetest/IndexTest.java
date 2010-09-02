@@ -58,13 +58,21 @@ public class IndexTest extends NoExitTestCase {
     public static final int NUM_RECORDS = 3;
 
     @Override
-    public void setUp () throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
         if (INDEX_ROOT.exists()) {
             Files.delete(INDEX_ROOT);
         }
         INDEX_ROOT.mkdirs();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        if (INDEX_ROOT.exists()) {
+            Files.delete(INDEX_ROOT);
+        }
     }
 
     public void testIngest() throws Exception {

@@ -36,7 +36,7 @@ public class ThreadInterrupt {
                 }
                 t.interrupt();
             }
-        });
+        }, "ThreadInterrupt Thread");
 
         waiter.start();
     }

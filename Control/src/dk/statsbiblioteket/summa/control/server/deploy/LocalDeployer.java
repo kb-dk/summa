@@ -206,7 +206,7 @@ public class LocalDeployer implements ClientDeployer {
         log.debug("Starting instance '" + clientId + "' with:\n"
                   + Strings.join(cmdLine, " "));
         try {
-            Thread processThread = new Thread(runner);
+            Thread processThread = new Thread(runner, "LocalDeployer Thread");
             processThread.setDaemon(true); // Allow JVM to exit
             processThread.start();
 

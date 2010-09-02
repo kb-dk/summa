@@ -53,7 +53,7 @@ public class NoExitTestCase extends TestCase {
     @Override
     public void setUp () throws Exception {
         super.setUp();
-        allowExit =false;
+        allowExit = false;
         checkSecurityManager();
     }
 
@@ -68,7 +68,12 @@ public class NoExitTestCase extends TestCase {
     }
 
     public void testDummy() {
-        // dummy method
+        try {
+            System.exit(1);
+            fail("Exit not allowed here");
+        } catch(SecurityException e) {
+            // ok
+        }
     }
 
     /**
@@ -86,8 +91,7 @@ public class NoExitTestCase extends TestCase {
             public void checkPermission(Permission perm, Object context) {
                 if (perm.getName().startsWith("exitVM")) {
                     // exitVM.1
-                    exitCode = Integer.valueOf(perm.getName().
-                            split("\\.")[1]);
+                    exitCode = Integer.valueOf(perm.getName().split("\\.")[1]);
                     exitHasBeenRequested = true;
                     if (!allowExit) {
                         throw new SecurityException(EXIT_MESSAGE);

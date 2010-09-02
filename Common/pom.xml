@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>${summaGroupId}</groupId>
+        <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>${summaVersion}</version>
+        <version>1.6.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-common</artifactId>
@@ -13,10 +13,6 @@
     <description>Common source code for the Summa modules.</description>
 
     <dependencies>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
@@ -28,10 +24,6 @@
         <dependency>
             <groupId>dk.statsbiblioteket.sbutil</groupId>
             <artifactId>sbutil</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>jline</groupId>
@@ -57,12 +49,16 @@
         </resources>
         <!-- Tests -->
         <testSourceDirectory>test/</testSourceDirectory>
+
         <testResources>
             <testResource>
                 <directory>data/</directory>
             </testResource>
             <testResource>
                 <directory>test/data/</directory>
+            </testResource>
+            <testResource>
+                <directory>test/</directory>
             </testResource>
         </testResources>
     </build>

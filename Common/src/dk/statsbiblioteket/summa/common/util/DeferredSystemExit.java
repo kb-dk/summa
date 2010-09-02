@@ -27,12 +27,12 @@ public class DeferredSystemExit implements Runnable {
     private Thread thread;
 
     /**
-     * Run {@code System.exit (exitCode)} after {@code delay} ms
-     * @param exitCode the system exit code
-     * @param delay number of milli seconds to wait before calling
-     *              {@link System#exit}
+     * Run {@code System.exit (exitCode)} after {@code delay} ms.
+     * @param exitCode The system exit code.
+     * @param delay Number of milli seconds to wait before calling
+     *              {@link System#exit}.
      */
-    public DeferredSystemExit (int exitCode, int delay) {
+    public DeferredSystemExit   (int exitCode, int delay) {
         this.exitCode = exitCode;
         this.delay = delay;
         startExit();
@@ -40,7 +40,7 @@ public class DeferredSystemExit implements Runnable {
 
     /**
      * Run {@code System.exit (exitCode)} after {@link #DEFAULT_DELAY} ms
-     * @param exitCode the system exit code
+     * @param exitCode The system exit code.
      */
     public DeferredSystemExit (int exitCode) {
         this (exitCode, DEFAULT_DELAY);
@@ -56,7 +56,7 @@ public class DeferredSystemExit implements Runnable {
     }
 
     /**
-     * Do not use this method. It is only meant to be internnaly called by
+     * Do not use this method. It is only meant to be internally called by
      * {@code DefferedSystemExit}.
      */
     public void run() {
@@ -70,14 +70,8 @@ public class DeferredSystemExit implements Runnable {
     }
 
     private void startExit () {
-        thread = new Thread (this);
+        thread = new Thread(this, "DeferredSystemExit Thread");
         thread.setDaemon(true); // Allow the JVM to exit even though thread is active
         thread.start();
     }
-
-
 }
-
-
-
-

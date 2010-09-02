@@ -27,40 +27,35 @@ public class DeferredSystemExitTest extends NoExitTestCase {
     private static final String NO_ATTEMPT_YET =
             "System.exit should not have been attempted by now";
 
-
     /**
      * Schedule a system exit 0 and wait for it to happen. If it
      * doesn't exit with code 1. This test should exit with code 0.
      * @throws Exception on frobnication
      */
-    public void testExit () throws Exception {
-        assertFalse(NO_ATTEMPT_YET,this.exitHasBeenRequested);
+    public void testExit() throws Exception {
+        assertFalse(NO_ATTEMPT_YET, this.exitHasBeenRequested);
+
         new DeferredSystemExit(0, 1000);
-        Thread.sleep (2000);
+        Thread.sleep(2000);
         assertTrue("System.exit should have been attempted by now",
                    this.exitHasBeenRequested);
         assertEquals("The exit code should be as expected",
-                   0, this.exitCode);
+                     0, this.exitCode);
     }
 
     /**
      * Schedule a system exit with code 1 and abort it. This test should exit
      * with exit code 0.
-     * @throws Exception if the wizzlebizzle has been twizzled
+     * @throws Exception If the wizzlebizzle has been twizzled
      */
     public void testAbortExit () throws Exception {
         DeferredSystemExit exit = new DeferredSystemExit(1, 1000);
 
         assertFalse(NO_ATTEMPT_YET + " (1)", this.exitHasBeenRequested);
-        Thread.sleep (500);
+        Thread.sleep(500);
         exit.abortExit();
         assertFalse(NO_ATTEMPT_YET + " (2)", this.exitHasBeenRequested);
-        Thread.sleep (1500);
+        Thread.sleep(1500);
         assertFalse(NO_ATTEMPT_YET + " (3)", this.exitHasBeenRequested);
     }
-
 }
-
-
-
-

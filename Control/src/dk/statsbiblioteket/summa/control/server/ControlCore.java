@@ -387,7 +387,7 @@ public class ControlCore extends UnicastRemoteObject
                                                   8,
                                                   feedback,
                                                   Status.CODE.not_instantiated);
-            Thread statusThread = new Thread (mon);
+            Thread statusThread = new Thread (mon, "Controlcore Thread");
             statusThread.setDaemon (true); // Allow JVM to exit
             statusThread.start();
             deployer.start(feedback);

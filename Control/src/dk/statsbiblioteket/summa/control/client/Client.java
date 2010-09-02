@@ -630,7 +630,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         /* Try and run the service JVM */
         ProcessRunner runner = new ProcessRunner(stub.buildCommandLine());
-        Thread processThread = new Thread (runner);
+        Thread processThread = new Thread (runner, "Client thread");
         processThread.setDaemon (true); // Allow JVM to exit
         runner.setStartingDir(serviceMan.getServiceDir(instanceId));
         processThread.start();
