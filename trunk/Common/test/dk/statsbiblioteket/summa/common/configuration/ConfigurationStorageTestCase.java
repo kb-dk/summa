@@ -17,13 +17,15 @@ package dk.statsbiblioteket.summa.common.configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.*;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ConfigurationStorageTestCase extends TestCase {
-
+    private static Log log = LogFactory.getLog(ConfigurationStorageTestCase.class);
     static final String configFilename =
             "configurationFiles/configuration.xml";
     public ConfigurationStorage storage;
@@ -39,10 +41,10 @@ public class ConfigurationStorageTestCase extends TestCase {
     }
 
     public void testSet () throws Exception {
-        System.out.println ("Sleeping 1s");
+        log.info("Sleeping 1s");
         Thread.sleep(1000);
 
-        System.out.println (testName + ": Testing set()");
+        log.info(testName + ": Testing set()");
         String resultValue, testValue = "MyTestValue";
         storage.put (RemoteStorageMBean.CONF_NAME, testValue);
         resultValue = (String) storage.get (RemoteStorageMBean.CONF_NAME);
@@ -52,7 +54,7 @@ public class ConfigurationStorageTestCase extends TestCase {
     }
 
     public void testPurge () throws Exception {
-        System.out.println (testName + ": Testing purge()");
+        log.info(testName + ": Testing purge()");
         String testPurgeKey = "testPurge";
         String testPurgeValue = "testValue";
 
@@ -66,7 +68,7 @@ public class ConfigurationStorageTestCase extends TestCase {
 
     /* This fails when called directly, by design */
     public void testConfigurationInstantiation () throws Exception {
-        System.out.println (testName + ": Testing instantiation with Configuration");
+        log.info(testName + ": Testing instantiation with Configuration");
 
         Configuration conf = Configuration.newMemoryBased("key", "value");
 
@@ -75,7 +77,3 @@ public class ConfigurationStorageTestCase extends TestCase {
         assertEquals("value", testStorage.get("key"));
     }
 }
-
-
-
-

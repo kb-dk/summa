@@ -47,7 +47,7 @@ public class DescriptorConverterTest extends TestCase {
 
     public void testConvert() throws Exception {
         String old = Resolver.getUTF8Content(OLD_DESCRIPTOR);
-        System.out.println("New style:\n"
+        log.info("New style:\n"
                            + new DescriptorConverter().convert(old));
     }
 
@@ -67,11 +67,10 @@ public class DescriptorConverterTest extends TestCase {
         converter.setDumpResolver(false);
         converter.setDumpHasSuggest(false);
         converter.setResetBoosts(true);
-        System.out.println(converter.convert(old));
+        log.info(converter.convert(old));
     }
 
     public static Test suite() {
         return new TestSuite(DescriptorConverterTest.class);
     }
 }
-

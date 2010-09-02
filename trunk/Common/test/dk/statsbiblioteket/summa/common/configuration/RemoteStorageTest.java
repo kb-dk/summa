@@ -17,6 +17,8 @@ package dk.statsbiblioteket.summa.common.configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -25,7 +27,7 @@ import java.rmi.registry.LocateRegistry;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class RemoteStorageTest extends ConfigurationStorageTestCase {
-
+    private static Log log = LogFactory.getLog(RemoteStorageTest.class);
     /** For debugging purposes */
     public RemoteStorage direct_storage;
 
@@ -37,11 +39,11 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
     public void setUp () throws Exception {
         Configuration conf = new Configuration(storage);
 
-        System.out.println (testName + ": Creating remote storage");
+        log.info(testName + ": Creating remote storage");
         direct_storage =
                 (RemoteStorage) Configuration.create(RemoteStorage.class, conf);
 
-        System.out.println (testName + ": Connecting to registry on " +
+        log.info(testName + ": Connecting to registry on " +
                                                   conf.getString(RemoteStorage.CONF_REGISTRY_HOST) +
                                                   ":" +
                                                   conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
@@ -49,11 +51,11 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
         Registry reg = LocateRegistry.getRegistry(conf.getString(RemoteStorage.CONF_REGISTRY_HOST),
                                                   conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
 
-        System.out.println("Connecting to remote storage at '"
+        log.info("Connecting to remote storage at '"
                            + conf.getString(RemoteStorage.CONF_NAME) + "'");
         storage = (ConfigurationStorage) reg.lookup(conf.getString(RemoteStorage.CONF_NAME));
 
-        System.out.println (testName + ": Remote storage prepared");
+        log.info(testName + ": Remote storage prepared");
     }
 
     @Override
