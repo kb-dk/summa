@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.File;
-
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
 
 /**
  * DiskPool Tester.
@@ -83,7 +83,3 @@ public class DiskPoolTest extends StringPoolSuper {
         log.info("Dirty: " + dirty);
     }
 }
-
-
-
-

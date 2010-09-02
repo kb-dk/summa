@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 
@@ -23,35 +25,37 @@ import java.io.File;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class FileStorageTest extends ConfigurationStorageTestCase {
-
+    private static Log log = LogFactory.getLog(FileStorageTest.class);
+    
     public FileStorageTest () throws Exception {
         super (new FileStorage("data/configurationFiles/configuration.xml"));
     }
 
     public void testEmptyConstructor () throws Exception {
         FileStorage s = new FileStorage();
-        System.out.println ("Created empty file storage at: " + s.getFilename());
+        log.info("Created empty file storage at: " + s.getFilename());
 
-        testPersitence();
+        testPersistence();
 
         new File(s.getFilename()).delete();
     }
 
-    public void testPersitence () throws Exception {
-        System.out.println (testName + ": Testing persistence");
+    public void testPersistence () throws Exception {
+        log.info(testName + ": Testing persistence");
 
         String persitenceTestValue = "PersistenceTestValue";
         String persitenceTestKey = "PersistenceTestKey";
         String resultValue;
 
-        storage.put (persitenceTestKey, persitenceTestValue);
+        storage.put(persitenceTestKey, persitenceTestValue);
 
         ConfigurationStorage newStorage = new FileStorage(configFilename);
         resultValue = (String) newStorage.get (persitenceTestKey);
 
-        assertTrue ("Setting a value on a FileStorage should save the underlying configuration file", persitenceTestValue.equals (resultValue));
+        assertTrue("Setting a value on a FileStorage should save the "
+                        +"underlying configuration file", 
+                   persitenceTestValue.equals (resultValue));
 
-        storage.purge (persitenceTestKey);
-
+        storage.purge(persitenceTestKey);
     }
 }

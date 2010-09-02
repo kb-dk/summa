@@ -22,6 +22,8 @@ import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.List;
@@ -35,8 +37,10 @@ import java.util.regex.Pattern;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XStorageTest extends ConfigurationStorageTestCase {
+    private static Log log = LogFactory.getLog(XStorageTest.class);
+
     public static final File subLocation =
-               new File("Common/test/data/substorage.xml").getAbsoluteFile();
+               new File("test/data/substorage.xml").getAbsoluteFile();
 
     public XStorageTest() throws Exception {
         super(new XStorage());
@@ -93,7 +97,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
         List<Configuration> subConfs =
                 configuration.createSubConfigurations("foo", 1);
         subConfs.get(0).set("bar", "baz");
-        System.out.println(new XProperties().getXStream().toXML(xs));
+        log.info(new XProperties().getXStream().toXML(xs));
     }
 
     public void testnextAvailableConfigurationFile() throws Exception {

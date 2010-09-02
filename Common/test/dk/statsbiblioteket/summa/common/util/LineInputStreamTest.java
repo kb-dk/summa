@@ -20,6 +20,8 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -29,6 +31,7 @@ import java.io.FileInputStream;
         author = "te",
         comment = "Needs testing of a mix of readLine and the read-methods")
 public class LineInputStreamTest extends TestCase {
+    private static Log log = LogFactory.getLog(LineInputStreamTest.class);
     public LineInputStreamTest(String name) {
         super(name);
     }
@@ -71,9 +74,9 @@ public class LineInputStreamTest extends TestCase {
         }
         assertNull("EOF should be reached", lis.readLine());
         lis.close();
-        System.out.println(String.format(
+        log.info(String.format(
                 "Got %d lines before the first empty line", lc));
-        System.out.println("The rest of the file was\n" + rest);
+        log.info("The rest of the file was\n" + rest);
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -112,4 +115,3 @@ public class LineInputStreamTest extends TestCase {
         }
     }
 }
-

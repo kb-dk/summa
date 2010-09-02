@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 import dk.statsbiblioteket.util.Strings;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.Map;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.io.StringReader;
  *
  */
 public class JStorageTest extends ConfigurationStorageTestCase {
+    private static Log log = LogFactory.getLog(JStorageTest.class);
     private static final String CONFIGURATIONJS = "configuration.js";
     public JStorageTest() {
         super(new JStorage());
@@ -86,8 +89,9 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         checkSampleConfig(conf);
 
         for (Map.Entry<String, Serializable> entry : conf) {
-            System.out.println(entry.getKey() + " = " + entry.getValue()
+            log.info(entry.getKey() + " = " + entry.getValue()
                                + "   (" + entry.getValue().getClass() + ")");
+            // TODO use assert
         }
     }
 
@@ -160,10 +164,10 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         "  ]\n" +
         "}", js.toString());
 
-        System.out.println("--------------");
+        log.info("--------------");
         js = new JStorage(CONFIGURATIONJS);
-        System.out.println(js.toString());
-        System.out.println("--------------");
+        log.info(js.toString());
+        log.info("--------------");
     }
 
     public void testSimpleTypes() throws Exception {

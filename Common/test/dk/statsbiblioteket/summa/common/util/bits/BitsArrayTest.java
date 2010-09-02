@@ -218,7 +218,7 @@ public class BitsArrayTest extends TestCase {
             testPerformancePlain(LENGTH);
         }
         
-        System.out.println(String.format(
+        log.info(String.format(
                 "Measuring write-performance calibrated with null-speed "
                 + "for %d random[0-%d] value assignments",
                 LENGTH,  MAX_VALUE));
@@ -243,7 +243,7 @@ public class BitsArrayTest extends TestCase {
                 sw.append("=").append(Long.toString(timings.get(i)-baseTime));
                 sw.append("ms");
             }
-            System.out.println(sw.toString());
+            log.info(sw.toString());
         }
     }
 
@@ -273,7 +273,7 @@ public class BitsArrayTest extends TestCase {
         log.debug("Created " + bas.size() + " BitsArrays");
         int[] a = makePlain(LENGTH, MAX_VALUE);
 
-        System.out.println(String.format(
+        log.info(String.format(
                 "Measuring read-performance calibrated with null-speed "
                 + "for %d value reads from %d random[0-%d] values",
                 READS, LENGTH, MAX_VALUE));
@@ -289,7 +289,7 @@ public class BitsArrayTest extends TestCase {
             sw.append("KB");
         }
 
-        System.out.println(sw.toString());
+        log.info(sw.toString());
 
         for (int i = 0 ; i < WARMUP ; i++) {
             for (BitsArray ba: bas) {
@@ -317,7 +317,7 @@ public class BitsArrayTest extends TestCase {
                 sw.append("=").append(Long.toString(timings.get(i)-baseTime));
                 sw.append("ms");
             }
-            System.out.println(sw.toString());
+            log.info(sw.toString());
         }
 
     }

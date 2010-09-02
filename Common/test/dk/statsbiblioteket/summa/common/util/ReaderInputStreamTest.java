@@ -14,17 +14,22 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-
-import java.io.*;
-import java.util.Random;
-
 import dk.statsbiblioteket.util.Streams;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Random;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ReaderInputStreamTest extends TestCase {
+    private static Log log = LogFactory.getLog(ReaderInputStreamTest.class);
     public static final String ENCODING = "utf-8";
 
     public ReaderInputStreamTest(String name) {
@@ -140,14 +145,16 @@ public class ReaderInputStreamTest extends TestCase {
                         expected.length > i ? Byte.toString(expected[i]) : "NA",
                         actual.length > i ? Byte.toString(actual[i]) : "NA"));
             }
-            System.out.println(sw.toString());
-
+            log.info(sw.toString());
+            // TODO use assert
+            
             sw = new StringWriter(100);
             sw.append("Input chars:");
             for (char c: input.toCharArray()) {
                 sw.append(" ").append(Integer.toString(c));
             }
-            System.out.println(sw.toString());
+            log.info(sw.toString());
+            // TODO use assert
         }
         assertEquals(message + " should result in the right number of bytes. "
                      + "Input was '" + input + "'",
@@ -160,4 +167,3 @@ public class ReaderInputStreamTest extends TestCase {
         }
     }
 }
-
