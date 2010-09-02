@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
-import java.rmi.RemoteException;
-import java.io.IOException;
-
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -75,7 +75,7 @@ public class SimpleTest extends ServiceBase {
                   Logging.LogLevel.DEBUG);
 
         if (service.stopped) {
-            new Thread (service).start();
+            new Thread (service, "SimpleTest Thread").start();
         } else {
             log.warn ("Trying to start service, but it is already running");
         }

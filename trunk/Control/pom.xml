@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>${summaGroupId}</groupId>
+        <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>${summaVersion}</version>
+        <version>1.6.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-control</artifactId>
@@ -13,10 +13,6 @@
     <description>This module, handles code that are used for controlling running Summa components.</description>
 
     <dependencies>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
@@ -28,10 +24,6 @@
         <dependency>
             <groupId>dk.statsbiblioteket.sbutil</groupId>
             <artifactId>sbutil</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>jline</groupId>
@@ -102,6 +94,18 @@
             </testResource>
         </testResources>
         <plugins>
+            <!-- Exclude release and performance tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/releasetest/**/*</exclude>
+                        <exclude>**/percormance/**/*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- Jar builder, needs multiple jars -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -112,11 +116,11 @@
                         <include>**/*</include>
                     </includes>
                 </configuration>
-                <!-- The Api Jar -->
+                <!-- Create Api jar at compile time, needed to validate that modules have right dependencies. -->
                 <executions>
                     <execution>
                         <id>api</id>
-                        <phase>package</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -129,7 +133,7 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <!-- Used for creating control zip -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2-beta-5</version>

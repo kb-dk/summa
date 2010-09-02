@@ -58,7 +58,7 @@ public class DescriptorTest extends NoExitTestCase {
         cleanup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
-
+                                            
     @Override
     public void tearDown() throws Exception {
         super.tearDown();

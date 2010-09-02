@@ -163,7 +163,7 @@ public abstract class ResourceListener implements Runnable {
         }
         if (active && !oldActive) {
             log.debug("Starting new listener thread");
-            new Thread(this).start();
+            new Thread(this, "ResourceListenerThread").start();
             return;
         }
         //noinspection DuplicateStringLiteralInspection

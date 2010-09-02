@@ -60,12 +60,20 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(DistributedTermStatsTest.class);
 
     @Override
-    public void setUp () throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
         if (INDEX_ROOT.exists()) {
             Files.delete(INDEX_ROOT);
         }
         INDEX_ROOT.mkdirs();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        if (INDEX_ROOT.exists()) {
+            Files.delete(INDEX_ROOT);
+        }
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

@@ -14,14 +14,8 @@
  */
 package dk.statsbiblioteket.summa.control.client;
 
-import junit.framework.TestCase;
-
-import java.net.URL;
-import java.io.File;
-import java.rmi.Naming;
-
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -29,7 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class ClientTest extends TestCase {
 
     public void testHello () throws Exception {
-        System.out.println("ClientTest disabled");
+        // Dummy
         /*URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
         System.out.println (url.getQuery());
         System.out.println (url.getPath());
@@ -48,10 +42,4 @@ public class ClientTest extends TestCase {
         client.deployService("test-1", "test-1-1", null);
 
     }*/
-    
-
 }
-
-
-
-

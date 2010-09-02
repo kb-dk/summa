@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.releasetest;
+    package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -58,6 +58,7 @@ public class FacetPerformanceTest extends NoExitTestCase {
     @Override
     public void setUp () throws Exception {
         super.setUp();
+        cleanup();
         TMP.mkdirs();
     }
 

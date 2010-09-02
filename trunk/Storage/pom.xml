@@ -3,10 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>${summaGroupId}</groupId>
+        <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>${summaVersion}</version>
+        <version>1.6.3-SNAPSHOT</version>
     </parent>
+
 
     <artifactId>summa-storage</artifactId>
     <name>Summa Storage module</name>
@@ -33,6 +34,14 @@
             <testResource>
                 <directory>data/</directory>
             </testResource>
+            <!-- Idea hack -->
+            <testResource>
+                <directory>test/data</directory>
+            </testResource>
+            <!-- Idea hack -->
+            <testResource>
+                <directory>test/</directory>
+            </testResource>
         </testResources>
         <plugins>
             <plugin>
@@ -45,11 +54,11 @@
                         <include>**/*</include>
                     </includes>
                 </configuration>
-                <!-- API jar -->
+                <!-- Create API jar at compile time, needed to validate that modules have right dependencies.-->
                 <executions>
                     <execution>
                         <id>api</id>
-                        <phase>package</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -68,16 +77,8 @@
     <!-- Dependencies for Summa Storage -->
     <dependencies>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.lucene</groupId>
@@ -109,12 +110,12 @@
             <artifactId>summa-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
+        <!-- <dependency>
+           <groupId>${project.groupId}</groupId>
             <artifactId>summa-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
-        </dependency>
+        </dependency> -->
     </dependencies>
 </project>

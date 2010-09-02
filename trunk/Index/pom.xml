@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>${summaGroupId}</groupId>
+        <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>${summaVersion}</version>
+        <version>1.6.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-index</artifactId>
@@ -25,7 +25,14 @@
         <testSourceDirectory>test/</testSourceDirectory>
         <testResources>
             <testResource>
+                <directory>test/data/</directory>
+            </testResource>
+            <testResource>
                 <directory>data/</directory>
+            </testResource>
+            <!-- Idea hack -->
+            <testResource>
+                <directory>test/</directory>
             </testResource>
         </testResources>
     </build>
@@ -35,14 +42,6 @@
         <dependency>
             <groupId>dk.statsbiblioteket.lucene</groupId>
             <artifactId>lucene-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.sbutil</groupId>
