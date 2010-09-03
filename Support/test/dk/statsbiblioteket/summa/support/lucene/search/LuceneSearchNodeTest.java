@@ -112,7 +112,7 @@ public class LuceneSearchNodeTest extends TestCase {
 /*    public void testStrings() throws Exception {
         Configuration conf = Configuration.load(basicSetup().toString());
         for (String s: conf.getStrings(SummaSearcher.CONF_RESULT_FIELDS)) {
-            System.out.println(s);
+            log.info(s);
         }
     }*/
 
@@ -264,7 +264,8 @@ public class LuceneSearchNodeTest extends TestCase {
         // Search should work now
         ResponseCollection response = searcher.search(request);
         searcher.close();
-        System.out.println("Got response\n" + response.toXML());
+        log.info("Got response\n" + response.toXML());
+        // TODO assert
     }
 
     private File makeIndex() throws Exception {
@@ -285,7 +286,7 @@ public class LuceneSearchNodeTest extends TestCase {
 
     public void testDisplayNonDeletedIDs() throws Exception {
         File indexLocation = makeIndex();
-        System.out.println("Test-index at " + indexLocation);
+        log.info("Test-index at " + indexLocation);
 
         // Do this every time the index is updated
 //        File indexLocation = new File("myhome/myindexfolder");
@@ -307,19 +308,20 @@ public class LuceneSearchNodeTest extends TestCase {
         DocIdSet workset = filter.getDocIdSet(reader);
         //workset.or(deleted);
         // workset now marks all the docids that is either matching or deleted
-        System.out.print("Non-matching documents: ");
+        log.info("Non-matching documents: ");
 
         for (int i = 0 ; i < reader.maxDoc() ; i++) {
             // TODO shouldn't this testcase test anything?
             /*if (!workset.get(i)) {
-                System.out.print(i + " ");
+                log.info(i + " ");
             } */
         }
+        // TODO assert
     }
 
     public void testDisplayNonDeletedIDsV2() throws Exception {
         File indexLocation = makeIndex();
-        System.out.println("Test-index at " + indexLocation);
+        log.info("Test-index at " + indexLocation);
 
         QueryParser parser =
                 new QueryParser(Version.LUCENE_30, "freetext",
@@ -333,20 +335,15 @@ public class LuceneSearchNodeTest extends TestCase {
         // Is a boolean with a single NOT clause valid?
         QueryWrapperFilter filter = new QueryWrapperFilter(notQuery);
         DocIdSet nonmatching = filter.getDocIdSet(reader);
-        System.out.println("Got '" + nonmatching.toString() + "' non-matches");
+        log.info("Got '" + nonmatching.toString() + "' non-matches");
 
         // workset now marks all the docids that is either matching or deleted
         // TODO shouldn't this testcase test anything?
-        System.out.print("Non-matching documents: ");
+        log.info("Non-matching documents: ");
         for (int i = 0 ; i < reader.maxDoc() ; i++) {
             /*if (nonmatching.get(i)) {
-                System.out.print(i + " ");
+                log.info(i + " ");
             } */
         }
     }
-
 }
-
-
-
-

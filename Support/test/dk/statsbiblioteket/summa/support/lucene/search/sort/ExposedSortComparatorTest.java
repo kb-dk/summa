@@ -2,18 +2,17 @@ package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
 
 /**
  * ExposedSortComparator Tester.
@@ -23,6 +22,7 @@ import java.util.Random;
  * @version 1.0
  */
 public class ExposedSortComparatorTest extends TestCase {
+    private static Log log = LogFactory.getLog(ExposedSortComparatorTest.class);
     public ExposedSortComparatorTest(String name) {
         super(name);
     }
