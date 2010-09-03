@@ -14,27 +14,29 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.io.File;
-import java.io.StringWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
-import dk.statsbiblioteket.util.qa.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "hbk")
 public class StorageTest extends StorageTestBase {
-
+    private static Log log = LogFactory.getLog(StorageTest.class);
     public void testGetEmpty () throws Exception {
         List<Record> recs = storage.getRecords(new ArrayList<String>(), null);
         assertEquals(0, recs.size());
@@ -402,8 +404,8 @@ public class StorageTest extends StorageTestBase {
 
         assertEquals(2, recs.size());
 
-        System.out.println ("ORIG:\n" + recP.toString(true));
-        System.out.println ("GOT :\n" + recs.get(0).toString(true));
+        log.info("ORIG:\n" + recP.toString(true));
+        log.info("GOT :\n" + recs.get(0).toString(true));
 
         /* We can't compare the records directly because recP has the child
          * records nested, while the retrieved records only has the ids */
@@ -753,12 +755,12 @@ public class StorageTest extends StorageTestBase {
         storage.close();
         String afterClose = Logs.expand(Arrays.asList(listStorageFiles()), 100);
 
-        System.out.println("Database location: "
+        log.info("Database location: "
                            + new File(lastStorageLocation).getAbsolutePath());
-        System.out.println("Before:     " + before);
-        System.out.println("AfterFlush: " + afterFlush);
+        log.info("Before:     " + before);
+        log.info("AfterFlush: " + afterFlush);
         assertEquals(before, afterFlush);
-        System.out.println("AfterClose: " + afterClose);
+        log.info("AfterClose: " + afterClose);
         storage = null;
     }
 
@@ -974,4 +976,3 @@ DEBUG [main] [2009-08-28 14:35:58,681] [dk.statsbiblioteket.summa.storage.api.St
         storage.close();
     }*/
 }
-
