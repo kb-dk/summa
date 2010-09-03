@@ -25,36 +25,36 @@
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
+        <param name="Threshold" value="FATAL"/><!-- or DEBUG or INFO -->
     <!--    //<param name="File" value="/home/summa/logs/search_engine_log.log"/>-->
         <!--<param name="Append" value="true"/>
         //<param name="MaxFileSize" value="100MB"/>
       //  <param name="MaxBackupIndex" value="5"/>-->
-        <layout class="org.apache.log4j.PatternLayout">
+       <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="CLUSTER" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
+    <!--<appender name="CLUSTER" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="DEBUG"/>--><!-- or DEBUG or INFO -->
     <!--   // <param name="File" value="/home/summa/logs/cluster_log.log"/>-->
        <!-- <param name="Append" value="true"/>
        // <param name="MaxFileSize" value="100MB"/>
       //  <param name="MaxBackupIndex" value="5"/>-->
-        <layout class="org.apache.log4j.PatternLayout">
+        <!--<layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
-    </appender>
+    </appender>-->
 
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
-    <appender name="FULL_LOG" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="FATAL"/>
+    <!--<appender name="FULL_LOG" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="FATAL"/>-->
 <!--        <param name="File" value="/home/summa/logs/search_engine_fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
         <param name="MaxBackupIndex" value="5"/>-->
-        <layout class="org.apache.log4j.PatternLayout">
+        <!--<layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
     </appender>
@@ -62,14 +62,14 @@
     <logger name="dk.statsbiblioteket.summa.cluster">
         <level value="debug" />
         <appender-ref ref="CLUSTER" />
-    </logger>
+    </logger>-->
 
     <logger name="dk.statsbiblioteket.summa.search">
-        <level value="DEBUG" />
+        <level value="FATAL" />
         <appender-ref ref="FILE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.suggest">
+    <!--<logger name="dk.statsbiblioteket.summa.suggest">
         <level value="DEBUG" />
         <appender-ref ref="FILE" />
     </logger>
@@ -77,13 +77,13 @@
     <logger name="dk.statsbiblioteket.summa.common">
         <level value="DEBUG" />
         <appender-ref ref="FILE" />
-    </logger>
+    </logger>-->
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
-    <root>
+    <!--<root>
         <level value="FATAL" />
         <appender-ref ref="FULL_LOG" />
-    </root>
+    </root>-->
 
 </log4j:configuration>
 
