@@ -14,42 +14,44 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.ByteArrayInputStream;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
-import org.apache.lucene.document.Document;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DocumentCreatorTest extends TestCase implements ObjectFilter {
+    private static Log log = LogFactory.getLog(DocumentCreatorTest.class);
     public DocumentCreatorTest(String name) {
         super(name);
     }
@@ -188,23 +190,24 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         int RUNS = 10;
         int SUBRUNS = 10;
 
-        System.out.println("Creating creators");
+        log.info("Creating creators");
         Configuration conf = getCreatorConf();
         ObjectFilter dom = new StreamingDocumentCreator(conf);
         ObjectFilter stream = new StreamingDocumentCreator(conf);
 
-        System.out.println("Performing warm up");
+        log.info("Performing warm up");
         for (int i = 0 ; i < WARM ; i++) {
             speed(dom, SUBRUNS);
             speed(stream, SUBRUNS);
         }
 
-        System.out.println("\nNumbers are transformation/s");
-        System.out.println("DOM\tStream");
+        log.info("\nNumbers are transformation/s");
+        log.info("DOM\tStream");
         for (int i = 0 ; i < RUNS ; i++) {
-            System.out.println(speed(dom, SUBRUNS) + "\t" 
+            log.info(speed(dom, SUBRUNS) + "\t"
                                + speed(stream, SUBRUNS));
         }
+        // TODO assert
     }
 
     public double speed(ObjectFilter creator, int runs) throws Exception {
@@ -256,11 +259,11 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
     }
 
     /* ObjectFilter implementation */
-
+    @Override
     public boolean hasNext() {
         return true;
     }
-
+    @Override
     public Payload next() {
         try {
             return new Payload(new Record("dummy", "fooBase",
@@ -271,21 +274,17 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         }
         return null;
     }
-
+    @Override
     public void remove() {
     }
-
+    @Override
     public void setSource(Filter filter) {
     }
-
+    @Override
     public boolean pump() throws IOException {
         return next() != null;
     }
-
+    @Override
     public void close(boolean success) {
     }
 }
-
-
-
-

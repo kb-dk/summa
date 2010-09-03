@@ -22,21 +22,21 @@
 
     <!-- -->
 
-    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="debug"/><!-- or ERROR or INFO -->
-        <layout class="org.apache.log4j.PatternLayout">
+    <!--<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="debug"/>--><!-- or ERROR or INFO -->
+        <!--<layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
-    </appender>
+    </appender>-->
 
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
-        <param name="File" value="log/logfile.log"/>
+        <param name="File" value="target/log/logfile.log"/>
         <param name="Append" value="true"/>
-        <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -44,7 +44,7 @@
 
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
-    <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
+    <!--<appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="FATAL"/>
         <param name="File" value="log/fatal.log"/>
         <param name="Append" value="true"/>
@@ -53,7 +53,7 @@
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
-    </appender>
+    </appender>-->
 
      <!-- use the async wrapper on logging
      <appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
@@ -62,34 +62,34 @@
 
 
     <logger name="dk.statsbiblioteket.summa.index">
+        <level value="FATAL" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <!--<logger name="dk.statsbiblioteket.summa.common">
         <level value="TRACE" />
         <appender-ref ref="CONSOLE" />
-    </logger>
-    <logger name="dk.statsbiblioteket.summa.common">
-        <level value="TRACE" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
 
     <!-- ControlLucene -->
-    <logger name="dk.statsbiblioteket.summa.storage.lucene.ControlLucene">
+    <!--<logger name="dk.statsbiblioteket.summa.storage.lucene.ControlLucene">
         <level value="WARN"/>
         <appender-ref ref="FILE"/>
-    </logger>
+    </logger>-->
 
     <!-- LuceneStorageServer -->
-    <logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneStorageServer">
+    <!--<logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneStorageServer">
         <level value="WARN"/>
         <appender-ref ref="FILE"/>
-    </logger>
+    </logger>-->
 
     <!-- LuceneTestClient -->
-    <logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneTestClient">
+    <!--<logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneTestClient">
         <level value="WARN"/>
         <appender-ref ref="FILE"/>
-    </logger>
+    </logger>-->
 
     <!-- util.schedule -->
-    <logger name="dk.statsbiblioteket.util.schedule">
+    <!--<logger name="dk.statsbiblioteket.util.schedule">
        <level value="WARN"/>
        <appender-ref ref="FILE"/>
     </logger>
@@ -112,13 +112,13 @@
     <logger name="dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
-    <root>
+    <!--<root>
         <level value="FATAL" />
         <appender-ref ref="FULL_LOG" />
-    </root>
+    </root>-->
 
 </log4j:configuration>
 
