@@ -21,6 +21,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xml.sax.Attributes;
 
 import javax.xml.parsers.SAXParserFactory;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 
 public class XMLSplitterHandlerTest extends TestCase implements
                                                      XMLSplitterReceiver {
+    private static Log log = LogFactory.getLog(XMLSplitterHandlerTest.class);
     public XMLSplitterHandlerTest(String name) {
         super(name);
     }
@@ -80,7 +83,8 @@ public class XMLSplitterHandlerTest extends TestCase implements
         assertEquals("the right number of Records should be produced",
                      1, received.size());
         Record record = received.get(0);
-        System.out.println(record.getContentAsUTF8());
+        log.info(record.getContentAsUTF8());
+        // TODO assert
     }
 
     public void testCData() throws Exception {

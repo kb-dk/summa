@@ -114,7 +114,8 @@ public class SBMARCParserTest extends TestCase {
                    iso2709toMARC.hasNext());
 
         String content = Strings.flush(iso2709toMARC.next().getStream());
-        System.out.println("Payload Stream:\n" + content);
+        log.info("Payload Stream:\n" + content);
+        // TODO assert
 
 
 /*        Configuration confMarc = Configuration.newMemoryBased();
@@ -207,7 +208,8 @@ public class SBMARCParserTest extends TestCase {
         writer.writeCharacters("foo\u0031bar");
         writer.writeEndElement();
         writer.close();
-        System.out.println("Produced\n" + sw.toString());
+        log.info("Produced\n" + sw.toString());
+        // TODO test
     }
 
     // TODO: Test multiple records

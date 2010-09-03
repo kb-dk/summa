@@ -18,13 +18,15 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.ingest.split.MARCParser;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.marc4j.MarcPermissiveStreamReader;
 import org.marc4j.MarcReader;
 import org.marc4j.MarcStreamReader;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ISO2709ToMARCXMLFilterTest extends TestCase {
+    private static Log log = LogFactory.getLog(ISO2709ToMARCXMLFilterTest.class);
     public ISO2709ToMARCXMLFilterTest(String name) {
         super(name);
     }
@@ -70,7 +73,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         InputStream input = new FileInputStream(SAMPLE);
 
         MarcReader reader = new MarcStreamReader(input);
-        MarcWriter writer = new MarcXmlWriter(System.out, true);
+        MarcWriter writer = new MarcXmlWriter(null, true);
+        //MarcWriter writer = new MarcXmlWriter(System.out, true);
 
         while (reader.hasNext()) {
             Record record = reader.next();
@@ -93,30 +97,32 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         int counter = 0;
         while (reader.hasNext()) {
             Record record = reader.next();
-            System.out.println("Got MARC Record " + ++counter + ":\n" + record);
+            log.info("Got MARC Record " + ++counter + ":\n" + record);
             dumpRecord(record);
 //            dumpRecordXML(record);
-            System.out.println("\nDump finished");
+            log.info("\nDump finished");
         }
         sampleIn.close();
     }
 
     private void dumpRecord(Record record) {
-        System.out.println("Dumping lineformat for " + record.getId());
+        log.info("Dumping lineformat for " + record.getId());
 //        MarcWriter lineWriter = new MarcStreamWriter(System.out, "UTF-8");
-        MarcWriter lineWriter = new MarcStreamWriter(System.out);
+        //MarcWriter lineWriter = new MarcStreamWriter(System.out);
+        MarcWriter lineWriter = new MarcStreamWriter(null);
         lineWriter.write(record);
-        System.out.println("\nDump finished");
+        log.info("\nDump finished");
         //lineWriter.close();
     }
 
     private void dumpRecordXML(Record record) {
-        System.out.println("\n\nDumping XML for " + record.getId());
-        MarcWriter writer = new MarcXmlWriter(System.out, true);
+        log.info("\n\nDumping XML for " + record.getId());
+        //MarcWriter writer = new MarcXmlWriter(System.out, true);
+        MarcWriter writer = new MarcXmlWriter(null, true);
 
         writer.write(record);
         writer.close();
-        System.out.println("Finished dumping XML for " + record.getId());
+        log.info("Finished dumping XML for " + record.getId());
     }
 
     public void testDirectDump() throws Exception {
@@ -126,7 +132,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         ByteArrayOutputStream out =
                                 new ByteArrayOutputStream((int)SAMPLE.length());
         Streams.pipe(sampleIn, out);
-        System.out.println("Content of " + SAMPLE + "in ISO-8859-1 is:\n"
+        log.info("Content of " + SAMPLE + "in ISO-8859-1 is:\n"
                            + new String(out.toByteArray(), "cp850"));
     }
 
@@ -154,7 +160,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
                      1, processed.size());
         Payload xmlPayload = processed.get(0);
         String xml = Strings.flush(xmlPayload.getStream());
-        System.out.println("Dumping Produced content:\n" + xml);
+        log.info("Dumping Produced content:\n" + xml);
     }
 
     public void testXMLDump2() throws Exception {
@@ -188,8 +194,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         byte[] head = new byte[4000];
         assertTrue("Stream should contain something",
                    xmlPayload.getStream().read(head) > 0);
-        System.out.println("First 4000 UTF8:\n" + new String(head, "utf8"));
-        System.out.println("\nCounting lines with '<record>'");
+        log.info("First 4000 UTF8:\n" + new String(head, "utf8"));
+        log.info("\nCounting lines with '<record>'");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 xmlPayload.getStream(), "utf-8"));
@@ -202,15 +208,15 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Got an Exception while counting:");
-            e.printStackTrace();
+            log.info("Got an Exception while counting:");
+            fail("Got an Exception while counting:");
         }
-        System.out.println("Found " + recordCount + " '<record>' after the "
+        log.info("Found " + recordCount + " '<record>' after the "
                            + "first 4000 bytes");
         xmlPayload.close();
         /*
         String xml = Strings.flush(xmlPayload.getStream());
-        System.out.println("Dumping Produced content:\n" + xml);*/
+        log.info("Dumping Produced content:\n" + xml);*/
     }
 
     public void testChain() throws Exception {
@@ -242,8 +248,6 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         while (streamer.hasNext()) {
             processed.add(streamer.next());
         }
-        System.out.println("Got a total of " + processed.size() + " Payloads");
+        log.info("Got a total of " + processed.size() + " Payloads");
     }
-
 }
-

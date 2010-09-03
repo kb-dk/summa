@@ -14,10 +14,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.ByteArrayInputStream;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.Test;
@@ -25,6 +21,10 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.ByteArrayInputStream;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XMLSplitterParserTest extends TestCase {
@@ -186,7 +186,7 @@ public class XMLSplitterParserTest extends TestCase {
     }
 
 /*    public void testDumpMultiXML() {
-        System.out.println(multiXML);
+        log.info(multiXML);
     }*/
 
     private Configuration getBasicConfiguration() {
@@ -211,7 +211,7 @@ public class XMLSplitterParserTest extends TestCase {
         parser.open(new Payload(stream));
 
 
-      System.out.println(new String(b));
+        log.info(new String(b));
         assertTrue("parser should have something",
                    parser.hasNext());
         Payload payload = parser.next();
@@ -221,7 +221,7 @@ public class XMLSplitterParserTest extends TestCase {
                     parser.hasNext());
         log.debug("Got Record " + payload.getRecord() + " with content\n" +
                   payload.getRecord().getContentAsUTF8());
-        System.out.println(new String(payload.getRecord().getContent()));
+        log.info(new String(payload.getRecord().getContent()));
         assertTrue(new String(payload.getRecord().getContent()).contains("&amp;"));
     }
 

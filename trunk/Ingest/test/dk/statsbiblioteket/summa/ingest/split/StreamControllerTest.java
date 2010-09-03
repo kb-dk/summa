@@ -14,14 +14,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import junit.framework.TestCase;
-import static dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParserTest.*;
-import dk.statsbiblioteket.summa.common.filter.object.PushFilter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.PushFilter;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+
+import static dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParserTest.PayloadFiller;
+import static dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParserTest.formatStackTrace;
 
 /**
  * Test cases for StreamController
@@ -30,7 +33,7 @@ import java.util.Arrays;
  * @since Oct 13, 2009
  */
 public class StreamControllerTest extends TestCase {
-
+    private static Log log = LogFactory.getLog(StreamControllerTest.class);
     StreamController controller;
     PayloadFiller filler;
 
@@ -67,7 +70,7 @@ public class StreamControllerTest extends TestCase {
                        filler.getLastError());
 
             count++;
-            System.out.println("Extracted payload " + p);
+            log.info("Extracted payload " + p);
         }
 
         assertNull("No errors should occur but at end of run got:\n"
@@ -76,7 +79,7 @@ public class StreamControllerTest extends TestCase {
         assertEquals("Exactly 6 payloads expected", 6, count);
 
         controller.close(true);
-        System.out.println("All good");
+        log.info("All good");
     }
 
     static Payload streamPayloadForBytes(int... bytes) {
@@ -92,4 +95,3 @@ public class StreamControllerTest extends TestCase {
         return bytes;
     }
 }
-
