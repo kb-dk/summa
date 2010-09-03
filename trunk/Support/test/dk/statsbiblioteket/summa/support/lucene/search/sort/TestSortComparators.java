@@ -118,13 +118,14 @@ public class TestSortComparators extends TestCase {
         Thread.sleep(200);
         System.gc();
         Thread.sleep(200);
-        System.out.println(String.format(
+        log.info(String.format(
                 "Measuring memory usage for different sorters. Term count = %d,"
                 + " max term length = %d, sort buffer (for multipass) = %d KB. "
                 + "Initial memory usage: %d KB",
                 TERM_COUNT, TERM_MAX_LENGTH, SORT_BUFFER / 1024,
                 (Runtime.getRuntime().totalMemory()
                  - Runtime.getRuntime().freeMemory()) / 1024));
+        // TODO assert
         for (int run = 0 ; run < RUNS ; run++) {
             long lucene = SortHelper.performSortedSearch(
                     index, "all:all", 10, getLuceneFactory(
@@ -138,11 +139,12 @@ public class TestSortComparators extends TestCase {
             long exposed =SortHelper.performSortedSearch(
                     index, "all:all", 10, getExposedFactory(
                             SortHelper.SORT_FIELD));
-            System.out.println(String.format(
+            log.info(String.format(
                   "Run %d -> lucene = %d KB, multipass = %d KB, static = %d KB,"
                   + " exposed = %d KB",
                   run, lucene / 1024, multipass / 1024, localstatic / 1024,
                   exposed / 1024));
+            // TODO assert
         }
     }
 }

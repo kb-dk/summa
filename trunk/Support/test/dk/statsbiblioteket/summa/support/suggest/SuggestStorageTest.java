@@ -14,22 +14,23 @@
  */
 package dk.statsbiblioteket.summa.support.suggest;
 
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.xml.DOM;
-
-import java.io.File;
-
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+
+import java.io.File;
 
 /**
  * 
  */
 public class SuggestStorageTest extends TestCase {
-
+    private static Log log = LogFactory.getLog(SuggestStorageTest.class);
     SuggestStorage storage;
     File dbLocation;
     int dbCount;
@@ -62,7 +63,8 @@ public class SuggestStorageTest extends TestCase {
 
         SuggestResponse resp = storage.getRecentSuggestions(100, 3);
         String xml = resp.toXML();
-        System.out.println(xml);
+        log.info(xml);
+        // TODO assert
 
         // We should only see the three items with max queryCount
         assertFalse(xml, xml.contains("old-1"));
@@ -81,9 +83,9 @@ public class SuggestStorageTest extends TestCase {
         // Fetch suggestions added within the last second
         resp = storage.getRecentSuggestions(1, 10);
         xml = resp.toXML();
-        System.out.println(xml);
-        System.out.println(storage.getSuggestion("new", 10).toXML());
-
+        log.info(xml);
+        log.info(storage.getSuggestion("new", 10).toXML());
+        // TODO assert
         // We should not see any old-*, but all of the four new suggestions
         assertFalse(xml, xml.contains("old-"));
         xml = eat(xml, "new-4");
@@ -101,8 +103,8 @@ public class SuggestStorageTest extends TestCase {
 
         SuggestResponse resp = storage.getSuggestion("f", 10);
         String xml = resp.toXML();
-        System.out.println(xml);
-
+        log.info(xml);
+        // TODO assert
 
         Document dom = DOM.stringToDOM(xml);
         NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
@@ -136,7 +138,8 @@ public class SuggestStorageTest extends TestCase {
 
         SuggestResponse resp = storage.getSuggestion("f", 10);
         String xml = resp.toXML();
-        System.out.println(xml);
+        log.info(xml);
+        // TODO assert
 
         Document dom = DOM.stringToDOM(xml);
         NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
@@ -196,7 +199,8 @@ public class SuggestStorageTest extends TestCase {
 
         SuggestResponse resp = storage.getSuggestion("f", 10);
         String xml = resp.toXML();
-        System.out.println(xml);
+        log.info(xml);
+        // TODO assert
 
         Document dom = DOM.stringToDOM(xml);
         NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
@@ -220,9 +224,6 @@ public class SuggestStorageTest extends TestCase {
         if (i == -1) {
             fail("'" + bite + "' not found in :\n" + food);
         }
-
         return food.substring(i + bite.length());
     }
-
 }
-

@@ -22,11 +22,13 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.io.FileInputStream;
 
 public class TikaDocumentCreatorTest extends TestCase {
+    private static Logger log = Logger.getLogger(TikaDocumentCreatorTest.class);
     public TikaDocumentCreatorTest(String name) {
         super(name);
     }
@@ -62,9 +64,9 @@ public class TikaDocumentCreatorTest extends TestCase {
         try {
             tika = new TikaDocumentCreator(conf);
             tika.setSource(feeder);
-            System.out.println("**** Dumping strict");
+            log.info("**** Dumping strict");
             tika.next();
-            System.out.println("**** Dumping lax");
+            log.info("**** Dumping lax");
             tika.next();            
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,4 +74,3 @@ public class TikaDocumentCreatorTest extends TestCase {
         }
     }
 }
-

@@ -20,6 +20,8 @@ import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -33,6 +35,7 @@ import java.util.List;
  * Tests multiple sort-implementations for Lucene for correctness.
  */
 public class MultipassSortComparatorTest extends TestCase {
+    private static Log log = LogFactory.getLog(MultipassSortComparatorTest.class);
     public MultipassSortComparatorTest(String name) {
         super(name);
     }
@@ -159,7 +162,7 @@ public class MultipassSortComparatorTest extends TestCase {
         Profiler profiler = new Profiler();
         SortHelper.createIndex(
             TestSortComparators.makeTerms(TERM_COUNT, TERM_MAX_LENGTH));
-        System.out.println("Build index with " + TERM_COUNT + " documents in "
+        log.info("Build index with " + TERM_COUNT + " documents in "
                            + profiler.getSpendTime());
     }
 
@@ -178,27 +181,29 @@ public class MultipassSortComparatorTest extends TestCase {
     // Manual test activation with tweaked Xmx
     public void testSortLucene() throws Exception {
         File index = new File(System.getProperty("java.io.tmpdir"));
-        System.out.println("Performing standard Lucene sorted search");
+        log.info("Performing standard Lucene sorted search");
         Profiler profiler = new Profiler();
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, TestSortComparators.getLuceneFactory(
                 SortHelper.SORT_FIELD));
-        System.out.println(
+        log.info(
                 "Lucene sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
+        // TODO assert
     }
 
     // Manual test activation with tweaked Xmx
     public void testSortMultipass() throws Exception {
         File index = new File(System.getProperty("java.io.tmpdir"));
-        System.out.println("Performing initial Multipass sorted search");
+        log.info("Performing initial Multipass sorted search");
         Profiler profiler = new Profiler();
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, TestSortComparators.getMultipassFactory(
                 SortHelper.SORT_FIELD,  1000 * 1024));
-        System.out.println(
+        log.info(
                 "Multipass sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
+        // TODO assert
     }
 
     public void testMultipassLoops() throws Exception {
@@ -209,7 +214,7 @@ public class MultipassSortComparatorTest extends TestCase {
 
         Profiler profiler = new Profiler();
         SortHelper.createIndex(terms);
-        System.out.println("Build index with " + TERM_COUNT + " documents in "
+        log.info("Build index with " + TERM_COUNT + " documents in "
                            + profiler.getSpendTime());
 
         File index = new File(System.getProperty("java.io.tmpdir"));
@@ -218,9 +223,10 @@ public class MultipassSortComparatorTest extends TestCase {
                 SortHelper.SORT_FIELD,  BUFFER);
         long lucene = SortHelper.performSortedSearch(index, "all:all", 10, sf);
 
-        System.out.println(
+        log.info(
                 "Multipass sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
+        // tODO assert
                                 /*
         IndexSearcher searcher = new IndexSearcher(index.toString());
         Sort multipassSort = sf.getSort(searcher.getIndexReader());
@@ -252,16 +258,17 @@ public class MultipassSortComparatorTest extends TestCase {
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, TestSortComparators.getLuceneFactory(
                 SortHelper.SORT_FIELD));
-        System.out.println(
+        log.info(
                 "Lucene initial sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
 
         long searchTime = SortHelper.timeSortedSearch(
                 index, "all:all", 10, TestSortComparators.getLuceneFactory(
                 SortHelper.SORT_FIELD), REPEATS);
-        System.out.println(
+        log.info(
                 "Lucene sort search #" + REPEATS + " took "
                 + searchTime + " ms");
+        // TODO assert
     }
 
     public void testSortMultipassRepeat() throws Exception {
@@ -274,7 +281,7 @@ public class MultipassSortComparatorTest extends TestCase {
                 index, "all:all", 10,
                 TestSortComparators.getMultipassFactory(
                 SortHelper.SORT_FIELD, 20 * 1024 * 1024));
-        System.out.println(
+        log.info(
                 "Multipass initial sort search performed, using "
                 + multipass / 1024 + " KB in " + profiler.getSpendTime());
 
@@ -282,7 +289,7 @@ public class MultipassSortComparatorTest extends TestCase {
                 index, "all:all", 10,
                 TestSortComparators.getMultipassFactory(
                 SortHelper.SORT_FIELD, 100 * 1024 * 1024), REPEATS);
-        System.out.println(
+        log.info(
                 "Multipass sort search #" + REPEATS + " took "
                 + searchTime + " ms");
     }
@@ -292,15 +299,13 @@ public class MultipassSortComparatorTest extends TestCase {
     // Manual test activation with tweaked Xmx
     public void testSortstatic() throws Exception {
         File index = new File(System.getProperty("java.io.tmpdir"));
-        System.out.println("Performing initial Staticlocal sorted search");
+        log.info("Performing initial Staticlocal sorted search");
         Profiler profiler = new Profiler();
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, TestSortComparators.getStaticFactory(
                 SortHelper.SORT_FIELD));
-        System.out.println(
+        log.info(
                 "Staticlocal sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
     }
-
 }
-
