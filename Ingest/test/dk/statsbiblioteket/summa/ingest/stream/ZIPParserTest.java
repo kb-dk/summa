@@ -14,23 +14,22 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.io.IOException;
-
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ZIPParserTest extends TestCase {
@@ -73,10 +72,10 @@ public class ZIPParserTest extends TestCase {
                     try {
                         queue.put(Integer.toString(i));
                     } catch (InterruptedException e) {
-                        System.out.println("Interrupted");
+                        log.error("Interrupted");
                     }
                 }
-                System.out.println("Finished feeding");
+                log.info("Finished feeding");
             }
         };
 
@@ -86,10 +85,10 @@ public class ZIPParserTest extends TestCase {
                 try {
                     //noinspection InfiniteLoopStatement
                     while (true) {
-                        System.out.println(queue.take());
+                        log.info(queue.take());
                     }
                 } catch (InterruptedException e) {
-                    System.out.println("Interrupted while taking");
+                    log.error("Interrupted while taking");
                 }
             }
         };
@@ -101,17 +100,17 @@ public class ZIPParserTest extends TestCase {
                     try {
                         queue.put("Take 2;" + Integer.toString(i));
                     } catch (InterruptedException e) {
-                        System.out.println("Interrupted");
+                        log.error("Interrupted");
                     }
                 }
-                System.out.println("Finished feeding");
+                log.info("Finished feeding");
             }
         };
 
         feeder.start();
         feeder.join();
         sucker.start();
-        System.out.println("Activating feeder 2");
+        log.info("Activating feeder 2") ;
         feeder2.start();
         Thread.sleep(1000);
     }
@@ -184,6 +183,4 @@ public class ZIPParserTest extends TestCase {
                      expected.size(), received);
         unzipper.close(true);
     }
-
 }
-

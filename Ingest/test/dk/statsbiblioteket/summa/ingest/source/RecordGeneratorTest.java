@@ -14,14 +14,15 @@
  */
 package dk.statsbiblioteket.summa.ingest.source;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * RecordGenerator Tester.
@@ -31,6 +32,7 @@ import java.util.ArrayList;
  * @version 1.0
  */
 public class RecordGeneratorTest extends TestCase {
+    private static Log log = LogFactory.getLog(RecordGeneratorTest.class);
     public RecordGeneratorTest(String name) {
         super(name);
     }
@@ -76,9 +78,9 @@ public class RecordGeneratorTest extends TestCase {
         conf.set("mylist", myList);
         RecordGenerator generator = new RecordGenerator(conf);
         for (int i = 0 ; i < RUNS ; i ++) {
-            System.out.println("*** run " + i + " ***");
-            System.out.println(generator.expand(contentTemplate));
+            log.info("*** run " + i + " ***");
+            log.info(generator.expand(contentTemplate));
+            // TODO assert
         }
     }
 }
-

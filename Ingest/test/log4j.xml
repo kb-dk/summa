@@ -16,41 +16,41 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
-    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="trace"/><!-- or ERROR or INFO -->
-        <layout class="org.apache.log4j.PatternLayout">
+    <!--<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="trace"/>--><!-- or ERROR or INFO -->
+        <!--<layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
-    </appender>
+    </appender>-->
 
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="log/logfile.log"/>
+        <param name="File" value="target/log/logfile.log"/>
         <param name="Append" value="true"/>
-        <param name="Threshold" value="info"/>
+        <param name="Threshold" value="FATAL"/>
          <param name="MaxFileSize" value="100MB"/>
-         <param name="MaxBackupIndex" value="10"/>
+         <param name="MaxBackupIndex" value="1"/>
          <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="error" class="org.apache.log4j.DailyRollingFileAppender">
+    <!--<appender name="error" class="org.apache.log4j.DailyRollingFileAppender">
         <param name="File" value="log/error.log"/>
         <param name="Append" value="true"/>
-        <param name="Threshold" value="error"/>
+        <param name="Threshold" value="error"/>-->
         <!-- Rollover at midnight each day -->
-        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <!--<param name="DatePattern" value="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n"/>
         </layout>
-    </appender>
+    </appender>-->
 
        
     <logger name="dk.statsbiblioteket.summa.ingest.stream">
-        <level value="trace" />
-        <appender-ref ref="CONSOLE"/>
+        <level value="FATAL" />
+        <appender-ref ref="FILE"/>
     </logger>
     
  <!--
@@ -79,10 +79,10 @@
     </logger>-->
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
-    <root>
+    <!--<root>
         <level value="info" />
         <appender-ref ref="CONSOLE" />
-    </root>
+    </root>-->
 
 </log4j:configuration>
 
