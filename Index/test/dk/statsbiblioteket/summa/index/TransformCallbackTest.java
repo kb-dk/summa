@@ -19,6 +19,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XSLT;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 
 import java.util.Properties;
@@ -31,7 +33,7 @@ import java.util.Properties;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class TransformCallbackTest extends TestCase {
-//    private static Log log = LogFactory.getLog(TransformCallbackTest.class);
+    private static Log log = LogFactory.getLog(TransformCallbackTest.class);
 
     private static final String XSLTLocationString =
             "data/transformCallback/getLikes.xsl";
@@ -46,10 +48,11 @@ public class TransformCallbackTest extends TestCase {
         prop.put("bundle_availability", "availability");
         prop.put("locale", "da");
 
-        System.out.println(XSLT.transform(
+        log.info(XSLT.transform(
                 Resolver.getURL(XSLTLocationString),
                 Resolver.getUTF8Content(XMLLocationString),
                 prop));
+        // TODO assert
     }
 
     public void testCallbackNoNamespace() throws Exception {
@@ -58,10 +61,11 @@ public class TransformCallbackTest extends TestCase {
         prop.put("bundle_availability", "availability");
         prop.put("locale", "da");
 
-        System.out.println(XSLT.transform(
+        log.info(XSLT.transform(
                 Resolver.getURL(XSLTLocationString),
                 Resolver.getUTF8Content(XMLLocationStringNoName),
                 prop));
+        // TODO assert
     }
 
     public void testCallbackDOM() throws Exception {
@@ -72,8 +76,9 @@ public class TransformCallbackTest extends TestCase {
 
         Document dom = DOM.stringToDOM(
                 Resolver.getUTF8Content(XMLLocationString));
-        System.out.println(XSLT.transform(
+        log.info(XSLT.transform(
                 Resolver.getURL(XSLTLocationString), dom, prop));
+        // TODO assert
     }
 
 
@@ -84,4 +89,3 @@ public class TransformCallbackTest extends TestCase {
                 bundle, locale, key);
     }
 }
-

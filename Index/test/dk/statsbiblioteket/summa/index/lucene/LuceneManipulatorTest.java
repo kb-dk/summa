@@ -117,9 +117,10 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         LuceneTestHelper.verifyContent(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        System.out.println("Spend " + profiler.getSpendTime() + " on "
+        log.info("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
                            + profiler.getBps() + " additions/second");
+        // TODO assertEquals
 
         profiler.reset();
         manipulator = openIndex(100);
@@ -132,9 +133,10 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         LuceneTestHelper.verifyContent(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        System.out.println("Spend " + profiler.getSpendTime() + " on "
+        log.info("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
                            + profiler.getBps() + " updates/second");
+        // TODO assert
     }
 
     public void testDeletionsIndex() throws Exception {
