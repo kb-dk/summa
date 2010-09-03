@@ -20,6 +20,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.List;
 import java.util.Arrays;
@@ -36,7 +38,7 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class DatabaseStorageTest extends StorageTestBase {
-
+    private static Log log = LogFactory.getLog(DatabaseStorageTest.class);
     DatabaseStorage storage;
 
     public void setUp() throws Exception {
@@ -140,7 +142,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(xml.startsWith("<holdings"));
         assertTrue(xml.endsWith("</holdings>"));
 
-        System.out.println(xml);
+        log.info(xml);
+        // TODO assert equals
     }
 }
-

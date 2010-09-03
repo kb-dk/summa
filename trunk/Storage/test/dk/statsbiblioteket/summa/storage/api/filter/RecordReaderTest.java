@@ -14,28 +14,35 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import java.util.*;
-import java.util.regex.Pattern;
-import java.io.File;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import junit.framework.Assert;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Assert;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class RecordReaderTest extends TestCase {
+    private static Log log = LogFactory.getLog(RecordReaderTest.class);
     public RecordReaderTest(String name) {
         super(name);
     }
@@ -62,7 +69,7 @@ public class RecordReaderTest extends TestCase {
         db.mkdirs();
         Files.delete(db);
         if (db.exists()) {
-            System.out.println("Unable to delete " + db);
+            log.error("Unable to delete " + db);
         }
         db.mkdirs();
 
@@ -89,7 +96,7 @@ public class RecordReaderTest extends TestCase {
                 fail("RecordReader did not have any records before timeout");
             }
         }
-        System.out.println("RecordReader has next");
+        log.debug("RecordReader has next");
     }
 
    /*public void testTimestampExtraction() throws Exception {

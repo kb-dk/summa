@@ -14,33 +14,33 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.object.PayloadBufferFilter;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.object.PushFilter;
-import dk.statsbiblioteket.summa.common.filter.object.RegexFilter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadBufferFilter;
+import dk.statsbiblioteket.summa.common.filter.object.PushFilter;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.io.File;
-import java.util.Iterator;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Iterator;
 
 /**
  * Unit tests for {@link ClearBaseFilter}
  */
 public class ClearBaseFilterTest extends TestCase {
+    private static Log log = LogFactory.getLog(ClearBaseFilterTest.class);
 
     Storage storage;
     ClearBaseFilter filter;
@@ -164,7 +164,7 @@ public class ClearBaseFilterTest extends TestCase {
         cal.set(Calendar.HOUR_OF_DAY, 16);
         cal.set(Calendar.MINUTE, 9);
         cal.set(Calendar.SECOND, 32);
-        System.out.println(String.format(
+        log.info(String.format(
                 ProgressTracker.TIMESTAMP_FORMAT, cal));
     }
 
@@ -198,5 +198,3 @@ public class ClearBaseFilterTest extends TestCase {
         assertBaseCount("base", 0);
     }
 }
-
-

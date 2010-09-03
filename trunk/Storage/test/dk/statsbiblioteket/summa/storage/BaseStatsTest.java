@@ -14,13 +14,14 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
-import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.Arrays;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Test suite for {@link BaseStats}
@@ -32,6 +33,7 @@ import java.io.StringWriter;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BaseStatsTest extends TestCase {
+    private static Log log = LogFactory.getLog(BaseStatsTest.class);
 
     public void testBasicProps() {
         // We use powers of two as counts to avoid collisions in the tests
@@ -68,7 +70,6 @@ public class BaseStatsTest extends TestCase {
         "  </base>\n"+
         "</holdings>";
         assertEquals(expected, xml);
-        System.out.println(xml);
+        log.info(xml);
     }
 }
-
