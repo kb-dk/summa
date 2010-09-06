@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
@@ -29,12 +27,13 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.CachedCollator;
-import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -43,9 +42,16 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.text.Collator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 
 public class IndexLookupTest extends TestCase {
+    private static Log log = LogFactory.getLog(IndexLookupTest.class);
+
     public IndexLookupTest(String name) {
         super(name);
     }
@@ -82,24 +88,24 @@ public class IndexLookupTest extends TestCase {
 
         TagHandler tagHandler = new TagHandlerImpl(
                 tagHandlerConf, structure, false);
-        System.out.println("Opening lti facet data");
+        log.info("Opening lti facet data");
         Profiler profiler = new Profiler();
         tagHandler.open(Resolver.getFile("data/lti.dat").getParentFile());
-        System.out.println(String.format(
+        log.info(String.format(
                 "Open of %d tags finished in %s",
                 tagHandler.getTagCount("lti"), profiler.getSpendTime()));
 
         //testTagOrderConsistency(tagHandler);
 
 
-        System.out.println("Dumping index lookup samples");
+        log.info("Dumping index lookup samples");
         int facetID = tagHandler.getFacetID("lti");
         for (String lookup: Arrays.asList("a", "b", "t", "to", "æ", "ø", "å")) {
-            System.out.println(lookup + " -direct-> "
+            log.info(lookup + " -direct-> "
                                + tagHandler.getTagName(
                     facetID, 
                     Math.abs(tagHandler.getNearestTagID(facetID, lookup))));
-            System.out.println(lookup + " -index-> " + getLookupResult(
+            log.info(lookup + " -index-> " + getLookupResult(
                     "lti", lookup, -2, 4, tagHandler));
         }
         tagHandler.close();
@@ -108,7 +114,7 @@ public class IndexLookupTest extends TestCase {
     private void testTagOrderConsistency(TagHandler tagHandler) {
         Facet ltiFacet = tagHandler.getFacets().get(0);
         Collator ltiCollator = ltiFacet.getCollator();
-        System.out.println("Testing tag-order consistency");
+        log.info("Testing tag-order consistency");
         String last = null;
         for (int i = 0 ; i < ltiFacet.size() ; i++) {
             String current = ltiFacet.get(i);
@@ -243,7 +249,7 @@ public class IndexLookupTest extends TestCase {
                 IndexRequest.CONF_INDEX_LENGTH, 10
         );
         String xml = getLookupXML("test", "b", indexConf, tagHandler);
-        System.out.println("Got XML:\n" + xml);
+        log.info("Got XML:\n" + xml);
         Document domIndex = DOM.stringToDOM(xml);
         NodeList nl = DOM.selectNodeList(domIndex, "//term");
 
@@ -257,7 +263,8 @@ public class IndexLookupTest extends TestCase {
             }
         }
 
-        System.out.println(index);
+        log.info(index);
+        // TODO assert
     }
 
     private void assertEquals(String term, int delta, int length,
@@ -324,4 +331,3 @@ public class IndexLookupTest extends TestCase {
         return indexResponse.toXML();
     }
 }
-

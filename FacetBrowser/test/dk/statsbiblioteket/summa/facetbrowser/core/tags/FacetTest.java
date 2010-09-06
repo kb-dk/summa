@@ -23,6 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -33,12 +35,15 @@ import java.util.Locale;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetTest extends TestCase {
+    private static Log log = LogFactory.getLog(FacetTest.class);
     public FacetTest(String name) {
         super(name);
     }
 
     private File TMP_FACET = new File(
         new File(System.getProperty("java.io.tmpdir")), "facettst");
+
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (TMP_FACET.exists()) {
@@ -48,7 +53,7 @@ public class FacetTest extends TestCase {
             fail("Unable to create dir " + TMP_FACET);
         }
     }
-
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (TMP_FACET.exists()) {
@@ -70,7 +75,7 @@ public class FacetTest extends TestCase {
         for (String tag: new String[]{"a", "c", "j", "b", "7", "å", "ø"}) {
             facet.dirtyAdd(tag);
         }
-        System.out.println("Added " + facet.size() + " tags");
+        log.info("Added " + facet.size() + " tags");
         facet.cleanup();
         assertEquals("The index of c should be correct",
                      (-3)-1, facet.insert("c"));
@@ -114,13 +119,14 @@ public class FacetTest extends TestCase {
     public void testCleanMultiple() throws UnsupportedEncodingException {
         for (byte b: CachedCollator.COMMON_SUMMA_EXTRACTED.getBytes("utf-8")) {
             if (b > 0xE0) {
-                System.out.println("'" + b + "': " + Integer.toString(b));
+                log.info("'" + b + "': " + Integer.toString(b));
             }
         }
-        System.out.println("Problematic 2");
+        log.info("Problematic 2");
         for (char c: PROBLEMATIC2.toCharArray()) {
-            System.out.println("'" + c + "': " + Integer.toString(c));
+            log.info("'" + c + "': " + Integer.toString(c));
         }
+        // TODO assert
     }
 
     public void testSpecialCaseLocale() throws Exception {
@@ -128,7 +134,7 @@ public class FacetTest extends TestCase {
         Files.saveString(PROBLEMATIC2, INPUT);
         String[] terms = Files.loadString(INPUT).split("\n");
 //        String[] terms = Files.loadString(new File("/home/te/tmp/llfo.dat.reducedfail")).split("\n");
-        System.out.println("Got " + terms.length + " terms from " + INPUT);
+        log.info("Got " + terms.length + " terms from " + INPUT);
 
         FacetStructure structure = new FacetStructure(
             Configuration.newMemoryBased(
@@ -138,24 +144,24 @@ public class FacetTest extends TestCase {
         Facet facet = new Facet(structure, false, false);
         facet.open(TMP_FACET);
         long counter = 0;
-        System.out.println("Doing initial fill from " + INPUT);
+        log.info("Doing initial fill from " + INPUT);
         for (String tag: terms) {
             facet.dirtyAdd(tag);
             if (counter >> 17 << 17 == counter) {
-                System.out.println(counter + ": " + tag);
+                log.info(counter + ": " + tag);
             }
             counter++;
         }
-        System.out.println("Cleaning up");
+        log.info("Cleaning up");
 
         facet.cleanup();
         long datSize = new File(TMP_FACET, "foo.dat").length();
         assertTrue("The datFile should contain something", datSize > 0);
 
-//        System.out.println("The content of the data file is\n"
+//        log.info("The content of the data file is\n"
 //                           + Files.loadString(new File(TMP_FACET, "foo.dat")));
 
-        System.out.println("Checking order explicitly");
+        log.info("Checking order explicitly");
         Collator collator =
             CollatorFactory.createCollator(new Locale("da"), false);
         String lastTag = null;
@@ -169,12 +175,12 @@ public class FacetTest extends TestCase {
         }
 
         counter = 0;
-        System.out.println("Doing re-insert from " + INPUT);
+        log.info("Doing re-insert from " + INPUT);
         for (String tag: terms) {
             assertTrue("insert of " + tag + " should return a negative index "
                        + "as it already exists", facet.insert(tag) < 0);
             if (counter >> 17 << 17 == counter) {
-                System.out.println(counter + ": " + tag);
+                log.info(counter + ": " + tag);
             }
             counter++;
         }

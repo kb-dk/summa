@@ -14,19 +14,18 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * TagHandlerImpl Tester.
@@ -44,11 +43,14 @@ public class TagHandlerImplTest extends TestCase {
     }
 
     BaseObjects bo;
+
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         bo = new BaseObjects();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         bo.close();
@@ -120,7 +122,3 @@ public class TagHandlerImplTest extends TestCase {
         return new TestSuite(TagHandlerImplTest.class);
     }
 }
-
-
-
-

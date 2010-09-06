@@ -14,25 +14,25 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.io.IOException;
-import java.io.File;
-import java.util.Random;
-
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.Version;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
-import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Random;
 
 /**
  * Builds a Lucene test index.
@@ -44,7 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public class IndexBuilder {
     public static final File INDEX_ROOT =
-            new File("FacetBrowser/tmp/", "index_root");
+            new File("target/tmp/", "index_root");
     public static final File DESCRIPTOR =
             new File(INDEX_ROOT, "TestIndexDescriptor.xml");
     public static final File DATE_LOCATION =
