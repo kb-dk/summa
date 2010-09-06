@@ -13,12 +13,10 @@
  *
  */
 package dk.statsbiblioteket.summa.control.bundle;
-/**
- *
- */
 
-import junit.framework.*;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +25,7 @@ import java.io.FileInputStream;
 import java.util.Arrays;
 
 public class BundleSpecBuilderTest extends TestCase {
-
+    private static Log log = LogFactory.getLog(BundleSpecBuilderTest.class);
     BundleSpecBuilder b;
 
     static String sampleSpec =
@@ -156,6 +154,7 @@ public class BundleSpecBuilderTest extends TestCase {
 
     /**
      * b should point at a fully loaded spec, matching {@link #sampleSpec}
+     * @throws Exception If something goes wrong.
      */
     public void doTestSampleSpec () throws Exception {
         assertEquals("myMainJar", b.getMainJar());
@@ -230,8 +229,9 @@ public class BundleSpecBuilderTest extends TestCase {
         b = BundleSpecBuilder.open (new FileInputStream(spec));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         b.write (out);
-        System.out.println ("SPEC:\n" + new String(out.toByteArray()));
+        log.info("SPEC:\n" + new String(out.toByteArray()));
         doTestSampleSpec();
+        // TODO assert
     }
 
     public void testClientSpecWrite () throws Exception {
@@ -272,15 +272,8 @@ public class BundleSpecBuilderTest extends TestCase {
         File bundleFile = b.buildBundle(new File("Control/test/test-search-1"),
                                         new File("tmp/delete_me"));
 
-        System.out.println ("Wrote: " + bundleFile);
-
+        log.info("Wrote: " + bundleFile);
+        // TODO assert
         //Files.delete ("tmp/delete_me");
     }
-
 }
-
-
-
-
-
-
