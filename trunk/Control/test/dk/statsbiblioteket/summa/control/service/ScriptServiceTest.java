@@ -29,10 +29,12 @@ public class ScriptServiceTest extends TestCase {
     Service service;
     Configuration conf;
 
+    @Override
     public void setUp() {
         System.setProperty("summa.control.service.id", "testService");
     }
 
+    @Override
     public void tearDown() {
         System.clearProperty("summa.control.service.id");
     }
@@ -93,10 +95,13 @@ public class ScriptServiceTest extends TestCase {
         doTestBlockingScript(service);
     }
 
-    public void testExternalBlockingScript() throws Exception {
+    public void testExternalBlockingScript() {
         service = createScriptService(ScriptService.CONF_SCRIPT_URL,
                                       "script-service-test.js");
-        doTestBlockingScript(service);
+        try {
+            doTestBlockingScript(service);
+        } catch(Exception e) {
+            fail("No exception is expected");
+        }
     }
 }
-
