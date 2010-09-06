@@ -14,26 +14,31 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.io.StringWriter;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
+import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.StringWriter;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class BrowserImplTest extends TestCase {
+    private static Log log = LogFactory.getLog(BrowserImplTest.class);
     public BrowserImplTest(String name) {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -114,9 +119,9 @@ public class BrowserImplTest extends TestCase {
 
     public void dumpPerformance() throws Exception {
         // TODO: Change this to use IndexConnector
-/*        System.out.println("Getting reader...");
+/*        log.info("Getting reader...");
         IndexReader reader = IndexBuilder.getReader();
-        System.out.println("Setting up system...");
+        log.info("Setting up system...");
         Configuration config = getConfiguration();
         StructureDescription structure = new StructureDescription(config);
         IndexConnector connector = new IndexConnector(config);
@@ -140,9 +145,9 @@ public class BrowserImplTest extends TestCase {
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         int maxDoc = reader.maxDoc();
-        System.out.println("Running tests...");
+        log.info("Running tests...");
         for (int docCount: docCounts) {
-//            System.out.println("Testing with " + docCount + " docIDs...");
+//            log.info("Testing with " + docCount + " docIDs...");
             int[] docIDs = new int[docCount];
             for (int pos = 0 ; pos < docCount ; pos++) {
                 docIDs[pos] = random.nextInt(maxDoc);
@@ -157,7 +162,7 @@ public class BrowserImplTest extends TestCase {
            tagCounter.getFirst(FacetResult.TagSortOrder.popularity).toXML();
                 profiler.beat();
             }
-            System.out.println("Average time for marking and extracting tags " +
+            log.info("Average time for marking and extracting tags " +
                                "for " + docCount + " documents: " 
                                + 1000 / profiler.getBps(true) + " ms");
 
@@ -170,9 +175,9 @@ public class BrowserImplTest extends TestCase {
 
     public void dumpPerformanceDirect() throws Exception {
         // TODO: Change this to use IndexConnector
-/*        System.out.println("Getting reader...");
+/*        log.info("Getting reader...");
         IndexReader reader = IndexBuilder.getReader();
-        System.out.println("Setting up system...");
+        log.info("Setting up system...");
         Configuration config = getConfiguration();
         config.set(FacetSearchNode.BROWSERTHREADS_PROPERTY, 2);
         config.set(FacetSearchNode.BROWSERTHREADS_TIMEOUT_PROPERTY, 5000);
@@ -214,7 +219,7 @@ public class BrowserImplTest extends TestCase {
         profiler.setExpectedTotal(runs);
         int maxDoc = reader.maxDoc();
 
-        System.out.println("Running tests...");
+        log.info("Running tests...");
         SlimCollector slimCollector = new SlimCollector();
         for (int docCount: docCounts) {
             for (FacetResult.TagSortOrder order: orders) {
@@ -231,7 +236,7 @@ public class BrowserImplTest extends TestCase {
                     browser.getFacetMap("Flam", order, slimCollector);
                     profiler.beat();
                 }
-                System.out.println("Average time for marking and extracting "
+                log.info("Average time for marking and extracting "
                                    + "tags for " + docCount + " documents: "
                                    + 1000 / profiler.getBps(true) + " ms - "
                                    + order);
@@ -243,7 +248,3 @@ public class BrowserImplTest extends TestCase {
         return new TestSuite(BrowserImplTest.class);
     }
 }
-
-
-
-

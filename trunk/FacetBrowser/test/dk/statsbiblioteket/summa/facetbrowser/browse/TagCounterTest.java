@@ -18,16 +18,15 @@ import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.index.IndexReader;
 import org.apache.log4j.Logger;
+import org.apache.lucene.index.IndexReader;
 
-import java.util.Random;
 import java.io.IOException;
+import java.util.Random;
 
 /**
  * TagCounterArray Tester.
@@ -51,6 +50,7 @@ public class TagCounterTest extends TestCase {
 
     BaseObjects bo;
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         bo = new BaseObjects();
@@ -62,6 +62,7 @@ public class TagCounterTest extends TestCase {
     }
 
     @SuppressWarnings({"AssignmentToNull"})
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         bo.close();
@@ -88,23 +89,23 @@ public class TagCounterTest extends TestCase {
 
     public void dumpPerformance() throws Exception {
         setupSample();
-        System.out.println("Testing fill performance");
+        log.info("Testing fill performance");
         int retries = 20;
         int COMPLETERUNS = 50;
         int updates = COMPLETERUNS * bo.getTagHandler().getTagCount();
-        System.out.println("Warming up...");
+        log.info("Warming up...");
         for (int i = 0 ; i < 10 ; i++) {
             fill(10);
         }
         bo.getTagCounter().reset();
-        System.out.println("Running...");
+        log.info("Running...");
         Profiler profiler = new Profiler();
         for (int i = 0 ; i < retries ; i++) {
             fill(COMPLETERUNS);
             profiler.beat();
         }
         double speed = 1000 / profiler.getBps(true);
-        System.out.println("Average speed: " + speed
+        log.info("Average speed: " + speed
                            + " ms for " + COMPLETERUNS + " complete fills of "
                            + bo.getTagHandler().getTagCount() + " tags ("
                            + updates / speed + " updates/ms)");
@@ -127,7 +128,7 @@ public class TagCounterTest extends TestCase {
         dumpPerformance();
         int retries = 2000;
 
-        System.out.println("Testing getFirst performance for POPULARITY");
+        log.info("Testing getFirst performance for POPULARITY");
 /*        Profiler profiler = new Profiler();
         FacetRequest popularityOrderRequest = new FacetRequest(
                 null, 0, 0, Strings.join(bo.getFacetNames(), " (POPULARITY), "),
@@ -137,12 +138,12 @@ public class TagCounterTest extends TestCase {
             profiler.beat();
         }
         double speed = 1000 / profiler.getBps(true);
-        System.out.println("Average speed: " + speed
+        log.info("Average speed: " + speed
                            + " ms for POPULARITY getFirst in "
                            + bo.getTagHandler().getTagCount() + " touched tags ("
                            + 1000 / speed + " fills/ms)");
 
-        System.out.println("Testing getFirst performance for ALPHA");
+        log.info("Testing getFirst performance for ALPHA");
         profiler = new Profiler();
         FacetRequest tagOrderRequest = new FacetRequest(
                 null, 0, 0, Strings.join(bo.getFacetNames(), " (ALPHA), "),
@@ -152,14 +153,14 @@ public class TagCounterTest extends TestCase {
             profiler.beat();
         }
         speed = 1000 / profiler.getBps(true);
-        System.out.println("Average speed: " + speed
+        log.info("Average speed: " + speed
                            + " ms for ALPHA getFirst in "
                            + bo.getTagHandler().getTagCount() + " touched tags ("
                            + 1000 / speed + " fills/ms)");
   */  }
 
     public void dumpBigSpeed() throws Exception {
-        System.out.println("Building bo.getTagHandler()...");
+        log.info("Building bo.getTagHandler()...");
         int tagcount = 2000000;
         int runs = 5;
         int maxTagCount = 100;
@@ -179,7 +180,7 @@ public class TagCounterTest extends TestCase {
         TagCounter counter = bo.getTagCounter();
 
         int markedTags = 0;
-        System.out.println("Filling bo.getTagCounter()...");
+        log.info("Filling bo.getTagCounter()...");
         for (int facetID = 0 ; facetID < bo.facetNames.length ; facetID++) {
             for (int tagID = 0 ; tagID < tagcount ; tagID++) {
                 if (random.nextInt(100) < chanceForHit) {
@@ -191,11 +192,11 @@ public class TagCounterTest extends TestCase {
                 }
             }
         }
-        System.out.println("Warming up bo.getTagCounter()...");
+        log.info("Warming up bo.getTagCounter()...");
         for (int i = 0 ; i < 5 ; i++) {
             counter.getFirst(bo.getStructure());
         }
-        System.out.println("Running getFirst tests...");
+        log.info("Running getFirst tests...");
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         for (int i = 0 ; i < runs ; i++) {
@@ -203,7 +204,7 @@ public class TagCounterTest extends TestCase {
             profiler.beat();
         }
         double bps = profiler.getBps(true);
-        System.out.println("Extracted first from " + markedTags
+        log.info("Extracted first from " + markedTags
                            + " marked tags in "
                            + bo.facetNames.length + " facets "
                            + bps + " times/second, "
@@ -214,7 +215,3 @@ public class TagCounterTest extends TestCase {
         return new TestSuite(TagCounterTest.class);
     }
 }
-
-
-
-

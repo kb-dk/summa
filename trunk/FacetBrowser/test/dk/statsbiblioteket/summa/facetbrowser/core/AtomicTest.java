@@ -19,6 +19,8 @@
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +37,8 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class AtomicTest extends TestCase {
+    private static Log log = LogFactory.getLog(AtomicTest.class);
+
     private static final int SIZE = 1 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
@@ -45,21 +49,21 @@ public class AtomicTest extends TestCase {
         long startTime = System.nanoTime();
         int[] plain = new int[SIZE];
         long allocateTime = System.nanoTime() - startTime;
-        System.out.println(mb + " MB allocated in "
+        log.info(mb + " MB allocated in "
                            + allocateTime / 1000000.0 + " ms");
         System.gc();
 
         startTime = System.nanoTime();
         fillWithGarbage(plain);
         long fillTime = System.nanoTime() - startTime;
-        System.out.println(mb + " MB filled with garbage in "
+        log.info(mb + " MB filled with garbage in "
                            + fillTime / 1000000.0 + " ms");
         
         startTime = System.nanoTime();
         Arrays.fill(plain, 0);
         long fillNS = System.nanoTime() - startTime;
         double fillMS = fillNS / 1000000.0;
-        System.out.println(
+        log.info(
                 "Array.fill(array, 0) of " + mb + " MB finished in "
                 + fillMS  + " ms => "
                 + Math.round(mb / fillMS * 1000) + " MB/second");
@@ -68,7 +72,7 @@ public class AtomicTest extends TestCase {
         Arrays.fill(plain, 0);
         fillNS = System.nanoTime() - startTime;
         fillMS = fillNS / 1000000.0;
-        System.out.println(
+        log.info(
                 "Array.fill(array, 0) of " + mb + " MB take 2 finished in "
                 + fillMS  + " ms => "
                 + Math.round(mb / fillMS * 1000) + " MB/second");
@@ -77,10 +81,11 @@ public class AtomicTest extends TestCase {
         clear(plain);
         long clearNS = System.nanoTime() - startTime;
         double clearMS = clearNS / 1000000.0;
-        System.out.println(
+        log.info(
                 "System.arraycopy(...) clear of " + mb + " MB finished in "
                 + clearMS  + " ms => "
                 + Math.round(mb / clearMS * 1000) + " MB/second");
+        // TODO assert
     }
 
     private void fillWithGarbage(int[] array) {
@@ -91,25 +96,26 @@ public class AtomicTest extends TestCase {
     }
     
     public void testDumpMemoryUsage() throws Exception {
-        System.out.println("Initial mem: " + mem());
+        log.info("Initial mem: " + mem());
         int[] l = new int[SIZE];
-        System.out.println("Imt mem: " + mem());
+        log.info("Imt mem: " + mem());
         l = null;
         AtomicIntegerArray al = new AtomicIntegerArray(SIZE);
         long nano = System.nanoTime();
         for (int i = 0 ; i < SIZE ; i++) {
             al.set(i, 0);
         }
-        System.out.println("AInt mem: " + mem() + "/" + SIZE
+        log.info("AInt mem: " + mem() + "/" + SIZE
                            + " ints  filled in "
                            + (System.nanoTime() - nano) / 1000000.0
                            + " milliseconds");
+        // TODO assert
     }
 
-    // disabled due to    "java.lang.OutOfMemoryError: Java heap space"
+    // TODO fix disabled due to    "java.lang.OutOfMemoryError: Java heap space"
     public void disabledtestDumpSpeed() throws Exception {
         Random random = new Random();
-        System.out.println("Creating arrays of size " + SIZE);
+        log.info("Creating arrays of size " + SIZE);
         int[] l = new int[SIZE];
         AtomicInteger[] al = new AtomicInteger[SIZE];
         for (int i = 0 ; i < SIZE ; i++) {
@@ -117,7 +123,7 @@ public class AtomicTest extends TestCase {
         }
         AtomicIntegerArray ala = new AtomicIntegerArray(SIZE);
         System.gc();
-        System.out.println("Warming up");
+        log.info("Warming up");
         for (int i = 0 ; i < WARMUP ; i++) {
             for (int j = 0 ; j < SIZE ; j++) {
                 int pos = random.nextInt(SIZE);
@@ -126,7 +132,7 @@ public class AtomicTest extends TestCase {
                 ala.incrementAndGet(pos);
             }
         }
-        System.out.println("Running");
+        log.info("Running");
         for (int i = 0 ; i < RUNS ; i++) {
 
             System.gc();
@@ -135,7 +141,7 @@ public class AtomicTest extends TestCase {
                 random.nextInt(SIZE);
             }
             long randomTime = System.currentTimeMillis()-startTime;
-            System.out.println("\nRandom time: "
+            log.info("\nRandom time: "
                                + Math.round(SIZE / randomTime)
                                + " randoms/ms");
 
@@ -145,13 +151,13 @@ public class AtomicTest extends TestCase {
                 l[random.nextInt(SIZE)]++;
             }
             double spend = (System.currentTimeMillis() - startTime -randomTime);
-            System.out.println("Plain int:  "
+            log.info("Plain int:  "
                                + Math.round(SIZE / spend)
                                + " increments/ms");
             startTime = System.currentTimeMillis();
             Arrays.fill(l, 0);
             spend = (System.currentTimeMillis() - startTime);
-            System.out.println("Plain int clear in " + spend + " ms");
+            log.info("Plain int clear in " + spend + " ms");
 
             System.gc();
             startTime = System.currentTimeMillis();
@@ -159,13 +165,13 @@ public class AtomicTest extends TestCase {
                 l[random.nextInt(SIZE)]++;
             }
             spend = (System.currentTimeMillis() - startTime -randomTime);
-            System.out.println("Plain int take 2:  "
+            log.info("Plain int take 2:  "
                                + Math.round(SIZE / spend)
                                + " increments/ms");
             startTime = System.currentTimeMillis();
             clear(l);
             spend = (System.currentTimeMillis() - startTime);
-            System.out.println("Plain int custom clear in " + spend + " ms");
+            log.info("Plain int custom clear in " + spend + " ms");
 
             System.gc();
             startTime = System.currentTimeMillis();
@@ -173,7 +179,7 @@ public class AtomicTest extends TestCase {
                 al[random.nextInt(SIZE)].getAndIncrement();
             }
             spend = (System.currentTimeMillis() - startTime - randomTime);
-            System.out.println("Atomic int: "
+            log.info("Atomic int: "
                                + Math.round(SIZE / spend)
                                + " increments/ms");
             startTime = System.currentTimeMillis();
@@ -181,7 +187,7 @@ public class AtomicTest extends TestCase {
                 anAl.set(0);
             }
             spend = (System.currentTimeMillis() - startTime);
-            System.out.println("Atomic int clear in " + spend + " ms");
+            log.info("Atomic int clear in " + spend + " ms");
 
             System.gc();
             startTime = System.currentTimeMillis();
@@ -189,7 +195,7 @@ public class AtomicTest extends TestCase {
                 ala.getAndIncrement(random.nextInt(SIZE));
             }
             spend = (System.currentTimeMillis() - startTime - randomTime);
-            System.out.println("Atomic int array: "
+            log.info("Atomic int array: "
                                + Math.round(SIZE / spend)
                                + " increments/ms");
             startTime = System.currentTimeMillis();
@@ -197,7 +203,7 @@ public class AtomicTest extends TestCase {
                 ala.set(j, 0);
             }
             spend = (System.currentTimeMillis() - startTime);
-            System.out.println("Atomic int array clear in " + spend + " ms");
+            log.info("Atomic int array clear in " + spend + " ms");
         }
     }
 
@@ -224,12 +230,12 @@ public class AtomicTest extends TestCase {
         int[] THREADS = new int[]{1, 2, 3, 4, 5};
         int[] UPDATES = new int[]{100, 1000, 10000, 100000, 1000000, 10000000,
                                   100000000};
-        System.out.println(
+        log.info(
                 "Updates\tThreads\tType\tUpd/sec\tRel.time\tClearOnGet");
         for (int threads : THREADS) {
             for (int updates: UPDATES) {
                 for (boolean cleanOnGet: new boolean[]{true, false}) {
-//                System.out.println("\nTrying with " + threads + " threads, "
+//                log.info("\nTrying with " + threads + " threads, "
 //                                   + updates + " updates");
 //                long sim = time(AtomicThread.TYPE.SIMULATE, threads, updates);
 //                    time(AtomicThread.TYPE.SIMULATE, threads, updates,
@@ -238,7 +244,7 @@ public class AtomicTest extends TestCase {
                                       -1, cleanOnGet);
                     time(AtomicThread.TYPE.ATOMIC, threads, updates, plain,
                          cleanOnGet);
-//                System.out.println("Atomic time was "
+//                log.info("Atomic time was "
 //                                   + Math.round(1.0 * plain  / atomic * 100)
 //                                   + "% of plain time");
                 }
@@ -339,12 +345,13 @@ public class AtomicTest extends TestCase {
 
         double spend = (System.currentTimeMillis()-startTime) / 1000.0;
         long speed = Math.round(updates / spend);
-        System.out.println(updates + "\t" + threadCount + "\t" + type + "\t"
+        log.info(updates + "\t" + threadCount + "\t" + type + "\t"
                            + speed + "\t" +
                            (previous == -1 ? "" :
                             Math.round(1.0 * previous  / speed * 100) + "%")
                            + "\t" + clearOnGet);
-//        System.out.println(type + ": " + Math.round(updates / spend)
+        // TODO assert
+//        log.info(type + ": " + Math.round(updates / spend)
 //                           + " updates/sec"); //. Merge time: " + mergeTime + " ms");
         return speed;
     }
@@ -376,7 +383,3 @@ public class AtomicTest extends TestCase {
         }
     }
 }
-
-
-
-

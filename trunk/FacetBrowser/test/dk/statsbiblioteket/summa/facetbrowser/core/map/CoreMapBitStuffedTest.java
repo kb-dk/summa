@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.log4j.Logger;
+
 import java.util.Random;
 import java.util.zip.Deflater;
-
-import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
-import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
-import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
-import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import org.apache.log4j.Logger;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -347,7 +346,7 @@ public class CoreMapBitStuffedTest extends TestCase {
             for (int redo = 0 ; redo < REDOS ; redo++) {
                 map.markCounterLists(tagCounter, docIDs, 0, map.getDocCount());
             }
-            System.out.println(String.format(
+            log.info(String.format(
                     "Marked tags for %d documents %d times in %s",
                     map.getDocCount(), REDOS, profiler.getSpendTime()));
         }
@@ -374,10 +373,10 @@ public class CoreMapBitStuffedTest extends TestCase {
             }
             map.add(i, random.nextInt(maxFacet), tagIDs);
             if (i % feedback == 0) {
-                System.out.print(".");
+                log.info(".");
             }
         }
-        System.out.println(String.format(
+        log.info(String.format(
                 "\nGenerated core map with length %d and approximate %d entries"
                 + " in %s",
                 map.getDocCount(), additions, profiler.getSpendTime()));
@@ -440,13 +439,12 @@ public class CoreMapBitStuffedTest extends TestCase {
         String input = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
         byte[] inputBytes = input.getBytes("UTF-8");
 
-        System.out.println("Original size in bytes: " + inputBytes.length);
+        log.info("Original size in bytes: " + inputBytes.length);
         byte[] output = new byte[inputBytes.length * 2];
         Deflater compresser = new Deflater();
         compresser.setInput(inputBytes);
         compresser.finish();
-        System.out.println("Packed size in bytes: " + compresser.deflate(output));
-
+        log.info("Packed size in bytes: " + compresser.deflate(output));
+        // TODO assert
     }
 }
-
