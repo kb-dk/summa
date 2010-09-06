@@ -15,11 +15,11 @@
     <build>
         <!-- Source -->
         <sourceDirectory>src/</sourceDirectory>
-        <resources>
+        <!--<resources>
             <resource>
                 <directory>config/</directory>
             </resource>
-        </resources>
+        </resources>-->
         <!-- Tests -->
         <testSourceDirectory>test/</testSourceDirectory>
     </build>
