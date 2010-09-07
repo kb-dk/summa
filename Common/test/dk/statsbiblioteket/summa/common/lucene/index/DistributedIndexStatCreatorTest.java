@@ -55,8 +55,8 @@ public class DistributedIndexStatCreatorTest extends TestCase {
         //return new TestSuite(DistributedIndexStatCreatorTest.class);
     }
 
-    public void oldTestDummy() {
-        //assertTrue(true);
+    public void testDummy() {
+        assertTrue(true);
     }
 
 /*    public void testAdd() throws IOException {
