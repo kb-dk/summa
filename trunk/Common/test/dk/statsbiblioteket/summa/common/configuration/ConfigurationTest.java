@@ -41,6 +41,8 @@ import java.util.Map;
 public class ConfigurationTest extends TestCase {
     private static final String CONFIGURATIONXML = "configurationFiles/configuration.xml";
     private static final String SIMPLEXSTORAGEXML = "configurationFiles/simple_xstorage.xml";
+    private static final String TMP = "target/tmp";
+
     public ConfigurationTest(String name) {
         super(name);
     }
@@ -48,16 +50,16 @@ public class ConfigurationTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        if(!new File("Common/tmp/").mkdirs()) {
-            fail("Error creating 'Common/tmp/'");
+        if(!new File(TMP).mkdirs()) {
+            fail("Error creating '" + TMP + "'");
         }
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        if(!new File("Common/tmp/").delete()) {
-            fail("Error deleting 'Common/tmp/'");
+        if(!new File(TMP).delete()) {
+            fail("Error deleting '" + TMP + "'");
         }
     }
 
@@ -73,7 +75,7 @@ public class ConfigurationTest extends TestCase {
         assertEquals("getStrings on a value without ,s should have size 1",
                      1, l.size());
         assertEquals("getStrings on a value without ,s should return the expected",
-                     "3268", l.get(0));
+                     "2768", l.get(0));
     }
 
     public void testGetStringsSingleAgain() throws Exception {
@@ -99,7 +101,7 @@ public class ConfigurationTest extends TestCase {
         Configuration conf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
         String s = conf.getString ("summa.configuration.service.port");
-        assertEquals("getString should return expected value", "3268", s);
+        assertEquals("getString should return expected value", "2768", s);
     }
 
     public void testGetStringWithDefault () throws Exception {
@@ -309,7 +311,7 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testLoadXConfigurationFromFile() throws Exception {
-        File tmp = new File("Common/tmp/", "tmpstorage.xml");
+        File tmp = new File(TMP, "tmpstorage.xml");
         System.out.println(tmp.getAbsolutePath());
         Files.copy(Resolver.getFile(
                 SIMPLEXSTORAGEXML), tmp, true);
