@@ -1304,7 +1304,8 @@ public class Configuration implements Serializable,
 
                 try {
                     storage = new XStorage(confLocation);
-                    log.trace("Loaded XStorage configuration");
+                    log.debug("Loaded XStorage configuration from '"
+                              + confLocation + "'");
                 } catch (IOException ex) {
                     throw new ConfigurationException("Error reading "
                                                      + "configuration file '"
