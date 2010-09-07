@@ -27,8 +27,8 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class SimpleTest extends ServiceBase {
-    private Log log = LogFactory.getLog(SimpleTest.class);
+public class ServiceBaseSimple extends ServiceBase {
+    private Log log = LogFactory.getLog(ServiceBaseSimple.class);
 
     private class ActualService implements Runnable {
 
@@ -36,6 +36,7 @@ public class SimpleTest extends ServiceBase {
 
         public boolean stopped = true;
 
+        @Override
         public void run() {
             stopped = false;
             log.info ("service started");
@@ -55,10 +56,10 @@ public class SimpleTest extends ServiceBase {
     private Status status;
     private ActualService service;
 
-    public SimpleTest (Configuration conf) throws IOException {
+    public ServiceBaseSimple(Configuration conf) throws IOException {
         super(conf);
 
-        setStatus(Status.CODE.constructed, "Created SimpleTest object",
+        setStatus(Status.CODE.constructed, "Created ServiceBaseSimple object",
                   Logging.LogLevel.DEBUG);
 
         service = new ActualService();
@@ -69,13 +70,14 @@ public class SimpleTest extends ServiceBase {
                   Logging.LogLevel.DEBUG);
     }
 
+    @Override
     public void start() throws RemoteException {
         System.out.println ("START");
-        setStatus(Status.CODE.startingUp, "Starting SimpleTest service" + this,
+        setStatus(Status.CODE.startingUp, "Starting ServiceBaseSimple service" + this,
                   Logging.LogLevel.DEBUG);
 
         if (service.stopped) {
-            new Thread (service, "SimpleTest Thread").start();
+            new Thread (service, "ServiceBaseSimple Thread").start();
         } else {
             log.warn ("Trying to start service, but it is already running");
         }
@@ -83,6 +85,7 @@ public class SimpleTest extends ServiceBase {
         setStatusRunning("The service is running");
     }
 
+    @Override
     public void stop() throws RemoteException {
         log.trace ("Recieved request to stop.");
         if (service.stopped) {
@@ -90,19 +93,15 @@ public class SimpleTest extends ServiceBase {
             return;
         }
 
-        setStatus(Status.CODE.stopping, "Shutting down SimpleTest service" + this,
+        setStatus(Status.CODE.stopping, "Shutting down ServiceBaseSimple service" + this,
                 Logging.LogLevel.DEBUG);
 
         service.stopped = true;
 
-        setStatus(Status.CODE.stopped, "SimpleTest service " + this + " down.",
+        setStatus(Status.CODE.stopped, "ServiceBaseSimple service " + this + " down.",
                 Logging.LogLevel.INFO);
 
         log.info ("Real (or atleast most) services should call System.exit(0) "
                   + "here");
     }
 }
-
-
-
-
