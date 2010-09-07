@@ -111,7 +111,7 @@ public class Configuration implements Serializable,
      *
      * @param storage The storage backend to use.
      */
-    public Configuration (ConfigurationStorage storage) {
+    public Configuration(ConfigurationStorage storage) {
         this.storage = storage;
     }
 
@@ -121,7 +121,7 @@ public class Configuration implements Serializable,
      *
      * @param conf The {@code Configuration} to share storage with.
      */
-    public Configuration (Configuration conf) {
+    public Configuration(Configuration conf) {
         storage = conf.getStorage();
     }
 
@@ -145,7 +145,7 @@ public class Configuration implements Serializable,
      *         in the argument list.
      */
     @SuppressWarnings("unchecked")   // to cast arg to List<String>
-    public static Configuration newMemoryBased (Serializable... args) {
+    public static Configuration newMemoryBased(Serializable... args) {
         if (args.length % 2 != 0) {
             throw new IllegalArgumentException("Odd number of arguments. "
                                              + "Arguments should be key-value "
@@ -180,7 +180,7 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public void set (String key, Serializable value) {
+    public void set(String key, Serializable value) {
         try {
             storage.put(key, value);
         } catch (IOException e) {
@@ -228,7 +228,7 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public Serializable get (String key) {
+    public Serializable get(String key) {
         try {
             return storage.get (key);
         } catch (IOException e) {
@@ -272,7 +272,7 @@ public class Configuration implements Serializable,
      * @throws NullPointerException          if there was no value corresponding
      *                                       to the key.
      */
-    public String getString (String key) {
+    public String getString(String key) {
         Object val = get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -310,6 +310,8 @@ public class Configuration implements Serializable,
                       + defaultValue);
             return Environment.escapeSystemProperties(defaultValue);
         }
+        log.debug("Found property for '" + key + "' using '"
+                  + val.toString().trim() + "'");
         return Environment.escapeSystemProperties(val.toString().trim());
     }
 
@@ -323,10 +325,10 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public int getInt (String key) {
+    public int getInt(String key) {
         Object val = get(key);
         if (val == null) {
-            throw new NullPointerException ("No such property: " + key);
+            throw new NullPointerException("No such property: " + key);
         }
 
         String sval = Environment.escapeSystemProperties(val.toString()).trim();
@@ -351,9 +353,12 @@ public class Configuration implements Serializable,
      *                     not be extracted.
      * @return The value for key as an int.
      */
-    public int getInt (String key, int defaultValue) {
+    public int getInt(String key, int defaultValue) {
         try {
-            return getInt(key);
+            int result = getInt(key);
+            log.debug("Found property for '" + key + "' using '"
+                  + result + "'");
+            return result;
         } catch (NullPointerException e) {
             log.debug("Unable to find property '" + key + "', using default "
                       + defaultValue);
@@ -376,10 +381,10 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public long getLong (String key) {
+    public long getLong(String key) {
         Object val = get(key);
         if (val == null) {
-            throw new NullPointerException ("No such property: " + key);
+            throw new NullPointerException("No such property: " + key);
         }
 
         String sval = Environment.escapeSystemProperties(val.toString()).trim();
@@ -407,7 +412,10 @@ public class Configuration implements Serializable,
      */
     public long getLong(String key, long defaultValue) {
         try {
-            return getLong(key);
+            long result = getLong(key);
+            log.debug("Found property for '" + key + "' using '"
+                  + result + "'");
+            return result;
         } catch (NullPointerException e) {
             log.debug("Unable to find property '" + key + "', using default "
                       + defaultValue);
@@ -430,10 +438,10 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public boolean getBoolean (String key) {
+    public boolean getBoolean(String key) {
         Object val = get (key);
         if (val == null) {
-            throw new NullPointerException ("No such property: " + key);
+            throw new NullPointerException("No such property: " + key);
         }
         try {
             return Boolean.parseBoolean(
@@ -453,8 +461,11 @@ public class Configuration implements Serializable,
             return defaultValue;
         }
         try {
-            return Boolean.parseBoolean(
-                    Environment.escapeSystemProperties(val.toString()).trim());
+            boolean result = Boolean.parseBoolean(
+                     Environment.escapeSystemProperties(val.toString()).trim());
+            log.debug("Found property for '" + key + "' using '"
+                      + result + "'");
+            return result;
         } catch (NumberFormatException e) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("Bad format for property '" + key + "' with value '"
