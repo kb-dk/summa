@@ -102,7 +102,6 @@ public class XMLTransformerTest extends TestCase {
         assertTrue("The transformed content '" + transformed
                    + "' should contain '" + expected + "'",
                    transformed.contains(expected));
-//        System.out.println(transformed);
     }
 
     public static final String GURLI = "data/fagref/gurli.margrethe.xml";
@@ -118,13 +117,12 @@ public class XMLTransformerTest extends TestCase {
 
         transformer.processPayload(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
+        System.out.println(transformed);
         String[] MUST_CONTAIN = new String[]{"sortLocale", "Yetitæmning",
-                                             "<shortrecord>", "boostFactor"};
+                                             "<shortrecord>", "boost"};
         for (String must: MUST_CONTAIN) {
             assertTrue("The result must contain " + must,
                        transformed.contains(must));
         }
     }
-
 }
-
