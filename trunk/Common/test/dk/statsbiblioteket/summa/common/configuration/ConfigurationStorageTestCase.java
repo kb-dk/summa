@@ -26,27 +26,27 @@ import org.apache.commons.logging.LogFactory;
         author = "mke")
 public class ConfigurationStorageTestCase extends TestCase {
     private static Log log = LogFactory.getLog(ConfigurationStorageTestCase.class);
-    static final String configFilename =
-            "configurationFiles/configuration.xml";
+    static final String CONFIGNAME =
+            "data/configurationFiles/configuration.xml";
     public ConfigurationStorage storage;
     public String testName;
 
     public ConfigurationStorageTestCase() throws Exception {
-        this(new FileStorage(configFilename));
+        this(new FileStorage(CONFIGNAME));
     }
 
-    public ConfigurationStorageTestCase (ConfigurationStorage storage) {
+    public ConfigurationStorageTestCase(ConfigurationStorage storage) {
         this.storage = storage;
         testName = storage.getClass().getSimpleName();
     }
 
-    public void testSet () throws Exception {
+    public void testSet() throws Exception {
         log.info("Sleeping 1s");
         Thread.sleep(1000);
 
         log.info(testName + ": Testing set()");
         String resultValue, testValue = "MyTestValue";
-        storage.put (RemoteStorageMBean.CONF_NAME, testValue);
+        storage.put(RemoteStorageMBean.CONF_NAME, testValue);
         resultValue = (String) storage.get (RemoteStorageMBean.CONF_NAME);
 
         assertEquals("Setting and getting a property should leave it unchanged",
