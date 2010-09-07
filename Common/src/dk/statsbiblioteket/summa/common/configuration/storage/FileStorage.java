@@ -47,12 +47,10 @@ import java.util.Properties;
         comment = "Class and methods needs better docs, especially for throws")
 public class FileStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 789468461L;
-    //public static final String DEFAULT_RESOURCE = "configuration.xml";
-
-    public static final String DEFAULT_RESOURCE =
-            "data/configurationFiles/configuration.xml";
-
+    /** Local hashmap, this should always mirror what is written to
+     *  {@link #filename}. */
     private HashMap<String,Serializable> map;
+    /** The filename used by this storage */
     private String filename;
 
     /**
@@ -61,7 +59,7 @@ public class FileStorage implements ConfigurationStorage {
      *
      * @throws IOException If an error occurs while loading the configuration.
      */
-    public FileStorage () throws IOException {
+    public FileStorage() throws IOException {
         this(nextAvailableConfigurationFile());
     }
 
@@ -69,9 +67,9 @@ public class FileStorage implements ConfigurationStorage {
      * Create a new {@code FileStorage} importing all properties from
      * the provided {@link Configuration}.
      * @param configuration The configuration.
-     * @throws IOException if error occurs during configuration import.
+     * @throws IOException If error occurs during configuration import.
      */
-    public FileStorage (Configuration configuration) throws IOException {
+    public FileStorage(Configuration configuration) throws IOException {
         this();
         new Configuration(this).importConfiguration(configuration);
     }
@@ -79,11 +77,11 @@ public class FileStorage implements ConfigurationStorage {
     /**
      * Create a new {@code FileStorage} loading properties from a file or
      * creating it if it doesn't exist already.
-     * @param configuration the file to read and write properties in
+     * @param configuration The file to read and write properties in.
      * @throws IOException If writing to the specified output stream results in
      * an IOException.
      */
-    public FileStorage (File configuration) throws IOException {
+    public FileStorage(File configuration) throws IOException {
         map  = new HashMap<String,Serializable> ();
         this.filename = configuration.getAbsolutePath();
 
@@ -91,19 +89,16 @@ public class FileStorage implements ConfigurationStorage {
             new Properties().storeToXML (new FileOutputStream(filename),
                     "Created: " + new Date().toString());
         }
-
         reloadConfig();
     }
 
     /**
      * Read and write to a resource
-     * @param resource name of <i>resource</i> to use as hard storage
+     * @param resource Name of <i>resource</i> to use as hard storage.
      * @throws IOException If an error occurs while loading the configuration.
      */
-    public FileStorage (String resource) throws IOException {
-        this (getResourceFile(resource));
-        
-        reloadConfig();
+    public FileStorage(String resource) throws IOException {
+        this(getResourceFile(resource));
     }
 
     private static File getResourceFile(String resource) {
@@ -135,22 +130,25 @@ public class FileStorage implements ConfigurationStorage {
      * in.
      * @throws IOException If an error occurs while loading the configuration.
      */
-    public FileStorage (URL initialConfig, String persistentConfig)
+    public FileStorage(URL initialConfig, String persistentConfig)
                                                             throws IOException {
         this.filename = persistentConfig;
         URLConnection con = initialConfig.openConnection();
         reloadConfig(new BufferedInputStream(con.getInputStream()));
     }
 
-    public String getFilename () {
+    /**
+     * @return The filename.
+     */
+    public String getFilename() {
         return filename;
     }
 
-    private void reloadConfig () throws IOException {
+    private void reloadConfig() throws IOException {
         reloadConfig(new BufferedInputStream(new FileInputStream(filename)));
     }
 
-    private void reloadConfig (InputStream in) throws IOException {
+    private void reloadConfig(InputStream in) throws IOException {
 
         Properties p = new Properties();
         p.loadFromXML(in);
@@ -158,12 +156,12 @@ public class FileStorage implements ConfigurationStorage {
         map.clear();
 
         for (Object prop : p.keySet()) {
-            map.put (prop.toString(), (Serializable)p.get(prop));
+            map.put(prop.toString(), (Serializable)p.get(prop));
         }
 
     }
 
-    private void writeConfig () {
+    private void writeConfig() {
         Properties p = new Properties();
         for (Map.Entry<String,Serializable> entry : map.entrySet()) {
             p.put(entry.getKey(), entry.getValue());
@@ -172,7 +170,7 @@ public class FileStorage implements ConfigurationStorage {
         try {
             OutputStream out =
                        new BufferedOutputStream(new FileOutputStream(filename));
-            p.storeToXML (out, "Last updated: " + new Date().toString());
+            p.storeToXML(out, "Last updated: " + new Date().toString());
             out.close();
         } catch (IOException e) {
             final String error = "Unable to write output file " + filename;
@@ -181,45 +179,53 @@ public class FileStorage implements ConfigurationStorage {
 
     }
 
+    @Override
     public synchronized void put(String key, Serializable value)
-                                                                throws IOException {
+                                                            throws IOException {
         if (key == null){
-	  throw new NullPointerException("Can not store value with 'null' key");
-	}
-	if (value == null) {
-	    // We can not store a 'null', Properties.put() throws a NPE
-	    value = "";
-	}
-        map.put (key, value);
+	        throw new NullPointerException("Can not store value with 'null' "
+                                           + "key");
+	    }
+        if (value == null) {
+            // We can not store a 'null', Properties.put() throws a NPE
+            value = "";
+        }
+        map.put(key, value);
         writeConfig();
     }
 
+    @Override
     public synchronized Serializable get(String key) throws IOException {
         return map.get(key);
     }
 
+    @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() {
         return map.entrySet().iterator();
     }
 
-    public synchronized void purge (String key) throws IOException {
+    @Override
+    public synchronized void purge(String key) throws IOException {
         map.remove(key);
         writeConfig();
     }
 
-    public int size () {
+    @Override
+    public int size() {
         return map.size();
     }
 
+    @Override
     public boolean supportsSubStorage() {
         return false;
     }
 
-
+    @Override
     public ConfigurationStorage getSubStorage(String key) {
         throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 
+    @Override
     public ConfigurationStorage createSubStorage(String key) {
         throw new UnsupportedOperationException("Not capable of handling sub"
                                                 + " storages");
@@ -237,11 +243,13 @@ public class FileStorage implements ConfigurationStorage {
         return f;
     }
 
+    @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                             throws IOException {
         throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 
+    @Override
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                  IOException {
         throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);

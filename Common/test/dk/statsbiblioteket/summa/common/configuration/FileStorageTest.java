@@ -26,21 +26,21 @@ import java.io.File;
         author = "mke")
 public class FileStorageTest extends ConfigurationStorageTestCase {
     private static Log log = LogFactory.getLog(FileStorageTest.class);
-    
-    public FileStorageTest () throws Exception {
-        super (new FileStorage("data/configurationFiles/configuration.xml"));
+
+   public FileStorageTest() throws Exception {
+        super(new FileStorage(CONFIGNAME));
     }
 
-    public void testEmptyConstructor () throws Exception {
+    public void testEmptyConstructor() throws Exception {
         FileStorage s = new FileStorage();
         log.info("Created empty file storage at: " + s.getFilename());
 
         testPersistence();
 
-        new File(s.getFilename()).delete();
+        assertTrue(new File(s.getFilename()).delete());
     }
 
-    public void testPersistence () throws Exception {
+    public void testPersistence() throws Exception {
         log.info(testName + ": Testing persistence");
 
         String persitenceTestValue = "PersistenceTestValue";
@@ -48,14 +48,14 @@ public class FileStorageTest extends ConfigurationStorageTestCase {
         String resultValue;
 
         storage.put(persitenceTestKey, persitenceTestValue);
+        assertEquals(persitenceTestValue, storage.get(persitenceTestKey));
 
-        ConfigurationStorage newStorage = new FileStorage(configFilename);
-        resultValue = (String) newStorage.get (persitenceTestKey);
+        ConfigurationStorage newStorage = new FileStorage(CONFIGNAME);
+        resultValue = (String) newStorage.get(persitenceTestKey);
 
         assertTrue("Setting a value on a FileStorage should save the "
                         +"underlying configuration file", 
-                   persitenceTestValue.equals (resultValue));
-
+                   persitenceTestValue.equals(resultValue));
         storage.purge(persitenceTestKey);
     }
 }
