@@ -73,7 +73,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         InputStream input = new FileInputStream(SAMPLE);
 
         MarcReader reader = new MarcStreamReader(input);
-        MarcWriter writer = new MarcXmlWriter(null, true);
+        MarcWriter writer = new MarcXmlWriter(new ByteArrayOutputStream(), true);
         //MarcWriter writer = new MarcXmlWriter(System.out, true);
 
         while (reader.hasNext()) {
@@ -85,12 +85,12 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 
     public void testBasicMarc4j() throws Exception {
         File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
- //       File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
-//        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+        //File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
+        //File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
-//        MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
-//        MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
-//        MarcStreamReader reader = new MarcStreamReader(sampleIn);
+        //MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
+        //MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
+        //MarcStreamReader reader = new MarcStreamReader(sampleIn);
         MarcPermissiveStreamReader reader = new MarcPermissiveStreamReader(
                 sampleIn, false, false, "Unimarc");
 
@@ -99,7 +99,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
             Record record = reader.next();
             log.info("Got MARC Record " + ++counter + ":\n" + record);
             dumpRecord(record);
-//            dumpRecordXML(record);
+            //dumpRecordXML(record);
             log.info("\nDump finished");
         }
         sampleIn.close();
@@ -107,7 +107,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 
     private void dumpRecord(Record record) {
         log.info("Dumping lineformat for " + record.getId());
-//        MarcWriter lineWriter = new MarcStreamWriter(System.out, "UTF-8");
+        //MarcWriter lineWriter = new MarcStreamWriter(System.out, "UTF-8");
         //MarcWriter lineWriter = new MarcStreamWriter(System.out);
         MarcWriter lineWriter = new MarcStreamWriter(null);
         lineWriter.write(record);
@@ -118,7 +118,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     private void dumpRecordXML(Record record) {
         log.info("\n\nDumping XML for " + record.getId());
         //MarcWriter writer = new MarcXmlWriter(System.out, true);
-        MarcWriter writer = new MarcXmlWriter(null, true);
+        MarcWriter writer = new MarcXmlWriter(new ByteArrayOutputStream(), true);
 
         writer.write(record);
         writer.close();
