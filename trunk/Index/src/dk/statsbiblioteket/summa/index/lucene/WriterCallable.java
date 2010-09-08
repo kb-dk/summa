@@ -163,9 +163,6 @@ public class WriterCallable implements Callable<Long> {
         } catch (IOException e) {
             die(e, "deletion");
         }
-        // It would be nice to determine the docID of the Document here
-        Logging.logProcess("LuceneManipulator", "Added Lucene document",
-                           Logging.LogLevel.TRACE, payload);
     }
 
     private void die(IOException e, String action) throws IOException {
