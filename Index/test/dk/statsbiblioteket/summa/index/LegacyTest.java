@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import java.net.URL;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+
+import java.net.URL;
 
 /**
  * The old style index format for Summa must be transformed to SummaDocumentXML
@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class LegacyTest  extends TestCase {
+public class LegacyTest extends TestCase {
     public LegacyTest(String name) {
         super(name);
     }
@@ -81,7 +81,3 @@ public class LegacyTest  extends TestCase {
                      expected.trim(), transformed.trim());
     }
 }
-
-
-
-
