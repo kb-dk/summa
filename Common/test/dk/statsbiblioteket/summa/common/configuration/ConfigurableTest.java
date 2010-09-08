@@ -25,12 +25,12 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ConfigurableTest extends TestCase {
-    
-    public void setUp () throws Exception {
+    @Override
+    public void setUp() {
 
     }
-
-    public void tearDown () throws Exception {
+    @Override
+    public void tearDown() {
 
     }
 
@@ -41,28 +41,28 @@ public class ConfigurableTest extends TestCase {
      * Assert that Configuration based on these storage are equal (this is a
      * deep check)
      */
-    public void testStorageInstantiations () throws Exception {
-        Configuration base = new Configuration(
-                                          new FileStorage("configuration.xml"));
+    public void testStorageInstantiations() {
+        Configuration base = null;
+        try {
+            base = new Configuration(new FileStorage("configuration.xml"));
+        } catch(Exception e) {
+            fail("Exception not expected when creating a new FileStorage");
+        }
 
         Configuration fileConf = new Configuration(
-                (ConfigurationStorage)Configuration.create(FileStorage.class,
-                                                          base));
+                                 Configuration.create(FileStorage.class, base));
         assertTrue (base.equals(fileConf));
 
         Configuration memConf = new Configuration(
-                (ConfigurationStorage)Configuration.create(MemoryStorage.class,
-                                                          base));
+                               Configuration.create(MemoryStorage.class, base));
         assertTrue (base.equals(memConf));
 
         Configuration remoteConf = new Configuration(
-                (ConfigurationStorage)Configuration.create(RemoteStorage.class,
-                                                          base));
+                               Configuration.create(RemoteStorage.class, base));
         assertTrue (base.equals(remoteConf));
 
         Configuration jConf = new Configuration(
-                (ConfigurationStorage)Configuration.create(JStorage.class,
-                                                          base));
+                                    Configuration.create(JStorage.class, base));
         assertTrue (base.equals(jConf));
     }
 }
