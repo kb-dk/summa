@@ -14,16 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import java.io.IOException;
-
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * Convenience implementation of ObjectFilter, suitable as a super-class for
@@ -31,7 +31,8 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "Class needs JavaDoc")
 public abstract class ObjectFilterImpl implements ObjectFilter {
     private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#"
                                         + this.getClass().getSimpleName());
@@ -50,6 +51,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     // if hasNext is true, a processed Payload is ready for delivery
+    @Override
     public boolean hasNext() {
         if (processedPayload != null) {
             return true;
@@ -123,10 +125,10 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                                Logging.LogLevel.TRACE, processedPayload);
             break;
         }
-
         return processedPayload != null;
     }
 
+    @Override
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
@@ -156,10 +158,12 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     protected abstract boolean processPayload(Payload payload) throws
                                                                PayloadException;
 
+    @Override
     public void remove() {
         // Do nothing as default
     }
 
+    @Override
     public void setSource(Filter filter) {
         if (filter == null) {
             //noinspection DuplicateStringLiteralInspection
@@ -174,6 +178,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     // TODO: Consider if close is a wise action - what about pooled ingests?
+    @Override
     public boolean pump() throws IOException {
         checkSource();
         if (!hasNext()) {
@@ -191,6 +196,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         return hasNext();
     }
 
+    @Override
     public void close(boolean success) {
         log.debug(String.format(
                 "Closing down '%s'. %s", this, getProcessStats()));
@@ -231,4 +237,3 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         return "Filter '" + getName() + "' " + getProcessStats();
     }
 }
-
