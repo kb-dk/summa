@@ -1,3 +1,17 @@
+/*
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -12,7 +26,7 @@ import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -57,10 +71,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         // Set up the endpoint filter
         PayloadBufferFilter buf = new PayloadBufferFilter(
                                                 Configuration.newMemoryBased());
-
         // Connect filters
         buf.setSource(writer);
-        
         return buf;
     }
 
@@ -241,7 +253,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         assertBaseCount("base3", 1);
     }
 
-    public void testalreadyDeletedPost() throws Exception {
+    public void testAlreadyDeletedPost() throws Exception {
         createTestStorage();
 
         Record rec1 = new Record("id1", "base1", "data".getBytes());
@@ -260,7 +272,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
                         UpdateFromFulldumpFilter.CONF_BASE, "base1"));
         chain = prepareFilterChain(filter, rec1);
 
-        assertEquals(2, filter.getNumberOfReadRecords());
+        // Getting records is moved to first call to next
+        assertEquals(0, filter.getNumberOfReadRecords());
 
         //noinspection StatementWithEmptyBody
         while(chain.pump()) {
@@ -272,6 +285,10 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         assertBaseCount("base1", 1);
     }
+
+    // TODO insert testcase for
+    // http://sourceforge.net/apps/trac/summa/changeset/2274
+
     
     private class UpdateFromFilldumpFilterTestClass
                                               extends UpdateFromFulldumpFilter {
