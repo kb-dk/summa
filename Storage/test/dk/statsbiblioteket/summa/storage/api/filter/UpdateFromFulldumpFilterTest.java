@@ -82,8 +82,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         long actual = 0;
         while (iter.hasNext()) {
             Record r = iter.next();
-            //System.out.println("Record: '" + r.getId() + "', delete: " + r.isDeleted());
-            if (!r.isDeleted()) {
+            if (!r.isDeleted() && r.isIndexable()) {
                 actual++;
             }
         }
@@ -191,8 +190,11 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         Record rec1 = new Record("id1", "base", "data".getBytes());
         rec1.setDeleted(false);
+        rec1.setIndexable(true);
         Record rec2 = new Record("id2", "base", "data".getBytes());
         rec2.setDeleted(false);
+        rec2.setIndexable(true);
+
         storage.flush(rec1);
         storage.flush(rec2);
 
@@ -260,6 +262,7 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
         Record rec2 = new Record("id2", "base1", "data".getBytes());
         Record rec3 = new Record("id3", "base1", "data".getBytes());
         rec2.setDeleted(true);
+        rec2.setIndexable(false);
 
         storage.flush(rec1);
         storage.flush(rec2);

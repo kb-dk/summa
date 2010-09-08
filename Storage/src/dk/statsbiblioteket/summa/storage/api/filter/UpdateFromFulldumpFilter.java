@@ -256,14 +256,15 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                     for(String id: new ArrayList<String>(ids.keySet())) {
                         Record tmp = readableStorage.getRecord(id, null);
                         tmp.setDeleted(true);
+                        tmp.setIndexable(false);
                         Logging.logProcess(
                                 "UpdateFromFulldumpFilter",
-                                "Marking as deleted",
+                                "Marking as deleted and not idexable",
                                 Logging.LogLevel.DEBUG, id);
                         writableStorage.flush(tmp);
                     }
                     log.info("Marked '" + ids.size() + "' records as deleted "
-                             + "from base " + base);
+                             + " and not indexable from base " + base);
                 } catch(IOException e) {
                     log.error("IOException when deleting records from storage. "
                               +"Storage now contains deleted records");
