@@ -47,4 +47,3 @@ public class WaitStepTest extends TestCase {
                    + delta + "ms", delta > 995 && delta < 1005);
     }
 }
-
