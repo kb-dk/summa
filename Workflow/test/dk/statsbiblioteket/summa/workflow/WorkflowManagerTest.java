@@ -14,11 +14,10 @@
  */
 package dk.statsbiblioteket.summa.workflow;
 
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.util.ThreadInterrupt;
+import junit.framework.TestCase;
 
 /**
  * Test suite for {@link WorkflowManager}
@@ -35,6 +34,7 @@ public class WorkflowManagerTest extends TestCase {
 
         }
 
+        @Override
         public void run() {
             numRuns++;
         }
@@ -48,16 +48,19 @@ public class WorkflowManagerTest extends TestCase {
             super(conf);
         }
 
+        @Override
         public void run() {
             super.run();
             throw new RuntimeException(message);
         }
     }
 
+    @Override
     public void setUp() throws Exception {
 
     }
 
+    @Override
     public void tearDown() throws Exception {
 
     }
@@ -139,7 +142,7 @@ public class WorkflowManagerTest extends TestCase {
 
     public void testConfigWait() throws Exception {
         Configuration conf = new Configuration(
-                                             new XStorage("wait-workflow.xml"));
+                                        new XStorage("data/wait-workflow.xml"));
         man = new WorkflowManager(conf);
 
         long delta = System.currentTimeMillis();
@@ -147,8 +150,5 @@ public class WorkflowManagerTest extends TestCase {
         delta = System.currentTimeMillis() -delta;
 
         assertTrue(delta < 5005 && delta > 4995);
-
     }
-
 }
-

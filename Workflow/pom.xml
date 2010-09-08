@@ -22,6 +22,15 @@
         </resources>-->
         <!-- Tests -->
         <testSourceDirectory>test/</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>test/data</directory>
+            </testResource>
+            <!-- Idea hack -->
+            <testResource>
+                <directory>test/</directory>
+            </testResource>
+        </testResources>
     </build>
 
     <!-- Dependencies for Summa Search -->
