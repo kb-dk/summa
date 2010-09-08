@@ -52,6 +52,20 @@ import java.util.regex.Pattern;
 public class LuceneSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(LuceneSearchNodeTest.class);
 
+    private static final String testRootPath =
+                                             "Support/target/tmp/summaTestRoot";
+    private static final String indexDescriptor = "indexDescriptor.xml";
+    private static final String fagref_indexDescriptor =
+                                       "data/fagref/fagref_IndexDescriptor.xml";
+    private static final String configurationFile = "configuration.xml";
+    private static final String luceneSearcherConf =
+                                                  "LuceneSearcherTest_conf.xml";
+    private static final String sourceDirPath = "data/fagref";
+
+    private File testRoot;
+    private File sourceDir;
+    private File descLocation;
+
     public LuceneSearchNodeTest(String name) {
         super(name);
     }
@@ -59,11 +73,18 @@ public class LuceneSearchNodeTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        testRoot = new File(testRootPath);
         if (testRoot.exists()) {
             Files.delete(testRoot);
         }
-        testRoot.mkdirs();
-        new File(testRoot, "index");
+        if(!testRoot.mkdirs()) {
+            fail("Test rook could not be created");
+        }
+
+        sourceDir = new File(Thread.currentThread().getContextClassLoader()
+                                         .getResource(sourceDirPath).getFile());
+        descLocation = new File(testRoot, indexDescriptor );
+
         assertTrue("The sourceDir '" + sourceDir + "' should exist",
                    sourceDir.exists());
     }
@@ -71,41 +92,29 @@ public class LuceneSearchNodeTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        if (testRoot.exists()) {
-//            Files.delete(testRoot);
-        }
     }
 
     public static Test suite() {
         return new TestSuite(LuceneSearchNodeTest.class);
     }
 
-    private File testRoot = new File(
-            "test/tmp/", "summaTestRoot");
-
-    File sourceDir = new File(Resolver.getURL(
-            "data/fagref/fagref_IndexDescriptor.xml").
-            getFile()).getParentFile();
-    File descLocation = new File(testRoot, "indexDescriptor.xml");
-
     /* Returns the location of the configuration file */
     private File basicSetup() throws Exception {
-        Files.copy(new File(sourceDir, "fagref_IndexDescriptor.xml"),
+        Files.copy(new File(sourceDir, fagref_indexDescriptor),
                    descLocation, false);
 
-        String configuration = Resolver.getUTF8Content(
-                "dk/statsbiblioteket/summa/support/lucene/search/LuceneSearcherTest_conf.xml");
-        configuration = configuration.replace(
+        String configuration = Resolver.getUTF8Content(luceneSearcherConf);
+        /*configuration = configuration.replace(
                 "/tmp/summatest/index",
                 testRoot.getAbsolutePath());
         configuration = configuration.replace(
                 "/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml",
-                descLocation.getAbsolutePath());
-        File confLocation = new File(testRoot,
-                "data/configurationFiles/configuration.xml");
+                descLocation.getAbsolutePath());*/
+        File confLocation = new File(testRoot, configurationFile);
         Files.saveString(configuration, confLocation);
 
         assertNotNull("The configuration should be available", confLocation);
+
         return confLocation;
     }
 
@@ -119,6 +128,7 @@ public class LuceneSearchNodeTest extends TestCase {
     public void testBasicSearcher() throws Exception {
         makeIndex();
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
@@ -306,6 +316,7 @@ public class LuceneSearchNodeTest extends TestCase {
         Query query = parser.parse("java");
         QueryWrapperFilter filter = new QueryWrapperFilter(query);
         DocIdSet workset = filter.getDocIdSet(reader);
+        assertNotNull(workset);
         //workset.or(deleted);
         // workset now marks all the docids that is either matching or deleted
         log.info("Non-matching documents: ");
