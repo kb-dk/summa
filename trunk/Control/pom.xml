@@ -90,7 +90,13 @@
         <testSourceDirectory>test/</testSourceDirectory>
         <testResources>
             <testResource>
+                <directory>test/data/</directory>
+            </testResource>
+            <testResource>
                 <directory>data/</directory>
+            </testResource>
+            <testResource>
+                <directory>test/</directory>
             </testResource>
         </testResources>
         <plugins>

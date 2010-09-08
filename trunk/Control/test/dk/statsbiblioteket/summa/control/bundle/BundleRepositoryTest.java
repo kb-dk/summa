@@ -14,66 +14,63 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import junit.framework.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.List;
-
 
 /**
  *
  */
 public class BundleRepositoryTest extends TestCase {
-
+    private static Log log = LogFactory.getLog(BundleRepositoryTest.class);
     BundleRepository repo;
     Configuration conf;
 
-    public void setUp () throws Exception {
-        conf = new Configuration (new FileStorage("configuration.xml"));
+    @Override
+    public void setUp() throws Exception {
+        conf = new Configuration(new FileStorage("configuration.xml"));
 
         Class<? extends BundleRepository> repositoryClass =
                                     conf.getClass(
-                                            ClientConnection.CONF_REPOSITORY_CLASS,
-                                            BundleRepository.class,
-                                            URLRepository.class);
+                                         ClientConnection.CONF_REPOSITORY_CLASS,
+                                         BundleRepository.class,
+                                         URLRepository.class);
         repo = Configuration.create(repositoryClass, conf);
     }
 
-    public void tearDwon () throws Exception {
-
+    @Override
+    public void tearDown() {
     }
 
-    public void testList () throws Exception {
+    public void testList() throws Exception {
         Configuration localConf = Configuration.newMemoryBased(
-                                         BundleRepository.CONF_REPO_ADDRESS,
-                                         "file:///${user.dir}/Control/test/data/dummy-repo");
-        BundleRepository remoteRepo = new RemoteURLRepositoryServer (localConf);
+                            BundleRepository.CONF_REPO_ADDRESS,
+                            "file:///${user.dir}/Control/test/data/dummy-repo");
+        BundleRepository remoteRepo = new RemoteURLRepositoryServer(localConf);
 
         String filter = ".*";
 
-        List<String> list = repo.list (filter);
-        System.out.println ("Repo list for '" + filter + "':\n\t"
-                            + Strings.join (list, "\n\t"));
+        List<String> list = repo.list(filter);
+        log.info("Repo list for '" + filter + "':\n\t"
+                           + Strings.join (list, "\n\t"));
 
         assertEquals(2, list.size());
         assertTrue(list.contains("foo"));
         assertTrue(list.contains("bar"));
 
         filter = "foo";
-        list = repo.list (filter);
-        System.out.println ("Repo list for '" + filter + "':\n\t"
+        list = repo.list(filter);
+        log.info("Repo list for '" + filter + "':\n\t"
                             + Strings.join (list, "\n\t"));
         assertEquals(1, list.size());
         assertTrue(list.contains("foo"));
     }
-
 }
-
-
-
-
