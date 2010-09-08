@@ -65,7 +65,7 @@
         </entry>
         <entry>
             <key>summa.indexwatcher.indexroot</key>
-            <value class="string">/tmp/summatest/index</value>
+            <value class="string">Support/target/tmp/summaTestRoot/</value>
         </entry>
         <entry>
             <key>summa.indexwatcher.minretention</key>
@@ -78,7 +78,7 @@
             <value class="xproperties">
                 <entry>
                     <key>summa.common.indexdescriptor.absolutelocation</key>
-                    <value class="string">/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml</value>
+                    <value class="string">data/fagref/fagref_IndexDescriptor.xml</value>
                 </entry>
             </value>
         </entry>
