@@ -68,6 +68,7 @@ public class StorageService extends ServiceBase {
 
     private Configuration conf; // Is it okay to keep this? (NO -- mke)
 
+    @Override
     public void start() throws RemoteException {
         if (storage != null) {
             throw new InvalidServiceStateException(getClientId(), getId(),
@@ -76,7 +77,7 @@ public class StorageService extends ServiceBase {
 
         setStatus(Status.CODE.startingUp, "Creating storage backend",
                   Logging.LogLevel.INFO);
-        log.info ("StorageService started");
+        log.info("StorageService started");
         log.debug("Creating Storage instance");
         try {
             storage = StorageFactory.createStorage(conf);
@@ -96,8 +97,9 @@ public class StorageService extends ServiceBase {
         setStatusIdle();
     }
 
+    @Override
     public void stop() throws RemoteException {
-        log.trace("Recieved request to stop Storage service");
+        log.trace("Received request to stop Storage service");
         if (storage == null) {
             throw new InvalidServiceStateException(getClientId(), getId(),
                                                    "stop", "Already stopped");
@@ -127,13 +129,9 @@ public class StorageService extends ServiceBase {
     }
 
     /**
-     * @return the underlying Storage. Primarily used for testing purposes.
+     * @return The underlying Storage. Primarily used for testing purposes.
      */
     public Storage getStorage() {
         return storage;
     }
 }
-
-
-
-
