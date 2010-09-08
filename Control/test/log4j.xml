@@ -185,10 +185,10 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="process">
+    <!--<logger name="process">
         <level value="info" />
         <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
 <!--
     <logger name="dk.statsbiblioteket.summa.index.lucene.LuceneManipulator">
         <level value="trace" />
@@ -213,11 +213,9 @@
     </logger>
     -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
-    <root>
+    <!--<root>
         <level value="INFO" />
         <appender-ref ref="FULL_LOG" />
-    </root>
+    </root>-->
 
 </log4j:configuration>
-
-

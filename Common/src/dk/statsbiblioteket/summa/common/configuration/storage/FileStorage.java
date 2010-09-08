@@ -69,6 +69,7 @@ public class FileStorage implements ConfigurationStorage {
      * @param configuration The configuration.
      * @throws IOException If error occurs during configuration import.
      */
+    @SuppressWarnings("unused")
     public FileStorage(Configuration configuration) throws IOException {
         this();
         new Configuration(this).importConfiguration(configuration);
@@ -130,6 +131,7 @@ public class FileStorage implements ConfigurationStorage {
      * in.
      * @throws IOException If an error occurs while loading the configuration.
      */
+    @SuppressWarnings("unused")
     public FileStorage(URL initialConfig, String persistentConfig)
                                                             throws IOException {
         this.filename = persistentConfig;
