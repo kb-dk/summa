@@ -139,7 +139,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
      */
     public UpdateFromFulldumpFilter(Configuration config) {
         super(config);
-
+        feedback = false;
         init(config, new StorageWriterClient(config),
                                                new StorageReaderClient(config));
     }
