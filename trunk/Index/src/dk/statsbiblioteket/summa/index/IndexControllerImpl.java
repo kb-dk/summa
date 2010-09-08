@@ -57,7 +57,8 @@ import java.util.List;
 // TODO: Handle deletions without documents
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "JavaDoc needed")
 public class IndexControllerImpl extends StateThread implements
                                                      IndexManipulator,
                                                      IndexController {
@@ -81,7 +82,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is "index".
      */
     public static final String CONF_INDEX_ROOT_LOCATION =
-            "summa.index.indexrootlocation";
+                                                "summa.index.indexrootlocation";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
@@ -92,7 +93,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is false.
      */
     public static final String CONF_CREATE_NEW_INDEX =
-            "summa.index.createnewindex";
+                                                   "summa.index.createnewindex";
     public static final boolean DEFAULT_CREATE_NEW_INDEX = false;
 
 
@@ -107,7 +108,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_COMMIT_TIMEOUT =
-            "summa.index.committimeout";
+                                                    "summa.index.committimeout";
     public static final int DEFAULT_COMMIT_TIMEOUT = -1;
 
     /**
@@ -122,7 +123,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is 1000. -1 means disabled.
      */
     public static final String CONF_COMMIT_MAX_DOCUMENTS =
-            "summa.index.commitmaxdocuments";
+                                               "summa.index.commitmaxdocuments";
     public static final int DEFAULT_COMMIT_MAX_DOCUMENTS = 1000;
 
     /**
@@ -136,7 +137,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_CONSOLIDATE_TIMEOUT =
-            "summa.index.consolidatetimeout";
+                                               "summa.index.consolidatetimeout";
     public static final int DEFAULT_CONSOLIDATE_TIMEOUT = -1;
 
     /**
@@ -151,7 +152,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_CONSOLIDATE_MAX_DOCUMENTS =
-            "summa.index.consolidatemaxdocuments";
+                                          "summa.index.consolidatemaxdocuments";
     public static final int DEFAULT_CONSOLIDATE_MAX_DOCUMENTS = -1;
 
     /**
@@ -166,7 +167,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is 70.
      */
     public static final String CONF_CONSOLIDATE_MAX_COMMITS =
-            "summa.index.consolidatemaxcommits";
+                                            "summa.index.consolidatemaxcommits";
     public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 70;
 
     /**
@@ -176,7 +177,7 @@ public class IndexControllerImpl extends StateThread implements
      * Optional. Default is false.
      */
     public static final String CONF_CONSOLIDATE_ON_CLOSE =
-            "summa.index.consolidateonclose";
+                                               "summa.index.consolidateonclose";
     public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
 
     /**
@@ -186,7 +187,7 @@ public class IndexControllerImpl extends StateThread implements
      * Optional. Default is false.
      */
     public static final String CONF_FORCE_CONSOLIDATE_ON_CLOSE =
-            "summa.index.forceconsolidateonclose";
+                                          "summa.index.forceconsolidateonclose";
     public static final boolean DEFAULT_FORCE_CONSOLIDATE_ON_CLOSE = false;
 
     private static final int PROFILER_SPAN = 1000;
@@ -396,6 +397,7 @@ public class IndexControllerImpl extends StateThread implements
      * @return the index updates per second, averaged over the last
      *         {@link #PROFILER_SPAN} milliseconds.
      */
+    @SuppressWarnings("unused")
     public double getCurrentUpdatesPerSecond() {
         return profiler.getBps(true);
     }
@@ -408,7 +410,7 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     /* The IndexManipulator interface aggregates the underlying manipulators */
-
+    @Override
     public synchronized void open(File indexRoot) throws IOException {
         open(indexRoot, false);
     }
@@ -491,6 +493,7 @@ public class IndexControllerImpl extends StateThread implements
         return concreteRoot;
     }
 
+    @Override
     public synchronized void clear() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("clear() called");
@@ -511,6 +514,7 @@ public class IndexControllerImpl extends StateThread implements
             author = "te",
             comment = "Is it okay to catch on Exception-level when calling "
                       + "update on the manipulators?")
+    @Override
     public synchronized boolean update(Payload payload) throws IOException {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
@@ -588,6 +592,7 @@ public class IndexControllerImpl extends StateThread implements
         return requestCommit;
     }
 
+    @Override
     public synchronized void commit() throws IOException {
         long startTime = System.currentTimeMillis();
         //noinspection DuplicateStringLiteralInspection
@@ -610,6 +615,7 @@ public class IndexControllerImpl extends StateThread implements
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
+    @Override
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
         log.info("consolidate started");
@@ -652,6 +658,7 @@ public class IndexControllerImpl extends StateThread implements
         }
     }
 
+    @Override
     public synchronized void close() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format(
@@ -684,7 +691,7 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     /* ObjectFilter interface */
-
+    @Override
     public synchronized void setSource(Filter filter) {
         if (filter instanceof ObjectFilter) {
             log.debug("Assigning source filter" + filter);
@@ -696,6 +703,7 @@ public class IndexControllerImpl extends StateThread implements
         }
     }
 
+    @Override
     public boolean pump() throws IOException {
         if (source == null) {
             throw new IOException("No source defined, cannot pump");
@@ -718,6 +726,13 @@ public class IndexControllerImpl extends StateThread implements
         return hasNext();
     }
 
+    /**
+     * This method logs a fatal on every IOException when closing index. No
+     * IOExceptions can be tolerated on when closing.
+     *  
+     * @param success If true a normal shutdown should take place.
+     */
+    @Override
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close(" + success + ") called");
@@ -729,12 +744,13 @@ public class IndexControllerImpl extends StateThread implements
             try {
                 close();
             } catch (IOException e) {
-                log.error("IOException while calling close() from close(true)",
+                log.fatal("IOException while calling close() from close(true)",
                           e);
             }
         }
     }
 
+    @Override
     public boolean hasNext() {
         if (source == null) {
             log.error("No source defined, cannot call source.hasNext");
@@ -754,6 +770,8 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     private int feedbackEvery = 1000;
+
+    @Override
     public Payload next() {
         // Get the next payload
         long start = System.nanoTime();
@@ -781,16 +799,19 @@ public class IndexControllerImpl extends StateThread implements
         return payload;
     }
 
+    @Override
     public void remove() {
         log.warn("remove() not supported");
     }
 
     /* IndexController interface */
 
+    @Override
     public synchronized void addManipulator(IndexManipulator manipulator) {
         manipulators.add(manipulator);
     }
 
+    @Override
     public synchronized boolean removeManipulator(IndexManipulator
             manipulator) {
         return manipulators.remove(manipulator);
@@ -809,4 +830,3 @@ public class IndexControllerImpl extends StateThread implements
         return orderChangedSinceLastCommit;
     }
 }
-
