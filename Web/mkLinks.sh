@@ -19,7 +19,7 @@ ln -s ../../../../../../../build.properties .
 cd ../
 ln -s ../../../../../config/search/configuration.xml .
 ln -s ../../../../../config/search/log4j.xml .
-ln -s ../../../../../config/search/services.xml .
+#ln -s ../../../../../config/search/services.xml .
 
 cd ../../../../
 
