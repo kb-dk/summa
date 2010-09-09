@@ -11,8 +11,21 @@
 
     <artifactId>summa-web-search</artifactId>
     <name>Summa Web Search module</name>
-    <description>Creates summa WAR files for deployment in Web container.</description>
+    <description>Creates summa search WAR file for deployment in Web container.</description>
     <packaging>war</packaging>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <build>
         <finalName>${artifactId}</finalName>
