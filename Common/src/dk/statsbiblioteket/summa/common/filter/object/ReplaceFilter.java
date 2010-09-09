@@ -57,7 +57,8 @@ import java.util.regex.Pattern;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "JavaDoc needed especially on methods")
 public class ReplaceFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(ReplaceFilter.class);
 
@@ -274,7 +275,6 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 throw new PayloadException(
                         "Unable to read character from Stream", payload);
             }
-
             String result = pattern.matcher(cb).replaceAll(patternReplacement);
             //noinspection UnusedAssignment
             cb = null; // Make the memory available ASAP
@@ -346,4 +346,3 @@ public class ReplaceFilter extends ObjectFilterImpl {
         }
     }
 }
-

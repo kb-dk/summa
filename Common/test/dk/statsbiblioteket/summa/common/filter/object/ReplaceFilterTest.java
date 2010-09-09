@@ -27,7 +27,11 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -186,7 +190,6 @@ public class ReplaceFilterTest extends TestCase {
                        replaceFilter.hasNext());
             processed.add(replaceFilter.next());
         }
-
         log.debug("Checking record");
         assertEquals(message + " record content only should match",
                      expected, processed.get(0).getRecord().getContentAsUTF8());
