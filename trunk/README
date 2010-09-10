@@ -3,14 +3,55 @@ Summa README
 
 Summa is an open source search engine developed by the
 State and University Library of Denmark. It is released
-under the GNU LGPL v 2.1.
+under the Apache License, Version 2.0.
 
 Homepage: http://wiki.statsbiblioteket.dk/summa
-SVN: https://gforge.statsbiblioteket.dk/svn/summa
+SVN:https://summa.svn.sourceforge.net/svnroot/summa
 
 Contact:
 For getting involved with Summa development er asking general questions about
-Summa please go to: https://gforge.statsbiblioteket.dk/projects/summa/ and sign
+Summa please go to: http://sourceforge.net/mail/?group_id=265356 and sign
 up for the 'summa-devel' mailing list.
 
+Running maven:
+Insert the following XML into the Maven2 settings file (under linux this i found
+in ~/.m2/settings.xml:
+<settings>
+  <mirrors>
+    <mirror>
+      <!--This sends everything else to /public -->
+      <id>nexus</id>
+      <mirrorOf>*</mirrorOf>
+      <url>http://sbforge.statsbiblioteket.dk/nexus/content/groups/public</url>
+    </mirror>
+  </mirrors>
+  <profiles>
+    <profile>
+      <id>nexus</id>
+      <!--Enable snapshots for the built in central repo to direct -->
+      <!--all requests to nexus via the mirror -->
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+      </repositories>
+     <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <url>http://central</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <!--make the profile active all the time -->
+    <activeProfile>nexus</activeProfile>
+  </activeProfiles>
+</settings>
 
+and run 'mvn compile' from the projects root directory. 
