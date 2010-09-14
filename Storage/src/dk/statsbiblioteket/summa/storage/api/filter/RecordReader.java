@@ -176,6 +176,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public static final boolean DEFAULT_EXPAND_CHILDREN = false;
 
     /**
+     * The maximum depth to expand children to if {@link #CONF_EXPAND_CHILDREN}
+     * is true.
+     * </p><p>
+     * Optional. Default is 100. -1 means no limit (not recommended due to
+     * the possibility of endless recursion).
+     */
+    public static final String CONF_EXPANSION_DEPTH =
+        "summa.storage.recordreader.expansiondepth";
+    public static final int DEFAULT_EXPANSION_DEPTH = 100;
+
+    /**
      * A boolean switch deciding whether or not to request expansion of
      * parent records. The default value is {@code false}.
      */
@@ -183,6 +194,16 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             "summa.storage.recordreader.expandparents";
     public static final boolean DEFAULT_EXPAND_PARENTS = false;
 
+    /**
+     * The maximum height to expand parents to if {@link #CONF_EXPAND_PARENTS}
+     * is true.
+     * </p><p>
+     * Optional. Default is 100. -1 means no limit (not recommended due to
+     * the possibility of endless recursion).
+     */
+    public static final String CONF_EXPANSION_HEIGHT =
+        "summa.storage.recordreader.expansionheight";
+    public static final int DEFAULT_EXPANSION_HEIGHT = 100;
 
 
     @SuppressWarnings({"FieldCanBeLocal"})
@@ -193,7 +214,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
     private boolean expandChildren = DEFAULT_EXPAND_CHILDREN;
+    private int maxExpansionDepth = DEFAULT_EXPANSION_DEPTH;
     private boolean expandParents = DEFAULT_EXPAND_PARENTS;
+    private int maxExpansionHeight = DEFAULT_EXPANSION_HEIGHT;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
 
@@ -251,8 +274,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                            DEFAULT_START_FROM_SCRATCH);
         expandChildren = conf.getBoolean(CONF_EXPAND_CHILDREN,
                                            DEFAULT_EXPAND_CHILDREN);
+        maxExpansionDepth = conf.getInt(
+            CONF_EXPANSION_DEPTH, maxExpansionDepth);
         expandParents = conf.getBoolean(CONF_EXPAND_PARENTS,
                                            DEFAULT_EXPAND_PARENTS);
+        maxExpansionHeight = conf.getInt(
+            CONF_EXPANSION_HEIGHT, maxExpansionHeight);
         maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS,
                                      DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
@@ -338,10 +365,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             if (!expandChildren && !expandParents) {
                 opts = null; // No special treatment
             } else {
-                 opts = new QueryOptions(null, null,
-                                         expandChildren ? -1 : 0,
-                                         expandParents ? -1 : 0,
-                                         null);
+                 opts = new QueryOptions(
+                     null, null,
+                     expandChildren ? maxExpansionDepth : 0,
+                     expandParents ? maxExpansionHeight : 0,
+                     null);
 
             }
             iterKey = storage.getRecordsModifiedAfter(
@@ -383,6 +411,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     /* ObjectFilter interface */
 
+    @Override
     public boolean hasNext() {
         if (isEof()) {
             return false;
@@ -471,6 +500,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.debug("Got notification from storage");
     }
 
+    @Override
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
@@ -512,16 +542,19 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         return payload;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException(
                 "No removal of Payloads for RecordReader");
     }
 
+    @Override
     public void setSource(Filter filter) {
         throw new UnsupportedOperationException(
                 "RecordReader must be the first filter in the chain");
     }
 
+    @Override
     public boolean pump() throws IOException {
         if (!hasNext()) {
              return false;
@@ -543,6 +576,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * @param success whether the while ingest has been successfull or not.
      */
     // TODO: Check why this is not called in FacetTest
+    @Override
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
@@ -568,6 +602,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
     }
 
+    @Override
     public void storageChanged(StorageWatcher watch, String base,
                                long timeStamp, Object userData) {
         log.trace("Storage was changed for base " + base + " and timestamp "
