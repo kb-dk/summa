@@ -1336,6 +1336,11 @@ getco     */
             Record record, RecursionQueryOptions options, Connection conn)
                                                             throws IOException {
         if (options.childRecursionDepth() == 0) {
+            if (options.childDepth() > 1) {
+                log.debug("Skipping further expansion of child records for "
+                          + record + " as the maximum expansion depth of "
+                          + options.childDepth() + " has been reached");
+            }
             return;
         }
 
@@ -1370,6 +1375,11 @@ getco     */
             Record record, RecursionQueryOptions options, Connection conn)
                                                             throws IOException {
         if (options.parentRecursionHeight() == 0) {
+            if (options.parentHeight() > 1) {
+                log.debug("Skipping further expansion of parent records for "
+                          + record + " as the maximum expansion height of " 
+                          + options.parentHeight() + " has been reached");
+            }
             return;
         }
 
@@ -1460,12 +1470,14 @@ getco     */
         RecursionQueryOptions opts;
 
         if (options.childDepth() != 0) {
-            opts = RecursionQueryOptions.wrap(options);
+//            opts = RecursionQueryOptions.wrap(options);
+            opts = RecursionQueryOptions.asChildOnlyOptions(options);
             expandChildRecords(r, opts, conn);
         }
 
         if (options.parentHeight() != 0) {
-            opts = RecursionQueryOptions.wrap(options);
+//            opts = RecursionQueryOptions.wrap(options);
+            opts = RecursionQueryOptions.asParentsOnlyOptions(options);
             expandParentRecords(r, opts, conn);
         }
 
