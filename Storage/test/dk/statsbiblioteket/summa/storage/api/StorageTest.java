@@ -541,11 +541,13 @@ public class StorageTest extends StorageTestBase {
         Record recC1 = new Record (testId2, testBase1, testContent1);
 
         recP.setChildIds(Arrays.asList(recC1.getId()));
+        recP.setParentIds(Arrays.asList(recC1.getId()));
         recC1.setChildIds(Arrays.asList(recP.getId()));
+        recC1.setParentIds(Arrays.asList(recP.getId()));
 
         storage.flushAll(Arrays.asList(recP, recC1));
 
-        QueryOptions options = new QueryOptions(null, null, 5, 0);
+        QueryOptions options = new QueryOptions(null, null, 5, 5);
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), options);
         assertEquals(1, recs.size());
 
