@@ -532,6 +532,32 @@ public class StorageTest extends StorageTestBase {
         assertBaseCount(testBase1, 4);
     }
 
+    /*
+     * Puts records in Storage that has cyclic child relations then extracts
+     * one of the records with a childRecursionDepth > 0.
+     */
+    public void testEndlessRecursion () throws Exception {
+        Record recP = new Record (testId1, testBase1, testContent1);
+        Record recC1 = new Record (testId2, testBase1, testContent1);
+
+        recP.setChildIds(Arrays.asList(recC1.getId()));
+        recC1.setChildIds(Arrays.asList(recP.getId()));
+
+        storage.flushAll(Arrays.asList(recP, recC1));
+
+        QueryOptions options = new QueryOptions(null, null, 5, 0);
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1), options);
+        assertEquals(1, recs.size());
+
+        Record extracted = recs.get(0);
+        assertNotNull("The extracted record should have childs defined",
+                      extracted.getChildren());
+        assertEquals("The extracted record should have a child",
+                     1, extracted.getChildren().size());
+        assertEquals("The extracted records child should have the correct ID",
+                     testId2, extracted.getChildren().get(0).getId());
+    }
+
     /**
      * Test that ctime is preserved but mtime is updated when flushing the same
      * tecord two times.
