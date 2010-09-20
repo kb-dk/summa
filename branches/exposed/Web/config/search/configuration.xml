@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Configuration used by the Summa Searcher web service  -->
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.web.search</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.rpc.vendor</key>
+                    <value class="string">//localhost:28000/summa-searcher</value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
+            <key>summa.web.suggest</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.rpc.vendor</key>
+                    <value class="string">//localhost:28000/summa-suggest</value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
+            <key>summa.web.didyoumean</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.rpc.vendor</key>
+                    <value class="string">//localhost:28000/summa-didyoumean</value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
