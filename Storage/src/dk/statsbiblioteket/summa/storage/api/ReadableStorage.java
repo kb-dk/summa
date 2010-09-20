@@ -41,8 +41,8 @@ public interface ReadableStorage extends Configurable {
 
     /**
      * Get an iterator over all records from the given base modified after the
-     * given time. The iterator is sorted by timestamps and records with
-     * identical timestamps are sorted by record id.
+     * given time. The iterator is sorted by timestamps (oldest to newest) and
+     * records with identical timestamps are sorted by record id.
      * <p/>
      * If the base is null, all records for all bases are selected.
      * <p/>
@@ -53,7 +53,9 @@ public interface ReadableStorage extends Configurable {
      * For convenient iteration over the result set one can use a
      * {@link StorageIterator} on the returned iterator key.
      *
-     * @param time A timestamp in milliseconds.
+     * @param time A timestamp in milliseconds. The time from the machine with
+     * the srotage is used in all cases, so no synchronization with universal
+     * time is needed.
      * @param base The name of the original record base or null if all bases are
      *             to be used.
      * @param options A possible {@code null} set of options to apply to the
