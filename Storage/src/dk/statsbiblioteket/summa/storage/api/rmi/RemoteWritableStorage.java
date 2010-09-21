@@ -12,36 +12,64 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.storage.rmi;
+package dk.statsbiblioteket.summa.storage.api.rmi;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
-import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by IntelliJ IDEA. User: mikkel Date: Aug 5, 2008 Time: 1:04:03 PM To
- * change this template use File | Settings | File Templates.
+ * Interface of a remote writable storage, this interface have a sibling in
+ * {@link RemoteReadableStorage}.
  */
+@QAInfo(author = "mke",
+        state = QAInfo.State.QA_NEEDED,
+        level = QAInfo.Level.NORMAL)
 public interface RemoteWritableStorage extends WritableStorage, Remote {
-
+    /**
+     * Insert a record into storage.
+     * @param record Record to flush into storage.
+     * @throws RemoteException If error occur when using the remote storage.
+     */
     void flush(Record record) throws RemoteException;
 
+    /**
+     * Insert a list of records into storage.
+     * @param records A list of records to insert into storage.
+     * @throws RemoteException If error occur when using the remote storage.
+     */
     void flushAll(List<Record> records) throws RemoteException;
 
+    /**
+     * Closes the storage.
+     * @throws RemoteException If error occur when using the remote storage.
+     */
     void close() throws RemoteException;
 
-    void clearBase (String base) throws RemoteException;
+    /**
+     * Clears a specific base from the storage.
+     * @param base The base to clear.
+     * @throws RemoteException If error occur when using the remote storage.
+     */
+    void clearBase(String base) throws RemoteException;
 
-    String batchJob(String jobName, String base,
-                    long minMtime, long maxMtime, QueryOptions options)
-                                                         throws RemoteException;
+    /**
+     * Executes a batch job on a specific set of records in the storage. Records
+     * can be specified by minimum and maximum MTime as well as base and a set
+     * of {@link QueryOptions}.
+     * @param jobName The batch job name.
+     * @param base The base to execute batch job on.
+     * @param minMtime The minimum MTime to execute batch job on.
+     * @param maxMtime The maximum MTime to execute batch job on.
+     * @param options The query options.
+     * @return Result of the batch job execution.
+     * @throws RemoteException If error occur when using the remote storage.
+     */
+    String batchJob(String jobName, String base, long minMtime, long maxMtime,
+                    QueryOptions options) throws RemoteException;
 }
-
-
-
-
