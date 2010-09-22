@@ -14,14 +14,26 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
-import javax.script.*;
-import java.io.*;
-import java.net.URL;
+import java.io.ByteArrayInputStream;
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
+import java.net.URL;
+
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * An {@link ObjectFilter} processing incoming payloads in some scripting
  * language supported by the Java runtime. The prime example here would be
- * Javascript.
+ * JavaScript.
  * <p/>
  * The scripting environment has four global variables injected into the global
  * scope. These are;
@@ -58,7 +70,7 @@ import org.apache.commons.logging.LogFactory;
  * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>.
  * <p/>
  * <h3>Example</h3>
- * Discard all payloads with ids starting with {@code illegal} and sleep 1s
+ * Discard all payloads with IDs starting with {@code illegal} and sleep 1s
  * if the payload id starts with {@code sleepy}:
  * <pre>
  *    var id = payload.getId();
@@ -72,19 +84,23 @@ import org.apache.commons.logging.LogFactory;
  *    }
  * </pre>
  */
+@QAInfo(state = QAInfo.State.IN_DEVELOPMENT,
+        level = QAInfo.Level.NORMAL,
+        author = "mke",
+        comment = "JavaDoc needed")
 public class ScriptFilter extends ObjectFilterImpl {
-
+    /** Private instance of the logger. */
     private static final Log log = LogFactory.getLog(ScriptFilter.class);
 
     /**
-     * Whether or not to precompile the script. In almost all cases this
-     * should give a performance boost (gievn that the script engine supports
+     * Whether or not to pre compile the script. In almost all cases this
+     * should give a performance boost (given that the script engine supports
      * compilation. Default is {@code true}
      */
     public static final String CONF_COMPILE = "filter.script.compile";
 
     /**
-     * The default value for the {@link #CONF_COMPILE} property
+     * The default value for the {@link #CONF_COMPILE} property.
      */
     public static final boolean DEFAULT_COMPILE = true;
 
@@ -93,7 +109,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * inlined in your configuration by setting the {@link #CONF_SCRIPT_INLINE}
      * instead of using this property.
      * <p/>
-     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * Either {@code CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
      * <i>must</i> be defined.
      */
     public static final String CONF_SCRIPT_URL = "filter.script.url";
@@ -103,7 +119,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * the script from an external resource by setting {@link #CONF_SCRIPT_URL}
      * instead of using this property.
      * <p/>
-     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * Either {@link #CONF_SCRIPT_URL} or {@code CONF_SCRIPT_INLINE}
      * <i>must</i> be defined.
      */
     public static final String CONF_SCRIPT_INLINE = "filter.script.inline";
@@ -114,7 +130,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * {@link #CONF_SCRIPT_INLINE}, the scripting language is defined by this
      * property.
      * <p/>
-     * Default is <code>js</code> for Javascript.
+     * Default is <code>js</code> for JavaScript.
      */
     public static final String CONF_SCRIPT_LANG = "filter.script.lang";
 
@@ -122,19 +138,31 @@ public class ScriptFilter extends ObjectFilterImpl {
      * Default value for the {@link #CONF_SCRIPT_LANG} property.
      */
     public static final String DEFAULT_SCRIPT_LANG = "js";
-
+    /** The script engine. */
     private ScriptEngine engine;
+    /** The script engine manager. */
     private ScriptEngineManager engineManager;
+    /** True if we have a copy of the compiled script. */
     private boolean compileScript;
+    /** The compiled script object. */
     private CompiledScript compiledScript;
+    /** A char array containing the script. */
     private char[] script;
 
-    public ScriptFilter(Reader script,
-                        boolean compileScript,
+    /**
+     * Creates a script filter.
+     * @param script The script.
+     * @param compileScript This instance hold a copy of the compiled input.
+     * @param scriptExtension The script extension.
+     * @throws ScriptException If error while compiling script.
+     * @throws IOException If error occur reading script.
+     */
+    public ScriptFilter(Reader script, boolean compileScript,
                         String scriptExtension)
                                            throws ScriptException, IOException {
         super(Configuration.newMemoryBased(CONF_FILTER_NAME,
-                                           "ScriptFilter["+scriptExtension+"]"));
+                                      "ScriptFilter[" + scriptExtension + "]"));
+        final int bufferSize = 1024;
         this.compileScript = compileScript;
         engineManager = new ScriptEngineManager();
         engine = engineManager.getEngineByExtension(scriptExtension);
@@ -146,20 +174,20 @@ public class ScriptFilter extends ObjectFilterImpl {
 
         // Invariant: If compileScript is true we also hold a valid
         //            CompiledScript in the compiledScript variable
-        if (compileScript) {
+        if (this.compileScript) {
             if (!(engine instanceof Compilable)) {
                 log.error("Script engine does not support compilation. "
                           + "Going on in interpretive mode");
-                compileScript = false;
+                this.compileScript = false;
             } else {
                 log.info("Downloading and compiling script");
-                compiledScript = ((Compilable)engine).compile(script);
+                compiledScript = ((Compilable) engine).compile(script);
             }
         } else {
             log.info("Downloading script for interpretive mode");
             CharArrayWriter out = new CharArrayWriter();
 
-            char[] buf = new char[1024];
+            char[] buf = new char[bufferSize];
             int len;
             while ((len = script.read(buf)) != -1) {
                 out.write(buf, 0, len);
@@ -169,27 +197,60 @@ public class ScriptFilter extends ObjectFilterImpl {
         }
     }
 
-    public ScriptFilter(InputStream script,
-                        boolean compileScript,
+    /**
+     * Creates a script filter.
+     * @param script The script.
+     * @param compileScript This instance hold a copy of the compiled input.
+     * @param scriptExtension The script extension.
+     * @throws ScriptException If error while compiling script.
+     * @throws IOException If error occur reading script.
+     */
+    public ScriptFilter(InputStream script, boolean compileScript,
                         String scriptExtension)
                                            throws ScriptException, IOException {
         this(new InputStreamReader(script), compileScript, scriptExtension);
     }
 
+    /**
+     * Creates a script filter. Script is being pre compiled.
+     * @param script The script.
+     * @throws ScriptException If error while compiling script.
+     * @throws IOException If error occur reading script.
+     */
     public ScriptFilter(Reader script) throws ScriptException, IOException {
         this(script, true, "js");
     }
 
-    public ScriptFilter(InputStream script) throws ScriptException, IOException {
+    /**
+     * Creates a script filter. Script is being pre compiled.
+     * @param script The script.
+     * @throws ScriptException If error while compiling script.
+     * @throws IOException If error occur reading script.
+     */
+    @SuppressWarnings("unused")
+    public ScriptFilter(InputStream script)
+                                           throws ScriptException, IOException {
         this(new InputStreamReader(script), true, "js");
     }
 
-    public ScriptFilter(Configuration conf) throws ScriptException, IOException {
-        this(readScript(conf),
-             conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE),
+    /**
+     * Creates a script filer base on given configuration. Script is being pre
+     * compiled.
+     * @param conf The configuration.
+     * @throws ScriptException  If error while compiling script.
+     * @throws IOException If error while reading script.
+     */
+    public ScriptFilter(Configuration conf)
+                                           throws ScriptException, IOException {
+        this(readScript(conf), conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE),
              getScriptExtension(conf));
     }
 
+    /**
+     * Return script extension based on the {@link #CONF_SCRIPT_URL}.
+     * @param conf The configuration.
+     * @return Script extension.
+     */
     private static String getScriptExtension(Configuration conf) {
         if (conf.valueExists(CONF_SCRIPT_URL)) {
             if (conf.valueExists(CONF_SCRIPT_LANG)) {
@@ -206,7 +267,7 @@ public class ScriptFilter extends ObjectFilterImpl {
                 return DEFAULT_SCRIPT_LANG;
             }
 
-            return urlString.substring(urlString.lastIndexOf('.')+1);
+            return urlString.substring(urlString.lastIndexOf('.') + 1);
         } else if (conf.valueExists(CONF_SCRIPT_INLINE)) {
             return conf.getString(CONF_SCRIPT_LANG, DEFAULT_SCRIPT_LANG);
         } else {
@@ -214,9 +275,14 @@ public class ScriptFilter extends ObjectFilterImpl {
                     "No URL or inlined script defined. Please set one of the %s"
                     + " or %s properties for this filter",
                     CONF_SCRIPT_URL, CONF_SCRIPT_INLINE));
-        }        
+        }
     }
 
+    /**
+     * Read script specified in the configuration as {@link #CONF_SCRIPT_URL}.
+     * @param conf The configuration.
+     * @return Input stream with content of script.
+     */
     private static InputStream readScript(Configuration conf) {
         if (!conf.valueExists(CONF_SCRIPT_URL)
             && !conf.valueExists(CONF_SCRIPT_INLINE)) {
@@ -267,8 +333,11 @@ public class ScriptFilter extends ObjectFilterImpl {
         }
     }
 
-    protected boolean processPayload(Payload payload) throws PayloadException {
+    @Override
+    protected final boolean processPayload(Payload payload)
+                                                       throws PayloadException {
         long time = System.nanoTime();
+        final double oneSecond = 1000000D;
 
         // Put the payload into the engine so the script can access it
         engine.put("payload", payload);
@@ -312,16 +381,15 @@ public class ScriptFilter extends ObjectFilterImpl {
             String message = (String) engine.get("feedbackMessage");
             if (result) {
                 log.debug("Processed " + payload.getId() + " in "
-                          + (time/1000000D) + "ms"
+                          + (time / oneSecond) + "ms"
                           + (message == null ? "" : (": " + message)));
             } else {
                 log.debug("Discarded " + payload.getId() + " in "
-                          + (time/1000000D) + "ms"
+                          + (time / oneSecond) + "ms"
                           + (message == null ? "" : (": " + message)));
             }
 
             return result;
-            
         } catch (ClassCastException e) {
             throw new PayloadException(
                     "Script did not return a boolean, but a "
@@ -329,4 +397,3 @@ public class ScriptFilter extends ObjectFilterImpl {
         }
     }
 }
-
