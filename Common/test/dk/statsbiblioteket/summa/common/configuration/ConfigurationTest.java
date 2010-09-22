@@ -19,9 +19,6 @@ import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import java.io.File;
 import java.io.Serializable;
@@ -30,6 +27,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * Configuration Tester.
@@ -223,7 +224,7 @@ public class ConfigurationTest extends TestCase {
     public void testGetSystemConfigRemote () throws Exception {
         RemoteStorageTest remote = new RemoteStorageTest();
         remote.setUp();
-        String serviceUrl = remote.direct_storage.getServiceUrl();
+        String serviceUrl = remote.getDirectStorage().getServiceUrl();
         System.out.println ("Service URL is: " + serviceUrl);
 
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, serviceUrl);
