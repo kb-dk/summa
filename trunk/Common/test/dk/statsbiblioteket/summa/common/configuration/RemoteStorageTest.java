@@ -14,54 +14,66 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
-
+/**
+ * Test clasesfor remote storage.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class RemoteStorageTest extends ConfigurationStorageTestCase {
+    /** Local log instance. */
     private static Log log = LogFactory.getLog(RemoteStorageTest.class);
-    /** For debugging purposes */
-    public RemoteStorage direct_storage;
+    /** For debugging purposes. */
+    @SuppressWarnings("unused")
+    private RemoteStorage directStorage;
 
-    public RemoteStorageTest () throws Exception {
-        super (new FileStorage("configurationFiles/configuration.xml"));
+    /**
+     * Creates a remote storage test instance.
+     * @throws Exception If error occur.
+     */
+    public RemoteStorageTest() throws Exception {
+        super(new FileStorage("configurationFiles/configuration.xml"));
         testName = this.getClass().getSimpleName();
     }
 
-    public void setUp () throws Exception {
+    @Override
+    public final void setUp() throws Exception {
         Configuration conf = new Configuration(storage);
 
         log.info(testName + ": Creating remote storage");
-        direct_storage =
+        directStorage =
                 (RemoteStorage) Configuration.create(RemoteStorage.class, conf);
 
-        log.info(testName + ": Connecting to registry on " +
-                                                  conf.getString(RemoteStorage.CONF_REGISTRY_HOST) +
-                                                  ":" +
-                                                  conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
+        log.info(testName + ": Connecting to registry on "
+                              + conf.getString(RemoteStorage.CONF_REGISTRY_HOST)
+                              + ":"
+                              + conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
 
-        Registry reg = LocateRegistry.getRegistry(conf.getString(RemoteStorage.CONF_REGISTRY_HOST),
-                                                  conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
+        Registry reg = LocateRegistry.getRegistry(
+                               conf.getString(RemoteStorage.CONF_REGISTRY_HOST),
+                               conf.getInt(RemoteStorage.CONF_REGISTRY_PORT));
 
         log.info("Connecting to remote storage at '"
                            + conf.getString(RemoteStorage.CONF_NAME) + "'");
-        storage = (ConfigurationStorage) reg.lookup(conf.getString(RemoteStorage.CONF_NAME));
+        storage = (ConfigurationStorage) reg.lookup(
+                                       conf.getString(RemoteStorage.CONF_NAME));
 
         log.info(testName + ": Remote storage prepared");
     }
 
     @Override
-    public void testConfigurationInstantiation () throws Exception {
+    public void testConfigurationInstantiation() {
         // This test case will not work the way it is implemented
         // in the base class
-        ;
     }
 }
