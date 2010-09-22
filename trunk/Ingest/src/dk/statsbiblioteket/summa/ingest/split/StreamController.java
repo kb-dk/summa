@@ -20,11 +20,12 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Retrieves payloads from a given source and processes the streams from the
@@ -35,6 +36,7 @@ import java.util.NoSuchElementException;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class StreamController implements ObjectFilter {
+    /** Local logger instance. */
     private static Log log = LogFactory.getLog(StreamController.class);
 
     /**
@@ -44,11 +46,17 @@ public class StreamController implements ObjectFilter {
      */
     public static final String CONF_PARSER =
             "summa.ingest.stream.controller.parser";
-
+    /** The payload. */
     private Payload payload = null;
+    /** The source filter. */
     private ObjectFilter source;
+    /** The stream parser. */
     protected StreamParser parser;
 
+    /**
+     * Creates a stream controller with a given configuration.
+     * @param conf The configuration.
+     */
     public StreamController(Configuration conf) {
         Class<? extends StreamParser> parserClass =
                 Configuration.getClass(CONF_PARSER, StreamParser.class,
@@ -100,8 +108,8 @@ public class StreamController implements ObjectFilter {
                     Payload streamPayload = source.next();
                     if (streamPayload == null) {
                         log.warn(String.format(
-                                "Got null Payload from source %s after hasNext()"
-                                + " == true", source));
+                               "Got null Payload from source %s after hasNext()"
+                               + " == true", source));
                     }
                     log.debug("makePayload: Opening source stream payload "
                               + streamPayload);
@@ -119,8 +127,8 @@ public class StreamController implements ObjectFilter {
         }
     }
 
-
-    public boolean hasNext() {
+    @Override
+    public final boolean hasNext() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("hasNext() called");
         checkSource();
@@ -131,7 +139,8 @@ public class StreamController implements ObjectFilter {
         return payload != null;
     }
 
-    public Payload next() {
+    @Override
+    public final Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         makePayload();
@@ -154,7 +163,8 @@ public class StreamController implements ObjectFilter {
         return newPayload;
     }
 
-    public boolean pump() throws IOException {
+    @Override
+    public final boolean pump() throws IOException {
         if (!hasNext()) {
             return false;
         }
@@ -171,7 +181,8 @@ public class StreamController implements ObjectFilter {
         return true;
     }
 
-    public void close(boolean success) {
+    @Override
+    public final void close(boolean success) {
         if (source == null) {
             log.warn(String.format(
                     "close(%b): Cannot close as no source is specified",
@@ -182,24 +193,29 @@ public class StreamController implements ObjectFilter {
         }
     }
 
-    public void remove() {
+    @Override
+    public final void remove() {
         log.warn("Remove not supported in StreamController");
     }
 
+    /**
+     * Checks that source is different for {@code null}.
+     */
     private void checkSource() {
         if (source == null) {
             throw new NoSuchElementException(
                     "No source specified for StreamController");
         }
     }
-    
-    public void setSource(Filter filter) {
+
+    @Override
+    public final void setSource(Filter filter) {
         if (!(filter instanceof ObjectFilter)) {
             throw new IllegalArgumentException(
                     "StreamController can only be chained to ObjectFilters");
         }
         log.debug("Assigning source " + source);
-        source = (ObjectFilter)filter;
+        source = (ObjectFilter) filter;
     }
 
     /**
@@ -212,4 +228,3 @@ public class StreamController implements ObjectFilter {
         return null;
     }
 }
-
