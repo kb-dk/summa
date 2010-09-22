@@ -14,36 +14,47 @@
  */
 package dk.statsbiblioteket.summa.workflow;
 
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.util.ThreadInterrupt;
 
+import junit.framework.TestCase;
+
 /**
- *
+ * Test {@link WaitStep}.
  */
 public class WaitStepTest extends TestCase {
-
+    /** WaitStep pointer. */
     WaitStep step;
 
-    public void testWait() throws Exception {
+    /**
+     * Test wait.
+     */
+    public final void testWait() {
+        final int deltaMax = 2000;
         step = new WaitStep(2);
 
         long delta = System.currentTimeMillis();
         step.run();
         delta = System.currentTimeMillis() - delta;
 
-        assertTrue(delta >= 2000);
+        assertTrue(delta >= deltaMax);
     }
 
-    public void testInterrupt() throws Exception {
+    /**
+     * Test interrupt.
+     */
+    public final void testInterrupt() {
+        final int sleep = 1000;
+        final int deltaMin = 980;
+        final int deltaMax = 1200;
         step = new WaitStep(2);
 
-        new ThreadInterrupt(Thread.currentThread(), 1000);
+        new ThreadInterrupt(Thread.currentThread(), sleep);
 
         long delta = System.currentTimeMillis();
         step.run();
         delta = System.currentTimeMillis() - delta;
 
         assertTrue("Should break out after a second. Break time was: "
-                   + delta + "ms", delta > 995 && delta < 1005);
+                   + delta + "ms", delta > deltaMin && delta < deltaMax);
     }
 }
