@@ -54,4 +54,12 @@ in ~/.m2/settings.xml:
   </activeProfiles>
 </settings>
 
-and run 'mvn compile' from the projects root directory. 
+If you don't want to or can't use the repository from Statsbiblioteket non
+official jars are supplied in the checkout and can be installed into you local
+maven repository.
+
+Run the following command to create symbolic links that enables to create war
+files under the web module.
+$ cd Web; ./mkLinks.sh; cd ../;
+
+and run '$ mvn compile' from the projects root directory. 
