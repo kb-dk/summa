@@ -23,7 +23,7 @@ import junit.framework.TestCase;
  */
 public class WaitStepTest extends TestCase {
     /** WaitStep pointer. */
-    WaitStep step;
+    private WaitStep step;
 
     /**
      * Test wait.
