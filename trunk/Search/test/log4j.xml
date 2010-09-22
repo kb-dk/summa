@@ -24,12 +24,12 @@
 
     <!-- A time/date based rolling appender -->
 
-    <appender name="FILE" class="org.apache.log4j.ConsoleAppender">
+    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="FATAL"/><!-- or DEBUG or INFO -->
-    <!--    //<param name="File" value="/home/summa/logs/search_engine_log.log"/>-->
-        <!--<param name="Append" value="true"/>
-        //<param name="MaxFileSize" value="100MB"/>
-      //  <param name="MaxBackupIndex" value="5"/>-->
+        <param name="File" value="target/log/search_engine_log.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="1"/>
        <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -72,11 +72,11 @@
     <!--<logger name="dk.statsbiblioteket.summa.suggest">
         <level value="DEBUG" />
         <appender-ref ref="FILE" />
-    </logger>
+    </logger>-->
 
-    <logger name="dk.statsbiblioteket.summa.common">
+    <!--<logger name="dk.statsbiblioteket.summa.common">
         <level value="DEBUG" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="CONSOLE" />
     </logger>-->
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
@@ -86,5 +86,3 @@
     </root>-->
 
 </log4j:configuration>
-
-
