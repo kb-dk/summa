@@ -1,17 +1,33 @@
-/**
- * Created: te 02-01-2010 19:26:22
- * CVS:     $Id$
+/*
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
  */
 package dk.statsbiblioteket.summa.common.util.bits.test;
 
+import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArray64Aligned;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArray64Packed;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayAligned;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayImpl;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayInt;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayPacked;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.bits.*;
 
 import java.io.StringWriter;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Tests the performance of different BitsArrays.
@@ -20,6 +36,11 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class BitsArrayPerformance {
+    /**
+     * Main method.
+     * @param args Arguments from command line.
+     * @throws Exception If error.
+     */
     public static void main(String[] args) throws Exception {
         if (args != null && args.length > 0) {
             if ("-h".equals(args[0])) {
@@ -37,6 +58,9 @@ public class BitsArrayPerformance {
         new BitsArrayPerformance().testPerformance(true);
     }
 
+    /**
+     * Print usage to {@link System#out}.
+     */
     public static void usage() {
         System.out.println("Usage: BitsArrayPerformance [-s]");
         System.out.println("");
@@ -46,7 +70,9 @@ public class BitsArrayPerformance {
 
     }
 
-    /* No exansion-testing */
+    /**
+     * No exansion-testing.
+     */
     public void testPerformance(boolean unsafe) throws Exception {
         int[] actionCounts = new int[]{
                 10*1000*1000};
@@ -62,10 +88,10 @@ public class BitsArrayPerformance {
                         getGenerators());
         bags.add(new SignalBAG(ARRAYSIGNAL));
         System.out.println(getPerformanceHeader(bags));
-        for (int ac: actionCounts) {
-            for (int l: lengths) {
-                for (ACTION action: actions) {
-                    for (int vm: valueMaxs) {
+        for (int ac : actionCounts) {
+            for (int l : lengths) {
+                for (ACTION action : actions) {
+                    for (int vm : valueMaxs) {
                         testPerformance(bags, action, l, vm, ac, l, vm, unsafe);
                     }
                 }
@@ -73,6 +99,10 @@ public class BitsArrayPerformance {
         }
     }
 
+    /**
+     * @param bags List over generators 'bags'.
+     * @return Return performance header.
+     */
     public String getPerformanceHeader(
             List<BitsArrayGenerator> bags) {
         String header = String.format(
@@ -118,20 +148,22 @@ public class BitsArrayPerformance {
                 });
     }
 
-
-    private enum ACTION {read, write}
-    /* A dry-run is performed before actual measuering */
-    public void testPerformance(
-            List<BitsArrayGenerator> bags, ACTION action,
-            int initialLength, int initialValueMax,
-            int mutatorActions, int mutatorIndexMax, int writeValueMax,
-            boolean unsafe)
+    /** Private enum. */
+    private enum ACTION { read, write }
+    /**
+     * A dry-run is performed before actual measuring.
+     */
+    public void testPerformance(List<BitsArrayGenerator> bags, ACTION action,
+                                int initialLength, int initialValueMax,
+                                int mutatorActions, int mutatorIndexMax,
+                                int writeValueMax, boolean unsafe)
                                                               throws Exception {
-        final int WARMUP = 1;
-        final int TESTS = 3;
+        final int warmup = 1;
+        final int tests = 3;
+        final int buffer = 1000;
 
-        for (int i = 0 ; i < WARMUP ; i++) {
-            for (BitsArrayGenerator bag: bags) {
+        for (int i = 0; i < warmup; i++) {
+            for (BitsArrayGenerator bag : bags) {
                 measureActionPerformance(
                         bag, action, initialLength, initialValueMax,
                         mutatorActions, mutatorIndexMax, writeValueMax,
@@ -139,35 +171,36 @@ public class BitsArrayPerformance {
             }
         }
 
-        StringWriter sw = new StringWriter(1000);
+        StringWriter sw = new StringWriter(buffer);
         sw.append(String.format(
                 "%12d%12d%12s%12d",
                 mutatorActions, mutatorIndexMax, action, writeValueMax));
         long base = 0;
-        for (int test = 0 ; test < TESTS ; test++) {
+        for (int test = 0; test < tests; test++) {
             base += measureActionPerformanceNull(
                     action, initialLength, mutatorActions,
                     mutatorIndexMax, writeValueMax);
         }
-        for (BitsArrayGenerator bag: bags) {
+        for (BitsArrayGenerator bag : bags) {
             long time = 0;
-            for (int test = 0 ; test < TESTS ; test++) {
+            for (int test = 0; test < tests; test++) {
                 time += measureActionPerformance(
                         bag, action, initialLength, initialValueMax,
                         mutatorActions,
                         mutatorIndexMax, writeValueMax,
                         unsafe);
             }
-            sw.append(String.format("%12d", Math.max(0, time-base) / TESTS));
+            sw.append(String.format("%12d", Math.max(0, time - base) / tests));
         }
         System.out.println(sw.toString());
     }
 
-    public long measureActionPerformance(
-            BitsArrayGenerator bag, ACTION action,
-            int initialLength, int initialValueMax,
-            int numberOfActions, int writeIndexMax, int writeValueMax,
-            boolean unsafe) throws Exception {
+    public long measureActionPerformance(BitsArrayGenerator bag, ACTION action,
+                                         int initialLength, int initialValueMax,
+                                         int numberOfActions, int writeIndexMax,
+                                         int writeValueMax, boolean unsafe)
+                                                              throws Exception {
+        final int sleep = 100;
         BitsArray testBA = bag.create(1, 1);
         if (testBA == ARRAYSIGNAL) {
             return measureActionPerformanceArray(
@@ -176,7 +209,7 @@ public class BitsArrayPerformance {
         }
 
         System.gc();
-        Thread.sleep(100);
+        Thread.sleep(sleep);
         long startTime = System.currentTimeMillis();
         BitsArray ba = createAndFillBitsArray(
                 bag, initialLength, initialValueMax, numberOfActions,
@@ -184,15 +217,18 @@ public class BitsArrayPerformance {
         if (action == ACTION.write) {
             return System.currentTimeMillis() - startTime;
         }
-        ba.set(writeIndexMax-1, 0); // Ensure filled
+        ba.set(writeIndexMax - 1, 0); // Ensure filled
         return measureReadPerformance(ba, numberOfActions, unsafe);
     }
 
-    private long measureActionPerformanceArray(
-            ACTION action, int initialLength, int numberOfActions,
-            int writeIndexMax, int writeValueMax) throws Exception {
+    private long measureActionPerformanceArray(ACTION action, int initialLength,
+                                               int numberOfActions,
+                                               int writeIndexMax,
+                                               int writeValueMax)
+                                                              throws Exception {
+        final int sleep = 100;
         System.gc();
-        Thread.sleep(100);
+        Thread.sleep(sleep);
         long startTime = System.currentTimeMillis();
         int[] direct = createAndFillDirectArray(
                 initialLength, numberOfActions, writeIndexMax, writeValueMax);
@@ -202,11 +238,14 @@ public class BitsArrayPerformance {
         return measureReadPerformance(direct, numberOfActions);
     }
 
-    private long measureActionPerformanceNull(
-            ACTION action, int initialLength, int numberOfActions,
-            int writeIndexMax, int writeValueMax) throws Exception {
+    private long measureActionPerformanceNull(ACTION action, int initialLength,
+                                              int numberOfActions,
+                                              int writeIndexMax,
+                                              int writeValueMax)
+                                                              throws Exception {
+        final int sleep = 100;
         System.gc();
-        Thread.sleep(100);
+        Thread.sleep(sleep);
         long startTime = System.currentTimeMillis();
         createAndFillNullArray(
                 initialLength, numberOfActions, writeIndexMax, writeValueMax);
@@ -218,16 +257,17 @@ public class BitsArrayPerformance {
 
     private long measureReadPerformance(BitsArray ba, int numberOfReads,
                                         boolean unsafe) {
+        final int randomNum = 87;
         int max = ba.size();
         long startTime = System.currentTimeMillis();
-        Random random = new Random(87);
+        Random random = new Random(randomNum);
         int lastVal = 0;
         if (unsafe) {
-            for (int read = 0 ; read < numberOfReads ; read++) {
+            for (int read = 0; read < numberOfReads; read++) {
                 lastVal = ba.fastGetAtomic(random.nextInt(max));
             }
         } else {
-            for (int read = 0 ; read < numberOfReads ; read++) {
+            for (int read = 0; read < numberOfReads; read++) {
                 lastVal = ba.getAtomic(random.nextInt(max));
             }
         }
@@ -239,11 +279,12 @@ public class BitsArrayPerformance {
     }
 
     private long measureReadPerformance(int[] direct, int numberOfReads) {
+        final int randomNum = 87;
         int max = direct.length;
         long startTime = System.currentTimeMillis();
-        Random random = new Random(87);
+        Random random = new Random(randomNum);
         int lastVal = 0;
-        for (int read = 0 ; read < numberOfReads ; read++) {
+        for (int read = 0; read < numberOfReads; read++) {
             lastVal = direct[random.nextInt(max)];
         }
         if (lastVal < 0) {
@@ -254,62 +295,68 @@ public class BitsArrayPerformance {
     }
 
     private long measureReadNullPerformance(int length, int numberOfReads) {
+        final int randomNum = 87;
         long startTime = System.currentTimeMillis();
-        Random random = new Random(87);
-        for (int read = 0 ; read < numberOfReads ; read++) {
+        Random random = new Random(randomNum);
+        for (int read = 0; read < numberOfReads; read++) {
             random.nextInt(length);
         }
         return System.currentTimeMillis() - startTime;
     }
 
-    public BitsArray createAndFillBitsArray(
-            BitsArrayGenerator bag,
-            int initialLength, int initialValueMax,
-            int numberOfWrites, int writeIndexMax, int writeValueMax,
-            boolean unsafe) throws Exception {
-        Random random = new Random(87);
+    public BitsArray createAndFillBitsArray(BitsArrayGenerator bag,
+                                            int initialLength,
+                                            int initialValueMax,
+                                            int numberOfWrites,
+                                            int writeIndexMax,
+                                            int writeValueMax, boolean unsafe)
+                                                              throws Exception {
+        final int randomNum = 87;
+        Random random = new Random(randomNum);
         BitsArray ba = bag.create(initialLength, initialValueMax);
         if (unsafe) {
-            for (int write = 0 ; write < numberOfWrites ; write++) {
+            for (int write = 0; write < numberOfWrites; write++) {
                 ba.fastSet(random.nextInt(writeIndexMax),
-                           random.nextInt(writeValueMax+1));
+                           random.nextInt(writeValueMax + 1));
             }
         } else {
-            for (int write = 0 ; write < numberOfWrites ; write++) {
+            for (int write = 0; write < numberOfWrites; write++) {
                 ba.set(random.nextInt(writeIndexMax),
-                       random.nextInt(writeValueMax+1));
+                       random.nextInt(writeValueMax + 1));
             }
         }
-        int top = Math.max(initialLength, writeIndexMax)-1;
+        int top = Math.max(initialLength, writeIndexMax) - 1;
         ba.set(top, ba.fastGetAtomic(top)); // Fix size
         return ba;
     }
 
-    private int[] createAndFillDirectArray(
-            int initialLength, int numberOfWrites,
-            int writeIndexMax, int writeValueMax) {
-        Random random = new Random(87);
+    private int[] createAndFillDirectArray(int initialLength,
+                                           int numberOfWrites, 
+                                           int writeIndexMax,
+                                           int writeValueMax) {
+        final int randomNum = 87;
+        Random random = new Random(randomNum);
         int[] direct = new int[writeIndexMax];
-        for (int write = 0 ; write < numberOfWrites ; write++) {
+        for (int write = 0; write < numberOfWrites; write++) {
             direct[random.nextInt(writeIndexMax)] =
-                   random.nextInt(writeValueMax+1);
+                   random.nextInt(writeValueMax + 1);
         }
         return direct;
     }
 
-    private void createAndFillNullArray(
-            int initialLength, int numberOfWrites,
-            int writeIndexMax, int writeValueMax) {
-        Random random = new Random(87);
-        for (int write = 0 ; write < numberOfWrites ; write++) {
+    private void createAndFillNullArray(int initialLength, int numberOfWrites,
+                                        int writeIndexMax, int writeValueMax) {
+        final int randomNum = 87;
+        Random random = new Random(randomNum);
+        for (int write = 0; write < numberOfWrites; write++) {
             random.nextInt(writeIndexMax);
-            random.nextInt(writeValueMax+1);
+            random.nextInt(writeValueMax + 1);
         }
     }
 
     public static List<String> getArrayNames(List<BitsArrayGenerator> bags) {
         List<String> names = new ArrayList<String>(bags.size());
-        for (BitsArrayGenerator bag: bags) {
+        for (BitsArrayGenerator bag : bags) {
             BitsArray ba = bag.create(1, 1);
             String name;
             if (ba == ARRAYSIGNAL) {
@@ -325,7 +372,9 @@ public class BitsArrayPerformance {
     }
 
     private class SignalBAG implements BitsArrayGenerator {
+        /** Signals. */
         private BitsArray signal;
+        
         public SignalBAG(BitsArray signal) {
             this.signal = signal;
         }
