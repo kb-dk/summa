@@ -14,115 +14,177 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.*;
-
 import java.io.StringReader;
+
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
  *
  */
 public class SummaStandardAnalyzerTest extends SummaAnalyzerTest {
+    /** The summa analyzer. */
+    private SummaAnalyzer a;
 
-    SummaAnalyzer a;
-
+    /**
+     * Checks tokens.
+     * @param tokenizer The tokenizer.
+     * @param tokens The tokens.
+     * @throws Exception If error occur.
+     */
     static void assertTokens(TokenStream tokenizer, String... tokens)
-                                                               throws Exception{
-        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);;
+                                                              throws Exception {
+        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);
         int count = 0;
 
         while (tokenizer.incrementToken()) {
             if (count >= tokens.length) {
-                fail("Too many tokens from tokenizer, found " + (count+1)
+                fail("Too many tokens from tokenizer, found " + (count + 1)
                      + ". Expected " + tokens.length + ".");
             }
-
             assertEquals("Mismatch in token number " + (count + 1) + ":",
                          tokens[count], term.term());
             count++;
 
         }
-
         assertEquals("To few tokens from tokenizer, found " + count
                      + ". Expected " + tokens.length + ".",
                      tokens.length, count);
     }
 
-    public void testFooCaseFold() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader("Foo"));
+    @Override
+    public final void testFooCaseFold() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("", new StringReader("Foo"));
 
-        assertTokens(t, "foo");
+            assertTokens(t, "foo");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testFooBarCaseFold() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));
+    @Override
+    public final void testFooBarCaseFold() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("",
+                                                  new StringReader("Foo baR"));
 
-        assertTokens(t, "foo", "bar");
+            assertTokens(t, "foo", "bar");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testWhiteSpace1() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader(" white "));
+    @Override
+    public final void testWhiteSpace1() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("",
+                                                  new StringReader(" white "));
 
-        assertTokens(t, "white");
+            assertTokens(t, "white");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testWhiteSpace2() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader("barry   white "));
+    @Override
+    public final void testWhiteSpace2() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("",
+                                            new StringReader("barry   white "));
 
-        assertTokens(t, "barry", "white");
+            assertTokens(t, "barry", "white");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testWhiteSpace3() throws Exception {
-        // This tes is case sensitive, just try that combo as well
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader(" I  P Jacobsen    "));
+    @Override
+    public final void testWhiteSpace3() {
+        try {
+            // This tes is case sensitive, just try that combo as well
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("",
+                                        new StringReader(" I  P Jacobsen    "));
 
-        assertTokens(t, "i", "p", "jacobsen");
+            assertTokens(t, "i", "p", "jacobsen");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testPunctuation() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
+    @Override
+    public final void testPunctuation() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream("",
+                                            new StringReader("barry   white."));
 
-        assertTokens(t, "barry", "white");
+            assertTokens(t, "barry", "white");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testTokenReplacements() throws Exception {
-        a = new SummaStandardAnalyzer();
-        TokenStream t = a.reusableTokenStream(
+    @Override
+    public final void testTokenReplacements() {
+        try {
+            a = new SummaStandardAnalyzer();
+            TokenStream t = a.reusableTokenStream(
                                    "", new StringReader(".Net vs C* Algebra?"));
 
-        assertTokens(t, "dotnet", "vs", "cstaralgebra");
+            assertTokens(t, "dotnet", "vs", "cstaralgebra");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testReuse() throws Exception {
-        a = new SummaAnalyzer(null, true, null, true, true);
+    @Override
+    public final void testReuse() {
+        try {
+            a = new SummaAnalyzer(null, true, null, true, true);
 
-        TokenStream t = a.reusableTokenStream("", new StringReader("foo"));
-        assertTokens(t, "foo");
+            TokenStream t = a.reusableTokenStream("", new StringReader("foo"));
+            assertTokens(t, "foo");
 
-        t = a.reusableTokenStream("", new StringReader("bar"));
-        assertTokens(t, "bar");
+            t = a.reusableTokenStream("", new StringReader("bar"));
+            assertTokens(t, "bar");
 
-        t = a.reusableTokenStream("",
-                                  new StringReader("Fast talking flip-flopper"));
-        assertTokens(t, "fast", "talking", "flip", "flopper");
+            t = a.reusableTokenStream("",
+                                 new StringReader("Fast talking flip-flopper"));
+            assertTokens(t, "fast", "talking", "flip", "flopper");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
 
-    public void testDashes() throws Exception {
-        a = new SummaStandardAnalyzer();//new SummaStandardAnalyzer(null, true, null, true, true);
-        TokenStream t = a.reusableTokenStream(
-                                   "", new StringReader("Hr. A. Binde-Streg"));
-        assertTokens(t, "hr", "a", "binde", "streg");
+    @Override
+    public final void testDashes() {
+        try {
+            a = new SummaStandardAnalyzer();
+            //new SummaStandardAnalyzer(null, true, null, true, true);
+            TokenStream t = a.reusableTokenStream(
+                                    "", new StringReader("Hr. A. Binde-Streg"));
+            assertTokens(t, "hr", "a", "binde", "streg");
 
-        t = a.reusableTokenStream(
+            t = a.reusableTokenStream(
                                 "", new StringReader("Jan-Hendrik S. Hofmeyr"));
-        assertTokens(t, "jan", "hendrik", "s", "hofmeyr");
+            assertTokens(t, "jan", "hendrik", "s", "hofmeyr");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception expected here");
+        }
     }
-
 }
-
