@@ -34,8 +34,14 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
     /** Local log instance. */
     private static Log log = LogFactory.getLog(RemoteStorageTest.class);
     /** For debugging purposes. */
-    @SuppressWarnings("unused")
     private RemoteStorage directStorage;
+
+    /**
+     * @return The remote storage.
+     */
+    public RemoteStorage getDirectStorage() {
+        return directStorage;
+    }
 
     /**
      * Creates a remote storage test instance.
