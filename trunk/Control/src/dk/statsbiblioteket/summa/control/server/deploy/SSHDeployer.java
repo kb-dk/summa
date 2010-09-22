@@ -29,8 +29,6 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -40,30 +38,49 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * <p>{@link ClientDeployer} that uses ssh to copy and start Clients.</p>
- * 
+ *
  * $Id$
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke",
-        comment="mke made substantial changes over te's original impl")
+        comment = "mke made substantial changes over te's original impl")
 public class SSHDeployer implements ClientDeployer {
-    private static final Log log = LogFactory.getLog(SSHDeployer.class);
-
+    /** Local logger instance. */
+    private Log log = LogFactory.getLog(SSHDeployer.class);
+    /** Start up time up.*/
     private static final int START_TIMEOUT = 7000;
+    /** Standard SSH port. */
+    private static final int SSHPORT = 22;
+    /** Number of log lines. */
+    private static final int LOGLINES = 100;
 
+    /** Login string. */
     private String login;
+    /** Feedback login string. */
     private String feedbackLogin; // Just for feedback, includes port
+    /** Destination string. */
     private String destination;
+    /** Source String. */
     private String source;
+    /** The client ID. */
     private String clientId;
+    /** Configuration location. */
     private String confLocation;
-    private int port = 22;
-
+    /** SSH port number. */
+    private int port = SSHPORT;
+    /** Configuration for this instance. */
     protected Configuration configuration;
 
+    /**
+     * Constructs a SSH Deployer instance with the given configuration.
+     * @param conf The configuration which is used to setup this instance.
+     */
     public SSHDeployer(Configuration conf) {
         login = conf.getString(CONF_DEPLOYER_TARGET);
         removePortFromLogin();
@@ -98,13 +115,13 @@ public class SSHDeployer implements ClientDeployer {
     }
 
     /**
-     * Deploy a client via SSH. 
+     * Deploy a client via SSH.
      * @param feedback Callback for communication with the user.
      * @throws Exception If error occur while deploying source to destination,
      * source is null or permission is not updated correctly.
      */
     @Override
-    public void deploy(Feedback feedback) throws Exception {
+    public final void deploy(Feedback feedback) throws Exception {
         log.info("Deploying client");
 
         if (source == null) {
@@ -122,7 +139,7 @@ public class SSHDeployer implements ClientDeployer {
                               login + ":"  + destination));
         try {
             runner.run();
-        } catch(Exception e) {
+        } catch (Exception e) {
             String error = "Could not deploy from source '" + source
                            + "' to destination '" + destination + "'";
             log.error(error);
@@ -162,7 +179,7 @@ public class SSHDeployer implements ClientDeployer {
                         + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             error = "Could not unpack archive '" + archivePath
                     + "' with login '" + feedbackLogin + "': " + e.getMessage()
                     + "\n\n\t" + runner.getProcessErrorAsString();
@@ -191,7 +208,7 @@ public class SSHDeployer implements ClientDeployer {
                         + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             error = "Could not delete '" + archivePath + "' with login '"
                     + feedbackLogin + "': " + e.getMessage() + "\n\n\t"
                     + runner.getProcessErrorAsString();
@@ -227,8 +244,8 @@ public class SSHDeployer implements ClientDeployer {
                 new ProcessRunner(Arrays.asList(
                         "ssh", "-p" + port, login, "cd", destination));
         runner.run();
-        if (runner.getReturnCode() == 0 &&
-            "".equals(runner.getProcessErrorAsString())) {
+        if (runner.getReturnCode() == 0
+                && "".equals(runner.getProcessErrorAsString())) {
             log.trace("The destination " + destination + " already exists");
             return;
         }
@@ -273,7 +290,7 @@ public class SSHDeployer implements ClientDeployer {
                         + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             error = "Failed to run:\n"
                     + Strings.join(Arrays.asList(command), " ") + "\n"
                     + "Got: " + e.getMessage() + "\n\n\t"
@@ -295,7 +312,7 @@ public class SSHDeployer implements ClientDeployer {
      * @throws Exception If service is not started.
      */
     @Override
-    public void start(Feedback feedback) throws Exception {
+    public final void start(Feedback feedback) throws Exception {
         log.info("Starting service");
 
         /* Read the bundle spec */
@@ -304,9 +321,9 @@ public class SSHDeployer implements ClientDeployer {
                   + "', client.xml");
         InputStream clientSpec;
         try {
-            clientSpec = new ByteArrayInputStream
-                    (Zips.getZipEntry(bdlFile, "client.xml"));
-        } catch(IOException e) {
+            clientSpec = new ByteArrayInputStream(Zips.getZipEntry(bdlFile,
+                                                  "client.xml"));
+        } catch (IOException e) {
             throw new IOException("Could not create InputStream for bdlFile '"
                                   + bdlFile + "', client.xml", e);
         }
@@ -316,7 +333,7 @@ public class SSHDeployer implements ClientDeployer {
         BundleStub stub = builder.getStub();
 
         /* Add properties to the command line as we are obliged to */
-        log.trace("Adding properties to command line");        
+        log.trace("Adding properties to command line");
         stub.addSystemProperty(ClientConnection.CONF_CLIENT_ID,
                                clientId);
 
@@ -332,14 +349,15 @@ public class SSHDeployer implements ClientDeployer {
          * since it must be passed as a single arg to ssh */
         String remoteArg = "cd " + destination + ";";
         List<String> remoteCmdLine = stub.buildCommandLine();
-        remoteCmdLine.set(0, probeJVMPath()); // Detect the JVM path remotely and override it
+        // Detect the JVM path remotely and override it
+        remoteCmdLine.set(0, probeJVMPath());
         for (String arg : remoteCmdLine) {
             remoteArg = remoteArg + " " + arg.replace(" ", "\\ ");
         }
         commandLine.add(remoteArg);
 
         log.debug("Command line for '" + clientId + "':\n"
-                   + Logs.expand(commandLine, 100));
+                   + Logs.expand(commandLine, LOGLINES));
 
         /* Exec the command line */
         ProcessRunner runner = new ProcessRunner(commandLine);
@@ -372,7 +390,7 @@ public class SSHDeployer implements ClientDeployer {
                         + runner.getReturnCode() + " and message "
                         + runner.getProcessErrorAsString();
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             error = "Could not start client '" + clientId + "' with login "
                     + feedbackLogin + " and configuration server "
                     + confLocation + ": " + runner.getProcessErrorAsString();
@@ -389,7 +407,9 @@ public class SSHDeployer implements ClientDeployer {
                            + confLocation + ": "
                            + runner.getProcessErrorAsString());
         /**
-         ssh bar@zoo java -Dsumma.control.configuration=//example.com/myConfServer -jar /path/to/somewhere/runClient.jar
+         ssh bar@zoo java
+             -Dsumma.control.configuration=//example.com/myConfServer
+             -jar /path/to/somewhere/runClient.jar
          */
     }
 
@@ -398,7 +418,7 @@ public class SSHDeployer implements ClientDeployer {
      * @return Return a string representation on the form 'user@host:/dir'.
      */
     @Override
-    public String getTargetHost() {
+    public final String getTargetHost() {
         // Extract hostname from a string like user@host:/dir
         int split = login.indexOf('@');
         split += 1;
@@ -450,7 +470,7 @@ public class SSHDeployer implements ClientDeployer {
         for (String jre : jrePropsects) {
             for (String root : rootProspects) {
                 String probePath = root + jre + "/bin/java";
-                log.trace("Probing for JRE " +probePath);
+                log.trace("Probing for JRE " + probePath);
                 ProcessRunner probe = new ProcessRunner(
                         "ssh", "-p" + port, login, probePath + " -version");
                 probe.run();
@@ -458,7 +478,7 @@ public class SSHDeployer implements ClientDeployer {
                     log.debug("Found JVM on " + login + ": " + probePath);
                     return probePath;
                 } else {
-                    log.trace("No JRE on "+probePath+":\n"
+                    log.trace("No JRE on " + probePath + ":\n"
                               + probe.getProcessOutputAsString() + "\n"
                               + probe.getProcessErrorAsString());
                 }
@@ -482,14 +502,14 @@ public class SSHDeployer implements ClientDeployer {
     /**
      * @return The login for the target system.
      */
-    public String getLogin() {
+    public final String getLogin() {
         return login;
     }
 
     /**
      * @return Port for ssh connection on target system.
      */
-    public int getPort() {
+    public final int getPort() {
         return port;
     }
 
