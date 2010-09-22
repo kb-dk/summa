@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public class XStorageTest extends ConfigurationStorageTestCase {
     /** Local log instance. */
     private static Log log = LogFactory.getLog(XStorageTest.class);
-    /** Sub storage xml location. */
+    /** Sub storage XML location. */
     public static final File SUBSTORAGELOCATION =
                new File("test/data/substorage.xml").getAbsoluteFile();
 
@@ -77,7 +77,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     }
 
     @SuppressWarnings("redundantcast")
-    public void testGetSubStorage() {
+    public final void testGetSubStorage() {
         final int seven = 7;
         final int eight = 8;
         try {
@@ -97,7 +97,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     /**
      * Test configuration wrap.
      */
-    public void testConfigurationWrap() {
+    public final void testConfigurationWrap() {
         final int seven = 7;
         final int eight = 8;
         try {
@@ -127,7 +127,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     /**
      * Test dump sub lists.
      */
-    public void testDumpSubList() {
+    public final void testDumpSubList() {
         try {
             XStorage xs = new XStorage();
             Configuration configuration = new Configuration(xs);
@@ -144,11 +144,10 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     /**
      * Test next available configuration file.
      */
-    @SuppressWarnings("null")
-    public void testnextAvailableConfigurationFile() {
+    public final void testnextAvailableConfigurationFile() {
         XStorage xs = null;
         try {
-            new XStorage();
+            xs = new XStorage();
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception expected here");
