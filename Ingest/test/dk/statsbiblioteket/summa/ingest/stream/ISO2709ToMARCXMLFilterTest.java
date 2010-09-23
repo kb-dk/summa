@@ -22,18 +22,6 @@ import dk.statsbiblioteket.summa.ingest.split.MARCParser;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.marc4j.MarcPermissiveStreamReader;
-import org.marc4j.MarcReader;
-import org.marc4j.MarcStreamReader;
-import org.marc4j.MarcStreamWriter;
-import org.marc4j.MarcWriter;
-import org.marc4j.MarcXmlWriter;
-import org.marc4j.marc.Record;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -44,8 +32,27 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.marc4j.MarcPermissiveStreamReader;
+import org.marc4j.MarcReader;
+import org.marc4j.MarcStreamReader;
+import org.marc4j.MarcStreamWriter;
+import org.marc4j.MarcWriter;
+import org.marc4j.MarcXmlWriter;
+import org.marc4j.marc.Record;
+
+/**
+ * Tests for {@link ISO2709ToMARCXMLFilter}.
+ */
 public class ISO2709ToMARCXMLFilterTest extends TestCase {
-    private static Log log = LogFactory.getLog(ISO2709ToMARCXMLFilterTest.class);
+    /** Private logger instance. */
+    private static Log log =
+                            LogFactory.getLog(ISO2709ToMARCXMLFilterTest.class);
     public ISO2709ToMARCXMLFilterTest(String name) {
         super(name);
     }
@@ -68,12 +75,13 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         // Taken from
         // http://marc4j.tigris.org/files/documents/220/33576/tutorial.html
 
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File sample = Resolver.getFile("data/iso2709/summerland.data");
 
-        InputStream input = new FileInputStream(SAMPLE);
+        InputStream input = new FileInputStream(sample);
 
         MarcReader reader = new MarcStreamReader(input);
-        MarcWriter writer = new MarcXmlWriter(new ByteArrayOutputStream(), true);
+        MarcWriter writer = new MarcXmlWriter(new ByteArrayOutputStream(),
+                                              true);
         //MarcWriter writer = new MarcXmlWriter(System.out, true);
 
         while (reader.hasNext()) {
@@ -84,10 +92,11 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testBasicMarc4j() throws Exception {
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File sample = Resolver.getFile("data/iso2709/summerland.data");
         //File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
-        //File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
-        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        //File SAMPLE = Resolver.getFile(
+        //"data/iso2709/dpu20091109_sample.data");
+        FileInputStream sampleIn = new FileInputStream(sample);
         //MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
         //MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
         //MarcStreamReader reader = new MarcStreamReader(sampleIn);
@@ -109,7 +118,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         log.info("Dumping lineformat for " + record.getId());
         //MarcWriter lineWriter = new MarcStreamWriter(System.out, "UTF-8");
         //MarcWriter lineWriter = new MarcStreamWriter(System.out);
-        MarcWriter lineWriter = new MarcStreamWriter(null);
+        MarcWriter lineWriter = new MarcStreamWriter(
+                                                   new ByteArrayOutputStream());
         lineWriter.write(record);
         log.info("\nDump finished");
         //lineWriter.close();
@@ -118,7 +128,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     private void dumpRecordXML(Record record) {
         log.info("\n\nDumping XML for " + record.getId());
         //MarcWriter writer = new MarcXmlWriter(System.out, true);
-        MarcWriter writer = new MarcXmlWriter(new ByteArrayOutputStream(), true);
+        MarcWriter writer = new MarcXmlWriter(
+                                             new ByteArrayOutputStream(), true);
 
         writer.write(record);
         writer.close();
@@ -126,25 +137,25 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testDirectDump() throws Exception {
-        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
-        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        File sample = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+        FileInputStream sampleIn = new FileInputStream(sample);
         //ByteOutputStream out = new ByteOutputStream((int)SAMPLE.length());
         ByteArrayOutputStream out =
-                                new ByteArrayOutputStream((int)SAMPLE.length());
+                               new ByteArrayOutputStream((int) sample.length());
         Streams.pipe(sampleIn, out);
-        log.info("Content of " + SAMPLE + "in ISO-8859-1 is:\n"
+        log.info("Content of " + sample + "in ISO-8859-1 is:\n"
                            + new String(out.toByteArray(), "cp850"));
     }
 
     public void testTransform() throws Exception {
        // File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
-//        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+//       File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
 //        File SAMPLE = Resolver.getFile(
 //                "/home/te/projects/data/dpb/dpb20091130.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
-        assertTrue("The sample file " + SAMPLE + " should exist",
-                   SAMPLE.exists());
-        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        File sample = Resolver.getFile("data/iso2709/summerland.data");
+        assertTrue("The sample file " + sample + " should exist",
+                sample.exists());
+        FileInputStream sampleIn = new FileInputStream(sample);
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
                 new Payload(sampleIn)));
         ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
@@ -165,21 +176,21 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 
     public void testXMLDump2() throws Exception {
 //        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
-//        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+//       File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
 //        File SAMPLE = Resolver.getFile(
 //                "/home/te/projects/data/dpb/dpb20091109");
 //        "/home/te/projects/data/dpb/dpb20091130.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File sample = Resolver.getFile("data/iso2709/summerland.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
-        assertNotNull("The sample file " + SAMPLE + " should exist",
-                   SAMPLE.exists());
-        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        assertNotNull("The sample file " + sample + " should exist",
+                sample.exists());
+        FileInputStream sampleIn = new FileInputStream(sample);
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
                 new Payload(sampleIn)));
         ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
                 Configuration.newMemoryBased(
                         ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850",
-//                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
+                      //ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
                         ISO2709ToMARCXMLFilter.CONF_FIX_CONTROLFIELDS, true));
         isoFilter.setSource(feeder);
         ArrayList<Payload> processed = new ArrayList<Payload>(3);
@@ -220,22 +231,23 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testChain() throws Exception {
+        final int payloadsNumber = 3;
 //        File SAMPLE = Resolver.getFile("data/iso2709/TOTALWEB4.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
-        assertNotNull("The sample file " + SAMPLE + " should exist",
-                   SAMPLE.exists());
-        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        File sample = Resolver.getFile("data/iso2709/summerland.data");
+        assertNotNull("The sample file " + sample + " should exist",
+                sample.exists());
+        FileInputStream sampleIn = new FileInputStream(sample);
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
                 new Payload(sampleIn)));
         ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
                 Configuration.newMemoryBased(
-//                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
+                      //ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
                         ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850",
                         ISO2709ToMARCXMLFilter.CONF_FIX_CONTROLFIELDS, true));
         isoFilter.setSource(feeder);
         StreamController streamer = new StreamController(
                 Configuration.newMemoryBased(
-                        StreamController.CONF_PARSER, 
+                        StreamController.CONF_PARSER,
                         "dk.statsbiblioteket.summa.ingest.split.SBMARCParser",
                         MARCParser.CONF_BASE, "sb_dpb",
                         MARCParser.CONF_ID_PREFIX, "dpb"
@@ -243,7 +255,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 
         streamer.setSource(isoFilter);
 
-        ArrayList<Payload> processed = new ArrayList<Payload>(3);
+        ArrayList<Payload> processed = new ArrayList<Payload>(payloadsNumber);
 
         while (streamer.hasNext()) {
             processed.add(streamer.next());
