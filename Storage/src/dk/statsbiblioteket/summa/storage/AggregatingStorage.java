@@ -15,17 +15,30 @@
 package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.storage.api.*;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link Storage} proxying requests onto a collection of sub-storages. The
@@ -75,34 +88,40 @@ public class AggregatingStorage extends StorageBase {
      * using {@link StorageFactory#createStorage(Configuration)} with this
      * sub configuration.
      */
-    public static final String CONF_SUB_STORAGE_CONFIG = "summa.storage.substorage.config";
-
+    public static final String CONF_SUB_STORAGE_CONFIG =
+                                              "summa.storage.substorage.config";
+    /** ID for unknown base keys. */
     public static final long UNKNOWN_BASE_KEY = -1;
 
     /**
-     * Iterator keys time out after 24 hours of inactivity
+     * Iterator keys time out after 24 hours of inactivity.
      */
     public static final long ITERATOR_TIMEOUT = 86400000; // 24h
-
-    private HashMap<String,StorageReaderClient> readers;
-    private HashMap<String,StorageWriterClient> writers;
-    private HashMap<Long,IteratorContext> iterators;
+    /** Map containing all readers. */
+    private HashMap<String, StorageReaderClient> readers;
+    /** Map containing all writers. */
+    private HashMap<String, StorageWriterClient> writers;
+    /** Map of iterator keys. */
+    private HashMap<Long, IteratorContext> iterators;
+    /** TODO . */
     private IteratorContextReaper reaper;
-
+    /** Local log instance. */
     private Log log;
 
     /**
      * Merging context class.
      */
     private class MergingContext extends IteratorContext {
-
+        /** Readable storage list. */
         private ReadableStorage[] readerList;
+        /** Record buffer. */
         private Record[] recBuffer;
+        /** List of iterator keys. */
         private long[] iterKeys;
 
         /**
          * Create a MergingContext.
-         * 
+         *
          * @param mtime modified time.
          * @param opts query options.
          * @param lastAccess lastAccess.
@@ -115,8 +134,8 @@ public class AggregatingStorage extends StorageBase {
             log.debug("Creating merging iterator over all sub storages");
 
             /* The iterKey for the merging iterator is constructed as
-             * the sum of all sub iter keys. This is *almost* guaranteed
-             * to be unique since we assume that all iterkeys
+             * the sum of all sub iterator keys. This is *almost* guaranteed
+             * to be unique since we assume that all iterator keys
              * constructed from the sub storages are strictly increasing */
             iterKey = 0;
 
@@ -124,8 +143,8 @@ public class AggregatingStorage extends StorageBase {
             iterKeys = new long[readers.size()];
 
             int counter = 0;
-            for (Map.Entry<String,StorageReaderClient> entry :
-                                                           readers.entrySet()) {
+            for (Map.Entry<String, StorageReaderClient> entry
+                    : readers.entrySet()) {
                 ReadableStorage reader = entry.getValue();
                 String readerBase = entry.getKey();
                 IteratorContext subIter = new IteratorContext(
@@ -133,7 +152,7 @@ public class AggregatingStorage extends StorageBase {
                 long subKey = subIter.getKey();
                 log.debug("Iterkey for '" + reader.toString() + "' is '"
                                                                       + subKey);
-                // TODO: Better collision handling
+                // TODO Better collision handling
                 if (iterators.containsKey(subKey)) {
                     throw new RuntimeException(String.format(
                             "Internal error. Iterator key collision '%s'",
@@ -191,7 +210,6 @@ public class AggregatingStorage extends StorageBase {
             } catch (NoSuchElementException e) {
                 recBuffer[newestOffset] = null;
             }
-            
             return newest;
         }
 
@@ -211,7 +229,7 @@ public class AggregatingStorage extends StorageBase {
                     result.add(next());
                 }
             } catch (NoSuchElementException e) {
-                // Iter is done
+                // Iterator is depleated
                 if (result.size() == 0) {
                     throw new NoSuchElementException();
                 }
@@ -220,10 +238,21 @@ public class AggregatingStorage extends StorageBase {
             return result;
         }
 
+        /**
+         * Returns the next record from the readerOffset reader in the reader
+         * list.
+         * @param readerOffset The offset into the readable storage list.
+         * @return The next record.
+         * @throws IOException If error occur while fetching record.
+         */
         private Record nextFromSub(int readerOffset) throws IOException {
             return readerList[readerOffset].next(iterKeys[readerOffset]);
         }
 
+        /**
+         * Initialize record buffer.
+         * @throws IOException If error occur communicating with storage.
+         */
         private void initRecBuffer() throws IOException {
             if (recBuffer != null) {
                 log.error("Internal error. Double initialization of "
@@ -250,37 +279,63 @@ public class AggregatingStorage extends StorageBase {
      * Iterator context class.
      */
     private static class IteratorContext {
+        /** Readable storage. */
         protected ReadableStorage reader;
+        /** The base. */
         protected String base;
+        /** Last modified time. */
         protected long mtime;
+        /** Private logger instance. */
         private Log log;
+        /** Query options used by this context. */
         protected QueryOptions opts;
+        /** Last access time. */
         protected long lastAccess;
+        /** The iterator key. */
         protected long iterKey=0;
 
-        public IteratorContext (ReadableStorage reader, String base,
-                                long mtime, QueryOptions opts,
-                                long lastAccess) throws IOException {
+        /**
+         * Creates an iterator context.
+         * @param reader The readable storage.
+         * @param base The base in storage.
+         * @param mtime The modification time.
+         * @param opts The options.
+         * @param lastAccess The last access time.
+         * @throws IOException If error occur.
+         */
+        public IteratorContext(ReadableStorage reader, String base, long mtime,
+                               QueryOptions opts, long lastAccess)
+                                                            throws IOException {
             this.reader = reader;
             this.base = base;
             this.mtime = mtime;
             this.opts = opts;
-            log = LogFactory.getLog (IteratorContext.class);
+            log = LogFactory.getLog(IteratorContext.class);
             this.lastAccess = lastAccess;
 
             log.debug("IteratorContext class created with mtime '" + mtime
                     + "', base '" + base + "'.");
 
             if (reader != null) {
-                this.iterKey = reader.getRecordsModifiedAfter(
-                        mtime, base, opts);
+                this.iterKey = reader.getRecordsModifiedAfter(mtime, base,
+                                                              opts);
             }
         }
 
+        /**
+         * @return The next record.
+         * @throws IOException If error occur while communicating with storage.
+         */
         public Record next() throws IOException {
             return reader.next(iterKey);
         }
 
+        /**
+         * Return a list of {@code madRecords} records.
+         * @param maxRecords Number of records.
+         * @return A list of at most {@code maxRecords} records.
+         * @throws IOException If error occur while communicating with storage.
+         */
         public List<Record> next(int maxRecords) throws IOException {
             return reader.next(iterKey, maxRecords);
         }
@@ -290,7 +345,11 @@ public class AggregatingStorage extends StorageBase {
             return base;
         }*/
 
-        public long getKey () {
+        /**
+         * Return the iterator key.
+         * @return the iterator key.
+         */
+        public long getKey() {
             accessed();
             return iterKey;
         }
@@ -299,11 +358,20 @@ public class AggregatingStorage extends StorageBase {
             return lastAccess;
         }*/
 
-        public long accessed () {
+        /**
+         * Return the last access time.
+         * @return Last access time.
+         */
+        public long accessed() {
             return (lastAccess = System.currentTimeMillis());
         }
 
-        public boolean isTimedOut (long now) {
+        /**
+         * Return true if this iterator context is time out.
+         * @param now Time stamp.
+         * @return True if this iterator context is timed out, false otherwise.
+         */
+        public boolean isTimedOut(long now) {
             return (now - lastAccess > ITERATOR_TIMEOUT);
         }
     }
@@ -312,28 +380,42 @@ public class AggregatingStorage extends StorageBase {
      * Iterator Context Reaper class.
      */
     private static class IteratorContextReaper implements Runnable {
-
-        private Map<Long,IteratorContext> iterators;
+        /** Map from iterator key to iterator contexts. */
+        private Map<Long, IteratorContext> iterators;
+        /** Local log instance. */
         private Log log;
+        /** True if this may run. */
         private boolean mayRun;
+        /** Private thread. */
         private Thread thread;
+        /** Sleep time. */
+        public static final int SLEEP_TIME = 1000 * 60;
 
-        public static final int SLEEP_TIME = 1000*60;
-
-        public IteratorContextReaper (Map<Long,IteratorContext> iterators) {
-            log = LogFactory.getLog (IteratorContextReaper.class);
+        /**
+         * Creates an iterator context.
+         * @param iterators A map of iterator keys and iterator context.
+         */
+        public IteratorContextReaper(Map<Long, IteratorContext> iterators) {
+            log = LogFactory.getLog(IteratorContextReaper.class);
             this.iterators = iterators;
             mayRun = true;
             thread = new Thread(this, "AggregatingStorage daemon");
             thread.setDaemon(true); // Allow JVM to exit when running
         }
 
-        public void runInThread () {
+        /**
+         * If this method is called, this is runned in a thread.
+         */
+        public void runInThread() {
             thread.start();
         }
 
+        /**
+         * The main run method.
+         */
+        @Override
         public void run() {
-            log.debug ("Starting");
+            log.debug("Starting");
             while (mayRun) {
                 try {
                     Thread.sleep(SLEEP_TIME);
@@ -345,7 +427,7 @@ public class AggregatingStorage extends StorageBase {
 
                 List<Long> timedOutKeys = new ArrayList<Long>();
 
-                /* Detect timed out iterators */
+                // Detect timed out iterators
                 long now = System.currentTimeMillis();
                 for (IteratorContext iter : iterators.values()) {
                     if (iter.isTimedOut(now)) {
@@ -353,16 +435,19 @@ public class AggregatingStorage extends StorageBase {
                     }
                 }
 
-                /* Remove all timed out keys */
+                // Remove all timed out keys
                 for (Long iterKey : timedOutKeys) {
-                    log.info (iterKey + " timed out");
+                    log.info(iterKey + " timed out");
                     iterators.remove(iterKey);
                 }
 
             }
         }
 
-        public void stop () {
+        /**
+         * Stop method for stopping running thread and cleaning up.
+         */
+        public void stop() {
             log.debug("Stopping");
             mayRun = false;
 
@@ -374,8 +459,8 @@ public class AggregatingStorage extends StorageBase {
                 log.debug("Joining IteratorContextReaper thread");
                 thread.join();
             } catch (InterruptedException e) {
-                log.warn("Interrupted while joining " +
-                         "IteratorContextReaper thread");
+                log.warn("Interrupted while joining "
+                         + "IteratorContextReaper thread");
             }
 
             log.debug("Stopped");
@@ -394,8 +479,8 @@ public class AggregatingStorage extends StorageBase {
      * @param conf The configuration.
      * @throws IOException if any errors are experienced during creation.
      */
-    public AggregatingStorage (Configuration conf) throws IOException {
-        super (conf);
+    public AggregatingStorage(Configuration conf) throws IOException {
+        super(conf);
 
         log = LogFactory.getLog(this.getClass().getName());
         log.debug("Creating aggregating storage");
@@ -403,7 +488,7 @@ public class AggregatingStorage extends StorageBase {
         List<Configuration> subConfs;
         try {
             subConfs = conf.getSubConfigurations(CONF_SUB_STORAGES);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new IOException("", e);
         }
 
@@ -411,9 +496,9 @@ public class AggregatingStorage extends StorageBase {
             log.warn("No sub storages configured");
         }
 
-        readers = new HashMap<String,StorageReaderClient>();
-        writers = new HashMap<String,StorageWriterClient>();
-        iterators = new HashMap<Long,IteratorContext>();
+        readers = new HashMap<String, StorageReaderClient>();
+        writers = new HashMap<String, StorageWriterClient>();
+        iterators = new HashMap<Long, IteratorContext>();
         toClose = new ArrayList<StorageWriterClient>();
 
         reaper = new IteratorContextReaper(iterators);
@@ -425,8 +510,8 @@ public class AggregatingStorage extends StorageBase {
 
             try {
                 bases = subConf.getStrings(CONF_SUB_STORAGE_BASES);
-                if (bases.size () == 0) {
-                    log.error ("No bases defined in sub configuration");
+                if (bases.size() == 0) {
+                    log.error("No bases defined in sub configuration");
                     continue;
                 }
             } catch (NullPointerException e) {
@@ -467,12 +552,20 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
+    /**
+     * Returns a iterator key over records modified after a given time.
+     * @param time Earliest time stamp we want records from.
+     * @param base The base in storage
+     * @param options The query options.
+     * @return An iterator key.
+     * @throws IOException If error occur while communicating with storage.
+     */
     @Override
     public long getRecordsModifiedAfter(long time, String base,
                                       QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("AggregatingStorage.getRecordsModifiedAfter(" + time
-                                                         + ", '" + base + "')");
+            log.trace("AggregatingStorage.getRecordsModifiedAfter("
+                      + time + ", '" + base + "')");
         }
 
         IteratorContext ctx;
@@ -495,7 +588,7 @@ public class AggregatingStorage extends StorageBase {
 
         long iterKey = ctx.getKey();
         log.debug("getModification iterKey '" + iterKey + "'.");
-        // TODO: Handle iterKey collisions in a sane way!
+        // TODO Handle iterKey collisions in a sane way!
         if (iterators.containsKey(iterKey)) {
             throw new RuntimeException("Internal error. Iterator key "
                                        + "collision '" + iterKey + "'");
@@ -503,24 +596,30 @@ public class AggregatingStorage extends StorageBase {
 
         iterators.put(iterKey, ctx);
         if (log.isTraceEnabled()) {
-            log.trace ("getRecordsModifiedAfter returns: "
+            log.trace("getRecordsModifiedAfter returns: "
                     + iterKey + ".");
         }
         return iterKey;
     }
 
+    /**
+     * Return last modification time for a given base.
+     * @param base The base in storage.
+     * @return Last modification time.
+     * @throws IOException If error occur while communicating with storage.
+     */
     @Override
-    public long getModificationTime (String base) throws IOException {
+    public long getModificationTime(String base) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("getModificationTime("+base+")");
+            log.trace("getModificationTime(" + base + ")");
         }
 
         /* If the base is undefined return the maximal mtime from all
          * sub storages */
         if (base == null) {
             long mtime = 0;
-            for (Map.Entry<String,StorageReaderClient> entry :
-                                                           readers.entrySet()) {
+            for (Map.Entry<String, StorageReaderClient> entry
+                    : readers.entrySet()) {
                 StorageReaderClient reader = entry.getValue();
                 String readerBase = entry.getKey();
                 mtime = Math.max(mtime, reader.getModificationTime(readerBase));
@@ -537,19 +636,27 @@ public class AggregatingStorage extends StorageBase {
             return -1;
         }
 
-        return reader.getModificationTime (base);
+        return reader.getModificationTime(base);
     }
 
+    /**
+     * Returns a list of records.
+     * @param ids A list of ID's on the records wanted.
+     * @param options The query options to select records from.
+     * @return A list of records.
+     * @throws IOException If error occur while communicating with storage.
+     */
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                             throws IOException {
+        final int logExpands = 5;
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
-            log.trace ("getRecords("+ Logs.expand(ids, 5)
-                                    +", "+options+")");
+            log.trace("getRecords(" + Logs.expand(ids, logExpands)
+                                  + ", " + options + ")");
         }
 
-        /* FIXME: This should be parallized*/
+        // FIXME: This should be parallized
         List<Record> result = new ArrayList<Record>(ids.size());
         for (StorageReaderClient reader : readers.values()) {
             List<Record> recs = reader.getRecords(ids, options);
@@ -562,14 +669,22 @@ public class AggregatingStorage extends StorageBase {
         return result;
     }
 
+    /**
+     * Return a single record.
+     * @param id The record id.
+     * @param options The query options to select records from.
+     * @return A record with the given id.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
-    public Record getRecord(String id, QueryOptions options) throws IOException {
+    public Record getRecord(String id, QueryOptions options)
+                                                            throws IOException {
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
-            log.trace ("getRecord('"+id+"', "+options+")");
+            log.trace("getRecord('" + id + "', " + options + ")");
         }
 
-        /* FIXME: This should be parallized*/
+        // FIXME: This should be parallized
         Record r;
         for (StorageReaderClient reader : readers.values()) {
             r = reader.getRecord(id, options);
@@ -587,6 +702,12 @@ public class AggregatingStorage extends StorageBase {
         return null;
     }
 
+    /**
+     * Returns the next record from the iterator.
+     * @param iteratorKey The iterator key.
+     * @return The next record from the iterator.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
     public Record next(long iteratorKey) throws IOException {
         if (iteratorKey == UNKNOWN_BASE_KEY) {
@@ -611,12 +732,12 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Get maxRecords records associated with given iterator.
-     *  
+     *
      * @param iteratorKey the key given by {@link ReadableStorage}.
      * @param maxRecords max number of records returned.
      * @return List containing max number of records, associated to the iterator
      * key.
-     * @throws IOException if error occured when fetching elements.
+     * @throws IOException if error occurred when fetching elements.
      */
     @Override
     public List<Record> next(long iteratorKey, int maxRecords)
@@ -646,11 +767,17 @@ public class AggregatingStorage extends StorageBase {
         return recs;
     }
 
+    /**
+     * Flushes a record into the storage, taking any options into consideration.
+     * @param record The record to flush.
+     * @param options The options to take into consideration.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
     public void flush(Record record, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
-            log.trace ("flush("+record+")");
+            log.trace("flush(" + record + ")");
         }
 
         StorageWriterClient writer = getSubStorageWriter(record.getBase());
@@ -669,11 +796,17 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
+    /**
+     * Flushes a list of records into the storage.
+     * @param records A list of records to flush into the storage.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
     public void flushAll(List<Record> records) throws IOException {
-        /* FIXME: Batch records into groups for each base and commit batches of records instead of singles */
+        // FIXME: Batch records into groups for each base and commit batches of
+        // records instead of singles
         for (Record r : records) {
-            flush (r);
+            flush(r);
         }
     }
 
@@ -690,23 +823,28 @@ public class AggregatingStorage extends StorageBase {
      */
     @Override
     public void close() throws IOException {
-        log.info ("Closing");
+        log.info("Closing");
 
         reaper.stop();
 
         for (StorageWriterClient writer : toClose) {
-            log.info ("Closing internally configured sub storage: "
-                      + writer.getVendorId());
+            log.info("Closing internally configured sub storage: "
+                     + writer.getVendorId());
             writer.close();
         }
 
-        log.info ("Closed");
+        log.info("Closed");
     }
 
+    /**
+     * Clears all records for a given base.
+     * @param base The record base to clear.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
     public void clearBase(String base) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("clearBase("+base+")");
+            log.trace("clearBase(" + base + ")");
         }
 
         StorageWriterClient writer = getSubStorageWriter(base);
@@ -716,13 +854,24 @@ public class AggregatingStorage extends StorageBase {
                      + base + "'");
             return;
         }
-
         writer.clearBase(base);
     }
 
+    /**
+     * Runs a batch jobs on storage.
+     * @param jobName The batch job name.
+     * @param base The records base.
+     * @param minMtime The minimum modification time on which batch job is
+     * runned.
+     * @param maxMtime The maximum modification time on which batch job is
+     * runned.
+     * @param options The query options.
+     * @return The result of the batch job.
+     * @throws IOException If error occur while communication with storage.
+     */
     @Override
-    public String batchJob(String jobName, String base,
-                    long minMtime, long maxMtime, QueryOptions options)
+    public String batchJob(String jobName, String base, long minMtime,
+                           long maxMtime, QueryOptions options)
                                                             throws IOException {
         log.debug(String.format("Batch job '%s' on '%s", jobName, base));
 
@@ -753,12 +902,21 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
-    protected StorageReaderClient getSubStorageReader (String base) {
+    /**
+     * Returns a storage reader client for a specific base.
+     * @param base The records base.
+     * @return A storage reader client.
+     */
+    protected StorageReaderClient getSubStorageReader(String base) {
         return readers.get(base);
     }
 
-    protected StorageWriterClient getSubStorageWriter (String base) {
+    /**
+     * Returns a storage writer client for a specific base.
+     * @param base The records base.
+     * @return A storage writer client.
+     */
+    protected StorageWriterClient getSubStorageWriter(String base) {
         return writers.get(base);
     }
 }
-
