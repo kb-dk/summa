@@ -23,15 +23,17 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.Iterator;
 
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
- * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.StorageTestBase
+ * FIXME: Missing class docs for StorageTestBase
  *
  * @author mke
  * @since Jan 11, 2010
@@ -40,8 +42,8 @@ import java.util.Iterator;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke, hbk")
 public class StorageTestBase extends TestCase {
-
-    protected static Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
+    /** Logger instance. */
+    private Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
 
     protected Storage storage;
 
@@ -103,11 +105,12 @@ public class StorageTestBase extends TestCase {
         assertTrue(true);
     }
 
-    public void setUp () throws Exception {
+    @Override
+    public void setUp() throws Exception {
         File dbRoot = new File(testDBRoot);
 
         if (dbRoot.exists()) {
-            Files.delete (dbRoot);
+            Files.delete(dbRoot);
         }
 
         storage = StorageFactory.createStorage(createConf());
@@ -119,13 +122,14 @@ public class StorageTestBase extends TestCase {
         testStartTime = System.currentTimeMillis();
     }
 
-    public void tearDown () throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         log.info("Test case tear down commencing");
         if(storage == null) {
             return;
         }
         if (storage instanceof DatabaseStorage) {
-            ((DatabaseStorage)storage).destroyDatabase();
+            ((DatabaseStorage) storage).destroyDatabase();
         }
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
