@@ -14,25 +14,32 @@
  */
 package dk.statsbiblioteket.summa.common.util.bits;
 
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
-import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
 import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayConstant;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
+import dk.statsbiblioteket.util.Strings;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.io.StringWriter;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"UnnecessaryLocalVariable"})
 public class BitsArrayTest extends TestCase {
+    /** Local log instance. */
     private static Log log = LogFactory.getLog(BitsArrayTest.class);
+    /** 87 The most likely number to choose between 1-100. */
+    private final int eightySeven = 87;
+    /** 88. */
+    private final int eightyEight = 88;
 
     public BitsArrayTest(String name) {
         super(name);
@@ -53,13 +60,14 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testBitMultiplicationOptimization() throws Exception {
-        int[][] TESTS = new int[][]{{1, 0}, {2, 1}, {4, 2}, {16, 4}, {256, 8}};
-        for (int[] test: TESTS) {
+        final int[][] tests = new int[][] {{1, 0}, {2, 1}, {4, 2}, {16, 4},
+                                            {256, 8}};
+        for (int[] test : tests) {
             int source = test[0];
             int expected = test[1];
             assertEquals("The bits for " + source + " should be correct",
-                         expected, (int)Math.ceil(
-                    Math.log(((long)source))/Math.log(2)));
+                         expected, (int) Math.ceil(
+                    Math.log(((long) source)) / Math.log(2)));
         }
     }
 
@@ -87,9 +95,9 @@ public class BitsArrayTest extends TestCase {
             assertEquals("The calculated number of bits needed for " + test[0]
                          + " should be correct", test[1], bits);
         }
-        int es = 87;
+        int es = eightySeven;
         if (es != 67) {
-            es = 87;
+            es = eightySeven;
         }
         assertEquals("SHL 0 should not change anything", es, es << 0);
         assertEquals("SHR 0 should not change anything", es, es >>> 0);
@@ -189,42 +197,45 @@ public class BitsArrayTest extends TestCase {
 
     private void assertContains(
             String message, BitsArrayPacked ba, List<Integer> expected) {
-        assertEquals(message + ". The BitsArrayPacked.size() should be as expected",
+        assertEquals(message
+                     + ". The BitsArrayPacked.size() should be as expected",
                      expected.size(), ba.size());
-        assertEquals(message + ". The BitsArrayPacked content should be as expected",
+        assertEquals(message
+                     + ". The BitsArrayPacked content should be as expected",
                      Strings.join(expected, ", "), Strings.join(ba, ", "));
     }
 
     public void testWritePerformanceUnsafe() {
         testWritePerformance(true);
     }
-    
+
     public void testWritePerformanceSafe() {
         testWritePerformance(false);
     }
 
     public void testWritePerformance(boolean unsafe) {
-        int LENGTH = 10000000;
+        int LENGTH = 1000;//10000000;
         int MAX_VALUE = 240;
         int INITIAL_MAX_LENGTH = LENGTH;
         int WARMUP = 2;
-        int RUNS = 3;
-        List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
-        for (int i = 0 ; i < WARMUP ; i++) {
-            for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
+        int RUNS = 1; //3;
+        List<BitsArrayPerformance.BitsArrayGenerator> bags
+                                         = BitsArrayPerformance.getGenerators();
+        for (int i = 0; i < WARMUP; i++) {
+            for (BitsArrayPerformance.BitsArrayGenerator bag : bags) {
                 testPerformanceBA(
                         bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe);
             }
             testPerformancePlain(LENGTH);
         }
-        
+
         log.info(String.format(
                 "Measuring write-performance calibrated with null-speed "
                 + "for %d random[0-%d] value assignments",
                 LENGTH,  MAX_VALUE));
         List<Long> timings = new ArrayList<Long>(bags.size());
-        for (int run = 0 ; run < RUNS ; run++) {
-            for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
+        for (int run = 0; run < RUNS; run++) {
+            for (BitsArrayPerformance.BitsArrayGenerator bag : bags) {
                 timings.add(testPerformanceBA(
                         bag, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe));
             }
@@ -234,13 +245,13 @@ public class BitsArrayTest extends TestCase {
             StringWriter sw = new StringWriter(1000);
             sw.append(String.format(
                     "Write %d (of %d values): ", LENGTH, LENGTH));
-            sw.append("int[]=").append(Long.toString(plainTime-baseTime));
+            sw.append("int[]=").append(Long.toString(plainTime - baseTime));
             sw.append("ms, null=").append(Long.toString(baseTime));
             sw.append("ms");
-            for (int i = 0 ; i < bags.size() ; i++) {
+            for (int i = 0; i < bags.size(); i++) {
                 sw.append(", ");
                 sw.append(bags.get(i).create(1, 1).getClass().getSimpleName());
-                sw.append("=").append(Long.toString(timings.get(i)-baseTime));
+                sw.append("=").append(Long.toString(timings.get(i) - baseTime));
                 sw.append("ms");
             }
             log.info(sw.toString());
@@ -256,19 +267,20 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testReadPerformance(boolean unsafe) {
-        int LENGTH = 100000;
+        int LENGTH = 1000; //100000;
         int READS = LENGTH * 100;
         int INITIAL_MAX_LENGTH = LENGTH;
         int MAX_VALUE = 255;
         int WARMUP = 2;
-        int RUNS = 5;
+        int RUNS = 2; //5;
 
         List<BitsArray> bas = new ArrayList<BitsArray>();
-        for (BitsArrayPerformance.BitsArrayGenerator generator:
-                BitsArrayPerformance.getGenerators()) {
+        for (BitsArrayPerformance.BitsArrayGenerator generator
+                : BitsArrayPerformance.getGenerators()) {
             bas.add(makeBA(
                     generator, LENGTH, INITIAL_MAX_LENGTH, MAX_VALUE, unsafe));
-            bas.get(bas.size()-1).set(LENGTH-1, 87); // Ensure size is max
+            // Ensure size is max
+            bas.get(bas.size() - 1).set(LENGTH - 1, eightySeven);
         }
         log.debug("Created " + bas.size() + " BitsArrays");
         int[] a = makePlain(LENGTH, MAX_VALUE);
@@ -280,9 +292,9 @@ public class BitsArrayTest extends TestCase {
 
         StringWriter sw = new StringWriter(1000);
         sw.append("Memory usage: int[]=");
-        sw.append(Integer.toString(a.length*4 / 1024));
+        sw.append(Integer.toString(a.length * 4 / 1024));
         sw.append("KB");
-        for (BitsArray ba: bas) {
+        for (BitsArray ba : bas) {
             sw.append(", ");
             sw.append(ba.getClass().getSimpleName());
             sw.append("~=").append(Integer.toString(ba.getMemSize() / 1024));
@@ -291,16 +303,16 @@ public class BitsArrayTest extends TestCase {
 
         log.info(sw.toString());
 
-        for (int i = 0 ; i < WARMUP ; i++) {
-            for (BitsArray ba: bas) {
+        for (int i = 0; i < WARMUP; i++) {
+            for (BitsArray ba : bas) {
                 testReadBA(ba, READS, unsafe);
             }
             testReadPlain(a, READS);
         }
 
         List<Long> timings = new ArrayList<Long>(bas.size());
-        for (int run = 0 ; run < RUNS ; run++) {
-            for (BitsArray ba: bas) {
+        for (int run = 0; run < RUNS; run++) {
+            for (BitsArray ba : bas) {
                 timings.add(testReadBA(ba, READS, unsafe));
             }
             long plainTime = testReadPlain(a, READS);
@@ -308,13 +320,13 @@ public class BitsArrayTest extends TestCase {
 
             sw = new StringWriter(1000);
             sw.append(String.format("Read %d (of %d values): ", READS, LENGTH));
-            sw.append("int[]=").append(Long.toString(plainTime-baseTime));
+            sw.append("int[]=").append(Long.toString(plainTime - baseTime));
             sw.append("ms, null=").append(Long.toString(baseTime));
             sw.append("ms");
-            for (int i = 0 ; i < bas.size() ; i++) {
+            for (int i = 0; i < bas.size(); i++) {
                 sw.append(", ");
                 sw.append(bas.get(i).getClass().getSimpleName());
-                sw.append("=").append(Long.toString(timings.get(i)-baseTime));
+                sw.append("=").append(Long.toString(timings.get(i) - baseTime));
                 sw.append("ms");
             }
             log.info(sw.toString());
@@ -333,21 +345,20 @@ public class BitsArrayTest extends TestCase {
         List<BitsArrayPerformance.BitsArrayGenerator> bags =
                 BitsArrayPerformance.getGenerators();
         List<BitsArray> bas = new ArrayList<BitsArray>(bags.size());
-        for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
+        for (BitsArrayPerformance.BitsArrayGenerator bag : bags) {
             BitsArray ba = makeBA(bag, LENGTH, LENGTH, MAX, unsafe);
-            ba.set(LENGTH-1, ba.fastGetAtomic(LENGTH-1)); // Fix size
+            ba.set(LENGTH - 1, ba.fastGetAtomic(LENGTH - 1)); // Fix size
             bas.add(ba);
-            
         }
         int[] plain = makePlain(LENGTH, MAX);
 
-        for (BitsArray ba: bas) {
+        for (BitsArray ba : bas) {
             if (ba.getClass() == BitsArrayConstant.class) {
                 continue;
             }
             log.debug("testing " + ba.getClass().getSimpleName());
             int[] baArray = new int[ba.size()];
-            for (int i = 0 ; i < ba.size() ; i++) {
+            for (int i = 0; i < ba.size(); i++) {
                 baArray[i] = ba.get(i);
             }
             ExtraAsserts.assertEqualsNoSort(String.format(
@@ -360,9 +371,9 @@ public class BitsArrayTest extends TestCase {
         System.gc();
         int MAX = a.length;
         long startTime = System.currentTimeMillis();
-        Random random = new Random(88);
+        Random random = new Random(eightyEight);
         int dummy = 0;
-        for (int i = 0 ; i < reads ; i++) {
+        for (int i = 0; i < reads; i++) {
             dummy = a[random.nextInt(MAX)];
         }
         if (dummy == -1) {
@@ -375,9 +386,9 @@ public class BitsArrayTest extends TestCase {
         System.gc();
         int MAX = a.length;
         long startTime = System.currentTimeMillis();
-        Random random = new Random(88);
+        Random random = new Random(eightyEight);
         int dummy = 0;
-        for (int i = 0 ; i < reads ; i++) {
+        for (int i = 0; i < reads; i++) {
             dummy = random.nextInt(MAX);
         }
         if (dummy == -1) {
@@ -388,22 +399,27 @@ public class BitsArrayTest extends TestCase {
 
     private long testReadBA(BitsArray ba, int reads, boolean unsafe) {
         System.gc();
-        int MAX = ba.size();
+        int max = ba.size();
         long startTime = System.currentTimeMillis();
-        Random random = new Random(88);
+        Random random = new Random(eightyEight);
         if (unsafe) {
-            for (int i = 0 ; i < reads ; i++) {
-                ba.fastGetAtomic(random.nextInt(MAX));
+            for (int i = 0; i < reads; i++) {
+                ba.fastGetAtomic(random.nextInt(max));
             }
         } else {
-            for (int i = 0 ; i < reads ; i++) {
-                ba.getAtomic(random.nextInt(MAX));
+            for (int i = 0; i < reads; i++) {
+                ba.getAtomic(random.nextInt(max));
             }
         }
         return System.currentTimeMillis() - startTime;
     }
 
-    public long testPerformancePlain(int max) {
+    /**
+     * Test performance.
+     * @param max Max.
+     * @return Time.
+     */
+    public final long testPerformancePlain(int max) {
         System.gc();
         long startTime = System.currentTimeMillis();
         makePlain(max);
@@ -414,7 +430,7 @@ public class BitsArrayTest extends TestCase {
         return makePlain(length, length);
     }
     private int[] makePlain(int length, int max) {
-        Random random = new Random(87);
+        Random random = new Random(eightySeven);
         int[] a = new int[length];
         for (int i = 0 ; i < length ; i++) {
             a[i] = random.nextInt(max);
@@ -425,12 +441,12 @@ public class BitsArrayTest extends TestCase {
     public long testPerformanceCalibrate(int max) {
         System.gc();
         long startTime = System.currentTimeMillis();
-        Random random = new Random(87);
+        Random random = new Random(eightySeven);
         int t = 0;
-        for (int i = 0 ; i < max ; i++) {
+        for (int i = 0; i < max; i++) {
             t = random.nextInt(max);
         }
-        if (t == max+1) {
+        if (t == max + 1) {
             System.err.println("Failed JIT-tricking sanity check");
         }
         return System.currentTimeMillis() - startTime;
@@ -449,18 +465,17 @@ public class BitsArrayTest extends TestCase {
     private BitsArray makeBA(BitsArrayPerformance.BitsArrayGenerator generator,
             int assignments, int constructorLength, int maxValue,
             boolean unsafe) {
-        Random random = new Random(87);
+        Random random = new Random(eightySeven);
         BitsArray ba = generator.create(constructorLength, maxValue);
         if (unsafe) {
-            for (int i = 0 ; i < assignments ; i++) {
+            for (int i = 0; i < assignments; i++) {
                 ba.fastSet(i, random.nextInt(maxValue));
             }
         } else {
-            for (int i = 0 ; i < assignments ; i++) {
+            for (int i = 0; i < assignments; i++) {
                 ba.set(i, random.nextInt(maxValue));
             }
         }
         return ba;
     }
 }
-
