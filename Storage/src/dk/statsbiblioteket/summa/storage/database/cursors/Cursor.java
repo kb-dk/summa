@@ -20,45 +20,44 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import java.util.Iterator;
 
 /**
- * Convenience interface to access and manage SQL ResultSets
+ * Convenience interface to access and manage SQL ResultSets.
 */
 public interface Cursor extends Iterator<Record> {
 
     /**
-     * Release and close all resources held by this cursor
+     * Release and close all resources held by this cursor.
      */
-    public void close();
+    void close();
 
     /**
      * Get the unique key identifying this cursor. Keys are used to track
      * results sets from processes outside the runing
      * {@link dk.statsbiblioteket.summa.storage.database.DatabaseStorage}
-     * @return a {@code long} unique identifying this cursor
+     * @return A {@code long} unique identifying this cursor
      */
-    public long getKey();
+    long getKey();
 
     /**
      * Get the system time for the last access to this cursor. Ie. not the
-     * actual timestamps of the underlying data, but the timestamp for when
+     * actual time stamps of the underlying data, but the timestamp for when
      * a client interacted with this cursor.
      * <p/>
      * The typical use case for calling this is to time out abandoned cursors.
-     * @return the system timestamp for the last access to this instance
+     * @return The system time stamp for the last access to this instance
      */
-    public long getLastAccess();
+    long getLastAccess();
 
     /**
-     * The {@link QueryOptions} used for the query generating this cursor
-     * @return the query options set when creating the cursor.
+     * The {@link QueryOptions} used for the query generating this cursor.
+     * @return The query options set when creating the cursor.
      *         Possibly {@code null}
      */
-    public QueryOptions getQueryOptions();
+    QueryOptions getQueryOptions();
 
     /**
      * The base this cursor iterates over.
      * @return The name of the base the generating query is on. Possibly
      *         {@code null} in case the query runs over all bases
      */
-    public String getBase();
+    String getBase();
 }
-
