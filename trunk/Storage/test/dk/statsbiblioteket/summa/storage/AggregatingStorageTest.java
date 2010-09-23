@@ -44,7 +44,6 @@ public class AggregatingStorageTest extends TestCase {
     private Log log = LogFactory.getLog(AggregatingStorageTest.class);
     /** Storage communication port. */
     private static final int PORT = 29000;
-    /** Test database counter. */
     static int test_db_counter = 0;
     String test_db_1 = "test_db_1_";
     String test_db_2 = "test_db_2_";
