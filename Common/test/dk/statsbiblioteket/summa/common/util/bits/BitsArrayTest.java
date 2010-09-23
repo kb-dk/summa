@@ -217,7 +217,7 @@ public class BitsArrayTest extends TestCase {
         int LENGTH = 1000;//10000000;
         int MAX_VALUE = 240;
         int INITIAL_MAX_LENGTH = LENGTH;
-        int WARMUP = 2;
+        int WARMUP = 1; //2;
         int RUNS = 1; //3;
         List<BitsArrayPerformance.BitsArrayGenerator> bags
                                          = BitsArrayPerformance.getGenerators();
@@ -268,7 +268,7 @@ public class BitsArrayTest extends TestCase {
 
     public void testReadPerformance(boolean unsafe) {
         int LENGTH = 1000; //100000;
-        int READS = LENGTH * 100;
+        int READS = LENGTH * 1; //100;
         int INITIAL_MAX_LENGTH = LENGTH;
         int MAX_VALUE = 255;
         int WARMUP = 2;
@@ -339,8 +339,8 @@ public class BitsArrayTest extends TestCase {
         testMonkey(true);
     }
     public void testMonkey(boolean unsafe) throws Exception {
-        int LENGTH = 1000;
-        int MAX = 1000;
+        int LENGTH = 10; //1000;
+        int MAX = 10; //1000;
 
         List<BitsArrayPerformance.BitsArrayGenerator> bags =
                 BitsArrayPerformance.getGenerators();
