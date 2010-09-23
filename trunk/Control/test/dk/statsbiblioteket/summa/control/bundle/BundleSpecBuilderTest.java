@@ -14,9 +14,7 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.Files;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,36 +22,46 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+/**
+ * Tests for {@link BundleSpecBuilder}.
+ */
 public class BundleSpecBuilderTest extends TestCase {
+    /** Private logger. */
     private static Log log = LogFactory.getLog(BundleSpecBuilderTest.class);
-    BundleSpecBuilder b;
+    /** Bundle spec builder. */
+    private BundleSpecBuilder b;
+    /** Sample spec. */
+    private static String sampleSpec = "<bundle>\n"
+        + "  <instanceId>myInstanceId</instanceId>\n"
+        + "  <bundleId>myBundleId</bundleId>\n"
+        + "  <mainClass>myMainClass</mainClass>\n"
+        + "  <mainJar>myMainJar</mainJar>\n"
+        + "  <autoStart>true</autoStart>"
+        + "  <description>myDescription</description>\n"
+        + "  <property name=\"myProp1\" value=\"myProp1Value\"/>\n"
+        + "  <property name=\"myProp2\" value=\"myProp2Value\"/>\n"
+        + "  <jvmArg>-Xmx64m</jvmArg>\n"
+        + "  <jvmArg>-Xms32m</jvmArg>\n"
+        + "  <publicApi>\n"
+        + "    <file>myLib-1.1.jar</file>\n"
+        + "  </publicApi>\n"
+        + "  <fileList>\n"
+        + "    <file>myFile1</file>\n"
+        + "    <file>myFile2</file>\n"
+        + "  </fileList>\n"
+        + "</bundle>";
 
-    static String sampleSpec =
-      "<bundle>\n"
-    + "  <instanceId>myInstanceId</instanceId>\n"
-    + "  <bundleId>myBundleId</bundleId>\n"
-    + "  <mainClass>myMainClass</mainClass>\n"
-    + "  <mainJar>myMainJar</mainJar>\n"
-    + "  <autoStart>true</autoStart>"
-    + "  <description>myDescription</description>\n"
-    + "  <property name=\"myProp1\" value=\"myProp1Value\"/>\n"
-    + "  <property name=\"myProp2\" value=\"myProp2Value\"/>\n"
-    + "  <jvmArg>-Xmx64m</jvmArg>\n"
-    + "  <jvmArg>-Xms32m</jvmArg>\n"
-    + "  <publicApi>\n"
-    + "    <file>myLib-1.1.jar</file>\n"
-    + "  </publicApi>\n"
-    + "  <fileList>\n"
-    + "    <file>myFile1</file>\n"
-    + "    <file>myFile2</file>\n"
-    + "  </fileList>\n"
-    + "</bundle>";
-
-    public void setUp () throws Exception {
+    @Override
+    public final void setUp() {
         b = new BundleSpecBuilder();
     }
 
-    public void testGetSetMainJar() throws Exception {
+    public void testGetSetMainJar() {
         assertNull(b.getMainJar());
         b.setMainJar("foo");
         assertEquals("foo", b.getMainJar());
@@ -61,7 +69,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("bar", b.getMainJar());
     }
 
-    public void testGetSetMainClass() throws Exception {
+    public void testGetSetMainClass() {
         assertNull(b.getMainClass());
         b.setMainClass("foo");
         assertEquals("foo", b.getMainClass());
@@ -69,7 +77,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("bar", b.getMainClass());
     }
 
-    public void testGetSetBundleId() throws Exception {
+    public void testGetSetBundleId() {
         assertNull(b.getBundleId());
         b.setBundleId("foo");
         assertEquals("foo", b.getBundleId());
@@ -77,7 +85,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("bar", b.getBundleId());
     }
 
-    public void testGetSetInstanceId() throws Exception {
+    public void testGetSetInstanceId() {
         assertNull(b.getInstanceId());
         b.setInstanceId("foo");
         assertEquals("foo", b.getInstanceId());
@@ -85,7 +93,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("bar", b.getInstanceId());
     }
 
-    public void testGetSetBundleType() throws Exception {
+    public void testGetSetBundleType() {
         assertNotNull(b.getBundleType());
         b.setBundleType(Bundle.Type.CLIENT);
         assertEquals(Bundle.Type.CLIENT, b.getBundleType());
@@ -93,7 +101,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals(Bundle.Type.SERVICE, b.getBundleType());
     }
 
-    public void testGetSetAutoStart() throws Exception {
+    public void testGetSetAutoStart() {
         assertFalse(b.isAutoStart());
         b.setAutoStart(true);
         assertTrue(b.isAutoStart());
@@ -101,7 +109,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertFalse(b.isAutoStart());
     }
 
-    public void testGetSetDescription() throws Exception {
+    public void testGetSetDescription() {
         assertNull(b.getDescription());
         b.setDescription("foo");
         assertEquals("foo", b.getDescription());
@@ -109,10 +117,10 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("bar", b.getDescription());
     }
 
-    public void testGetSetProperty() throws Exception {
+    public void testGetSetProperty() {
         try {
             b.getProperty("foo");
-            fail ("NPE should be thrown on non existing property");
+            fail("NPE should be thrown on non existing property");
         } catch (NullPointerException e) {
             // expected
         }
@@ -123,20 +131,20 @@ public class BundleSpecBuilderTest extends TestCase {
         b.clearProperty("boo");
         try {
             b.getProperty("boo");
-            fail ("NPE should be thrown on non existing property");
+            fail("NPE should be thrown on non existing property");
         } catch (NullPointerException e) {
             // expected
         }
         b.clearProperty("foo");
         try {
             b.getProperty("foo");
-            fail ("NPE should be thrown on non existing property");
+            fail("NPE should be thrown on non existing property");
         } catch (NullPointerException e) {
             // expected
         }
     }
 
-    public void testAddRemoveFile () throws Exception {
+    public void testAddRemoveFile() {
         assertFalse(b.hasFile("foo"));
         b.addFile("foo");
         assertTrue(b.hasFile("foo"));
@@ -144,7 +152,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertFalse(b.hasFile("foo"));
     }
 
-    public void testAddRemoveApi () throws Exception {
+    public void testAddRemoveApi() {
         assertFalse(b.hasApi("foo"));
         b.addApi("foo");
         assertTrue(b.hasApi("foo"));
@@ -153,10 +161,9 @@ public class BundleSpecBuilderTest extends TestCase {
     }
 
     /**
-     * b should point at a fully loaded spec, matching {@link #sampleSpec}
-     * @throws Exception If something goes wrong.
+     * b should point at a fully loaded spec, matching {@link #sampleSpec}.
      */
-    public void doTestSampleSpec () throws Exception {
+    public void doTestSampleSpec() {
         assertEquals("myMainJar", b.getMainJar());
         assertEquals("myMainClass", b.getMainClass());
         assertEquals("myInstanceId", b.getInstanceId());
@@ -173,7 +180,7 @@ public class BundleSpecBuilderTest extends TestCase {
             b.getProperty("myPropNonExistant");
             fail("Retrieving a non-existing property should raise a NPE");
         } catch (NullPointerException e) {
-            //expected
+            assertTrue(true);
         }
 
         assertTrue(b.hasApi("myLib-1.1.jar"));
@@ -184,72 +191,80 @@ public class BundleSpecBuilderTest extends TestCase {
         assertFalse(b.hasFile("myFileNonExistant"));
     }
 
-    public void testRead () throws Exception {
+    public void testRead() {
         b.read(new ByteArrayInputStream(sampleSpec.getBytes()));
         doTestSampleSpec();
     }
 
-    public void testOpen () throws Exception {
+    public void testOpen() {
         b = BundleSpecBuilder.open(
-                            new ByteArrayInputStream(sampleSpec.getBytes()));
+                               new ByteArrayInputStream(sampleSpec.getBytes()));
         doTestSampleSpec();
 
     }
 
-    public void testWrite() throws Exception {
+    public void testWrite() {
         b.read(new ByteArrayInputStream(sampleSpec.getBytes()));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        b.write (out);
+        try {
+            b.write(out);
+        } catch (Exception e) {
+            fail("No exception expected here");
+        }
 
-        b = BundleSpecBuilder.open (
-                                   new ByteArrayInputStream(out.toByteArray()));
+        b = BundleSpecBuilder.open(new ByteArrayInputStream(out.toByteArray()));
         doTestSampleSpec();
     }
 
     /**
-     * b should should be a fully loaded spec
-     * @throws Exception on error
+     * b should should be a fully loaded spec.
      */
-    public void doTestWriteFile() throws Exception {
+    public void doTestWriteFile() {
+        try {
+            File dir = new File(System.getProperty("user.dir"), "tmp");
+            File spec = b.writeToDir(dir);
 
-        File dir = new File(System.getProperty("user.dir"), "tmp");
-        File spec = b.writeToDir(dir);
+            assertTrue(spec.isFile());
 
-        assertTrue(spec.isFile());
+            if (b.getBundleType() == Bundle.Type.CLIENT) {
+                assertEquals("client.xml", spec.getName());
+            } else if (b.getBundleType() == Bundle.Type.SERVICE) {
+                assertEquals("service.xml", spec.getName());
+            } else {
+                fail("Unknown bundle type '" + b.getBundleType().name() + "'");
+            }
 
-        if (b.getBundleType() == Bundle.Type.CLIENT) {
-            assertEquals("client.xml", spec.getName());
-        } else if (b.getBundleType() == Bundle.Type.SERVICE) {
-            assertEquals("service.xml", spec.getName());
-        } else {
-            fail ("Unknown bundle type '" + b.getBundleType().name() + "'");
+            b = BundleSpecBuilder.open(new FileInputStream(spec));
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            b.write(out);
+            log.info("SPEC:\n" + new String(out.toByteArray()));
+            doTestSampleSpec();
+            // TODO assert
+        } catch (Exception e) {
+            fail("No exception expected in helper method");
         }
-
-        b = BundleSpecBuilder.open (new FileInputStream(spec));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        b.write (out);
-        log.info("SPEC:\n" + new String(out.toByteArray()));
-        doTestSampleSpec();
-        // TODO assert
     }
 
-    public void testClientSpecWrite () throws Exception {
+    public void testClientSpecWrite () {
         b.read(new ByteArrayInputStream(sampleSpec.getBytes()));
         b.setBundleType(Bundle.Type.CLIENT);
         doTestWriteFile();
     }
 
-    public void testServiceSpecWrite () throws Exception {
+    public void testServiceSpecWrite() {
         b.read(new ByteArrayInputStream(sampleSpec.getBytes()));
         b.setBundleType(Bundle.Type.SERVICE);
         doTestWriteFile();
     }
 
-    public void testBuildFileList () throws Exception {
-        File bundleRoot = new File ("Control/test/test-search-1");
-        b.buildFileList(bundleRoot);
-
+    public void testBuildFileList() {
+        File bundleRoot = new File("test/test-search-1");
+        try {
+            b.buildFileList(bundleRoot);
+        } catch (Exception e) {
+            fail("No exception expected in helper method");
+        }
         assertTrue(b.hasFile("service.xml"));
         assertTrue(b.hasFile("config/configuration.xml"));
         assertTrue(b.hasFile("config/jmx.access"));
@@ -258,22 +273,26 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals(5, b.getFiles().size());
     }
 
-    public void testGetFilename () throws Exception {
+    public void testGetFilename() {
         b.setBundleType(Bundle.Type.CLIENT);
         assertEquals("client.xml", b.getFilename());
         b.setBundleType(Bundle.Type.SERVICE);
         assertEquals("service.xml", b.getFilename());
     }
 
-    public void testBuildBundle () throws Exception {
+    public void testBuildBundle() {
         b.setBundleType(Bundle.Type.SERVICE);
         b.addFile("config/configuration.xml");
         b.setBundleId("unit-test");
-        File bundleFile = b.buildBundle(new File("Control/test/test-search-1"),
-                                        new File("tmp/delete_me"));
-
-        log.info("Wrote: " + bundleFile);
-        // TODO assert
-        //Files.delete ("tmp/delete_me");
+        File bundleFile = null;
+        try {
+            bundleFile = b.buildBundle(new File("test/test-search-1"),
+                                       new File("tmp/delete_me"));
+            log.info("Wrote: " + bundleFile);
+            assertTrue(bundleFile.exists());
+            Files.delete("tmp/delete_me");
+        } catch (Exception e) {
+            fail("No exception expected in helper method");
+        }
     }
 }
