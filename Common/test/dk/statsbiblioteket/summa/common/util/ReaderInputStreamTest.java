@@ -15,11 +15,6 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.Streams;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Reader;
@@ -27,11 +22,26 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Random;
 
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+/**
+ * Test {@link ReaderInputStream}.
+ */
 public class ReaderInputStreamTest extends TestCase {
+    /** Local logger. */
     private static Log log = LogFactory.getLog(ReaderInputStreamTest.class);
+    /** Default encoding. */
     public static final String ENCODING = "utf-8";
 
+    /**
+     * Constructor.
+     * @param name The name.
+     */
     public ReaderInputStreamTest(String name) {
         super(name);
     }
@@ -55,7 +65,7 @@ public class ReaderInputStreamTest extends TestCase {
         assertConvert("Empty", "");
         assertConvert("Danish", "æøå");
         assertConvert("Long", "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRS"
-                              + "TUVWXYZÆØÅ!\"#¤%&/()=?`´1234567890 -.,;:_*'¨^½" 
+                              + "TUVWXYZÆØÅ!\"#¤%&/()=?`´1234567890 -.,;:_*'¨^½"
                               + "§<>\\");
     }
 
@@ -66,24 +76,26 @@ public class ReaderInputStreamTest extends TestCase {
      * @throws Exception always
      */
     public void testMonkey() throws Exception {
-        int RUNS = 5000;
-        int MAX = 30;
+        System.out.println("Test monkey");
+        final int runs = 5000;
+        final int max = 30;
         Random random = new Random(86);
-        for (int run = 0 ; run < RUNS ; run++) {
-            int length = random.nextInt(MAX);
+        for (int run = 0; run < runs; run++) {
+            int length = random.nextInt(max);
             StringWriter sw = new StringWriter(length);
-            for (int i = 0 ; i < length ; i++) {
-                sw.append((char)random.nextInt(65535));
+            for (int i = 0; i < length; i++) {
+                sw.append((char) random.nextInt(65535));
             }
             assertConvert("Monkey test #" + run, sw.toString());
         }
+        System.out.println("Test monkey end");
     }
 
     public void testLength() throws Exception {
-        int MAX = 500;
-        for (int length = 0 ; length < MAX ; length++) {
+        final int max = 500;
+        for (int length = 0; length < max; length++) {
             StringWriter sw = new StringWriter(length);
-            for (int i = 0 ; i < length ; i++) {
+            for (int i = 0; i < length; i++) {
                 sw.append("A");
             }
             assertConvert("Test of length " + length, sw.toString());
@@ -97,18 +109,19 @@ public class ReaderInputStreamTest extends TestCase {
      * @throws Exception always
      */
     public void testAll() throws Exception {
-        int PART = 30;
+        final int part = 30;
+        final int max = 65536;
         char c = 0;
-        while (c < 65536) {
-            StringWriter sw = new StringWriter(PART);
+        while (c < max) {
+            StringWriter sw = new StringWriter(part);
             char startPos = c;
-            for (int i = 0 ; i < PART ; i++) {
+            for (int i = 0; i < part; i++) {
                 sw.append(c++);
-                if (c == 65536) {
+                if (c == max) {
                     break;
                 }
             }
-            assertConvert("Pos " + (int)startPos, sw.toString());
+            assertConvert("Pos " + (int) startPos, sw.toString());
         }
     }
 
@@ -119,12 +132,13 @@ public class ReaderInputStreamTest extends TestCase {
      * @throws Exception always
      */
     public void test56300() throws Exception {
-        int LENGTH = 30;
-        StringWriter sw = new StringWriter(LENGTH);
-        for (int i = 0 ; i < LENGTH ; i++) {
-            sw.append((char)(56300 + i));
+        final int high = 56300;
+        final int length = 30;
+        StringWriter sw = new StringWriter(length);
+        for (int i = 0; i < length; i++) {
+            sw.append((char) (high + i));
         }
-        assertConvert("Chars at position 56300 test", sw.toString());
+        assertConvert("Chars at position " + high + " test", sw.toString());
     }
 
     private void assertConvert(String message, String input) throws Exception {
@@ -137,31 +151,29 @@ public class ReaderInputStreamTest extends TestCase {
         if (expected.length != actual.length) {
             StringWriter sw = new StringWriter(input.length() * 10);
             sw.append("Diff for bytes:");
-            for (int i = 0 ;
-                 i < Math.max(expected.length, actual.length) ;
-                 i++) {
-                sw.append(String.format(
-                        " (%s, %s)",
+            for (int i = 0; i < Math.max(expected.length, actual.length); i++) {
+                sw.append(String.format(" (%s, %s)",
                         expected.length > i ? Byte.toString(expected[i]) : "NA",
                         actual.length > i ? Byte.toString(actual[i]) : "NA"));
             }
             log.info(sw.toString());
+            System.out.println(sw.toString());
             // TODO use assert
-            
+
             sw = new StringWriter(100);
             sw.append("Input chars:");
-            for (char c: input.toCharArray()) {
+            for (char c : input.toCharArray()) {
                 sw.append(" ").append(Integer.toString(c));
             }
             log.info(sw.toString());
             // TODO use assert
         }
-        assertEquals(message + " should result in the right number of bytes. "
+        assertEquals(message + " should result in the right number of bytes.\n"
                      + "Input was '" + input + "'",
                      expected.length, actual.length);
-        for (int i = 0 ; i < expected.length ; i++) {
+        for (int i = 0; i < expected.length; i++) {
             assertEquals(message + " should have the same content. The bytes at"
-                         + " position " + i + " differs. " 
+                         + " position " + i + " differs. "
                          + "Input was '" + input + "'",
                          expected[i], actual[i]);
         }
