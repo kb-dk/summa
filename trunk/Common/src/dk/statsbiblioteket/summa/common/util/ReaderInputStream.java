@@ -16,9 +16,9 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.IOException;
 
 /**
  * Wrapper for a Reader that converts the characters into bytes. Note that this
@@ -26,22 +26,28 @@ import java.io.IOException;
  * the garbage collector.
  * </p><p>
  * Important: This InputStream does not properly handle unicode characters above
- * 65535 (see the JUnit-test). TODO: Correct this shortcoming
+ * 65535 (see the JUnit-test).
+ * TODO Correct this shortcoming
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ReaderInputStream extends InputStream {
+    /** Reader object. */
     private Reader reader;
+    /** True if the reader is empty. */
     private boolean readerEmpty = false;
-
+    /** Encoding used. */
     private String encoding;
-
+    /** Internal buffer. */
     private byte[] byteBuffer = null;
+    /** Position in the internal buffer. */
     private int bufferPos = 0;
-
-    private int READ_AHEAD = 20; // Read minimum this many characters ahead
+    /** The minimum number of characters to read ahead. */
+    private static final int READ_AHEAD = 20;
+    /** Read a head buffer. */
     private final char[] readAheadBuffer = new char[READ_AHEAD];
+    /** Custom buffer. */
     private char[] customBuffer = readAheadBuffer;
 
     /**
@@ -54,6 +60,10 @@ public class ReaderInputStream extends InputStream {
         this.encoding = encoding;
     }
 
+    /**
+     * Return one byte from buffer.
+     * @return the byte value.
+     */
     @Override
     public int read() throws IOException {
         checkBuffer(1);
@@ -69,11 +79,11 @@ public class ReaderInputStream extends InputStream {
      * the buffer after this operation is that the underlying Reader has reached
      * End Of File.
      * @param wantedSize the wanted minimum number of bytes in the buffer.
-     * @throws java.io.IOException if an I/O error in the Reader occured.
+     * @throws java.io.IOException if an I/O error in the Reader occurred.
      */
     private void checkBuffer(int wantedSize) throws IOException {
-        if (readerEmpty ||
-            (byteBuffer != null && byteBuffer.length - bufferPos >= wantedSize)) {
+        if (readerEmpty || (byteBuffer != null
+                        && byteBuffer.length - bufferPos >= wantedSize)) {
             return;
         }
         // We try to reuse buffers
@@ -82,13 +92,12 @@ public class ReaderInputStream extends InputStream {
                             new char[wantedSize];
         int charCount = reader.read(readBuffer);
         readerEmpty = charCount == -1 || charCount == 0;
-        byte[] readByteBuffer = readerEmpty ? new byte[0] :
-                                new String(readBuffer, 0, charCount).
-                                        getBytes(encoding);
+        byte[] readByteBuffer = readerEmpty ? new byte[0]
+                      : new String(readBuffer, 0, charCount).getBytes(encoding);
         if (byteBuffer != null && bufferPos < byteBuffer.length) {
             byte[] merged = new byte[byteBuffer.length - bufferPos
                                      + readByteBuffer.length];
-            System.arraycopy(byteBuffer, 0, merged, 0, 
+            System.arraycopy(byteBuffer, 0, merged, 0,
                              byteBuffer.length - bufferPos);
             System.arraycopy(readByteBuffer, 0, merged,
                              byteBuffer.length - bufferPos,
@@ -105,4 +114,3 @@ public class ReaderInputStream extends InputStream {
         reader.close();
     }
 }
-
