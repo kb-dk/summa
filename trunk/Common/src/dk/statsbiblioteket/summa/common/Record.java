@@ -18,19 +18,19 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Inherited;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A Record is the atom data unit in Summa. Is is used for ingesting to the
@@ -43,16 +43,26 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "hal, te, mke")
-public class Record implements Serializable, Comparable{
+public class Record implements Serializable, Comparable {
+    /** Serial version UID. */
     public static final long serialVersionUID = 35848318185L;
+    /** Local logger instance. */
     private static Log log = LogFactory.getLog(Record.class);
+    /** Empty byte array for creating records with no content. */
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
     /**
      * The validation-state can only be stored indirectly using the map
      * provided by getMeta().
      */
-    public enum ValidationState {notValidated, valid, invalid;
+    public enum ValidationState {
+        /** The tree validation states, nonValidated, valid and invalid. */
+        notValidated, valid, invalid;
+        /**
+         * Create a validation state from given string.
+         * @param in Input stream.
+         * @return The state.
+         */
         public static ValidationState fromString(String in) {
             if ("notValidated".equals(in)) {
                 return notValidated;
@@ -116,16 +126,16 @@ public class Record implements Serializable, Comparable{
      */
     private LinkedHashSet<String> parentIds;
     /**
-     * A list of Record instances representing the parents of this record
+     * A list of Record instances representing the parents of this record.
      */
     private LinkedHashSet<Record> parents;
     /**
-     * The ids of the children-records for this record, if any. If there are
+     * The IDs of the children-records for this record, if any. If there are
      * no children-records, this must be null.
      */
     private LinkedHashSet<String> childIds;
     /**
-     * A list of Record instances representing the children of this record
+     * A list of Record instances representing the children of this record.
      */
     private LinkedHashSet<Record> children;
 
@@ -189,7 +199,7 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parentIds       the ID for the parent record. {@link #parentIds}.
      * @param childIds     The ID's for the children records. {@link #childIds}.
-     * @param meta         Metadata for the Record.
+     * @param meta         Meta data for the Record.
      * @param contentCompressed Whether the contents of the {@code data}
      *                          argument id GZip compressed. If this argument is
      *                          {@code true} the first call to
@@ -218,14 +228,14 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parents      The ID for the parent record. {@link #parentIds}.
      * @param children     The ID's for the children records. {@link #childIds}.
-     * @param meta         Metadata for the Record.
+     * @param meta         Meta data for the Record.
      * @param contentCompressed If true, content is GZipped.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     List<String> parents, List<String> children, StringMap meta,
-                     boolean contentCompressed){
+                     List<String> parents, List<String> children,
+                     StringMap meta, boolean contentCompressed){
         setId(id);
         setBase(base);
         setDeleted(deleted);
@@ -500,8 +510,8 @@ public class Record implements Serializable, Comparable{
             this.parentIds = null;
         } else if (parentIds.isEmpty()) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn("The non-existence of a parentId should be stated by null, "
-                     + "not the empty list. Problematic Record with id '"
+            log.warn("The non-existence of a parentId should be stated by "
+                     + "null, not the empty list. Problematic Record with id '"
                      + getId() + "' from base '" + getBase()
                      + "'. Continuing creation");
             //noinspection AssignmentToNull
@@ -514,7 +524,7 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * Return a list of all childrens id's. 
+     * Return a list of all children id's.
      * @return a list of children id's
      */
     public List<String> getChildIds() {
@@ -522,13 +532,13 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * Set the child ids listed as children of this record. This will reset
+     * Set the child IDs listed as children of this record. This will reset
      * any children registered with {@link #setChildren(List)}. Note that this
      * method copies the content of the given list, so callers are free to
      * clear the list after calling.
      * Note 2: Object-references to children are cleared as part of this to
-     *         ensure consistence.
-     * @param childIds List of record ids for the record's children.
+     *         ensure consistency.
+     * @param childIds List of record IDs for the record's children.
      */
     public void setChildIds(List<String> childIds) {
         if (childIds == null) {
@@ -562,7 +572,7 @@ public class Record implements Serializable, Comparable{
 
         List<String> newChildIds = new ArrayList<String>(children.size());
         for (Record child : children) {
-            newChildIds.add (child.getId());
+            newChildIds.add(child.getId());
         }
 
         setChildIds(newChildIds);
@@ -578,13 +588,13 @@ public class Record implements Serializable, Comparable{
      *         of this record, or {@code null} if the child ids has never been
      *         resolved.
      */
-    public List<Record> getChildren () {
+    public List<Record> getChildren() {
         return children == null ? null : new ArrayList<Record>(children);
     }
 
     /**
      * Set parent {@code Record} instances of this record. This will also call
-     * {@link #setParentIds} with the ids of the parent records.
+     * {@link #setParentIds} with the IDs of the parent records.
      *
      * @param parents List of record instances to register as parents.
      */
@@ -596,12 +606,11 @@ public class Record implements Serializable, Comparable{
 
         List<String> newParentIds = new ArrayList<String>(parents.size());
         for (Record parent : parents) {
-            newParentIds.add (parent.getId());
+            newParentIds.add(parent.getId());
         }
 
         setParentIds(newParentIds);
         this.parents = new LinkedHashSet<Record>(parents);
-        
     }
 
     /**
@@ -613,7 +622,7 @@ public class Record implements Serializable, Comparable{
      *         of this record, or {@code null} if the parent ids has never been
      *         resolved.
      */
-    public List<Record> getParents () {
+    public List<Record> getParents() {
         return parents == null ? null : new ArrayList<Record>(parents);
     }
 
@@ -670,7 +679,8 @@ public class Record implements Serializable, Comparable{
      * Update {@link #modificationTime} to the current time, thereby marking the
      * record as modified.
      * </p><p>
-     * Note: The granularity of this is in milliseconds, so if youch is called imm.
+     * Note: The granularity of this is in milliseconds, so if touch is called
+     * imm.
      */
     public void touch() {
         setModificationTime(System.currentTimeMillis());
@@ -703,7 +713,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Gives a whole map, to override the existing meta data.
-     * @param meta A map of metadata.
+     * @param meta A map of meta data.
      */
     public void setMeta (StringMap meta) {
         this.meta = meta;
@@ -721,7 +731,7 @@ public class Record implements Serializable, Comparable{
     /**
      * Tells if this record has meta data or not.
      * @return true If a meta-map has been created. Used for time/space
-     *         optimization. 
+     *         optimization.
      */
     public boolean hasMeta() {
         return meta != null;
@@ -734,8 +744,8 @@ public class Record implements Serializable, Comparable{
     @Override
     @QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.QA_NEEDED,
-        comment="Hans made the hash-function, so no present persons know how it "
-                + "works (or if)")
+        comment = "Hans made the hash-function, so no present persons know how "
+                  + "it works (or if)")
     public int hashCode() {
         int result;
         result = (int) (modificationTime ^ modificationTime >>> 32);
@@ -748,8 +758,10 @@ public class Record implements Serializable, Comparable{
      * Compares this Record with the specified Record for order.
      * The natural ordering on records is defined to be lexicographical by id.
      * @param o Parameter object to be compared to this record.
-     * @return A negative integer, zero, or a positive integer as the name of this record is.
-     *         lexicographically less than, equal to, or greater than the name of the record argument.
+     * @return A negative integer, zero, or a positive integer as the name of
+     *         this record is.
+     *         lexicographically less than, equal to, or greater than the name
+     *         of the record argument.
      * @throws ClassCastException If o is not a Record.
      */
     public int compareTo(Object o) {
@@ -757,31 +769,35 @@ public class Record implements Serializable, Comparable{
     }
 
     @Override
-    @SuppressWarnings({"UnnecessaryParentheses"})
+    @SuppressWarnings("UnnecessaryParentheses")
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te",
-            comment="Tripple-check childIds and meta")
+            comment = "Tripple-check childIds and meta")
     public boolean equals(Object o) {
         if (o == null || !(o instanceof Record)) {
             return false;
         }
-        Record other = (Record)o;
+        Record other = (Record) o;
 
         try {
             return id.equals(other.getId())
                    && base.equals(other.getBase())
-                   // Semantically we compare only the record content, storage context, such as not timestamps:
+                   // Semantically we compare only the record content, storage
+                   // context, such as not timestamps:
                    //&& timeEquals(creationTime, other.getCreationTime())
-                   //&& timeEquals(modificationTime, other.getModificationTime())
+                   //&& timeEquals(modificationTime,
+                   //              other.getModificationTime())
                    && deleted == other.isDeleted()
                    && indexable == other.isIndexable()
                    && ((parentIds == null && other.getParentIds() == null)
-                       || (parentIds != null && deepEquals(parentIds, other.getParentIds())))
+                       || (parentIds != null
+                       && deepEquals(parentIds, other.getParentIds())))
                    && Arrays.equals(getContent(), other.getContent())
-                   && ((childIds == null && other.getChildIds() == null) ||
-                       (childIds != null) && deepEquals(childIds, other.getChildIds()))
-                    && ((!hasMeta() == !other.hasMeta()) 
+                   && ((childIds == null && other.getChildIds() == null)
+                           || (childIds != null)
+                           && deepEquals(childIds, other.getChildIds()))
+                   && ((!hasMeta() == !other.hasMeta())
                         || (hasMeta() && getMeta().equals(other.getMeta())));
         } catch (Exception e) {
             log.error("Error calling equals for " + this + " and " + other
@@ -810,11 +826,13 @@ public class Record implements Serializable, Comparable{
         return "Record [id(" + getId() + "), base(" + getBase()
                + "), deleted(" + isDeleted() + "), indexable(" + isIndexable()
                + "), data-length(" + getLength()
-               + "), num-childrenIDs(" + (childIds == null ? 0 : childIds.size())
-               + "), num-parentsIDs(" + (parentIds == null ? 0 : parentIds.size())
+               + "), num-childrenIDs("
+               + (childIds == null ? 0 : childIds.size())
+               + "), num-parentsIDs("
+               + (parentIds == null ? 0 : parentIds.size())
                + "), num-childRecords("
                + (children == null ? 0 : children.size())
-               + "), num-parentRecords(" 
+               + "), num-parentRecords("
                + (parents == null ? 0 : parents.size())
                + ")" + (verbose ?
                         ", creationTime(" + timeToString(getCreationTime())
@@ -836,7 +854,7 @@ public class Record implements Serializable, Comparable{
     /**
      * Simple conversion of milliseconds to ISO-standard date-time display.
      * @param timestamp Milliseconds since 1972-01-01.
-     * @return A human readable timestamp.
+     * @return A human readable time stamp.
      */
     private String timeToString(long timestamp) {
         if (timestamp == 0) {
@@ -873,10 +891,10 @@ public class Record implements Serializable, Comparable{
         if (ids == null || ids.size() == 0) {
             return null;
         }
-        StringWriter sw = new StringWriter(ids.size()*256);
-        for (int i = 0 ; i < ids.size() ; i++) {
+        StringWriter sw = new StringWriter(ids.size() * 256);
+        for (int i = 0; i < ids.size(); i++) {
             sw.append(ids.get(i));
-            if (i < ids.size()-1) {
+            if (i < ids.size() - 1) {
                 sw.append(ID_DELIMITER);
             }
         }
@@ -904,6 +922,7 @@ public class Record implements Serializable, Comparable{
      * and childrenIds lists
      * @param a First iterable to compare.
      * @param b Second iterable to compare.
+     * @param <E> A comparable object.
      * @return True iff a and b has the same number of elements and all elements
      *         respond true to and equals().
      */
@@ -925,7 +944,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Return true if content is compressed. False otherwise.
-     * @return true if content is compressed, falsed otherwise.
+     * @return true if content is compressed, false otherwise.
      */
     public boolean isContentCompressed() {
         return contentCompressed;
