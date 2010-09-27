@@ -28,9 +28,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test clases for {@link XMLSplitterFilter}.
+ * Test classes for {@link XMLSplitterFilter}.
  */
-@SuppressWarnings("DuplicateStringLiteralInspection")
 public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
     /**
      * Constructor.
@@ -145,7 +144,7 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
     }
 
     /**
-     * @return A baisc configuration.
+     * @return A basic configuration.
      */
     private Configuration getBasicConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
