@@ -14,11 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common;
 
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 
 /**
  * Utility class for doing conditional logging. Consider the case with a method
@@ -41,11 +40,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public final class Logging {
-    /**
-     * Private constructor to make sure there are not instances of this class.
-     */
-    private Logging() { }
+public class Logging {
 
     /**
      * The name of the process log: "process". Logging on trace-level will
@@ -54,9 +49,7 @@ public final class Logging {
      * warn-level message is given.
      */
     public static final String PROCESS_LOG_NAME = "process";
-    /** Process log logger instance. */
-    private static final Log PROCESS_LOG = LogFactory.getLog(PROCESS_LOG_NAME);
-    /** Maximal content size. */
+    private static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
     private static final int MAX_CONTENT = 1000;
 
     /**
@@ -72,13 +65,13 @@ public final class Logging {
      * TRACE: Different stages that the Payload has passed, such as the Filters
      *        that processed it, processing time etc.<br />
      * </p><p>
-     * @param origin  Where the message was from, e.g. "ClassName.methodName".
-     * @param message The log message.
-     * @param level   The log level.
-     * @param payload The Payload related to the message.
+     * @param origin  where the message was from, e.g. "ClassName.methodName".
+     * @param message the log message.
+     * @param level   the log level.
+     * @param payload the Payload related to the message.
      */
-    public static void logProcess(final String origin, final String message,
-                                  final LogLevel level, final Payload payload) {
+    public static void logProcess(
+            String origin, String message, LogLevel level, Payload payload) {
         logProcess(origin, message, level, payload, null);
     }
 
@@ -95,15 +88,15 @@ public final class Logging {
      * TRACE: Different stages that the Payload has passed, such as the Filters
      *        that processed it, processing time etc.<br />
      * </p><p>
-     * @param origin  Where the message was from, e.g. "ClassName.methodName".
-     * @param message The log message.
-     * @param level   The log level.
+     * @param origin  where the message was from, e.g. "ClassName.methodName".
+     * @param message the log message.
+     * @param level   the log level.
      * @param payload the Payload related to the message.
-     * @param cause   What caused this message.
+     * @param cause   what caused this message.
      */
-    public static void logProcess(final String origin, final String message,
-                                  final LogLevel level, final Payload payload,
-                                  final Throwable cause) {
+    public static void logProcess(
+            String origin, String message, LogLevel level, Payload payload,
+            Throwable cause) {
         String fullMessage;
         if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG)
              || level == LogLevel.TRACE)) {
@@ -116,18 +109,13 @@ public final class Logging {
         }
 
         if (cause == null) {
-            log(fullMessage, PROCESS_LOG, level);
+            log(fullMessage,processLog, level);
         } else {
-            log(fullMessage, PROCESS_LOG, level, cause);
+            log(fullMessage,processLog, level, cause);
         }
     }
 
-    /**
-     * Get content snippet.
-     * @param payload The Payload.
-     * @return Content snippet.
-     */
-    private static String getContentSnippet(final Payload payload) {
+    private static String getContentSnippet(Payload payload) {
         if (payload == null || payload.getRecord() == null) {
             return "null";
         }
@@ -136,158 +124,119 @@ public final class Logging {
         content.substring(0, MAX_CONTENT) : content;
     }
 
-    /**
-     * Creates a process log entry.
-     * @param origin The origin of the log.
-     * @param message The message.
-     * @param level The log level.
-     * @param id A id.
-     */
-    public static void logProcess(final String origin, final String message,
-                                  final LogLevel level, final String id) {
+    public static void logProcess(String origin, String message, LogLevel level,
+                                  String id) {
         logProcess(origin, message, level, id, null);
     }
 
-    /**
-     * Creates a process log entry.
-     * @param origin The origin of the log.
-     * @param message The message.
-     * @param level The log level.
-     * @param id The log id.
-     * @param cause The cause.
-     */
-    public static void logProcess(final String origin, final String message,
-                                  final LogLevel level, final String id,
-                                  final Throwable cause) {
+    public static void logProcess(String origin, String message, LogLevel level,
+                                  String id, Throwable cause) {
         String fullMessage = (origin == null ? "" : origin + ": ")
                              + message + ". " + id;
 
         if (cause == null) {
-            log(fullMessage, PROCESS_LOG, level);
+            log(fullMessage,processLog, level);
         } else {
-            log(fullMessage, PROCESS_LOG, level, cause);
+            log(fullMessage,processLog, level, cause);
         }
     }
 
     /**
-     * @param level Is logging done on this level?
-     * @return True if process logging is done on the stated level.
+     * @param level is logging done on this level?
+     * @return true if process logging is done on the stated level.
      */
-    public static boolean isProcessLogLevel(final LogLevel level) {
+    public static boolean isProcessLogLevel(LogLevel level) {
         switch (level) {
-            case FATAL: return PROCESS_LOG.isFatalEnabled();
-            case ERROR: return PROCESS_LOG.isErrorEnabled();
-            case WARN:  return PROCESS_LOG.isWarnEnabled();
-            case INFO:  return PROCESS_LOG.isInfoEnabled();
-            case DEBUG: return PROCESS_LOG.isDebugEnabled();
-            case TRACE: return PROCESS_LOG.isTraceEnabled();
+            case FATAL: return processLog.isFatalEnabled();
+            case ERROR: return processLog.isErrorEnabled();
+            case WARN:  return processLog.isWarnEnabled();
+            case INFO:  return processLog.isInfoEnabled();
+            case DEBUG: return processLog.isDebugEnabled();
+            case TRACE: return processLog.isTraceEnabled();
             default: return true; // Better to log extra than miss messages
         }
     }
 
-    /**
-     * Enum class for log level.
-     */
     public static enum LogLevel {
-        /** Log levels. */
         FATAL, ERROR, WARN, INFO, DEBUG, TRACE
     }
 
-    /**
-     * Logs a message to the appropriated log level.
-     * @param message The message.
-     * @param log The log to write to.
-     * @param level The level.
-     */
-    public static void log(final String message, final Log log,
-                           final LogLevel level) {
+    public static void log (String message, Log log, LogLevel level) {
         switch (level) {
             case FATAL:
-                log.fatal(message);
+                log.fatal (message);
                 break;
             case ERROR:
-                log.error(message);
+                log.error (message);
                 break;
             case WARN:
-                log.warn(message);
+                log.warn (message);
                 break;
             case INFO:
-                log.info(message);
+                log.info (message);
                 break;
             case DEBUG:
-                log.debug(message);
+                log.debug (message);
                 break;
             case TRACE:
-                log.trace(message);
+                log.trace (message);
                 break;
             default:
-                log.info("[Unknown log level " + level +"]: " + message);
+                log.info ("[Unknown log level " + level +"]: " + message);
         }
     }
 
-    /**
-     * Logs a message to the appropriated log level.
-     * @param message The message.
-     * @param log The log to write to.
-     * @param level The level.
-     * @param cause The log cause.
-     */
-    public static void log(final String message, final Log log,
-                           final LogLevel level, final Throwable cause) {
+    public static void log (String message, Log log, LogLevel level, Throwable cause) {
         switch (level) {
             case FATAL:
-                log.fatal(message, cause);
+                log.fatal (message, cause);
                 break;
             case ERROR:
-                log.error(message, cause);
+                log.error (message, cause);
                 break;
             case WARN:
-                log.warn(message, cause);
+                log.warn (message, cause);
                 break;
             case INFO:
-                log.info(message, cause);
+                log.info (message, cause);
                 break;
             case DEBUG:
-                log.debug(message, cause);
+                log.debug (message, cause);
                 break;
             case TRACE:
-                log.trace(message, cause);
+                log.trace (message, cause);
                 break;
             default:
-                log.info("[Unknown log level " + level + "]: " + message,
-                         cause);
+                log.info ("[Unknown log level " + level +"]: " + message, cause);
         }
     }
 
-    /**
-     * Logs a message to the appropriated log level.
-     * @param log The log to write to.
-     * @param level The level.
-     * @param cause The log cause.
-     */
-    public static void log(final Throwable cause, final Log log,
-                           final LogLevel level) {
+    public static void log (Throwable cause, Log log, LogLevel level) {
         switch (level) {
             case FATAL:
-                log.fatal(cause);
+                log.fatal (cause);
                 break;
             case ERROR:
-                log.error(cause);
+                log.error (cause);
                 break;
             case WARN:
-                log.warn(cause);
+                log.warn (cause);
                 break;
             case INFO:
-                log.info(cause);
+                log.info (cause);
                 break;
             case DEBUG:
-                log.debug(cause);
+                log.debug (cause);
                 break;
             case TRACE:
-                log.trace(cause);
+                log.trace (cause);
                 break;
             default:
-                log.info("[Unknown log level " + level + "]", cause);
+                log.info ("[Unknown log level " + level +"]", cause);
         }
     }
 }
+
+
+
+

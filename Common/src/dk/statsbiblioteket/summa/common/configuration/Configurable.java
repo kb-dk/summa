@@ -35,41 +35,21 @@ public interface Configurable {
      * one-argument constructor that takes a {@link Configuration}.
      */
     public class ConfigurationException extends RuntimeException {
-        /** Serial version UID. */
         public static final long serialVersionUID = 76846183L;
 
-        /**
-         * Creates configuration exception with a throwable cause.
-         * @param cause The cause of this exception.
-         */
-        public ConfigurationException(final Throwable cause) {
-            super(getCauseMessage(cause));
+        public ConfigurationException (Throwable cause) {
+            super (getCauseMessage(cause));
         }
 
-        /**
-         * Constructs a configuration exception with a message.
-         * @param message The message.
-         */
-        public ConfigurationException(final String message) {
-            super(message);
+        public ConfigurationException (String message) {
+            super (message);
         }
 
-        /**
-         * Creates a configuration exception with a message and cause.
-         * @param message The message.
-         * @param cause The cause of this exception.
-         */
-        public ConfigurationException(final String message,
-                                      final Throwable cause) {
-            super(message, cause);
+        public ConfigurationException (String message, Throwable cause) {
+            super (message, cause);
         }
 
-        /**
-         * Return the cause message.
-         * @param t The throwable which this method extract the message from.
-         * @return The message of the throwable.
-         */
-        private static String getCauseMessage(final Throwable t) {
+        private static String getCauseMessage(Throwable t) {
             // If there is no message, or if the exception has its message set
             // to its class name (InvocationTargetException I am looking
             // at you!), we try and find a better message
@@ -80,8 +60,13 @@ public interface Configurable {
                     return getCauseMessage(t.getCause());
                 }
             }
+
             return (t.getMessage() == null || "".equals(t.getMessage())) ?
                     "Unknwon cause" : t.getMessage();
         }
     }
 }
+
+
+
+
