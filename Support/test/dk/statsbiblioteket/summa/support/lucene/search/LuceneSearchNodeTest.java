@@ -25,9 +25,17 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.Files;
+
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.BitSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -42,12 +50,9 @@ import org.apache.lucene.search.QueryWrapperFilter;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
 
-import java.io.File;
-import java.rmi.RemoteException;
-import java.util.BitSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+/**
+ * Tests {@link LuceneSearchNode}.
+ */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(LuceneSearchNodeTest.class);
@@ -77,13 +82,13 @@ public class LuceneSearchNodeTest extends TestCase {
         if (testRoot.exists()) {
             Files.delete(testRoot);
         }
-        if(!testRoot.mkdirs()) {
+        if (!testRoot.mkdirs()) {
             fail("Test rook could not be created");
         }
 
         sourceDir = new File(Thread.currentThread().getContextClassLoader()
                                          .getResource(sourceDirPath).getFile());
-        descLocation = new File(testRoot, indexDescriptor );
+        descLocation = new File(testRoot, indexDescriptor);
 
         assertTrue("The sourceDir '" + sourceDir + "' should exist",
                    sourceDir.exists());
@@ -128,7 +133,7 @@ public class LuceneSearchNodeTest extends TestCase {
     public void testBasicSearcher() throws Exception {
         makeIndex();
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
-        
+
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
@@ -140,6 +145,7 @@ public class LuceneSearchNodeTest extends TestCase {
     }
 
     public void testMatchAll() throws Exception {
+        final int hitCount = 3;
         makeIndex();
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
@@ -148,7 +154,7 @@ public class LuceneSearchNodeTest extends TestCase {
         String result = searcher.search(request).toXML();
         log.debug("Search with query for '*' gave\n" + result);
         assertEquals("We should get the right number of hits",
-                     3, getHitCount(result));
+                     hitCount, getHitCount(result));
         searcher.close();
     }
 
@@ -182,11 +188,11 @@ public class LuceneSearchNodeTest extends TestCase {
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
         ResponseCollection responses = searcher.search(request);
         log.debug("Search for 'hans' gave\n" + responses.toXML());
-        // TODO: Inject fake searcher that tests for docID count
-//        DocIDCollector collector = (DocIDCollector)
-//                responses.getTransient().get(DocumentSearcher.DOCIDS);
-//        assertEquals("The right number of docIDs should be collected",
-//                     1, collector.getDocCount());
+        // TODO Inject fake searcher that tests for docID count
+        //        DocIDCollector collector = (DocIDCollector)
+        //                responses.getTransient().get(DocumentSearcher.DOCIDS);
+        //        assertEquals("The right number of docIDs should be collected",
+        //                     1, collector.getDocCount());
         searcher.close();
     }
 
@@ -321,7 +327,7 @@ public class LuceneSearchNodeTest extends TestCase {
         // workset now marks all the docids that is either matching or deleted
         log.info("Non-matching documents: ");
 
-        for (int i = 0 ; i < reader.maxDoc() ; i++) {
+        for (int i = 0; i < reader.maxDoc(); i++) {
             // TODO shouldn't this testcase test anything?
             /*if (!workset.get(i)) {
                 log.info(i + " ");
@@ -337,7 +343,8 @@ public class LuceneSearchNodeTest extends TestCase {
         QueryParser parser =
                 new QueryParser(Version.LUCENE_30, "freetext",
                                      new StandardAnalyzer(Version.LUCENE_30));
-        IndexReader reader = IndexReader.open(new NIOFSDirectory(indexLocation));
+        IndexReader reader = IndexReader.open(
+                                             new NIOFSDirectory(indexLocation));
         new IndexSearcher(new NIOFSDirectory(indexLocation));
 
         Query query = parser.parse("java");
@@ -351,7 +358,7 @@ public class LuceneSearchNodeTest extends TestCase {
         // workset now marks all the docids that is either matching or deleted
         // TODO shouldn't this testcase test anything?
         log.info("Non-matching documents: ");
-        for (int i = 0 ; i < reader.maxDoc() ; i++) {
+        for (int i = 0; i < reader.maxDoc(); i++) {
             /*if (nonmatching.get(i)) {
                 log.info(i + " ");
             } */
