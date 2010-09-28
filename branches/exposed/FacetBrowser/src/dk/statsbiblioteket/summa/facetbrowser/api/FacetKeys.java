@@ -30,7 +30,7 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 public interface FacetKeys {
 
     /**
-     * A comma-separeted list with the names of the wanted Facets.
+     * A comma-separated list with the names of the wanted Facets.
      * Optionally, the maximum Tag-count for a given Facet can be specified in
      * parenthesis after the name.
      * Example: "Title, Author (5), City (10), Year".

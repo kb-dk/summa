@@ -80,7 +80,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
     private Configuration conf;
     private Structure structure = null;
-    private FacetMap facetMap = null;
     private IndexLookup indexLookup;
     /**
      * The structure and facetMaps are updated upon open, depending on setup.
@@ -90,8 +89,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
 
     private boolean loadDescriptorFromIndex;
-
-    private BlockingQueue<BrowserThread> browsers;
 
     public FacetSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -160,29 +157,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     private void initStructures(Structure newStructure) throws RemoteException {
         lock.writeLock().lock();
         try {
-            long startTime = System.currentTimeMillis();
             structure = newStructure;
-            if (facetMap != null) {
-                log.debug("Closing existing facet map");
-                facetMap.close();
-            }
-            TagHandler tagHandler = TagHandlerFactory.getTagHandler(
-                    conf, structure, true);
-            CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
-            facetMap = new FacetMap(structure, coreMap, tagHandler, true);
-            browsers = new ArrayBlockingQueue<BrowserThread>(
-                    getMaxConcurrentSearches(), true);
-            for (int i = 0 ; i < getMaxConcurrentSearches() ; i++) {
-                try {
-                    browsers.put(new BrowserThread(tagHandler, coreMap));
-                } catch (InterruptedException e) {
-                    throw new RemoteException("Interrupted while trying to add"
-                                              + " BrowserThread to queue");
-                }
-            }
-            log.debug(String.format(
-                    "Finished initalizing in %d ms",
-                    System.currentTimeMillis() - startTime));
+            throw new UnsupportedOperationException("init not done yet");
         } finally {
             lock.writeLock().unlock();
         }
@@ -203,9 +179,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     protected void managedClose() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
-        if (facetMap != null) {
-            facetMap.close();
-        }
+        throw new UnsupportedOperationException("close not done yet");
     }
 
     @Override
@@ -215,27 +189,14 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         if (loadDescriptorFromIndex) {
             updateDescriptor(new File(location));
         }
-        try {
-            Profiler profiler = new Profiler();
-            facetMap.open(new File(location, FacetCore.FACET_FOLDER));
-            log.debug(String.format(
-                    "managedOpen(%s) finished in %s",
-                    location, profiler.getSpendTime()));
-        } catch (IOException e) {
-            throw new RemoteException(String.format(
-                    "Unable to open facetMap at location '%s'", location));
-        }
+        throw new UnsupportedOperationException("managedOpen not done yet");
     }
 
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
         long startTime = System.currentTimeMillis();
-        if (facetMap == null) {
-            throw new RemoteException("Unable to perform facet search as no "
-                                      + "facet structure has been opened");
-        }
-        indexLookup.lookup(request, responses, facetMap.getTagHandler());
+//        indexLookup.lookup(request, responses, facetMap.getTagHandler());
         if (!responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
             log.debug("No " + DocumentSearcher.DOCIDS + " from a previous "
                       + "DocumentSearcher in responses. Skipping faceting");
@@ -282,93 +243,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 log.debug("Got facet-request " + facetRequest.toString(false));
             }
             log.trace("Requesting BrowserThread");
-            BrowserThread browserThread;
-            try {
-                browserThread = browsers.poll(
-                        BROWSER_THREAD_QUEUE_TIMEOUT, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                throw new RemoteException("Interrupted while waiting for a "
-                                          + "free BrowserThread", e);
-            }
-            if (browserThread == null) {
-                throw new RemoteException(String.format(
-                        "Timeout after %d ms while waiting for a free "
-                        + "BrowserThread", BROWSER_THREAD_QUEUE_TIMEOUT));
-            }
-            try {
-                // TODO: Make this threaded
-                log.trace("Activating BrowserThread");
-                browserThread.startRequest(
-                        docIDs, 0, (int)docIDs.getBits().capacity(), 
-                        facetRequest);
-                log.trace("Waiting for browserThread");
-                browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
-                log.trace("Finished waiting for BrowserThread, "
-                          + "returning result");
-                return browserThread.getResult().externalize();
-            } finally {
-                while (true) {
-                    try {
-                        browsers.put(browserThread);
-                        break;
-                    } catch (InterruptedException e) {
-                        log.debug("Interrupted while putting browserThread. "
-                                  + "Retrying");
-                    }
-                }
-            }
         } finally {
             lock.readLock().unlock();
         }
-        /*
-    protected synchronized FacetResult getFacetMap(String query,
-                                       FacetResult.TagSortOrder sortOrder,
-                                       SlimCollector slimCollector) {
-
-        int threadCount =
-                slimCollector.getDocumentCount() < SINGLE_THREAD_THRESHOLD ?
-                1 : browsers.size();
-        int partSize = slimCollector.getDocumentCount() / threadCount;
-        int startPos = 0;
-        for (int browserID = 0 ; browserID < threadCount ; browserID++) {
-            BrowserThread browser = browsers.get(browserID);
-            browser.startRequest(slimCollector.getDocumentIDsOversize(),
-                                 startPos,
-                                 browserID == threadCount-1 ?
-                                 slimCollector.getDocumentCount()-1 :
-                                 startPos + partSize-1, sortOrder);
-            startPos += partSize;
-        }
-
-        FacetResult structure = null;
-        for (int browserID = 0 ; browserID < threadCount ; browserID++) {
-            BrowserThread browser = browsers.get(browserID);
-            browser.waitForResult(timeout);
-            if (browser.hasFinished()) {
-                if (structure == null) {
-                    structure = browser.getResult();
-                } else {
-                    structure.merge(browser.getResult());
-                }
-            } else {
-                log.error("Skipping browser thread #" + browserID
-                          + " as it has not finished. The facet/tag result "
-                          + "will not be correct");
-            }
-        }
-        if (structure != null) {
-            structure.reduce(sortOrder);
-        }
-        log.debug("Created FacetResult from query \"" + query + "\" and "
-                  + "sortOrder " + sortOrder
-                  + " (" + slimCollector.getDocumentCount() + " documents) "
-                  + " in " + profiler.getSpendTime());
-        return structure;
-
-         */
     }
 }
-
-
-
-
