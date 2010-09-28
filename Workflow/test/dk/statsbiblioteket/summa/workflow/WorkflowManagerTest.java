@@ -32,7 +32,7 @@ public class WorkflowManagerTest extends TestCase {
     private WorkflowManager man;
     /** Grace time. */
     private final int graceTime = 5;
-    
+
     /**
      * Good step counter class.
      */
@@ -166,8 +166,8 @@ public class WorkflowManagerTest extends TestCase {
       * Test config wait.
       */
      public final void testConfigWait() {
-        final int max = 5005;
-        final int min = 4995;
+        final int max = 5015;
+        final int min = 4985;
         Configuration conf = null;
         try {
            conf = new Configuration(new XStorage("data/wait-workflow.xml"));
