@@ -182,8 +182,8 @@
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
                     <trimStackTrace>false</trimStackTrace>
-                    <forkMode>none</forkMode>
-                    <argLine>-Xms256m -Xmx768m</argLine>
+                    <!-- <forkMode>none</forkMode>
+                    <argLine>-Xms256m -Xmx768m</argLine> -->
                 </configuration>
             </plugin>
             <!-- Jars -->
