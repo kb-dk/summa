@@ -30,7 +30,7 @@ import junit.framework.TestSuite;
 /**
  * Tests {@link RMIStorageProxy}.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings("duplicatestringliteralinspection")
 public class RMIStorageProxyTest extends TestCase {
     /**
      * Constructs a RMI Storage proxy.
