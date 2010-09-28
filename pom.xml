@@ -11,6 +11,10 @@
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
     <version>1.6.3-SNAPSHOT</version>
+    <ciManagement>
+    	<system>hudson</system>
+    	<url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
+    </ciManagement>
     <inceptionYear>2010</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
@@ -177,6 +181,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
+                    <trimStackTrace>false</trimStackTrace>
+                    <forkMode>none</forkMode>
+                    <argLine>-Xms256m -Xmx768m</argLine>
                 </configuration>
             </plugin>
             <!-- Jars -->
@@ -210,7 +217,7 @@
 
     <organization>
         <name>Statsbiblioteket</name>
-        <url>http://www.statsbibloteket.dk</url>
+        <url>http://www.statsbiblioteket.dk</url>
     </organization>
     <developers>
         <developer>
@@ -225,7 +232,8 @@
         </developer>
     </developers>
     <issueManagement>
-        <url>https://sourceforge.net/apps/trac/summa/</url>
+    	<system>trac</system>
+    	<url>https://sourceforge.net/apps/trac/summa/report/1</url>
     </issueManagement>
     <licenses>
         <license>
