@@ -92,31 +92,28 @@ public class AggregatingStorageTest extends TestCase {
                 (Serializable) Arrays.asList(base1, base2));
         subConf1.set(ConnectionConsumer.CONF_RPC_TARGET,
                      "//localhost:29000/summa-storage-sub1");
-        storageConf1 =
-            subConf1.createSubConfiguration(
+        storageConf1 = subConf1.createSubConfiguration(
                                     AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
         storageConf1.set(Storage.CONF_CLASS, RMIStorageProxy.class);
         storageConf1.set(DatabaseStorage.CONF_LOCATION, db1);
         storageConf1.set(RMIStorageProxy.CONF_REGISTRY_PORT, PORT);
         storageConf1.set(RMIStorageProxy.CONF_SERVICE_NAME,
-                          "summa-storage-sub1");
+                         "summa-storage-sub1");
         storageConf1.set(DatabaseStorage.CONF_FORCENEW, true);
 
         /* SUB 2 */
         subConf2 = storageConfs.get(1);
-        subConf2.set(
-                AggregatingStorage.CONF_SUB_STORAGE_BASES,
-                (Serializable) Arrays.asList(base3));
+        subConf2.set(AggregatingStorage.CONF_SUB_STORAGE_BASES,
+                     (Serializable) Arrays.asList(base3));
         subConf2.set(ConnectionConsumer.CONF_RPC_TARGET,
                      "//localhost:29000/summa-storage-sub2");
-        storageConf2 =
-            subConf2.createSubConfiguration(
+        storageConf2 = subConf2.createSubConfiguration(
                                     AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
         storageConf2.set(Storage.CONF_CLASS, RMIStorageProxy.class);
         storageConf2.set(DatabaseStorage.CONF_LOCATION, db2);
         storageConf2.set(RMIStorageProxy.CONF_REGISTRY_PORT, PORT);
         storageConf2.set(RMIStorageProxy.CONF_SERVICE_NAME,
-                          "summa-storage-sub2");
+                         "summa-storage-sub2");
         storageConf2.set(DatabaseStorage.CONF_FORCENEW, true);
 
         /* Create the aggregating storage and child storages */
@@ -157,7 +154,9 @@ public class AggregatingStorageTest extends TestCase {
         storage.clearBase(base3);
 
         assertBaseCount(base1, 0);
+        Thread.sleep(2);
         assertBaseCount(base2, 0);
+        Thread.sleep(2);
         assertBaseCount(base3, 0);
 
         storage.flush(new Record(testId1, base1, testContent1));
@@ -166,7 +165,9 @@ public class AggregatingStorageTest extends TestCase {
         storage.flush(new Record(testId4, base3, testContent1));
 
         assertBaseCount(base1, 1);
+        Thread.sleep(2);
         assertBaseCount(base2, 1);
+        Thread.sleep(2);
         assertBaseCount(base3, 2);
         assertBaseCount(null, 4);
     }
