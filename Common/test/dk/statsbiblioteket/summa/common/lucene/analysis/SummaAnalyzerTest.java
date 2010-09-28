@@ -31,7 +31,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
  */
 @SuppressWarnings("DuplicateStringLiteralInspection")
 public class SummaAnalyzerTest extends TestCase {
-    /** Summa annalyzer. */
+    /** Summa analyzer. */
     private SummaAnalyzer a;
 
     /**
@@ -83,7 +83,7 @@ public class SummaAnalyzerTest extends TestCase {
                     RuleParser.parse(RuleParser.sanitize(
                             "", true, Rules.ALL_TRANSLITERATIONS)));
             ReplaceReader replacer = factory.getReplacer();
-            System.out.println("Got Replacer " + replacer);
+            assertNotNull(replacer);
         } catch (Exception e) {
             e.printStackTrace();
             fail("Exception thrown");
@@ -91,7 +91,7 @@ public class SummaAnalyzerTest extends TestCase {
     }
 
     /**
-     * Tset foo case fold.
+     * Test foo case fold.
      */
     public void testFooCaseFold() {
         try {
