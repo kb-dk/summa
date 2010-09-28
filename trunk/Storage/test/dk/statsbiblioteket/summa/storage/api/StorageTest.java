@@ -21,8 +21,6 @@ import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,36 +30,64 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+/**
+ * Test {@link Storage}.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "hbk")
 public class StorageTest extends StorageTestBase {
+    /** Local logger. */
     private static Log log = LogFactory.getLog(StorageTest.class);
-    public void testGetEmpty () throws Exception {
+
+    /**
+     * Test get empty.
+     * @throws Exception If error.
+     */
+    public void testGetEmpty() throws Exception {
         List<Record> recs = storage.getRecords(new ArrayList<String>(), null);
         assertEquals(0, recs.size());
     }
 
-    public void testGetNonExisting () throws Exception {
+    /**
+     * Test get non existing record.
+     * @throws Exception If error.
+     */
+    public void testGetNonExisting() throws Exception {
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
         assertEquals(0, recs.size());
     }
 
-    public void testClearEmptyBase () throws Exception {
-        storage.clearBase (testBase1);
-        assertBaseEmpty (testBase1);
+    /**
+     * Test clear empty base.
+     * @throws Exception If error.
+     */
+    public void testClearEmptyBase() throws Exception {
+        storage.clearBase(testBase1);
+        assertBaseEmpty(testBase1);
     }
 
+    /**
+     * Test iteration.
+     * @throws Exception If error.
+     */
     public void testIteration() throws Exception {
-        storage.clearBase (testBase1);
+        storage.clearBase(testBase1);
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase1, testContent1));
         assertBaseCount(testBase1, 2);
-    }    
+    }
 
-    public void testAddOne () throws Exception {
-        Record rec = new Record (testId1, testBase1, testContent1);
-        storage.flush (rec);
+    /**
+     * Test add one.
+     * @throws Exception If error.
+     */
+    public void testAddOne() throws Exception {
+        Record rec = new Record(testId1, testBase1, testContent1);
+        storage.flush(rec);
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
@@ -75,10 +101,14 @@ public class StorageTest extends StorageTestBase {
 
         assertBaseCount(testBase1, 1);
 
-        assertTrue(storage.getModificationTime (testBase1) > testStartTime);
-        assertTrue(storage.getModificationTime (null) > testStartTime);
+        assertTrue(storage.getModificationTime(testBase1) >= testStartTime);
+        assertTrue(storage.getModificationTime(null) >= testStartTime);
     }
 
+    /**
+     * Test update multi flush.
+     * @throws Exception If error.
+     */
     public void testUpdateMultiFlush() throws Exception {
         Record plain = new Record(testId1, testBase1, testContent1);
         Record deleted = new Record(testId1, testBase1, testContent1);
@@ -92,7 +122,10 @@ public class StorageTest extends StorageTestBase {
         storage.flushAll(Arrays.asList(plain, deleted, deleted, plain));
     }
 
-    /* Test that record content is indeed updated when calling the flush() */
+    /**
+     * Test that record content is indeed updated when calling the flush().
+     * @throws Exception  If error.
+     */
     public void testContentUpdate() throws Exception {
         Record orig = new Record(testId1, testBase1, testContent1);
         Record upd = new Record(testId1, testBase1, testContent2);
@@ -113,8 +146,11 @@ public class StorageTest extends StorageTestBase {
         assertTrue(_upd.getContentAsUTF8().equals(new String(testContent2)));
     }
 
-    /* Assert that the TRY_UPDATE meta flag works - ie. that we don't update
-     * records that are already up to date */
+    /** 
+     * Assert that the TRY_UPDATE meta flag works - ie. that we don't update
+     * records that are already up to date
+     * @throws Exception If error. 
+     */
     public void testTryUpdate() throws Exception {
         Record orig = new Record(testId1, testBase1, testContent1);
         storage.flush(orig);
@@ -135,7 +171,10 @@ public class StorageTest extends StorageTestBase {
         assertTrue(newMtime > mtime);
     }
 
-    /* Test that record content is indeed updated when calling the flushAll() */
+    /**
+     * Test that record content is indeed updated when calling the flushAll().
+     * @throws Exception If error.
+     **/
     public void testBatchedContentUpdate() throws Exception {
         Record orig = new Record(testId1, testBase1, testContent1);
         Record upd = new Record(testId1, testBase1, testContent2);
@@ -164,7 +203,7 @@ public class StorageTest extends StorageTestBase {
 
     // Flush single records repeatedly with flush()
     public void testClearAndUpdate() throws Exception {
-        int NUM_RUNS = 30;
+        int NUM_RUNS = 1; // 30;
         int NUM_RECS = 1027;
 
         for (int i = 0; i < NUM_RUNS; i++) {
@@ -185,7 +224,7 @@ public class StorageTest extends StorageTestBase {
                 assertEquals(new String(testContent1), rec.getContentAsUTF8());
                 assertFalse(rec.isDeleted());
             }
-            assertFalse("Base " + testBase1 +" must contain at max "
+            assertFalse("Base " + testBase1 + " must contain at max "
                         + NUM_RECS + " records", iter.hasNext());
 
             // Clear the test base. Rinse, repeat
@@ -196,7 +235,7 @@ public class StorageTest extends StorageTestBase {
 
     // Flush batches of records repeatedly with flushAll()
     public void testClearAndUpdateBatch() throws Exception {
-        int NUM_RUNS = 30;
+        int NUM_RUNS = 3; //30;
         int NUM_RECS = 1000;
 
         for (int i = 0; i < NUM_RUNS; i++) {
@@ -229,9 +268,9 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testAddOneWithOneChildId() throws Exception {
-        Record rec = new Record (testId1, testBase1, testContent1);
+        Record rec = new Record(testId1, testBase1, testContent1);
         rec.setChildIds(Arrays.asList(testId2));
-        storage.flush (rec);
+        storage.flush(rec);
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
@@ -247,9 +286,9 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testAddOneWithTwoChildIds() throws Exception {
-        Record rec = new Record (testId1, testBase1, testContent1);
+        Record rec = new Record(testId1, testBase1, testContent1);
         rec.setChildIds(Arrays.asList(testId2, testId3));
-        storage.flush (rec);
+        storage.flush(rec);
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
@@ -257,7 +296,8 @@ public class StorageTest extends StorageTestBase {
         assertEquals(rec, recs.get(0));
 
         assertEquals(null, recs.get(0).getChildren());
-        assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getChildIds());
+        assertEquals(Arrays.asList(testId2, testId3),
+                     recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(null, recs.get(0).getParentIds());
 
@@ -265,9 +305,9 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testAddOneWithOneParentId() throws Exception {
-        Record rec = new Record (testId1, testBase1, testContent1);
+        Record rec = new Record(testId1, testBase1, testContent1);
         rec.setParentIds(Arrays.asList(testId2));
-        storage.flush (rec);
+        storage.flush(rec);
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
@@ -284,9 +324,9 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testAddOneWithTwoParentIds() throws Exception {
-        Record rec = new Record (testId1, testBase1, testContent1);
+        Record rec = new Record(testId1, testBase1, testContent1);
         rec.setParentIds(Arrays.asList(testId2, testId3));
-        storage.flush (rec);
+        storage.flush(rec);
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
@@ -296,16 +336,20 @@ public class StorageTest extends StorageTestBase {
         assertEquals(null, recs.get(0).getChildren());
         assertEquals(null, recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
-        assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getParentIds());
+        assertEquals(Arrays.asList(testId2, testId3),
+                     recs.get(0).getParentIds());
 
         assertBaseCount(testBase1, 1);
     }
 
-    public void testAddTwo () throws Exception {
+    /**
+     * Test AddTwo.
+     * @throws Exception If error.
+     */
+    public final void testAddTwo() throws Exception {
         Record rec1 = new Record(testId1, testBase1, testContent1);
         Record rec2 = new Record(testId2, testBase1, testContent1);
-
-        storage.flushAll (Arrays.asList(rec1, rec2));
+        storage.flushAll(Arrays.asList(rec1, rec2));
 
         List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2),
                                                null);
@@ -326,16 +370,20 @@ public class StorageTest extends StorageTestBase {
 
         assertBaseCount(testBase1, 2);
 
-        assertTrue(storage.getModificationTime (testBase1) > testStartTime);
-        assertTrue(storage.getModificationTime (null) > testStartTime);
+        assertTrue(storage.getModificationTime(testBase1) >= testStartTime);
+        assertTrue(storage.getModificationTime(null) >= testStartTime);
     }
 
-    public void testAddTwoWithTimestampSort () throws Exception {
+    /**
+     * Test add two with time stamp sort.
+     * @throws Exception If error.
+     */
+    public final void testAddTwoWithTimestampSort() throws Exception {
         Record rec1 = new Record(testId1, testBase1, testContent1);
         Record rec2 = new Record(testId2, testBase1, testContent1);
 
         // Commit the records with id sorting reversed with 100ms delay
-        storage.flush (rec2);
+        storage.flush(rec2);
         Thread.sleep(100);
         storage.flush(rec1);
 
@@ -352,13 +400,13 @@ public class StorageTest extends StorageTestBase {
                     iter.hasNext());
     }
 
-    public void testClearTwo () throws Exception {
+    public void testClearTwo() throws Exception {
         testAddTwo();
         storage.clearBase(testBase1);
         assertBaseEmpty(testBase1);
     }
 
-    public void testExpandShallowRecord () throws Exception {
+    public void testExpandShallowRecord() throws Exception {
         testAddOne();
 
         QueryOptions options = new QueryOptions(null, null, 1, 0);
@@ -371,7 +419,7 @@ public class StorageTest extends StorageTestBase {
         assertEquals(rec.getId(), rec.getId());
     }
 
-    public void testFullExpandShallowRecord () throws Exception {
+    public void testFullExpandShallowRecord() throws Exception {
         testAddOne();
 
         QueryOptions options = new QueryOptions(null, null, -1, 0);
@@ -385,9 +433,9 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testAddLinkedRecords () throws Exception {
-        Record recP = new Record (testId1, testBase1, testContent1);
-        Record recC1 = new Record (testId2, testBase1, testContent1);
-        Record recC2 = new Record (testId3, testBase1, testContent1);
+        Record recP = new Record(testId1, testBase1, testContent1);
+        Record recC1 = new Record(testId2, testBase1, testContent1);
+        Record recC2 = new Record(testId3, testBase1, testContent1);
 
         recP.setChildIds(Arrays.asList(recC1.getId(), recC2.getId()));
 
@@ -567,7 +615,7 @@ public class StorageTest extends StorageTestBase {
      * @throws Exception if error.
      */
     public void testTimestampUpdates () throws Exception {
-        Record r1 = new Record (testId1, testBase1, testContent1);
+        Record r1 = new Record(testId1, testBase1, testContent1);
 
         long beforeFlushTime = System.currentTimeMillis();
         storage.flush(r1);
@@ -584,21 +632,20 @@ public class StorageTest extends StorageTestBase {
         long ctime = r2.getCreationTime();
         long mtime = r2.getModificationTime();
 
-        assertEquals("For new records mtime == ctime",
-                     ctime, mtime);
+        assertEquals("For new records mtime == ctime", ctime, mtime);
 
         storage.flush(r1);
         r2 = storage.getRecords(Arrays.asList(testId1), null).get(0);
 
         assertEquals(ctime, r2.getCreationTime());
-        assertTrue(mtime < r2.getModificationTime());
+        assertTrue(mtime <= r2.getModificationTime());
     }
 
     public void testGetMorerecords() throws Exception {
-        int WANTED_RECORDS = Math.max(DatabaseStorage.DEFAULT_PAGE_SIZE*3 + 5,
+        int WANTED_RECORDS = Math.max(DatabaseStorage.DEFAULT_PAGE_SIZE * 3 + 5,
                                       StorageIterator.MAX_QUEUE_SIZE + 5);
 
-        for (int i = 0 ; i < WANTED_RECORDS ; i++) {
+        for (int i = 0; i < WANTED_RECORDS; i++) {
             storage.flush(new Record("Foo" + i, testBase1, testContent1));
         }
 
@@ -614,12 +661,12 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testGetModifiedAfter() throws Exception {
-        Record r1 = new Record (testId1, testBase1, testContent1);
+        Record r1 = new Record(testId1, testBase1, testContent1);
         storage.flush(r1);
         Record r2 = storage.getRecords(Arrays.asList(testId1), null).get(0);
         assertEquals("The timestamp for the retireved record should match the"
                      + " ingested", r1, r2);
-        long mtime1 = r2.getModificationTime();
+        long mtime1 = r1.getModificationTime();
 
         storage.flush(new Record(testId2, testBase1, testContent1));
         long mtime2 = storage.getRecords(Arrays.asList(testId2), null).get(0).
@@ -636,10 +683,10 @@ public class StorageTest extends StorageTestBase {
         Record record = records.next();
         log.debug("Got record from getModifiedAfter(" + mtime1 + ", "
                   + testBase1 + ") with id " + record.getId() + ", mtime "
-                  + record.getModificationTime() + ". Time diff: " 
+                  + record.getModificationTime() + ". Time diff: "
                   + (record.getModificationTime() - mtime1));
         if (records.hasNext()) {
-            fail("Record is singular - no more records should be returned. " 
+            fail("Record is singular - no more records should be returned. "
                  + "Got record " + records.next());
         }
     }
@@ -659,28 +706,28 @@ public class StorageTest extends StorageTestBase {
         long ctimeP = recP.getCreationTime();
 
         /* Touch child recCC1 of recP (nested 2 levels) */
-        storage.flush (recCC1);
+        storage.flush(recCC1);
 
         recCC1 = storage.getRecord(testId4, null);
         recP = storage.getRecord(testId1, null);
 
         /* Sanity check that recCC1 has been updated */
-        assertTrue (mtimeCC1 < recCC1.getModificationTime());
-        assertTrue (ctimeCC1 == recCC1.getCreationTime());
+        assertTrue(mtimeCC1 < recCC1.getModificationTime());
+        assertTrue(ctimeCC1 == recCC1.getCreationTime());
 
         /* Assert that the parent has been updated as well */
-        assertTrue (mtimeP < recP.getModificationTime());
-        assertTrue (ctimeP == recP.getCreationTime());
+        assertTrue(mtimeP < recP.getModificationTime());
+        assertTrue(ctimeP == recP.getCreationTime());
     }
 
     public void testRecordMetaTags () throws Exception {
-        Record r1 = new Record (testId1, testBase1, testContent1);
+        Record r1 = new Record(testId1, testBase1, testContent1);
         r1.addMeta("foo", "bar");
         r1.addMeta("bork", "boo");
 
         storage.flush(r1);
         Record r2 = storage.getRecords(Arrays.asList(testId1), null).get(0);
-        
+
         assertEquals(2, r2.getMeta().size());
         assertEquals(r1.getMeta("foo"), r2.getMeta("foo"));
         assertEquals(r1.getMeta("bork"), r2.getMeta("bork"));
@@ -692,8 +739,8 @@ public class StorageTest extends StorageTestBase {
     public void testFlushAllIdCollisions() throws Exception {
         List<Record> recs = new ArrayList<Record>();
 
-        recs.add(new Record (testId1, testBase1, testContent1));
-        recs.add(new Record (testId1, testBase2, testContent1));
+        recs.add(new Record(testId1, testBase1, testContent1));
+        recs.add(new Record(testId1, testBase2, testContent1));
 
         storage.flushAll(recs);
 
@@ -737,8 +784,8 @@ public class StorageTest extends StorageTestBase {
      * will test for connection leaks.
      */
     public void testManyParentChild() throws Exception {
-        int batchCount = 20;
-        int batchSize = 30;
+        final int batchCount = 20;
+        final int batchSize = 30;
         List<List<Record>> batches =
                                   new ArrayList<List<Record>>(batchCount);
         List<String> parentIds = new ArrayList<String>(batchSize);
@@ -746,25 +793,26 @@ public class StorageTest extends StorageTestBase {
         for (int j = 0; j < batchCount; j++) {
             List<Record> batch = new ArrayList<Record>(batchSize);
             batches.add(batch);
-        for (int i = 0; i < batchSize; i++) {
-            batch.add(new Record ("parent_"+j+"_"+i, testBase1, testContent1));
-            parentIds.add("parent_"+j+"_"+i);
-            batch.get(i).setChildren(Arrays.asList(new Record ("child_"+j+"_"+i,
-                                                              testBase1,
-                                                              testContent1)));
-        }
+            for (int i = 0; i < batchSize; i++) {
+                batch.add(new Record("parent_" + j + "_" + i,
+                                     testBase1, testContent1));
+                parentIds.add("parent_" + j + "_" + i);
+                batch.get(i).setChildren(Arrays.asList(
+                      new Record("child_" + j + "_" + i, testBase1,
+                                 testContent1)));
+            }
         }
 
         for (List<Record> batche : batches) {
             storage.flushAll(batche);
         }
 
-        assertBaseCount(testBase1, batchSize*batchCount*2);
+        assertBaseCount(testBase1, batchSize * batchCount * 2);
 
         List<Record> result = storage.getRecords(parentIds,
                                                  new QueryOptions(null, null,
                                                                   -1 , -1));
-        assertEquals(batchCount*batchSize, result.size());
+        assertEquals(batchCount * batchSize, result.size());
         for (Record aResult : result) {
             assertEquals(1, aResult.getChildren().size());
             assertEquals("child_",
@@ -875,6 +923,7 @@ public class StorageTest extends StorageTestBase {
     }
 
     public void testPauseResume() throws Exception {
+        final int sleepTime = 2 /*10*/ * 1000; 
         Configuration storageConf = getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyHelper monkey = new StorageMonkeyHelper(
@@ -883,8 +932,8 @@ public class StorageTest extends StorageTestBase {
                 monkey.createJobs(10000, 0, 0, 10000, 100, 100);
         log.info("Handling primary jobs");
         monkey.doJobs(primaryJobs, 1);
-        log.info("Sleeping 10 seconds");
-        Thread.sleep(10 * 1000);
+        log.info("Sleeping " + sleepTime + " ms");
+        Thread.sleep(sleepTime);
         log.info("Handling secondary jobs");
         List<StorageMonkeyHelper.Job> secondaryJobs =
                 monkey.createJobs(1000, 0, 0, 1000, 100, 100);
