@@ -186,6 +186,26 @@
                     <argLine>-Xms256m -Xmx768m</argLine> -->
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>./</directory>
+                            <includes>
+                                <include>**/configuration.*.xml</include>
+                                <include>**/xconfiguration.*.xml</include>
+                            </includes>
+                            <!-- <excludes>
+                                <exclude>**/important.log</exclude>
+                                <exclude>**/another-important.log</exclude>
+                            </excludes> -->
+                            <followSymlinks>false</followSymlinks>
+                          </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
             <!-- Jars -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
