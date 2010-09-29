@@ -19,9 +19,9 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.File;
 import java.io.IOException;
@@ -133,12 +133,17 @@ public class TermStatExtractor {
         Profiler profiler = new Profiler();
         TermStat stats = new TermStat(termStatConf);
         stats.create(destination);
-        TermEnum terms = ir.terms();
-        while (terms.next()) {
-            stats.add(new TermEntry(
-                    terms.term().field() + ":" + terms.term().text(),
-                    terms.docFreq()));
-            profiler.beat();
+        FieldsEnum fields = ir.fields().iterator();
+        String field;
+        while ((field = fields.next()) != null) {
+            TermsEnum terms = ir.terms(field).iterator();
+            BytesRef ref;
+            while ((ref = terms.next()) != null) {
+                stats.add(new TermEntry(
+                        field + ":" + ref.utf8ToString(),
+                        terms.docFreq()));
+                profiler.beat();
+            }
         }
         stats.setDocCount(ir.maxDoc());
         stats.setSource(index.toString());

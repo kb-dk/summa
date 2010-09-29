@@ -22,13 +22,13 @@
 
 
 
-    <!--<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
        <param name="Target" value="System.out"/>
-       <param name="Threshold" value="trace"/>
+       <param name="Threshold" value="info"/>
        <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
        </layout>
-     </appender>-->
+     </appender>
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
@@ -76,11 +76,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>-->
 
-<!--    <logger name="dk.statsbiblioteket.summa">
+    <logger name="dk.statsbiblioteket.summa">
         <level value="info" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    -->
+
    <logger name="dk.statsbiblioteket.summa.support">
         <level value="FATAL" />
         <appender-ref ref="FILE" />
@@ -92,9 +92,9 @@
     </logger>
     -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
-    <!--<root>
-        <level value="FATAL" />
-        <appender-ref ref="FULL_LOG" />
-    </root>-->
+    <root>
+        <level value="INFO" />
+        <appender-ref ref="CONSOLE" />
+    </root>
 
 </log4j:configuration>

@@ -41,7 +41,6 @@ import java.util.Random;
 public class TestSortComparators extends TestCase {
     private static Log log = LogFactory.getLog(TestSortComparators.class);
 
-
     static SortHelper.SortFactory getLuceneFactory(final String field) {
         return new SortHelper.SortFactory() {
             @Override
@@ -51,22 +50,12 @@ public class TestSortComparators extends TestCase {
         };
     }
 
-    static SortHelper.SortFactory getStaticFactory(final String field) {
-        return new SortHelper.SortFactory() {
-            @Override
-            Sort getSort(IndexReader reader) throws IOException {
-                return new Sort(new SortField(
-                        field, new LocalStaticSortComparator("da")));
-            }
-        };
-    }
-
     static SortHelper.SortFactory getExposedFactory(final String field) {
         return new SortHelper.SortFactory() {
             IndexReader reader = null;
             @Override
             Sort getSort(IndexReader reader) throws IOException {
-                ExposedSortComparator exposed = new ExposedSortComparator("da");
+                ExposedComparator exposed = new ExposedComparator("da");
                 exposed.indexChanged(reader);
                 return new Sort(new SortField(field, exposed));
             }
@@ -74,17 +63,6 @@ public class TestSortComparators extends TestCase {
             @Override
             void indexChanged(IndexReader reader) throws IOException {
                 this.reader = reader;
-            }
-        };
-    }
-
-    static SortHelper.SortFactory getMultipassFactory(
-            final String field, final int buffer) {
-        return new SortHelper.SortFactory() {
-            @Override
-            Sort getSort(IndexReader reader) throws IOException {
-                return new Sort(new SortField(
-                        field, new MultipassSortComparator("da", buffer)));
             }
         };
     }
@@ -109,7 +87,6 @@ public class TestSortComparators extends TestCase {
     public void testCompareMemoryConsumption() throws Exception {
         int TERM_COUNT = 10000;
         int TERM_MAX_LENGTH = 20;
-        int RUNS = 3;
         final int SORT_BUFFER = 2 * 1024 * 1024;
 
         File index = SortHelper.createIndex(
@@ -118,33 +95,26 @@ public class TestSortComparators extends TestCase {
         Thread.sleep(200);
         System.gc();
         Thread.sleep(200);
+        long initialMem = Runtime.getRuntime().totalMemory()
+                   - Runtime.getRuntime().freeMemory();
         log.info(String.format(
                 "Measuring memory usage for different sorters. Term count = %d,"
                 + " max term length = %d, sort buffer (for multipass) = %d KB. "
                 + "Initial memory usage: %d KB",
                 TERM_COUNT, TERM_MAX_LENGTH, SORT_BUFFER / 1024,
-                (Runtime.getRuntime().totalMemory()
-                 - Runtime.getRuntime().freeMemory()) / 1024));
+                initialMem / 1024));
         // TODO assert
-        for (int run = 0 ; run < RUNS ; run++) {
-            long lucene = SortHelper.performSortedSearch(
-                    index, "all:all", 10, getLuceneFactory(
-                    SortHelper.SORT_FIELD));
-            long multipass = SortHelper.performSortedSearch(
-                    index, "all:all", 10, getMultipassFactory(
-                            SortHelper.SORT_FIELD, SORT_BUFFER));
-            long localstatic =SortHelper.performSortedSearch(
-                    index, "all:all", 10, getStaticFactory(
-                            SortHelper.SORT_FIELD));
-            long exposed =SortHelper.performSortedSearch(
-                    index, "all:all", 10, getExposedFactory(
-                            SortHelper.SORT_FIELD));
-            log.info(String.format(
-                  "Run %d -> lucene = %d KB, multipass = %d KB, static = %d KB,"
-                  + " exposed = %d KB",
-                  run, lucene / 1024, multipass / 1024, localstatic / 1024,
-                  exposed / 1024));
-            // TODO assert
-        }
+        long lucene = SortHelper.performSortedSearch(
+            index, "all:all", 10, getLuceneFactory(
+                SortHelper.SORT_FIELD));
+        long exposed = SortHelper.performSortedSearch(
+            index, "all:all", 10, getExposedFactory(
+                SortHelper.SORT_FIELD));
+        System.out.println(String.format(
+            "initial = %d KB, lucene overhead = %d KB, "
+            + "exposed overhead = %d KB",
+            initialMem / 1024,
+            (lucene - initialMem) / 1024,
+            (exposed - lucene) / 1024));
     }
 }

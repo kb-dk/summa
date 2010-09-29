@@ -26,7 +26,6 @@ import java.util.Locale;
 
 /**
  * Lazy container with sorters for fields.
- * TODO Should not used deprecated MultipassSortComparator
  */
 public class SortFactory {
     private static final Logger log = Logger.getLogger(SortFactory.class);
@@ -52,19 +51,13 @@ public class SortFactory {
      *         Cons: Long startup-time if low memory-usage is requested.
      */
     public static enum COMPARATOR {
-        lucene, localstatic, multipass, exposed;
+        lucene, exposed;
         public static COMPARATOR parse(String value) {
             if (value == null) {
                 return DEFAULT_COMPARATOR;
             }
             if (value.equalsIgnoreCase(lucene.toString())) {
                 return lucene;
-            }
-            if (value.equalsIgnoreCase(localstatic.toString())) {
-                return localstatic;
-            }
-            if (value.equalsIgnoreCase(multipass.toString())) {
-                return multipass;
             }
             if (value.equalsIgnoreCase(exposed.toString())) {
                 return exposed;
@@ -74,7 +67,7 @@ public class SortFactory {
     }
 
     /** The Default comparator. */
-    public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.localstatic;
+    public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.exposed;
 
     /** Default buffer size is 100MB. */
     public static final int DEFAULT_BUFFER = 100 * 1024 * 1024; // 100MB
@@ -92,7 +85,7 @@ public class SortFactory {
      * auto-detecting field type (String, integer, float...).
      * @param comparator   the String-comparator implementation to use.
      * @param buffer       comparator-specific buffer-size.
-     *                     Currently used by {@link MultipassSortComparator}.
+     *                     Currently not used by any comparator.
      * @param field        the field to perform sorting on.
      * @param sortLanguage the language for sorting.
      * @param comparators  a map of existing comparators for fields.
@@ -184,23 +177,10 @@ public class SortFactory {
                                 "Lucene sorters should be constructed by "
                                 + "getSortField");
                     }
-                    case localstatic: {
-                        comparators.put(
-                                sortLanguage,
-                                new LocalStaticSortComparator(sortLanguage));
-                        break;
-                    }
-                    case multipass: {
-                        comparators.put(
-                                sortLanguage,
-                                new MultipassSortComparator(
-                                        sortLanguage, buffer));
-                        break;
-                    }
                     case exposed: {
                         comparators.put(
                                 sortLanguage,
-                                new ExposedSortComparator(sortLanguage));
+                                new ExposedComparator(sortLanguage));
                         break;
                     }
                     default: {

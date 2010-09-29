@@ -30,10 +30,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.Term;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
+import org.apache.lucene.index.*;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Document;
 import dk.statsbiblioteket.util.Profiler;
@@ -45,6 +43,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.SimpleFSLockFactory;
+import org.apache.lucene.util.BytesRef;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -121,15 +120,17 @@ public class Inspect {
     private void cache(String field) throws IOException {
         System.out.println("Populating cache for field '" + field + "'");
         Profiler profiler = new Profiler();
-        String[] result = FieldCache.DEFAULT.getStrings(ir, field);
+        FieldCache.DocTerms result = FieldCache.DEFAULT.getTerms(ir, field);
         
         String time = profiler.getSpendTime();
         long size = 0;
         int defined = 0;
         int nulls = 0;
-        for (String t: result) {
-            if (t != null) {
-                size += t.length();
+        BytesRef ref = new BytesRef();
+        for (int i = 0 ; i < result.size() ; i++) {
+            ref = result.getTerm(i, ref);
+            if (ref != null) {
+                size += ref.length;
                 defined++;
             } else {
                 nulls++;
@@ -138,7 +139,7 @@ public class Inspect {
         System.out.println("Cached " + defined + " terms for field '"
                            + field + "' of average size "
                            + size * 1.0 / defined
-                           + "chars (" + nulls + " nulls) in " + time);
+                           + "bytes (" + nulls + " nulls) in " + time);
     }
 
     private void stats(String[] strings) throws IOException {
@@ -150,18 +151,16 @@ public class Inspect {
         String fieldName = strings[0];
         String divider = strings[1];
         HashMap<String, Integer> buckets = new HashMap<String, Integer>(100);
-        TermEnum termEnum = ir.terms(new Term(fieldName, "*"));
+        TermsEnum terms = ir.terms(fieldName).iterator();
         int counter = 0;
         int errors = 0;
-        while (termEnum.term() != null) {
-            if (!termEnum.term().field().equals(fieldName)) {
-                break;
-            }
-            String[] split = termEnum.term().text().split(divider, 2);
+        BytesRef ref;
+        while ((ref = terms.next()) != null) {
+            String[] split = ref.utf8ToString().split(divider, 2);
             if (split.length != 2) {
                 errors++;
                 if (errors == 1) {
-                    System.err.println("Term '" + termEnum.term().text()
+                    System.err.println("Term '" + ref.utf8ToString()
                                        + "' in field " + fieldName
                                        + "' did not divide by '" + divider
                                        + "'. Skipping all following errors");
@@ -176,7 +175,6 @@ public class Inspect {
             if (counter++ % feedback == 0) {
                 System.out.print(".");
             }
-            termEnum.next();
         }
         System.out.println("\nStats for field '" + fieldName + " with divider '"
                            + divider + "'. DocCount: " + ir.maxDoc()
@@ -297,19 +295,16 @@ public class Inspect {
     }
 
     private String indirect(int docID, String fieldName) throws IOException {
-        TermEnum terms = ir.terms();
         StringWriter sw = new StringWriter(1000);
-        while (terms.next()) {
-            if (terms.term().field().equals(fieldName)) {
-                TermDocs termDocs = ir.termDocs(new Term(fieldName,
-                                                         terms.term().text()));
-                if (termDocs != null) {
-                    while (termDocs.next()) {
-                        if (termDocs.doc() == docID) {
-                            sw.append(terms.term().text()).append(" ");
-                            break;
-                        }
-                    }
+        TermsEnum terms = ir.terms(fieldName).iterator();
+        BytesRef ref;
+        DocsEnum docs = null;
+        while ((ref = terms.next()) != null) {
+            docs = terms.docs(ir.getDeletedDocs(), docs);
+            while (docs.nextDoc() != DocsEnum.NO_MORE_DOCS) {
+                if (docs.docID() == docID) {
+                    sw.append(ref.utf8ToString()).append(" ");
+                    break;
                 }
             }
         }
@@ -319,35 +314,24 @@ public class Inspect {
     public void stats() throws IOException {
         System.out.println("Mem: " + getMem());
         System.out.println("\nFields:");
-        Collection fields =
-                ir.getFieldNames(IndexReader.FieldOption.ALL);
-        List<String> fieldnames = new ArrayList<String>(fields.size());
-        for (Object field: fields) {
-            System.out.println(field);
-            fieldnames.add((String)field);
-        }
 
-        Map<String, Integer> termCount =
-                new HashMap<String, Integer>(fieldnames.size());
-        TermEnum terms = ir.terms();
-        int fCount = 0;
-        while (terms.next()) {
-            Integer count = termCount.get(terms.term().field());
-            if (count == null) {
-                termCount.put(terms.term().field(), 1);
+        FieldsEnum fields = ir.fields().iterator();
+        String field;
+        long totalTermCount = 0;
+        while ((field = fields.next()) != null) {
+            long termCount = 0;
+            if (ir.getSequentialSubReaders() == null) {
+                termCount = ir.terms(field).getUniqueTermCount();
             } else {
-                termCount.put(terms.term().field(), count+1);
+                for (IndexReader sub: ir.getSequentialSubReaders()) {
+                    termCount += sub.terms(field).getUniqueTermCount();
+                }
             }
-            if (fCount++ % 100000 == 0) {
-                System.out.print(".");
-            }
+            System.out.println("Field " + field + ": " + termCount + " terms");
+            totalTermCount += termCount;
         }
-        System.out.println("\nTermCounts: ");
-        for (Map.Entry<String, Integer> entry: termCount.entrySet()) {
-            System.out.println(entry.getKey() + ": " + entry.getValue());
-        }
-
-        System.out.println("\nDocuments: " + ir.maxDoc());
+        System.out.println("Total: " + ir.maxDoc()+ " documents, "
+                           + totalTermCount + " terms");
     }
 
     public static String getMem() {
@@ -411,32 +395,37 @@ public class Inspect {
     public void field(String fieldName) throws IOException {
         int MAXDOCS = 10;
         int counter = 0;
-        TermEnum terms = ir.terms();
-        while (terms.next()) {
-            if (terms.term().field().equals(fieldName)) {
-                System.out.println(fieldName + ": " + terms.term().text());
-                field(fieldName, terms.term().text());
-                if (counter++ >= MAXDOCS) {
-                    System.out.println("Maximum display count reached");
-                    break;
-                }
+
+        TermsEnum terms = ir.terms(fieldName).iterator();
+        while (terms.next() != null) {
+            System.out.println(fieldName + ": " + terms.term().utf8ToString());
+            field(fieldName, terms.term().utf8ToString());
+            if (counter++ >= MAXDOCS) {
+                System.out.println("Maximum display count reached");
+                break;
             }
         }
     }
 
     public void field(String fieldName, String termName) throws IOException {
         int MAXDOCS = 5;
-        TermDocs termDocs = ir.termDocs(new Term(fieldName, termName));
-        if (termDocs == null) {
+
+        TermsEnum terms = ir.terms(fieldName).iterator();
+        BytesRef ref = new BytesRef(termName);
+        if (terms.seek(ref) == TermsEnum.SeekStatus.NOT_FOUND) {
             System.out.println(" - No TermDocs for field " + fieldName);
             return;
         }
+
         System.out.println(" - Dumping the first " + MAXDOCS
                            + " docs for " + fieldName + ": " + termName);
         int counter = 0;
-        while (termDocs.next() && counter++ < MAXDOCS) {
-            System.out.println("  - Document " + termDocs.doc());
-        }
+        DocsEnum docs = null;
+        docs = terms.docs(ir.getDeletedDocs(), docs);
+        do {
+            System.out.println("  - Document " + docs.read());
+            counter++;
+        } while (counter < MAXDOCS && docs.nextDoc() != DocsEnum.NO_MORE_DOCS);
     }
 }
 

@@ -220,8 +220,8 @@ public class LuceneManipulator implements IndexManipulator {
         }
         try {
             IndexWriterConfig writerConfig =
-                        new IndexWriterConfig(Version.LUCENE_30,
-                                     new StandardAnalyzer(Version.LUCENE_30));
+                        new IndexWriterConfig(Version.LUCENE_40,
+                                     new StandardAnalyzer(Version.LUCENE_20));
             writerConfig.setMaxFieldLength(
                                    IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
             if (bufferSizePayloads != -1) {
@@ -240,11 +240,11 @@ public class LuceneManipulator implements IndexManipulator {
                           indexDirectory.getDirectory()));
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
 
-                writer = new IndexWriter(indexDirectory, writerConfig);
 
-                LogMergePolicy logMergePolicy = new LogDocMergePolicy(writer);
+                LogMergePolicy logMergePolicy = new LogDocMergePolicy();
                 logMergePolicy.setMergeFactor(80); // TODO: Verify this
-                writer.setMergePolicy(new LogByteSizeMergePolicy(writer)); 
+                writerConfig.setMergePolicy(logMergePolicy);
+                writer = new IndexWriter(indexDirectory, writerConfig);
 
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering

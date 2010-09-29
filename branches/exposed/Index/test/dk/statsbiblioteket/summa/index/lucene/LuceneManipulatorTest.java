@@ -117,10 +117,9 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         LuceneTestHelper.verifyContent(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        log.info("Spend " + profiler.getSpendTime() + " on "
+        System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
                            + profiler.getBps() + " additions/second");
-        // TODO assertEquals
 
         profiler.reset();
         manipulator = openIndex(100);
@@ -133,10 +132,9 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         LuceneTestHelper.verifyContent(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        log.info("Spend " + profiler.getSpendTime() + " on "
+        System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
                            + profiler.getBps() + " updates/second");
-        // TODO assert
     }
 
     public void testDeletionsIndex() throws Exception {
@@ -206,7 +204,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                     new NIOFSDirectory(new File(location,
                                                 LuceneIndexUtils.LUCENE_FOLDER)));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
-                if (!reader.isDeleted(i)) {
+                if (!reader.getDeletedDocs().get(i)) {
                     try {
                         log.debug("id(" + i + "): "
                                   + reader.document(i).getValues(
@@ -285,7 +283,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         // Check for analyzer
         // Search for Jens with default / different prefixes
     }
-    @Override
+
     public boolean hasNext() {
         return hasMore;
     }
@@ -293,7 +291,6 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private boolean hasMore = true;
     private String jens = null;
     private String DOC_ID = "fagref:jh@statsbiblioteket.invalid";
-    @Override
     public Payload next() {
         if (!hasMore) {
             return null;
@@ -316,21 +313,21 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
     }
 
-    @Override
     public void remove() {
     }
 
-    @Override
     public void setSource(Filter filter) {
     }
 
-    @Override
     public boolean pump() throws IOException {
         return next() != null;
     }
 
-    @Override
     public void close(boolean success) {
         hasMore = false;
     }
 }
+
+
+
+

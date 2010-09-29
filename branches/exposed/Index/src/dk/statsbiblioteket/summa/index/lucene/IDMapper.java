@@ -42,8 +42,9 @@ import org.apache.lucene.index.TermEnum;
  * underlying index triggers an update of the IDMapper.
  */
 // TODO: Consider a speed-optimization here
+    // TODO: Remove this class or update the code for Lucene 4
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.UNDEFINED,
         author = "te")
 public class IDMapper implements Map<String, Integer> {
     private static Log log = LogFactory.getLog(IDMapper.class);
@@ -69,7 +70,7 @@ public class IDMapper implements Map<String, Integer> {
             author = "te",
             comment="Check if termEnum skips the first term")
     public IDMapper(Directory directory) throws IOException {
-        log.debug("Constructing IDMapper for '" + directory + "'");
+/*        log.debug("Constructing IDMapper for '" + directory + "'");
         long startTime = System.currentTimeMillis();
         IndexReader reader = IndexReader.open(directory);
         recordIDs = new HashMap<String, Integer>((int)(reader.maxDoc() * 1.2));
@@ -111,6 +112,7 @@ public class IDMapper implements Map<String, Integer> {
         log.debug("Extracted " + recordIDs.size() + " RecordIDs for "
                   + reader.maxDoc() + " documents in "
                   + (System.currentTimeMillis()-startTime) + " ms");
+                  */
     }
 
     // TODO: Validate ont-to-one correspondance

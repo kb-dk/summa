@@ -63,6 +63,8 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.DocIdBitSet;
@@ -468,6 +470,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     }
 
     private IndexReader getIndexreader(URL location) throws IOException {
+        // TODO: Optimize with reopen support
+        ExposedCache.getInstance().purgeAllCaches();
         IndexReader reader = IndexReader.open(new NIOFSDirectory(
                  new File(Resolver.urlToFile(location).getAbsolutePath())), true);
         return termProvider == null ? reader :

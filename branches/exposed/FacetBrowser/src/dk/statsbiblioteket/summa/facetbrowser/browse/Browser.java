@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -31,7 +30,7 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface Browser extends FacetCore {
+public interface Browser  {
     /**
      * @return a list with the names of all mapped Facets.
      */

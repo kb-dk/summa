@@ -79,7 +79,7 @@ public class IndexDumper {
         IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
         FieldSelector selector = new MapFieldSelector(fields);
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
-            if (ir.isDeleted(i)) {
+            if (!ir.getDeletedDocs().get(i)) {
                 continue;
             }
             Document doc = ir.document(i, selector);

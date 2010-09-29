@@ -21,9 +21,9 @@ import java.util.List;
  * @since <pre>05/25/2010</pre>
  * @version 1.0
  */
-public class ExposedSortComparatorTest extends TestCase {
-    private static Log log = LogFactory.getLog(ExposedSortComparatorTest.class);
-    public ExposedSortComparatorTest(String name) {
+public class ExposedComparatorTest extends TestCase {
+    private static Log log = LogFactory.getLog(ExposedComparatorTest.class);
+    public ExposedComparatorTest(String name) {
         super(name);
     }
 
@@ -36,14 +36,14 @@ public class ExposedSortComparatorTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(ExposedSortComparatorTest.class);
+        return new TestSuite(ExposedComparatorTest.class);
     }
 
     public void testExposedSortBasic() throws Exception {
         List<String> actual = SortHelper.getSortResult(
             "all:all",
             SortHelper.BASIC_TERMS, new SortHelper.SortFactory() {
-                ExposedSortComparator exposed = new ExposedSortComparator("da");
+                ExposedComparator exposed = new ExposedComparator("da");
                 @Override
                 Sort getSort(IndexReader reader) throws IOException {
                     exposed.indexChanged(reader);

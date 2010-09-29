@@ -20,22 +20,13 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
-import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserThread;
 import dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest;
-import dk.statsbiblioteket.summa.facetbrowser.browse.IndexLookup;
-import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
-import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -45,9 +36,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -80,7 +68,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
     private Configuration conf;
     private Structure structure = null;
-    private IndexLookup indexLookup;
     /**
      * The structure and facetMaps are updated upon open, depending on setup.
      * A lock is needed to ensure consistency.
@@ -110,7 +97,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             Structure structure = new Structure(conf);
             initStructures(structure);
         }
-        indexLookup = new IndexLookup(conf);
         log.trace("FacetSearchNode constructed. Awaiting open");
     }
 
@@ -246,5 +232,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         } finally {
             lock.readLock().unlock();
         }
+        throw new UnsupportedOperationException("getFacetMap not implemented");
     }
 }

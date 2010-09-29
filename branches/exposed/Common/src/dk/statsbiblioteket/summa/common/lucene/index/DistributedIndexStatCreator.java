@@ -68,13 +68,13 @@ public class DistributedIndexStatCreator {
         if (needsAdd){
            indexex.add(r);
            numdocs += r.numDocs();
-           TermEnum te = r.terms();
+/*           TermEnum te = r.terms();
            while (te.next()){
             Term t = te.term();
 
             int frq = buffer.get(t) != null ? te.docFreq() + buffer.get(t) : te.docFreq();
             buffer.put(t,frq);
-           }
+           }*/
         }
     }
 
@@ -87,12 +87,13 @@ public class DistributedIndexStatCreator {
         for (IndexReader r : indexex){
             IndexOutput o = r.directory().createOutput(DISTRIBUTED_STATS_FILE);
             o.writeVInt(numdocs);
-            TermEnum te = r.terms();
+/*            TermEnum te = r.terms();
             while(te.next()){
                 Term t = te.term();
                 o.writeString(t.field()); o.writeString(t.text()); o.writeVInt(buffer.get(t));
             }
             o.writeString(EOF);o.writeString(EOF);o.writeVInt(0);
+            */
         }
     }
 

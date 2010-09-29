@@ -53,7 +53,7 @@ public class LuceneTestHelper extends TestCase {
         IndexReader reader = IndexReader.open(new NIOFSDirectory(location));
         try {
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
-                if (!reader.isDeleted(i)) {
+                if (!reader.getDeletedDocs().get(i)) {
                     ids.add(reader.document(i).getValues(
                             IndexUtils.RECORD_FIELD)[0]);
                 }

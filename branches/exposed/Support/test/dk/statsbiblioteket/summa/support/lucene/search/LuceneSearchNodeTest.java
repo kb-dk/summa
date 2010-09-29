@@ -304,7 +304,7 @@ public class LuceneSearchNodeTest extends TestCase {
                             IndexReader.open(new NIOFSDirectory(indexLocation));
         BitSet deleted = new BitSet(reader.maxDoc());
         for (int i = 0 ; i < reader.maxDoc() ; i++) {
-            if (reader.isDeleted(i)) {
+            if (reader.getDeletedDocs().get(i)) {
                 deleted.set(i);
             }
         }

@@ -36,7 +36,7 @@ import org.apache.lucene.store.*;
 public class StemmingStats extends TestCase {
     private static final String INDEX_LOCATION =
             "/space/full_index";
-
+/*
     public void countTermsInFields(String termPrefix) throws Exception {
         int MAX_DUMP = 10;
         IndexReader ir = new IndexSearcher(new NIOFSDirectory(new File(INDEX_LOCATION))).getIndexReader();
@@ -75,6 +75,7 @@ public class StemmingStats extends TestCase {
     public void countMiddelalder() throws Exception {
         countTermsInFields("middel");
     }
+    */
 }
 
 
