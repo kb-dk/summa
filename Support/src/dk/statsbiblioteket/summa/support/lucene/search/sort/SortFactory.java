@@ -74,7 +74,7 @@ public class SortFactory {
     }
 
     /** The Default comparator. */
-    public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.localstatic;
+    public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.lucene;
 
     /** Default buffer size is 100MB. */
     public static final int DEFAULT_BUFFER = 100 * 1024 * 1024; // 100MB
