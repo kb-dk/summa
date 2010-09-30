@@ -154,20 +154,20 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                          1, payloadA.getData(LuceneIndexUtils.META_ADD_DOCID));
         }
 
-        {
+/*        {
             Payload deleted = getPayload("b", true);
             manipulator.update(deleted);
             assertEquals("The ID for the deleted Payload should be correct",
                         0, deleted.getData(LuceneIndexUtils.META_DELETE_DOCID));
         }
-
-        {
+  */
+/*        {
             Payload deleted2 = getPayload("b", true);
             manipulator.update(deleted2);
             assertEquals("The ID for the redeleted Payload should be unchanged",
                        0, deleted2.getData(LuceneIndexUtils.META_DELETE_DOCID));
         }
-
+  */
         {
             Payload reAdd = getPayload("b", false);
             manipulator.update(reAdd);
