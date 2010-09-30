@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
@@ -78,13 +79,13 @@ public class SummaKeywordAnalyzer extends Analyzer {
         TokenStream ts =
                      new SummaStandardAnalyzer().tokenStream(fieldName, reader);
 
-        TermAttribute term = ts.getAttribute(TermAttribute.class);
+        CharTermAttribute term = ts.getAttribute(CharTermAttribute.class);
         try {
             ts.reset();
 
             while(ts.incrementToken()) {
-                buf.append(term.termBuffer(), 0, term.termLength())
-                    .append(' ');
+//                buf.append(term.termBuffer(), 0, term.termLength())
+                buf.append(term.toString()).append(' ');
             }
             ts.end();
             ts.close();
@@ -118,12 +119,11 @@ public class SummaKeywordAnalyzer extends Analyzer {
         ts.reset();
 
         // FIXME: Here we are buffering the whole stream. Insane.
-        TermAttribute term = ts.getAttribute(TermAttribute.class);
+        CharTermAttribute term = ts.getAttribute(CharTermAttribute.class);
 
         try {
             while (ts.incrementToken()){
-                ctx.buf.append(term.termBuffer(), 0, term.termLength())
-                       .append(' ');
+                ctx.buf.append(term.toString()).append(' ');
             }
             // We have an extra whitespace at the end. Strip it
             ts.end();

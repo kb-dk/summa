@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.unittest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -52,10 +53,16 @@ public class LuceneTestHelper extends TestCase {
         List<String> ids = new ArrayList<String>(100);
         IndexReader reader = IndexReader.open(new NIOFSDirectory(location));
         try {
-            for (int i = 0 ; i < reader.maxDoc() ; i++) {
-                if (!reader.getDeletedDocs().get(i)) {
-                    ids.add(reader.document(i).getValues(
+            IndexReader[] readers = reader.getSequentialSubReaders() == null ?
+                                    new IndexReader[]{reader} :
+                                    reader.getSequentialSubReaders();
+            for (IndexReader sub: readers) {
+                for (int i = 0 ; i < sub.maxDoc() ; i++) {
+                    if (sub.getDeletedDocs() == null ||
+                        !sub.getDeletedDocs().get(i)) {
+                        ids.add(sub.document(i).getValues(
                             IndexUtils.RECORD_FIELD)[0]);
+                    }
                 }
             }
         } finally {

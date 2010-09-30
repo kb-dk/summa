@@ -204,7 +204,8 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                     new NIOFSDirectory(new File(location,
                                                 LuceneIndexUtils.LUCENE_FOLDER)));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
-                if (!reader.getDeletedDocs().get(i)) {
+                // TODO: Add check for deleted
+//                if (!reader.getDeletedDocs().get(i)) {
                     try {
                         log.debug("id(" + i + "): "
                                   + reader.document(i).getValues(
@@ -212,9 +213,9 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                     } catch (Exception e) {
                         log.warn("Could not extract id(" + i + ")", e);
                     }
-                } else {
-                    log.debug("id(" + i + ") is deleted");
-                }
+//                } else {
+//                    log.debug("id(" + i + ") is deleted");
+//                }
             }
             reader.close();
         } catch (Exception e) {
@@ -272,13 +273,17 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         log.info("Index created at '" + location + "'. Opening index...");
 
         logIndex();        
-        IndexReader reader = IndexReader.open(
-                new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
+        IndexReader reader = IndexReader.open(new NIOFSDirectory(new File(
+                    location, LuceneIndexUtils.LUCENE_FOLDER)));
         assertEquals("The number of documents in the index should match",
                      1, reader.maxDoc());
+        Document readerDoc = reader.document(0);
+        Field readerField = readerDoc.getField(IndexUtils.RECORD_FIELD);
+        assertNotNull(
+            "The field '" + IndexUtils.RECORD_FIELD + "' should exist",
+            readerField);
         assertEquals("The recordID of the single indexed document should match",
-                     DOC_ID, reader.document(0).getField(
-                IndexUtils.RECORD_FIELD).stringValue());
+                     DOC_ID, readerField.stringValue());
         reader.close();
         // Check for analyzer
         // Search for Jens with default / different prefixes

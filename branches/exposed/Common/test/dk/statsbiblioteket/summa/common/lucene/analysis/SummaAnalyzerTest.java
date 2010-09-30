@@ -34,7 +34,7 @@ public class SummaAnalyzerTest extends TestCase {
 
     static void assertTokens(TokenStream tokenizer, String... tokens)
                                                                throws Exception{
-        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);
+        CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
         int count = 0;
 
         while (tokenizer.incrementToken()) {
@@ -44,7 +44,7 @@ public class SummaAnalyzerTest extends TestCase {
             }
 
             assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         tokens[count], term.term());
+                         tokens[count], term.toString());
             count++;
 
         }

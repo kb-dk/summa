@@ -221,7 +221,7 @@ public class LuceneManipulator implements IndexManipulator {
         try {
             IndexWriterConfig writerConfig =
                         new IndexWriterConfig(Version.LUCENE_40,
-                                     new StandardAnalyzer(Version.LUCENE_20));
+                                     new StandardAnalyzer(Version.LUCENE_40));
             writerConfig.setMaxFieldLength(
                                    IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
             if (bufferSizePayloads != -1) {

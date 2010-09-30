@@ -21,6 +21,7 @@ import org.apache.lucene.analysis.WhitespaceTokenizer;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
@@ -33,7 +34,7 @@ public class SummaKeywordAnalyzerTest extends TestCase {
 
     static void assertTokens(TokenStream tokenizer, String... tokens)
                                                                throws Exception{
-        TermAttribute term = tokenizer.getAttribute(TermAttribute.class);
+        CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
         int count = 0;
 
         while (tokenizer.incrementToken()) {
@@ -43,7 +44,7 @@ public class SummaKeywordAnalyzerTest extends TestCase {
             }
 
             assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         tokens[count], term.term());
+                         tokens[count], term.toString());
             count++;
         }
 
