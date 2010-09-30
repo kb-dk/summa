@@ -1,4 +1,53 @@
 ========================
+2010-09-30: Summa 1.6.3
+========================
+
+ * NOTICE: By Summa 1.6.3 we are upgrading build tool to Maven2. The
+   README file is updated accordingly. The SBForge repository is 
+   still not accessible from the out site world, so lib folder 
+	 continues to hold used libraries. 
+	 
+   Idea project has been deleted.
+
+ * Bugfix: Changed default sort method to lucene build in. The static 
+   and multipass were broken by Lucene 3.0 and will be replaced 
+   shortly by exposed.
+
+ * Bugfix: The default recursion depth/height for RecordReader was
+   unlimited. The default maximal depth/height is set to 100.
+
+ * Bugfix: Setting indexable false when deleting records.
+   Made UpdateFromFulldumpFilter less chatty
+
+ * Moved XML configuration from source tree to data directory.
+
+ * JavaDoc: Clarification on timestamps in ReadableStorage.
+
+ * Bugfix: Removed output from clean test run, fixed all System.out
+	 and redirected these to log file.
+   Logging in test targets are now silent.
+
+ * Known weakness: RemoteStorage should extend 
+   RemoteReadableStorage and RemoteWritableStorage.
+ 
+ * Feature: Added possible non-verbose to Client/ControlShell,
+   usages is:
+   ./bin/control-shell.sh [-v] [commands ....]
+   ./bin/client-shell.sh target-id [-v] [commands ....]
+
+ * Bugfix: Fixed scripts for control module, such that they now
+   return the return code from the java application.
+   Fixed different runnable java files, and given every exit a
+   return code.
+   This fixes #101.
+
+ * Bugfix: #11 - When a bundle in the incoming directory isn't imported
+   there will be created a bundle_file_name.error file next to it,
+   describing what went wrong when importing this file.
+ 
+ * Upgrade to SB Util 0.5.1
+
+========================
 2010-07-26: Summa 1.6.2
 ========================
 
