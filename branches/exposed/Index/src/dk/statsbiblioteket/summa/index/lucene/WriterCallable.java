@@ -84,6 +84,8 @@ public class WriterCallable implements Callable<Long> {
             }
         } catch (Exception e) {
             log.warn("Got exception while writing " + payload, e);
+            Logging.logProcess("WriterCallable", "Got exception while writing", 
+                               Logging.LogLevel.WARN, payload, e);
             throw e; // Rethrow to keep the concrete Exception
             // TODO: Consider signalling orderChangedSinceLastCommit
         } catch (Error e) {
