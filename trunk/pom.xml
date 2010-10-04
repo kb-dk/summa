@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.3</version>
+    <version>1.6.4-SNAPSHOT</version>
     <ciManagement>
     	<system>hudson</system>
     	<url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -268,5 +268,4 @@
         <tag>HEAD</tag>
         <url>http://summa.svn.sourceforge.net/viewvc/summa/</url>
     </scm>
-
 </project>
