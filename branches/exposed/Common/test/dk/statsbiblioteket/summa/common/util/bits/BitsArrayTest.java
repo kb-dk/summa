@@ -204,12 +204,13 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testWritePerformance(boolean unsafe) {
-        int LENGTH = 10000000;
+        int LENGTH = 100000;
         int MAX_VALUE = 240;
         int INITIAL_MAX_LENGTH = LENGTH;
         int WARMUP = 2;
         int RUNS = 3;
-        List<BitsArrayPerformance.BitsArrayGenerator> bags = BitsArrayPerformance.getGenerators();
+        List<BitsArrayPerformance.BitsArrayGenerator> bags =
+            BitsArrayPerformance.getGenerators();
         for (int i = 0 ; i < WARMUP ; i++) {
             for (BitsArrayPerformance.BitsArrayGenerator bag: bags) {
                 testPerformanceBA(

@@ -40,7 +40,6 @@ import org.apache.lucene.util.Version;
         comment="This functionality is not that of an Analyzer, " +
                 "but a TokenFilter")
 public class SummaSymbolRemovingAnalyzer extends Analyzer {
-
     private static final Log log = LogFactory.getLog(SummaSymbolRemovingAnalyzer.class);
 
     private static class TokenStreamContext {
