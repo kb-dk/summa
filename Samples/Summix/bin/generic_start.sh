@@ -93,6 +93,7 @@ do
             CLASSPATH=$CLASSPATH:$lib
         fi
     done
+    CLASSPATH=$CLASSPATH:$libdir
 done
 CLASSPATH=$CLASSPATH:$DEPLOY/config/:$MAINJAR
 
