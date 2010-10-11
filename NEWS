@@ -1,4 +1,12 @@
 ========================
+2010-10-11: Summa 1.6.4
+========================
+ * Bugfix: Added Lib to CLASSPATH so that resources can be found
+   outside the summix package directory.
+ 
+ * Bugfix: The default locations for configuration were wrong.
+
+========================
 2010-09-30: Summa 1.6.3
 ========================
 
