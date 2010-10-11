@@ -64,7 +64,6 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.exposed.ExposedCache;
-import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.DocIdBitSet;

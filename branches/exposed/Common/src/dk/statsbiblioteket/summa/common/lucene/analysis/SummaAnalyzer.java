@@ -137,7 +137,7 @@ public class SummaAnalyzer extends Analyzer {
         ctx.filters.add(transliteratorFactory.getReplacer(
                 ctx.filters.getLast()));
 
-        ctx.tokenStream = new WhitespaceTokenizer(Version.LUCENE_40,
+        ctx.tokenStream = new WhitespaceTokenizer(Version.LUCENE_30,
                                                   ctx.filters.getLast());
 
         return ctx;
