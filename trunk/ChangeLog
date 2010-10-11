@@ -1,3 +1,47 @@
+2010-10-06 08:59  hkirk
+
+	* [r2594] Samples/Summix/bin/generic_start.bat,
+	  Samples/Summix/bin/generic_start.sh:
+	  
+	  Bugfix: Added Lib to CLASSPATH so that resources can be found
+	  outside the summix package.
+
+2010-10-04 11:43  hkirk
+
+	* [r2593] Common/pom.xml, Control/pom.xml, FacetBrowser/pom.xml,
+	  Index/pom.xml, Ingest/pom.xml, Samples/Summix/pom.xml,
+	  Search/pom.xml, Storage/pom.xml, Support/pom.xml,
+	  Web/Modules/Search/pom.xml, Web/Modules/Status/pom.xml,
+	  Web/Modules/Storage/pom.xml, Web/Modules/Website/pom.xml,
+	  Web/pom.xml, Workflow/pom.xml, pom.xml:
+	  
+	  Updated to version 1.6.4-SNAPSHOT
+
+2010-09-30 08:22  hkirk
+
+	* [r2586] ChangeLog, NEWS:
+	  
+	  Updated Changelog and new before 1.6.3 release
+
+2010-09-30 07:58  toke-sb
+
+	* [r2585]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bugfix: The default locations for configuration were wrong
+	  (probably due to a bad refactor)
+
+2010-09-30 06:33  hkirk
+
+	* [r2584] Common/pom.xml, Control/pom.xml, FacetBrowser/pom.xml,
+	  Index/pom.xml, Ingest/pom.xml, Samples/Summix/pom.xml,
+	  Search/pom.xml, Storage/pom.xml, Support/pom.xml,
+	  Web/Modules/Search/pom.xml, Web/Modules/Status/pom.xml,
+	  Web/Modules/Storage/pom.xml, Web/Modules/Website/pom.xml,
+	  Web/pom.xml, Workflow/pom.xml, pom.xml:
+	  
+	  Updated to version 1.6.3
+
 2010-09-29 12:47  toke-sb
 
 	* [r2582]
