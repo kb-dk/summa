@@ -1,0 +1,4 @@
+The *-templates.svg files in this directory contains general purpose
+vector graphics for use in presentations. Each file contains lots of elements
+and are not meant to be displayed as a whole, but should be extracted and
+rasterized individually.

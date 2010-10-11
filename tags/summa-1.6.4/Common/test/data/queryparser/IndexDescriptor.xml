@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!--
+
+        IndexDescriptor used by the SummaQueryParserTest 
+
+        -->
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <groups>
+        <group name="ti">
+            <alias name="titel" lang="da"/>
+            <field ref="title"/>
+            <field ref="titel"/>
+        </group>
+        <group name="subtitle">
+            <field ref="lessimportanttitle"/>
+        </group>
+    </groups>
+
+    <fields>
+        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" inFreeText="true" required="true">
+            <alias name="forfatter" lang="da"/>
+        </field>
+
+        <field name="title" parent="text" indexed="true" stored="true"/>
+        <field name="titel" parent="text" indexed="true" stored="true"/>
+        <field name="lessimportanttitle" parent="text" indexed="true" stored="false"/>
+    </fields>
+
+    <defaultLanguage>da</defaultLanguage>
+
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="ti"/>
+        <field ref="id"/>
+    </defaultSearchFields>
+
+    <QueryParser defaultOperator="AND"/>
+
+</IndexDescriptor>
+
+

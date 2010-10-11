@@ -1,0 +1,23 @@
+The insync directory contains the scripts necesarry
+to do a complete index update cycle.
+
+Running the full_index_update.sh script from
+atria will do the following:
+
+    1) Ingest all horizon updates
+    2) Do a complete distributed indexing
+    3) Deploy the index to the cluster calculator (kredit)
+       this is done by running deploy_index.sh on the calculator
+    3) When cluster calculation is complete update all mirrors
+       listed in deploy_index.sh MIRRORS variable. This is
+       done by calling sync_index.sh on all mirrors.
+    4) Actually part of 3), restart the tomcats on each mirrors
+       as well as one the cluster calculator, and ping them to ensure
+       that the clustermap is loaded.
+       
+Adding new mirrors
+==================
+Add the mirror user@remote to the MIRRORS variable
+in the cluster calculators HOME/bin/deploy_index.sh.
+
+Add the sync_index.sh script to the mirrors HOME/bin.
