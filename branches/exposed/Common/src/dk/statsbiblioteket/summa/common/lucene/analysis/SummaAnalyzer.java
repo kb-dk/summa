@@ -143,7 +143,9 @@ public class SummaAnalyzer extends Analyzer {
         return ctx;
     }
 
-    @Override
+    // TODO: Make reusableTokenStream work again
+
+/*    @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader)
             throws IOException {
         // This method fetches a stored *thread local* TokenStreamContext
@@ -170,7 +172,7 @@ public class SummaAnalyzer extends Analyzer {
 
         return ctx.tokenStream;
     }
-
+  */
 
 }
 

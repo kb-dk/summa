@@ -67,6 +67,7 @@ public class DisjunctionQueryParser extends QueryParser {
     protected Query getFieldQuery(String field, final String queryText,
                                   final int slop)
                                                          throws ParseException {
+//        System.out.println(field + ":" + queryText);
         return getExpanded(field, new InnerQueryMaker() {
             public Query getRecursiveQuery(String fieldOrGroup) throws
                                                                 ParseException {
@@ -139,7 +140,16 @@ public class DisjunctionQueryParser extends QueryParser {
     // Calls super.getFieldQuery and ensures that slop is set if relevant
     private Query getFinalFieldQuery(String field, String queryText, int slop)
                                                          throws ParseException {
-        Query query = super.getFieldQuery(field, queryText);
+        Query query;
+        try {
+            query = super.getFieldQuery(field, queryText);
+        } catch(NullPointerException e) {
+            ParseException pe = new ParseException(
+                "Got NullPointerException while calling getFieldQuery('"
+                + field + "', '" + queryText + "')");
+            pe.initCause(e);
+            throw pe;
+        }
         if (query != null) {
             if (query instanceof PhraseQuery) {
                 ((PhraseQuery) query).setSlop(slop);

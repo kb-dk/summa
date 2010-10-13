@@ -45,6 +45,12 @@ public class SummaQueryParserTest extends TestCase {
         return new TestSuite(SummaQueryParserTest.class);
     }
 
+    public void testTrivialParse() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("The parsed query should not change nature", qp,
+              "freetext:foo[1.0]", "freetext:foo");
+    }
+
     public void testGroupExpansion() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should expand default groups", qp,
