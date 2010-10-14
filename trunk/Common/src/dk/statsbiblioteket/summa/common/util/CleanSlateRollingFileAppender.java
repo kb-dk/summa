@@ -15,10 +15,11 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.log4j.Layout;
-import org.apache.log4j.RollingFileAppender;
 
 import java.io.IOException;
+
+import org.apache.log4j.Layout;
+import org.apache.log4j.RollingFileAppender;
 
 /**
  * Custom rolling file appender implementation for Log4J that rolls
@@ -62,8 +63,8 @@ public class CleanSlateRollingFileAppender extends RollingFileAppender {
     }
 
     /**
-     * This calls {@link super#activateOptions()} and den do a
-     * {@link super#rollOver}.
+     * This calls {@link #activateOptions()} and den do a
+     * {@link #rollOver}.
      */
     @Override
     public void activateOptions() {

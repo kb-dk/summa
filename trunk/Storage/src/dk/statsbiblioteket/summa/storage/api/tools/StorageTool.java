@@ -28,11 +28,6 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -45,6 +40,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
@@ -53,7 +54,7 @@ public class StorageTool {
                                               "//localhost:28000/summa-storage";
 
     /**
-     * Helper method for printing a record on {@link System@out} with or without
+     * Helper method for printing a record on {@link System#out} with or without
      * content.
      * @param rec The record to print.
      * @param withContents True if this record should be printed with its

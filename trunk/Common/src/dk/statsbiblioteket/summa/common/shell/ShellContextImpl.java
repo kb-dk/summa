@@ -15,11 +15,12 @@
 package dk.statsbiblioteket.summa.common.shell;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import jline.ConsoleReader;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Stack;
+
+import jline.ConsoleReader;
 
 /**
  * Silent shell context, used for running one or more command(s) in a silent
@@ -60,7 +61,7 @@ public class ShellContextImpl implements ShellContext {
      * @param consoleReader The console reader.
      * @param error The error stream.
      * @param info The info stream.
-     * @param debug If {@link true} debug message are printed on the info print
+     * @param debug If {@code true} message are printed on the info print
      * stream.
      */
     public ShellContextImpl(final ConsoleReader consoleReader,
@@ -150,7 +151,7 @@ public class ShellContextImpl implements ShellContext {
 
     /**
      * {@inheritDoc}
-     * @return
+     * @return The string read.
      */
     @Override
     public String readLine() {
@@ -177,7 +178,7 @@ public class ShellContextImpl implements ShellContext {
 
     /**
      * {@inheritDoc}
-     * @return
+     * @return The last error.
      */
     @Override
     public String getLastError() {
