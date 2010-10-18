@@ -14,6 +14,15 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,15 +30,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.IOException;
 
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.WritableStorage;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke")
 public abstract class StorageBase implements Storage {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(StorageBase.class);
 
     /**
@@ -60,13 +62,21 @@ public abstract class StorageBase implements Storage {
      */
     protected static final String TRY_UPDATE = "TRY_UPDATE";
 
+    /** Storage start time. */
     private long storageStartTime;
-    private HashMap<String,Long> lastFlushTimes;
+    /** Last flush time. */
+    private HashMap<String, Long> lastFlushTimes;
+    /** An ID matcher. */
     private Matcher privateIdMatcher;
 
+    /**
+     * Storage base constructor.
+     * @param conf Configuration to create this storage base with.
+     */
     public StorageBase(Configuration conf) {
+        final int hashMapSize = 10;
         storageStartTime = System.currentTimeMillis();
-        lastFlushTimes = new HashMap<String,Long>(10);
+        lastFlushTimes = new HashMap<String, Long>(hashMapSize);
         privateIdMatcher = Pattern.compile("__.+__").matcher("");
     }
 
@@ -86,18 +96,19 @@ public abstract class StorageBase implements Storage {
      * it was started the start time stamp of the storage will be returned.
      *
      * @param base the base to check for changes in. If {@code base} is
-     *             {@code null} return the maximal time stamp from all bases
-     * @return the time stamp
-     * @throws IOException on communication errors
+     *             {@code null} return the maximal time stamp from all bases.
+     * @return the time stamp.
+     * @throws IOException on communication errors.
      */
-    public long getModificationTime (String base) throws IOException {
+    @Override
+    public long getModificationTime(String base) throws IOException {
         Long lastFlush;
 
         if (base != null) {
             lastFlush = lastFlushTimes.get(base);
             if (lastFlush == null) {
-                lastFlushTimes.put (base, storageStartTime);
-                lastFlush = storageStartTime; 
+                lastFlushTimes.put(base, storageStartTime);
+                lastFlush = storageStartTime;
             }
         } else {
             lastFlush = storageStartTime;
@@ -113,12 +124,12 @@ public abstract class StorageBase implements Storage {
      * Set the time stamp for the last time {@link #flush} or
      * {@link #flushAll} was called on something in {@code base}.
      *
-     * @param base the base in which to register a change
-     * @param timeStamp the new time stamp to set
-     * @return the {@code timeStamp} argument
+     * @param base the base in which to register a change.
+     * @param timeStamp the new time stamp to set.
+     * @return the {@code timeStamp} argument.
      */
-    protected long setModificationTime (String base, long timeStamp) {
-        lastFlushTimes.put (base, timeStamp);
+    protected long setModificationTime(String base, long timeStamp) {
+        lastFlushTimes.put(base, timeStamp);
         return timeStamp;
     }
 
@@ -126,18 +137,24 @@ public abstract class StorageBase implements Storage {
      * Set the time stamp for the last time {@link #flush} or
      * {@link #flushAll} was called to {@code System.currentTimeMillis()}.
      *
-     * @param base the base in which to register a change
-     * @return the new time stamp
+     * @param base the base in which to register a change.
+     * @return the new time stamp.
      */
-    protected long updateModificationTime (String base) {
-        return setModificationTime (base, System.currentTimeMillis());
+    protected long updateModificationTime(String base) {
+        return setModificationTime(base, System.currentTimeMillis());
     }
 
     /**
      * Default implementation that uses {@link #next(long)} to create the list
      * of records. As this happens server-side, this should be fast
      * enough.
+     * @param iteratorKey The iterator key.
+     * @param maxRecords The maximum number of records to return.
+     * @return A list of records. Length is equal maxRecords unleash the storage
+     * is depleted.
+     * @throws IOException If error occur while fetching records from storage.
      */
+    @Override
     public List<Record> next(long iteratorKey, int maxRecords) throws
                                                                IOException {
         List<Record> records = new ArrayList<Record>(maxRecords);
@@ -163,16 +180,17 @@ public abstract class StorageBase implements Storage {
      * This method is only a generic implementation and can likely be optimized
      * a great deal for a concrete storage implementation.
      *
-     * @param record the record to update related records for
-     * @throws java.io.IOException on communication errors with the db
+     * @param record the record to update related records for.
+     * @throws java.io.IOException on communication errors with the DB.
      */
     protected void updateRelations(Record record) throws IOException {
+        final int arrayListSize = 5;
         if (log.isTraceEnabled()) {
-            log.trace("updateRelations("+record.getId()+")");
+            log.trace("updateRelations(" + record.getId() + ")");
         }
 
         /* We collect a list of changes and submit them in one transaction */
-        List<Record> flushQueue = new ArrayList<Record>(5);
+        List<Record> flushQueue = new ArrayList<Record>(arrayListSize);
 
         /* Make sure parent records are correct */
         if (record.getParentIds() != null) {
@@ -189,15 +207,15 @@ public abstract class StorageBase implements Storage {
 
                 if (parentChildren == null) {
                     parent.setChildIds(Arrays.asList(record.getId()));
-                    log.trace ("Creating child list '" + record.getId()
-                               + "' on parent " + parent.getId());
-                    flushQueue.add (parent);
+                    log.trace("Creating child list '" + record.getId()
+                              + "' on parent " + parent.getId());
+                    flushQueue.add(parent);
                 } else if (!parentChildren.contains(record.getId())) {
-                    parentChildren.add (record.getId());
+                    parentChildren.add(record.getId());
                     parent.setChildIds(parentChildren);
-                    log.trace ("Adding child '" + record.getId()
-                               + "' to parent " + parent.getId());
-                    flushQueue.add (parent);
+                    log.trace("Adding child '" + record.getId()
+                              + "' to parent " + parent.getId());
+                    flushQueue.add(parent);
                 }
             }
         }
@@ -214,21 +232,21 @@ public abstract class StorageBase implements Storage {
                 if (childParents == null) {
                     child.setParentIds(Arrays.asList(record.getId()));
                     child.setIndexable(false);
-                    log.trace ("Creating parent list '" + record.getId()
+                    log.trace("Creating parent list '" + record.getId()
                                + " on child " + child.getId());
                     flushQueue.add(child);
                 } else if (!childParents.contains(record.getId())) {
                     child.getParentIds().add(record.getId());
                     child.setIndexable(false);
-                    log.trace ("Adding parent '" + record.getId()
+                    log.trace("Adding parent '" + record.getId()
                                + "' to child " + child.getId());
                     flushQueue.add(child);
 
                 } else {
                     if (child.isIndexable()) {
-                        log.debug ("Child '" + child.getId() + "' of '"
-                                   + record.getId() + "' was marked as "
-                                   + "indexable. Marking as not indexable");
+                        log.debug("Child '" + child.getId() + "' of '"
+                                  + record.getId() + "' was marked as "
+                                  + "indexable. Marking as not indexable");
                         child.setIndexable(false);
                     }
                 }
@@ -264,10 +282,12 @@ public abstract class StorageBase implements Storage {
     /**
      * Convenience implementation of calling
      * {@link #flush(Record, QueryOptions)} with query options set to
-     * {@code null}
-     * @param record the record to flush
-     * @throws IOException
+     * {@code null}.
+     * @param record the record to flush.
+     * @throws IOException If error occur while running.
+     * {@link #flushAll(List, QueryOptions)}.
      */
+    @Override
     public void flush(Record record) throws IOException {
         flush(record, null);
     }
@@ -282,9 +302,10 @@ public abstract class StorageBase implements Storage {
      *
      * @param records the records to store or update
      * @param options the options to pass to {@link #flush}
-     * @throws IOException on comminication errors
+     * @throws IOException on communication errors
      */
-    public void flushAll (List<Record> records, QueryOptions options)
+    @Override
+    public void flushAll(List<Record> records, QueryOptions options)
                                                             throws IOException {
         for (Record rec : records) {
             flush(rec, options);
@@ -293,11 +314,12 @@ public abstract class StorageBase implements Storage {
 
     /**
      * Convenience implementation of calling
-     * {@link #flushAll(java.util.List, dk.statsbiblioteket.summa.storage.api.QueryOptions)}  with
-     * QueryOptions set to {@code null}.
+     * {@link #flushAll(List, QueryOptions)} with QueryOptions set to
+     * {@code null}.
      * @param records the records to flush.
-     * @throws IOException if error occour while flushing records.
+     * @throws IOException if error occur while flushing records.
      */
+    @Override
     public void flushAll(List<Record> records) throws IOException {
         flushAll(records, null);
     }
@@ -305,8 +327,13 @@ public abstract class StorageBase implements Storage {
     /**
      * Simple implementation of {@link ReadableStorage#getRecords} fetching
      * each record one at a time and collecting them in a list.
+     * @param ids List of IDs to fetch from storage.
+     * @param options The query options for discarding records that can't be
+     * used in the given context.
+     * @return A list of records.
+     * @throws IOException If error occur while communication with storage.
      */
-    public List<Record> getRecords (List<String> ids, QueryOptions options)
+    public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                         throws IOException {
         long startTime = System.currentTimeMillis();
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
@@ -335,7 +362,7 @@ public abstract class StorageBase implements Storage {
      * meta field is set on the query options passed to the storage when
      * calling {@link #getRecord}(s).
      * @param id The ID to check.
-     * @return trur if the ID is a private ID.
+     * @return true if the ID is a private ID.
      */
     protected boolean isPrivateId(String id) {
         return privateIdMatcher.reset(id).matches();
@@ -352,6 +379,3 @@ public abstract class StorageBase implements Storage {
         return opts != null && "true".equals(opts.meta(ALLOW_PRIVATE));
     }
 }
-
-
-
