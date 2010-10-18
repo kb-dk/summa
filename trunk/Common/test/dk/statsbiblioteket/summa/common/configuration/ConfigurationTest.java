@@ -35,13 +35,18 @@ import junit.framework.TestSuite;
 /**
  * Configuration Tester.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings("DuplicateStringLiteralInspection")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class ConfigurationTest extends TestCase {
-    private static final String CONFIGURATIONXML = "configurationFiles/configuration.xml";
-    private static final String SIMPLEXSTORAGEXML = "configurationFiles/simple_xstorage.xml";
+    /** Configurations XML. */
+    private static final String CONFIGURATIONXML =
+        "configurationFiles/configuration.xml";
+    /** Simple storage XML. */
+    private static final String SIMPLEXSTORAGEXML =
+        "configurationFiles/simple_xstorage.xml";
+    /** TMP path. */
     private static final String TMP = "target/tmp";
 
     public ConfigurationTest(String name) {
@@ -51,7 +56,7 @@ public class ConfigurationTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        if(!new File(TMP).mkdirs()) {
+        if (!new File(TMP).mkdirs()) {
             fail("Error creating '" + TMP + "'");
         }
     }
@@ -59,7 +64,7 @@ public class ConfigurationTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        if(!new File(TMP).delete()) {
+        if (!new File(TMP).delete()) {
             fail("Error deleting '" + TMP + "'");
         }
     }
@@ -72,7 +77,7 @@ public class ConfigurationTest extends TestCase {
         Configuration conf = new Configuration(
                                         new FileStorage(CONFIGURATIONXML
                                                 ));
-        List<String> l = conf.getStrings ("summa.configuration.service.port");
+        List<String> l = conf.getStrings("summa.configuration.service.port");
         assertEquals("getStrings on a value without ,s should have size 1",
                      1, l.size());
         assertEquals("getStrings on a value without ,s should return the expected",
@@ -117,7 +122,7 @@ public class ConfigurationTest extends TestCase {
         System.out.println(conf.toString());
     }
 
-    public void testSimpleEquals () throws Exception {
+    public void testSimpleEquals() throws Exception {
         Configuration c1 = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
         Configuration c2 = new Configuration(new FileStorage(
@@ -172,10 +177,10 @@ public class ConfigurationTest extends TestCase {
         configuration.set("ok", "a 1, b(2),c(-3),  d ( 4  ) , e, f (5)");
         configuration.set("invalid1", "a(3a)");
         configuration.set("invalid2", "a((3))");
-        // TODO: File a bug on no error with non-static inner class
+        // TODO File a bug on no error with non-static inner class
         List<Configuration.Pair<String, Integer>> elements =
                 configuration.getIntValues("ok", 87);
-        assertEquals("The value for a 1 should be 87", 
+        assertEquals("The value for a 1 should be 87",
                      new Integer(87), elements.get(0).getSecond());
         assertEquals("The value for b should be 2",
                      new Integer(2), elements.get(1).getSecond());
@@ -200,18 +205,20 @@ public class ConfigurationTest extends TestCase {
                      "b(", elements.get(1).getFirst());
     }
 
-    public void testGetIntWithDefault () throws Exception {
+    public void testGetIntWithDefault() throws Exception {
         Configuration configuration = new Configuration(new MemoryStorage());
         int i = configuration.getInt("foobar", 27);
         assertEquals("Integer should be default value", 27, i);
     }
 
-    public void testGetSystemConfigLocal () throws Exception {
-        String confPath = CONFIGURATIONXML;//Thread.currentThread().getContextClassLoader().getResource("configuration.xml").toString();
+    public void testGetSystemConfigLocal() throws Exception {
+        String confPath = CONFIGURATIONXML;
+        //Thread.currentThread().getContextClassLoader()
+        //  .getResource("configuration.xml").toString();
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, confPath);
 
         Configuration conf = Configuration.getSystemConfiguration();
-        Configuration originalConf = new Configuration (new FileStorage(
+        Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
         assertTrue("Loading via getSystemConfiguration and directly should "
@@ -221,16 +228,17 @@ public class ConfigurationTest extends TestCase {
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
 
-    public void testGetSystemConfigRemote () throws Exception {
+    public void testGetSystemConfigRemote() throws Exception {
         RemoteStorageTest remote = new RemoteStorageTest();
         remote.setUp();
         String serviceUrl = remote.getDirectStorage().getServiceUrl();
-        System.out.println ("Service URL is: " + serviceUrl);
+        System.out.println("Service URL is: " + serviceUrl);
 
-        System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, serviceUrl);
+        System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY,
+                           serviceUrl);
 
         Configuration testConf = Configuration.getSystemConfiguration();
-        Configuration originalConf = new Configuration (new FileStorage(
+        Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
         assertTrue("Loading via getSystemConfiguration and directly should "
@@ -240,35 +248,35 @@ public class ConfigurationTest extends TestCase {
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
 
-    public void testGetSystemConfigUnset () throws Exception {
+    public void testGetSystemConfigUnset() throws Exception {
         Configuration conf = Configuration.getSystemConfiguration(true);
         assertNotNull(conf);
         assertNotNull(conf.getStorage());
 
         try {
             Configuration.getSystemConfiguration(false);
-            fail ("Should not be able to retrieve system config when not set");
+            fail("Should not be able to retrieve system config when not set");
         } catch (Configurable.ConfigurationException e) {
             // expected
         }
 
     }
 
-    public void testNewMemoryBasedEmpty () {
+    public void testNewMemoryBasedEmpty() {
         Configuration conf = Configuration.newMemoryBased();
         int count = 0;
 
-        for (Map.Entry<String, Serializable> entry: conf) {
-            count ++;
+        for (Map.Entry<String, Serializable> entry : conf) {
+            count++;
         }
         assertEquals(count, 0);
     }
 
-    public void testNewMemoryBased () {
+    public void testNewMemoryBased() {
         int count = 0;
-        ArrayList<String> list = new ArrayList<String> ();
+        ArrayList<String> list = new ArrayList<String>();
         list.add("foo");
-        list.add ("bar");
+        list.add("bar");
 
         Configuration conf = Configuration.newMemoryBased(
                 "hello.world", 10,
@@ -276,8 +284,8 @@ public class ConfigurationTest extends TestCase {
                 "hello.nothing", new String[]{"baz"}
         );
 
-        for (Map.Entry<String, Serializable> entry: conf) {
-            count ++;
+        for (Map.Entry<String, Serializable> entry : conf) {
+            count++;
         }
 
         assertEquals(count, 3);
@@ -318,27 +326,27 @@ public class ConfigurationTest extends TestCase {
                 SIMPLEXSTORAGEXML), tmp, true);
 
         Configuration conf = Configuration.load(tmp.toString());
-        assertTrue("The underlying Storage should be an XStorage", 
+        assertTrue("The underlying Storage should be an XStorage",
                    conf.getStorage() instanceof XStorage);
         assertTrue("The underlying Storage should support sub storages",
                    conf.supportsSubConfiguration());
-        if(!tmp.delete()) {
+        if (!tmp.delete()) {
             System.err.println("Error deleting '" + tmp.getName() + "'");
         }
     }
 
     public void testGetSystemConfigError () throws Exception {
         try {
-            Configuration.getSystemConfiguration ("summa.snafu", false);
-            fail ("Lookup of unexisting system config should fail");
+            Configuration.getSystemConfiguration("summa.snafu", false);
+            fail("Lookup of unexisting system config should fail");
         } catch (Configurable.ConfigurationException e) {
             // expected
         }
     }
 
-    public void testGetSystemConfigAuto () throws Exception {
+    public void testGetSystemConfigAuto() throws Exception {
         Configuration conf =
-                         Configuration.getSystemConfiguration("summa.snafu", true);
+                      Configuration.getSystemConfiguration("summa.snafu", true);
 
         int count = 0;
         for (Object o : conf) {
@@ -346,27 +354,27 @@ public class ConfigurationTest extends TestCase {
         }
 
         if (count == 0) {
-            fail ("Got empty system config. Expected non-empty config to " +
+            fail("Got empty system config. Expected non-empty config to " +
                   "be found");
         }
 
     }
 
-    public void testExpandedSysProp () throws Exception {
+    public void testExpandedSysProp() throws Exception {
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           "${user.home}");
 
         assertEquals(System.getProperty("user.home"),
                      conf.getString("foo.bar"));
-        
+
         // Also test that we expand the default value
         assertEquals(System.getProperty("user.home"),
                      conf.getString("b0rk", "${user.home}"));
     }
 
-    public void testExpandedSysPropList () throws Exception {
-        ArrayList<String> val = new ArrayList<String>(Arrays.asList("${user.dir}",
-                                                                    "bar"));
+    public void testExpandedSysPropList() throws Exception {
+        ArrayList<String> val = new ArrayList<String>(
+                                           Arrays.asList("${user.dir}", "bar"));
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           val);
 
@@ -387,11 +395,11 @@ public class ConfigurationTest extends TestCase {
                                                           val);
 
         Arrays.asList(
-                new Configuration.Pair<String,Integer>("a",1),
-                new Configuration.Pair<String,Integer>("b",2)
+                new Configuration.Pair<String, Integer>("a", 1),
+                new Configuration.Pair<String, Integer>("b", 2)
         );
         // TODO check expected
-        List<Configuration.Pair<String,Integer>> result =
+        List<Configuration.Pair<String, Integer>> result =
                                              conf.getIntValues("foo.bar", 3);
 
         // Clear the sys prop before the test has a chance of failing
@@ -399,14 +407,13 @@ public class ConfigurationTest extends TestCase {
 
         assertEquals(3, result.size());
 
-        assertEquals(new Configuration.Pair<String,Integer>("a",1),
+        assertEquals(new Configuration.Pair<String, Integer>("a", 1),
                      result.get(0));
 
-        assertEquals(new Configuration.Pair<String,Integer>("b",
-                                                            27),
+        assertEquals(new Configuration.Pair<String, Integer>("b", 27),
                      result.get(1));
 
-        assertEquals(new Configuration.Pair<String,Integer>(
+        assertEquals(new Configuration.Pair<String, Integer>(
                                               System.getProperty("os.name"), 3),
                      result.get(2));
     }
@@ -459,8 +466,8 @@ public class ConfigurationTest extends TestCase {
                 url);
         assertNotSame("Got File from URL: '" + url.getFile() + "' expected '"
                 + file + "'.", file, url.getFile());
-        assertEquals("new File(URI): " + new File(url.toURI()), file.getAbsolutePath(),
-                new File(url.toURI()).getAbsolutePath());
+        assertEquals("new File(URI): " + new File(url.toURI()),
+               file.getAbsolutePath(), new File(url.toURI()).getAbsolutePath());
 
     }
 
@@ -501,12 +508,42 @@ public class ConfigurationTest extends TestCase {
         assertNotNull(conf.getStorage());
         try {
             conf.importConfiguration(conf);
-        } catch(ConfigurationStorageException e) {
+        } catch (ConfigurationStorageException e) {
             fail("should not produces an exception");
         }
     }
 
     public static Test suite() {
         return new TestSuite(ConfigurationTest.class);
+    }
+
+
+    /**
+     * Test defaults resources.
+     */
+    public final void testDefaultResources() {
+        /** Configurations paths. */
+        final String[] defaultResources = {
+            "configuration.xml",
+            "configuration.js",
+            "config.xml",
+            "config.js",
+            "properties.xml",
+            "properties.js",
+            "configuration.properties",
+            "config.properties",
+            "config/configuration.xml",
+            "config/configuration.js",
+            "config/config.xml",
+            "config/config.js",
+            "config/properties.xml",
+            "config/properties.js",
+            "config/configuration.properties",
+            "config/config.properties"
+        };
+        for (int i = 0; i < defaultResources.length; i++) {
+            assertEquals(defaultResources[i],
+                         Configuration.DEFAULT_RESOURCES[i]);
+        }
     }
 }
