@@ -379,6 +379,10 @@ public class FileReader implements ObjectFilter {
                 try {
                     log.trace("Renaming '" + file + "' to '" + newName + "'");
                     renamed = file.renameTo(newName);
+                    if (!file.setLastModified(System.currentTimeMillis())) {
+                        log.trace("Unable to set last modification time for '"
+                                  + file + "'");
+                    }
                 } catch(Exception e) {
                     log.error("Could not rename '" + file
                               + "' to '" + newName + "'", e);
