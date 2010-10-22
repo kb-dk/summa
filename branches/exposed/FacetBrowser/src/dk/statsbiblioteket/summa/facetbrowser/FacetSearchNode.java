@@ -19,10 +19,12 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
@@ -30,19 +32,36 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.exposed.ExposedComparators;
+import org.apache.lucene.search.exposed.ExposedRequest;
+import org.apache.lucene.search.exposed.facet.CollectorPool;
+import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
+import org.apache.lucene.search.exposed.facet.FacetResponse;
+import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.List;
+import java.text.Collator;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * The implementation uses threading and should scale well on a multi-processor
- * machine, if the architecture supports parallel RAM access. On a machine
- * with multiple processors, but old-style access to RAM, the increase in
- * performance is smaller.
+ * The implementation relies on
+ * https://issues.apache.org/jira/browse/LUCENE-2369
+ * for all heavy lifting regarding faceting.
+ * </p><p>
+ * The faceting system must be located after a SearchNode that updates the
+ * response.transient data with a Lucene IndexSearcher {@code INDEX_SEARCHER}
+ * and a Lucene QueryParser {@code QUERY_PARSER}.
  * </p><p>
  * Note that this node is also responsible for index lookups. The configuration
  * for the node should thus contain settings for
@@ -59,6 +78,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class FacetSearchNode extends SearchNodeImpl implements Browser {
     private static Logger log = Logger.getLogger(FacetSearchNode.class);
 
+    public static final String INDEX_SEARCHER = "INDEX_SEARCHER";
+    public static final String QUERY_PARSER = "QUERY_PARSER";
+
     /**
      * Each concurrent search costs total number of tags * 4 bytes of memory.
      */
@@ -66,14 +88,21 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     public static final int BROWSER_THREAD_QUEUE_TIMEOUT = 20 * 1000;
     private static final long BROWSER_THREAD_MARK_TIMEOUT = 30 * 1000;
 
+    // TODO: Make this configurable
+    private static CollectorPoolFactory poolFactory =
+        new CollectorPoolFactory(6, 2, 2);
+
     private Configuration conf;
     private Structure structure = null;
+
     /**
      * The structure and facetMaps are updated upon open, depending on setup.
      * A lock is needed to ensure consistency.
      */
     ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
+    private IndexSearcher searcher = null;
+    private QueryParser qp = null;
 
     private boolean loadDescriptorFromIndex;
 
@@ -83,17 +112,17 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         this.conf = conf;
         // TODO: Add override-switch to state where to get the descriptor
         loadDescriptorFromIndex =
-                !Structure.isSetupDefinedInConfiguration(conf);
+            !Structure.isSetupDefinedInConfiguration(conf);
         if (loadDescriptorFromIndex) {
             log.debug("The Structure will be derived from IndexDescriptor XML "
                       + "in the index folders upon calls to open(...)");
         } else {
             log.info(String.format(
-                    "The property %s was defined, so the IndexDescriptor "
-                    + "will not be taken from the index-folder. Note that this"
-                    + " makes it hard to coordinate major updates to "
-                    + "the IndexDescriptor in a production system",
-                    IndexDescriptor.CONF_DESCRIPTOR));
+                "The property %s was defined, so the IndexDescriptor "
+                + "will not be taken from the index-folder. Note that this"
+                + " makes it hard to coordinate major updates to "
+                + "the IndexDescriptor in a production system",
+                IndexDescriptor.CONF_DESCRIPTOR));
             Structure structure = new Structure(conf);
             initStructures(structure);
         }
@@ -121,22 +150,22 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             return;
         }
         URL urlLocation = Resolver.getURL(
-                location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
+            location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
         Structure newStructure = new Structure(urlLocation);
         if (structure != null && structure.absorb(newStructure)) {
             log.debug(String.format(
-                    "Only minor facet changes detected in the IndexDescriptor "
-                    + "from '%s'. Major re-initialization skipped",
-                    urlLocation));
+                "Only minor facet changes detected in the IndexDescriptor "
+                + "from '%s'. Major re-initialization skipped",
+                urlLocation));
             return;
         }
         log.info(String.format(
-                "Performing major initialization based on '%s'", urlLocation));
+            "Performing major initialization based on '%s'", urlLocation));
         initStructures(newStructure);
         if (log.isDebugEnabled()) {
             log.debug(String.format(
-                    "Facets after updateDescription(%s): %s", 
-                    location, Strings.join(structure.getFacetNames(), ", ")));
+                "Facets after updateDescription(%s): %s",
+                location, Strings.join(structure.getFacetNames(), ", ")));
         }
     }
 
@@ -175,42 +204,232 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         if (loadDescriptorFromIndex) {
             updateDescriptor(new File(location));
         }
-        throw new UnsupportedOperationException("managedOpen not done yet");
     }
 
+    // We always require a searcher and a query parser to ensure that the
+    // searcher and the faceter are in sync.
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
-                                                        throws RemoteException {
+        throws RemoteException {
         long startTime = System.currentTimeMillis();
-//        indexLookup.lookup(request, responses, facetMap.getTagHandler());
-        if (!responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
-            log.debug("No " + DocumentSearcher.DOCIDS + " from a previous "
-                      + "DocumentSearcher in responses. Skipping faceting");
-            return;
-        }
-        Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
-        if (!(o instanceof DocIDCollector)) {
-            throw new RemoteException(String.format(
+
+        Map<String, Object> shared = responses.getTransient();
+        String query = null;
+        DocIDCollector collectedIDs = null;
+        if (!shared.containsKey(DocumentSearcher.DOCIDS)) {
+            if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                log.warn("There were neither '" + DocumentSearcher.DOCIDS
+                         + ", nor '" + DocumentSearcher.SEARCH_QUERY
+                         + " defined in the request, so no faceting could be "
+                         + "performed");
+                return;
+            }
+            log.debug("Faceting with query " + DocumentSearcher.SEARCH_QUERY
+                      + "='" + request.get(DocumentKeys.SEARCH_QUERY) + "'");
+            query = (String)shared.get(DocumentKeys.SEARCH_QUERY);
+        } else {
+            Object o = shared.get(DocumentSearcher.DOCIDS);
+            if (!(o instanceof DocIDCollector)) {
+                throw new RemoteException(String.format(
                     "Found transient data for key '%s'. Expected class %s, "
                     + "but got %s", DocumentSearcher.DOCIDS,
-                                    DocIDCollector.class.getName(),
-                                    o.getClass().getName()));
+                    DocIDCollector.class.getName(),
+                    o.getClass().getName()));
+            }
+            collectedIDs = (DocIDCollector)o;
+            if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                log.debug("Faceting with " + collectedIDs.getDocCount()
+                          + " documents IDs");
+            } else {
+                log.debug("Both query '"
+                          + request.get(DocumentKeys.SEARCH_QUERY) + "' and "
+                          + collectedIDs.getDocCount() + " doc IDs with key "
+                          + DocumentSearcher.DOCIDS
+                          + " were defined in the query. Using document IDs");
+            }
         }
-        DocIDCollector collector = (DocIDCollector)o;
-        responses.add(getFacetMap(
-                collector, request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
-                           request.getString(FacetKeys.SEARCH_FACET_FACETS) :
-                           null));
+
+        assignSearcherAndQueryParser(shared, collectedIDs);
+      org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
+            constructFacetRequest(request, query);
+
+        TagCollector tagCollector = collect(facetRequest, query, collectedIDs);
+        FacetResponse facetResponse;
+        try {
+            facetResponse = tagCollector.extractResult(facetRequest);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to extract response from TagCollector", e);
+        }
+
+//        indexLookup.lookup(request, responses, facetMap.getTagHandler());
+
+        responses.add(newResponseToOldResult(facetResponse));
         if (log.isDebugEnabled()) {
             if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.debug("Finished facet call for query '"
-                          + request.get(DocumentKeys.SEARCH_QUERY) + "' with "
-                          + collector.getDocCount() + " hits in "
+                          + request.get(DocumentKeys.SEARCH_QUERY) + "' in "
                           + (System.currentTimeMillis() - startTime));
             } else {
+                String docCount = collectedIDs == null ? "N/A" :
+                                  Integer.toString(collectedIDs.getDocCount());
                 log.debug("Finished facet call for unknown query with "
-                          + collector.getDocCount() + " hits in "
+                          + docCount + " hits in "
                           + (System.currentTimeMillis() - startTime));
+            }
+        }
+    }
+
+    private Response newResponseToOldResult(
+        FacetResponse newResponse, Request request) {
+        String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
+                        request.getString(FacetKeys.SEARCH_FACET_FACETS) :
+                        null;
+        dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest
+            oldFR = new FacetRequest(null, facets, structure);
+
+        FacetResultExternal oldResult = new FacetResultExternal(
+            oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields());
+        newResponse.
+    }
+
+    private TagCollector collect(
+       org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest,
+       String query, DocIDCollector collectedIDs) {
+        IndexReader reader = searcher.getIndexReader();
+        CollectorPool collectorPool;
+        try {
+            collectorPool = poolFactory.acquire(reader, facetRequest);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to acquire a CollectorPool for " + facetRequest, e);
+        }
+        TagCollector tagCollector = collectorPool.acquire(query);
+        if (tagCollector.getQuery() == null) {
+            log.trace("No cached tag collector. Performing collection");
+            long collectTime = -System.currentTimeMillis();
+            if (collectedIDs != null) {
+                try {
+                    tagCollector.collect(collectedIDs.getBits());
+                } catch (IOException e) {
+                    throw new RuntimeException(
+                        "IOException while assigning previously collected IDs "
+                        + "into TagCollector for query '" + query + "'", e);
+                }
+                collectTime += System.currentTimeMillis();
+                log.debug("Filled tagCollector from bit set with length "
+                          + collectedIDs.getBits().size() + " in "
+                          + collectTime + " ms");
+            } else {
+                try {
+                    // TODO: Support filter?
+                    searcher.search(qp.parse(query), tagCollector);
+                } catch (IOException e) {
+                    throw new RuntimeException(
+                        "IOException while collecting IDs into TagCollector "
+                        + "for query '" + query + "'", e);
+                } catch (ParseException e) {
+                    throw new RuntimeException(
+                        "Unable to parse query '" + query + "'", e);
+                }
+                collectTime += System.currentTimeMillis();
+                log.debug("Filled tagCollector for query '" + query + "' in "
+                          + collectTime + " ms");
+            }
+        } else {
+            log.debug("Previously filled tag collector was found for query '"
+                      + query + ". Skipping tag collection");
+        }
+        return tagCollector;
+    }
+
+    private org.apache.lucene.search.exposed.facet.request.FacetRequest
+    constructFacetRequest(Request request, String query) {
+        String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
+                        request.getString(FacetKeys.SEARCH_FACET_FACETS) :
+                        null;
+        dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest
+            oldFacetRequest = new FacetRequest(null, facets, structure);
+        //ExposedRequest.
+
+        List<FacetRequestGroup>
+            groups = new ArrayList<FacetRequestGroup>();
+
+        for (Map.Entry<String, FacetStructure> facet:
+            oldFacetRequest.getFacets().entrySet()) {
+            FacetStructure structure = facet.getValue();
+            Locale locale = structure.getLocale() ==
+                            null ? null : new Locale(structure.getLocale());
+            String comparatorID;
+            org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER facetOrder;
+            if (structure.getSortType().equals(FacetStructure.SORT_ALPHA)) {
+                comparatorID = locale == null ?
+                               ExposedRequest.LUCENE_ORDER :
+                               structure.getLocale();
+                facetOrder = locale == null ?
+                             org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.index :
+                             org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.locale;
+
+            } else { // Popularity
+                comparatorID = ExposedRequest.LUCENE_ORDER;
+                locale = null;
+                facetOrder = org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.count;
+            }
+            // TODO: Use a factory for collator
+            Comparator<BytesRef> comparator =
+                ExposedComparators.collatorToBytesRef(
+                    locale == null ? null : Collator.getInstance(locale));
+
+            List<ExposedRequest.Field> fields =
+                new ArrayList<ExposedRequest.Field>();
+            for (String fieldName: structure.getFields()) {
+                fields.add(new ExposedRequest.Field(
+                    fieldName, comparator, comparatorID));
+            }
+            ExposedRequest.Group group = new ExposedRequest.Group(
+                structure.getName(), fields, comparator, comparatorID);
+            FacetRequestGroup facetGroup = new FacetRequestGroup(
+                group, facetOrder, structure.getLocale(), 0,
+                structure.getWantedTags(), 1, null);
+            groups.add(facetGroup);
+        }
+        return new org.apache.lucene.search.exposed.facet.request.FacetRequest(
+            query, groups);
+    }
+
+    private void assignSearcherAndQueryParser(
+        Map<String, Object> shared, DocIDCollector collectedIDs) {
+        if (!shared.containsKey(INDEX_SEARCHER)) {
+            log.error("The FacetSearchNode did not contain a value for key '"
+                      + INDEX_SEARCHER
+                      + "'. No faceting can be performed. Please set the "
+                      + INDEX_SEARCHER + " in the previous SearchNode");
+            searcher = null;
+        } else {
+            IndexSearcher newSearcher =
+                (IndexSearcher)shared.get(INDEX_SEARCHER);
+            if (newSearcher != searcher) {
+                log.info("Assigning new searcher");
+                searcher = newSearcher;
+            }
+        }
+        if (!shared.containsKey(QUERY_PARSER)) {
+            if (collectedIDs != null) {
+                log.debug("No " + QUERY_PARSER + " defined, but previously "
+                          + "collected IDs were present so faceting will "
+                          + "commence");
+            } else {
+                log.error("The FacetSearchNode did not contain a value for "
+                          + "key '" + QUERY_PARSER
+                          + "'. No faceting can be performed. Please set the "
+                          + QUERY_PARSER + " in the previous SearchNode");
+            }
+            qp = null;
+        } else {
+            QueryParser newQP = (QueryParser)shared.get(QUERY_PARSER);
+            if (newQP != qp) {
+                log.info("Assigning new query parser");
+                qp = newQP;
             }
         }
     }
@@ -220,11 +439,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     }
 
     public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws
-                                                               RemoteException {
+                                                                         RemoteException {
         lock.readLock().lock();
         try {
             FacetRequest facetRequest =
-                    new FacetRequest(docIDs, facets, structure);
+                new FacetRequest(docIDs, facets, structure);
             if (log.isDebugEnabled()) {
                 log.debug("Got facet-request " + facetRequest.toString(false));
             }

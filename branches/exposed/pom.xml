@@ -106,12 +106,12 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>4.0-dev-LUCENE-2369-20100928</version>
+                <version>4.0-dev-LUCENE-2369-20101021</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.0-dev-LUCENE-2369-20100928</version>
+                <version>4.0-dev-LUCENE-2369-20101021</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
@@ -190,6 +190,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <downloadJavadocs>true</downloadJavadocs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
