@@ -44,6 +44,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * TODO java doc.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
@@ -1427,7 +1430,7 @@ public class Configuration implements Serializable,
                         + subStorage.toString()
                         + "' doesn't support sub configurations");
                 }
-                configurations.add(new Configuration(storage));
+                configurations.add(new Configuration(subStorage));
             }
             return Collections.unmodifiableList(configurations);
         } catch (IOException e) {
