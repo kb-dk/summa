@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * A {@link Storage} proxying requests onto a collection of sub-storages. The
  * matching is done on {@code base} level. The actual requests are send through
  * {@link StorageReaderClient}s and {@link StorageWriterClient}s meaning that
- * all connections are stateless and will survive unstable connections to the
+ * all connections are state less and will survive unstable connections to the
  * sub storages.
  * <p/>
  * Configuration instructions for the aggregating storage can be found under
@@ -63,7 +63,7 @@ public class AggregatingStorage extends StorageBase {
      * <p/>
      * Each sub configuration is passed to
      * a {@link StorageReaderClient} and a {@link StorageWriterClient} so
-     * any configuration paramters applying to these classes may also be
+     * any configuration parameters applying to these classes may also be
      * supplied here.
      * <p/>
      * If the sub storage configuration contains another sub configuration
@@ -159,7 +159,7 @@ public class AggregatingStorage extends StorageBase {
                             subKey));
                 }
 
-                // Calc the merger's iterKey as the sum the children's
+                // Calculate the merger's iterKey as the sum the children's
                 iterKey += subKey;
 
                 // We need to store the readers to guarantee the correct order
@@ -194,8 +194,8 @@ public class AggregatingStorage extends StorageBase {
                     continue;
                 }
 
-                if (newest.getModificationTime() <
-                    recBuffer[i].getModificationTime()) {
+                if (newest.getModificationTime()
+                        < recBuffer[i].getModificationTime()) {
                     newest = recBuffer[i];
                     newestOffset = i;
                 }
@@ -339,11 +339,6 @@ public class AggregatingStorage extends StorageBase {
         public List<Record> next(int maxRecords) throws IOException {
             return reader.next(iterKey, maxRecords);
         }
-
-        /*public String getBase () {
-            accessed();
-            return base;
-        }*/
 
         /**
          * Return the iterator key.
