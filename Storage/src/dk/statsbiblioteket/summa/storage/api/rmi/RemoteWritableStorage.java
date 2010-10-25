@@ -49,7 +49,7 @@ public interface RemoteWritableStorage extends WritableStorage, Remote {
     void flushAll(List<Record> records) throws RemoteException;
 
     /**
-     * Closes the storage.\
+     * Closes the storage.
      * @see WritableStorage
      * @throws RemoteException If error occur when using the remote storage.
      */
