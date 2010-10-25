@@ -14,12 +14,13 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import java.io.IOException;
-
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,12 +31,18 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
-public class StorageFactory {
+public final class StorageFactory {
+    /** Private logger instance. */
     private static Log log = LogFactory.getLog(StorageFactory.class);
 
     /**
+     * Private constructor, to make sure there are not instances of this class.
+     */
+    private StorageFactory() { }
+
+    /**
      * The default storage class to instantiate if {@link Storage#CONF_CLASS}
-     * is not specified in the configuration passed to {@link #createStorage} 
+     * is not specified in the configuration passed to {@link #createStorage}.
      */
     public static final Class<? extends Storage> DEFAULT_STORAGE =
             RMIStorageProxy.class;
@@ -48,9 +55,10 @@ public class StorageFactory {
      * used to specify the class of the storage implementation to use.</p>
      *
      * @param conf setup for the wanted storage along with the
-     *        property {@link Storage#CONF_CLASS} which should hold the class-name
-     *        for the wanted {@link Storage}. If no storage is specified,
-     *        the {@code StorageFactory} defaults to {@link #DEFAULT_STORAGE}.
+     *        property {@link Storage#CONF_CLASS} which should hold the
+     *        class-name for the wanted {@link Storage}. If no storage is
+     *        specified, the {@code StorageFactory} defaults to
+     *        {@link #DEFAULT_STORAGE}.
      * @return an object implementing the {@link Storage} interface.
      * @throws IOException if the storage could not be created.
      */
@@ -102,9 +110,4 @@ public class StorageFactory {
                     + "' should be well defined.", e);
         }
     }
-
 }
-
-
-
-
