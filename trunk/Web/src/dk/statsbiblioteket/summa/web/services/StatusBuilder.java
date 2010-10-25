@@ -38,7 +38,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke",
-        reviewers = {"hbk"})
+        reviewers = "hbk")
 public class StatusBuilder {
     /**
      * Static Properties class.
@@ -52,8 +52,10 @@ public class StatusBuilder {
          * @param group The Node group, if null NullPointerException is thrown.
          */
         Properties(Node group) {
-            if (group == null) throw new NullPointerException(
-                                             "Properties based on null group");
+            if (group == null) {
+                throw new NullPointerException(
+                                              "Properties based on null group");
+            }
             this.group = group;
         }
 
@@ -79,7 +81,9 @@ public class StatusBuilder {
 
                 Node prop = child.getAttributes().getNamedItem("name");
 
-                if (prop == null) continue;
+                if (prop == null) {
+                    continue;
+                }
 
                 if (prop.getTextContent().equals(name)) {
                     return child;
@@ -95,7 +99,9 @@ public class StatusBuilder {
          */
         String getText(String name) {
             Node prop = get(name);
-            if (prop == null) return "Undefined";
+            if (prop == null) {
+                return "Undefined";
+            }
 
             Node child = prop.getFirstChild();
             if (child == null) {
@@ -124,7 +130,7 @@ public class StatusBuilder {
      *
      * @param statusDom The DOM used to build the status web content.
      */
-    public StatusBuilder (Node statusDom) {
+    public StatusBuilder(Node statusDom) {
         this.statusDom = statusDom;
 
         searcher = new Properties(
@@ -156,12 +162,12 @@ public class StatusBuilder {
      * @param nodes Items to parse and sort.
      * @return a sorted collection with Pairs (count, query).
      */
-    private List<Pair<String,String>> sortQueries(NodeList nodes) {
-        List<Pair<String,String>> l = new LinkedList<Pair<String,String>>();
+    private List<Pair<String, String>> sortQueries(NodeList nodes) {
+        List<Pair<String, String>> l = new LinkedList<Pair<String, String>>();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             l.add(
-                new Pair<String,String>(
+                new Pair<String, String>(
                     node.getAttributes().getNamedItem("name").getTextContent(),
                     node.getFirstChild().getTextContent().trim()
                 )
@@ -179,9 +185,8 @@ public class StatusBuilder {
      * @return true if searcher, storage and suggest is 'OK', false otherwise.
      */
     public boolean allGood() {
-        return "OK".equals(searcherStatus) &&
-               "OK".equals(storageStatus) &&
-               "OK".equals(suggestStatus);
+        return "OK".equals(searcherStatus) && "OK".equals(storageStatus)
+            && "OK".equals(suggestStatus);
     }
 
     /**
@@ -202,37 +207,37 @@ public class StatusBuilder {
 
         // Year
         output += cal.get(Calendar.YEAR);
-        if(granularity.equals("year")) {
+        if (granularity.equals("year")) {
             return output;
         }
 
         // Month
         output += "-" + cal.get(Calendar.MONTH);
-        if(granularity.equals("month")) {
+        if (granularity.equals("month")) {
             return output;
         }
 
         // Day
         output += "-" + cal.get(Calendar.DAY_OF_MONTH);
-        if(granularity.equals("day")) {
+        if (granularity.equals("day")) {
             return output;
         }
 
         // Hour
         output += "T" + cal.get(Calendar.HOUR_OF_DAY);
-        if(granularity.equals("hour")) {
+        if (granularity.equals("hour")) {
             return output;
         }
 
-        // Min 
+        // Min
         output += ":" + cal.get(Calendar.MINUTE);
-        if(granularity.equals("minute")) {
+        if (granularity.equals("minute")) {
             return output;
         }
 
         // Sec
         output += ":" + cal.get(Calendar.SECOND);
-        if(granularity.equals("second")) {
+        if (granularity.equals("second")) {
             return output;
         }
 
@@ -348,9 +353,9 @@ public class StatusBuilder {
         buf.append("<p>\n");
         buf.append("<b>Popular queries the last 24 hours</b>");
         buf.append("<i>(number of queries - query string)</i>:<br/>");
-        if(queryCount.size() > 0) {
+        if (queryCount.size() > 0) {
             buf.append("<ul>");
-            for (Pair<String,String> prop : queryCount) {
+            for (Pair<String, String> prop : queryCount) {
                 buf.append("<li>")
                    .append(Integer.toString(Integer.parseInt(prop.getKey())))
                    .append(" - ")
@@ -369,7 +374,7 @@ public class StatusBuilder {
         buf.append("<b>Storage holdings:</b>");
         if (holdings != null) {
             NodeList bases = holdings.getChildNodes();
-            if(bases.getLength() > 0) {
+            if (bases.getLength() > 0) {
                 buf.append("<ul>\n");
                 for (int i = 0; i < bases.getLength(); i++) {
                     if (bases.item(i).getNodeType() != Node.ELEMENT_NODE) {
@@ -395,4 +400,3 @@ public class StatusBuilder {
         return buf;
     }
 }
-

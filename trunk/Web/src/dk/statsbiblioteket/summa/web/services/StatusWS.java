@@ -63,7 +63,7 @@ import java.util.TreeSet;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
         author = "mke",
-        reviewers = {"hbk"})
+        reviewers = "hbk")
 @WebService
 public class StatusWS {
     private Log log;
@@ -256,7 +256,7 @@ public class StatusWS {
                     String tagName = tag.getNamedItem("name").getNodeValue();
                     String tagCount =
                                 tag.getNamedItem("addedobjects").getNodeValue();
-                    status.put("facets", facetName + ":"+tagName, tagCount);
+                    status.put("facets", facetName + ":" + tagName, tagCount);
                 }
             }
         } catch (IOException e) {
@@ -309,8 +309,8 @@ public class StatusWS {
      * ''Suggest', Pair('Status', 'ok')'.
      */
     private class Status {
-        Map<String, List<Pair<String,String>>> groups =
-                               new HashMap<String, List<Pair<String,String>>>();
+        Map<String, List<Pair<String, String>>> groups =
+                              new HashMap<String, List<Pair<String, String>>>();
 
         Date date;
 
@@ -330,7 +330,7 @@ public class StatusWS {
          */
         public void put(String group, String name, String value) {
             if (!groups.containsKey(group)) {
-                groups.put(group, new LinkedList<Pair<String,String>>());
+                groups.put(group, new LinkedList<Pair<String, String>>());
             }
             groups.get(group).add(new Pair<String,String>(name, value));
         }
@@ -349,12 +349,12 @@ public class StatusWS {
                .append("\">\n");
             SortedSet<String> groupNames = new TreeSet<String>(groups.keySet());
             for (String groupName : groupNames) {
-                List<Pair<String,String>> group = groups.get(groupName);
+                List<Pair<String, String>> group = groups.get(groupName);
                 Collections.sort(group);
                 buf.append("  <group name=\"")
                    .append(XMLUtil.encode(groupName))
                    .append("\">\n");
-                for (Pair<String,String> prop : group) {
+                for (Pair<String, String> prop : group) {
                     // Note: In order to allow services to return rich
                     //       status messages the body of the response is assumed
                     //       to be valid XML, thus is not escaped
@@ -373,7 +373,3 @@ public class StatusWS {
         }
     }
 }
-
-
-
-
