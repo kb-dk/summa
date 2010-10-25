@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 
 /**
  * Storage is a unified interface for {@link ReadableStorage} and
@@ -41,7 +39,7 @@ public interface Storage extends ReadableStorage, WritableStorage {
      * Configuration property specifying which port the Storage service
      * should communicate on. Default is 27027.
      */
-    public static final String CONF_SERVICE_PORT = "summa.storage.service.port";        
+    public static final String CONF_SERVICE_PORT = "summa.storage.service.port";
 
     /**
      * Configuration property specifying where the storage should store
@@ -49,7 +47,3 @@ public interface Storage extends ReadableStorage, WritableStorage {
      */
     public static final String CONF_DATA_DIR = "summa.storage.data.dir";
 }
-
-
-
-
