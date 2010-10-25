@@ -25,25 +25,25 @@ import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A {@link Storage} implementation capable of wrapping an underlying backend
  * {@code Storage} and expose it over RMI.
- * </p><p>
- *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke, te, hbk")
 public class RMIStorageProxy extends UnicastRemoteObject
                              implements RemoteStorage {
+    /** Serial version UID. */
     private static final long serialVersionUID = 23485L;
 
     /**
@@ -76,7 +76,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
     public static final int DEFAULT_REGISTRY_PORT = 28000;
 
     /**
-     * Configuration property specifying the service name of the Storage service.
+     * Configuration property specifying the service name of the Storage
+     * service.
      * Default is {@link #DEFAULT_SERVICE_NAME}.
      */
     public static final String CONF_SERVICE_NAME =
@@ -85,63 +86,71 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Default value for {@link RMIStorageProxy#CONF_SERVICE_NAME}.
      */
     public static final String DEFAULT_SERVICE_NAME = "summa-storage";
-
-    private static final Log log = LogFactory.getLog(RMIStorageProxy.class);
-
+    /** Private logger instance. */
+    private static Log log = LogFactory.getLog(RMIStorageProxy.class);
+    /** Storage backend. */
     private Storage backend;
+    /** RMI service name. */
     private String serviceName;
+    /** Registry port. */
     private int registryPort;
-
-    public RMIStorageProxy (Configuration conf) throws IOException {
-        super (getServicePort(conf));
+    /** Log expand size. */
+    private final int logExpand = 5;
+    /**
+     * Constructs a RMI Storage proxy with a given configuration.
+     * @param conf The configuration.
+     * @throws IOException If error occur construction storage.
+     */
+    public RMIStorageProxy(Configuration conf) throws IOException {
+        super(getServicePort(conf));
 
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
         // FIXME: The below config should really be kept entirely in memory,
         //        but we can't use a memory-based config because of bug:
-        //        https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
-        Configuration backendConf = new Configuration (new XStorage());
-        backendConf.importConfiguration (conf);
-        if (conf.valueExists (CONF_BACKEND)) {
-            backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
+        //https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
+        Configuration backendConf = new Configuration(new XStorage());
+        backendConf.importConfiguration(conf);
+        if (conf.valueExists(CONF_BACKEND)) {
+            backendConf.set(CONF_CLASS, conf.getString(CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
-                      + " for backend");
-            backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
+            log.info(CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
+                     + " for backend");
+            backendConf.set(CONF_CLASS, DEFAULT_BACKEND);
         }
 
         /* If the backend is set to be another RMIStorageProxy then avoid
          * infinite recursion by forcing it into a DerbyStorage. */
-        if (backendConf.valueExists (CONF_CLASS)) {
+        if (backendConf.valueExists(CONF_CLASS)) {
             if (this.getClass().getName().equals(
-                                          backendConf.getString (CONF_CLASS))) {
-                log.warn ("Backend set to RMIStorageProxy. Forcing backend " +
-                          "class to " + DEFAULT_BACKEND.getName()
-                          + " to avoid infinite recursion");
-                backendConf.set (CONF_CLASS, DEFAULT_BACKEND.getName());
+                                          backendConf.getString(CONF_CLASS))) {
+                log.warn("Backend set to RMIStorageProxy. Forcing backend "
+                         + "class to " + DEFAULT_BACKEND.getName()
+                         + " to avoid infinite recursion");
+                backendConf.set(CONF_CLASS, DEFAULT_BACKEND.getName());
             }
         }
 
-        if (log.isTraceEnabled ()) {
-            log.trace ("Backend conf:\n" + backendConf.dumpString ());
+        if (log.isTraceEnabled()) {
+            log.trace("Backend conf:\n" + backendConf.dumpString());
         }
 
-        log.trace ("Creating storage backend");
-        backend = StorageFactory.createStorage (backendConf);
-        log.trace ("Created storage: " + backend.getClass().getName());
+        log.trace("Creating storage backend");
+        backend = StorageFactory.createStorage(backendConf);
+        log.trace("Created storage: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
 
-        RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
+        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
 
         try {
-            RemoteHelper.exportMBean (this);
+            RemoteHelper.exportMBean(this);
         } catch (Exception e) {
             String msg = "Error exporting MBean of '" + this
-                         + "'. Going on without it: " + e.getMessage ();
+                         + "'. Going on without it: " + e.getMessage();
             if (log.isTraceEnabled()) {
-                log.warn (msg, e);
+                log.warn(msg, e);
             } else {
                 log.warn(msg);
             }
@@ -169,19 +178,19 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Return iterator key for records modified after input time, from the
      * backend storage.
      *
-     * @param time Timestamp records should be modified after.
+     * @param time Time stamp records should be modified after.
      * @param base The base to look in.
      * @param options The query options.
      * @return Iterator key for the result set.
      * @throws RemoteException If error occurred while doing RMI call.
      */
     @Override
-    public long getRecordsModifiedAfter(
-            long time, String base, QueryOptions options)
+    public long getRecordsModifiedAfter(long time, String base,
+                                        QueryOptions options)
                                                         throws RemoteException {
         log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', "
                 + options + ").");
-        if(log.isTraceEnabled()) {
+        if (log.isTraceEnabled()) {
             log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', "
                 + options + ").");
         }
@@ -233,7 +242,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getRecord(ids=%s, queryOptions=%s) for %d:%s",
-                    Logs.expand(ids, 5), options,
+                    Logs.expand(ids, logExpand), options,
                     registryPort, serviceName), t);
             return null;
         }
@@ -351,7 +360,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flushAll(%s) for %d:%s",
-                    Logs.expand(records, 5), registryPort, serviceName), t);
+                    Logs.expand(records, logExpand), registryPort, serviceName),
+                    t);
         }
     }
 
@@ -376,7 +386,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
     @Override
     public void close() throws RemoteException {
         try {
-            RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
+            RemoteHelper.unExportRemoteInterface(serviceName, registryPort);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "close().unExportRemoteInterface(serviceName='%s', "
@@ -409,14 +419,14 @@ public class RMIStorageProxy extends UnicastRemoteObject
      */
     @Override
     public void clearBase(String base) throws RemoteException {
-        final String CALL = String.format("clearBase(%s) for %d:%s",
+        final String call = String.format("clearBase(%s) for %d:%s",
                                           base, registryPort, serviceName);
         //noinspection DuplicateStringLiteralInspection
-        log.debug(CALL + " called");
+        log.debug(call + " called");
         try {
             backend.clearBase(base);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, CALL, t);
+            RemoteHelper.exitOnThrowable(log, call, t);
         }
     }
 
@@ -444,17 +454,16 @@ public class RMIStorageProxy extends UnicastRemoteObject
     public String batchJob(String jobName, String base,
                            long minMtime, long maxMtime, QueryOptions options)
                                                             throws IOException {
-        final String CALL = String.format(
+        final String call = String.format(
                 "batchJob(%s, %s) for %d:%s",
                 jobName, base, registryPort, serviceName);
         //noinspection DuplicateStringLiteralInspection
-        log.debug(CALL + " called");
+        log.debug(call + " called");
         try {
             return backend.batchJob(jobName, base, minMtime, maxMtime, options);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, CALL, t);
+            RemoteHelper.exitOnThrowable(log, call, t);
             return "ERROR: " + t.getMessage();
         }
     }
 }
-
