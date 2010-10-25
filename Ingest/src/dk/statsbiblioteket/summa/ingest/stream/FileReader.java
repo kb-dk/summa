@@ -22,8 +22,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,6 +34,9 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * This reader performs a recursive scan for a given pattern of files.
@@ -56,7 +57,7 @@ import java.util.regex.Pattern;
  * </p><p>
  * Warning: The FileReader does not check for cyclic folders structures.
  */
-// TODO: Make the FileReader handle cyclic folder structures
+// TODO Make the FileReader handle cyclic folder structures
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -109,7 +110,7 @@ public class FileReader implements ObjectFilter {
 
     protected File root;
     private boolean recursive;
-    private boolean reverse_sort = DEFAULT_REVERSE_SORT;
+    private boolean reverseSort = DEFAULT_REVERSE_SORT;
     private Pattern filePattern;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private String postfix = DEFAULT_COMPLETED_POSTFIX;
@@ -159,8 +160,8 @@ public class FileReader implements ObjectFilter {
         }
         recursive = configuration.getBoolean(CONF_RECURSIVE,
                                              DEFAULT_RECURSIVE);
-        reverse_sort = configuration.getBoolean(
-                CONF_REVERSE_SORT, reverse_sort);
+        reverseSort = configuration.getBoolean(
+                CONF_REVERSE_SORT, reverseSort);
         filePattern = Pattern.compile(configuration.
                 getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
         postfix = configuration.getString(CONF_COMPLETED_POSTFIX, postfix);
@@ -170,6 +171,7 @@ public class FileReader implements ObjectFilter {
                  + "', completed postfix: '" + postfix + "'");
     }
 
+    @Override
     public void setSource(Filter source) {
         throw new UnsupportedOperationException(String.format(
                 "A %s must be positioned at the start of a filter chain",
@@ -177,6 +179,7 @@ public class FileReader implements ObjectFilter {
     }
 
     private FileFilter dataAndFolderFilter = new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
             return pathname.canRead()
                    && (pathname.isDirectory()
@@ -186,6 +189,7 @@ public class FileReader implements ObjectFilter {
     };
 
     private Comparator<File> fileComparator = new Comparator<File>() {
+        @Override
         public int compare(File o1, File o2) {
             return o1.getName().compareTo(o2.getName());
         }
@@ -195,7 +199,7 @@ public class FileReader implements ObjectFilter {
      * folder since it is not a file), add the expansion to the start of the
      * to do list and call updateTodo again.
      * </p><p>
-     * This behaviour ensures a lazy depth-first traversal in unicode
+     * This behavior ensures a lazy depth-first traversal in unicode
      * (optionally reverse unicode) order. It is safe to call this method
      * multiple times.
      * </p><p>
@@ -229,7 +233,7 @@ public class FileReader implements ObjectFilter {
                     continue;
                 }
                 Arrays.sort(files, fileComparator);
-                if (reverse_sort) {
+                if (reverseSort) {
                     ArrayUtil.reverse(files);
                 }
                 //noinspection DuplicateStringLiteralInspection
@@ -406,6 +410,7 @@ public class FileReader implements ObjectFilter {
      * @return a Payload with a stream for the next file or null if no further
      *         files are available.
      */
+    @Override
     public synchronized Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
@@ -430,7 +435,6 @@ public class FileReader implements ObjectFilter {
             Payload payload = new Payload(in);
             payload.getData().put(Payload.ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
-//            System.out.println(delivered + " " + payload);
             synchronized (delivered) {
                 delivered.add(payload);
             }
@@ -445,11 +449,14 @@ public class FileReader implements ObjectFilter {
 
     /**
      * Graceful shutdown of opened files.
+     * Note: if success, some streams might still be open.
+     *
      * @param success if false, all opened files are closed immediately. If
      *                true, processed files are appended with {@link #postfix}
      *                and any currently opened files are kept open until they
      *                are emptied.
      */
+    @Override
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Closing");
@@ -512,6 +519,7 @@ public class FileReader implements ObjectFilter {
      * @return true if pumping should continue, in order to process all data.
      * @throws IOException in case of read errors.
      */
+    @Override
     public synchronized boolean pump() throws IOException {
         for (Payload payload: delivered) {
             if (payload.pump()) {
@@ -522,19 +530,31 @@ public class FileReader implements ObjectFilter {
     }
 
     /* Interface implementations */
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized boolean hasNext() {
         updateToDo();
         return todo.size() > 0;
     }
 
+    /**
+     * Not implemented. So doesn't do anything.
+     */
+    @Override
     public void remove() {
         log.warn("Remove not implemented for " + getClass().getName());
     }
 
+    /**
+     * Return the empty state of the number of folders/files ready to be
+     * processed.
+     * @return True if the number of folders/files ready to be precessed are
+     * empty, false otherwise
+     */
     protected synchronized boolean isTodoEmpty() {
         log.trace("idTodoEmpty(): todo-size: " + todo.size());
         return todo.size() == 0;
     }
 }
-
