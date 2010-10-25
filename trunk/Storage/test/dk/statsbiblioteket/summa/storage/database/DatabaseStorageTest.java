@@ -39,20 +39,33 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class DatabaseStorageTest extends StorageTestBase {
+    /** Database storage logger. */
     private static Log log = LogFactory.getLog(DatabaseStorageTest.class);
+    /** Local instance of this object. */
     DatabaseStorage storage;
 
+    /**
+     * Setup method, calls setup on super object.
+     */
     @Override
     public void setUp() throws Exception {
         super.setUp();
         this.storage = (DatabaseStorage) super.storage;
     }
 
+    /**
+     * Tests statistic on an empty storage.
+     * @throws Exception If error.
+     */
     public void testStatsOnEmptyStorage() throws Exception {
         List<BaseStats> stats = storage.getStats();
         assertTrue(stats.isEmpty());
     }
 
+    /**
+     * Tests statistic on storage with a single record.
+     * @throws Exception If error.
+     */
     public void testStatsOnSingleRecord() throws Exception {
         long storageStart = storage.getModificationTime(null);
         Thread.sleep(2); // To make sure we have a time stamp delta
@@ -67,13 +80,17 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(0, base.getDeletedCount());
         assertEquals(1, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
-        assertTrue("Base mtime must be updated, but " +
-                   "base.getModificationTime() <= storageStart: " +
-                   base.getModificationTime() + " <= " +
-                   storageStart,
+        assertTrue("Base mtime must be updated, but "
+                   + "base.getModificationTime() <= storageStart: "
+                   + base.getModificationTime() + " <= "
+                   + storageStart,
                    base.getModificationTime() > storageStart);
     }
 
+    /**
+     * Tests statistic on storage with to records in two different bases.
+     * @throws Exception If error.
+     */
     public void testStatsOnTwoRecordsInTwoBases() throws Exception {
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase2, testContent1));
@@ -96,6 +113,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    /**
+     * Tests statistic on storage with mixed states.
+     * @throws Exception If error.
+     */
     public void testStatsWithMixedStates() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
 
@@ -109,7 +130,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         r4.setDeleted(true);
         r4.setIndexable(false);
 
-        storage.flushAll(Arrays.asList(r1,r2,r3,r4));
+        storage.flushAll(Arrays.asList(r1, r2, r3, r4));
         List<BaseStats> stats = storage.getStats();
 
         assertEquals(1, stats.size());
@@ -122,6 +143,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    /**
+     * Test illegal access to __holdings__ record.
+     * @throws Exception If error.
+     */
     public void testIllegalPrivateAccess() throws Exception {
         try {
             storage.getRecord("__holdings__", null);
@@ -131,6 +156,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    /**
+     * Test get __holdings__ object.
+     * @throws Exception If error.
+     */
     public void testGetHoldings() throws Exception {
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase2, testContent1));
