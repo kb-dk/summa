@@ -14,9 +14,15 @@
  */
 package dk.statsbiblioteket.summa.storage.database.h2;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.h2.jdbcx.JdbcDataSource;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.StorageUtils;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
+import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,32 +32,26 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-
-import dk.statsbiblioteket.summa.storage.StorageUtils;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.util.Files;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.h2.jdbcx.JdbcDataSource;
 
 /**
  * Storage implementation on top of the H" database engine.
  */
 public class H2Storage extends DatabaseStorage implements Configurable {
-
+    /** Private logger. */
     private static Log log = LogFactory.getLog(H2Storage.class);
+    /** DB file. */
     private static final String DB_FILE = "summa_h2storage";
     //public static final int META_LIMIT = 50*1024*1024; // MAX_VALUE instead?
 
     /**
-     * We optimize the index statistics after this many flushes
+     * We optimize the index statistics after this many flushes.
      */
     public static final int OPTIMIZE_INDEX_THRESHOLD = 100000;
 
