@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.storage.http;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.*;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.http.QueryToken
