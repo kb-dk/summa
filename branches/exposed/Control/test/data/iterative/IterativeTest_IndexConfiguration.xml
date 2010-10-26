@@ -112,7 +112,7 @@
                                             </entry>
                                         </xproperties>
 
-                                        <xproperties>
+<!--                                        <xproperties>
                                             <entry>
                                                 <key>summa.index.manipulatorclass</key>
                                                 <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
@@ -162,7 +162,7 @@
                                                     </xproperties>
                                                 </value>
                                             </entry>
-                                        </xproperties>
+                                        </xproperties>-->
                                     </value>
                                 </entry>
                             </xproperties>

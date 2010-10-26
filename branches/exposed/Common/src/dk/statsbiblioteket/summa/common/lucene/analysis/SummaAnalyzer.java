@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.util.Version;
 
 /**

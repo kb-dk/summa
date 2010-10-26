@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
@@ -92,6 +93,10 @@ import java.util.concurrent.TimeUnit;
 public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                                   Configurable {
     private static Log log = LogFactory.getLog(LuceneSearchNode.class);
+
+    // Used to pass on searcher and query parser to subsequent search nodes
+    public static final String INDEX_SEARCHER = "INDEX_SEARCHER";
+    public static final String QUERY_PARSER = "QUERY_PARSER";
 
     /**
      * The maximum number of boolean clauses that a query can be expanded to.
@@ -572,6 +577,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                || super.isRequestUsable(request);
     }
 
+    @Override
+    protected void managedSearch(Request request, ResponseCollection responses)
+                                                        throws RemoteException {
+        log.trace("Assigning searcher and query parser to responses.transient");
+        responses.getTransient().put(INDEX_SEARCHER, searcher);
+        responses.getTransient().put(QUERY_PARSER, parser);
+        super.managedSearch(request, responses);
+    }
+
+    @Override
     public DocumentResponse fullSearch(Request request,
             String filter, String query, long startIndex, long maxRecords,
             String sortKey, boolean reverseSort,

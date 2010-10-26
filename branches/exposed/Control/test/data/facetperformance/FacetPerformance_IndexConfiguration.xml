@@ -191,7 +191,7 @@
                                                 <value class="boolean">false</value>
                                             </entry>
                                         </xproperties>
-                                        <xproperties>
+<!--                                        <xproperties>
                                             <entry>
                                                 <key>summa.index.manipulatorclass</key>
                                                 <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
@@ -204,7 +204,7 @@
                                                 <key>summa.facet.cleartagsonconsolidate</key>
                                                 <value class="string">true</value>
                                             </entry>
-                                        </xproperties>
+                                        </xproperties>-->
                                     </value>
                                 </entry>
                             </xproperties>

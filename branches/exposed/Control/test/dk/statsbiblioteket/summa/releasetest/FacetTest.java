@@ -389,15 +389,14 @@ public class FacetTest extends NoExitTestCase {
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "fagekspert");
         request.put(DocumentKeys.SEARCH_SORTKEY, "sort_title");
-        String first =
-                Strings.join(getIDs(searcher.search(request).toXML()), ", ");
+        String result = searcher.search(request).toXML();
+        String first = Strings.join(getIDs(result), ", ");
         log.debug("IDs from sort_title sort: " + first);
 
         request.put(DocumentKeys.SEARCH_REVERSE, true);
-        String second =
-                Strings.join(getIDs(searcher.search(request).toXML()), ", ");
+        result = searcher.search(request).toXML();
+        String second = Strings.join(getIDs(result), ", ");
         log.debug("IDs from sort_title reverse: " + second);
-
 
         assertFalse(String.format(
                 "The first IDs '%s' should be in reverse order of the second "

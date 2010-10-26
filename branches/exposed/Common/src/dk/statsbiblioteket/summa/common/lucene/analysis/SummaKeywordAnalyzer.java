@@ -16,7 +16,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.KeywordAnalyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.Token;
 
 import org.apache.commons.logging.Log;
@@ -28,13 +28,12 @@ import java.io.IOException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 /**
  * This KeywordAnalyzer strips off the _ character, that the QueryParser
  * substitutes with " " before wrapping a KeyWordAnalyzer.
  *
- * @see org.apache.lucene.analysis.KeywordAnalyzer
+ * @see org.apache.lucene.analysis.core.KeywordAnalyzer
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

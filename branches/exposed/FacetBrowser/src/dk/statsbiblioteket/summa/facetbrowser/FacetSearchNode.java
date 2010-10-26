@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.facetbrowser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
@@ -34,9 +35,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
@@ -61,7 +60,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * </p><p>
  * The faceting system must be located after a SearchNode that updates the
  * response.transient data with a Lucene IndexSearcher {@code INDEX_SEARCHER}
- * and a Lucene QueryParser {@code QUERY_PARSER}.
+ * and a SummaQueryParser {@code QUERY_PARSER}.
  * </p><p>
  * Note that this node is also responsible for index lookups. The configuration
  * for the node should thus contain settings for
@@ -102,7 +101,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     private IndexSearcher searcher = null;
-    private QueryParser qp = null;
+    private SummaQueryParser qp = null;
 
     private boolean loadDescriptorFromIndex;
 
@@ -173,7 +172,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         lock.writeLock().lock();
         try {
             structure = newStructure;
-            throw new UnsupportedOperationException("init not done yet");
+            // TODO: Consider clearing TagCounter cache
         } finally {
             lock.writeLock().unlock();
         }
@@ -194,7 +193,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     protected void managedClose() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
-        throw new UnsupportedOperationException("close not done yet");
+        CollectorPoolFactory.getLastFactory().clear();
     }
 
     @Override
@@ -250,6 +249,12 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
 
         assignSearcherAndQueryParser(shared, collectedIDs);
+        if (searcher == null) {
+            throw new RemoteException(
+                "No searcher defined. An IndexSearcher needs to be passed to "
+                + "this search node from a previous search node in order to "
+                + "make faceting work");
+        }
       org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
             constructFacetRequest(request, query);
 
@@ -264,7 +269,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
 //        indexLookup.lookup(request, responses, facetMap.getTagHandler());
 
-        responses.add(newResponseToOldResult(facetResponse));
+        responses.add(newResponseToOldResult(facetResponse, request));
         if (log.isDebugEnabled()) {
             if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.debug("Finished facet call for query '"
@@ -280,6 +285,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
     }
 
+    // Not hierarchical
     private Response newResponseToOldResult(
         FacetResponse newResponse, Request request) {
         String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
@@ -290,7 +296,13 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
         FacetResultExternal oldResult = new FacetResultExternal(
             oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields());
-        newResponse.
+        for (FacetResponse.Group group: newResponse.getGroups()) {
+            String name = group.getRequest().getGroup().getName();
+            for (FacetResponse.Tag tag: group.getTags().getTags()) {
+                oldResult.assignTag(name, tag.getTerm(), tag.getCount());
+            }
+        }
+        return oldResult;
     }
 
     private TagCollector collect(
@@ -426,7 +438,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             }
             qp = null;
         } else {
-            QueryParser newQP = (QueryParser)shared.get(QUERY_PARSER);
+            SummaQueryParser newQP = (SummaQueryParser)shared.get(QUERY_PARSER);
             if (newQP != qp) {
                 log.info("Assigning new query parser");
                 qp = newQP;
@@ -434,10 +446,12 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
     }
 
+    @Override
     public List<String> getFacetNames() {
         return structure.getFacetNames();
     }
 
+    @Override
     public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws
                                                                          RemoteException {
         lock.readLock().lock();

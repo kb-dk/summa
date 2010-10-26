@@ -78,6 +78,7 @@ public class SortFactory {
     private Sort reverseSort;
     private COMPARATOR comparator;
     private int buffer;
+    private IndexReader lastReader = null;
 
     /**
      * Create a SortFactory with the given parameters. Note that the absence of
@@ -178,9 +179,10 @@ public class SortFactory {
                                 + "getSortField");
                     }
                     case exposed: {
-                        comparators.put(
-                                sortLanguage,
-                                new ExposedComparator(sortLanguage));
+                        ExposedComparator c =
+                            new ExposedComparator(sortLanguage);
+                        c.indexChanged(lastReader);
+                        comparators.put(sortLanguage, c);
                         break;
                     }
                     default: {
@@ -211,6 +213,7 @@ public class SortFactory {
      * @param reader the new reader to use for sorting.
      */
     public void indexChanged(IndexReader reader) {
+        lastReader = reader;
         for (Map.Entry<String, ReusableSortComparator> source:
             comparators.entrySet()) {
             source.getValue().indexChanged(reader);
