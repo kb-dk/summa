@@ -176,4 +176,12 @@ public class DatabaseStorageTest extends StorageTestBase {
         log.info(xml);
         // TODO assert equals
     }
+
+    public void testGetSetModificationTime() throws Exception {
+        long start = storage.getModificationTime(testBase1);
+        assertEquals(storage.getStorageStartTime(), start);
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        long newMtime = storage.getModificationTime(testBase1);
+        assertTrue(start < newMtime);
+    }
 }

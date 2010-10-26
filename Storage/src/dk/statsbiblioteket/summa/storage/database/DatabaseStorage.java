@@ -235,6 +235,11 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String RELATIONS = "summa_relations";
 
     /**
+     * The of the table holding statistic on a base level. 
+     */
+    public static final String BASE_STATISTICS = "summa_basestats";
+
+    /**
      * The {@code id} column contains the unique identifier for a given record
      * in the database. The value that is mapped directly to the {@code id}
      * value of the constructed {@link Record} objects.
@@ -278,7 +283,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * The {@code data} column contains the raw record-data as ingested.
      */
-    public static final String DATA_COLUMN      = "data";
+    public static final String DATA_COLUMN = "data";
 
     /**
      * The {@code ctime} column signifies the time of record creation in the
@@ -290,7 +295,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * mapped back to a system time value and can be inspected via
      * {@link Record#getCreationTime()} as usual.
      */
-    public static final String CTIME_COLUMN     = "ctime";
+    public static final String CTIME_COLUMN = "ctime";
 
     /**
      * The {@code mtime} column signifies the time of record modification in the
@@ -327,6 +332,12 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public static final String CHILD_ID_COLUMN = "childId";
 
+    /**
+     * The valid column id, for the {@link #BASE_STATISTICS} table. The column
+     * holds the state of the indexable, deleted count and ctime.
+     */
+    public static final String VALID_COLUMN = "valid";
+
     /* Constants for database-setup */
     public static final int ID_LIMIT = 255;
     public static final int BASE_LIMIT = 31;
@@ -348,6 +359,10 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
+    private StatementHandle stmtUpdateMtimForBase;
+    private StatementHandle stmtInsertBaseStats;
+    private StatementHandle stmtSetBaseStatsInvalid;
+    private StatementHandle stmtGetLastModificationTime;
     private String allColumns;
 
     private Map<Long, Cursor> iterators = new HashMap<Long, Cursor>(10);
@@ -980,15 +995,42 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtCreateRelation = prepareStatement(createRelation);
         log.debug("createRelation handle: " + stmtCreateRelation);
 
-        /* deleteRelation */
-        /*String deleteRelation = "DELETE FROM " + RELATIONS
-                                + " WHERE " + PARENT_ID_COLUMN + "=? "
-                                + " OR " + CHILD_ID_COLUMN + "=? ";
-        log.debug("Preparing query deleteRelation with '" +
-                                              deleteRelation + "'");
-        stmtDeleteRelation = prepareStatement(
-                                                     deleteRelation);*/
+        // Updated mtime per base
+        String updateMtimeForBase = "UPDATE " + BASE_STATISTICS
+            + " SET " + MTIME_COLUMN + " = ? WHERE " + BASE_COLUMN
+            + " = ?"; 
+        log.debug("Preparing query updateMtimeforBase with '"
+                  + updateMtimeForBase + "'");
+        stmtUpdateMtimForBase = prepareStatement(updateMtimeForBase);
+        log.debug("updateMtimeForBase handle: " + stmtUpdateMtimForBase);
 
+        // Insert new base statistic row
+        String insertBaseStats = "INSERT INTO " + BASE_STATISTICS
+            + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", " + DELETED_COLUMN
+            + ", " + INDEXABLE_COLUMN + ", " + VALID_COLUMN
+            + ") VALUES (?, ?, 0, 0, 0)";
+        log.debug("Preparing query insertBaseStats with '" + insertBaseStats
+                  + "'");
+        stmtInsertBaseStats = prepareStatement(insertBaseStats);
+        log.debug("insertBaseStats handle: " + stmtInsertBaseStats);
+
+        // Set base stats row invalid
+        String setBaseStatsInvalid = "UPDATE " + BASE_STATISTICS + " SET "
+            + VALID_COLUMN + "= 0 WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query setBaseStatsInvalid with '"
+                + setBaseStatsInvalid + "'");
+        stmtSetBaseStatsInvalid = prepareStatement(setBaseStatsInvalid);
+        log.debug("setBaseStatsInvalid handle: " + stmtSetBaseStatsInvalid);
+
+        // SQL for getting last modification time
+        String getLastModificationTime = "SELECT " + MTIME_COLUMN + " FROM "
+            + BASE_STATISTICS + " WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query getLastModificationTime with '"
+                + getLastModificationTime + "'");
+        stmtGetLastModificationTime = prepareStatement(getLastModificationTime);
+        log.debug("getLastModificationTime handle: "
+                  + stmtGetLastModificationTime);
+        
         log.debug("Finished preparing SQL statements");
     }
 
@@ -1537,6 +1579,11 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             conn.setReadOnly(false);
             flushWithConnection(record, options, conn);
+            // Update last modification time.
+            updateLastModficationTimeForBase(record.getBase(), conn);
+            setBaseStatisticInvalid(record.getBase(), conn);
+            log.debug("Updates last modification time for base '"
+                    + record.getBase() + "'");
         } catch (SQLException e) {
             // This error is logged in the finally clause below
             error = e.getMessage() + '\n' + Strings.getStackTrace(e);
@@ -1601,6 +1648,7 @@ public abstract class DatabaseStorage extends StorageBase {
         Record lastRecord = null;
         long start = System.nanoTime();
         boolean isDebug = log.isDebugEnabled();
+        Map<String, Boolean> bases = new HashMap<String, Boolean>();
         try {
             for (Record r : recs) {
                 if (isDebug) {
@@ -1608,6 +1656,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 lastRecord = r;
                 flushWithConnection(r, options, conn);
+                bases.put(r.getBase(), true);
+            }
+            for(String base: bases.keySet()) {
+                log.debug("Updates last modification time for base '"
+                          + base + "'");
+                updateLastModficationTimeForBase(base, conn);
+                setBaseStatisticInvalid(base, conn);
             }
             // TODO Introduce time-based logging on info
             log.debug("Flushed " + recs.size() + " in "
@@ -2511,7 +2566,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setLong(6, nowStamp);
             stmt.setLong(7, nowStamp);
             stmt.setBytes(8, Zips.gzipBuffer(record.getContent()));
-            stmt.setBytes(9,record.hasMeta() ?
+            stmt.setBytes(9, record.hasMeta() ?
                                 record.getMeta().toFormalBytes() : new byte[0]);
             stmt.executeUpdate();
         } finally {
@@ -2530,13 +2585,75 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    /* Note that creationTime isn't touched */
-    private void updateRecordWithConnection(
-                  Record record, QueryOptions options, Connection conn)
-                                              throws IOException, SQLException {
+    /**
+     * Sets a base statistic row invalid, this is done when a record is flushed,
+     * because the ingester don't know when it is done ingesting and therefore
+     * don't know when to update the deleted, indexable and count.
+     * 
+     * @param base The base to set invalid.
+     * @param conn The connection.
+     */
+    private void setBaseStatisticInvalid(String base, Connection conn)
+                                                           throws SQLException {
+        PreparedStatement stmt =
+                        conn.prepareStatement(stmtSetBaseStatsInvalid.getSql());
+        try {
+            stmt.setString(1, base);
+            stmt.execute();
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Update the last modification time for a single base.
+     *
+     * @param base The base.
+     * @param conn The connection.
+     * @throws SQLException If error occur while executing SQL.
+     */
+    private void updateLastModficationTimeForBase(String base, Connection conn) 
+                                                           throws SQLException {
+        long mtime = System.currentTimeMillis();
+        log.debug("Updating mtime for base '" + base
+                  + " and setting it to " + mtime);
+        PreparedStatement stmt =
+                          conn.prepareStatement(stmtUpdateMtimForBase.getSql());
+        PreparedStatement insertStmt =
+            conn.prepareStatement(stmtInsertBaseStats.getSql());
+        try {
+            // update mtime and base
+            stmt.setLong(1, mtime);
+            stmt.setString(2, base);
+            stmt.executeUpdate();
+            if(stmt.getUpdateCount() == 0) { // This is a new base, update
+                // insert base and mtime
+                insertStmt.setString(1, base);
+                insertStmt.setLong(2, mtime);
+                insertStmt.execute();
+            }
+        } finally {
+            closeStatement(stmt);
+            closeStatement(insertStmt);
+        }
+    }
+
+    /**
+     * Update a record.
+     * Note: that creationTime isn't touched
+     * @param record The record to update, the record updated in storage is
+     * depended on the record id.
+     * @param options The query options, see {@link QueryOptions} for
+     * documentation.
+     * @param conn The database connection.
+     * @throws IOException If error communicating with storage.
+     * @throws SQLException If error executing SQL. 
+     */
+    private void updateRecordWithConnection(Record record, QueryOptions options,
+                             Connection conn) throws IOException, SQLException {
         log.debug("Updating: " + record.getId());
 
-        // Respect the TRY_UPDATE meta flag. See docs for QueryOptions
+        // Respect the TRY_UPDATE meta flag. See docs for {@link QueryOptions}
         if (options != null
                 && "true".equals(options.meta(TRY_UPDATE))) {
             Record old = getRecordWithConnection(record.getId(), options, conn);
@@ -2560,8 +2677,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setLong(5, nowStamp);
             stmt.setBytes(6, Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(7, record.hasMeta() ?
-                                         record.getMeta().toFormalBytes() :
-                                         new byte[0]);
+                                record.getMeta().toFormalBytes() : new byte[0]);
             stmt.setString(8, record.getId());
             stmt.executeUpdate();
 
@@ -2628,44 +2744,94 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Create the schema for the database.
+     * Create the tables for the database.
      * @throws SQLException If the database could not be created.
      */
     private void doCreateSchema() throws SQLException {
-
         Connection conn = null;
-
         try {
             conn = getDefaultConnection();
 
-            /* RECORDS */
+            // RECORDS
             try {
                 doCreateSummaRecordsTable(conn);
             } catch (SQLException e) {
-                if (log.isDebugEnabled()) {
-                    log.info("Failed to create table for record data: "
-                             + e.getMessage(), e);
-                } else {
-                    log.info("Failed to create table for record data: "
-                             + e.getMessage());
-                }
+                log.info("Failed to create table for record data: "
+                         + e.getMessage(), e);
             }
 
-            /* RELATIONS */
+            // RELATIONS
             try {
                 doCreateSummaRelationsTable(conn);
             } catch (SQLException e) {
-                if (log.isDebugEnabled()) {
-                    log.info("Failed to create table for record relations: "
-                             + e.getMessage(), e);
-                } else {
-                    log.info("Failed to create table for record relations: "
-                             + e.getMessage());
-                }
+                log.info("Failed to create table for record relations: "
+                         + e.getMessage(), e);
+            }
+
+            // BASE STATISTIC
+            try {
+                doCreateSummaBaseStatisticTable(conn);
+            } catch (SQLException e) {
+                log.info("Failed to create table for base statistic: "
+                         + e.getMessage(), e);
             }
         } finally {
             closeConnection(conn);
         }
+    }
+
+    @Override
+    public long getModificationTime(String base) throws IOException {
+        try {
+            Connection conn = getDefaultConnection();         
+            return getModifcationTimeWithConnection(base, conn);
+        } catch (SQLException e) {
+            throw new IOException("Error fetching last modification time", e);
+        }
+    }
+
+    private long getModifcationTimeWithConnection(String base, Connection conn)
+                                                           throws SQLException {
+        if (base == null) {
+            return getStorageStartTime();
+        }
+        PreparedStatement stmt =
+                   conn.prepareStatement(stmtGetLastModificationTime.getSql());
+        try {
+            stmt.setString(1, base);
+            stmt.execute();
+            // We don't have a storage match
+            ResultSet result = stmt.getResultSet();
+            if (result.first()) {
+                return result.getLong(result.findColumn(MTIME_COLUMN));
+            } else {
+                return getStorageStartTime();
+            }
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Create a table for holding statistic for each base.
+     * @param conn The database connection.
+     * @throws SQLException If there is an error while executing the SQL.
+     */
+    private void doCreateSummaBaseStatisticTable(Connection conn)
+                                                           throws SQLException {
+        Statement stmt;
+        String createBaseStatisticQuery = "CREATE TABLE IF NOT EXISTS " 
+            + BASE_STATISTICS + " (" 
+            + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
+            + MTIME_COLUMN + " BIGINT, "
+            + DELETED_COLUMN + " INTEGER, "
+            + INDEXABLE_COLUMN + " INTEGER, "
+            + VALID_COLUMN + " INTEGER)";
+        log.debug("Creating table " + BASE_STATISTICS + " with query '"
+                    + createBaseStatisticQuery + "'");
+        stmt = conn.createStatement();
+        stmt.execute(createBaseStatisticQuery);
+        stmt.close();
     }
 
     private void doCreateSummaRelationsTable(Connection conn)
@@ -2771,9 +2937,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public void destroyDatabase() throws SQLException {
         log.warn("Preparing to destroy database. All data will be lost");
-
         Connection conn = getDefaultConnection();
-
         try {
             log.warn("Destroying all record data");
             Statement stmt = conn.createStatement();
@@ -2787,7 +2951,6 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeConnection(conn);
         }
-
         log.info("All Summa data wiped from database");
     }
 
