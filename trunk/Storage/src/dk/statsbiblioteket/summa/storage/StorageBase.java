@@ -378,4 +378,12 @@ public abstract class StorageBase implements Storage {
     protected boolean allowsPrivate(QueryOptions opts) {
         return opts != null && "true".equals(opts.meta(ALLOW_PRIVATE));
     }
+
+    /**
+     * The storage start time.
+     * @return The storage start time.
+     */
+    public long getStorageStartTime() {
+        return storageStartTime;
+    }
 }
