@@ -27,8 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
 
 /**
  * Maps from RecordIDs to LuceneIDs for a given Lucene Index. The RecordIDs must

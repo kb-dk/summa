@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.*;
 import org.apache.lucene.util.Version;

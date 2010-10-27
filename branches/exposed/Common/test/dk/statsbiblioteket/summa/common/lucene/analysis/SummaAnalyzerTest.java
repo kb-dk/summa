@@ -18,8 +18,8 @@ import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import junit.framework.TestCase;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.LowerCaseFilter;
-import org.apache.lucene.analysis.WhitespaceTokenizer;
+import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.tokenattributes.*;
 
 import java.io.StringReader;

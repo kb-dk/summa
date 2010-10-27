@@ -85,6 +85,10 @@
             <artifactId>lucene-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
         </dependency>

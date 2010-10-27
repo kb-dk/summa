@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.commons.logging.Log;       import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Analyzer;
 
@@ -32,7 +32,7 @@ import org.apache.lucene.util.Version;
  * In effect all chars where Character.isLetter == false will be removed.
  * This analyzer wraps a SimpleAnalyzer
  *
- * @see org.apache.lucene.analysis.SimpleAnalyzer
+ * @see org.apache.lucene.analysis.core.SimpleAnalyzer
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

@@ -23,12 +23,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.store.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

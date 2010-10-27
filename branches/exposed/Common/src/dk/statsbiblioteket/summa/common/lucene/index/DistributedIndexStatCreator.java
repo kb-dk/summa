@@ -16,7 +16,6 @@ package dk.statsbiblioteket.summa.common.lucene.index;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.store.IndexOutput;
 
 import java.util.ArrayList;
