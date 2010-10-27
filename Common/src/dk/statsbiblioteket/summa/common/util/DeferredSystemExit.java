@@ -19,11 +19,13 @@ package dk.statsbiblioteket.summa.common.util;
  * It is possible to abort the exit by calling {@link #abortExit()}. 
  */
 public class DeferredSystemExit implements Runnable {
-
+    /** Default shutdown delay in milliseconds. */
     public static final int DEFAULT_DELAY = 5000;
-
+    /** Exit code to exit with. */
     private int exitCode;
+    /** The actual delay. */
     private int delay;
+    /** Private thread, which when started calls the exit. */
     private Thread thread;
 
     /**
@@ -32,7 +34,7 @@ public class DeferredSystemExit implements Runnable {
      * @param delay Number of milli seconds to wait before calling
      *              {@link System#exit}.
      */
-    public DeferredSystemExit   (int exitCode, int delay) {
+    public DeferredSystemExit(int exitCode, int delay) {
         this.exitCode = exitCode;
         this.delay = delay;
         startExit();
@@ -42,14 +44,14 @@ public class DeferredSystemExit implements Runnable {
      * Run {@code System.exit (exitCode)} after {@link #DEFAULT_DELAY} ms
      * @param exitCode The system exit code.
      */
-    public DeferredSystemExit (int exitCode) {
+    public DeferredSystemExit(int exitCode) {
         this (exitCode, DEFAULT_DELAY);
     }
 
     /**
      * Abort the scheduled system exit.
      */
-    public void abortExit () {
+    public void abortExit() {
         if (thread != null) {
             thread.interrupt();
         }
@@ -61,7 +63,7 @@ public class DeferredSystemExit implements Runnable {
      */
     public void run() {
         try {
-            Thread.sleep (delay);
+            Thread.sleep(delay);
         } catch (InterruptedException e) {
             // Abort the System.exit. Someone probably called abortExit()
             return;
@@ -69,9 +71,13 @@ public class DeferredSystemExit implements Runnable {
         System.exit (exitCode);
     }
 
-    private void startExit () {
+    /**
+     * Starts a exit thread.
+     */
+    private void startExit() {
         thread = new Thread(this, "DeferredSystemExit Thread");
-        thread.setDaemon(true); // Allow the JVM to exit even though thread is active
+        // Allow the JVM to exit even though thread is active
+        thread.setDaemon(true);
         thread.start();
     }
 }
