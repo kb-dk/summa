@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,7 +38,7 @@ public class StorageRunner {
      * Create a new storage instance as defined by the configuration
      * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
      * <p/>
-     * Any paramters to this method are ignored.
+     * Any parameters to this method are ignored.
      *
      * @param args ignored
      */
@@ -52,10 +53,7 @@ public class StorageRunner {
         log.info("Creating storage instance");
         try {
             Storage storage = StorageFactory.createStorage(conf);
-
-
             log.info("Storage is running");
-
             try {
                 stats = new MachineStats(conf, "Storage");
             } catch (Exception e) {
@@ -71,13 +69,9 @@ public class StorageRunner {
             }
         } catch (Throwable t) {
             log.fatal("Caught toplevel exception: " + t.getMessage(), t);
+            System.err.println(t.getMessage());
             t.printStackTrace();
             System.exit(1);
         }
     }
-
 }
-
-
-
-
