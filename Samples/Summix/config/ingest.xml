@@ -49,6 +49,21 @@
 
                             <xproperties>
                                 <entry>
+                                <key>filter.name</key>
+                                <value class="string">StorageValidator</value>
+                              </entry>
+                              <entry>
+                                <key>summa.filter.sequence.filterclass</key>
+                                <value class="string">dk.statsbiblioteket.summa.storage.api.filter.StorageValidationFilter</value>
+                              </entry>
+                              <entry>
+                                <key>summa.rpc.vendor</key>
+                                <value class="string">//localhost:28000/summa-storage</value>
+                              </entry>
+                            </xproperties>
+                            
+                            <xproperties>
+                                <entry>
                                     <key>filter.name</key>
                                     <value class="string">Splitter</value>
                                 </entry>
