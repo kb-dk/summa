@@ -42,7 +42,7 @@
         <!-- Summix data -->
         <fileSet>
             <directory>${basedir}/../../Control/test/data/oai</directory>
-            <outputDirectory>${project.build.finalName}/oai</outputDirectory>
+            <outputDirectory>${project.build.finalName}/data/oai</outputDirectory>
             <includes>
                 <include>**/*</include>
             </includes>
