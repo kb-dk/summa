@@ -31,6 +31,7 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.exposed.ExposedSettings;
 
 import java.io.File;
 import java.io.IOException;
@@ -300,6 +301,7 @@ public class FacetTest extends NoExitTestCase {
     }
 
     public void testFacetSearch() throws Exception {
+//        ExposedSettings.debug = true;
         log.debug("Getting configuration for searcher");
         Configuration conf = getSearcherConfiguration();
         log.debug("Creating Searcher");
@@ -337,8 +339,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
         updateIndex();
-        log.debug("Waiting for the searcher to discover the new index");
-        searcher.checkIndex(); // Make double sure
+        log.debug("Waiting for the searcher to discover the new index");        searcher.checkIndex(); // Make double sure
         log.debug("Verify final index");
         SearchTest.verifySearch(searcher, "Gurli", 1);
         SearchTest.verifySearch(searcher, "Gurli", 1); // Yes, we try again

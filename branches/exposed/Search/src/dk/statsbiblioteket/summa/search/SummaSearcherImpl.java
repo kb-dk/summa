@@ -141,7 +141,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     }
 
     /**
-     * Make a search request. And return the apropriate reponse collection.
+     * Make a search request. And return the appropriate response collection.
      *
      * @param request Contains SearchNode-specific request-data.
      * @return Response collection based on the search request.
