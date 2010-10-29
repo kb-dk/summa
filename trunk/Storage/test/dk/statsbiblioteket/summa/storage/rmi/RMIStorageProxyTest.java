@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,9 @@ import junit.framework.TestSuite;
  */
 @SuppressWarnings("duplicatestringliteralinspection")
 public class RMIStorageProxyTest extends TestCase {
+    /** Test root. */
+    private File testRoot = new File("target/test_result", "storagetest");
+
     /**
      * Constructs a RMI Storage proxy.
      * @param name The name.
@@ -43,11 +47,17 @@ public class RMIStorageProxyTest extends TestCase {
     @Override
     public final void setUp() throws Exception {
         super.setUp();
+        if (testRoot.exists()) {
+            Files.delete(testRoot);
+        }
+        testRoot.mkdirs();        
     }
 
     @Override
     public final void tearDown() throws Exception {
         super.tearDown();
+        testRoot.mkdirs();
+        Files.delete(testRoot);
     }
 
     /**
@@ -56,9 +66,6 @@ public class RMIStorageProxyTest extends TestCase {
     public static Test suite() {
         return new TestSuite(RMIStorageProxyTest.class);
     }
-
-    /** Test root. */
-    private File testRoot = new File("target/test_result", "storagetest");
 
     /**
      * Returns a RMI storage.
