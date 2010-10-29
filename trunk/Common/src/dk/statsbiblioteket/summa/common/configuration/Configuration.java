@@ -90,7 +90,7 @@ public class Configuration implements Serializable,
     };
 
     /** System property defining where to fetch the configuration.
-     * This can be a normal URL or an rmi path.*/
+     * This can be a normal URL or an RMI path.*/
     public static final String CONF_CONFIGURATION_PROPERTY =
                                                           "summa.configuration";
 
@@ -183,10 +183,11 @@ public class Configuration implements Serializable,
      *
      * @param key Name of property to store.
      * @param value The value to associate with {@code key}.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      */
-    public void set(String key, Serializable value) {
+    public void set(String key, Serializable value) 
+                                          throws ConfigurationStorageException {
         try {
             storage.put(key, value);
         } catch (IOException e) {
@@ -203,10 +204,11 @@ public class Configuration implements Serializable,
      *
      * @param key     Name of the property to store.
      * @param strings The Strings to store.
-     * @throws ConfigurationStorageException if there was an error communicating
+     * @throws ConfigurationStorageException If there was an error communicating
      *                                       with the storage backend.
      */
-    public void setStrings(String key, List<String> strings) {
+    public void setStrings(String key, List<String> strings)
+                                          throws ConfigurationStorageException {
         StringWriter sw = new StringWriter(strings.size() * 100);
         for (int i = 0; i < strings.size(); i++) {
             String current = strings.get(i);
@@ -231,10 +233,10 @@ public class Configuration implements Serializable,
      *
      * @param key The name of the value to look up.
      * @return The value associated with {@code key}.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      */
-    public Serializable get(String key) {
+    public Serializable get(String key) throws ConfigurationStorageException {
         try {
             return storage.get(key);
         } catch (IOException e) {
@@ -273,12 +275,13 @@ public class Configuration implements Serializable,
      *         The returned string will not containing leading or trailing white
      *         space. As described above any references to system properties
      *         enclosed in <code>${prop.name}</code> will be escaped.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
-     * @throws NullPointerException          if there was no value corresponding
+     * @throws NullPointerException          If there was no value corresponding
      *                                       to the key.
      */
-    public String getString(String key) {
+    public String getString(String key)
+                    throws ConfigurationStorageException, NullPointerException {
         Object val = get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -300,7 +303,7 @@ public class Configuration implements Serializable,
      *
      * @param key          The name of the value to look up.
      * @param defaultValue Ff the value does not exist, return this instead.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      * @return the {@code String} representation of the value associated with
      *         {@code key} or the defaultValue, if the key did not exist.
@@ -309,7 +312,8 @@ public class Configuration implements Serializable,
      *         enclosed in <code>${prop.name}</code> will be escaped. System
      *         property references in the default value will also be expanded.
      */
-    public String getString(String key, String defaultValue) {
+    public String getString(String key, String defaultValue)
+                                          throws ConfigurationStorageException {
         Object val = get(key);
         if (val == null) {
             log.debug("Unable to find property '" + key + "', using default "
@@ -325,13 +329,14 @@ public class Configuration implements Serializable,
      * Look up an integer property.
      * @param key The name of the property to look up.
      * @return Value as an integer.
-     * @throws NullPointerException if the property is not found
-     * @throws IllegalArgumentException      if the property is found but does
+     * @throws NullPointerException If the property is not found
+     * @throws IllegalArgumentException      If the property is found but does
      *                                       not parse as an integer.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      */
-    public int getInt(String key) {
+    public int getInt(String key) throws ConfigurationStorageException,
+                                IllegalArgumentException, NullPointerException {
         Object val = get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -387,7 +392,8 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      */
-    public long getLong(String key) {
+    public long getLong(String key) throws ConfigurationStorageException,
+                                IllegalArgumentException, NullPointerException {
         Object val = get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -438,13 +444,14 @@ public class Configuration implements Serializable,
      *
      * @param key The name of the property to look up.
      * @return Value as a boolean.
-     * @throws NullPointerException if the property is not found.
-     * @throws IllegalArgumentException      if the property is found but does
+     * @throws NullPointerException If the property is not found.
+     * @throws IllegalArgumentException      If the property is found but does
      *                                       not parse as a boolean.
-     * @throws ConfigurationStorageException if there is an error communicating
+     * @throws ConfigurationStorageException If there is an error communicating
      *                                       with the storage backend.
      */
-    public boolean getBoolean(String key) {
+    public boolean getBoolean(String key) throws ConfigurationStorageException,
+                                IllegalArgumentException, NullPointerException {
         Object val = get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -459,6 +466,13 @@ public class Configuration implements Serializable,
         }
     }
 
+    /**
+     * Get the boolean value and return it, if no value is define for the key,
+     * use the default value.
+     * @param key The key.
+     * @param defaultValue The default value.
+     * @return The boolean associated with the key or the default value.
+     */
     public boolean getBoolean(String key, boolean defaultValue) {
         Object val = get(key);
         if (val == null) {
@@ -501,7 +515,10 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *         with the storage backend.
      */
-    public List<String> getStrings(String key) {
+    public List<String> getStrings(String key) 
+                                        throws ConfigurationStorageException,
+                                               IllegalArgumentException, 
+                                               NullPointerException {
         Object val = get(key);
         if (val instanceof List) {
             ArrayList<String> result =
@@ -603,7 +620,9 @@ public class Configuration implements Serializable,
      * @param <U> Second type for the pair class.
      */
     public static class Pair<T, U> {
+        /** First value of the pair. */
         private T t;
+        /** Second value of the pair. */
         private U u;
 
         /**
@@ -681,7 +700,10 @@ public class Configuration implements Serializable,
      *         with the storage backend.
      */
     public List<Pair<String, Integer>> getIntValues(String key,
-                                                    Integer defaultValue) {
+                                                    Integer defaultValue) 
+                                           throws ConfigurationStorageException,
+                                                  IllegalArgumentException,
+                                                  NullPointerException {
         List<String> elements = getStrings(key);
         List<Pair<String, Integer>> result =
                 new ArrayList<Pair<String, Integer>>(elements.size());
@@ -704,6 +726,7 @@ public class Configuration implements Serializable,
     /**
      * Look up a stored {@link Class}.
      *
+     * @param <T> The object of a type given in the parameter list.
      * @param key The name of the property to look up.
      * @param classType The class of which the return type should be.
      * @return The {@link Class} associated with {@code key}.
@@ -715,7 +738,10 @@ public class Configuration implements Serializable,
      *                                       with the storage backend.
      */
     @SuppressWarnings("unchecked")
-    public <T> Class<? extends T> getClass (String key, Class<T> classType) {
+    public <T> Class<? extends T> getClass (String key, Class<T> classType)
+                                           throws ConfigurationStorageException,
+                                                  IllegalArgumentException,
+                                                  NullPointerException {
         return getClass(key, classType, this);
     }
 
@@ -746,6 +772,7 @@ public class Configuration implements Serializable,
      * Static version of getClass. Use this to ensure that the classLoader runs
      * locally and not through RMI.
      *
+     * @param <T> The object of a type given in the parameter list.
      * @param key The name of the property to look up.
      * @param classType The class of which the return type should be.
      * @param conf The configuration from where the class-name is located.
@@ -758,9 +785,12 @@ public class Configuration implements Serializable,
      *                                       with the storage backend.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Class<? extends T> getClass(String key,
+    public static <T> Class<? extends T> getClass(String key, 
                                                   Class<T> classType,
-                                                  Configuration conf) {
+                                                  Configuration conf) 
+                                           throws ConfigurationStorageException,
+                                                  IllegalArgumentException,
+                                                  NullPointerException{
         Object val = conf.get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -794,6 +824,7 @@ public class Configuration implements Serializable,
      * Like {@link Configuration#getClass(String,Class,Configuration)}. Use this
      * static variant of {@link #getClass} to avoid loading the class over RMI.
      *
+     * @param <T> The object of a type given in the parameter list.
      * @param key The property name to look up.
      * @param classType The class to cast the return value to.
      * @param defaultClass Default class to return if {@code key} was not found
@@ -819,6 +850,7 @@ public class Configuration implements Serializable,
      * Get a class value resorting to a default class if it is not found
      * in the configuration.
      *
+     * @param <T> The object of a type given in the parameter list.
      * @param key The name of the property to look up.
      * @param classType The class of which the return type should be.
      * @param defaultValue Default class to return of the requested key is not
@@ -961,6 +993,7 @@ public class Configuration implements Serializable,
      * Instantiate a {@link Configurable} class with {@code this} as argument
      * to the {@link Configurable}'s constructor.
      *
+     * @param <T> The object of a type given in the parameter list.
      * @param configurable The {@code Configurable} class to instantiate.
      * @return An object instantiated from the given class.
      * @throws Configurable.ConfigurationException if there is a problem
@@ -971,7 +1004,8 @@ public class Configuration implements Serializable,
      *             unintentional RMI-based creation.
      */
     @Deprecated
-    public <T> T create(Class<T> configurable) {
+    public <T> T create(Class<T> configurable) throws ConfigurationException,
+                                                      IllegalArgumentException {
         return create(configurable, this);
     }
 
@@ -1177,7 +1211,7 @@ public class Configuration implements Serializable,
                     log.info("Failed to load '" + confResource
                               + "' as XProperties:" + e.getMessage());
                     log.debug("Failed to load '" + confResource
-                               + "' as XProperties:" + e.getMessage(), e);
+                               + "' as XProperties:" + e.getMessage());
                 }
 
                 try {
@@ -1186,10 +1220,10 @@ public class Configuration implements Serializable,
                               + "properties");
                     return new Configuration(storage);
                 } catch (Exception e) {
-                    log.info("Failed to load '" + confResource + "'", e);
+                    log.info("Failed to load '" + confResource + "'");
                 }
 
-                log.info("Failed to load any configuration."
+                log.warn("Failed to load any configuration."
                          + "Using empty configuration");
                 return Configuration.newMemoryBased();
             } else {

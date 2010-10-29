@@ -40,7 +40,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
- * A class containing methods meant to be exposed as a web service
+ * A class containing methods meant to be exposed as a web service.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -50,7 +50,7 @@ public class StorageWS {
     /**
      * Logger for StorageWS.
      */
-    private final static Log log = LogFactory.getLog(StorageWS.class);
+    private static Log log = LogFactory.getLog(StorageWS.class);
 
     /**
      * Records namespace, used in response.
@@ -77,7 +77,7 @@ public class StorageWS {
     Configuration conf;
     /**
      * XML output factory, used for creating output stream when responding with
-     * multiple records. 
+     * multiple records.
      */
     private XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
@@ -87,7 +87,7 @@ public class StorageWS {
      */
     public StorageWS() {
         mergers = new LinkedList<MarcMultiVolumeMerger>();
-        for(int i=0; i<numMergers; i++) {
+        for (int i = 0; i < numMergers; i++) {
             mergers.add(i, new MarcMultiVolumeMerger(getConfiguration()));
         }
     }
@@ -125,8 +125,8 @@ public class StorageWS {
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
-                log.error("Failed to lookup env-entry.", e);
-                log.warn("Trying to load system configuration.");
+                log.warn("Failed to lookup env-entry.");
+                log.info("Trying to load system configuration.");
                 conf = Configuration.getSystemConfiguration(true);
             }
         }
@@ -196,7 +196,7 @@ public class StorageWS {
      */
     private String realGetRecords(List<String> ids) {
         StringWriter sw = new StringWriter(5000);
-        long startTime, time=0;
+        long startTime, time = 0;
         String retXML;
         XMLStreamWriter writer;
 
@@ -215,7 +215,7 @@ public class StorageWS {
             writer.writeStartElement(RECORDS);
             writer.writeDefaultNamespace(RECORDS_NAMESPACE);
             writer.writeAttribute(QUERYTIME, String.valueOf(time));
-            for(Record r: records) {
+            for (Record r : records) {
                 RecordUtil.toXML(writer, 1, r, true);
             }
             writer.writeEndElement();
@@ -306,7 +306,3 @@ public class StorageWS {
         mergers.add(m);
     }
 }
-
-
-
-
