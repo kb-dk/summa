@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-core</artifactId>  
-                <version>4.0-dev-LUCENE-2369-20101025</version>
+                <version>4.0-dev-LUCENE-2369-20101029</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
