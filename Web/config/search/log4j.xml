@@ -32,8 +32,8 @@
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-        <param name="Threshold" value="TRACE"/><!-- or DEBUG or INFO -->
-        <param name="File" value="${catalina.home}/logs/logfile.log"/>
+        <param name="Threshold" value="INFO"/><!-- or DEBUG or INFO -->
+        <param name="File" value="${catalina.home}/logs/searchWS.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
