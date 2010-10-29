@@ -58,8 +58,7 @@ public class RMIStorageProxyTest extends TestCase {
     }
 
     /** Test root. */
-    private File testRoot = new File(System.getProperty(
-                                     "java.io.tmpdir", "storagetest"));
+    private File testRoot = new File("target/test_result", "storagetest");
 
     /**
      * Returns a RMI storage.
@@ -82,6 +81,7 @@ public class RMIStorageProxyTest extends TestCase {
             assertFalse("The added record should exist",
                         storage.getRecord("Dummy1", null).isDeleted());
         } catch (Exception e) {
+            e.printStackTrace();
             fail("Not expected here");
         }
     }
