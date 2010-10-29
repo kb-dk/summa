@@ -55,16 +55,26 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     public static final int OPTIMIZE_INDEX_THRESHOLD = 100000;
 
+    /** The DB username. */
     private String username;
+    /** The DB password. */
     private String password;
+    /** The DB location. */
     private File location;
+    /** The max allowed connection to the DB. */
     private int maxConnections;
+    /** True if a new database should be created. */
     private boolean createNew = true;
+    /** True if creation of database should be forced. */
     private boolean forceNew = false;
+    /** True if we should us L2 cache. */
     private boolean useL2cache = true;
 
+    /** The database source. */
     private JdbcDataSource dataSource;
+    /** The connection pool. */
     private MiniConnectionPoolManager pool;
+    /** Number of flushes. */
     private long numFlushes;
 
     /**
@@ -78,9 +88,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * Default is {@code false}.
      */
     public static final String CONF_L2CACHE = "summa.storage.database.l2cache";
+    /** Default usage for H2 of L2 cached is false. */
     public static final boolean DEFAULT_L2CACHE = false;
 
-
+    /**
+     * Creates a H2 database storage, given the configuration.
+     * @param conf The configuration.
+     * @throws IOException If error occur while doing IO work for creation of
+     * database.
+     */
     public H2Storage(Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing H2Storage");
@@ -147,8 +163,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.warn(error);
             throw new IOException(error, e);
         }
-        log.info("H2 Storage closed.");
-        
+        log.info("H2 Storage closed.");        
     }
 
     @Override
@@ -222,10 +237,12 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.info("Creating new table for '" + location + "'");
             createSchema();
         }
-
         setMaxMemoryRows();
     }
 
+    /**
+     * Optimizes the tables.
+     */
     private void optimizeTables() {
         Connection conn = getConnection();
         try {
@@ -252,7 +269,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (numFlushes == 0) {
             optimizeTables();
         }
-
         super.flush(rec);
     }
 
@@ -347,10 +363,12 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * Because of this we override the generic method with one that does manual
      * looping over all parents. It should still perform fairly good.
      *
-     * @param id the record id of the record which parents to update
-     * @param options any query options that may affect how the touching should
-     *                be carried out
-     * @throws IOException in case of communication errors with the database
+     * @param id The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should
+     *                be carried out.
+     * @param conn The database connection.
+     * @throws IOException In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
      */
     @Override
     protected void touchParents(String id,
@@ -359,6 +377,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         touchParents(id, null, options, conn);
     }
 
+    /**
+     * @see #touchParents(String, QueryOptions, Connection);
+     * @param id The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should
+     *                be carried out.
+     * @param conn The database connection.
+     * @param touched The set of already touched IDs.
+     * @throws IOException In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
+     */
     private void touchParents(String id, Set<String> touched,
                               QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
@@ -387,7 +415,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             touchRecord(parent.getId(), conn);
             touchParents(parent.getId(), touched, options, conn);
         }
-
     }
 
     // H2 is very bad at large result sets (_very_)
@@ -396,7 +423,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         return true;
     }
 
-    // Genrally Java embedded DBs are bad at JOINs over tables with many rows
+    // Generally Java embedded DBs are bad at JOINs over tables with many rows
     @Override
     public boolean useLazyRelationLookups() {
         return true;
@@ -406,8 +433,4 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     public String getPagingStatement(String sql) {
         return sql + " LIMIT " + getPageSize();
     }
-
-
-
 }
-
