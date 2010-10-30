@@ -67,7 +67,6 @@ public class DisjunctionQueryParser extends QueryParser {
     protected Query getFieldQuery(String field, final String queryText,
                                   final int slop)
                                                          throws ParseException {
-//        System.out.println(field + ":" + queryText);
         return getExpanded(field, new InnerQueryMaker() {
             public Query getRecursiveQuery(String fieldOrGroup) throws
                                                                 ParseException {

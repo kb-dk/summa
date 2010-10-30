@@ -223,9 +223,15 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                          + "performed");
                 return;
             }
-            log.debug("Faceting with query " + DocumentSearcher.SEARCH_QUERY
-                      + "='" + request.get(DocumentKeys.SEARCH_QUERY) + "'");
-            query = (String)shared.get(DocumentKeys.SEARCH_QUERY);
+            // TODO: Add codID-agnostic faceting option
+            log.debug("There were no docIDs collected for "
+                      + DocumentSearcher.SEARCH_QUERY
+                      + "='" + request.get(DocumentKeys.SEARCH_QUERY)
+                      + "' so faceting is skipped");
+            return;
+//            log.debug("Faceting with query " + DocumentSearcher.SEARCH_QUERY
+//                      + "='" + request.get(DocumentKeys.SEARCH_QUERY) + "'");
+//            query = (String)shared.get(DocumentKeys.SEARCH_QUERY);
         } else {
             Object o = shared.get(DocumentSearcher.DOCIDS);
             if (!(o instanceof DocIDCollector)) {
