@@ -95,9 +95,9 @@ public abstract class StorageBase implements Storage {
      * In case there has been no changes to to the storage since
      * it was started the start time stamp of the storage will be returned.
      *
-     * @param base the base to check for changes in. If {@code base} is
+     * @param base The base to check for changes in. If {@code base} is
      *             {@code null} return the maximal time stamp from all bases.
-     * @return the time stamp.
+     * @return The time stamp.
      * @throws IOException on communication errors.
      */
     @Override
@@ -116,7 +116,6 @@ public abstract class StorageBase implements Storage {
                 lastFlush = Math.max(time, lastFlush);
             }
         }
-
         return lastFlush;
     }
 

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 
-import java.util.NoSuchElementException;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
