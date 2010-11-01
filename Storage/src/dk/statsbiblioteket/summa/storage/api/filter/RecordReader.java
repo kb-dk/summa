@@ -14,29 +14,30 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageChangeListener;
+import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.io.File;
-import java.util.NoSuchElementException;
-import java.util.Iterator;
-import java.util.Arrays;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -51,8 +52,9 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: If keepalive, the state should be saved at regular intervals
-// TODO: Change the + 1000 ms when the time granilarity of JavaDB improves
+// TODO: Change the + 1000 ms when the time granularity of JavaDB improves
 public class RecordReader implements ObjectFilter, StorageChangeListener {
+    /** Local log instance. */
     private static Log log = LogFactory.getLog(RecordReader.class);
 
     /**
@@ -67,6 +69,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_PROGRESS_FILE =
             "summa.storage.recordreader.progressfile";
+    /** Default value for {@link #CONF_PROGRESS_FILE}. */
     public static final String DEFAULT_PROGRESS_FILE_POSTFIX = "progress.xml";
 
     /**
@@ -81,6 +84,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_USE_PERSISTENCE =
             "summa.storage.recordreader.usepersistence";
+    /** Default value for {@link #CONF_USE_PERSISTENCE}. */
     public static final boolean DEFAULT_USE_PERSISTENCE = true;
 
     /**
@@ -91,26 +95,29 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_START_FROM_SCRATCH =
             "summa.storage.recordreader.startfromscratch";
+    /** Default value for {@link #CONF_START_FROM_SCRATCH}. */
     public static final boolean DEFAULT_START_FROM_SCRATCH = false;
 
     /**
-     * The maximum number of Records to read before signalling EOF onwards in
+     * The maximum number of Records to read before signaling EOF onwards in
      * the filter chain. Specifying -1 means no limit.
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_RECORDS =
             "summa.storage.recordreader.maxread.records";
+    /** Default value for {@link #CONF_MAX_READ_RECORDS}. */
     public static final int DEFAULT_MAX_READ_RECORDS = -1;
 
     /**
-     * The maximum number of seconds before signalling EOF onwards in the
+     * The maximum number of seconds before signaling EOF onwards in the
      * filter chain. Specifying -1 means no limit.
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_SECONDS =
             "summa.storage.recordreader.maxread.seconds";
+    /** Default value for {@link #CONF_MAX_READ_SECONDS}. */
     public static final int DEFAULT_MAX_READ_SECONDS = -1;
 
     /**
@@ -121,6 +128,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_BASE =
             "summa.storage.recordreader.base";
+    /** Default value for {@link #CONF_BASE}. */
     public static final String DEFAULT_BASE = "";
 
     /**
@@ -137,6 +145,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_PROGRESS_BATCH_SIZE =
             "summa.storage.recordreader.progress.batchsize";
+    /** Default value for {@link #CONF_PROGRESS_BATCH_SIZE}. */
     public static final long DEFAULT_PROGRESS_BATCH_SIZE = 500;
 
     /**
@@ -151,6 +160,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_PROGRESS_GRACETIME =
             "summa.storage.recordreader.progress.gracetime";
+    /** Default value for {@link #CONF_PROGRESS_GRACETIME}. */
     public static final long DEFAULT_PROGRESS_GRACETIME = 5000;
 
     /**
@@ -165,6 +175,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_STAY_ALIVE =
             "summa.storage.recordreader.stayalive";
+    /** Default value for {@link #CONF_STAY_ALIVE}. */
     public static final boolean DEFAULT_STAY_ALIVE = false;
 
     /**
@@ -173,6 +184,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_EXPAND_CHILDREN =
             "summa.storage.recordreader.expandchildren";
+    /** Default value for {@link #CONF_EXPAND_CHILDREN}. */
     public static final boolean DEFAULT_EXPAND_CHILDREN = false;
 
     /**
@@ -184,6 +196,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_EXPANSION_DEPTH =
         "summa.storage.recordreader.expansiondepth";
+    /** Default value for {@link #CONF_EXPANSION_DEPTH}. */
     public static final int DEFAULT_EXPANSION_DEPTH = 100;
 
     /**
@@ -192,6 +205,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_EXPAND_PARENTS =
             "summa.storage.recordreader.expandparents";
+    /** Default value for {@link #CONF_EXPAND_PARENTS}. */
     public static final boolean DEFAULT_EXPAND_PARENTS = false;
 
     /**
@@ -203,6 +217,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final String CONF_EXPANSION_HEIGHT =
         "summa.storage.recordreader.expansionheight";
+    /** Default value for {@link #CONF_EXPANSION_HEIGHT}. */
     public static final int DEFAULT_EXPANSION_HEIGHT = 100;
 
 
@@ -226,7 +241,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private long startTime = System.currentTimeMillis();
     private long lastRecordTimestamp;
     private long lastIteratorUpdate;
-
+    /** Record iterator. */
     private Iterator<Record> recordIterator = null;
 
     /**
@@ -400,11 +415,18 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
     }
 
+    /**
+     * Mark end of record iterator reached.
+     */
     private void markEof() {
         eofReached = true;
         recordIterator = null; // Allow finalization of the recordIterator
     }
 
+    /**
+     * Return true if end of record iterator is reached.
+     * @return True if end of record iterator is reached.
+     */
     private boolean isEof() {
         return eofReached;
     }
@@ -448,6 +470,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         return !isEof();
     }
 
+    /**
+     * Wait for storage change. This method blocks until there is a storage
+     * change.
+     */
     private void waitForStorageChange() {
         log.trace("waitForStorageChange() called");
         try {
@@ -496,7 +522,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 log.debug("Interrupted while waiting for StorageWatcher");
             }
         }
-
         log.debug("Got notification from storage");
     }
 
@@ -611,7 +636,3 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         // TODO : Update the Semaphore with at most 1   (remember syns)
     }
 }
-
-
-
-
