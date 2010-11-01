@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -159,7 +159,3 @@ public interface WritableStorage extends Configurable {
                     long minMtime, long maxMtime, QueryOptions options)
                                                              throws IOException;
 }
-
-
-
-
