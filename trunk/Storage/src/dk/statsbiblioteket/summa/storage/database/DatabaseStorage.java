@@ -339,11 +339,15 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String VALID_COLUMN = "valid";
 
     /* Constants for database-setup */
+    /** The ID limit. */
     public static final int ID_LIMIT = 255;
+    /** The base limit. */
     public static final int BASE_LIMIT = 31;
     //public static final int DATA_LIMIT =     50*1024*1024;
+    /** The fetch size. */
     private static final int FETCH_SIZE = 100;
 
+    /** An empty iterator key. */
     private static final long EMPTY_ITERATOR_KEY = -1;
 
     private StatementHandle stmtGetModifiedAfter;
@@ -359,24 +363,35 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
+    /** Update statement for modification time of a base. */
     private StatementHandle stmtUpdateMtimForBase;
+    /** Insert statement for base statistic. */
     private StatementHandle stmtInsertBaseStats;
+    /** Sets a base statistic row in invalid. */
     private StatementHandle stmtSetBaseStatsInvalid;
+    /** Retrieves the last modification time for a base. */
     private StatementHandle stmtGetLastModificationTime;
     private String allColumns;
 
+    /** Iterator keys. */
     private Map<Long, Cursor> iterators = new HashMap<Long, Cursor>(10);
 
     private CursorReaper iteratorReaper;
+    /** Unique time stamp generator. */
     private UniqueTimestampGenerator timestampGenerator;
 
     /** List of base names for which we don't track relations. */
     private Set<String> disabledRelationsTracking;
 
+    /** True if lazy relation should be used. */
     private boolean useLazyRelations;
+    /** True if paging model should be used. */
     private boolean usePagingModel;
+    /** The page size. */
     private int pageSize;
+    /** The cached base statistic. */
     private List<BaseStats> cachedStats;
+    /*** The lock for the cached base statistic lock. */
     private final Object cachedStatsLock = new Object();
 
     /**
@@ -384,34 +399,61 @@ public abstract class DatabaseStorage extends StorageBase {
      * depths for expanding children and parents.
      */
     private static class RecursionQueryOptions extends QueryOptions {
+        /** Serial version UID. */
         private static final long serialVersionUID = 16841L;
 
+        /** Recursion depth for children. */
         private int childRecursionDepth;
+        /** Parent recursion height. */
         private int parentRecursionHeight;
 
-        public RecursionQueryOptions (QueryOptions original) {
+        /**
+         * Recursion query options constructor.
+         * @param original The original query options.
+         */
+        public RecursionQueryOptions(QueryOptions original) {
             super(original);
             resetRecursionLevels();
         }
 
+        /**
+         * Return the child recursion depth.
+         * @return The child recursion depth.
+         */
         public int childRecursionDepth() {
             return childRecursionDepth;
         }
 
+        /**
+         * Return the parent recursion height.
+         * @return The parent recursion height.
+         */
         public int parentRecursionHeight() {
             return parentRecursionHeight;
         }
 
+        /**
+         * Do a child recursion, count down the child recursion depth.
+         * @return The recursion query options equals this object.
+         */
         public RecursionQueryOptions decChildRecursionDepth() {
             childRecursionDepth--;
             return this;
         }
 
+        /**
+         * Count the parent recursion height down with one.
+         * @return This object.
+         */
         public RecursionQueryOptions decParentRecursionHeight() {
             parentRecursionHeight--;
             return this;
         }
 
+        /**
+         * Reset the child depth and parent height.
+         * @return This object.
+         */
         public RecursionQueryOptions resetRecursionLevels(){
             childRecursionDepth = childDepth();
             parentRecursionHeight = parentHeight();
@@ -479,6 +521,12 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Constructions a database storage with a given configuration. This means
+     * that the parent is also constructed with the configuration.
+     * @param conf The configuration.
+     * @throws IOException If error occur while starting the storage.
+     */
     public DatabaseStorage(Configuration conf) throws IOException {
         super(updateConfiguration(conf));
 
@@ -518,6 +566,11 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Update the configurations.
+     * @param configuration The new configurations.
+     * @return A new configurations object.
+     */
     private static Configuration updateConfiguration(
                                                   Configuration configuration) {
         String location;
