@@ -527,7 +527,7 @@ public class StorageTest extends StorageTestBase {
         Record recC2 = new Record (testId3, testBase1, testContent1);
         Record recCC1 = new Record (testId4, testBase1, testContent1);
 
-        /* We need to explicitely set all relations here to make the assertions
+        /* We need to explicitly set all relations here to make the assertions
          * work*/
 
         recP.setChildren(Arrays.asList(recC1, recC2));
@@ -610,7 +610,7 @@ public class StorageTest extends StorageTestBase {
 
     /**
      * Test that ctime is preserved but mtime is updated when flushing the same
-     * tecord two times.
+     * record two times.
      *
      * @throws Exception if error.
      */
@@ -867,8 +867,7 @@ public class StorageTest extends StorageTestBase {
         return conf;
     }
     public static File getStorageLocation() {
-        return new File(System.getProperty("java.io.tmpdir"),
-                        "storage" + storageCounter++);
+        return new File("target/test_result/storage" + storageCounter++);
     }
 
 

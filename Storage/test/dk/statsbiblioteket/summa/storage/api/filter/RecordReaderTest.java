@@ -22,12 +22,6 @@ import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.Arrays;
@@ -37,12 +31,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import junit.framework.Assert;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class RecordReaderTest extends TestCase {
     private static Log log = LogFactory.getLog(RecordReaderTest.class);
+    private static File db = new File("target/test_result",
+            "summatest" + File.separator + "recordreadertest");
+    private final int timeout = 1000;
+
     public RecordReaderTest(String name) {
         super(name);
     }
@@ -50,11 +56,18 @@ public class RecordReaderTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        if (db.exists()) {
+            Files.delete(db);
+        }
+        db.mkdirs();
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        // Clean up and prepare a fresh directory
+        //db.mkdirs();
+        //Files.delete(db);
     }
 
     public static Test suite() {
@@ -62,17 +75,6 @@ public class RecordReaderTest extends TestCase {
     }
 
     public static Storage createStorage() throws Exception {
-        File db = new File(System.getProperty("java.io.tmpdir"),
-                           "summatest" + File.separator + "recordreadertest");
-
-        // Clean up and prepare a fresh directory
-        db.mkdirs();
-        Files.delete(db);
-        if (db.exists()) {
-            log.error("Unable to delete " + db);
-        }
-        db.mkdirs();
-
         Configuration conf = Configuration.newMemoryBased(
                                              DatabaseStorage.CONF_LOCATION,
                                              db.getAbsolutePath());
@@ -138,9 +140,9 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
         Record orig = new Record("test1", "base", "Hello".getBytes());
-
         sto.flush(orig);
-        waitForHasNext(r, 1000);
+        System.exit(1);
+        waitForHasNext(r, timeout);
 
         Payload p = r.next();
         Record rec = p.getRecord();
@@ -158,7 +160,7 @@ public class RecordReaderTest extends TestCase {
         Record orig2 = new Record("test2", "base", "Hello".getBytes());
 
         sto.flushAll(Arrays.asList(orig1, orig2));
-        waitForHasNext(r, 1000);
+        waitForHasNext(r, timeout);
 
         Payload p = r.next();
         Record rec = p.getRecord();
@@ -180,7 +182,7 @@ public class RecordReaderTest extends TestCase {
         Record orig3 = new Record("test3", "base", "Hello".getBytes());
 
         sto.flushAll(Arrays.asList(orig1, orig2, orig3));
-        waitForHasNext(r, 1000);
+        waitForHasNext(r, timeout);
 
         Payload p = r.next();
         Record rec = p.getRecord();
@@ -276,7 +278,3 @@ public class RecordReaderTest extends TestCase {
         }
     }
 }
-
-
-
-

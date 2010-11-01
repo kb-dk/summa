@@ -1014,7 +1014,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtInsertBaseStats = prepareStatement(insertBaseStats);
         log.debug("insertBaseStats handle: " + stmtInsertBaseStats);
 
-        // Set base stats row invalid
+        // Set base statistic row invalid
         String setBaseStatsInvalid = "UPDATE " + BASE_STATISTICS + " SET "
             + VALID_COLUMN + "= 0 WHERE " + BASE_COLUMN + " = ?";
         log.debug("Preparing query setBaseStatsInvalid with '"
@@ -1201,7 +1201,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (timestampGenerator.systemTime(mtimeTimestamp)
                                                   > getModificationTime(base)) {
             log.debug("Storage not flushed after " + mtimeTimestamp
-                      + ". Returning empty iterator");
+                      + " for base '" + base + ". Returning empty iterator");
             try {
                 stmt.close();
             } catch (SQLException e) {
@@ -2041,10 +2041,9 @@ public abstract class DatabaseStorage extends StorageBase {
         int _ID = 1, _MTIME = 2, _DELETED = 3;
         String sql = "SELECT id, mtime, deleted "
                    + " FROM " + RECORDS
-                   + " WHERE " + BASE_COLUMN + "=?"
-                   + " AND " + MTIME_COLUMN + ">?"
-                   + " AND " + MTIME_COLUMN + "<?";
-
+                   + " WHERE " + BASE_COLUMN + " = ?"
+                   + " AND " + MTIME_COLUMN + " > ?"
+                   + " AND " + MTIME_COLUMN + " < ?";
         if (usePagingModel) {
             sql = getPagingStatement(sql);
         }
@@ -2052,7 +2051,6 @@ public abstract class DatabaseStorage extends StorageBase {
         PreparedStatement stmt = conn.prepareStatement(sql,
                                                  ResultSet.TYPE_FORWARD_ONLY,
                                                  ResultSet.CONCUR_UPDATABLE);
-
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
@@ -2116,7 +2114,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.debug("Comitting at update " + totalCount);
                 stmt.getConnection().commit();
             }
-
+            updateLastModficationTimeForBase(base, conn);
             log.debug("Commit finished, invalidate cache stats");
             invalidateCachedStats();
             log.debug("Updating modification timestamps");
@@ -2619,15 +2617,17 @@ public abstract class DatabaseStorage extends StorageBase {
                   + " and setting it to " + mtime);
         PreparedStatement stmt =
                           conn.prepareStatement(stmtUpdateMtimForBase.getSql());
-        PreparedStatement insertStmt =
-            conn.prepareStatement(stmtInsertBaseStats.getSql());
+        PreparedStatement insertStmt = null;
         try {
             // update mtime and base
             stmt.setLong(1, mtime);
             stmt.setString(2, base);
-            stmt.executeUpdate();
-            if(stmt.getUpdateCount() == 0) { // This is a new base, update
+            if (stmt.executeUpdate() == 0) { // This is a new base, update
                 // insert base and mtime
+                log.debug("Base row didn't exists in "+ BASE_STATISTICS
+                          + " insert new row");
+                insertStmt =
+                            conn.prepareStatement(stmtInsertBaseStats.getSql());
                 insertStmt.setString(1, base);
                 insertStmt.setLong(2, mtime);
                 insertStmt.execute();
@@ -2793,7 +2793,16 @@ public abstract class DatabaseStorage extends StorageBase {
     private long getModifcationTimeWithConnection(String base, Connection conn)
                                                            throws SQLException {
         if (base == null) {
-            return getStorageStartTime();
+            String sql = "SELECT " + MTIME_COLUMN + " FROM " + BASE_STATISTICS
+                + " ORDER BY " + MTIME_COLUMN + " DESC LIMIT 1";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.execute();
+            long maxTime = 0;
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                maxTime = resultSet.getLong(1);
+            }
+            return Math.max(getStorageStartTime(), maxTime);
         }
         PreparedStatement stmt =
                    conn.prepareStatement(stmtGetLastModificationTime.getSql());
@@ -2802,9 +2811,18 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.execute();
             // We don't have a storage match
             ResultSet result = stmt.getResultSet();
-            if (result.first()) {
+            if (result.next()) {
                 return result.getLong(result.findColumn(MTIME_COLUMN));
             } else {
+                long time = 0;
+                try {
+                    time = super.getModificationTime(base);
+                } catch (IOException e) {
+                    
+                }                
+                log.debug("No data for base, returning storage start time (" 
+                          + getStorageStartTime() + ", should have been "
+                          + time);
                 return getStorageStartTime();
             }
         } finally {
