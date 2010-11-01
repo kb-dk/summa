@@ -153,7 +153,7 @@ public abstract class SearchNodeImpl implements SearchNode {
             long searchCount = 0;
             URL warmupDataURL = Resolver.getURL(warmupData);
             if (warmupDataURL == null) {
-                log.warn("Could not resolve '" + warmupDataURL
+                log.warn("Could not resolve '" + warmupData
                          + "' to an URL. Skipping warmup");
                 return;
             }
@@ -189,6 +189,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      * for a DocumentSearcher or a word for a did-you-mean searcher.
      * @param request implementation-specific warmup-data.
      */
+    @Override
     public void warmup(String request) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("warmup(" + request + ") called");
@@ -212,6 +213,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      */
     protected abstract void managedWarmup(String request);
 
+    @Override
     public synchronized void open(String location) throws RemoteException {
         log.trace("open called for location '" + location + "'");
         syncOpen(location);
@@ -263,10 +265,12 @@ public abstract class SearchNodeImpl implements SearchNode {
      */
     protected abstract void managedOpen(String location) throws RemoteException;
 
+    @Override
     public int getFreeSlots() {
         return slots.availablePermits();
     }
 
+    @Override
     public synchronized void close() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
@@ -308,6 +312,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      */
     protected abstract void managedClose() throws RemoteException;
 
+    @Override
     public void search(Request request, ResponseCollection responses) throws
                                                                RemoteException {
         log.trace("search called");

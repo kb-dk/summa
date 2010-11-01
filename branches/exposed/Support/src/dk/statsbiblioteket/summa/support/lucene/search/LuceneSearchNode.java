@@ -560,14 +560,54 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
+    /**
+     * If the query does not contain an '='-character, it is assumed to be a
+     * standard query, which will result in a standard search.
+     * </p><p>
+     * If the query contains an '='-character, it is assumed top be of the form:
+     * {@code
+       query: entry(|query)?
+       entry: key=value
+     } where the keys and values conform to the {@link DocumentKeys}.
+     * @param query either a direct Lucene query or a list of key-value search
+     *              parameters.
+     */
     @Override
     public void managedWarmup(String query) {
         //noinspection OverlyBroadCatchBlock
         try {
-            fullSearch(null, null, query, 0, WARMUP_MAX_HITS, null, false, null,
-                       null);
+            if (!query.contains("=")) {
+                Request request = new Request();
+                request.put(DocumentKeys.SEARCH_QUERY, query);
+                long warmTime = -System.currentTimeMillis();
+                fullSearch(request, null, query, 0, WARMUP_MAX_HITS, null,
+                           false, null, null);
+                warmTime += System.currentTimeMillis();
+                log.debug("Performed basic warmup with '" + query + "' in "
+                          + warmTime + " ms");
+                return;
+            }
+            String[] entries = query.split("\\|");
+            Request request = new Request();
+            for (String entry: entries) {
+                String[] pair = entry.split("\\=", 2);
+                if (pair.length != 2) {
+                    log.warn("managedWarmup: The entry '" + entry + "' from the"
+                             + " full-form query '" + query + "' could not be "
+                             + "split into key and value. The delimiter '=' is"
+                             + " required. Skipping warm up of this query");
+                    return;
+                }
+                request.put(pair[0], pair[1]);
+            }
+            long warmTime = -System.currentTimeMillis();
+            // TODO: Avoid logging here
+            managedSearch(request, new ResponseCollection());
+            warmTime += System.currentTimeMillis();
+            log.debug("Performed full-form warmup of '" + query + "' in "
+                      + warmTime + " ms");
         } catch (Throwable t) {
-            log.warn("Throwable caught in warmup", t);
+            log.warn("Throwable caught in warmup of '" + query + "'", t);
         }
     }
 
@@ -643,7 +683,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     // Can return null on MoreLikeThis parsing
     private Query parseQuery(Request request, String query) throws
                                                RemoteException, ParseException {
-        if (!isMoreLikeThisRequest(request)) {
+        if (request == null || !isMoreLikeThisRequest(request)) {
             log.debug("parseQuery(...): Returning plain query instead of "
                       + "MoreLikeThis");
             return matchAllParse(query);
@@ -735,7 +775,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             boolean reverseSort, String[] fields, String[] fallbacks,
             boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
-        boolean mlt_request = isMoreLikeThisRequest(request);
+        boolean mlt_request = request != null && isMoreLikeThisRequest(request);
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
 

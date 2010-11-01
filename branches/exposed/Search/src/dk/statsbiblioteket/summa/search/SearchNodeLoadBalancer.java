@@ -90,6 +90,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
                 nodes.size()));
     }
 
+    @Override
     public void open(String location) throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("open(%s) called", location));
@@ -102,6 +103,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
     // FIXME: We have a race-condition from calculation of slots to search
     // FIXME: Handle open
     // TODO: Try another searcher upon exception
+    @Override
     public void search(Request request, ResponseCollection responses) throws
                                                                RemoteException {
         SearchNode bestCandidate = null;
@@ -119,6 +121,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
         bestCandidate.search(request, responses);
     }
 
+    @Override
     public void warmup(String request) {
         log.debug(String.format("warmup(%s) called", request));
         for (SearchNode node: nodes) {
@@ -126,6 +129,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
         }
     }
 
+    @Override
     public void close() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
@@ -150,6 +154,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
      * nodes. In a multi-threaded environment, this will be an approximation.
      * @return the total number of free slots.
      */
+    @Override
     public int getFreeSlots() {
         int slots = 0;
         for (SearchNode node: nodes) {

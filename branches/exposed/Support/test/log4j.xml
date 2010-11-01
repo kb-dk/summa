@@ -24,7 +24,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
        <param name="Target" value="System.out"/>
-       <param name="Threshold" value="info"/>
+       <param name="Threshold" value="DEBUG"/>
        <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
        </layout>
@@ -86,6 +86,10 @@
         <appender-ref ref="FILE" />
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
+         <level value="DEBUG" />
+         <appender-ref ref="CONSOLE" />
+     </logger>
 <!--    <logger name="dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />

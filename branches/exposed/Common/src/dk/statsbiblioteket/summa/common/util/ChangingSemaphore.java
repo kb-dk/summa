@@ -58,6 +58,7 @@ public class ChangingSemaphore extends Semaphore {
         } else {
             reducePermits(overallPermits - permits);
         }
+        overallPermits = permits; // TODO: Sanity check this
     }
 
     /**
