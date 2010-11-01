@@ -142,7 +142,7 @@ public class StorageTestBase extends TestCase {
         Thread.sleep(200);
         // cleanup
         //dbRoot.mkdirs();
-        //Files.delete(dbRoot);
+        Files.delete(dbRoot);
     }
 
     public void assertBaseEmpty(String base) throws Exception {
