@@ -1535,7 +1535,6 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeConnection(conn);
         }
-
     }
 
     private Record expandRelationsWithConnection(Record r, QueryOptions options,
@@ -1558,14 +1557,17 @@ public abstract class DatabaseStorage extends StorageBase {
             opts = RecursionQueryOptions.asParentsOnlyOptions(options);
             expandParentRecords(r, opts, conn);
         }
-
         return r;
     }
 
-    /*
+    /**
+     * Flush a single record to storage.
      * Note: the 'synchronized' part of this method decl is paramount to
      * allowing us to set our transaction level to
      * Connection.TRANSACTION_READ_UNCOMMITTED
+     * @param record The record to flush.
+     * @param options Query options to filter out record from flushing.
+     * @throws IOException If error occur while flushing.
      */
     @Override
     public synchronized void flush(Record record, QueryOptions options)
@@ -1621,10 +1623,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    /*
+    /**
+     * Flush a list of records to the storage.
      * Note: the 'synchronized' part of this method decl is paramount to
      * allowing us to set our transaction level to
      * Connection.TRANSACTION_READ_UNCOMMITTED
+     * @param recs The list of options to flush.
+     * @param options The query options to filter out records.
+     * @throws IOException If error occur while flushing.
      */
     @Override
     public synchronized void flushAll(List<Record> recs, QueryOptions options)
@@ -1717,6 +1723,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Flush a record to the database.
+     * @param r The record to flush.
+     * @param options The query options.
+     * @param conn The database connection.
+     * @throws IOException If error occur with connection.
+     * @throws SQLException If error occur while executing SQL.
+     */
     protected void flushWithConnection(Record r, QueryOptions options,
                              Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
@@ -1725,7 +1739,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Flushing: " + r.toString(false));
         }
 
-        /* Update the timestamp we check against in getRecordsModifiedAfter */
+        // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
         invalidateCachedStats();
 
@@ -1744,7 +1758,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
-        /* Recursively add child records */
+        // Recursively add child records
         List<Record> children = r.getChildren();
         if (children != null) {
             log.debug("Flushing " + children.size()
@@ -1754,8 +1768,8 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
-        /* Touch parents recursively upwards
-         * FIXME: The call to touchParents() might be pretty expensive... */
+        // Touch parents recursively upwards
+        // FIXME: The call to touchParents() might be pretty expensive... 
         try {
             touchParents(r.getId(), null, conn);
         } catch (IOException e) {
@@ -1764,9 +1778,9 @@ public abstract class DatabaseStorage extends StorageBase {
                       + e.getMessage(), e);
         }
 
-        /* Again - update the timestamp we check against in
-         * getRecordsModifiedAfter. This is also done in the end of the flush()
-         * because the operation is non-instantaneous  */
+        //Again - update the timestamp we check against in
+        // getRecordsModifiedAfter. This is also done in the end of the flush()
+        // because the operation is non-instantaneous
         updateModificationTime(r.getBase());
         invalidateCachedStats();
     }
@@ -1828,6 +1842,16 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Return a list of parent records.
+     * @param id The child ID.
+     * @param options The query option to filter out parents from the return
+     * set.
+     * @param conn The database connection.
+     * @return A list of parent records.
+     * @throws IOException If error occur with database connection.
+     * @throws SQLException If error occur executing the SQL.
+     */
     protected List<Record> getParents(String id, QueryOptions options,
                              Connection conn) throws IOException, SQLException {
         PreparedStatement stmt = conn.prepareStatement(stmtGetParents.getSql());
@@ -1873,6 +1897,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Returns a list of children.
+     * @param id The parent record ID.
+     * @param options The query options to filter the children.
+     * @param conn The connection.
+     * @return A list of children to the parent.
+     * @throws IOException If error occur while communication with storage.
+     * @throws SQLException If error occur with executing the storage.
+     */
     @SuppressWarnings("unused")
     private List<Record> getChildren(String id, QueryOptions options,
                              Connection conn) throws IOException, SQLException {
@@ -1999,10 +2032,13 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    // The synchronized modifier on clearBase() is paramount to have the
-    // TRANSACTION_READ_UNCOMMITTED transaction isolation level work properly,
-    // in a nutshell this is the only isolation level that gives us the
-    // throughput we want
+    /**
+     * The synchronized modifier on clearBase() is paramount to have the
+     * TRANSACTION_READ_UNCOMMITTED transaction isolation level work properly,
+     * in a nutshell this is the only isolation level that gives us the
+     * throughput we want
+     * @param base The records base.
+     */
     @Override
     public synchronized void clearBase(String base) throws IOException {
         log.debug(String.format("clearBase(%s) called", base));
@@ -2142,7 +2178,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
      *                resource in the classpath of the storage process.
-     *                Fx {@code count.job.js}
+     *                eq. {@code count.job.js}
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
@@ -2189,7 +2225,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
      *                resource in the classpath of the storage process.
-     *                Fx {@code count.job.js}
+     *                eg. {@code count.job.js}
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
@@ -2330,8 +2366,20 @@ public abstract class DatabaseStorage extends StorageBase {
         return job.getOutput();
     }
 
-    /* Run a BatchJob on a given record. Returns false if the job was not
-     * run because the record was filtered by the query options. */
+    /**
+     * Run a BatchJob on a given record. Returns false if the job was not
+     * run because the record was filtered by the query options.
+     * @param job The batch job to run.
+     * @param record The record to run the batch job on.
+     * @param oldRecordId The old record ID.
+     * @param jobBase The job record base.
+     * @param options The query options, used to validate the records.
+     * @param isFirst True if it is the first record.
+     * @param isLast True if it is the last record.
+     * @param conn The database connection.
+     * @return False if the batch job wasn't runned because the record was
+     * filtered out. 
+     */
     private boolean applyJobtoRecord(
                 BatchJob job, Record record, String oldRecordId, String jobBase,
                 QueryOptions options, boolean isFirst, boolean isLast,
@@ -2381,7 +2429,11 @@ public abstract class DatabaseStorage extends StorageBase {
         return true;
     }
 
-    /* Create parent/child and child/parent relations for the given record */
+    /**
+     * Create parent/child and child/parent relations for the given record.
+     * @param rec The record.
+     * @param conn The database connection.
+     */
     private void createRelations(Record rec, Connection conn)
                                                            throws SQLException {
         PreparedStatement stmt =
@@ -2455,11 +2507,14 @@ public abstract class DatabaseStorage extends StorageBase {
                 markHasRelations(parentIds, conn);
             }
         }
-
         closeStatement(stmt);
     }
 
-    // Return false if the record should be excepted from relations tracking
+    /**
+     * Return false if the record should be excepted from relations tracking.
+     * @param rec The record.
+     * @return False if the record should be excepted from relations tracking.
+     */
     private boolean shouldTrackRelations(Record rec) {
         return !disabledRelationsTracking.contains(rec.getBase());
     }
@@ -2492,6 +2547,12 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Updates has relation for a record ID.
+     * @param id The record ID.
+     * @param conn The connection to the database.
+     * @throws SQLException If error occur with SQL execution.
+     */
     private void checkHasRelations(String id, Connection conn)
                                                            throws SQLException {
         PreparedStatement stmt =
@@ -2542,6 +2603,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Create a new record on the given connection.
+     * @param record The record object to flush into the database.
+     * @param options The query options.
+     * @param conn The database connection.
+     * @throws IOException If error occur while communicating with storage.
+     * @throws SQLException If error occur with SQL execution.
+     */
     private void createNewRecordWithConnection(
                      Record record, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
@@ -2704,6 +2773,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
      }
 
+    /**
+     * Touch a record means updating the records timestamp. This also updates
+     * the storage last modification time.
+     * @param id The record ID.
+     * @param conn The database connection, changes are not committed.
+     * @throws IOException If error occurs while communication with the storage.
+     * @throws SQLException If error occur while executing the SQL.
+     */
     protected void touchRecord(String id, Connection conn)
                                               throws IOException, SQLException {
         PreparedStatement stmt =
@@ -2711,11 +2788,12 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Touching: " + id);
 
         invalidateCachedStats();
-
         try {
             stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
+            Record r = getRecord(id, null);
+            updateLastModficationTimeForBase(r.getBase(), conn);
         } finally {
             closeStatement(stmt);
         }
@@ -2780,50 +2858,72 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Return the last modification time for a base or the storage, if no
+     * changes to a base has happened yet. This is drawn from the database.
+     * @param base The base.
+     * @return The last modification time.
+     * @throws IOException If error occur while executing the SQL.
+     */
     @Override
     public long getModificationTime(String base) throws IOException {
         try {
-            Connection conn = getDefaultConnection();         
+            Connection conn = getDefaultConnection(); 
+            conn.commit();
             return getModifcationTimeWithConnection(base, conn);
         } catch (SQLException e) {
             throw new IOException("Error fetching last modification time", e);
         }
     }
 
+    /**
+     * Return the last modification time for a single base. If base is
+     * {@code null} then the last modification the for the storage is returned.
+     * If not changes has been made yet, then this is the storage start time
+     * that is returned.
+     * @param base The base.
+     * @param conn The connection, the SQL isn't committed in this method.
+     * @return The last modification time of the storage or storage startup
+     * time.
+     * @throws SQLException If error executing the SQL.
+     */
     private long getModifcationTimeWithConnection(String base, Connection conn)
                                                            throws SQLException {
-        if (base == null) {
-            String sql = "SELECT " + MTIME_COLUMN + " FROM " + BASE_STATISTICS
-                + " ORDER BY " + MTIME_COLUMN + " DESC LIMIT 1";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.execute();
-            long maxTime = 0;
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                maxTime = resultSet.getLong(1);
-            }
-            return Math.max(getStorageStartTime(), maxTime);
-        }
-        PreparedStatement stmt =
-                   conn.prepareStatement(stmtGetLastModificationTime.getSql());
+        PreparedStatement stmt = null;
         try {
-            stmt.setString(1, base);
-            stmt.execute();
-            // We don't have a storage match
-            ResultSet result = stmt.getResultSet();
-            if (result.next()) {
-                return result.getLong(result.findColumn(MTIME_COLUMN));
+            if (base == null) {
+                String sql = "SELECT " + MTIME_COLUMN + " FROM "
+                    + BASE_STATISTICS + " ORDER BY " + MTIME_COLUMN
+                    + " DESC LIMIT 1";
+                stmt = conn.prepareStatement(sql);
+                stmt.execute();
+                long maxTime = 0;
+                ResultSet resultSet = stmt.executeQuery();
+                if (resultSet.next()) {
+                    maxTime = resultSet.getLong(1);
+                }
+                return Math.max(getStorageStartTime(), maxTime);
             } else {
-                long time = 0;
-                try {
-                    time = super.getModificationTime(base);
-                } catch (IOException e) {
-                    
-                }                
-                log.debug("No data for base, returning storage start time (" 
-                          + getStorageStartTime() + ", should have been "
-                          + time);
-                return getStorageStartTime();
+                stmt =
+                    conn.prepareStatement(stmtGetLastModificationTime.getSql());
+                stmt.setString(1, base);
+                stmt.execute();
+                // We don't have a storage match
+                ResultSet result = stmt.getResultSet();
+                if (result.next()) {
+                    return result.getLong(result.findColumn(MTIME_COLUMN));
+                } else {
+                    long time = 0;
+                    try {
+                        time = super.getModificationTime(base);
+                    } catch (IOException e) {
+                        
+                    }                
+                    log.debug("No data for base, returning storage start time (" 
+                              + getStorageStartTime() + ", should have been "
+                              + time);
+                    return getStorageStartTime();
+                }
             }
         } finally {
             closeStatement(stmt);
