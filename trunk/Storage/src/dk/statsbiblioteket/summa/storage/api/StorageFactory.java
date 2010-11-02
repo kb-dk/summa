@@ -75,7 +75,7 @@ public final class StorageFactory {
      * the class used for instantiating the storage.</p>
      *
      * @param conf setup for the wanted storage determined by the
-     *             {@code classProp} property wihtin {@code conf}
+     *             {@code classProp} property within {@code conf}
      * @param classProp the property defining the storage class to instantiate
      * @return an object implementing the {@link Storage} interface.
      * @throws IOException if the storage could not be created.
