@@ -14,14 +14,16 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
-import java.io.File;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
+import dk.statsbiblioteket.util.Files;
+
+import java.io.File;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -38,22 +40,38 @@ public class StorageFactoryTest extends TestCase {
         super(name);
     }
 
+    /**
+     * Setup.
+     * @throws Exception if error.
+     */
     public void setUp() throws Exception {
         super.setUp();
+        if (location.exists()) {
+            Files.delete(location);
+        }
     }
 
+    /**
+     * Tear down.
+     * @throws Exception If error.
+     */
     public void tearDown() throws Exception {
         super.tearDown();
+        Files.delete(location);
     }
 
     public static Test suite() {
         return new TestSuite(StorageFactoryTest.class);
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    /** Location. */
     private static final File location =
-            new File(System.getProperty("java.io.tmpdir"), "kabloey");
+                                     new File("target/test_result/", "kabloey");
 
+    /**
+     * Test create default controller.
+     * @throws Exception If error.
+     */
     public void testCreateDefaultController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
@@ -62,6 +80,10 @@ public class StorageFactoryTest extends TestCase {
         storage.close();
     }
 
+    /**
+     * Test create derby controller.
+     * @throws Exception If error.
+     */
     public void testCreateDerbyController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
@@ -72,7 +94,3 @@ public class StorageFactoryTest extends TestCase {
         storage.close();
     }
 }
-
-
-
-
