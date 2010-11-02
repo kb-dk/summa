@@ -261,6 +261,14 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
     }
 
+    /**
+     * Flush a single record to the storage. If the number of records now
+     * exceeds the maximal number of records before a optimize should happen,
+     * then optimization is done before the call to\
+     * {@link DatabaseStorage#flush(Record)}.
+     * @param rec The record to flush.
+     * @throws IOException If error occur while optimizing or flushing record.
+     */
     @Override
     public synchronized void flush(Record rec) throws IOException {
         numFlushes++;
@@ -272,11 +280,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         super.flush(rec);
     }
 
-    /*
-    * Note: the 'synchronized' part of this method decl is paramount to
-    * allowing us to set our transaction level to
-    * Connection.TRANSACTION_READ_UNCOMMITTED
-    */
+    /**
+     * Flush a list of records to the storage.
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED.
+     *
+     * @param recs List of records to flush to the storage.
+     * @throws IOException If error occur while flushing.
+     */
     @Override
     public synchronized void flushAll(List<Record> recs) throws IOException {
         if (numFlushes > OPTIMIZE_INDEX_THRESHOLD) {
@@ -316,40 +328,62 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     /**
      * We override this method because H2 only uses its custom
      * JdbcSQLExceptions, and not the proper exceptions according to the
-     * JDBC api
-     * @param e sql exception to inspect
+     * JDBC API.
+     * @param e SQL exception to inspect
      * @return whether or not {@code e} represents an integrity constraint
      *         violation
      */
     @Override
-    protected boolean isIntegrityConstraintViolation (SQLException e) {
+    protected boolean isIntegrityConstraintViolation(SQLException e) {
         // The H2 error codes for integrity constraint violations are
         // numbers between 23000 and 23999
         return (e instanceof SQLIntegrityConstraintViolationException ||
                 (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
     }
 
+    /**
+     * Return a connection from the connection pool.
+     * @return A database connection from the connection pool.
+     */
     @Override
     protected Connection getConnection() {
         return pool.getConnection();
     }
 
+    /**
+     * Prepare a SQL statement.
+     * @param sql The SQL statement.
+     * @return The statement handle created from the SQL statement. 
+     */
     @Override
     protected StatementHandle prepareStatement(String sql) {
         return pool.prepareStatement(sql);
     }
 
+    /**
+     * Return a prepared statement, from the statement handler.
+     * @parem handle The statement handler.
+     * @return The prepared statement.
+     */
     @Override
     protected PreparedStatement getManagedStatement(StatementHandle handle)
                                                            throws SQLException {
         return pool.getManagedStatement(handle);
     }
 
+    /**
+     * Return the meta column data declaration.
+     * @return The meta column " BYTEA".
+     */
     @Override
     protected String getMetaColumnDataDeclaration() {
         return " BYTEA";
     }
 
+    /**
+     * Return the data column data declaration.
+     * @return The data column " BYTEA".
+     */
     @Override
     protected String getDataColumnDataDeclaration() {
         return " BYTEA";
@@ -417,18 +451,31 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
     }
 
-    // H2 is very bad at large result sets (_very_)
+    /**
+     * Returns whether not H2 uses the paging model for results.
+     * Note: H2 is very bad at large result sets (_very_)
+     * @return Always true, since H2 is bad performance wise with large results
+     * sets. 
+     */
     @Override
     public boolean usePagingResultSets() {
         return true;
     }
 
-    // Generally Java embedded DBs are bad at JOINs over tables with many rows
+    /**
+     * Generally Java embedded DBs are bad at JOINs over tables with many rows.
+     * @return Always true.
+     */
     @Override
     public boolean useLazyRelationLookups() {
         return true;
     }
 
+    /**
+     * Return the given SQL statement with a LIMIT statement.
+     * @param sql The SQL statement which should be added page statement.
+     * @return The given SQL statement with a LIMIT statement.
+     */
     @Override
     public String getPagingStatement(String sql) {
         return sql + " LIMIT " + getPageSize();
