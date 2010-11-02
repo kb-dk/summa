@@ -49,7 +49,8 @@ public class StorageTestBase extends TestCase {
     /** The storage instantiated by this test helper. */
     protected Storage storage;
 
-    protected static String testDBRoot = "target/test_result/test_db";
+    /** Test db root, for all clases using this storage construction method. */
+    public static String testDBRoot = "target/test_result/test_db";
     protected static String dbPrefix = "db";
     protected static String testBase1 = "foobar";
     protected static String testBase2 = "frobnibar";
