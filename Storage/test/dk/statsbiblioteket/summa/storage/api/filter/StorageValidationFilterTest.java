@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
@@ -31,7 +30,7 @@ public class StorageValidationFilterTest extends TestCase {
     /** Local storage instance. */
     private Storage storage = null;
     /** Storage location. */
-    private File dbRoot = new File(StorageTestBase.testDBRoot);
+    private File dbRoot = new File("target/test_result/storagevalidation/");
     /** The used storage configuration. */
     private Configuration conf;
     /** storage counter. */
@@ -76,7 +75,6 @@ public class StorageValidationFilterTest extends TestCase {
         }
         try {
             storage = new RMIStorageProxy(conf);
-            Thread.sleep(6000);
             assertNotNull(storage);
             StorageValidationFilter storageValidationFilter = 
                                               new StorageValidationFilter(conf);
