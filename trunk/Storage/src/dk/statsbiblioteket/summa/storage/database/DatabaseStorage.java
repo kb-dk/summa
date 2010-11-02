@@ -1704,9 +1704,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // probably does not have the relevant exception class
             throw new IOException("Can not prepare database for write mode: "
                                   + e.getMessage());
-        } finally {
-            closeConnection(conn);
-        }
+        } 
 
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
