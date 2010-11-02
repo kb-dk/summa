@@ -369,7 +369,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtInsertBaseStats;
     /** Sets a base statistic row in invalid. */
     private StatementHandle stmtSetBaseStatsInvalid;
-    /** Retrieves the last modification time for a base. */
+	    /** Retrieves the last modification time for a base. */ 
     private StatementHandle stmtGetLastModificationTime;
     private String allColumns;
 
@@ -802,10 +802,18 @@ public abstract class DatabaseStorage extends StorageBase {
                                          + "when using paging result sets");
     }
 
+    /**
+     * Return the unique time stamp generator used by this instance.
+     * @return The unique time stamp generator.
+     */
     public UniqueTimestampGenerator getTimestampGenerator() {
         return timestampGenerator;
     }
 
+    /**
+     * Return the used page size. 
+     * @return The used page size.
+     */
     public int getPageSize() {
         return pageSize;
     }
@@ -1116,7 +1124,6 @@ public abstract class DatabaseStorage extends StorageBase {
         if (conn == null) {
             return;
         }
-
         try {
             conn.close();
         } catch (SQLException e) {
@@ -1160,7 +1167,6 @@ public abstract class DatabaseStorage extends StorageBase {
         if (usePagingModel) {
             iter = new PagingCursor(this, (ResultSetCursor) iter);
         }
-
         return registerCursor(iter);
     }
 
@@ -1202,7 +1208,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                   + statement + ": "
                                   + e.getMessage(), e);
         }
-
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
         return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
@@ -1317,9 +1322,16 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    public List<Record> getRecordsWithConnection(
-            List<String> ids, QueryOptions options, Connection conn)
-                                                            throws IOException {
+    /**
+     * Return a list of records filtered with the given query options.
+     * @param ids The list of ID's.
+     * @param options The query options to filter record by.
+     * @param conn The database connection.
+     * @return A list of records.
+     * @throws IOException If error occur while fetching records.
+     */
+    public List<Record> getRecordsWithConnection(List<String> ids,
+                     QueryOptions options, Connection conn) throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
 
         for (String id : ids) {
@@ -1333,9 +1345,7 @@ public abstract class DatabaseStorage extends StorageBase {
                           + "' for batch request: " + e.getMessage(), e);
                 result.add(null);
             }
-
         }
-
         return result;
     }
 
@@ -1666,12 +1676,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.warn(error, e);
                 throw new IOException(error, e);
             } finally {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    log.warn("Error closing connection after committing "
-                             + record.getId() + ": " + e.getMessage(), e);
-                }
+                closeConnection(conn);
             }
         }
     }
@@ -1699,6 +1704,8 @@ public abstract class DatabaseStorage extends StorageBase {
             // probably does not have the relevant exception class
             throw new IOException("Can not prepare database for write mode: "
                                   + e.getMessage());
+        } finally {
+            closeConnection(conn);
         }
 
         // Brace yourself for the try-catch-finally hell, but we really don't
@@ -2920,12 +2927,15 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public long getModificationTime(String base) throws IOException {
+        Connection conn = null;
         try {
-            Connection conn = getDefaultConnection(); 
+            conn = getDefaultConnection(); 
             conn.commit();
             return getModifcationTimeWithConnection(base, conn);
         } catch (SQLException e) {
             throw new IOException("Error fetching last modification time", e);
+        } finally {
+            closeConnection(conn);
         }
     }
 
@@ -3134,7 +3144,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * elements.
      * <p/>
      * This method will position the result set at the beginning of the next
-     * record
+     * record.
      *
      * @param resultSet     a SQL result set. The result set will be stepped
      *                      to the beginning of the following record
@@ -3149,7 +3159,6 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public Record scanRecord(ResultSet resultSet, ResultSetCursor iter)
                                               throws SQLException, IOException {
-
         boolean hasNext;
 
         String id = resultSet.getString(ID_KEY);
@@ -3292,7 +3301,6 @@ public abstract class DatabaseStorage extends StorageBase {
             && parentIds == null && childIds == null) {
             resolveRelatedIds(rec, resultSet.getStatement().getConnection());
         }
-
         return rec;
     }
 
@@ -3386,12 +3394,13 @@ public abstract class DatabaseStorage extends StorageBase {
         return anInt != 0;
     }
 
+    /**
+     * Close the database storage, which involves closing all iterators.
+     */
     @Override
     public void close() throws IOException {
         log.info("Closing DatabaseStorage");
-
         iteratorReaper.stop();
-
         log.info("Closed DatabaseStorage");
     }
 
@@ -3418,14 +3427,7 @@ public abstract class DatabaseStorage extends StorageBase {
             } catch (SQLException e) {
                 throw new IOException("Could not get database stats", e);
             } finally {
-                try {
-                    if (conn != null) {
-                        conn.close();
-                    }
-                } catch (SQLException e) {
-                    log.warn("Failed to close connection database: "
-                             + e.getMessage(), e);
-                }
+                closeConnection(conn);
             }
         }
     }
