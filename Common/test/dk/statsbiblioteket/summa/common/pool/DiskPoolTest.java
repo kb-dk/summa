@@ -15,12 +15,14 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * DiskPool Tester.
@@ -50,7 +52,7 @@ public class DiskPoolTest extends StringPoolSuper {
     public SortedPool<String> getPool(File location,
                                       String name) throws Exception {
         DiskStringPool pool = new DiskStringPool(defaultCollator);
-//        DiskStringPool pool = new DiskStringPool(null);
+        //DiskStringPool pool = new DiskStringPool(null);
         pool.open(location, name, false, true);
         return pool;
     }

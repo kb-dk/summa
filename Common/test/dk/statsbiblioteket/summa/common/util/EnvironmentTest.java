@@ -74,8 +74,9 @@ public class EnvironmentTest extends TestCase {
     }
 
     public void testCheckJavaVersion() throws Exception {
-        System.out.println("Current JVM version: "
-                           + Environment.checkJavaVersion());
+        //System.out.println("Current JVM version: "
+        //                   + Environment.checkJavaVersion());
+        // TODO assert 
     }
 }
 
