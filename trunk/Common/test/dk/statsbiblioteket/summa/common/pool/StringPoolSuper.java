@@ -19,9 +19,6 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -31,6 +28,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A super-class with tests for String Pools.
@@ -80,8 +82,7 @@ public abstract class StringPoolSuper extends TestCase {
 
     protected Collator defaultCollator =
         CollatorFactory.createCollator(new Locale("da"), true);
-    protected static File poolDir = new File(
-            System.getProperty("target/test_result", "pooltest");
+    protected static File poolDir = new File("target/test_result", "pooltest");
     private List<SortedPool<String>> pools =
             new ArrayList<SortedPool<String>>(10);
     protected SortedPool<String> getPool() throws Exception {
@@ -341,7 +342,7 @@ public abstract class StringPoolSuper extends TestCase {
             //System.out.println("Dirty adding took "+ profiler.getSpendTime());
             pool.cleanup();
             //System.out.println("After cleanup the total time was "
-                               + profiler.getSpendTime());
+            //                   + profiler.getSpendTime());
         }
 
         //System.out.println("Construction took "+ profiler.getSpendTime());
