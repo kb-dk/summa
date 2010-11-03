@@ -1,3 +1,457 @@
+2010-11-03 13:18  toke-sb
+
+	* [r2664]
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/sort/MultipassSortComparatorTest.java:
+	  
+	  Minor test: Slight update to sort comparator tests
+
+2010-11-03 13:18  hkirk
+
+	* [r2663] Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Bugfix: added visualvm name to summix scripts
+
+2010-11-03 13:13  hkirk
+
+	* [r2662] Common/pom.xml, Control/pom.xml, FacetBrowser/pom.xml,
+	  Index/pom.xml, Ingest/pom.xml, Samples/Summix/pom.xml,
+	  Search/pom.xml, Storage/pom.xml, Support/pom.xml,
+	  Web/Modules/Search/pom.xml, Web/Modules/Status/pom.xml,
+	  Web/Modules/Storage/pom.xml, Web/Modules/Website/pom.xml,
+	  Web/pom.xml, Workflow/pom.xml, pom.xml:
+	  
+	  Updated POMs to version 1.6.5
+
+2010-11-03 12:23  toke-sb
+
+	* [r2661]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: StorageWS re-initialized for each session, putting
+	  garbage in perm space, making a lot of external request and
+	  generally performed horribly
+
+2010-11-03 08:20  hkirk
+
+	* [r2660]
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuper.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/EnvironmentTest.java:
+	  
+	  Fixed typo
+
+2010-11-03 08:03  hkirk
+
+	* [r2659]
+	  Common/test/dk/statsbiblioteket/summa/common/pool/DiskPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuper.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/EnvironmentTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ReaderInputStreamTest.java:
+	  
+	  Removed system.out
+
+2010-11-03 07:31  hkirk
+
+	* [r2658] pom.xml:
+	  
+	  fork mode always
+
+2010-11-03 06:37  hkirk
+
+	* [r2657] pom.xml:
+	  
+	  New try
+
+2010-11-02 14:34  hkirk
+
+	* [r2656] pom.xml:
+	  
+	  Reveted pom
+
+2010-11-02 14:12  hkirk
+
+	* [r2655] pom.xml:
+	  
+	  Experiment with heap space exception on hudson server
+
+2010-11-02 13:53  hkirk
+
+	* [r2654]
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageTestBase.java:
+	  
+	  Added test db root dir
+
+2010-11-02 13:38  hkirk
+
+	* [r2653]
+	  Index/test/dk/statsbiblioteket/summa/index/XMLTransformerTest.java:
+	  
+	  Bugfix: Removed System.out.println
+
+2010-11-02 13:33  hkirk
+
+	* [r2652]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageReaderClient.java:
+	  
+	  Bugfix: Added Javadoc
+
+2010-11-02 13:12  hkirk
+
+	* [r2651]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilterTest.java:
+	  
+	  Bugfix: access rights
+
+2010-11-02 13:03  hkirk
+
+	* [r2650]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilter.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilterTest.java:
+	  
+	  Bugfix: Updated files with licence.
+	  Bugfix: Fixed error in test.
+
+2010-11-02 12:17  hkirk
+
+	* [r2649]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageFactory.java:
+	  
+	  Bugfix: spelling
+
+2010-11-02 12:09  hkirk
+
+	* [r2648]
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageFactoryTest.java:
+	  
+	  Bugfix: Updated location.
+
+2010-11-02 10:03  hkirk
+
+	* [r2647]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: fixed memory leak, from not closing connection. This is a
+	  second commit, since I made a ctrl-z just before committing
+
+2010-11-02 09:56  hkirk
+
+	* [r2646]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Bugfix: Fixed JavaDoc
+
+2010-11-02 09:31  hkirk
+
+	* [r2645]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: Fixed connection closing
+
+2010-11-01 13:36  hkirk
+
+	* [r2644]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java:
+	  
+	  Removed trailing line spaces
+
+2010-11-01 13:34  hkirk
+
+	* [r2643]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: Updated JavaDoc
+
+2010-11-01 12:31  hkirk
+
+	* [r2641]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: updated javadoc
+
+2010-11-01 10:05  hkirk
+
+	* [r2638]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageTestBase.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageWriterClientTest.java:
+	  
+	  Fixed unit test storage location
+
+2010-11-01 09:19  hkirk
+
+	* [r2637]
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/PagingCursor.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageTestBase.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordReaderTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilterTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryToken.java:
+	  
+	  Fixed bug in database storage, when updating the base statistic
+	  table:
+
+2010-10-29 09:47  hkirk
+
+	* [r2634]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Bugfix: Added Javadoc
+
+2010-10-29 09:02  hkirk
+
+	* [r2633]
+	  Storage/test/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxyTest.java:
+	  
+	  Forgot to add cleanup...
+
+2010-10-29 08:56  hkirk
+
+	* [r2632]
+	  Storage/test/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxyTest.java:
+	  
+	  Changed root for index
+
+2010-10-29 06:25  hkirk
+
+	* [r2631]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Updated log levels when loading configuration. This means that
+	  there are not printed any exceptions when in debug.
+
+2010-10-29 05:52  hkirk
+
+	* [r2630] Web/config/search/log4j.xml, Web/config/status/log4j.xml,
+	  Web/config/storage/log4j.xml, Web/config/website/log4j.xml:
+	  
+	  Bugfix: Upgrade from trace to info, for a more production like
+	  setup
+
+2010-10-28 08:59  hkirk
+
+	* [r2628]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java:
+	  
+	  Bugfix: added missing JavaDoc
+
+2010-10-28 07:18  hkirk
+
+	* [r2627] Samples/Summix/summix_package.xml:
+	  
+	  Bugfix: fixed summix package
+
+2010-10-28 06:40  hkirk
+
+	* [r2626] Samples/Summix/config/ingest.xml:
+	  
+	  Bugfix: Summix example ingester fails when storage ins't up
+
+2010-10-27 12:44  hkirk
+
+	* [r2624]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilter.java[ADD],
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/StorageValidationFilterTest.java[ADD]:
+	  
+	  Added filter for stopping the ingester chain, early when there is
+	  no storage connected and a unit test of this class
+
+2010-10-27 12:13  hkirk
+
+	* [r2623]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LoggingExceptionHandler.java:
+	  
+	  Bugfix: Added JavaDoc
+
+2010-10-27 12:11  hkirk
+
+	* [r2622]
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Bugfix: made output from failing main consistent.
+
+2010-10-27 11:55  hkirk
+
+	* [r2621]
+	  Common/src/dk/statsbiblioteket/summa/common/util/DeferredSystemExit.java:
+	  
+	  Bugfix: Fixed javacode
+
+2010-10-27 08:19  hkirk
+
+	* [r2620]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Bugfix: Added missing JavaDoc
+
+2010-10-26 12:47  hkirk
+
+	* [r2618]
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Bugfix: fixed last modification time for all base, which was
+	  wrongly set when a databsase storage was closed an restarted.
+	  This is a fix for #109
+
+2010-10-26 11:25  hkirk
+
+	* [r2617]
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryToken.java:
+	  
+	  Removed unneasseary imports
+
+2010-10-25 10:53  hkirk
+
+	* [r2616]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/Storage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/rmi/RemoteWritableStorage.java:
+	  
+	  Fixed typos
+
+2010-10-25 09:59  hkirk
+
+	* [r2615]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  code update
+
+2010-10-25 09:54  hkirk
+
+	* [r2614]
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java:
+	  
+	  Bugfix: Updated Javadoc
+
+2010-10-25 09:44  hkirk
+
+	* [r2613]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageFactory.java:
+	  
+	  Bugfix: added JavaDoc
+
+2010-10-25 09:41  hkirk
+
+	* [r2612]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Added some javadoc, fixed small errors
+
+2010-10-25 08:51  hkirk
+
+	* [r2611]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bugfix: Refactor error
+
+2010-10-25 08:43  hkirk
+
+	* [r2610]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java:
+	  
+	  Updated javadoc, was suposed to be commited with the last test
+	  file
+
+2010-10-25 08:39  hkirk
+
+	* [r2609]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Updated javadoc
+
+2010-10-25 08:35  hkirk
+
+	* [r2608]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java:
+	  
+	  Added missing javadoc
+
+2010-10-25 08:25  hkirk
+
+	* [r2607]
+	  Workflow/src/dk/statsbiblioteket/summa/workflow/Main.java:
+	  
+	  added java doc
+
+2010-10-25 08:21  hkirk
+
+	* [r2606]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Bugfix: fixed codestyle
+
+2010-10-22 12:20  toke-sb
+
+	* [r2604]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java:
+	  
+	  Feature: The FileReader now sets lastModificationTime for files
+	  marked as completed
+
+2010-10-21 09:19  hkirk
+
+	* [r2603]
+	  Support/src/dk/statsbiblioteket/summa/support/didyoumean/DidYouMeanSearchNode.java:
+	  
+	  Bugfix: Fixed codestyle
+
+2010-10-18 07:50  hkirk
+
+	* [r2602]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Added test case for default resource files existence.
+	  Fixed Javadoc
+
+2010-10-18 05:35  hkirk
+
+	* [r2601]
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java:
+	  
+	  Javadoc codestyle
+
+2010-10-14 07:36  hkirk
+
+	* [r2600]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/ShellContextImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CleanSlateRollingFileAppender.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/tools/StorageTool.java:
+	  
+	  Updated errors in javadoc
+
+2010-10-13 13:50  hkirk
+
+	* [r2599] Common/pom.xml, Control/pom.xml, FacetBrowser/pom.xml,
+	  Index/pom.xml, Ingest/pom.xml, Samples/Summix/pom.xml,
+	  Search/pom.xml, Storage/pom.xml, Support/pom.xml,
+	  Web/Modules/Search/pom.xml, Web/Modules/Status/pom.xml,
+	  Web/Modules/Storage/pom.xml, Web/Modules/Website/pom.xml,
+	  Web/pom.xml, Workflow/pom.xml, pom.xml:
+	  
+	  Bumped to 1.6.5-snapshot
+
+2010-10-11 09:41  hkirk
+
+	* [r2595] ChangeLog, Common/pom.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  Control/pom.xml, FacetBrowser/pom.xml, Index/pom.xml,
+	  Ingest/pom.xml, NEWS, Samples/Summix/pom.xml, Search/pom.xml,
+	  Storage/pom.xml, Support/pom.xml, Web/Modules/Search/pom.xml,
+	  Web/Modules/Status/pom.xml, Web/Modules/Storage/pom.xml,
+	  Web/Modules/Website/pom.xml, Web/pom.xml, Workflow/pom.xml,
+	  pom.xml:
+	  
+	  Updates to 1.6.4 release
+
 2010-10-06 08:59  hkirk
 
 	* [r2594] Samples/Summix/bin/generic_start.bat,
