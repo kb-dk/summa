@@ -192,7 +192,7 @@
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
                     <trimStackTrace>false</trimStackTrace>
-                    <forkMode>never</forkMode>
+                    <forkMode>always</forkMode>
                     <argLine>-Xms256m -Xmx768m</argLine>
                 </configuration>
             </plugin>
@@ -290,4 +290,4 @@
         <url>http://summa.svn.sourceforge.net/viewvc/summa/</url>
     </scm>
 
-</project>  
+</project>   
