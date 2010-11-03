@@ -1,0 +1,73 @@
+<xproperties>
+    <xproperties>
+
+        <!-- The RMI communications port -->
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">27070</value>
+        </entry>
+
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.StorageService</value>
+        </entry>
+
+        <entry>
+            <key>summa.control.service.id</key>
+            <value class="string">AutoStorageService</value>
+        </entry>
+
+        <!-- The following properties are taken from StorageFactory and
+       DatabaseControl -->
+
+        <!-- The backend to use for Storage -->
+        <entry>
+            <key>summa.storage.controller</key>
+            <value class="string">dk.statsbiblioteket.summa.storage.database.derby.ControlDerby</value>
+        </entry>
+
+        <!--
+        <entry>
+            <key>summa.storage.database.username</key>
+            <value></value>
+            </entry>
+        <entry>
+            <key>summa.storage.database.password</key>
+            <value></value>
+            </entry>
+        -->
+
+        <!--
+        * The property-key for the boolean value determining if a new database
+        * should be created is there is no existing database. If createnew is
+        * true and a database exists and forcenew is true, the existing database
+        * is deleted and a new one created. If createnew is true and a database
+        * exists and forcenew is false, the existing database is reused.
+        -->
+        <entry>
+            <key>summa.storage.database.createnew</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <!--
+        * The property-key for the boolean determining if a new database should
+        * be created, no matter is a database already exists.
+        -->
+        <entry>
+            <key>summa.storage.database.forcenew</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <!--
+        * The location of the database to use/create. This will be relative to
+          the persistent-dir for the client. This also means that only one instance
+          of this service can be deployed at each client.
+        -->
+        <entry>
+            <key>summa.storage.database.location</key>
+            <value class="string">[teststoragelocation]</value>
+        </entry>
+
+    </xproperties>
+</xproperties>

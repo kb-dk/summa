@@ -1,0 +1,116 @@
+6. OKT. 2006:
+	MeanFetchingSpeed:	    27,5s
+	MeanProcessingSpeed:	48,6s
+	NumFinished:    		614 @ 10000
+	NumSlaves:		        11
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        info
+
+9. OKT. 2006:
+	MeanFetchingSpeed:	    24,2s
+	MeanProcessingSpeed:	37,6s
+	NumFinished:		    497 @ 10000
+	NumSlaves:		        14
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        info
+
+10. OKT. 2006:
+	MeanFetchingSpeed:	    26,0s
+	MeanProcessingSpeed:	41,0s
+	NumFinished:		    633 @ 10000
+	NumSlaves:		        14-19 varying niceness, ganymede and dastardly tested, various workers killed
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        info
+
+12. OKT. 2006:
+    MeanFetchingSpeed:	    23,9s
+	MeanProcessingSpeed:	37,5s
+	NumFinished:		    633 @ 10000
+	NumSlaves:		        19 varying log levels, 3 dedicated workers, ganymede x 3
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        info
+
+18. OKT. 2006:
+    MeanFetchingSpeed:	    28
+	MeanProcessingSpeed:	42
+	NumFinished:		    634
+	NumSlaves:		        17
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN
+    Notes:                  pc134, pc982, and dastardly was running as dedicated workers. 1 ganymede worker only
+
+19. OKT. 2006:
+    MeanFetchingSpeed:      25
+	MeanProcessingSpeed:    38	
+	NumFinished:		    634
+	NumSlaves:		        18
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN
+    Notes:                  dastardly dedicated with 350mb ram did 33 jobs! (almost x3 standard speed for dastardly)
+
+22. OKT. 2006:
+    MeanFetchingSpeed:      24.8
+	MeanProcessingSpeed:    37.7
+	NumFinished:		    634
+	NumSlaves:		        17
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN
+    Notes:                  dastardly, eon, liambs, thulcandra dedicated with 350mb
+
+23. OKT. 2006:
+    MeanFetchingSpeed:      21.6
+	MeanProcessingSpeed:    32.2
+	NumFinished:		    637
+	NumSlaves:		        17
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN
+    Notes:                  all slaves running as sleeper agents
+
+24. OKT. 2006:
+    MeanFetchingSpeed:      26.6
+	MeanProcessingSpeed:    37
+	NumFinished:		    637
+	NumSlaves:		        21
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN    
+    Notes:                  atria was swapping through the entire session, and the job queue was depleted at some point
+
+26. OKT. 2006:
+    MeanFetchingSpeed:      19.4
+	MeanProcessingSpeed:    28.6
+	NumFinished:		    637
+	NumSlaves:		        24
+	Indexer:		        atria
+	Merger:			        atria
+	Log:			        WARN
+    Notes:
+
+27. OKT. 2006:
+    MeanFetchingSpeed:      19.2
+	MeanProcessingSpeed:    29.5
+	NumFinished:		    640
+	NumSlaves:		        23
+	Indexer:		        atria
+	Merger:			        atria
+    Log:			        WARN
+    Notes:
+    
+3. NOV. 2006:
+    MeanFetchingSpeed:      19.8
+	MeanProcessingSpeed:    30.1
+	NumFinished:		    643
+	NumSlaves:		        22
+	Indexer:		        atria
+	Merger:			        atria
+    Log:			        WARN
+    Notes:
+    
