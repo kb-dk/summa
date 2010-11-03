@@ -76,7 +76,7 @@ public class ReaderInputStreamTest extends TestCase {
      * @throws Exception always
      */
     public void testMonkey() throws Exception {
-        System.out.println("Test monkey");
+        //System.out.println("Test monkey");
         final int runs = 5000;
         final int max = 30;
         Random random = new Random(86);
@@ -88,7 +88,7 @@ public class ReaderInputStreamTest extends TestCase {
             }
             assertConvert("Monkey test #" + run, sw.toString());
         }
-        System.out.println("Test monkey end");
+        //System.out.println("Test monkey end");
     }
 
     public void testLength() throws Exception {
@@ -157,7 +157,7 @@ public class ReaderInputStreamTest extends TestCase {
                         actual.length > i ? Byte.toString(actual[i]) : "NA"));
             }
             log.info(sw.toString());
-            System.out.println(sw.toString());
+            //System.out.println(sw.toString());
             // TODO use assert
 
             sw = new StringWriter(100);
