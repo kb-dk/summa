@@ -1,4 +1,32 @@
 ========================
+2010-11-03: Summa 1.6.5
+========================
+
+ * Bugfix: StorageWS re-initialized for each session, putting
+   garbage in perm space, making a lot of external request and
+   generally performed horribly.
+
+ * Bugfix: fixed last modification time for all base, which was
+   wrongly set when a databsase storage was closed an restarted.
+   This is a fix for #109
+
+ * Feature: The FileReader now sets lastModificationTime for files
+   marked as completed
+
+ * Bugfix: fixed memory leak, from not closing connection.
+
+ * Bugfix: fixed summix package, data is now placed in the rigth place.
+
+ * Added filter (StorageValidationFilter) for stopping the ingester
+   chain early, when there is no storage connected.
+
+ * Bugfix: Output from failing main methods is no consistent.
+
+ * Bugfix: Added VisualVm name to summix scripts.
+
+ * Fork mode always in unit test.
+
+========================
 2010-10-11: Summa 1.6.4
 ========================
  * Bugfix: Added Lib to CLASSPATH so that resources can be found
