@@ -15,6 +15,7 @@ export CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 export PRINT_CONFIG=
 export DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
+export NAME=summa-storage
 ###LIBDIRS=
 ###JAVA_HOME=
 #JVM_OPTS="$JVM_OPTS -Dsumma.configuration=$1"
