@@ -29,6 +29,7 @@ DEPLOY=`dirname $0`/..
 #    JVM_OPTS         # Optional arguments to the jvm.
 #    SECURITY_POLICY  # Optional. The value of java.security.policy (path to .policy file)
 #    ENABLE_JMX       # Optional. If set to "true" the JMX_* paramters will be used.
+#    NAME             # Optional. If set the argument visualvm.display.name is set.
 #
 # JMX Options:
 #    JMX_PORT         # Port to run JMX on (integer)
@@ -46,7 +47,6 @@ if [ "$CONFIGURATION" != "" ]; then
     if [ -z "$LOG4J" ]; then
         LOG4J="$(basename $CONFIGURATION .xml).log4j.xml"
     fi
-    
     CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
 else
     CONFIGURATION="-Dsumma.configuration=$DEFAULT_CONFIGURATION"
@@ -122,6 +122,10 @@ if [ "$ENABLE_JMX" == "true" ]; then
     JMX="$JMX_PORT $JMX_SSL $JMX_PASS $JMX_ACCESS";
 fi;
 
+if [ "$NAME" != "" ]; then
+		VISUALVM_NAME="-Dvisualvm.display.name=$NAME"
+fi
+
 SYS_PROPS=""
 if [ -f "$PROPERTIES_FILE" ]; then        
     while read prop; do
@@ -141,7 +145,7 @@ fi
 # of the local computer.
 LOCALRMI="-Djava.rmi.server.hostname=localhost"
 
-COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
+COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -VISUALVM_NAME -cp $CLASSPATH $MAINCLASS"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then
@@ -159,7 +163,7 @@ fi
 
 if [ ! -z "$SYS_PROPS" ]; then
     # We need 'eval' to get system property quoting right
-    eval "exec $JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
+    eval "exec $JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX $VISUALVM_NAME -cp $CLASSPATH $MAINCLASS $@"
 else
     exec $COMMAND "$@"
 fi

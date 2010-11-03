@@ -14,6 +14,7 @@ export MAINCLASS=dk.statsbiblioteket.summa.common.filter.FilterControl
 export CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 export PRINT_CONFIG=
+export NAME=summa-filter
 ###LIBDIRS=
 ###JAVA_HOME=
 #JVM_OPTS="$JVM_OPTS -Dsumma.configuration=$1"
