@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Tests multiple sort-implementations for Lucene for correctness.
@@ -82,6 +83,23 @@ public class MultipassSortComparatorTest extends TestCase {
         String[] expected = Arrays.copyOf(
                 SortHelper.TRICKY_TERMS, SortHelper.TRICKY_TERMS.length);
         SortHelper.nullSort(expected);
+        assertEquals("The returned order should be correct",
+                     Strings.join(expected, ", "), Strings.join(actual, ", "));
+    }
+
+    public void testLuceneSortComparator() throws Exception {
+        List<String> actual = SortHelper.getSortResult(
+                "all:all",
+                SortHelper.BASIC_TERMS, new SortHelper.SortFactory() {
+            @Override
+            Sort getSort(IndexReader reader) throws IOException {
+                return new Sort(new SortField(
+                        SortHelper.SORT_FIELD, new Locale("da")));
+            }
+        });
+        String[] expected = Arrays.copyOf(
+                SortHelper.BASIC_TERMS, SortHelper.BASIC_TERMS.length);
+        Arrays.sort(expected);
         assertEquals("The returned order should be correct",
                      Strings.join(expected, ", "), Strings.join(actual, ", "));
     }
