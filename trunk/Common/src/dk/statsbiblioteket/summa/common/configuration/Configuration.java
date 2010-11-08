@@ -349,8 +349,9 @@ public class Configuration implements Serializable,
             try {
                 return (int) Double.parseDouble(sval);
             } catch (NumberFormatException ee) {
-            throw new IllegalArgumentException("Bad number format for '" + key
-                                               + "': " + e.getMessage());
+                throw new IllegalArgumentException("Bad number format for '"
+                                                   + key + "': " 
+                                                   + e.getMessage(), e);
             }
         }
     }
@@ -408,7 +409,7 @@ public class Configuration implements Serializable,
             } catch (NumberFormatException ee) {
                 throw new IllegalArgumentException("Bad number format for '"
                                                    + key + "': "
-                                                   + e.getMessage());
+                                                   + e.getMessage(), e);
             }
         }
     }
@@ -462,7 +463,7 @@ public class Configuration implements Serializable,
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("The property " + key
                                                + " is not a boolean, but a "
-                                               + val.getClass());
+                                               + val.getClass(), e);
         }
     }
 
@@ -1334,7 +1335,7 @@ public class Configuration implements Serializable,
                 //noinspection DuplicateStringLiteralInspection
                 throw new ConfigurationException("Could not locate "
                                                  + "configuration at '"
-                                                 + confLocation + "'");
+                                                 + confLocation + "'", e);
             } catch (IOException e) {
                 if (log.isTraceEnabled()) {
                     log.debug("Failed loading configuration from "

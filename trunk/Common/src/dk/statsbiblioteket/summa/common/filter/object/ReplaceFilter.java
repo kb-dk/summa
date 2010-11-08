@@ -23,8 +23,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.CircularCharBuffer;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Replaces characters in streams or content. If possible, streams are
@@ -60,6 +61,7 @@ import java.util.regex.Pattern;
         author = "te",
         comment = "JavaDoc needed especially on methods")
 public class ReplaceFilter extends ObjectFilterImpl {
+    /** Logger. */
     private static Log log = LogFactory.getLog(ReplaceFilter.class);
 
     /**
@@ -69,6 +71,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      */
     public static final String CONF_PROCESS_CONTENT =
             "common.replacefilter.process.content";
+    /** Default value for {@link #CONF_PROCESS_CONTENT}. */
     public static final boolean DEFAULT_PROCESS_CONTENT = true;
 
     /**
@@ -78,6 +81,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      */
     public static final String CONF_PROCESS_STREAM =
             "common.replacefilter.process.stream";
+    /** Default value for {@link #CONF_PROCESS_STREAM}. */
     public static final boolean DEFAULT_PROCESS_STREAM = true;
 
     /**
@@ -87,6 +91,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      */
     public static final String CONF_ENCODING_IN =
             "common.replacefilter.encoding.in";
+    /** Default value for {@link #CONF_ENCODING_IN}. */
     public static final String DEFAULT_ENCODING_IN = "utf-8";
 
     /**
@@ -96,6 +101,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      */
     public static final String CONF_ENCODING_OUT =
             "common.replacefilter.encoding.out";
+    /** Default value for {@link #CONF_ENCODING_OUT}. */
     public static final String DEFAULT_ENCODING_OUT = "utf-8";
 
     /**
@@ -167,6 +173,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
     private ReplaceFactory factory =    null;
     private ReplaceReader basicReplacer;
 
+    /**
+     * Constructs a new replace filter, with the specified configuration.
+     * @param conf The configuration to construct this filter.
+     */
     public ReplaceFilter(Configuration conf) {
         super(conf);
         processContent = conf.getBoolean(CONF_PROCESS_CONTENT, processContent);
@@ -193,7 +203,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 log.debug(String.format("%d rules found", ruleConfs.size()));
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException(
-                        "Storage doesn't support sub configurations");
+                        "Storage doesn't support sub configurations", e);
             } catch (NullPointerException e) {
                 throw new ConfigurationException(String.format(
                         "IOException while extracting sub properties for %s",
@@ -252,19 +262,25 @@ public class ReplaceFilter extends ObjectFilterImpl {
         return true;
     }
 
+    /**
+     * Process the payload according to the pattern.
+     * @param payload The payload to process.
+     * @throws PayloadException If error occur with the processing.
+     */
     private void processPattern(Payload payload) throws PayloadException {
+        final int bufferSize = 1000;
         if (payload.getStream() != null) {
             log.debug("Copying Stream content into memory in order to perform "
                       + "Pattern replacement");
             CircularCharBuffer cb =
-                    new CircularCharBuffer(1000, Integer.MAX_VALUE);
+                    new CircularCharBuffer(bufferSize, Integer.MAX_VALUE);
             Reader in;
             try {
                 in = new InputStreamReader(payload.getStream(), encodingIn);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
                         "The encoding '%s' for the InputStream is not supported"
-                        + " on this platform", encodingIn));
+                        + " on this platform", encodingIn), e);
             }
             try {
                 int c;
@@ -273,7 +289,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 }
             } catch (IOException e) {
                 throw new PayloadException(
-                        "Unable to read character from Stream", payload);
+                        "Unable to read character from Stream", e, payload);
             }
             String result = pattern.matcher(cb).replaceAll(patternReplacement);
             //noinspection UnusedAssignment
@@ -307,7 +323,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
                         "Encoding '%s' not supported for reading content",
-                        encodingIn));
+                        encodingIn), e);
             }
             try {
                 payload.getRecord().setContent(
@@ -315,11 +331,16 @@ public class ReplaceFilter extends ObjectFilterImpl {
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
                         "Encoding '%s' not supported for storing content",
-                        encodingOut));
+                        encodingOut), e);
             }
         }
     }
 
+    /**
+     * Factory process for a given payload.
+     * @param payload The payload.
+     * @throws UnsupportedEncodingException If the encoding is unsupported.
+     */
     private void processFactory(Payload payload) throws
                                                  UnsupportedEncodingException {
         if (payload.getStream() != null) {
