@@ -15,12 +15,12 @@
 package dk.statsbiblioteket.summa.control.client;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
-import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ClientException;
@@ -43,20 +43,21 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-import java.rmi.server.UnicastRemoteObject;
 import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>Core class for running ClientManager clients.</p>
@@ -69,7 +70,9 @@ import java.util.List;
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
 public class Client extends UnicastRemoteObject implements ClientMBean {
+    /** The serial version UID. */
     private static final long serialVersionUID = 68791684985L;
+    /** Logger instance. */
     private static Log log = LogFactory.getLog(Client.class);
 
     /** Extension to use for old packages, used for rollback purposes.
@@ -132,7 +135,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * The various RMI properties needed are read from the {@link Configuration}
      * as defined in {@link ClientConnection}.
      * @param conf The configuration from which to extract RMI  properties.
-     * @throws RemoteException If there is an error exposing the RMI service.
+     * @throws IOException If there is an error exposing the RMI service.
      */
     public Client(Configuration conf) throws IOException {
         super (getServicePort (conf));
@@ -966,7 +969,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         if (id == null) {
-            throw new NullPointerException("id is null");
+            throw new NullPointerException("ID is null");
         }
 
         if (!serviceMan.knows(id)) {
@@ -988,20 +991,19 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 String tmpId = s.getId();
 
                 if (!id.equals(tmpId)) {
-                    log.warn ("Service '" + id + "' reports id '" + tmpId + "'");
+                    log.warn("Service '" + id + "' reports id '" + tmpId + "'");
                     throw new InvalidServiceStateException(this, id,
                                                    "getServiceConnection",
                                                    "service reports unexpected "
                                                     + "id '" + tmpId + "'");
                 }
-
                 log.trace ("Connection to '" + id + "' good");                
             } catch (Exception e) {
                 // Something is bad. Mark the connection broken wait a bit,
                 // and try to establish a new connection
-                log.info ("Connection to '" + id + "' broken: "
+                log.info("Connection to '" + id + "' broken: "
                            + e.getMessage());
-                log.debug (e);
+                log.debug(e, e);
 
                 serviceMan.reportError(connCtx, e);
 
@@ -1011,17 +1013,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                     log.debug ("Interrupted while waiting for grace time of "
                                + "'" + id + "' to expire");
                     throw new InvalidServiceStateException(this, id,
-                                                   "getServiceConnection",
-                                                   "Connection to service broken"
-                                                   + " interrupedt while waiting"
-                                                   + " for new connection");
+                                                  "getServiceConnection",
+                                                  "Connection to service broken"
+                                                  + " interrupedt while waiting"
+                                                  + " for new connection");
                 }
 
                 // Retry connection
                 log.debug ("Retrying connection to '" + id + "'");
                 return getServiceConnection(id, numRetries + 1);
             }
-
             return s;
         }
     }

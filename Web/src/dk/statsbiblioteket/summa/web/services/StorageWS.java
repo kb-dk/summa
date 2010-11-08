@@ -25,8 +25,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,39 +69,32 @@ public class StorageWS {
      */
     public static final String QUERYTIME = "querytime";
 
-    static ArrayBlockingQueue<MarcMultiVolumeMerger> mergers;
+    /** Marc multi volume mergers. */
+    LinkedList<MarcMultiVolumeMerger> mergers;
 
+    /** Number of merges. */
     private static final int numMergers = 10;
 
+    /** Storage reader client. */
     static StorageReaderClient storage;
-    static Configuration conf;
+    /** The configuration. */
+    Configuration conf;
     /**
      * XML output factory, used for creating output stream when responding with
      * multiple records.
      */
     private XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+    /** True if content should be escaped. */
     static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
 
     /**
      * Constructor for Storage WebService.
      */
     public StorageWS() {
-        synchronized (this.getClass()) {
-            if (mergers != null) {
-                return;
-            }
-            log.info("Creating " + numMergers + " multi volume mergers");
-            mergers = new ArrayBlockingQueue<MarcMultiVolumeMerger>(10);
-            for(int i=0; i<numMergers; i++) {
-                try {
-                    mergers.put(new MarcMultiVolumeMerger(getConfiguration()));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(
-                        "Interrupted while trying to add MarcMultiVolumeMergers"
-                        + " to the queue", e);
-                }
-            }
-       }
+        mergers = new LinkedList<MarcMultiVolumeMerger>();
+        for (int i = 0; i < numMergers; i++) {
+            mergers.add(i, new MarcMultiVolumeMerger(getConfiguration()));
+        }
     }
 
     /**
@@ -207,7 +200,8 @@ public class StorageWS {
      * @return List of Records specified by the given list of id's.
      */
     private String realGetRecords(List<String> ids) {
-        StringWriter sw = new StringWriter(5000);
+        final int buffer = 5000;
+        StringWriter sw = new StringWriter(buffer);
         long startTime, time = 0;
         String retXML;
         XMLStreamWriter writer;
@@ -236,7 +230,7 @@ public class StorageWS {
             retXML = sw.toString();
         } catch(IOException e) {
             log.error("Error getting #" + ids.size() + " records from "
-                    + "storage. Error was: " + e);
+                    + "storage. Error was: ", e);
             retXML = null;
         } catch(XMLStreamException e) {
             log.error("Error converting records to XML");
@@ -310,23 +304,11 @@ public class StorageWS {
         return retXML;
     }
 
-    private MarcMultiVolumeMerger getMerger() {
-        try {
-            return mergers.take();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(
-                "Interrupted while trying to retrieve a MarcMultiVolumeMerger"
-                + " from the queue", e);
-        }
+    private synchronized MarcMultiVolumeMerger getMerger() {
+        return mergers.removeFirst();
     }
 
     private synchronized void releaseMerger(MarcMultiVolumeMerger m) {
-        try {
-            mergers.put(m);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(
-                "Interrupted while trying to add a MarcMultiVolumeMerger"
-                + " to the queue", e);
-        }
+        mergers.add(m);
     }
 }
