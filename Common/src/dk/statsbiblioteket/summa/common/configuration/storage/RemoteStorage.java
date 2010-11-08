@@ -14,23 +14,23 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.rmi.RemoteException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.rmi.AccessException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
-import java.rmi.AccessException;
-import java.rmi.server.UnicastRemoteObject;
-import java.rmi.registry.Registry;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.io.Serializable;
-import java.io.IOException;
-import java.util.Map;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.List;
-import java.net.MalformedURLException;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,8 +58,15 @@ import org.apache.commons.logging.LogFactory;
         comment = "Some method-documentations misses parts")
 public class RemoteStorage extends UnicastRemoteObject implements
                                                        RemoteStorageMBean {
+    /** The serial version UID. */
     public static final long serialVersionUID = 34581040194821L;
+    /** Logger. */
     private final Log log = LogFactory.getLog(RemoteStorage.class);
+
+    /** Default value for {@link RemoteStorageMBean#CONF_NAME}. */
+    private static final int DEFAULT_PORT = 27007;
+    /** Default value for {@link RemoteStorageMBean#CONF_REGISTRY_PORT}. */
+    private static final int DEFAULT_REGISTRY_PORT = 27000;
 
     private String serviceName, registryHost;
     private int servicePort, registryPort;
@@ -72,7 +79,7 @@ public class RemoteStorage extends UnicastRemoteObject implements
      *
      * FIXME: Should we export a JMX iface as well?
      *
-     * @param conf the configuration to read the rmi configuration from and
+     * @param conf the configuration to read the RMI configuration from and
      *                         expose remotely as well.
      * @throws RemoteException if there is an error exporting the interface
      */
@@ -81,8 +88,8 @@ public class RemoteStorage extends UnicastRemoteObject implements
         this.conf = conf;
         storage = conf.getStorage();
         serviceName = conf.getString(CONF_NAME, "configurationStorage");
-        servicePort = conf.getInt (CONF_PORT, 27007);
-        registryPort = conf.getInt (CONF_REGISTRY_PORT, 27000);
+        servicePort = conf.getInt (CONF_PORT, DEFAULT_PORT);
+        registryPort = conf.getInt (CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
         registryHost = conf.getString (CONF_REGISTRY_HOST, "localhost");
 
         exportRMIInterface();
@@ -110,6 +117,10 @@ public class RemoteStorage extends UnicastRemoteObject implements
         return (ConfigurationStorage) Naming.lookup (rmiPath);
     }
 
+    /**
+     * Return the service URL.
+     * @return The service URL.
+     */
     public String getServiceUrl () {
         return "//" + registryHost + ":" + registryPort + "/" + serviceName;
     }
@@ -163,55 +174,63 @@ public class RemoteStorage extends UnicastRemoteObject implements
                  + servicePort);                 
     }
 
+    @Override
     public void put(String key, Serializable value) throws RemoteException {
         try {
-            storage.put (key, value);
+            storage.put(key, value);
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException(e.toString(), e);
         }
     }
 
+    @Override
     public Serializable get(String key) throws RemoteException {
         try {
-            return storage.get (key);
+            return storage.get(key);
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException(e.toString(), e);
         }
     }
 
-    public Iterator<Map.Entry<String, Serializable>> iterator() throws RemoteException {
+    @Override
+    public Iterator<Map.Entry<String, Serializable>> iterator()
+                                                        throws RemoteException {
         try {
             return storage.iterator();
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException (e.toString(), e);
         }
     }
 
-    public void purge (String key) throws RemoteException {
+    @Override
+    public void purge(String key) throws RemoteException {
         try {
             storage.purge(key);
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException(e.toString(), e);
         }
     }
 
-    public int size () throws RemoteException {
+    @Override
+    public int size() throws RemoteException {
         try {
             return storage.size();
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException(e.toString(), e);
         }
     }
 
+    @Override
     public boolean supportsSubStorage() throws RemoteException {
         try {
             return storage.supportsSubStorage();
         } catch (IOException e) {
-            throw new RemoteException(e.toString());
+            throw new RemoteException(e.toString(), e);
         }
     }
 
     // TODO: Can we return a RemoteStorage here?
+    @Override
     public ConfigurationStorage createSubStorage(String key) throws
                                                           RemoteException {
         try {
@@ -222,6 +241,7 @@ public class RemoteStorage extends UnicastRemoteObject implements
     }
 
     // TODO: Can we return a RemoteStorage here?
+    @Override
     public ConfigurationStorage getSubStorage(String key) throws
                                                           RemoteException {
         try {
@@ -231,6 +251,7 @@ public class RemoteStorage extends UnicastRemoteObject implements
         }
     }
 
+    @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                         throws RemoteException {
         try {
@@ -240,6 +261,7 @@ public class RemoteStorage extends UnicastRemoteObject implements
         }
     }
 
+    @Override
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                RemoteException {
         try {
@@ -249,6 +271,11 @@ public class RemoteStorage extends UnicastRemoteObject implements
         }
     }
 
+    /**
+     * Return a dump of the configuration.
+     * @return A dump of the configuration.
+     */
+    @Override
     public String[] getConfigDump() {
         return conf.dump();
     }
@@ -264,9 +291,8 @@ public class RemoteStorage extends UnicastRemoteObject implements
      * @param args You must pass two integer arguments on the command line,
      *             namely {@code registryPort} and {@code servicePort} in that
      *             order.
-     * @throws Exception if there is an error setting up the remote interface
      */
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         System.out.println("Starting configuration server");
 
         Configuration conf = Configuration.getSystemConfiguration();
@@ -282,10 +308,5 @@ public class RemoteStorage extends UnicastRemoteObject implements
             t.printStackTrace();
             System.exit(1);
         }
-
     }
 }
-
-
-
-
