@@ -219,12 +219,14 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         "summa.storage.recordreader.expansionheight";
     /** Default value for {@link #CONF_EXPANSION_HEIGHT}. */
     public static final int DEFAULT_EXPANSION_HEIGHT = 100;
-
-
+    
+    /** The readable storage. */
     @SuppressWarnings({"FieldCanBeLocal"})
     private ReadableStorage storage;
+    /** The base. */
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
+    /** The progress tracker. */
     private ProgressTracker progressTracker;
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
@@ -235,11 +237,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
 
+    /** The storage watcher used to check for changes. */
     private StorageWatcher storageWatcher;
+    /** True if end of file is reached. */
     private boolean eofReached = false;
+    /** Number of read records. */
     private long recordCounter = 0;
+    /** Start time for this record reader instance. */
     private long startTime = System.currentTimeMillis();
+    /** Time stamp for last processed record. */
     private long lastRecordTimestamp;
+    /** Time stamp for last iterator update. */
     private long lastIteratorUpdate;
     /** Record iterator. */
     private Iterator<Record> recordIterator = null;
