@@ -56,7 +56,7 @@ public class Configuration implements Serializable,
     /**
      * Fail-fast check for Java version.
      */
-    //private static transient String version = Environment.checkJavaVersion();
+    private static transient String version = Environment.checkJavaVersion();
 
     private ConfigurationStorage storage;
 
