@@ -24,17 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParserConstants;
 import org.apache.lucene.queryParser.Token;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.NumericRangeQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.search.*;
 
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -186,6 +176,7 @@ public class SummaQueryParser {
         parser = new DisjunctionQueryParser(descriptor);
     }
 
+    private final static Query MATCH_ALL = new MatchAllDocsQuery();
     /**
      * Parse the given String and return a Lucene Query from it.
      * </p><p>
@@ -195,6 +186,13 @@ public class SummaQueryParser {
      * @throws ParseException if the query could not be parsed.
      */
     public synchronized Query parse(String queryString) throws ParseException {
+        if (queryString == null || "".equals(queryString) ||
+            "*".equals(queryString)|| "(*)".equals(queryString)) {
+            log.debug(
+                "Received '" + queryString + "', returning MatchAllQuery");
+            return MATCH_ALL;
+        }
+
         long startTime = System.nanoTime();
         String boosts = null;
         if (supportQueryTimeBoosts) {

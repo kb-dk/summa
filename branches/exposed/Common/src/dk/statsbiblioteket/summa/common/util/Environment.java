@@ -162,7 +162,7 @@ public class Environment {
                     + "indexes. The current Java runtime version is "
                     + version);
         }
-        log.debug("Java runtime version is " + version + ". All OK");
+        log.info("Java runtime version is " + version + ". All OK");
         return version;
     }
     private static Pattern VERSION_PATTERN = Pattern.compile(

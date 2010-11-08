@@ -56,7 +56,7 @@ public class Configuration implements Serializable,
     /**
      * Fail-fast check for Java version.
      */
-    private static transient String version = Environment.checkJavaVersion();
+    private static transient String version = null;
 
     private ConfigurationStorage storage;
 
@@ -112,6 +112,7 @@ public class Configuration implements Serializable,
      * @param storage The storage backend to use.
      */
     public Configuration(ConfigurationStorage storage) {
+        checkVersion();
         this.storage = storage;
     }
 
@@ -122,6 +123,7 @@ public class Configuration implements Serializable,
      * @param conf The {@code Configuration} to share storage with.
      */
     public Configuration(Configuration conf) {
+        checkVersion();
         storage = conf.getStorage();
     }
 
@@ -146,6 +148,7 @@ public class Configuration implements Serializable,
      */
     @SuppressWarnings("unchecked")   // to cast arg to List<String>
     public static Configuration newMemoryBased(Serializable... args) {
+        checkVersion();
         if (args.length % 2 != 0) {
             throw new IllegalArgumentException("Odd number of arguments. "
                                              + "Arguments should be key-value "
@@ -170,6 +173,16 @@ public class Configuration implements Serializable,
 
         }
         return conf;
+    }
+
+    /**
+     * We use this instead of a class loader based check to be sure that log4j
+     * is ready.
+     */
+    private static void checkVersion() {
+        if (version == null) {
+            version = Environment.checkJavaVersion();
+        }
     }
 
     /**

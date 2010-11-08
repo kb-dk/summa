@@ -49,6 +49,14 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface IndexKeys {
 
     /**
+     * The query used for limiting the index lookup result. If no query is
+     * stated, all terms in the field will be used.
+     * </p><p>
+     * Optional. Default is not defined (all terms).
+     */
+    public static final String SEARCH_INDEX_QUERY = "search.index.query";
+
+    /**
      * The conceptual field to perform a lookup on. As this is mapped directly
      * to a facet, the facet must be specified in the IndexDescriptor.
      * </p><p>

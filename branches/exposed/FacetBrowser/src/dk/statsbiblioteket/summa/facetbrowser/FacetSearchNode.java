@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest;
+import dk.statsbiblioteket.summa.facetbrowser.browse.IndexLookup;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -94,6 +95,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     private Configuration conf;
     private Structure structure = null;
 
+    private IndexLookup indexLookup;
+
     /**
      * The structure and facetMaps are updated upon open, depending on setup.
      * A lock is needed to ensure consistency.
@@ -125,6 +128,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             Structure structure = new Structure(conf);
             initStructures(structure);
         }
+        indexLookup = new IndexLookup(conf);
         log.trace("FacetSearchNode constructed. Awaiting open");
     }
 
@@ -166,6 +170,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 "Facets after updateDescription(%s): %s",
                 location, Strings.join(structure.getFacetNames(), ", ")));
         }
+        indexLookup.updateDescriptor(location);
     }
 
     private void initStructures(Structure newStructure) throws RemoteException {
@@ -212,9 +217,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         throws RemoteException {
         long startTime = System.currentTimeMillis();
 
+        indexLookup.lookup(request, responses);
+
         Map<String, Object> shared = responses.getTransient();
         String query = null;
-        DocIDCollector collectedIDs = null;
+        DocIDCollector collectedIDs;
         if (!shared.containsKey(DocumentSearcher.DOCIDS)) {
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.warn("There were neither '" + DocumentSearcher.DOCIDS
@@ -264,7 +271,17 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
       org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
             constructFacetRequest(request, query);
 
-        TagCollector tagCollector = collect(facetRequest, query, collectedIDs);
+        CollectorPool collectorPool;
+        try {
+            collectorPool = poolFactory.acquire(
+                searcher.getIndexReader(), facetRequest);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to acquire a CollectorPool for " + facetRequest, e);
+        }
+        TagCollector tagCollector = collectorPool.acquire(query);
+
+        collect(tagCollector, facetRequest, query, collectedIDs);
         FacetResponse facetResponse;
         try {
             facetResponse = tagCollector.extractResult(facetRequest);
@@ -272,8 +289,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             throw new RuntimeException(
                 "Unable to extract response from TagCollector", e);
         }
-
-//        indexLookup.lookup(request, responses, facetMap.getTagHandler());
+        collectorPool.release(query, tagCollector);
 
         responses.add(newResponseToOldResult(facetResponse, request));
         if (log.isDebugEnabled()) {
@@ -289,6 +305,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                           + (System.currentTimeMillis() - startTime));
             }
         }
+
     }
 
     // Not hierarchical
@@ -311,18 +328,9 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         return oldResult;
     }
 
-    private TagCollector collect(
+    private void collect(TagCollector tagCollector,
        org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest,
        String query, DocIDCollector collectedIDs) {
-        IndexReader reader = searcher.getIndexReader();
-        CollectorPool collectorPool;
-        try {
-            collectorPool = poolFactory.acquire(reader, facetRequest);
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "Unable to acquire a CollectorPool for " + facetRequest, e);
-        }
-        TagCollector tagCollector = collectorPool.acquire(query);
         if (tagCollector.getQuery() == null) {
             log.trace("No cached tag collector. Performing collection");
             long collectTime = -System.currentTimeMillis();
@@ -358,7 +366,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             log.debug("Previously filled tag collector was found for query '"
                       + query + ". Skipping tag collection");
         }
-        return tagCollector;
     }
 
     private org.apache.lucene.search.exposed.facet.request.FacetRequest

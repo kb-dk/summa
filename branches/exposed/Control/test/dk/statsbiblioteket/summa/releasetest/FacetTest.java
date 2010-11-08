@@ -19,9 +19,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -169,6 +171,40 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
+
+    public void testIndexLookup() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+        assertTrue("The fagref Hans should exist in storage",
+                   hansRecord != null);
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+
+        Request request = new Request();
+//        request.put(DocumentKeys.SEARCH_QUERY, "*");
+        request.put(IndexKeys.SEARCH_INDEX_QUERY, "*");
+        request.put(IndexKeys.SEARCH_INDEX_FIELD, "author_person");
+        request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
+        ResponseCollection responses = searcher.search(request);
+        assertTrue("The index lookup should return at least one term",
+                   responses.toXML().contains(
+                       "<term count=\"1\">Hans Jensen</term>"));
+        System.out.println(responses.toXML());
+
+        // TODO: IndexDescriptor-load?
+        searcher.close();
+        storage.close();
+    }
+
 
     public static  void verifyFacetResult(SummaSearcher searcher,
                                           String query) throws IOException {

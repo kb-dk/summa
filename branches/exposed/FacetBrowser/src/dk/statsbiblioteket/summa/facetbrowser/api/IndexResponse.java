@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -46,6 +47,7 @@ public class IndexResponse implements Response {
     public static final String NAME = "IndexResponse";
 
     // Taken directly from {@link IndexKeys}.
+    private String query;
     private String field;
     private String term;
     private boolean caseSensitive;
@@ -56,20 +58,22 @@ public class IndexResponse implements Response {
     private Locale sortLocale;
 
     // Sorting
-    private transient Comparator<String> sorter;
+    private transient Comparator<Pair<String, Integer>> sorter;
 
-    private ArrayList<String> index;
+    private ArrayList<Pair<String, Integer>> index;
 
-    public IndexResponse(String field, String term, boolean caseSensitive,
+    public IndexResponse(String query, String field, String term,
+                         boolean caseSensitive,
                          int delta, int length, Locale sortLocale) {
         log.debug("Creating index response " + field + ":" + term);
+        this.query = query;
         this.field = field;
         this.term = term;
         this.caseSensitive = caseSensitive;
         this.delta = delta;
         this.length = length;
         this.sortLocale = sortLocale;
-        index = new ArrayList<String>(length);
+        index = new ArrayList<Pair<String, Integer>>(length);
     }
 
     /**
@@ -79,9 +83,10 @@ public class IndexResponse implements Response {
      * </p><p>
      * Note that a cleanup will be performed when {@link #toXML()} is called,
      * so the order and exact number of terms added is not significant.
-     * @param term the term to add to the index.
+     * @param term the term to add to the index (a pir of String an occurrence
+     *        count.
      */
-    public void addTerm(String term) {
+    public void addTerm(Pair<String, Integer> term) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "Adding term '%s' to field '%s'", term, field));
@@ -89,6 +94,7 @@ public class IndexResponse implements Response {
         index.add(term);
     }
 
+    @Override
     public String getName() {
         return NAME;
     }
@@ -97,7 +103,7 @@ public class IndexResponse implements Response {
      * Used exclusively for merging.
      * @return the index of terms.
      */
-    ArrayList<String> getIndex() {
+    ArrayList<Pair<String, Integer>> getIndex() {
         return index;
     }
 
@@ -105,6 +111,7 @@ public class IndexResponse implements Response {
      * Merge the other SearchResult into this result.
      * @param other the index lookup result that should be merged into this.
      */
+    @Override
     public void merge(Response other) {
         log.trace("Index-lookup merge called");
         if (!(other instanceof IndexResponse)) {
@@ -113,11 +120,20 @@ public class IndexResponse implements Response {
                     getClass().toString(), other.getClass().toString()));
         }
         IndexResponse indexResponse = (IndexResponse)other;
-        index.addAll(indexResponse.getIndex());
+        outer:
+        for (Pair<String, Integer> oPair: indexResponse.getIndex()) {
+            for (Pair<String, Integer> tPair: getIndex()) {
+                if (oPair.getKey().equals(tPair.getKey())) {
+                    tPair.setValue(tPair.getValue() + oPair.getValue());
+                    continue outer;
+                }
+            }
+            getIndex().add(oPair);
+        }
     }
 
-    private static class SensitiveComparator implements Comparator<String>,
-                                                        Serializable {
+    private static class SensitiveComparator implements
+                               Comparator<Pair<String, Integer>>, Serializable {
         private static final long serialVersionUID = 798341696165L;
         private Collator collator = null;
         public SensitiveComparator(Collator collator) {
@@ -125,14 +141,15 @@ public class IndexResponse implements Response {
         }
         public SensitiveComparator() { }
 
-        public int compare(String o1, String o2) {
+        @Override
+        public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
             return collator == null ?
-                   o1.compareTo(o2) :
-                   collator.compare(o1, o2);
+                   o1.getKey().compareTo(o2.getKey()) :
+                   collator.compare(o1.getKey(), o2.getKey());
         }
     }
-    private static class InSensitiveComparator implements Comparator<String>,
-                                                          Serializable {
+    private static class InSensitiveComparator implements
+                               Comparator<Pair<String, Integer>>, Serializable {
         private static final long serialVersionUID = 7984368165L;
         private Collator collator = null;
         public InSensitiveComparator(Collator collator) {
@@ -140,10 +157,12 @@ public class IndexResponse implements Response {
         }
         public InSensitiveComparator() { }
 
-        public int compare(String o1, String o2) {
+        @Override
+        public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
             return collator == null ?
-                   o1.compareToIgnoreCase(o2) :
-                   collator.compare(o1.toLowerCase(), o2.toLowerCase());
+                   o1.getKey().compareToIgnoreCase(o2.getKey()) :
+                   collator.compare(o1.getKey().toLowerCase(),
+                                    o2.getKey().toLowerCase());
         }
     }
 
@@ -168,12 +187,13 @@ public class IndexResponse implements Response {
         }
         Collections.sort(index, sorter);
         int start = Math.max(0, getOrigo() + delta);
-        index = new ArrayList<String>(index.subList(
+        index = new ArrayList<Pair<String, Integer>>(index.subList(
                 start, Math.min(index.size(), start + length)));
     }
 
     private int getOrigo() {
-        int origo = Collections.binarySearch(index, term, sorter);
+        int origo = Collections.binarySearch(
+            index, new Pair<String, Integer>(term, 0), sorter);
         return origo < 0 ? (origo + 1) * -1 : origo;
     }
 
@@ -193,6 +213,7 @@ public class IndexResponse implements Response {
        }
      * @return the search-result as XML, suitable for web-services et al.
      */
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String toXML() {
         log.trace("toXML() called");
@@ -207,6 +228,7 @@ public class IndexResponse implements Response {
 //            xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("indexresponse");
+            xmlOut.writeAttribute("query", query);
             xmlOut.writeAttribute("field", field);
             xmlOut.writeAttribute("term", term);
             xmlOut.writeAttribute(
@@ -218,9 +240,11 @@ public class IndexResponse implements Response {
 
             xmlOut.writeStartElement("index");
             xmlOut.writeCharacters("\n");
-            for (String term: index) {
+            for (Pair<String, Integer> term: index) {
                 xmlOut.writeStartElement("term");
-                xmlOut.writeCharacters(term);
+                xmlOut.writeAttribute(
+                    "count", Integer.toString(term.getValue()));
+                xmlOut.writeCharacters(term.getKey());
                 xmlOut.writeEndElement();
                 xmlOut.writeCharacters("\n");
             }

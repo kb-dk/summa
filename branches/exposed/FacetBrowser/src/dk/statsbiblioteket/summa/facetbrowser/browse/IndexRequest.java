@@ -21,6 +21,8 @@ import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.util.Locale;
+
 /**
  * Representation of a request for an index lookup.
  * </p><p>
@@ -76,11 +78,13 @@ public class IndexRequest {
     public static final int DEFAULT_INDEX_LENGTHLIMIT = 10000;
 
     // Taken directly from {@link IndexKeys}.
+    private String query = null;
     private String field = null;
     private String term = null;
     private boolean caseSensitive = DEFAULT_INDEX_CASE_SENSITIVE;
     private int delta = DEFAULT_INDEX_DELTA;
     private int length = DEFAULT_INDEX_LENGTH;
+    private Locale locale = null;
 
     private int lengthLimit = DEFAULT_INDEX_LENGTHLIMIT;
     private boolean valid = false;
@@ -103,8 +107,9 @@ public class IndexRequest {
                 caseSensitive, delta, length, lengthLimit));
     }
 
-    IndexRequest(String field, String term,
+    IndexRequest(String query, String field, String term,
                  boolean caseSensitive, int delta, int length) {
+        this.query = query;
         this.field = field;
         this.term = term;
         this.caseSensitive = caseSensitive;
@@ -131,6 +136,7 @@ public class IndexRequest {
      */
     public IndexRequest createRequest(Request request) {
         log.trace("createRequest called");
+        String query = request.getString(IndexKeys.SEARCH_INDEX_QUERY, null);
         String field;
         String term;
         if ((field = request.getString(IndexKeys.SEARCH_INDEX_FIELD, null)) ==
@@ -144,7 +150,7 @@ public class IndexRequest {
             term = "";
         }
         return new IndexRequest(
-                field, term,
+                query, field, term,
                 request.getBoolean(
                         IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, caseSensitive),
                 request.getInt(IndexKeys.SEARCH_INDEX_DELTA, delta),
@@ -161,7 +167,23 @@ public class IndexRequest {
         }
     }
 
+    @Override
+    public String toString() {
+        return "IndexRequest(query='" + query + "', field=" + field + ", term='"
+               + term + "', locale=" + locale + ", delta=" + delta + ", length="
+               + length + ")";
+    }
+
+    // temporary hack to merge new exposed with old Summa
+    public void setLocale(Locale locale) {
+        this.locale = locale;
+    }
+
     /* Getters */
+
+    public String getQuery() {
+        return query;
+    }
     public String getField() {
         checkValid();
         return field;
@@ -178,6 +200,10 @@ public class IndexRequest {
     }
     public int getLength() {
         return length;
+    }
+
+    public Locale getLocale() {
+        return locale;
     }
 }
 
