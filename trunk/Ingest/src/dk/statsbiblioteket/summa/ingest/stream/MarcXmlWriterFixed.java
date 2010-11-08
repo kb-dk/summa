@@ -78,7 +78,7 @@ public class MarcXmlWriterFixed implements MarcWriter {
      */
     private String encoding = "UTF8";
 
-    /** Charecter converter. */
+    /** Charecter converter. */ 
     private CharConverter converter = null;
 
     /** True if XMl should be normalized. */
