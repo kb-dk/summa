@@ -52,7 +52,7 @@
         doDidYouMean = true;
     }
 
-    if(request.getParameter("reverse") != null) {
+    if("on".equals(request.getParameter("reverse"))) {
         reverseSort = true;
     }
 
@@ -122,6 +122,11 @@
             }
             if (sort != null) {
                 search_prop.put("sort", sort);
+            }
+            if (reverseSort) {
+                search_prop.put("reverse", "on");
+            } else {
+                search_prop.put("reverse", "off");
             }
             search_prop.put("per_page", per_page);
             search_prop.put("current_page", current_page);
