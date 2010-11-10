@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  Log4j Configuration                                                  -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<!-- $Id: log4j.xml,v 1.5 2007/02/05 14:55:37 hal Exp $ -->
+
+<!--
+   | For more configuration infromation and examples see the Jakarta Log4j
+   | owebsite: http://jakarta.apache.org/log4j
+ -->
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+    <!-- ================================= -->
+    <!--         Send to logfile           -->
+    <!-- ================================= -->
+
+
+
+    <!-- A time/date based rolling appender -->
+
+    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="INFO"/><!-- or DEBUG or INFO -->
+        <param name="File" value="/home/summa/log/storage_logfile.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="10MB"/>
+        <param name="MaxBackupIndex" value="3"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+
+    <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
+    <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="FATAL"/>
+        <param name="File" value="/home/summa/log/storage_fatal.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="1MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+     <!-- use the async wrapper on logging
+     <appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
+        <appender-ref ref="FILE"/>
+    </appender>  -->
+
+    <!-- ControlLucene -->
+    <logger name="dk.statsbiblioteket.summa.storage.lucene.ControlLucene">
+        <level value="WARN"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- LuceneStorageServer -->
+    <logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneStorageServer">
+        <level value="WARN"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- LuceneTestClient -->
+    <logger name="dk.statsbiblioteket.summa.storage.lucene.LuceneTestClient">
+        <level value="WARN"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- util.schedule -->
+    <logger name="dk.statsbiblioteket.util.schedule">
+       <level value="WARN"/>
+       <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.storage.database">
+        <level value="INFO" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
+    <root>
+        <level value="FATAL" />
+        <appender-ref ref="FULL_LOG" />
+    </root>
+
+</log4j:configuration>
+
+
