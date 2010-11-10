@@ -22,6 +22,7 @@
     String form_query = "";
     String form_sort = "";
     boolean doDidYouMean = false;
+    boolean reverseSort = false;
 
     String query = request.getParameter("query");
     if ("".equals(query)) {
@@ -49,6 +50,10 @@
 
     if(request.getParameter("dodidyoumean") != null) {
         doDidYouMean = true;
+    }
+
+    if(request.getParameter("reverse") != null) {
+        reverseSort = true;
     }
 
 
@@ -83,7 +88,7 @@
 
         String xml_search_result = (String)services.execute(
                 "summafiltersearchsorted", filter, query,
-                per_page, current_page * per_page, sort, false);
+                per_page, current_page * per_page, sort, reverseSort);
 
         if (xml_search_result == null) {
             search_html = "Error executing query";
@@ -228,7 +233,12 @@
                 Filter sorted search<br />
                 <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
                 <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
-                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" /><br />
+                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
+                <% if (reverseSort) { %>
+                  <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse" checked="checked" /><br />
+                <% } else { %>
+                  <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse"  /><br />
+                <% } %>
                 <label for="dodidyoumean">Do Didyoumean Search:</label> <input type="checkbox" name="dodidyoumean" id="dodidyoumean" /><br />
                 <input type="submit" value="Search" />
                 <input type="hidden" name="userfiltersortsearch" value="true" />
