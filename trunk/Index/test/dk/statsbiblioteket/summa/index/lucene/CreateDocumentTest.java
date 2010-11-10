@@ -14,48 +14,64 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.XMLTransformerTest;
 import dk.statsbiblioteket.util.Streams;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class CreateDocumentTest extends TestCase implements ObjectFilter {
+    /** Logger. */
     private static Log log = LogFactory.getLog(CreateDocumentTest.class);
 
+    /**
+     * Constructor.
+     * @param name The name.
+     */
     public CreateDocumentTest(String name) {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
 
+    /**
+     * Return this test class.
+     * @return This test class.
+     */
     public static Test suite() {
         return new TestSuite(CreateDocumentTest.class);
     }
 
+    /** Gurli test document. */
     private static final String GURLI = "data/fagref/gurli.margrethe.xml";
+    /** Hans test document. */
     private static final String HANS = "data/fagref/hans.jensen.xml";
+    /** Jens test document. */
     private static final String JENS = "data/fagref/jens.hansen.xml";
 
     public void testProcesspayload() throws Exception {
@@ -99,6 +115,11 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
     // TODO: Test close(true/false), EOF et al.
 
     private List<Payload> payloads = new ArrayList<Payload>(10);
+    /**
+     * Initialize the content.
+     * @param xmlFiles XML content files.
+     * @throws Exception If error.
+     */
     private void initcontent(String... xmlFiles) throws Exception {
         payloads.clear();
         for (String xmlFile: xmlFiles) {
@@ -112,12 +133,19 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
     }
 
     /* ObjectFilter implementation */
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean hasNext() {
         log.debug("payloads.size() = " + payloads.size());
         return payloads.size() > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Payload next() {
         if (!hasNext()) {
             throw new IndexOutOfBoundsException("No more payloads");
@@ -125,23 +153,35 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         return payloads.remove(0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void remove() {
         // Nada
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setSource(Filter filter) {
         throw new IllegalAccessError("Not defined");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean pump() throws IOException {
         return hasNext() && next() != null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void close(boolean success) {
         payloads.clear();
     }
 }
-
-
-
-

@@ -26,14 +26,11 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -41,10 +38,16 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -196,14 +199,14 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         ObjectFilter stream = new StreamingDocumentCreator(conf);
 
         log.info("Performing warm up");
-        for (int i = 0 ; i < WARM ; i++) {
+        for (int i = 0; i < WARM; i++) {
             speed(dom, SUBRUNS);
             speed(stream, SUBRUNS);
         }
 
         log.info("\nNumbers are transformation/s");
         log.info("DOM\tStream");
-        for (int i = 0 ; i < RUNS ; i++) {
+        for (int i = 0; i < RUNS; i++) {
             log.info(speed(dom, SUBRUNS) + "\t"
                                + speed(stream, SUBRUNS));
         }
@@ -212,7 +215,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
     public double speed(ObjectFilter creator, int runs) throws Exception {
         long startTime = System.currentTimeMillis();
-        for (int i = 0 ; i < runs ; i++) {
+        for (int i = 0; i < runs; i++) {
             testSimpleTransformation(creator);
         }
         return runs * 1000 / (System.currentTimeMillis() - startTime);
@@ -238,19 +241,23 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         return conf;
     }
 
+    /**
+     * Test Simple transformation.
+     * @param creator The creator filter.
+     * @throws Exception If error occur.
+     */
     public void testSimpleTransformation(ObjectFilter creator) throws
                                                                   Exception {
-
         creator.setSource(this);
         Payload processed = creator.next();
-        assertNotNull("Payload should have a document", 
+        assertNotNull("Payload should have a document",
                       processed.getData(Payload.LUCENE_DOCUMENT));
-        Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
+        Document doc = (Document) processed.getData(Payload.LUCENE_DOCUMENT);
         assertTrue("The document should have some fields",
                    doc.getFields().size() > 0);
-        for (String fieldName: new String[]{"mystored", "freetext",
-                                            "nonexisting",
-                                            IndexUtils.RECORD_FIELD}) {
+        for (String fieldName : new String[] {"mystored", "freetext",
+                                              "nonexisting",
+                                              IndexUtils.RECORD_FIELD}) {
             assertNotNull("The document should contain the field " + fieldName,
                           doc.getField(fieldName));
         }

@@ -21,7 +21,8 @@ import junit.framework.TestCase;
  */
 public class EnvironmentTest extends TestCase {
 
-    public void testEscapeOneSysProp () {
+    /** Test escape one system properties. */ 
+    public void testEscapeOneSysProp() {
         String home = System.getProperty("user.home");
         String source = "${user.home}";
 
@@ -29,7 +30,8 @@ public class EnvironmentTest extends TestCase {
                      Environment.escapeSystemProperties(source));
     }
 
-    public void testEscapeTwoSysProps () {
+    /** Test escape two system properties. */
+    public void testEscapeTwoSysProps() {
         String home = System.getProperty("user.home");
         String ioTmpdir = System.getProperty("java.io.tmpdir");
         String source = "${user.home} ${java.io.tmpdir}";
@@ -38,7 +40,8 @@ public class EnvironmentTest extends TestCase {
                Environment.escapeSystemProperties(source));
     }
 
-    public void testEscapeTwoSysPropsPreserveSpaces () {
+    /** Test escape two system properties with spaces. */
+    public void testEscapeTwoSysPropsPreserveSpaces() {
         String home = System.getProperty("user.home");
         String ioTmpdir = System.getProperty("java.io.tmpdir");
         String source = " ${user.home}  ${java.io.tmpdir} ";
@@ -48,7 +51,7 @@ public class EnvironmentTest extends TestCase {
     }
 
     /**
-     * Unknown sy props should not be touched
+     * Unknown system. props should not be touched
      */
     public void testEscapeNonExistingSysProp () {
         String source = "${user.homer}";
@@ -57,14 +60,16 @@ public class EnvironmentTest extends TestCase {
                      Environment.escapeSystemProperties(source));
     }
 
-    public void testUnclosedSysProp () {
+    /** Test unclosed system properties. */
+    public void testUnclosedSysProp() {
         String source = "${user.home";
 
         assertEquals(source,
                      Environment.escapeSystemProperties(source));
     }
 
-    public void testNull () {
+    /** Test null in properties. */
+    public void testNull() {
         assertEquals(null,
                      Environment.escapeSystemProperties((String)null));
         assertEquals(null,
@@ -73,6 +78,10 @@ public class EnvironmentTest extends TestCase {
                      Environment.escapeSystemProperties((Iterable<String>)null));
     }
 
+    /**
+     * Check java version test.
+     * @throws Exception If error.
+     */
     public void testCheckJavaVersion() throws Exception {
         //System.out.println("Current JVM version: "
         //                   + Environment.checkJavaVersion());
