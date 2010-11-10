@@ -67,7 +67,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke, te")
 public abstract class DatabaseStorage extends StorageBase {
-    /** Logger. */
+    /** Log instance. */
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
     /** Key for ID in a record. */
     private static final int ID_KEY = 1;
@@ -2996,9 +2996,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn The database connection.
      * @throws SQLException If there is an error while executing the SQL.
      */
-    private void doCreateSummaBaseStatisticTable(Connection conn)
+    protected void doCreateSummaBaseStatisticTable(Connection conn)
                                                            throws SQLException {
-        Statement stmt;
         String createBaseStatisticQuery = "CREATE TABLE IF NOT EXISTS " 
             + BASE_STATISTICS + " (" 
             + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
@@ -3006,9 +3005,9 @@ public abstract class DatabaseStorage extends StorageBase {
             + DELETED_COLUMN + " INTEGER, "
             + INDEXABLE_COLUMN + " INTEGER, "
             + VALID_COLUMN + " INTEGER)";
-        log.debug("Creating table " + BASE_STATISTICS + " with query '"
-                    + createBaseStatisticQuery + "'");
-        stmt = conn.createStatement();
+        log.debug("Creating table " + BASE_STATISTICS + " if not already existing"
+        	  + " with query '" + createBaseStatisticQuery + "'");
+        Statement stmt = conn.createStatement();
         stmt.execute(createBaseStatisticQuery);
         stmt.close();
     }
@@ -3127,12 +3126,26 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt = conn.createStatement();
             stmt.execute("DROP TABLE " + RELATIONS);
             stmt.close();
+
+            destroyBaseStatistic();
         } finally {
             closeConnection(conn);
         }
         log.info("All Summa data wiped from database");
     }
 
+    protected void destroyBaseStatistic() throws SQLException {
+        Connection conn = getDefaultConnection();
+        try {
+            log.warn("Destryoing all statistic");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + BASE_STATISTICS);
+            stmt.close();
+        } finally {
+            closeConnection(conn);
+        }
+    }
+    
     protected abstract String getMetaColumnDataDeclaration();
 
     protected abstract String getDataColumnDataDeclaration();
