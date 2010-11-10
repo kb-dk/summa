@@ -27,7 +27,6 @@ import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.io.StringWriter;
-import java.io.IOException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -68,7 +66,6 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-//        ReleaseTestCommon.tearDown();
     }
 
     public static Test suite() {
@@ -200,4 +197,3 @@ public class FagrefGeneratorTest extends NoExitTestCase {
                 FacetStructure.CONF_FACET_FIELDS , fields);
     }
 }
-

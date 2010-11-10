@@ -29,7 +29,8 @@ import java.util.Locale;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "te")
+        author = "te",
+        comment = "Needs JavaDoc before QA")
 public class FacetStructure implements Serializable {
     private static final long serialVersionUID = 719987522941864L;
     private static volatile Logger log = Logger.getLogger(Structure.class);
@@ -148,12 +149,12 @@ public class FacetStructure implements Serializable {
     /**
      * Construct a new FacetStructure from the existing one, optionally
      * overriding wantedTags and sortType.
-     * @param wantedTags the number of wanted tags. This is limited by
+     * @param wantedTags The number of wanted tags. This is limited by
      *                   {@link #maxTags}. If wantedTags is null, the
      *                   value is ignored.
-     * @param sortType   the wanted sort-type. If sort-type is null, the
+     * @param sortType   The wanted sort-type. If sort-type is null, the
      *                   value is ignored.
-     * @return a clone of this updated with the specified values.
+     * @return A clone of this updated with the specified values.
      */
     public FacetStructure getRequestFacet(Integer wantedTags,
                                           String sortType) {
@@ -167,7 +168,7 @@ public class FacetStructure implements Serializable {
                                   locale, sortType);
     }
 
-    /* Mutators */
+    /* Mutators and Accessors*/
 
     public String getName() {
         return name;
@@ -264,6 +265,12 @@ public class FacetStructure implements Serializable {
         return id;
     }
 
+    /**
+     * Pretty prints the facet structure. The string includes id, name, fields,
+     * tags, sortType, and the locale.
+     * @return String containing a detailed print of the facet structure. This
+     * include id, name, fields, tags, sortType, and the locale.
+     */
     @Override
     public String toString() {
         return String.format(
@@ -274,9 +281,9 @@ public class FacetStructure implements Serializable {
     }
 
     /**
-     * Absorb secondary characteristica from other. Secondary attributes are
+     * Absorb secondary characteristics from other. Secondary attributes are
      * all attributes except name, fields and sortLocale.
-     * @param other the FacetStructure to absorb characteristica from.
+     * @param other the FacetStructure to absorb characteristics from.
      */
     public void absorb(FacetStructure other) {
         this.setSortType(other.getSortType());
@@ -284,4 +291,3 @@ public class FacetStructure implements Serializable {
         this.setMaxTags(other.getMaxTags());
     }
 }
-

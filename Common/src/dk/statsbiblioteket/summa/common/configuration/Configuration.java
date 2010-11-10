@@ -1452,7 +1452,7 @@ public class Configuration implements Serializable,
      * @throws SubConfigurationsNotSupportedException if one of the storage
      * doesn't support sub configurations.
      */
-    public List<Configuration> getSubConfigurations(String key) throws 
+    public List<Configuration> getSubConfigurations(String key) throws
                   NullPointerException, SubConfigurationsNotSupportedException {
         try {
             List<ConfigurationStorage> storages =
