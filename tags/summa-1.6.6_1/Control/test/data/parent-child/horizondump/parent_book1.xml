@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim">
+<record>
+  <leader>.....cmm  12.....3  56789</leader>
+  <datafield tag="001" ind1=" " ind2=" ">
+    <subfield code="a">parent1</subfield>
+    <subfield code="c">20071003150200</subfield>
+    <subfield code="d">20071003</subfield>
+  </datafield>
+<!--    <datafield tag="014" ind1="0" ind2="0">
+      <subfield code="a">aParent</subfield>
+    </datafield>-->
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">child1</subfield>
+        <subfield code="v">002</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">child2</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">child3</subfield>
+    </datafield>
+  <datafield tag="010" ind1="0" ind2="0">
+    <subfield code="a">2 740 553 3</subfield>
+    <subfield code="b">870970</subfield>
+    <subfield code="c">20071001125641</subfield>
+    <subfield code="d">20070909</subfield>
+    <subfield code="f">a</subfield>
+    <subfield code="t">ARKHAM</subfield>
+  </datafield>
+  <datafield tag="241" ind1="0" ind2="0">
+    <subfield code="a">Chaos Chicken Parental Post</subfield>
+  </datafield>
+  <datafield tag="245" ind1="0" ind2="0">
+    <subfield code="a">Kaoskyllingen</subfield>
+  </datafield>
+</record>
+</collection>

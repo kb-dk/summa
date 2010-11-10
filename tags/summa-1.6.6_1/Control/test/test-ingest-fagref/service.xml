@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>test-ingest-fagref-service-@summa.version@.jar</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
+    <property name="com.sun.management.jmxremote.port" value="2776"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>Test ingest fagref</description>
+	<bundleId>test-ingest-fagref</bundleId>
+</bundle>
+
+
