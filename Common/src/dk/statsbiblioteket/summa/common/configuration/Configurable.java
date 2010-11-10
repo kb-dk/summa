@@ -35,20 +35,42 @@ public interface Configurable {
      * one-argument constructor that takes a {@link Configuration}.
      */
     public class ConfigurationException extends RuntimeException {
+        /** The serial version UID. */
         public static final long serialVersionUID = 76846183L;
 
-        public ConfigurationException (Throwable cause) {
-            super (getCauseMessage(cause));
+        /**
+         * Constructor that creates a {@link ConfigurationException} with a
+         * {@link Throwable}.
+         * @param cause The cause of this exception.
+         */
+        public ConfigurationException(Throwable cause) {
+            super(getCauseMessage(cause));
         }
 
-        public ConfigurationException (String message) {
-            super (message);
+        /**
+         * Constructor that creates a {@link ConfigurationException} with a
+         * message.
+         * @param message The message.
+         */
+        public ConfigurationException(String message) {
+            super(message);
         }
 
-        public ConfigurationException (String message, Throwable cause) {
-            super (message, cause);
+        /**
+         * Constructor that creates a {@link ConfigurationException} with both
+         * a message and a {@link Throwable}.
+         * @param message The message.
+         * @param cause the cause.
+         */
+        public ConfigurationException(String message, Throwable cause) {
+            super(message, cause);
         }
 
+        /**
+         * Returns either the {@link Throwable#getMessage()} or unknown cause.
+         * @param t The throwable.
+         * @return The cause message.
+         */
         private static String getCauseMessage(Throwable t) {
             // If there is no message, or if the exception has its message set
             // to its class name (InvocationTargetException I am looking
@@ -60,13 +82,8 @@ public interface Configurable {
                     return getCauseMessage(t.getCause());
                 }
             }
-
             return (t.getMessage() == null || "".equals(t.getMessage())) ?
                     "Unknwon cause" : t.getMessage();
         }
     }
 }
-
-
-
-
