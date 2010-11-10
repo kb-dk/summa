@@ -175,9 +175,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                  + ", location '" + location + "', createNew " + createNew
                  + " and forceNew " + forceNew);
 
-        if (new File(location, DB_FILE+".h2.db").isFile() ||
-            new File(location, DB_FILE+".data.db").isFile()) {
-            /* Database location exists*/
+        if (new File(location, DB_FILE + ".h2.db").isFile()
+            || new File(location, DB_FILE + ".data.db").isFile()) {
+            // Database location exists
             log.debug("Old database found at '" + location + "'");
             if (forceNew) {
                 log.info("Deleting existing database at '" + location + "'");
@@ -190,6 +190,12 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             } else {
                 log.info("Reusing old database at '" + location + "'");
                 createNew = false;
+                try {
+                    doCreateSummaBaseStatisticTable(getConnection());
+                } catch (SQLException e) {
+                    log.info("Error creating table "
+                             + DatabaseStorage.BASE_STATISTICS, e);
+                }
             }
         } else {
             log.debug("No database at '" + location + "'");
@@ -362,8 +368,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     /**
      * Return a prepared statement, from the statement handler.
-     * @parem handle The statement handler.
+     * @param handle The statement handler.
      * @return The prepared statement.
+     * @throws SQLException If error occurs while manage statements.
      */
     @Override
     protected PreparedStatement getManagedStatement(StatementHandle handle)

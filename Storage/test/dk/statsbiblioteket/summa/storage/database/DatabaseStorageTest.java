@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.Arrays;
@@ -177,11 +178,33 @@ public class DatabaseStorageTest extends StorageTestBase {
         // TODO assert equals
     }
 
+    /**
+     * Test get and set of modification time.
+     * @throws Exception If error occur
+     */
     public void testGetSetModificationTime() throws Exception {
         long start = storage.getModificationTime(testBase1);
         assertEquals(storage.getStorageStartTime(), start);
         storage.flush(new Record(testId1, testBase1, testContent1));
         long newMtime = storage.getModificationTime(testBase1);
         assertTrue(start < newMtime);
+    }
+
+    /**
+     * Test start on an existing storage.
+     * @throws Exception If error.
+     */
+    public void testStatsOnExistingStorage() throws Exception {
+        long start = storage.getModificationTime(testBase1);
+        try {
+            storage.destroyBaseStatistic();
+            storage.close();
+            storage = (DatabaseStorage) StorageFactory.createStorage(createConf());
+            storage.flush(new Record(testId1, testBase1, testContent1));
+            assertTrue(start < storage.getModificationTime(testBase1));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("This should not happen");
+        }
     }
 }
