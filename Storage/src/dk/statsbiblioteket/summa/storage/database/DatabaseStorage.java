@@ -2996,7 +2996,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn The database connection.
      * @throws SQLException If there is an error while executing the SQL.
      */
-    protected void doCreateSummaBaseStatisticTable(Connection conn)
+    private void doCreateSummaBaseStatisticTable(Connection conn)
                                                            throws SQLException {
         String createBaseStatisticQuery = "CREATE TABLE IF NOT EXISTS " 
             + BASE_STATISTICS + " (" 
@@ -3104,6 +3104,15 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt = conn.createStatement();
         stmt.execute(createRecordsBaseIndexQuery);
         stmt.close();
+    }
+
+    protected void checkTableConsistency() {
+        try {
+            doCreateSummaBaseStatisticTable(getConnection());
+        } catch (SQLException e) {
+            log.info("Error creating table "
+                     + DatabaseStorage.BASE_STATISTICS, e);
+        }
     }
 
     /**

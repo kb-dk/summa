@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
@@ -195,11 +196,14 @@ public class DatabaseStorageTest extends StorageTestBase {
      * @throws Exception If error.
      */
     public void testStatsOnExistingStorage() throws Exception {
+        Configuration conf = createConf();
+        storage = (DatabaseStorage) StorageFactory.createStorage(conf);
         long start = storage.getModificationTime(testBase1);
         try {
             storage.destroyBaseStatistic();
             storage.close();
-            storage = (DatabaseStorage) StorageFactory.createStorage(createConf());
+            // Start storage on a old database file
+            storage = (DatabaseStorage) StorageFactory.createStorage(conf);
             storage.flush(new Record(testId1, testBase1, testContent1));
             assertTrue(start < storage.getModificationTime(testBase1));
         } catch (Exception e) {

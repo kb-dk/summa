@@ -190,12 +190,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             } else {
                 log.info("Reusing old database at '" + location + "'");
                 createNew = false;
-                try {
-                    doCreateSummaBaseStatisticTable(getConnection());
-                } catch (SQLException e) {
-                    log.info("Error creating table "
-                             + DatabaseStorage.BASE_STATISTICS, e);
-                }
             }
         } else {
             log.debug("No database at '" + location + "'");
@@ -242,6 +236,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
             createSchema();
+        } else {
+            log.info("Checking database table consistency");
+            checkTableConsistency();
         }
         setMaxMemoryRows();
     }
