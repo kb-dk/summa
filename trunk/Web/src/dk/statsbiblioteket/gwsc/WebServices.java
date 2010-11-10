@@ -68,7 +68,7 @@ public class WebServices {
 
     /**
      * Create a service with the given name.
-     * 
+     *
      * @param name the name of the service to create.
      * @return true if services are created without error. False otherwise.
      */
