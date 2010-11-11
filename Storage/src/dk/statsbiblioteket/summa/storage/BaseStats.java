@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.summa.common.util.StringMap;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
-import java.io.PrintWriter;
-import java.util.Map;
-import java.util.List;
-import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Encapsulation of storage statistics for a given base in the
@@ -49,6 +49,20 @@ public class BaseStats implements Serializable {
     private long nonDeletedNonIndexables;
     private StringMap meta;
 
+    /**
+     * Constructs the base statistic object.
+     *
+     * @param baseName The base name.
+     * @param lastModified Last modification time for the base.
+     * @param generationTime The generation time of the base statistic object.
+     * @param deletedIndexables The number of deleted and indexable records.
+     * @param nonDeletedIndexables The number of non deleted and indexable
+     * records.
+     * @param deletedNonIndexables The number of deleted and non indexable
+     * records.
+     * @param nonDeletedNonIndexables the number of non deleted and non
+     * indexable records.
+     */
     public BaseStats(String baseName,
                      long lastModified,
                      long generationTime,
@@ -106,7 +120,7 @@ public class BaseStats implements Serializable {
      *
      * @return The total number of records with their base set to
      *         the base represented by this object. Ie. the base with
-     *         name equalling {@link #getBaseName()}.
+     *         name equal {@link #getBaseName()}.
      */
     public long getTotalCount() {
         return deletedIndexables + nonDeletedIndexables
@@ -122,15 +136,20 @@ public class BaseStats implements Serializable {
     }
 
     /**
-     * Get the timestamp for the last update on the base represented by these
+     * Get the time stamp for the last update on the base represented by these
      * statistics
-     * @return the timestamp for when {@code flush()}, {@code flushAll()}, or
+     * @return the time stamp for when {@code flush()}, {@code flushAll()}, or
      * {@code clearBase()} was called on the base in question
      */
     public long getModificationTime() {
         return lastModified;
     }
 
+    /**
+     * Time stamp for generation time of this statistic object.
+     *
+     * @return Time stamp for generation time of this statistic object. 
+     */
     public long getGenerationTime() {
         return generationTime;
     }
@@ -145,10 +164,10 @@ public class BaseStats implements Serializable {
     }
 
     /**
-     * Return the additional metadata associated with these statistics.
-     * Possibly {@code null} if no additional metadata has been recorded.
-     * @return a key/value map of strings for the additional metadata or
-     *         {@code null} if no metatdata is recorded
+     * Return the additional meta data associated with these statistics.
+     * Possibly {@code null} if no additional meta data has been recorded.
+     * @return a key/value map of strings for the additional meta data or
+     *         {@code null} if no meta data is recorded
      */
     public StringMap meta() {
         return meta;
@@ -181,6 +200,11 @@ public class BaseStats implements Serializable {
         return this;
     }
 
+    /**
+     * Creates a XML representation of a list of base statistic elements.
+     * @param stats The list of base statistic objects.
+     * @param out The writer for the output XML.
+     */
     public static void toXML(List<BaseStats> stats, Writer out) {
         long[] times = findMaxGenerationAndModificationTimes(stats);
         DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -228,6 +252,13 @@ public class BaseStats implements Serializable {
         w.flush();
     }
 
+    /**
+     * Fixes the max generation and modification time for a list of base
+     * statistic elements.
+     * @param stats The list of elements.
+     * @return List of generation time and modification time. Both are the
+     * newest timestamps.
+     */
     private static long[] findMaxGenerationAndModificationTimes(
                                                         List<BaseStats> stats) {
         long[] times = new long[2];
@@ -237,8 +268,6 @@ public class BaseStats implements Serializable {
             times[0] = Math.max(b.getGenerationTime(), times[0]);
             times[1] = Math.max(b.getModificationTime(), times[1]);
         }
-
         return times;
     }
 }
-
