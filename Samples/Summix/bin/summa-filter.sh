@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-DEPLOY=`dirname $0`/..
+DEPLOY=`dirname "$0"`/..
 
 #
 # EDIT HERE

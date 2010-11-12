@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-DEPLOY=`dirname $0`/..
+DEPLOY=`dirname "$0"`/..
 
 #
 # EDIT HERE
@@ -31,8 +31,8 @@ export NAME=summa-storage
 # Custom code
 export CONFIGURATION=$1
 if [ ! -f "$1" ]; then
-        echo "You must specify a configuration as first parameter" 1>&2
-        exit 1
+    echo "You must specify a configuration as first parameter" 1>&2
+    exit 1
 fi
 
 # All is ready, execute!
