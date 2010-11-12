@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-DEPLOY=`dirname $0`/..
+DEPLOY=`dirname "$0"`/..
 
 #
 # TEMPLATE FOR RUNNING JARS FROM BASH SCRIPTS
@@ -81,21 +81,21 @@ function set_property () {
 
 # Build classpath
 if [ "$LIBDIRS" == "" ]; then
-    LIBDIRS=$DEPLOY/lib
+    LIBDIRS="$DEPLOY"/lib
 fi
-for libdir in $LIBDIRS
+for libdir in "$LIBDIRS" # This is why Summix don't support spaces
 do
-    for lib in `ls $libdir/*.jar`
+    for lib in `ls "$libdir"/*.jar`
     do
         if [ -z "$CLASSPATH" ]; then
-            CLASSPATH=$lib
+            CLASSPATH="$lib"
         else
-            CLASSPATH=$CLASSPATH:$lib
+            CLASSPATH=$CLASSPATH:"$lib"
         fi
     done
-    CLASSPATH=$CLASSPATH:$libdir
+    CLASSPATH=$CLASSPATH:"$libdir"
 done
-CLASSPATH=$CLASSPATH:$DEPLOY/config/:$MAINJAR
+CLASSPATH="$CLASSPATH:$DEPLOY/config/:$MAINJAR"
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
