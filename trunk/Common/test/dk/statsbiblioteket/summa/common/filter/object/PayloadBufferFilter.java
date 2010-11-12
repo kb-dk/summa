@@ -24,23 +24,42 @@ import java.util.ArrayList;
  * Buffers all incoming payloads for later retrieval
  */
 public class PayloadBufferFilter extends ObjectFilterImpl {
+    /** The payloads accepted. */
+    List<Payload> payloads;
 
-   List<Payload> payloads;
-
+    /**
+     * Constructs a PayloadBufferFilter which stores all incoming payloads for
+     * later retrieval.
+     * @param conf The configuration.
+     */
     public PayloadBufferFilter(Configuration conf) {
         super(conf);
         payloads = new ArrayList<Payload>();
     }
 
-    protected boolean processPayload(Payload payload) throws PayloadException {
+    /**
+     * Each payload is locally stored for later retrievel.
+     * @param payload The process.
+     * @return True.
+     */
+    protected boolean processPayload(Payload payload) {
         payloads.add(payload);
         return true;
     }
 
+    /**
+     * Return the {@code idx}'s payload recieved.
+     * @param idx The {@code idx}'th payload to return.
+     * @return {@code idx}'th payload.
+     */
     public Payload get(int idx) {
         return payloads.get(idx);
     }
 
+    /**
+     * Return the number of payloads processed.
+     * @return Number of payloads processed.
+     */
     public int size() {
         return payloads.size();
     }
