@@ -47,7 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A class containing methods meant to be exposed as a web service
+ * A class containing methods meant to be exposed as a web service.
  *
  * @author Mads Villadsen <mailto:mv@statsbiblioteket.dk>
  * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
@@ -86,6 +86,9 @@ public class SearchWS {
     /** XML version attribute value. */
     public static final String VERSION = "1.0";
 
+    /**
+     * Default constructor.
+     */
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
     }
@@ -344,9 +347,9 @@ public class SearchWS {
     // TODO Should be implemented
     public String getFields(String[] ids, String fieldName) {
         log.trace("getFields([" + ids + "], '" + fieldName + "')");
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
         String retXML = null;
-        ResponseCollection res;
+        //ResponseCollection res;
 
         Request req = new Request();
         req.put(DocumentKeys.SEARCH_QUERY, ids);
