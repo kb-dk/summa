@@ -188,19 +188,19 @@ public abstract class StorageBase implements Storage {
             log.trace("updateRelations(" + record.getId() + ")");
         }
 
-        /* We collect a list of changes and submit them in one transaction */
+        // We collect a list of changes and submit them in one transaction
         List<Record> flushQueue = new ArrayList<Record>(arrayListSize);
 
-        /* Make sure parent records are correct */
+        // Make sure parent records are correct
         if (record.getParentIds() != null) {
             List<Record> parents = getRecords(record.getParentIds(), null);
 
-            /* If a record has any *existing* parents it is not indexable */
+            // If a record has any *existing* parents it is not indexable
             if (parents != null && !parents.isEmpty()) {
                 record.setIndexable(false);
             }
 
-            /* Assert that the record is set as child on all existing parents */
+            // Assert that the record is set as child on all existing parents
             for (Record parent : parents) {
                 List<String> parentChildren = parent.getChildIds();
 
@@ -219,12 +219,12 @@ public abstract class StorageBase implements Storage {
             }
         }
 
-        /* Make sure child records are correct */
+        // Make sure child records are correct
         if (record.getChildIds() != null) {
             List<Record> children = getRecords(record.getChildIds(), null);
 
-            /* Assert that the existing child records have this record set
-             * as parent and that they are marked not indexable  */
+            // Assert that the existing child records have this record set
+            // as parent and that they are marked not indexable
             for (Record child : children) {
                 List<String> childParents = child.getParentIds();
 
