@@ -14,42 +14,45 @@
  */
 package dk.statsbiblioteket.summa.plugins;
 
-import java.util.Properties;
-import java.io.IOException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
+import java.util.Properties;
 
 //TODO: remove this from here and stuff in netmusik
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class NetmusikGenre {
+    /** Singleton instance. */
+    private static NetmusikGenre thisInstance = null;
+    /** Properties used to create this instance. */
+    private static Properties prop;
 
 
-   private static NetmusikGenre _this = null;
-   private static Properties prop;
-
-
+    /**
+     * Return the singleton instance of the NetmusikGenre class.
+     * @return The singleton instance of this class.
+     */
     private static synchronized NetmusikGenre getInstance(){
-       if (_this == null){
-          ClassLoader loader = Thread.currentThread().getContextClassLoader();
-          prop = new Properties();
-           try {
-               prop.loadFromXML(loader.getResourceAsStream("genremap.properties.xml"));
-           } catch (IOException e) {
-               e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-           }
-       }
-        return _this;
+        if (thisInstance == null){
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            prop = new Properties();
+            try {
+                prop.loadFromXML(loader.getResourceAsStream("genremap.properties.xml"));
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+        return thisInstance;
     }
 
-    public static String getGenre(String genre_org){
-        return  getInstance().prop.getProperty(genre_org, "");
+    /**
+     * Return the genre property.
+     * @param genreOrg The genre.
+     * @return The genre property.
+     */
+    public static String getGenre(String genreOrg){
+        return  getInstance().prop.getProperty(genreOrg, "");
     }
 }
-
-
-
-
-
-
