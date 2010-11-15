@@ -69,17 +69,22 @@ public class StorageWS {
      */
     public static final String QUERYTIME = "querytime";
 
+    /** A merger pool. */
     static ArrayBlockingQueue<MarcMultiVolumeMerger> mergers;
 
+    /** Number of merges in the merger pool. */
     private static final int numMergers = 10;
 
+    /** Storage reader client. */
     static StorageReaderClient storage;
+    /** Used configuration. */
     static Configuration conf;
     /**
      * XML output factory, used for creating output stream when responding with
      * multiple records.
      */
     private XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+    /** True if content should be escaped. */
     static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
 
     /**
@@ -236,7 +241,7 @@ public class StorageWS {
             retXML = sw.toString();
         } catch(IOException e) {
             log.error("Error getting #" + ids.size() + " records from "
-                    + "storage. Error was: " + e);
+                    + "storage. Error was: " + e, e);
             retXML = null;
         } catch(XMLStreamException e) {
             log.error("Error converting records to XML");
@@ -310,6 +315,10 @@ public class StorageWS {
         return retXML;
     }
 
+    /**
+     * Return a merger used by this web service.
+     * @return A merger used by this web service.
+     */
     private MarcMultiVolumeMerger getMerger() {
         try {
             return mergers.take();
@@ -320,6 +329,10 @@ public class StorageWS {
         }
     }
 
+    /**
+     * Release a used merger to the merger pool.
+     * @param m The meger that should be released.
+     */
     private synchronized void releaseMerger(MarcMultiVolumeMerger m) {
         try {
             mergers.put(m);
