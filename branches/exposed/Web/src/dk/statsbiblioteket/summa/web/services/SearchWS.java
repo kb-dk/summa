@@ -458,6 +458,61 @@ public class SearchWS {
     }
 
     /**
+     * Performs a lookup in the given field for the given term and returns a
+     * list starting at the term position + delta with the given length.
+     * </p><p>
+     * The method works as {@link #indexLookup(String, String, int, int)} but
+     * allows for query-based restriction on the documents used to form the
+     * index.
+     * @param query  If not null, only the terms from the documents matching the
+     *               query will be used for the index lookup. If null, all
+     *               documents will be matched.
+     * @param field  The field to perform a lookup on. Currently this must be
+     *               the name of a facet.
+     * @param term   The term to search for. This can be multiple words.
+     * @param delta  The offset relative to the term position.
+     * @param length The maximum number of terms to return.
+     * @param minCount The minimum number of documents that must contain the
+     *               term for the term to be returned. Normally 0 or 1.
+     * @return An XML string containing the result or an error description.
+     */
+    @WebMethod
+    public String extendedIndexLookup(String query, String field, String term,
+                                      int delta, int length, int minCount) {
+        //noinspection DuplicateStringLiteralInspection
+        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", "
+                      + length + ")";
+        log.trace(call);
+        long startTime = System.currentTimeMillis();
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        if (query != null) {
+            req.put(IndexKeys.SEARCH_INDEX_QUERY, query);
+        }
+        req.put(IndexKeys.SEARCH_INDEX_FIELD, field);
+        req.put(IndexKeys.SEARCH_INDEX_TERM, term);
+        req.put(IndexKeys.SEARCH_INDEX_DELTA, delta);
+        req.put(IndexKeys.SEARCH_INDEX_LENGTH, length);
+        req.put(IndexKeys.SEARCH_INDEX_MINCOUNT, minCount);
+
+        try {
+            res = getSearchClient().search(req);
+            retXML = res.toXML();
+        } catch (IOException e) {
+            log.warn("Error executing " + call + ": ", e);
+            String mes = "Error performing " + call + ": " + e.getMessage();
+            retXML = getErrorXML(IndexResponse.NAME, mes, e);
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace(call + " finished in "
+                  + (System.currentTimeMillis() - startTime + "ms"));
+        return retXML;
+    }
+
+    /**
      * Gives a search result of records that "are similar to" a given record.
      *
      * @param id The recordID of the record that should be used as base for the

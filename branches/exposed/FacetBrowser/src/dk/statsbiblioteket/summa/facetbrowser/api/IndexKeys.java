@@ -96,4 +96,12 @@ public interface IndexKeys {
      * Optional. If no value is specified, the default setup is used.
      */
     public static final String SEARCH_INDEX_LENGTH = "search.index.length";
+
+    /**
+     * The minimum number of documents that must contain the term for the term
+     * to be returned.
+     * </p><p>
+     * Optional. Default is 0.
+     */
+    public static final String SEARCH_INDEX_MINCOUNT = "search.index.mincount";
 }

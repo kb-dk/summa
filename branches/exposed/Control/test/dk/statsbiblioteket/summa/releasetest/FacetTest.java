@@ -189,16 +189,47 @@ public class FacetTest extends NoExitTestCase {
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
 
-        Request request = new Request();
+        { // Query, minCount 0
+            Request request = new Request();
+            request.put(IndexKeys.SEARCH_INDEX_QUERY, "jensen");
+            request.put(IndexKeys.SEARCH_INDEX_FIELD, "author_person");
+            request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
+            request.put(IndexKeys.SEARCH_INDEX_MINCOUNT, 0);
+            ResponseCollection responses = searcher.search(request);
+            assertTrue("The index lookup should return 0 for Jens Hansen",
+                       responses.toXML().contains(
+                           "<term count=\"0\">Jens Hansen</term>"));
+  //          System.out.println(responses.toXML());
+        }
+
+        { // Query, minCount 1
+            Request request = new Request();
+            request.put(IndexKeys.SEARCH_INDEX_QUERY, "jensen");
+            request.put(IndexKeys.SEARCH_INDEX_FIELD, "author_person");
+            request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
+            request.put(IndexKeys.SEARCH_INDEX_MINCOUNT, 1);
+            ResponseCollection responses = searcher.search(request);
+//            System.out.println(responses.toXML());
+            assertFalse("The index lookup should have no Jens Hansen entry",
+                        responses.toXML().contains(
+                            "<term count=\"0\">Jens Hansen</term>"));
+            assertTrue("The index lookup should return 1 for Hans Jensen",
+                       responses.toXML().contains(
+                           "<term count=\"1\">hans Jensen</term>"));
+        }
+
+        { // No query, hit all
+            Request request = new Request();
 //        request.put(DocumentKeys.SEARCH_QUERY, "*");
-        request.put(IndexKeys.SEARCH_INDEX_QUERY, "*");
-        request.put(IndexKeys.SEARCH_INDEX_FIELD, "author_person");
-        request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
-        ResponseCollection responses = searcher.search(request);
-        assertTrue("The index lookup should return at least one term",
-                   responses.toXML().contains(
-                       "<term count=\"1\">Hans Jensen</term>"));
-        System.out.println(responses.toXML());
+            //    request.put(IndexKeys.SEARCH_INDEX_QUERY, "");
+            request.put(IndexKeys.SEARCH_INDEX_FIELD, "author_person");
+            request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
+            ResponseCollection responses = searcher.search(request);
+            assertTrue("The index lookup should return at least one term",
+                       responses.toXML().contains(
+                           "<term count=\"1\">Hans Jensen</term>"));
+        //    System.out.println(responses.toXML());
+        }
 
         // TODO: IndexDescriptor-load?
         searcher.close();
@@ -465,4 +496,3 @@ public class FacetTest extends NoExitTestCase {
         IndexTest.updateIndex(indexConf);
     }
 }
-

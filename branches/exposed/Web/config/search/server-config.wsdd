@@ -133,6 +133,31 @@
             </parameter>
         </operation>
 
+        <operation name="extendedIndexLookup">
+            <documentation>
+                Perform a lookup for a given term on a given field and returns a list of terms surrounding it.
+                The lookup is limited by the given query.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query to limit the lookup.</documentation>
+            </parameter>
+            <parameter name="field" type="tns:string">
+                <documentation>The field to perform lookup on. Valid fields are all defined facets.</documentation>
+            </parameter>
+            <parameter name="term" type="tns:string">
+                <documentation>The term to perform lookup for. Terms can be single or multiple words.</documentation>
+            </parameter>
+            <parameter name="delta" type="tns:int">
+                <documentation>The offset from the term position in the field for the start of the list of terms.</documentation>
+            </parameter>
+            <parameter name="length" type="tns:int">
+                <documentation>The manimum number of terms to return.</documentation>
+            </parameter>
+            <parameter name="minCount" type="tns:int">
+                <documentation>The minimum number of documents, limited by query, that much contain the term for it to be returned.</documentation>
+            </parameter>
+        </operation>
+
         <operation name="simpleSearch">
             <documentation>
                 This method executes the given query and returns a search result ranked by relevancy.

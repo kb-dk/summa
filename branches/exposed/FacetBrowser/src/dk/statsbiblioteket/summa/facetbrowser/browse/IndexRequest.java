@@ -77,6 +77,16 @@ public class IndexRequest {
             "search.index.lengthlimit";
     public static final int DEFAULT_INDEX_LENGTHLIMIT = 10000;
 
+    /**
+     * The minimum number of documents that must contain the term for the term
+     * to be returned.
+     * </p><p>
+     * Optional. Default is 0.
+     */
+    public static final String CONF_INDEX_MINCOUNT = "search.index.mincount";
+    public static final int DEFAULT_INDEX_MINCOUNT = 0;
+
+
     // Taken directly from {@link IndexKeys}.
     private String query = null;
     private String field = null;
@@ -85,6 +95,7 @@ public class IndexRequest {
     private int delta = DEFAULT_INDEX_DELTA;
     private int length = DEFAULT_INDEX_LENGTH;
     private Locale locale = null;
+    private int minCount = DEFAULT_INDEX_MINCOUNT;
 
     private int lengthLimit = DEFAULT_INDEX_LENGTHLIMIT;
     private boolean valid = false;
@@ -101,20 +112,22 @@ public class IndexRequest {
         delta = conf.getInt(CONF_INDEX_DELTA, delta);
         length = conf.getInt(CONF_INDEX_LENGTH, length);
         lengthLimit = conf.getInt(CONF_INDEX_LENGTHLIMIT, lengthLimit);
+        minCount = conf.getInt(CONF_INDEX_MINCOUNT, minCount);
         log.debug(String.format(
                 "Created default index request with caseSensitive=%b, delta=%d,"
-                + " length=%d, lengthLimit=%d",
-                caseSensitive, delta, length, lengthLimit));
+                + " length=%d, lengthLimit=%d, minCount=%d",
+                caseSensitive, delta, length, lengthLimit, minCount));
     }
 
     IndexRequest(String query, String field, String term,
-                 boolean caseSensitive, int delta, int length) {
+                 boolean caseSensitive, int delta, int length, int minCount) {
         this.query = query;
         this.field = field;
         this.term = term;
         this.caseSensitive = caseSensitive;
         this.delta = delta;
-        this.length = length;
+        this.length = Math.min(length, lengthLimit);
+        this.minCount = minCount;
         valid = true;
         log.debug(String.format(
                 "Created index request with field='%s', term='%s', "
@@ -154,8 +167,8 @@ public class IndexRequest {
                 request.getBoolean(
                         IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, caseSensitive),
                 request.getInt(IndexKeys.SEARCH_INDEX_DELTA, delta),
-                Math.min(request.getInt(IndexKeys.SEARCH_INDEX_LENGTH, length),
-                         lengthLimit));
+                request.getInt(IndexKeys.SEARCH_INDEX_LENGTH, length),
+                request.getInt(IndexKeys.SEARCH_INDEX_MINCOUNT, minCount));
     }
 
     private void checkValid() {
@@ -171,7 +184,7 @@ public class IndexRequest {
     public String toString() {
         return "IndexRequest(query='" + query + "', field=" + field + ", term='"
                + term + "', locale=" + locale + ", delta=" + delta + ", length="
-               + length + ")";
+               + length + ", minCount=" + minCount + ")";
     }
 
     // temporary hack to merge new exposed with old Summa
@@ -204,6 +217,10 @@ public class IndexRequest {
 
     public Locale getLocale() {
         return locale;
+    }
+
+    public int getMinCount() {
+        return minCount;
     }
 }
 

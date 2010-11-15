@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -30,7 +31,6 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Locale;
 
 /**
  * The result of an index-lookup, suitable for later merging and sorting.
@@ -46,34 +46,19 @@ public class IndexResponse implements Response {
             "http://statsbiblioteket.dk/summa/2009/IndexResponse";
     public static final String NAME = "IndexResponse";
 
-    // Taken directly from {@link IndexKeys}.
-    private String query;
-    private String field;
-    private String term;
-    private boolean caseSensitive;
-    private int delta;
-    private int length;
-
-    // If the sortLocale is null, Unicode order is used.
-    private Locale sortLocale;
+    private final IndexRequest request;
 
     // Sorting
     private transient Comparator<Pair<String, Integer>> sorter;
 
     private ArrayList<Pair<String, Integer>> index;
 
-    public IndexResponse(String query, String field, String term,
-                         boolean caseSensitive,
-                         int delta, int length, Locale sortLocale) {
-        log.debug("Creating index response " + field + ":" + term);
-        this.query = query;
-        this.field = field;
-        this.term = term;
-        this.caseSensitive = caseSensitive;
-        this.delta = delta;
-        this.length = length;
-        this.sortLocale = sortLocale;
-        index = new ArrayList<Pair<String, Integer>>(length);
+    public IndexResponse(IndexRequest request) {
+        if (log.isDebugEnabled()) {
+            log.debug("Creating index response for request " + request);
+        }
+        this.request = request;
+        index = new ArrayList<Pair<String, Integer>>(request.getLength());
     }
 
     /**
@@ -89,7 +74,16 @@ public class IndexResponse implements Response {
     public void addTerm(Pair<String, Integer> term) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
-                    "Adding term '%s' to field '%s'", term, field));
+                    "Adding term '%s' to field '%s'", term, request.getField()));
+        }
+        if (term.getKey() == null) {
+            log.warn("addTerm was called with null as term. Modifying to the "
+                     + "String 'null'");
+            term.setKey("null");
+        }
+        if (term.getValue() == null) {
+            log.warn("addTerm was calles with null as count. Modifying to 0");
+            term.setValue(0);
         }
         index.add(term);
     }
@@ -174,26 +168,27 @@ public class IndexResponse implements Response {
     private void clean() {
         log.trace("clean() called");
         if (sorter == null) { // Create sorters
-            if (sortLocale == null) {
-                sorter = caseSensitive
+            if (request.getLocale() == null) {
+                sorter = request.isCaseSensitive()
                          ? new SensitiveComparator()
                          : new InSensitiveComparator();
             } else {
-                Collator collator = CollatorFactory.createCollator(sortLocale);
-                sorter = caseSensitive
+                Collator collator = CollatorFactory.createCollator(
+                    request.getLocale());
+                sorter = request.isCaseSensitive()
                          ? new SensitiveComparator(collator)
                          : new InSensitiveComparator(collator);
             }
         }
         Collections.sort(index, sorter);
-        int start = Math.max(0, getOrigo() + delta);
+        int start = Math.max(0, getOrigo() + request.getDelta());
         index = new ArrayList<Pair<String, Integer>>(index.subList(
-                start, Math.min(index.size(), start + length)));
+                start, Math.min(index.size(), start + request.getLength())));
     }
 
     private int getOrigo() {
         int origo = Collections.binarySearch(
-            index, new Pair<String, Integer>(term, 0), sorter);
+            index, new Pair<String, Integer>(request.getTerm(), 0), sorter);
         return origo < 0 ? (origo + 1) * -1 : origo;
     }
 
@@ -228,13 +223,21 @@ public class IndexResponse implements Response {
 //            xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("indexresponse");
-            xmlOut.writeAttribute("query", query);
-            xmlOut.writeAttribute("field", field);
-            xmlOut.writeAttribute("term", term);
+            if (request.getQuery() != null) {
+                xmlOut.writeAttribute("query", request.getQuery());
+            }
+            xmlOut.writeAttribute("field", request.getField());
+            xmlOut.writeAttribute("term", request.getTerm());
+            xmlOut.writeAttribute("caseSensitive",
+                                  Boolean.toString(request.isCaseSensitive()));
+            if (request.getLocale() != null) {
+                xmlOut.writeAttribute(
+                    "sortlocale", request.getLocale().toString());
+            }
             xmlOut.writeAttribute(
-                    "caseSensitive", Boolean.toString(caseSensitive));
-            xmlOut.writeAttribute("delta", Integer.toString(delta));
-            xmlOut.writeAttribute("length", Integer.toString(length));
+                "delta", Integer.toString(request.getDelta()));
+            xmlOut.writeAttribute(
+                "length", Integer.toString(request.getLength()));
             xmlOut.writeAttribute("origo", Integer.toString(getOrigo()));
             xmlOut.writeCharacters("\n");
 

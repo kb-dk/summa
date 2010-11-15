@@ -169,10 +169,7 @@ public class IndexLookup {
 
     private IndexResponse newResponseToOldResult(
         FacetResponse fResponse, IndexRequest request) {
-        IndexResponse response = new IndexResponse(
-            request.getQuery(), request.getField(), request.getTerm(),
-            request.isCaseSensitive(), request.getDelta(), request.getLength(),
-            request.getLocale());
+        IndexResponse response = new IndexResponse(request);
         for (FacetResponse.Tag tag:
             fResponse.getGroups().get(0).getTags().getTags()) {
             response.addTerm(new Pair<String, Integer>(
@@ -230,7 +227,8 @@ public class IndexLookup {
 
         FacetRequestGroup facetGroup = new FacetRequestGroup(
             eGroup, facetOrder, locale == null ? null : comparatorID,
-            request.getDelta(), request.getLength(), 0, request.getTerm());
+            request.getDelta(), request.getLength(), request.getMinCount(),
+            request.getTerm());
         groups.add(facetGroup);
         return new org.apache.lucene.search.exposed.facet.request.FacetRequest(
             request.getQuery() == null ? "*" : request.getQuery(), groups);
