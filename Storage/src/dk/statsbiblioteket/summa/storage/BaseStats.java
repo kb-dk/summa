@@ -38,15 +38,23 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BaseStats implements Serializable {
+    /** The serial version UID. */
     private static final long serialVersionUID = 7879514L;
-    
+    /** The base name. */
     private String baseName;
+    /** Last modification time. */
     private long lastModified;
+    /** Base generation time. */
     private long generationTime;
+    /** Number of deleted indexables. */
     private long deletedIndexables;
+    /** Number of non deleted indexables. */
     private long nonDeletedIndexables;
+    /** Number of deleted non indexables. */
     private long deletedNonIndexables;
+    /** Number of non deleted non indexables. */
     private long nonDeletedNonIndexables;
+    /** Meta data. */
     private StringMap meta;
 
     /**
@@ -60,16 +68,12 @@ public class BaseStats implements Serializable {
      * records.
      * @param deletedNonIndexables The number of deleted and non indexable
      * records.
-     * @param nonDeletedNonIndexables the number of non deleted and non
+     * @param nonDeletedNonIndexables The number of non deleted and non
      * indexable records.
      */
-    public BaseStats(String baseName,
-                     long lastModified,
-                     long generationTime,
-                     long deletedIndexables,
-                     long nonDeletedIndexables,
-                     long deletedNonIndexables,
-                     long nonDeletedNonIndexables) {
+    public BaseStats(String baseName, long lastModified, long generationTime,
+                     long deletedIndexables, long nonDeletedIndexables,
+                     long deletedNonIndexables, long nonDeletedNonIndexables) {
         this.baseName = baseName;
         this.lastModified = lastModified;
         this.generationTime = generationTime;
@@ -102,10 +106,9 @@ public class BaseStats implements Serializable {
 
     /**
      * Return the number of records that would be indexed in a normal
-     * situation - which can be considered the "live set" of records
-     * in the storage. This is calculated as the
-     * number of records that has the <i>indexable</i> flag set, but
-     * not the <i>deleted</i> flag.
+     * situation - which can be considered the "live set" of records in the
+     * storage. This is calculated as the number of records that has the
+     * <i>indexable</i> flag set, but not the <i>deleted</i> flag.
      *
      * @return The number of records that has the <i>indexable</i>
      *         flag set, but not the <i>deleted</i> flag.
@@ -128,8 +131,8 @@ public class BaseStats implements Serializable {
     }
 
     /**
-     * The name of the base these statistics were generated for
-     * @return The name of the base these statistics were generated for
+     * The name of the base these statistics were generated for.
+     * @return The name of the base these statistics were generated for.
      */
     public String getBaseName() {
         return baseName;
@@ -137,9 +140,9 @@ public class BaseStats implements Serializable {
 
     /**
      * Get the time stamp for the last update on the base represented by these
-     * statistics
-     * @return the time stamp for when {@code flush()}, {@code flushAll()}, or
-     * {@code clearBase()} was called on the base in question
+     * statistics.
+     * @return The time stamp for when {@code flush()}, {@code flushAll()}, or
+     * {@code clearBase()} was called on the base in question.
      */
     public long getModificationTime() {
         return lastModified;
@@ -156,8 +159,8 @@ public class BaseStats implements Serializable {
 
     /**
      * Return whether or not these statistics has additional metadata
-     * associated with them
-     * @return {@code true}
+     * associated with them.
+     * @return {@code true}.
      */
     public boolean hasMeta() {
         return meta != null && !meta.isEmpty();
@@ -166,8 +169,8 @@ public class BaseStats implements Serializable {
     /**
      * Return the additional meta data associated with these statistics.
      * Possibly {@code null} if no additional meta data has been recorded.
-     * @return a key/value map of strings for the additional meta data or
-     *         {@code null} if no meta data is recorded
+     * @return A key/value map of strings for the additional meta data or
+     *         {@code null} if no meta data is recorded.
      */
     public StringMap meta() {
         return meta;
@@ -176,9 +179,9 @@ public class BaseStats implements Serializable {
     /**
      * Return the metadata associated with the given {@code key}, returning
      * {@code null} if no data exists for the key or no metadata is associated
-     * with the statistics
-     * @param key the name of the metadata field to look up
-     * @return the value corresponding to {@code key} or {@code null}
+     * with the statistics.
+     * @param key The name of the metadata field to look up.
+     * @return The value corresponding to {@code key} or {@code null}.
      */
     public String meta(String key) {
         return meta == null ? null : meta.get(key);
@@ -187,10 +190,10 @@ public class BaseStats implements Serializable {
     /**
      * Set a key/value pair as additional metadata carried with these
      * statistics. If a field already exists under the given name it will
-     * be replaced with the supplied value
-     * @param key the unique name for the metadata field
-     * @param value the value to set for the field
-     * @return always returns {@code this}
+     * be replaced with the supplied value.
+     * @param key The unique name for the metadata field.
+     * @param value The value to set for the field.
+     * @return Always returns {@code this}.
      */
     public BaseStats meta(String key, String value) {
         if (meta == null) {
