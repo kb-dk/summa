@@ -26,13 +26,14 @@ import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The default implementation of IndexController. It is basically an aggregator
@@ -62,7 +63,9 @@ import java.util.List;
 public class IndexControllerImpl extends StateThread implements
                                                      IndexManipulator,
                                                      IndexController {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(IndexControllerImpl.class);
+    /** Fail logger for this class. */
     private static Log failLog = LogFactory.getLog(LOG_FAILED);
 
     /**
@@ -94,6 +97,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_CREATE_NEW_INDEX =
                                                    "summa.index.createnewindex";
+    /** Default value for {@link #CONF_CREATE_NEW_INDEX}. */
     public static final boolean DEFAULT_CREATE_NEW_INDEX = false;
 
 
@@ -109,6 +113,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_COMMIT_TIMEOUT =
                                                     "summa.index.committimeout";
+    /** Default value for {@link #CONF_COMMIT_TIMEOUT}. */
     public static final int DEFAULT_COMMIT_TIMEOUT = -1;
 
     /**
@@ -124,6 +129,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_COMMIT_MAX_DOCUMENTS =
                                                "summa.index.commitmaxdocuments";
+    /** Default value for {@link #CONF_COMMIT_MAX_DOCUMENTS}. */
     public static final int DEFAULT_COMMIT_MAX_DOCUMENTS = 1000;
 
     /**
@@ -138,6 +144,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_CONSOLIDATE_TIMEOUT =
                                                "summa.index.consolidatetimeout";
+    /** Default value for {@link #CONF_CONSOLIDATE_TIMEOUT}. */
     public static final int DEFAULT_CONSOLIDATE_TIMEOUT = -1;
 
     /**
@@ -153,6 +160,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_CONSOLIDATE_MAX_DOCUMENTS =
                                           "summa.index.consolidatemaxdocuments";
+    /** Default value for {@link #CONF_CONSOLIDATE_MAX_DOCUMENTS}. */
     public static final int DEFAULT_CONSOLIDATE_MAX_DOCUMENTS = -1;
 
     /**
@@ -168,6 +176,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_CONSOLIDATE_MAX_COMMITS =
                                             "summa.index.consolidatemaxcommits";
+    /** Default value for {@link #CONF_CONSOLIDATE_MAX_COMMITS}. */
     public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 70;
 
     /**
@@ -178,6 +187,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_CONSOLIDATE_ON_CLOSE =
                                                "summa.index.consolidateonclose";
+    /** Default value for {@link #CONF_CONSOLIDATE_ON_CLOSE}. */
     public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
 
     /**
@@ -188,6 +198,7 @@ public class IndexControllerImpl extends StateThread implements
      */
     public static final String CONF_FORCE_CONSOLIDATE_ON_CLOSE =
                                           "summa.index.forceconsolidateonclose";
+    /** Default value for {@link #CONF_FORCE_CONSOLIDATE_ON_CLOSE}. */
     public static final boolean DEFAULT_FORCE_CONSOLIDATE_ON_CLOSE = false;
 
     private static final int PROFILER_SPAN = 1000;
@@ -238,7 +249,7 @@ public class IndexControllerImpl extends StateThread implements
             indexLocation = Resolver.getPersistentFile(indexRoot);
         } catch (Exception e) {
             throw new ConfigurationException(String.format(
-                    "Exception resolving '%s' to absolute path", indexRoot));
+                    "Exception resolving '%s' to absolute path", indexRoot), e);
         }
         log.debug(String.format("Using indexRoot '%s' at location '%s'",
                                 indexRoot.toString(),
@@ -256,7 +267,7 @@ public class IndexControllerImpl extends StateThread implements
         } catch (Exception e) {
             throw new ConfigurationException(
                     "Could not get sub-configurations for key "
-                    + CONF_MANIPULATORS);
+                    + CONF_MANIPULATORS, e);
         }
         IndexDescriptor.copySetupToSubConfigurations(conf, manipulatorConfs);
 
@@ -388,7 +399,7 @@ public class IndexControllerImpl extends StateThread implements
                 throw new RuntimeException("IOException during triggerCheck"
                                            + " from watchdog thread. "
                                            + "Stopping timer-based "
-                                           + "watchdog");
+                                           + "watchdog", e);
             }
         }
     }
@@ -414,6 +425,13 @@ public class IndexControllerImpl extends StateThread implements
     public synchronized void open(File indexRoot) throws IOException {
         open(indexRoot, false);
     }
+
+    /**
+     * Open an index.
+     * @param indexRoot The root directory of the index.
+     * @param createNewIndex True if new should be created.
+     * @throws IOException If error occur while creating/opening index.
+     */
     public synchronized void open(File indexRoot, boolean createNewIndex) throws
                                                                    IOException {
         if (indexRoot == null) {
@@ -446,13 +464,17 @@ public class IndexControllerImpl extends StateThread implements
         log.trace("Finished open()");
     }
 
-    /*
-    * The location of the index files is a subfolder to indexRoot.
-    * The name of the subfolder is a timestamp for the construction time of the
-    * index with the format YYYYMMDD-HHMM. If subfolders matching the pattern
-    * are present in indexRoot, the last (sorted alphanumerically) folder
-    * is used. If no such folder exists, a new one is created.
-    */
+    /**
+     * The location of the index files is a subfolder to indexRoot.
+     * The name of the subfolder is a timestamp for the construction time of the
+     * index with the format YYYYMMDD-HHMM. If subfolders matching the pattern
+     * are present in indexRoot, the last (sorted alphanumerically) folder
+     * is used. If no such folder exists, a new one is created.
+     * @param indexRoot The index root.
+     * @param createNewIndex True if new index should be created.
+     * @return The concrete index root.
+     * @throws IOException If error occur while creating index.
+     */
     private File getConcreteRoot(File indexRoot, boolean createNewIndex) throws
                                                                    IOException {
         if (!indexRoot.exists()) {
@@ -464,7 +486,7 @@ public class IndexControllerImpl extends StateThread implements
                 }
             } catch (SecurityException e) {
                 throw new IOException("Not allowed to create indexRoot '"
-                                      + indexRoot + "'");
+                                      + indexRoot + "'", e);
             }
         }
         // Locate existing folders
@@ -769,6 +791,7 @@ public class IndexControllerImpl extends StateThread implements
         return hasNext;
     }
 
+    /** How often to feed back. */
     private int feedbackEvery = 1000;
 
     @Override

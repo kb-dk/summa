@@ -33,10 +33,21 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.lucene.SummaIndexReader;
 import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
-import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortFactory;
+import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
@@ -68,16 +79,6 @@ import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.DocIdBitSet;
 import org.apache.lucene.util.OpenBitSetDISI;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Lucene-specific search node.
  * </p><p>
@@ -90,6 +91,7 @@ import java.util.concurrent.TimeUnit;
 // TODO: Support setMaxBooleanClauses
 public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                                   Configurable {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(LuceneSearchNode.class);
 
     /**
@@ -99,6 +101,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public static final String CONF_MAX_BOOLEAN_CLAUSES =
             "summa.support.lucene.clauses.max";
+    /** Default value for {@link #CONF_MAX_BOOLEAN_CLAUSES}. */
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
 
     /**
@@ -120,6 +123,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public static final String CONF_MORELIKETHIS_ENABLED =
             "summa.support.lucene.morelikethis.enabled";
+    /** Default value for {@link #CONF_MORELIKETHIS_ENABLED}. */
     public static final boolean DEFAULT_MORELIKETHIS_ENABLED = true;
 
     /* http://lucene.apache.org/java/2_4_0/api/contrib-queries/org/apache/lucene/search/similar/MoreLikeThis.html */
@@ -207,6 +211,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      * Optional. Default is false;
      */
     public static final String CONF_EXPLAIN = "summa.support.lucene.explain";
+    /** Default value for {@link #CONF_EXPLAIN}. */
     public static final boolean DEFAULT_EXPLAIN = false;
 
     /**
@@ -246,6 +251,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public static final String CONF_SORT_COMPARATOR =
             "summa.support.lucene.sort.comparator";
+    /** Default value for {@link #CONF_SORT_COMPARATOR}. */
     public static final String DEFAULT_SORT_COMPARATOR =
             SortFactory.DEFAULT_COMPARATOR.toString();
 
@@ -256,6 +262,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public static final String CONF_SORT_BUFFER =
             "summa.support.lucene.sort.buffer";
+    /** Default value for {@link #CONF_SORT_BUFFER}. */
     public static final int DEFAULT_SORT_BUFFER = SortFactory.DEFAULT_BUFFER;
 
     /**
@@ -265,6 +272,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public static final String CONF_WARMUP_SORTERS =
             "summa.support.lucene.warmup.warmsorters";
+    /** Default value for {@link #CONF_WARMUP_SORTERS}. */
     public static final boolean DEFAULT_WARMUP_SORTERS = false;
 
     @SuppressWarnings({"FieldCanBeLocal"})
@@ -343,7 +351,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                         conf.getSubConfiguration(CONF_TERMSTAT_CONFIGURATION));
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException(
-                        "Storage doesn't support sub configurations");
+                        "Storage doesn't support sub configurations", e);
             } catch (NullPointerException e) {
                 throw new ConfigurationException(String.format(
                         "Exception extracting sub-configuration '%s'",
@@ -373,7 +381,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             }
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+                    "Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             log.error(String.format(
                     "The key '%s' existed, but did not resolve to a sub "
@@ -577,12 +585,12 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           sortKey, reverseSort, fields, fallbacks, true);
     }
 
-    private DocumentResponse fullSearch(
-            Request request, String filter, String query,
-            long startIndex, long maxRecords,
-            String sortKey, boolean reverseSort,
-            String[] fields, String[] fallbacks,
-            boolean doLog) throws RemoteException {
+    private DocumentResponse fullSearch(Request request, String filter,
+                                        String query, long startIndex,
+                                        long maxRecords, String sortKey,
+                                        boolean reverseSort, String[] fields,
+                                        String[] fallbacks, boolean doLog)
+                                                        throws RemoteException {
         sanityCheck(startIndex, maxRecords);
         if (sortKey == null) {
             sortKey = getSortKey();
@@ -922,7 +930,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     COLLECTOR_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new RemoteException("Interrupted while requesting a "
-                                      + "DocIDCollector from the queue");
+                                      + "DocIDCollector from the queue", e);
         }
         if (collector == null) {
             throw new RemoteException(String.format(
