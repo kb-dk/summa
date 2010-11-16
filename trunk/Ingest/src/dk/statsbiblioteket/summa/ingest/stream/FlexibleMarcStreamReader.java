@@ -15,6 +15,17 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.marc4j.Constants;
@@ -22,11 +33,13 @@ import org.marc4j.MarcException;
 import org.marc4j.MarcReader;
 import org.marc4j.converter.CharConverter;
 import org.marc4j.converter.impl.AnselToUnicode;
-import org.marc4j.marc.*;
+import org.marc4j.marc.ControlField;
+import org.marc4j.marc.DataField;
+import org.marc4j.marc.Leader;
+import org.marc4j.marc.MarcFactory;
+import org.marc4j.marc.Record;
+import org.marc4j.marc.Subfield;
 import org.marc4j.marc.impl.Verifier;
-
-import java.io.*;
-import java.util.Iterator;
 
 /**
  * Implementation of MarcReader from marc4j, that allows for the input charset
@@ -104,6 +117,10 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         }
     }
 
+    /**
+     * Function not supported by this class.
+     */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("Remove not supported");
     }
@@ -115,8 +132,9 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
      */
     public boolean hasNext() {
         try {
-            if (input.available() == 0)
+            if (input.available() == 0) {
                 return false;
+            }
         } catch (IOException e) {
             throw new MarcException(e.getMessage(), e);
         }
@@ -128,8 +146,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
      *
      * @return Record - the record object
      */
-    public Record next()
-    {
+    public Record next() {
         record = factory.newRecord();
 
         try {
@@ -151,8 +168,8 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         }
     }
 
-    private void parseRecord(Record record, byte[] byteArray, byte[] recordBuf, int recordLength)
-    {
+    private void parseRecord(Record record, byte[] byteArray, byte[] recordBuf,
+                             int recordLength) {
         Leader ldr;
         ldr = factory.newLeader();
         ldr.setRecordLength(recordLength);
@@ -174,20 +191,22 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         // if MARC 21 then check encoding
         switch (ldr.getCharCodingScheme()) {
         case ' ':
-            if (!override)
+            if (!override) {
                 encoding = "ISO-8859-1";
+            }
             break;
         case 'a':
-            if (!override)
+            if (!override) {
                 encoding = "UTF8";
+            }
         }
         record.setLeader(ldr);
 
-        if ((directoryLength % 12) != 0)
-        {
+        if ((directoryLength % 12) != 0) {
             throw new MarcException("invalid directory");
         }
-        DataInputStream inputrec = new DataInputStream(new ByteArrayInputStream(recordBuf));
+        DataInputStream inputrec =
+                       new DataInputStream(new ByteArrayInputStream(recordBuf));
         int size = directoryLength / 12;
 
         String[] tags = new String[size];
@@ -200,8 +219,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         String tmp;
 
         try {
-            for (int i = 0; i < size; i++)
-            {
+            for (int i = 0; i < size; i++) {
                 inputrec.readFully(tag);
                 tmp = new String(tag);
                 tags[i] = tmp;
@@ -213,22 +231,20 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
                 inputrec.readFully(start);
             }
 
-            if (inputrec.read() != Constants.FT)
-            {
-                throw new MarcException("expected field terminator at end of directory");
+            if (inputrec.read() != Constants.FT) {
+                throw new MarcException("Expected field terminator at end of "
+                                        + "directory");
             }
 
-            for (int i = 0; i < size; i++)
-            {
+            for (int i = 0; i < size; i++) {
                 int fieldLength = getFieldLength(inputrec);
-                if (Verifier.isControlField(tags[i]))
-                {
+                if (Verifier.isControlField(tags[i])) {
                     byteArray = new byte[lengths[i] - 1];
                     inputrec.readFully(byteArray);
 
-                    if (inputrec.read() != Constants.FT)
-                    {
-                        throw new MarcException("expected field terminator at end of field");
+                    if (inputrec.read() != Constants.FT) {
+                        throw new MarcException("expected field terminator at "
+                                                + "end of field");
                     }
 
                     ControlField field = factory.newControlField();
@@ -236,13 +252,13 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
                     field.setData(getDataAsString(byteArray));
                     record.addVariableField(field);
                 }
-                else
-                {
+                else {
                     byteArray = new byte[lengths[i]];
                     inputrec.readFully(byteArray);
 
                     try {
-                        record.addVariableField(parseDataField(tags[i], byteArray));
+                        record.addVariableField(parseDataField(tags[i],
+                                                               byteArray));
                     } catch (IOException e) {
                         throw new MarcException(
                                 "error parsing data field for tag: " + tags[i]
@@ -252,13 +268,11 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
                 }
             }
 
-            if (inputrec.read() != Constants.RT)
-            {
+            if (inputrec.read() != Constants.RT) {
                 throw new MarcException("expected record terminator");
             }
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             throw new MarcException("an error occured reading input", e);
         }
     }
@@ -281,15 +295,18 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         Subfield subfield;
         while (true) {
             readByte = bais.read();
-            if (readByte < 0)
+            if (readByte < 0) {
                 break;
+            }
             switch (readByte) {
             case Constants.US:
                 code = bais.read();
-                if (code < 0)
+                if (code < 0) {
                     throw new IOException("unexpected end of data field");
-                if (code == Constants.FT)
+                }
+                if (code == Constants.FT) {
                     break;
+                }
                 size = getSubfieldLength(bais);
                 data = new byte[size];
                 bais.read(data);
@@ -305,8 +322,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         return dataField;
     }
 
-    private int getFieldLength(DataInputStream bais) throws IOException
-    {
+    private int getFieldLength(DataInputStream bais) throws IOException {
         bais.mark(9999);
         int bytesRead = 0;
         while (true) {
@@ -324,7 +340,8 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         }
     }
 
-    private int getSubfieldLength(ByteArrayInputStream bais) throws IOException {
+    private int getSubfieldLength(ByteArrayInputStream bais) 
+                                                            throws IOException {
         bais.mark(9999);
         int bytesRead = 0;
         while (true) {
@@ -361,7 +378,8 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
                 leaderData));
         char[] tmp = new char[5];
         isr.read(tmp);
-        //  Skip over bytes for record length, If we get here, its already been computed.
+        // Skip over bytes for record length, ff we get here, its already been
+        // computed.
         ldr.setRecordStatus((char) isr.read());
         ldr.setTypeOfRecord((char) isr.read());
         tmp = new char[2];
@@ -380,7 +398,8 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         ldr.setEntryMap(tmp);
         isr.close();
         try {
-            ldr.setIndicatorCount(Integer.parseInt(String.valueOf(indicatorCount)));
+            ldr.setIndicatorCount(Integer.parseInt(
+                                               String.valueOf(indicatorCount)));
         } catch (NumberFormatException e) {
             throw new MarcException("unable to parse indicator count", e);
         }
@@ -395,7 +414,5 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         } catch (NumberFormatException e) {
             throw new MarcException("unable to parse base address of data", e);
         }
-
     }
 }
-
