@@ -15,12 +15,26 @@
 package dk.statsbiblioteket.summa.support.suggest;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.CharSequenceReader;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -29,25 +43,13 @@ import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.h2.jdbcx.JdbcDataSource;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Statement;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SuggestStorageH2 extends SuggestStorageImpl {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(SuggestStorageH2.class);
-
+    /** Database file for this storage. */
     public static final String DB_FILE = "suggest_h2storage";
 
     public static final int MAX_QUERY_LENGTH = 250;
@@ -78,6 +80,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      * level 2 cache enabled.
      */
     public static final String CONF_L2CACHE = "summa.support.suggest.l2cache";
+    /** Default value for {@link #CONF_L2CACHE}. */
     public static final boolean DEFAULT_L2CACHE = false;
 
     /**
@@ -88,12 +91,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      * in the database, to affect how they are presented to the user see
      * {@link #CONF_SANITIZER}.
      * <p/>
-     * Default is
-     * {@link dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer}.
+     * Default is {@link SummaKeywordAnalyzer}.
      * <p/>
      * The specified class <i>must</i> have a no-arguments constructor.
      */
-    public static final String CONF_NORMALIZER = "summa.support.suggest.normalizer";
+    public static final String CONF_NORMALIZER =
+                                             "summa.support.suggest.normalizer";
+    /** Default value for {@link #CONF_NORMALIZER}. */
     public static final Class<? extends Analyzer> DEFAULT_NORMALIZER =
                                                      SummaKeywordAnalyzer.class;
 
@@ -110,7 +114,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      * <p/>
      * The specified class <i>must</i> have a no-arguments constructor.
      */
-    public static final String CONF_SANITIZER = "summa.support.suggest.sanitizer";
+    public static final String CONF_SANITIZER =
+                                              "summa.support.suggest.sanitizer";
+    /** Default value for {@link #CONF_SANITIZER}. */
     public static final Class<? extends Analyzer> DEFAULT_SANITIZER =
                                                      WhitespaceAnalyzer.class;
 
@@ -251,56 +257,83 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         return connection;
     }
 
+    /**
+     * Creates the Schema for the suggest database implementation.
+     * @throws SQLException If error occurs while executing SQL.
+     */
     private void createSchema() throws SQLException {
-        Statement s = connection.createStatement();
-        s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_index("
+        Statement s = null;
+        try {
+            s = connection.createStatement();
+            s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_index("
                                + "query_id INTEGER AUTO_INCREMENT PRIMARY KEY, "
                                + "normalized_query VARCHAR(%1$d) NOT NULL)",
-                                MAX_QUERY_LENGTH));
-
-        s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_data("
-                                      + "query_id INTEGER NOT NULL, "
-                                      + "user_query VARCHAR(%1$d) UNIQUE, "
-                                      + "query_count INTEGER, "
-                                      + "hit_count INTEGER, "
-                                      + "mtime BIGINT, "
-                                      + "PRIMARY KEY (query_id,user_query))",
-                                MAX_QUERY_LENGTH));
-        s.close();
-        createIndexes();
+                               MAX_QUERY_LENGTH));
+    
+            s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_data("
+                                    + "query_id INTEGER NOT NULL, "
+                                    + "user_query VARCHAR(%1$d) UNIQUE, "
+                                    + "query_count INTEGER, "
+                                    + "hit_count INTEGER, "
+                                    + "mtime BIGINT, "
+                                    + "PRIMARY KEY (query_id,user_query))",
+                                    MAX_QUERY_LENGTH));
+            createIndexes();
+        } finally {
+            s.close();
+        }
     }
 
+    /**
+     * Create indexes on the tables.
+     * @throws SQLException If error occur while creating indexes.
+     */
     private void createIndexes() throws SQLException {
-        long startTime = System.currentTimeMillis();
-        log.info("Preparing table indices");
-        Statement s = connection.createStatement();
-
-        //
-        s.execute("CREATE INDEX IF NOT EXISTS suggest_normalized_query "
-                + "ON suggest_index(normalized_query)");
-
-        // This index is used for prefix searches sorted on query_count,
-        // as well as fast lookups of query_id given a user_query
-        s.execute("CREATE INDEX IF NOT EXISTS suggest_query_count "
-                + "ON suggest_data(user_query, query_count desc)");
-
-        // This index is used for most recent queries sorted by query_count
-        s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
-                + "ON suggest_data(mtime desc, query_count desc)");
-
-        s.close();
-        log.info("Table indices prepared in "
-                 + (System.currentTimeMillis() - startTime) + "ms");
+        Statement s = null;
+        try {
+            long startTime = System.currentTimeMillis();
+            log.info("Preparing table indices");
+            s = connection.createStatement();
+    
+            //
+            s.execute("CREATE INDEX IF NOT EXISTS suggest_normalized_query "
+                    + "ON suggest_index(normalized_query)");
+    
+            // This index is used for prefix searches sorted on query_count,
+            // as well as fast lookups of query_id given a user_query
+            s.execute("CREATE INDEX IF NOT EXISTS suggest_query_count "
+                    + "ON suggest_data(user_query, query_count desc)");
+    
+            // This index is used for most recent queries sorted by query_count
+            s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
+                    + "ON suggest_data(mtime desc, query_count desc)");
+    
+            log.info("Table indices prepared in "
+                     + (System.currentTimeMillis() - startTime) + "ms");
+        } finally {
+            s.close();
+        }
     }
 
+    /**
+     * Drop all indexes on suggest tables.
+     * @throws SQLException If error occurs while dropping indexes.
+     */
     private void dropIndexes() throws SQLException {
-        Statement s = connection.createStatement();
-        s.execute("DROP INDEX suggest_normalized_query");
-        s.execute("DROP INDEX suggest_query_count");
-        s.execute("DROP INDEX suggest_mtime");
-        s.close();
+        Statement s = null;
+        try {
+            s = connection.createStatement();
+            s.execute("DROP INDEX suggest_normalized_query");
+            s.execute("DROP INDEX suggest_query_count");
+            s.execute("DROP INDEX suggest_mtime");
+        } finally {
+            s.close();
+        }
     }
 
+    /**
+     * Closing the suggest database and the database connection.
+     */
     public synchronized void close() {
         log.info(String.format("Closing '%s'" , location));
         if (closed) {
@@ -780,16 +813,24 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    @Override
     public synchronized void clear() throws IOException {
         log.info("Clearing suggest data");
+        Statement s = null;
         try {
-            Statement s = connection.createStatement();
+            s = connection.createStatement();
             s.execute("DROP TABLE suggest_index;");
             s.execute("DROP TABLE suggest_data;");
             createSchema();
         } catch (SQLException e) {
             throw new IOException(
                     "Exception while dropping and re-creating table", e);
+        } finally {
+            try {
+                s.close();
+            } catch (SQLException e) {
+                throw new IOException("Error while closing statement", e);
+            }
         }
     }
 
@@ -805,30 +846,48 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         optimizeTables();
     }
 
+    /**
+     * Optimize the tables holding the suggest data.
+     */
     private synchronized void optimizeTables() {
         long startTime = System.currentTimeMillis();
+        Statement stmt = null;
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
             log.debug("Optimizing suggest table selectivity");
-            Statement stmt = connection.createStatement();
+            stmt = connection.createStatement();
             //noinspection DuplicateStringLiteralInspection
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
             log.warn("Failed to optimize suggest table selectivity", e);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Error occured while closing statement: '" + stmt
+                         + "'", e);
+            }
         }
         log.debug("Optimize finished in "
                   + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private void setMaxMemoryRows(int maxMemoryRows) {
+        Statement stmt = null;
         try {
             log.debug("Setting MAX_MEMORY_ROWS for suggest to "
                       + maxMemoryRows);
-            Statement stmt = connection.createStatement();
+            stmt = connection.createStatement();
             //noinspection DuplicateStringLiteralInspection
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
         } catch (SQLException e) {
             log.warn("Failed to set MAX_MEMORY_ROWS for suggest", e);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: '" + stmt + "'", e);
+            }
         }
     }
 
@@ -899,9 +958,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     /**
      * Join a stream of tokens, between each token, is added the delimiter.
-     * @param toks token stream.
-     * @param delimiter the delimiter.
-     * @return the string build by added delimiter between each token.
+     * @param toks Token stream.
+     * @param delimiter The delimiter.
+     * @return The string build by added delimiter between each token.
      */
     private String join(TokenStream toks, String delimiter) {
         StringBuilder buf = threadLocalBuilder.get();
@@ -922,10 +981,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             // This should *never* happen because we read from a local String,
             // not really doing IO
             log.error(String.format(
-                    "Error analyzing query: %s", e.toString()), e);
+                                 "Error analyzing query: %s", e.toString()), e);
             return "ERROR";
         }
     }
-
 }
-

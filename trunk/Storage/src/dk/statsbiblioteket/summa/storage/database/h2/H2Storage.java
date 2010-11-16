@@ -248,16 +248,18 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     private void optimizeTables() {
         Connection conn = getConnection();
+        Statement stmt = null;
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
             log.info("Optimizing table selectivity");
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
             log.warn("Failed to optimize table selectivity", e);
         } finally {
             try {
                 conn.close();
+                stmt.close();
             } catch (SQLException e) {
                 log.warn("Failed to close connection: " + e.getMessage(), e);
             }
@@ -309,12 +311,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     private void setMaxMemoryRows() {
         Connection conn = getConnection();
+        Statement stmt = null;
         try {
             // There might be several rows per record if the records has
             // relations. There will be one extra row per relation
             int maxMemoryRows = getPageSize()*3;
             log.debug("Setting MAX_MEMORY_ROWS to " + maxMemoryRows);
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
         } catch (SQLException e) {
             log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance"
@@ -322,6 +325,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         } finally {
             try {
                 conn.close();
+                stmt.close();
             } catch (SQLException e) {
                 log.warn("Failed to close connection: " + e.getMessage(), e);
             }

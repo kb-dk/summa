@@ -2029,7 +2029,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             ResultSet results = stmt.getResultSet();
             iter = new ResultSetCursor(this, stmt, results, true);
-
+            
             while (iter.hasNext()) {
                 Record r = iter.next();
                 if (options != null && options.allowsRecord(r)) {
@@ -2046,18 +2046,16 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.trace("Looked up children for '" + id + "': "
                           + Strings.join(children, ";"));
             }
-
+            results.close();
             return children;
-
         } catch (SQLException e) {
             throw new IOException(String.format(
                     "Failed to get children for record '%s': %s",
                     id, e.getMessage()), e);
         } finally {
+            stmt.close();
             if (iter != null) {
                 iter.close();
-            } else {
-                stmt.close();
             }
         }
     }
@@ -2109,6 +2107,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     childIds.add(childId);
                 }
             }
+            results.close();
         } catch (SQLException e) {
             log.warn("Failed to resolve related ids for " + rec.getId() + ": "
                      + e.getMessage(), e);
@@ -3001,6 +3000,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private long getModifcationTimeWithConnection(String base, Connection conn)
                                                            throws SQLException {
         PreparedStatement stmt = null;
+        ResultSet resultSet = null;
         try {
             if (base == null) {
                 String sql = "SELECT " + MTIME_COLUMN + " FROM "
@@ -3009,7 +3009,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt = conn.prepareStatement(sql);
                 stmt.execute();
                 long maxTime = 0;
-                ResultSet resultSet = stmt.executeQuery();
+                resultSet = stmt.executeQuery();
                 if (resultSet.next()) {
                     maxTime = resultSet.getLong(1);
                 }
@@ -3020,9 +3020,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt.setString(1, base);
                 stmt.execute();
                 // We don't have a storage match
-                ResultSet result = stmt.getResultSet();
-                if (result.next()) {
-                    return result.getLong(result.findColumn(MTIME_COLUMN));
+                resultSet = stmt.getResultSet();
+                if (resultSet.next()) {
+                    return resultSet.getLong(
+                                            resultSet.findColumn(MTIME_COLUMN));
                 } else {
                     long time = 0;
                     try {
@@ -3030,13 +3031,16 @@ public abstract class DatabaseStorage extends StorageBase {
                     } catch (IOException e) {
                         
                     }                
-                    log.debug("No data for base, returning storage start time (" 
+                    log.debug("No data for base, returning storage start time ("
                               + getStorageStartTime() + ", should have been "
                               + time);
                     return getStorageStartTime();
                 }
             }
         } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
             closeStatement(stmt);
         }
     }
