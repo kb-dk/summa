@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.3-20101115-SNAPSHOT</version>
+    <version>1.6.3-20101116-SNAPSHOT</version>
     <inceptionYear>2010</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-core</artifactId>  
-                <version>4.0-dev-LUCENE-2369-20101115</version>
+                <version>4.0-dev-LUCENE-2369-20101116</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
@@ -121,7 +121,8 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-didyoumean</artifactId>
-                <version>3.0.1</version>
+                <version>4.0-dev-20101115</version>
+<!--                <version>3.0.1</version>-->
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>

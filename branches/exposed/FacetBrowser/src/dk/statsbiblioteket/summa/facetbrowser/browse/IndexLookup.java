@@ -142,6 +142,8 @@ public class IndexLookup {
         org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest =
             createFacetRequest(request);
 
+//        System.out.println("Requesting for\n" + fRequest.toXML());
+
         IndexReader reader = searcher.getIndexReader();
         CollectorPool collectorPool;
         try {
@@ -160,6 +162,9 @@ public class IndexLookup {
                 "Unable to extract response from TagCollector", e);
         }
         collectorPool.release(request.getQuery(), tagCollector);
+
+        //System.out.println("Got response\n" + fResponse.toXML());
+        
         IndexResponse iResponse = newResponseToOldResult(fResponse, request);
         lookupTime += System.currentTimeMillis();
         log.debug("Finished IndexLookup for " + request + " in " + lookupTime
@@ -230,8 +235,10 @@ public class IndexLookup {
             request.getDelta(), request.getLength(), request.getMinCount(),
             request.getTerm());
         groups.add(facetGroup);
-        return new org.apache.lucene.search.exposed.facet.request.FacetRequest(
+        org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest =
+            new org.apache.lucene.search.exposed.facet.request.FacetRequest(
             request.getQuery() == null ? "*" : request.getQuery(), groups);
+        return fRequest;
     }
 
     public void updateDescriptor(File location) {

@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup extendedIndexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="didYouMean">

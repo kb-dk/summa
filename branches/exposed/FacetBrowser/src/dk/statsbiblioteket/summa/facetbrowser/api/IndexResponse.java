@@ -239,6 +239,8 @@ public class IndexResponse implements Response {
             xmlOut.writeAttribute(
                 "length", Integer.toString(request.getLength()));
             xmlOut.writeAttribute("origo", Integer.toString(getOrigo()));
+            xmlOut.writeAttribute(
+                "mincount", Integer.toString(request.getMinCount()));
             xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("index");
