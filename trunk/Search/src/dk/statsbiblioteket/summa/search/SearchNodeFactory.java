@@ -19,12 +19,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Constructs a tree of SearchNodes from properties. It is expected that
@@ -34,6 +35,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SearchNodeFactory {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(SearchNodeFactory.class);
     /**
      * The class for the SearchNode to construct.
@@ -68,7 +70,7 @@ public class SearchNodeFactory {
         } catch (NullPointerException e) {
             throw new RemoteException(String.format(
                     "The property '%s' could not be located in properties",
-                    CONF_NODE_CLASS));
+                    CONF_NODE_CLASS), e);
         }
         return createSearchNode(searchNodeClassName, conf);
     }
@@ -109,10 +111,10 @@ public class SearchNodeFactory {
             sub = conf.getSubConfiguration(key);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new RemoteException(
-                    "Storage doesn't support sub configurations");
+                    "Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new RemoteException(String.format(
-                    "Could not extract the sub configuration '%s'", key));
+                    "Could not extract the sub configuration '%s'", key), e);
         }
         return createSearchNode(sub);
     }
@@ -139,7 +141,7 @@ public class SearchNodeFactory {
             nodeConfs = conf.getSubConfigurations(CONF_NODES);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new Configurable.ConfigurationException(
-                    "Storage doesn't support sub configurations");
+                    "Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new Configurable.ConfigurationException(String.format(
                     "Could not extract a list of XProperties for SearchNodes "

@@ -18,10 +18,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -35,6 +34,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 /**
  * The Facet Structure holds top-level information, such as the Facet names
  * and the maximum number of Tags in each Facet.
@@ -46,7 +47,9 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Structure implements Configurable, Serializable {
+    /** Serial version UID. */
     private static final long serialVersionUID = 96848713588L;
+    /** Logger for this class. */
     private static volatile Logger log = Logger.getLogger(Structure.class);
 
     /**
@@ -135,12 +138,12 @@ public class Structure implements Configurable, Serializable {
                     conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+                    "Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
             throw new ConfigurationException(String.format(
                     "Unable to extract sub configuration %s",
-                    IndexDescriptor.CONF_DESCRIPTOR));
+                    IndexDescriptor.CONF_DESCRIPTOR), e);
         }
         try {
             FacetIndexDescriptor descriptor =
@@ -159,7 +162,7 @@ public class Structure implements Configurable, Serializable {
             facetConfs = conf.getSubConfigurations(CONF_FACETS);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+                    "Storage doesn't support sub configurations", e);
         } catch (ClassCastException e) {
             throw new ConfigurationException(String.format(
                     "Could not extract a list of Configurations from "
@@ -205,7 +208,7 @@ public class Structure implements Configurable, Serializable {
     /**
      * It is recommended not to change the map of FacetStructures externally,
      * as this might result in bad sorting of facets.
-     * @return the Facet-definitions. The result is an ordered map.
+     * @return The Facet-definitions. The result is an ordered map.
      *         It is expected that the order will be used in presentation.
      */
     public Map<String, FacetStructure> getFacets() {
@@ -213,7 +216,7 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
-     * @return the facets that makes up the Structure.
+     * @return The facets that makes up the Structure.
      */
     public List<FacetStructure> getFacetList() {
         List<FacetStructure> result =
@@ -225,8 +228,8 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
-     * @param facetName the name of the wanted FacetStructure.
-     * @return the wanted FacetStructure or null if the structure is
+     * @param facetName The name of the wanted FacetStructure.
+     * @return The wanted FacetStructure or null if the structure is
      *         non-existing.
      */
     public FacetStructure getFacet(String facetName) {
@@ -261,19 +264,19 @@ public class Structure implements Configurable, Serializable {
             if (facets == null) {
                 throw new IllegalStateException(String.format(
                         "The facets list was null when performing lookup of"
-                        + " facet '%s'", facetName));
+                        + " facet '%s'", facetName), e);
             } else {
                 //noinspection unchecked
                 throw new IllegalArgumentException(String.format(
                         "The facet '%s' did not exist in the facet-list %s", 
                         facetName, Logs.expand(new ArrayList<String>(
-                        facets.keySet()), 20)));
+                        facets.keySet()), 20)), e);
             }
         }
     }
 
     /**
-     * @return a list with the names of all the facets, in facet sort order.
+     * @return A list with the names of all the facets, in facet sort order.
      */
     public List<String> getFacetNames() {
         List<String> facetNames = new ArrayList<String>(facets.size());
@@ -284,7 +287,7 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
-     * @return a map from Facet-names to maximum tags. The order is significant.
+     * @return A map from Facet-names to maximum tags. The order is significant.
      */
     public HashMap<String, Integer> getMaxTags() {
         HashMap<String, Integer> map =
@@ -432,4 +435,3 @@ public class Structure implements Configurable, Serializable {
         return "Structure(" + facets.size() + " facets)";
     }
 }
-

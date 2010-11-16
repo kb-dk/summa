@@ -498,15 +498,15 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } catch (IOException e) {
             try {
                 Files.delete(tmpPkg);
-                throw new BundleLoadingException ("Error deploying "
-                                                  + localFile + ". "
-                                                  + "Purged " + tmpPkg
-                                                  + " from tmp dir", e);
+                throw new BundleLoadingException("Error deploying "
+                                                 + localFile + ". "
+                                                 + "Purged " + tmpPkg
+                                                 + " from tmp dir", e);
             } catch (IOException ee) {
                 log.error ("Failed to clean up after buggy deploy", ee);
-                throw new BundleLoadingException ("Error deleting file '"
-                                                  + tmpPkg + "' when cleaning "
-                                                  + "up buggy deploy", e);
+                throw new BundleLoadingException("Error deleting file '"
+                                                 + tmpPkg + "' when cleaning "
+                                                 + "up buggy deploy", e);
             }
         }
 

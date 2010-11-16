@@ -18,11 +18,7 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -39,10 +35,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Utility class foor remote invocation.
  */
 public class RemoteHelper {
+    /** Logger for this class. */
     static private final Log log = LogFactory.getLog (RemoteHelper.class);
     static private final RemoteHelperShutdownHook shutdownHook;
 
@@ -107,10 +110,16 @@ public class RemoteHelper {
                  + serviceName);
     }
 
+    /**
+     * Un export a remote interface.
+     * @param serviceName The service that should be unexported.
+     * @param registryPort The port of the service.
+     * @throws IOException If error occur while unexporting service. 
+     */
     public synchronized static void unExportRemoteInterface (
                       String serviceName, int registryPort) throws IOException {
-        log.trace ("Preparing to unexport '" + serviceName + "' with registry on"
-                   + " port " + registryPort);
+        log.trace("Preparing to unexport '" + serviceName
+                  + "' with registry on" + " port " + registryPort);
         Registry reg;
 
         /* We should not try and create the registry when we want to
@@ -236,13 +245,13 @@ public class RemoteHelper {
             tmpDir.mkdirs();
             Files.delete(tmpDir);
         } catch (IOException e) {
-            log.error ("Failed to create or delete temporary dir. Can not "
-                       + "resolve code path", e);
+            log.error("Failed to create or delete temporary dir. Can not "
+                      + "resolve code path", e);
             return;
         }
 
         for (String uri : uris) {
-            log.trace ("Testing codepath for " + uri);
+            log.trace("Testing codepath for " + uri);
 
             tmpDir.mkdirs();
 
