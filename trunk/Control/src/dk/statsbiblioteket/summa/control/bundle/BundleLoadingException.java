@@ -21,28 +21,40 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="Methods needs Javadoc")
+        author = "mke")
 public class BundleLoadingException extends RuntimeException {
+    /** Serial version UID. */
     private static final long serialVersionUID = 86991866841831L;
-    public BundleLoadingException () {
+    /**
+     * Default constructor.
+     */
+    public BundleLoadingException() {
         super();
     }
 
-    public BundleLoadingException (String msg) {
+    /**
+     * Exception with a message.
+     * @param msg The message.
+     */
+    public BundleLoadingException(String msg) {
         super(msg);
     }
 
-    public BundleLoadingException (String msg, Throwable cause) {
+    /**
+     * Exception with message and cause.
+     * @param msg The message.
+     * @param cause The cause of this exception.
+     */
+    public BundleLoadingException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
-    public BundleLoadingException (Throwable cause) {
+    /**
+     * Exception with a cause.
+     * @param cause The cause of this exception.
+     */
+    public BundleLoadingException(Throwable cause) {
         super(cause);
     }
-
 }
-
-
-
 
