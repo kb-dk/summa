@@ -240,6 +240,28 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String BASE_STATISTICS = "summa_basestats";
 
     /**
+     * Number of records in deleted stated and indexable.
+     */
+    public static final String DELETE_INDEXABLES_COLUMN = "deletedindexables";
+
+    /**
+     * Number of records not in deleted stated but indexable.
+     */
+    public static final String NON_DELETED_INDEXABLES_COLUMN =
+                                                         "nondeletedindexables";
+
+    /**
+     * Number of records in deleted state and not indexable. 
+     */
+    public static final String DELETED_NON_INDEXABLES_COLUMN =
+                                                         "deletednonindexables";
+
+    /**
+     * Number of records not deleted and not indexable.
+     */
+    public static final String NON_DELETED_NON_INDEXABLES_COLUMN =
+                                                      "nonDeletedNonIndexables";
+    /**
      * The {@code id} column contains the unique identifier for a given record
      * in the database. The value that is mapped directly to the {@code id}
      * value of the constructed {@link Record} objects.
@@ -369,8 +391,13 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtInsertBaseStats;
     /** Sets a base statistic row in invalid. */
     private StatementHandle stmtSetBaseStatsInvalid;
-	    /** Retrieves the last modification time for a base. */ 
+	/** Retrieves the last modification time for a base. */ 
     private StatementHandle stmtGetLastModificationTime;
+    /** Insert full set of data into base statistic row. */
+    private StatementHandle stmtInsertFullBaseStats;
+    /** Update full set of base statistic. */
+    private StatementHandle stmtUpdateFullBaseStats;
+    /** String for all columns. */
     private String allColumns;
 
     /** Iterator keys. */
@@ -389,10 +416,6 @@ public abstract class DatabaseStorage extends StorageBase {
     private boolean usePagingModel;
     /** The page size. */
     private int pageSize;
-    /** The cached base statistic. */
-    private List<BaseStats> cachedStats;
-    /*** The lock for the cached base statistic lock. */
-    private final Object cachedStatsLock = new Object();
 
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
@@ -1067,9 +1090,11 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Insert new base statistic row
         String insertBaseStats = "INSERT INTO " + BASE_STATISTICS
-            + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", " + DELETED_COLUMN
-            + ", " + INDEXABLE_COLUMN + ", " + VALID_COLUMN
-            + ") VALUES (?, ?, 0, 0, 0)";
+            + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", "
+            + DELETE_INDEXABLES_COLUMN + ", " + NON_DELETED_INDEXABLES_COLUMN
+            + ", " + DELETED_NON_INDEXABLES_COLUMN + ", "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + ", " + VALID_COLUMN
+            + ") VALUES (?, ?, 0, 0, 0, 0, 0)";
         log.debug("Preparing query insertBaseStats with '" + insertBaseStats
                   + "'");
         stmtInsertBaseStats = prepareStatement(insertBaseStats);
@@ -1077,7 +1102,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Set base statistic row invalid
         String setBaseStatsInvalid = "UPDATE " + BASE_STATISTICS + " SET "
-            + VALID_COLUMN + "= 0 WHERE " + BASE_COLUMN + " = ?";
+            + VALID_COLUMN + " = 0 WHERE " + BASE_COLUMN + " = ?";
         log.debug("Preparing query setBaseStatsInvalid with '"
                 + setBaseStatsInvalid + "'");
         stmtSetBaseStatsInvalid = prepareStatement(setBaseStatsInvalid);
@@ -1091,7 +1116,32 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetLastModificationTime = prepareStatement(getLastModificationTime);
         log.debug("getLastModificationTime handle: "
                   + stmtGetLastModificationTime);
-        
+
+        // SQL for updating full base statistic
+        String updateFullBaseStats = "UPDATE " + BASE_STATISTICS + " SET "
+            + DELETE_INDEXABLES_COLUMN + " = ?, "
+            + NON_DELETED_INDEXABLES_COLUMN + " = ?, "
+            + DELETED_NON_INDEXABLES_COLUMN + " = ?, "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + " = ?, "
+            + VALID_COLUMN + " = 1 "
+            +" WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query getLastModificationTime with '"
+                + updateFullBaseStats + "'");
+        stmtUpdateFullBaseStats = prepareStatement(updateFullBaseStats);
+        log.debug("updateFullBaseStats handle: " + stmtUpdateFullBaseStats);
+
+        // SQL for updating full base statistic
+        String insertFullBaseStats = "INSERT INTO " + BASE_STATISTICS
+        + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", "
+        + DELETE_INDEXABLES_COLUMN + ", " + NON_DELETED_INDEXABLES_COLUMN
+        + ", " + DELETED_NON_INDEXABLES_COLUMN + ", "
+        + NON_DELETED_NON_INDEXABLES_COLUMN + ", " + VALID_COLUMN
+        + ") VALUES (?, ?, ?, ?, ?, ?, 1)";
+        log.debug("Preparing query getLastModificationTime with '"
+                  + insertFullBaseStats + "'");
+        stmtInsertFullBaseStats = prepareStatement(insertFullBaseStats);
+        log.debug("insertFullBaseStats handle: " + stmtInsertFullBaseStats);
+
         log.debug("Finished preparing SQL statements");
     }
 
@@ -3002,8 +3052,10 @@ public abstract class DatabaseStorage extends StorageBase {
             + BASE_STATISTICS + " (" 
             + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
             + MTIME_COLUMN + " BIGINT, "
-            + DELETED_COLUMN + " INTEGER, "
-            + INDEXABLE_COLUMN + " INTEGER, "
+            + DELETE_INDEXABLES_COLUMN + " BIGINT, "
+            + NON_DELETED_INDEXABLES_COLUMN + " BIGINT, "
+            + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + " BIGINT, "
             + VALID_COLUMN + " INTEGER)";
         log.debug("Creating table " + BASE_STATISTICS + " if not already existing"
         	  + " with query '" + createBaseStatisticQuery + "'");
@@ -3107,12 +3159,29 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     protected void checkTableConsistency() {
+        boolean createNew = false;
+        Connection conn = getConnection();
         try {
-            doCreateSummaBaseStatisticTable(getConnection());
+            String query = "SELECT " + NON_DELETED_NON_INDEXABLES_COLUMN
+                + " FROM " + BASE_STATISTICS;
+            Statement stmt = conn.createStatement();
+            stmt.execute(query);
+        } catch (SQLException e) {
+            log.info("Deleting old base statistic table");
+            destroyBaseStatistic();
+            createNew = true;
+            log.info("Creating new base statistic table");
+        }
+
+        try {
+            if (createNew) {
+                doCreateSummaBaseStatisticTable(conn);
+            }
         } catch (SQLException e) {
             log.info("Error creating table "
                      + DatabaseStorage.BASE_STATISTICS, e);
         }
+        closeConnection(conn);
     }
 
     /**
@@ -3143,13 +3212,20 @@ public abstract class DatabaseStorage extends StorageBase {
         log.info("All Summa data wiped from database");
     }
 
-    protected void destroyBaseStatistic() throws SQLException {
-        Connection conn = getDefaultConnection();
+    /**
+     * Destroy the base statistic table.
+     */
+    protected void destroyBaseStatistic() {
+        Connection conn = null;
         try {
+            conn = getDefaultConnection();
             log.warn("Destryoing all statistic");
             Statement stmt = conn.createStatement();
             stmt.execute("DROP TABLE " + BASE_STATISTICS);
             stmt.close();
+        } catch (SQLException e) {
+            log.info("Base statistic table not deleted reason: " + e.getCause()
+                  + "'", e);
         } finally {
             closeConnection(conn);
         }
@@ -3432,33 +3508,139 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public List<BaseStats> getStats() throws IOException {
         log.trace("getStats()");
+        Connection conn = null;
 
-        synchronized (cachedStatsLock) {
-            if (cachedStats != null) {
-                log.debug("Retrieving stats from cache");
-                return cachedStats;
-            }
+        String isBaseStatsInvalid = "SELECT * FROM " + BASE_STATISTICS
+            + " WHERE " + VALID_COLUMN + " = 0";
 
-            Connection conn = null;
-            try {
-                conn = getConnection();
-                cachedStats = getStatsWithConnection(conn);
-                return cachedStats;
-            } catch (SQLException e) {
-                throw new IOException("Could not get database stats", e);
-            } finally {
-                closeConnection(conn);
+        try {
+            conn = getConnection();
+            Statement stmt = conn.createStatement();
+            boolean resultSet = stmt.execute(isBaseStatsInvalid);
+            if(resultSet && stmt.getResultSet().first()) {
+                log.debug("Return slow statistic");
+                return getHeavyStatsWithConnection(conn);
+            } else {
+                log.debug("Return fast statistic");
+                return getStatsWithConnection(conn);
             }
+        } catch (SQLException e) {
+            throw new IOException("Could not get database stats", e);
+        } finally {
+            closeConnection(conn);
         }
     }
 
     /**
-     * Clears cached statistic.
+     * Invalidate cached statistic in database.
      */
     private void invalidateCachedStats() {
-        synchronized (cachedStatsLock) {
-            cachedStats = null;
+        String invalidateCachedStats = "UPDATE " + BASE_STATISTICS 
+        + " SET " + VALID_COLUMN + " = 0";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            Statement stmt = conn.createStatement();
+            stmt.execute(invalidateCachedStats);
+        } catch (SQLException e) {
+            log.error("Error invalidating base statistic in database", e);
+        } finally {
+            closeConnection(conn);
         }
+    }
+
+    private List<BaseStats> getStatsWithConnection(Connection conn)
+                                              throws SQLException, IOException {
+        long startTime = System.currentTimeMillis();
+        List<BaseStats> stats = new LinkedList<BaseStats>();
+
+        String query = "SELECT * FROM " + BASE_STATISTICS;
+        Statement stmt = conn.createStatement();
+        ResultSet results = stmt.executeQuery(query);
+
+        try {
+           for(results.first(); !results.isAfterLast(); results.next()) {
+               String baseName = results.getString(1);
+               long lastModified = results.getLong(2);
+               long deletedIndexables = results.getLong(3);
+               long nonDeletedIndexables = results.getLong(4);
+               long deletedNonIndexables = results.getLong(5);
+               long nonDeletedNonIndexables = results.getLong(6);
+               stats.add(new BaseStats(baseName, lastModified, startTime,
+                                       deletedIndexables,
+                                       nonDeletedIndexables,
+                                       deletedNonIndexables,
+                                       nonDeletedNonIndexables));
+           }
+        } finally {
+            if (results != null) {
+                results.close();
+            }
+        }        
+        log.debug(String.format("Extracted storage stats in %sms",
+                (System.currentTimeMillis() - startTime)));
+        return stats;
+    }
+
+    /**
+     * Updates the base statistic table, if no row exists for this table a new
+     * row is inserted into the database.
+     * Note: This method returns a new instantiated {@link BaseStats} object.
+     *
+     * @param baseName The base name.
+     * @param lastModified Last modification time for the base.
+     * @param generationTime The generation time of the base statistic object.
+     * @param deletedIndexables The number of deleted and indexable records.
+     * @param nonDeletedIndexables The number of non deleted and indexable
+     * records.
+     * @param deletedNonIndexables The number of deleted and non indexable
+     * records.
+     * @param nonDeletedNonIndexables the number of non deleted and non
+     * indexable records.
+     * @param conn The database connection.
+     * @return 
+     */
+    private BaseStats updateBaseStatsTable(String baseName, long lastModified,
+                                          long generationTime,
+                                          long deletedIndexables,
+                                          long nonDeletedIndexables,
+                                          long deletedNonIndexables,
+                                          long nonDeletedNonIndexables,
+                                          Connection conn) throws SQLException {
+        // Update base stats table
+        log.debug("Updating base statistic for base '" + baseName + ".");
+        PreparedStatement stmt =
+                        conn.prepareStatement(stmtUpdateFullBaseStats.getSql());
+        PreparedStatement insertStmt = null;
+        try {
+            stmt.setLong(1, deletedIndexables);
+            stmt.setLong(2, nonDeletedIndexables);
+            stmt.setLong(3, deletedNonIndexables);
+            stmt.setLong(4, nonDeletedNonIndexables);
+            stmt.setString(5, baseName);
+            if (stmt.executeUpdate() < 1) { // This is a new base, update
+                // insert base and mtime
+                log.debug("Base row didn't exists in "+ BASE_STATISTICS
+                          + " insert new row");
+                insertStmt =
+                        conn.prepareStatement(stmtInsertFullBaseStats.getSql());
+                insertStmt.setString(1, baseName);
+                insertStmt.setLong(2, lastModified);
+                insertStmt.setLong(3, deletedIndexables);
+                insertStmt.setLong(4, nonDeletedIndexables);
+                insertStmt.setLong(5, deletedNonIndexables);
+                insertStmt.setLong(6, nonDeletedNonIndexables);
+                insertStmt.execute();
+            }
+        } finally {
+            closeStatement(stmt);
+            closeStatement(insertStmt);
+        }
+        // Return new base stats element 
+        return new BaseStats(baseName, lastModified, generationTime,
+                             deletedIndexables, nonDeletedIndexables,
+                             deletedNonIndexables, nonDeletedNonIndexables);
     }
 
     /**
@@ -3468,7 +3650,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error getting the SQL exception.
      * @throws IOException If error handling RMI.
      */
-    private List<BaseStats> getStatsWithConnection(Connection conn)
+    private List<BaseStats> getHeavyStatsWithConnection(Connection conn)
                                               throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<BaseStats>();
@@ -3520,10 +3702,12 @@ public abstract class DatabaseStorage extends StorageBase {
                         break;
                     }
                 }
-                stats.add(new BaseStats(
-                        lastBase, getModificationTime(lastBase), startTime,
-                        deletedIndexables, nonDeletedIndexables,
-                        deletedNonIndexables, nonDeletedNonIndexables));
+                // Insert / update database and create {@link BaseStats} object
+                stats.add(updateBaseStatsTable(lastBase,
+                          getModificationTime(lastBase), startTime,
+                          deletedIndexables, nonDeletedIndexables,
+                          deletedNonIndexables, nonDeletedNonIndexables,
+                          conn));    
             }
         } finally {
             result.close();
