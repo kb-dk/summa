@@ -470,7 +470,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         // Doing checkString() here makes sure we don't allocate huge amounts
         // of memory in our thread local StringBuilders used in join()
-        if (!checkString(query)) return;
+        if (!checkString(query)) {
+            return;
+        }
         query = sanitize(query);
 
         if (hits == 0) {
@@ -507,7 +509,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         String normalizedQuery = normalize(query);
 
-        if (!checkString(normalizedQuery)) return;
+        if (!checkString(normalizedQuery)) {
+            return;
+        }
 
         if (normalizeQueries) {
             query = normalizedQuery;
@@ -633,7 +637,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         try {
             String normalizedQuery = normalize(query);
 
-            if (!checkString(normalizedQuery)) return;
+            if (!checkString(normalizedQuery)) {
+                return;
+            }
 
             if (normalizeQueries) {
                 query = normalizedQuery;
