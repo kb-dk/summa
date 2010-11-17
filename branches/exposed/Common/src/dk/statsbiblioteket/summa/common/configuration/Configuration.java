@@ -25,11 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.StringWriter;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -954,7 +950,6 @@ public class Configuration implements Serializable,
     @SuppressWarnings("unused")
     public void loadFromXML(String filename) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
         Properties p = new Properties();
         p.loadFromXML(loader.getResourceAsStream(filename));
 
