@@ -152,8 +152,13 @@ public class IndexLookup {
             throw new RuntimeException(
                 "Unable to acquire a CollectorPool for " + fRequest, e);
         }
-        TagCollector tagCollector = collectorPool.acquire(request.getQuery());
-        collect(tagCollector, fRequest, request.getQuery());
+        String queryKey = toQueryKey(request);
+        TagCollector tagCollector = collectorPool.acquire(queryKey);
+        if (queryKey.equals(tagCollector.getQuery())) {
+            log.debug("Reusing already filled collector for " + queryKey);
+        } else {
+            collect(tagCollector, fRequest, request.getQuery());
+        }
         FacetResponse fResponse;
         try {
             fResponse = tagCollector.extractResult(fRequest);
@@ -161,7 +166,7 @@ public class IndexLookup {
             throw new RuntimeException(
                 "Unable to extract response from TagCollector", e);
         }
-        collectorPool.release(request.getQuery(), tagCollector);
+        collectorPool.release(queryKey, tagCollector);
 
         //System.out.println("Got response\n" + fResponse.toXML());
         
@@ -170,6 +175,11 @@ public class IndexLookup {
         log.debug("Finished IndexLookup for " + request + " in " + lookupTime
                   + " ms");
         return iResponse;
+    }
+
+    private String toQueryKey(IndexRequest request) {
+        return (request.getQuery() == null ? "*" : request.getQuery())
+               + request.getField();
     }
 
     private IndexResponse newResponseToOldResult(

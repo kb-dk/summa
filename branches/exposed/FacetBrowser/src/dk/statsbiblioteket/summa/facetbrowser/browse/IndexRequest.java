@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /**
@@ -34,7 +35,9 @@ import java.util.Locale;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexRequest {
+public class IndexRequest implements Serializable {
+    private static final long serialVersionUID = 798434168190L;
+
     private static Log log = LogFactory.getLog(IndexRequest.class);
 
     /**
