@@ -18,13 +18,15 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.xml.DOM;
+
+import java.io.File;
+
 import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-
-import java.io.File;
 
 /**
  * 
@@ -38,7 +40,7 @@ public class SuggestStorageTest extends TestCase {
     public void setUp() throws Exception {
         if (storage != null) {
             dbLocation = new File(
-                    System.getProperty("java.io.tmpdir"),
+                    "target/test/",
                     "suggest-" + ++dbCount);
             storage.open(dbLocation);
         } else {
