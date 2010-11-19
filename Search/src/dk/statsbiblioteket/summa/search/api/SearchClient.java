@@ -30,7 +30,7 @@ import java.io.IOException;
  * or you must do manual connection management, this is by far the easiest way
  * to use a remote {@link SummaSearcher}.
  * <p></p>
- * It is modelled as a {@link ConnectionConsumer} meaning that you can tweak
+ * It is modeled as a {@link ConnectionConsumer} meaning that you can tweak
  * its behavior by changing the configuration parameters
  * {@link GenericConnectionFactory#CONF_RETRIES},
  * {@link GenericConnectionFactory#CONF_GRACE_TIME},
@@ -38,14 +38,14 @@ import java.io.IOException;
  * {@link ConnectionConsumer#CONF_RPC_TARGET}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "mke")
 public class SearchClient extends ConnectionConsumer<SummaSearcher>
                           implements Configurable {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
-    public SearchClient (Configuration conf) {
-        super (conf);
+    public SearchClient(Configuration conf) {
+        super(conf);
         log.debug(String.format(
                 "Created SearchClient with %s=%s",
                 ConnectionConsumer.CONF_RPC_TARGET,
@@ -56,11 +56,11 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
      * Perform a search on the remote {@link SummaSearcher}. Connection handling
      * is done transparently underneath.
      * 
-     * @param request the request to pass.
-     * @return what ever response the search engine returns.
+     * @param request The request to pass.
+     * @return What ever response the search engine returns.
      * @throws IOException on communication errors with the search engine.
      */
-    public ResponseCollection search (Request request) throws IOException {
+    public ResponseCollection search(Request request) throws IOException {
         SummaSearcher searcher = getConnection();
 
         if (searcher == null) {
@@ -77,9 +77,4 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
             releaseConnection();
         }
     }
-
 }
-
-
-
-
