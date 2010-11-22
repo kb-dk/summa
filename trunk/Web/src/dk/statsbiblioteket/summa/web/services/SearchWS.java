@@ -174,7 +174,6 @@ public class SearchWS {
                 conf = Configuration.getSystemConfiguration(true);
             }
         }
-
         return conf;
     }
 
@@ -269,6 +268,24 @@ public class SearchWS {
                   + ") finished in " + (System.currentTimeMillis() - startTime)
                   + "ms");
         return retXML;
+    }
+ 
+    /**
+     * Web method for deleting a suggestion from storage.
+     * @param suggestion The suggestion that should be deleted from storage.
+     */
+    @WebMethod
+    public void deleteSuggestion(String suggestion) {
+        log.trace("deleteSuggestion('" + suggestion + "')");
+        long startTime = System.currentTimeMillis();
+        
+        Request req = new Request();
+        req.put(SuggestKeys.DELETE_SUGGEST, suggestion);
+        try {
+            getSuggestClient().search(req);
+        } catch (IOException e) {
+            log.warn("Error deleting suggetion '" + suggestion + "'");
+        }
     }
 
     /**

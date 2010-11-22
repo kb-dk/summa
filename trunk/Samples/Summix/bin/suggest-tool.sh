@@ -24,6 +24,7 @@ if [ -z "$1" -o -z "$2" ]; then
     echo -e "\tclear" 1>&2
     echo -e "\timport <URL>" 1>&2
     echo -e "\texport <target-file>" 1>&2
+    echo -e "\tdelete <suggestion>" 1>&2
 fi
 
 if [ "$ACTION" == "query" ]; then
@@ -51,7 +52,12 @@ elif [ "$ACTION" == "export" ]; then
         exit 1
     fi
     ARGS="summa.support.suggest.export=$QUERY"
-    
+elif [ "$ACTION" == "delete" ]; then
+	if [ -z "$QUERY" ]; then
+		echo "Please specify a suggestion to delete."
+		exit 1;
+	fi
+	ARGS="summa.support.suggest.delete=$QUERY"    
 else
     echo "Unknown action '$ACTION'" 1>&2
     popd > /dev/null

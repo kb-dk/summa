@@ -28,6 +28,9 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+import javax.jws.WebMethod;
+import javax.xml.ws.WebEndpoint;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -73,7 +76,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is 1000.
      */
     public static final String CONF_MAX_RESULTS =
-            "summa.support.suggest.maxresults";
+                                             "summa.support.suggest.maxresults";
     /** Default value for {@link #CONF_MAX_RESULTS}. */
     public static final int DEFAULT_MAX_RESULTS = 1000;
 
@@ -85,7 +88,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * @see SuggestKeys#SEARCH_MAX_RESULTS
      */
     public static final String CONF_DEFAULT_MAX_RESULTS =
-            "summa.support.suggest.defaultmaxresults";
+                                      "summa.support.suggest.defaultmaxresults";
     /** Default value for {@link #CONF_DEFAULT_MAX_RESULTS}. */
     public static final int DEFAULT_DEFAULT_MAX_RESULTS = 10;
 
@@ -100,7 +103,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is false.
      */
     public static final String CONF_NORMALIZE_QUERIES =
-            "summa.support.suggest.normalizequeries";
+                                       "summa.support.suggest.normalizequeries";
     /** Default value for {@link #CONF_NORMALIZE_QUERIES}. */
     public static final boolean DEFAULT_NORMALIZE_QUERIES = false;
 
@@ -124,7 +127,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is "da" (Danish).
      */
     public static final String CONF_LOWERCASE_LOCALE =
-            "summa.support.suggest.lowercaselocale";
+                                        "summa.support.suggest.lowercaselocale";
     /** Default value for {@link #CONF_LOWERCASE_LOCALE}. */
     public static final String DEFAULT_LOWERCASE_LOCALE = "da";
 
@@ -198,7 +201,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * export ({@link SuggestStorage#exportSuggestions(File)}),
      * prefix ({@link #suggestSearch(Request, ResponseCollection)}),
      * update ({@link #suggestUpdate(Request, ResponseCollection)}),
-     * recent ({@link #suggestRecent(Request, ResponseCollection)}).
+     * recent ({@link #suggestRecent(Request, ResponseCollection)}),
+     * delete ({@link #deleteSuggestion(String)}).
      * See documentation for details about the individual search requests.
      * @param request The search request.
      * @param responses A collection of responses.
@@ -216,6 +220,17 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 storage.clear();
                 responses.add(new SuggestResponse("Suggestions cleared",
                                                   maxResults));
+                maintenance = true;
+            }
+            if (request.containsKey(SuggestKeys.DELETE_SUGGEST)) {
+                String suggestion =
+                                  request.getString(SuggestKeys.DELETE_SUGGEST);
+                log.info("Deleting suggestion '" + suggestion
+                         + "' from storage");
+                boolean isDeleted = storage.deleteSuggestion(suggestion);
+                if (!isDeleted) {
+                    log.warn("Suggestion still exists in storage");
+                }
                 maintenance = true;
             }
             if (request.containsKey(SEARCH_IMPORT)) {
@@ -259,7 +274,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         }
         log.debug(String.format(
                 "None of the expected keys %s, %s, %s, %s or %s encountered,"
-                + " no suggest will be performed", 
+                + " no suggest will be performed",
                 SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY,
                 SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
     }
@@ -294,7 +309,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Perform a suggest recent on the suggest storage. 
+     * Perform a suggest recent on the suggest storage.
      * @param request The request. This should contain
      * {@link SuggestKeys#SEARCH_RECENT}
      * @param responses The response.
@@ -424,5 +439,15 @@ public class SuggestSearchNode extends SearchNodeImpl {
     public void addSuggestions(ArrayList<String> suggestions) throws
                                                               IOException {
         storage.addSuggestions(suggestions.iterator());
+    }
+
+    /**
+     * Delete all suggestion in storage, not depended on case.
+     * @param suggestion The suggestion string to remove from
+     * storage.
+     * @return True if suggestion isn't present i storage anymore.
+     */
+    public boolean deleteSuggestion(String suggestion) {
+        return storage.deleteSuggestion(suggestion);
     }
 }

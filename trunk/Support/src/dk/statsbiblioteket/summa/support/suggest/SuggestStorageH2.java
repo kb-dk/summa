@@ -43,6 +43,9 @@ import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.h2.jdbcx.JdbcDataSource;
 
+/**
+ * H2 database implementation of the {@link SuggestStorage}.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -118,7 +121,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                                               "summa.support.suggest.sanitizer";
     /** Default value for {@link #CONF_SANITIZER}. */
     public static final Class<? extends Analyzer> DEFAULT_SANITIZER =
-                                                     WhitespaceAnalyzer.class;
+                                                       WhitespaceAnalyzer.class;
 
     private ThreadLocal<StringBuilder> threadLocalBuilder =
                                               new ThreadLocal<StringBuilder>() {
@@ -136,7 +139,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     };
 
-    @SuppressWarnings({"UnusedDeclaration"})
+    @SuppressWarnings("unused")
     public SuggestStorageH2(Configuration conf) {
         log.debug("Creating SuggestStorageH2");
 
@@ -146,7 +149,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         /* Initialize query normalizer */
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
-                CONF_NORMALIZER,Analyzer.class, DEFAULT_NORMALIZER, conf);
+                CONF_NORMALIZER, Analyzer.class, DEFAULT_NORMALIZER, conf);
         try {
             normalizer = analyzerClass.newInstance();
         } catch (Exception e) {
@@ -168,6 +171,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         timestamps = new UniqueTimestampGenerator();
     }
 
+    @Override
     public synchronized void open(File location) throws IOException {
         log.debug(String.format(
                 "open(%s) called for SuggestStorageH2", location));
@@ -183,8 +187,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
             createNew = true;
         } else {
-            if (new File(location, DB_FILE + ".h2.db").isFile() ||
-                new File(location, DB_FILE + ".data.db").isFile()) {
+            if (new File(location, DB_FILE + ".h2.db").isFile()
+                    || new File(location, DB_FILE + ".data.db").isFile()) {
                 /* Database location exists*/
                 log.debug(String.format(
                         "Reusing old database found at '%s'", location));
@@ -221,6 +225,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         closed = false;
     }
 
+    /**
+     * Resets the connection.
+     * @return The reset connection.
+     * @throws IOException If connection could not be reset.
+     */
     private Connection resetConnection() throws IOException {
         if (connection != null) {
             log.warn("Resetting database connection");
@@ -252,7 +261,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                     "Unable to get a connection from '%s'", sourceURL), e);
         }
 
-        setMaxMemoryRows(MAX_SUGGESTIONS*3);
+        setMaxMemoryRows(MAX_SUGGESTIONS * 3);
 
         return connection;
     }
@@ -269,7 +278,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                                + "query_id INTEGER AUTO_INCREMENT PRIMARY KEY, "
                                + "normalized_query VARCHAR(%1$d) NOT NULL)",
                                MAX_QUERY_LENGTH));
-    
+
             s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_data("
                                     + "query_id INTEGER NOT NULL, "
                                     + "user_query VARCHAR(%1$d) UNIQUE, "
@@ -294,20 +303,20 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             long startTime = System.currentTimeMillis();
             log.info("Preparing table indices");
             s = connection.createStatement();
-    
+
             //
             s.execute("CREATE INDEX IF NOT EXISTS suggest_normalized_query "
                     + "ON suggest_index(normalized_query)");
-    
+
             // This index is used for prefix searches sorted on query_count,
             // as well as fast lookups of query_id given a user_query
             s.execute("CREATE INDEX IF NOT EXISTS suggest_query_count "
                     + "ON suggest_data(user_query, query_count desc)");
-    
+
             // This index is used for most recent queries sorted by query_count
             s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
                     + "ON suggest_data(mtime desc, query_count desc)");
-    
+
             log.info("Table indices prepared in "
                      + (System.currentTimeMillis() - startTime) + "ms");
         } finally {
@@ -334,6 +343,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     /**
      * Closing the suggest database and the database connection.
      */
+    @Override
     public synchronized void close() {
         log.info(String.format("Closing '%s'" , location));
         if (closed) {
@@ -347,6 +357,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    @Override
     public synchronized SuggestResponse getSuggestion(
                              String prefix, int maxResults) throws IOException {
         if (log.isTraceEnabled()) {
@@ -362,13 +373,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
             PreparedStatement psExists = connection.prepareStatement(
                  // FIXME: Sorting on query_count is slow
-                 "SELECT user_query AS query, query_count, hit_count " +
-                 "FROM suggest_data " +
-                 "INNER JOIN suggest_index " +
-                 "ON suggest_index.query_id = suggest_data.query_id " +
-                 "WHERE suggest_index.normalized_query LIKE ? " +
-                 "ORDER BY query_count DESC " +
-                 "LIMIT ?");
+                 "SELECT user_query AS query, query_count, hit_count "
+                    + "FROM suggest_data "
+                    + "INNER JOIN suggest_index "
+                    + "ON suggest_index.query_id = suggest_data.query_id "
+                    + "WHERE suggest_index.normalized_query LIKE ? "
+                    + "ORDER BY query_count DESC "
+                    + "LIMIT ?");
             psExists.setString(1, normalize(prefix) + "%");
             psExists.setInt(2, maxResults);
             psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
@@ -411,7 +422,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         try {
             long startTime = System.nanoTime();
-            long mtime = System.currentTimeMillis() - ageSeconds*1000;
+            long mtime = System.currentTimeMillis() - ageSeconds * 1000;
             mtime = timestamps.baseTimestamp(mtime);
             maxResults = Math.min(maxResults, MAX_SUGGESTIONS);
 
@@ -420,13 +431,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
             PreparedStatement psExists = connection.prepareStatement(
                  // FIXME: ORDER BY query_count is slow
-                 "SELECT user_query AS query, query_count, hit_count " +
-                 "FROM suggest_data " +
-                 "INNER JOIN suggest_index " +
-                 "ON suggest_index.query_id = suggest_data.query_id " +
-                 "WHERE suggest_data.mtime > ? " +
-                 "ORDER BY mtime DESC " +
-                 "LIMIT ?");
+                 "SELECT user_query AS query, query_count, hit_count "
+                    + "FROM suggest_data "
+                    + "INNER JOIN suggest_index "
+                    + "ON suggest_index.query_id = suggest_data.query_id "
+                    + "WHERE suggest_data.mtime > ? "
+                    + "ORDER BY mtime DESC "
+                    + "LIMIT ?");
             psExists.setLong(1, mtime);
             psExists.setInt(2, maxResults);
             psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
@@ -460,11 +471,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    @Override
     public void addSuggestion(String query, int hits) throws IOException {
         addSuggestion(query, hits, -1);
     }
 
     // -1 means add 1 to suggest_index.query_count
+    @Override
     public synchronized void addSuggestion(
                     String query, int hits, int queryCount) throws IOException {
 
@@ -478,7 +491,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         if (hits == 0) {
             log.trace("No hits for '" + query + "'. Deleting query...");
             try {
-                deleteSuggestion(query);
+                delete(query);
             } catch (SQLException e) {
                 log.warn(String.format(
                         "Unable to delete suggestion '%s': %s",
@@ -527,8 +540,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             // Can not raise an integrity constriant violation because PK
             // is AUTO_INCREMENT
             psInsert = connection.prepareStatement(
-                    "INSERT INTO suggest_index (normalized_query)" +
-                    "VALUES (?)");
+                    "INSERT INTO suggest_index (normalized_query)"
+                    + "VALUES (?)");
             psInsert.setString(1, normalizedQuery);
             psInsert.executeUpdate();
             psInsert.close();
@@ -536,8 +549,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             // Raises integrity constraint violation if 'query' is already
             // listed in suggest_data.user_query
             psInsert = connection.prepareStatement(
-                    "INSERT INTO suggest_data " +
-                    "VALUES (identity(), ?, ?, ?, ?)");
+                    "INSERT INTO suggest_data "
+                    + "VALUES (identity(), ?, ?, ?, ?)");
             psInsert.setString(1, query);
             psInsert.setInt(2, queryCount);
             psInsert.setInt(3, hits);
@@ -566,7 +579,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         analyzeIfNeeded();
     }
 
-    private boolean checkString (String normalizedQuery) {
+    private boolean checkString(String normalizedQuery) {
         if (normalizedQuery.length() > MAX_QUERY_LENGTH) {
             log.info("addSuggestion: The analyzed query must be "
                      + MAX_QUERY_LENGTH + " chars or less. Got "
@@ -577,8 +590,24 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         return true;
     }
 
-    // Deletes all suggestions, no matter the case
-    private void deleteSuggestion(String query) throws SQLException {
+    @Override
+    public boolean deleteSuggestion(String suggestion) {
+        try {
+            delete(suggestion);
+            return true;
+        } catch (SQLException e) {
+            log.warn("Deletion of suggstion '" + suggestion
+                     + "' was not succesfull");
+        }
+        return false;
+    }
+
+    /**
+     * Deletes all suggestions, no matter the case.
+     * @param query The query.
+     * @throws SQLException SQL error if suggestion wasn't deleted.
+     */
+    private void delete(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
 
         String normalizedQuery = normalize(query);
@@ -586,8 +615,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         // Delete from suggest_index table
         PreparedStatement psUpdate = connection.prepareStatement(
-                "DELETE FROM suggest_index " +
-                "WHERE normalized_query=?"
+                "DELETE FROM suggest_index "
+                + "WHERE normalized_query=?"
         );
         psUpdate.setString(1, normalizedQuery);
         psUpdate.executeUpdate();
@@ -595,8 +624,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         // Delete from suggest_data table
         if (queryId != -1) {
             psUpdate = connection.prepareStatement(
-                    "DELETE FROM suggest_data " +
-                    "WHERE query_id=?"
+                    "DELETE FROM suggest_data "
+                    + "WHERE query_id=?"
             );
             psUpdate.setInt(1, queryId);
             psUpdate.executeUpdate();
@@ -604,7 +633,6 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             log.warn("No suggest data for normalized query '"
                      + normalizedQuery + "'");
         }
-
         updateCount++;
         analyzeIfNeeded();
     }
@@ -628,9 +656,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     /**
      * If queryCount is -1 we must add one to the previous value, otherwise
-     * we should set suggest_index.query_count to queryCount
-     * @param query the search query.
-     * @param hits the hit count, gonna override 'suggest_data.hit_count'.
+     * we should set suggest_index.query_count to queryCount.
+     * @param query The search query.
+     * @param hits The hit count, gonna override 'suggest_data.hit_count'.
      * @param queryCount if -1 we add one to old query_count otherwise override.
      */
     private void updateSuggestion(String query, int hits, int queryCount) {
@@ -693,6 +721,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         analyzeIfNeeded();
     }
 
+    @Override
     public ArrayList<String> listSuggestions(int start, int max) throws
                                                                  IOException {
         log.debug(String.format(
@@ -745,7 +774,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     @Override
     public void addSuggestions(Iterator<String> suggestions) throws
-                                                                   IOException {
+                                                                  IOException {
         log.debug("addSuggestions called");
         long start = System.nanoTime();
 
@@ -767,8 +796,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 String[] tokens = suggestion.split("\t");
                 if (tokens.length > 3) { // Compensate for tabs in the query
                     tokens[0] = Strings.join(
-                            Arrays.asList(tokens).subList(0, tokens.length-2),
-                            "\t");
+                           Arrays.asList(tokens).subList(0, tokens.length - 2),
+                           "\t");
                     tokens[1] = tokens[tokens.length - 2];
                     tokens[2] = tokens[tokens.length - 1];
                 }
@@ -793,11 +822,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                             "NumberFormatException for querycount with '%s'",
                             tokens[2]));
                 }
-                addSuggestion(query, (int)hits, queryCount);
+                addSuggestion(query, (int) hits, queryCount);
             }
             log.debug(String.format(
                     "Finished adding %d suggestions in %sms ",
-                    count, (System.nanoTime() - start)/1000000D));
+                    count, (System.nanoTime() - start) / 1000000D));
             connection.commit();
             updateCount += count;
             analyzeIfNeeded();
@@ -840,6 +869,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    @Override
     public File getLocation() {
         return location;
     }
