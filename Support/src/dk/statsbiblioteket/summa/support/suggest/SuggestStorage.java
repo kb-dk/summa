@@ -25,23 +25,24 @@ import java.io.File;
 import java.net.URL;
 
 /**
- * Interface for the storage responsible for persistence
+ * Interface for the storage responsible for persistence.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract interface SuggestStorage extends Configurable {    
+public interface SuggestStorage extends Configurable {
 
     /**
      * Open a storage at the specified location. If the location does not exist,
      * then create it and initialize.
-     * @param location where the storage should be located.
-     * @throws java.io.IOException if the open could not be completed.
+     * @param location Where the storage should be located.
+     * @throws IOException If the open could not be completed.
      */
     void open(File location) throws IOException;
 
     /**
-     * @return the location og the storage, as given in {@link #open}.
+     * Return the location or the storage, as given in {@link #open}.
+     * @return The location or the storage, as given in {@link #open}.
      */
     File getLocation();
 
@@ -53,10 +54,10 @@ public abstract interface SuggestStorage extends Configurable {
 
     /**
      * Create a SuggestResponse based on the given prefix.
-     * @param prefix the prefix that should be satisfied for all suggestions.
-     * @param maxResults the maximum number of suggestions to give.
-     * @return a list of suggestions, wrapped in a response.
-     * @throws java.io.IOException if the suggestion could not be handled.
+     * @param prefix The prefix that should be satisfied for all suggestions.
+     * @param maxResults The maximum number of suggestions to give.
+     * @return A list of suggestions, wrapped in a response.
+     * @throws IOException If the suggestion could not be handled.
      */
     SuggestResponse getSuggestion(String prefix, int maxResults) throws
                                                                  IOException;
@@ -65,10 +66,10 @@ public abstract interface SuggestStorage extends Configurable {
      * Create a SuggestResponse containing the last {@code maxResult}
      * recorded suggestions within the last {@code ageSeconds} seconds.
      *
-     * @param ageSeconds number of seconds to look back
-     * @param maxResults the maximum number of suggestions to give.
-     * @return a list of suggestions, wrapped in a response.
-     * @throws java.io.IOException if the suggestion could not be handled.
+     * @param ageSeconds Number of seconds to look back
+     * @param maxResults The maximum number of suggestions to give.
+     * @return A list of suggestions, wrapped in a response.
+     * @throws IOException If the suggestion could not be handled.
      */
     SuggestResponse getRecentSuggestions(int ageSeconds, int maxResults) throws
                                                                  IOException;
@@ -76,10 +77,10 @@ public abstract interface SuggestStorage extends Configurable {
     /**
      * Add the given suggestion. If it already exists, update its queryCount
      * with 1 and set the number of hits. If it does not exist, create a new
-     * entry with queryCount set to 1.
-     * @param query the query to store.
-     * @param hits the number of hits that the query gives.
-     * @throws java.io.IOException if the addition failed.
+     * entry with ueryCount set to 1.
+     * @param query The query to store.
+     * @param hits The number of hits that the query gives.
+     * @throws IOException If the addition failed.
      */
     void addSuggestion(String query, int hits) throws IOException;
 
@@ -87,10 +88,10 @@ public abstract interface SuggestStorage extends Configurable {
      * Add the given suggestion. If it already exists, set its queryCount and
      * the number of hits. If it does not exist, create a new entry with the
      * given parameters.
-     * @param query the query to store.
-     * @param hits the number of hits that the query gives.
-     * @param queryCount the number of times the suggestion has been added.
-     * @throws java.io.IOException if the addition failed.
+     * @param query The query to store.
+     * @param hits The number of hits that the query gives.
+     * @param queryCount The number of times the suggestion has been added.
+     * @throws IOException If the addition failed.
      */
     void addSuggestion(String query, int hits, int queryCount) throws
                                                                IOException;
@@ -98,11 +99,11 @@ public abstract interface SuggestStorage extends Configurable {
     /**
      * Extracts max stored suggestions from the underlying storage from start.
      * This is typically used for dumping the suggest data.
-     * @param start the position from which to start extraction.
-     * @param max   the maximum number of suggestions to extract.
-     * @return a list of suggestions. Each suggest-entry if represented as
+     * @param start The position from which to start extraction.
+     * @param max   The maximum number of suggestions to extract.
+     * @return A list of suggestions. Each suggest-entry if represented as
      *        {@code query\thits\tqueryCount} where {@code \t} is tab.
-     * @throws IOException if the suggestions could not be extracted.
+     * @throws IOException If the suggestions could not be extracted.
      */
     ArrayList<String> listSuggestions(int start, int max) throws IOException;
 
@@ -114,8 +115,8 @@ public abstract interface SuggestStorage extends Configurable {
      * {@link #listSuggestions}. It is possible to leave out both queryCount and
      * hits, although it is highly recommended to provide hits. If no hits are
      * stated, the value 1 is used.
-     * @param suggestions a list of suggestions.
-     * @throws IOException if the suggestions could not be added.
+     * @param suggestions A list of suggestions.
+     * @throws IOException If the suggestions could not be added.
      */
     void addSuggestions(Iterator<String> suggestions) throws IOException;
 
@@ -124,7 +125,8 @@ public abstract interface SuggestStorage extends Configurable {
      * </p><p>
      * Each suggest-entry if represented as
      * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
-     * @throws IOException if the data could not be imported.
+     * @param in Location of input data.
+     * @throws IOException If the data could not be imported.
      */
     void importSuggestions(URL in) throws IOException;
 
@@ -133,14 +135,22 @@ public abstract interface SuggestStorage extends Configurable {
      * </p><p>
      * Each suggest-entry will be represented as
      * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
-     * @throws IOException if the data could not be exported.
+     * @param out The output file for the export.
+     * @throws IOException If the data could not be exported.
      */
     void exportSuggestions(File out) throws IOException;
 
     /**
      * Clears all suggestions.
-     * @throws IOException if the suggestions could not be cleared.
+     * @throws IOException If the suggestions could not be cleared.
      */
     void clear() throws IOException;
-}
 
+    /**
+     * Delete the specific suggestion from the Storage.
+     * @param suggestion The suggestion to delete.
+     * @return True if suggestion was deleted or did not exists
+     * in storage.
+     */
+    boolean deleteSuggestion(String suggestion);
+}

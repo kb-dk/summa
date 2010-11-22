@@ -83,10 +83,10 @@ public class SuggestResponse implements Response {
      * @throws ClassCastException if otherResponse was not a SuggestResponse.
      */
     public void merge(Response otherResponse) throws ClassCastException {
-        SuggestResponse other = (SuggestResponse)otherResponse;
+        SuggestResponse other = (SuggestResponse) otherResponse;
         otherLoop:
-        for (SuggestTripel otherTripel: other.getSuggestions()) {
-            for (SuggestTripel thisTripel: getSuggestions()) {
+        for (SuggestTripel otherTripel : other.getSuggestions()) {
+            for (SuggestTripel thisTripel : getSuggestions()) {
                 if (thisTripel.getQuery().equals(otherTripel.getQuery())) {
                     thisTripel.setHits(
                             thisTripel.getHits() + otherTripel.getHits());
@@ -145,7 +145,7 @@ public class SuggestResponse implements Response {
             writer.writeCharacters("    ");
             writer.writeStartElement(SUGGESTIONS);
             writer.writeCharacters("\n");
-            for (SuggestTripel suggestion: suggestions) {
+            for (SuggestTripel suggestion : suggestions) {
                 suggestion.toXML(writer);
             }
             writer.writeCharacters("    ");
@@ -208,4 +208,3 @@ public class SuggestResponse implements Response {
         }
     }
 }
-

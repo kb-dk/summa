@@ -30,20 +30,12 @@ import java.net.URL;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class SuggestStorageImpl implements SuggestStorage {
+    /** Local logger. */
     private static Log log = LogFactory.getLog(SuggestStorageImpl.class);
+    /** Default batch size. */
     private static final int BATCH_SIZE = 1000;
-
-    /*public void importSuggestions() throws IOException {
-        File location = getLocation(IMPORT_FILE);
-
-        if (!location.exists()) {
-            throw new FileNotFoundException(String.format(
-                    "Unable to import suggest data from '%s' as the file does "
-                    + "not exist", location));
-        }
-
-        importSuggestions(location.toURI().toURL());
-    }*/
+    /** Milli seconds in a second. */
+    private static final int MILLI_IN_SECOND = 1000;
 
     @Override
     public void importSuggestions(URL in) throws IOException {
@@ -73,7 +65,8 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
         lines.close();
         log.info(String.format(
                 "Finished importing %d suggestions in %ds",
-                counter, (System.currentTimeMillis() - importStart)/1000));
+                counter,
+                (System.currentTimeMillis() - importStart) / MILLI_IN_SECOND));
     }
 
     @Override
@@ -100,7 +93,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
                 break;
             }
             exported += buffer.size();
-            for (String entry: buffer) {
+            for (String entry : buffer) {
                 out.write(entry);
                 out.write('\n');
             }
@@ -109,7 +102,6 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
         log.info(String.format(
                 "Exported %d suggestions to '%s' in %ds",
                 exported, target,
-                (System.currentTimeMillis() - exportStart)/1000));
-    }    
-
+                (System.currentTimeMillis() - exportStart) / MILLI_IN_SECOND));
+    }
 }
