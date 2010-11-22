@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions deleteSuggestion commitQuery didYouMean"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="didYouMean">
@@ -53,6 +53,15 @@
             </parameter>
             <parameter name="maxSuggestions" type="tns:int">
                 <documentation>The maximum number of alternatives queries to return.</documentation>
+            </parameter>
+        </operation>
+
+       <operation name="deleteSuggestion">
+            <documentation>
+                Given a suggestion which exists in storage, this or these (case is ignored) are removed.
+             </documentation>
+            <parameter name="suggestion" type="tns:string">
+                <documentation>The suggestion that should be deleted (case is ignored)</documentation>
             </parameter>
         </operation>
 
