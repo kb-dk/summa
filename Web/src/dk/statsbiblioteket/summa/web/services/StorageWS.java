@@ -73,7 +73,7 @@ public class StorageWS {
     static ArrayBlockingQueue<MarcMultiVolumeMerger> mergers;
 
     /** Number of merges in the merger pool. */
-    private static final int numMergers = 10;
+    private static final int NUMBER_OF_MERGERS = 10;
 
     /** Storage reader client. */
     static StorageReaderClient storage;
@@ -95,9 +95,10 @@ public class StorageWS {
             if (mergers != null) {
                 return;
             }
-            log.info("Creating " + numMergers + " multi volume mergers");
-            mergers = new ArrayBlockingQueue<MarcMultiVolumeMerger>(10);
-            for(int i=0; i<numMergers; i++) {
+            log.info("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
+            mergers =
+               new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
+            for (int i = 0; i < NUMBER_OF_MERGERS; i++) {
                 try {
                     mergers.put(new MarcMultiVolumeMerger(getConfiguration()));
                 } catch (InterruptedException e) {
@@ -199,10 +200,12 @@ public class StorageWS {
        <pre>
 <?xml version="1.0" ?>
 <Records xmlns="http://statsbiblioteket.dk/summa/2009/Records" querytime="626">
-    <record id="id1" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.395" mtime="2010-03-31T09:54:53.395">
+    <record id="id1" base="base1" deleted="false" indexable="true"
+            ctime="2010-03-31T09:54:53.395" mtime="2010-03-31T09:54:53.395">
         <content>data</content>
     </record>
-    <record id="id2" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.437" mtime="2010-03-31T09:54:53.437">
+    <record id="id2" base="base1" deleted="false" indexable="true"
+            ctime="2010-03-31T09:54:53.437" mtime="2010-03-31T09:54:53.437">
         <content>data</content>
     </record>
 </Records>
