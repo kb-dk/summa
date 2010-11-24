@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.3-20101116-SNAPSHOT</version>
+    <version>1.6.3-20101123-SNAPSHOT</version>
     <inceptionYear>2010</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
@@ -106,22 +106,27 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-core</artifactId>  
-                <version>4.0-dev-LUCENE-2369-20101116</version>
+                <version>4.0-dev-20101123</version>
+            </dependency>
+            <dependency>
+                <groupId>dk.statsbiblioteket.lucene</groupId>
+                <artifactId>lucene-exposed</artifactId>
+                <version>4.0-dev-20101123</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.0-dev-LUCENE-2369-20101021</version>
+                <version>4.0-dev-20101123</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.0-dev-LUCENE-2369-20101025</version>
+                <version>4.0-dev-20101123</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-didyoumean</artifactId>
-                <version>4.0-dev-20101115</version>
+                <version>4.0-dev-20101123</version>
 <!--                <version>3.0.1</version>-->
             </dependency>
             <dependency>
@@ -147,7 +152,8 @@
             <dependency>
                 <groupId>org.archive</groupId>
                 <artifactId>heritrix</artifactId>
-                <version>1.14.4</version>
+                <!-- 1.14.4 has conflict with apache commons lang 2.1 -->
+                <version>1.14.3</version>
             </dependency>
             <dependency>
                 <groupId>org.marc4j</groupId>
