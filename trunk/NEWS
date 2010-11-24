@@ -1,4 +1,31 @@
 ========================
+2010-11-24: Summa 1.6.7
+========================
+
+ * Bugfix: Reversed heritrix to 1.14.3 due to conflict with apache 
+   commons lang 2.1.
+
+ * Bugfix: Removed faulty doctype for service.xml for non java 
+   properties files.
+
+ * Feature: The base statistic table is used and updated. This is a
+   fixe for #110.
+   Implemented use of base statistic table, when ever status/holdings 
+   are called and invalidating it when ingest is done.
+
+ * Fixed bug #87, it is now possible to delete suggestion from the
+   suggestion storage, either via the suggest-tool or the web
+   service.
+
+ * Feature: Added reverse sort option to test-GUI.
+
+ * Bugfix: Closing database connection after use.
+
+ * Moved PayloadBufferFilter to the source branch.
+
+ * Updated Summix scripts, so they work on MAC OSX.
+
+========================
 2010-11-10: Summa 1.6.6_1
 ========================
 
