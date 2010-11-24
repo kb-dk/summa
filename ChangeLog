@@ -1,3 +1,318 @@
+2010-11-24 09:41  hkirk
+
+	* [r2726]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Fixed line length
+
+2010-11-24 09:18  toke-sb
+
+	* [r2725] pom.xml:
+	  
+	  Reversed heritrix to 1.14.3 due to conflict with apache commons
+	  lang 2.1
+
+2010-11-23 12:31  hkirk
+
+	* [r2723] Web/pom.xml:
+	  
+	  Hopefully a fix to sonar trouble
+
+2010-11-23 10:07  hkirk
+
+	* [r2722]
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestStorageTest.java:
+	  
+	  Bugfix: added junit test for delete suggestion
+
+2010-11-23 09:57  hkirk
+
+	* [r2721]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: Fixed codestyle
+
+2010-11-22 10:23  hkirk
+
+	* [r2720] Samples/Summix/bin/didyoumean-tool.sh,
+	  Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh,
+	  Samples/Summix/bin/suggest-tool.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Bugfix: Fixed lib dirs
+
+2010-11-22 08:42  hkirk
+
+	* [r2719] Web/config/search/server-config.wsdd:
+	  
+	  Forgot to add wsdd file
+
+2010-11-22 08:42  hkirk
+
+	* [r2718] Samples/Summix/bin/suggest-tool.bat,
+	  Samples/Summix/bin/suggest-tool.sh,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageImpl.java,
+	  Web/src/dk/statsbiblioteket/gwsc/WebServices.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Fixed bug #87, it is now possible to delete suggestion from the
+	  suggestion storage, either via the suggest-tool or the web
+	  service
+
+2010-11-19 09:46  hkirk
+
+	* [r2717]
+	  Search/src/dk/statsbiblioteket/summa/search/api/SearchClient.java:
+	  
+	  QA okay
+
+2010-11-18 08:58  hkirk
+
+	* [r2716]
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestStorageTest.java:
+	  
+	  Fixed file path in suggest storage test
+
+2010-11-17 12:49  toke-sb
+
+	* [r2714] Web/config/status/services.xml,
+	  Web/config/website/services.xml:
+	  
+	  Removed faulty doctype for service.xml
+
+2010-11-16 13:48  hkirk
+
+	* [r2711]
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/rmi/RemoteConsoleFeedback.java,
+	  Index/src/dk/statsbiblioteket/summa/plugins/YearRange.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FlexibleMarcStreamReader.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Bugfix: fixed if sentences with missing braces
+
+2010-11-16 13:04  hkirk
+
+	* [r2710]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Bugfix: closing statements after use
+
+2010-11-16 10:00  hkirk
+
+	* [r2709]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: implemented use of base statistic table, when ever
+	  status/holdings are called and invalidating it when ingest is
+	  done.
+
+2010-11-16 09:12  hkirk
+
+	* [r2708]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeFactory.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Fixed preservation of stacktrace, sonar
+
+2010-11-16 09:05  hkirk
+
+	* [r2707]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleLoadingException.java:
+	  
+	  Bugfix: JavaDoc + QA fix
+
+2010-11-15 12:44  hkirk
+
+	* [r2706]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Removed unused parameters, major from sonar
+
+2010-11-15 10:04  hkirk
+
+	* [r2704]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: Fixed logging
+
+2010-11-15 10:03  hkirk
+
+	* [r2703]
+	  Web/Modules/Storage/src/main/java/dk/statsbiblioteket/summa/web/services/StorageWS.java[DEL]:
+	  
+	  Removed symbolic link
+
+2010-11-15 10:01  hkirk
+
+	* [r2702]
+	  Web/Modules/Storage/src/main/java/dk/statsbiblioteket/summa/web/services/StorageWS.java[ADD]:
+	  
+	  Bugfix: Fixed logging error.
+
+2010-11-15 09:55  hkirk
+
+	* [r2701]
+	  Index/src/dk/statsbiblioteket/summa/plugins/NetmusikGenre.java:
+	  
+	  Bugfix: Remove to Major from sonar and fixed JavaDoc
+
+2010-11-15 09:45  hkirk
+
+	* [r2700]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BaseStats.java:
+	  
+	  Bugfix: JavaDoc
+
+2010-11-15 07:20  hkirk
+
+	* [r2699]
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java:
+	  
+	  Bugfix: inline comments
+
+2010-11-12 12:29  hkirk
+
+	* [r2698]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadBufferFilter.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/PayloadBufferFilter.java[DEL]:
+	  
+	  Moved PayloadBufferFilter to the rigth location
+
+2010-11-12 11:25  hkirk
+
+	* [r2697]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadBufferFilter.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/PayloadBufferFilter.java:
+	  
+	  Bugfix: duplicate from maven branch merge
+
+2010-11-12 10:47  hkirk
+
+	* [r2696]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadException.java:
+	  
+	  Bugfix: Added JavaDoc
+
+2010-11-12 10:04  hkirk
+
+	* [r2695] Samples/Summix, Samples/Summix/bin/all.sh,
+	  Samples/Summix/bin/didyoumean-tool.sh,
+	  Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh,
+	  Samples/Summix/bin/suggest-tool.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Updated scripts, so they work on MAC OSX.
+
+2010-11-11 12:21  hkirk
+
+	* [r2694]
+	  Storage/src/dk/statsbiblioteket/summa/storage/BaseStats.java:
+	  
+	  Feature: The base statistic table is used and updated. This is a
+	  fixe for #110
+
+2010-11-10 14:13  toke-sb
+
+	* [r2693] Web/website_resources/index.jsp,
+	  Web/website_resources/xslt/short_records.xsl:
+	  
+	  Minor test: Slight update to sort comparator tests
+
+2010-11-10 13:33  toke-sb
+
+	* [r2692] Web/website_resources/index.jsp:
+	  
+	  Test: Added reverse sort option to test-GUI
+
+2010-11-10 12:38  hkirk
+
+	* [r2691] Common/pom.xml, Control/pom.xml, FacetBrowser/pom.xml,
+	  Index/pom.xml, Ingest/pom.xml, Samples/Summix/pom.xml,
+	  Search/pom.xml, Storage/pom.xml, Support/pom.xml,
+	  Web/Modules/Search/pom.xml, Web/Modules/Status/pom.xml,
+	  Web/Modules/Storage/pom.xml, Web/Modules/Website/pom.xml,
+	  Web/pom.xml, Workflow/pom.xml, pom.xml:
+	  
+	  Updated to 1.6.7-SNAPSHOT
+
+2010-11-10 12:22  hkirk
+
+	* [r2690]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Merge error
+
+2010-11-10 11:33  hkirk
+
+	* [r2687] Common/pom.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  Control/pom.xml, FacetBrowser/pom.xml, Index/pom.xml,
+	  Ingest/pom.xml, NEWS, Samples/Summix/pom.xml, Search/pom.xml,
+	  Storage/pom.xml, Support/pom.xml, Web/Modules/Search/pom.xml,
+	  Web/Modules/Status/pom.xml, Web/Modules/Storage/pom.xml,
+	  Web/Modules/Website/pom.xml, Web/pom.xml, Workflow/pom.xml,
+	  pom.xml:
+	  
+	  Updated for Summa 1.6.6_1 release
+
+2010-11-10 11:01  hkirk
+
+	* [r2686]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/DatabaseStorageTest.java:
+	  
+	  Bugfix: Fixed opening old storage (second edition)
+
+2010-11-10 09:54  hkirk
+
+	* [r2684] NEWS:
+	  
+	  Forgot news file in pre release commit
+
+2010-11-10 09:03  hkirk
+
+	* [r2682] ChangeLog, Common, Common/pom.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  Control/pom.xml, FacetBrowser/pom.xml, Index, Index/pom.xml,
+	  Ingest/pom.xml, Samples/Summix/pom.xml, Search/pom.xml, Storage,
+	  Storage/pom.xml, Support/pom.xml, Web/Modules/Search/pom.xml,
+	  Web/Modules/Status/pom.xml, Web/Modules/Storage/pom.xml,
+	  Web/Modules/Website/pom.xml, Web/pom.xml, Workflow/pom.xml,
+	  pom.xml:
+	  
+	  Version update to 1.6.6, pre release commit
+
+2010-11-10 08:31  hkirk
+
+	* [r2681]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configurable.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexUtils.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Clean up commit before 1.6.6 release
+
 2010-11-10 08:28  hkirk
 
 	* [r2680]
