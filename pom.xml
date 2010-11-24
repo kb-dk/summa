@@ -155,7 +155,8 @@
             <dependency>
                 <groupId>org.archive</groupId>
                 <artifactId>heritrix</artifactId>
-                <version>1.14.4</version>
+                <!-- 1.14.4 has conflict with apache commons lang 2.1 -->
+                <version>1.14.3</version>
             </dependency>
             <dependency>
                 <groupId>org.marc4j</groupId>
