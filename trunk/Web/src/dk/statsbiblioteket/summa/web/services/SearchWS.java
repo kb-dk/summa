@@ -202,7 +202,8 @@ public class SearchWS {
             res = getDidYouMeanClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
+                    "/responsecollection/response[@name='DidYouMeanResponse']/"
+                    + "DidYouMeanResponse");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
             log.warn("Error executing didYouMean: '" + query + "', " +
@@ -248,7 +249,8 @@ public class SearchWS {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+                    "/responsecollection/response[@name='SuggestResponse']/"
+                    + "QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
             log.warn("Error executing getSuggestions: '" + prefix + "', " +
@@ -313,11 +315,12 @@ public class SearchWS {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+                    "/responsecollection/response[@name='SuggestResponse']/"
+                    + "QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing getRecentSuggestions: "
-                     + ageSeconds + "s, " + maxSuggestions + ". Error was: ", e);
+            log.warn("Error executing getRecentSuggestions: " + ageSeconds
+                     + "s, " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing getRecentSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
