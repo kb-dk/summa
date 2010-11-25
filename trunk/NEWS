@@ -1,4 +1,11 @@
 ========================
+2010-11-25: Summa 1.6.8
+========================
+
+ * Bugfix: Removes asterisk from default transliteration as it made
+   truncated search fail.
+
+========================
 2010-11-24: Summa 1.6.7
 ========================
 

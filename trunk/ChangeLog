@@ -1,3 +1,24 @@
+2010-11-25 14:22  toke-sb
+
+	* [r2729]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/Rules.java:
+	  
+	  Removes asterisk from default transliteration as it made
+	  truncated search fail
+
+2010-11-24 09:53  hkirk
+
+	* [r2727] ChangeLog, Common/pom.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/SummaConstants.java,
+	  Control/pom.xml, FacetBrowser/pom.xml, Index/pom.xml,
+	  Ingest/pom.xml, NEWS, Samples/Summix/pom.xml, Search/pom.xml,
+	  Storage/pom.xml, Support/pom.xml, Web/Modules/Search/pom.xml,
+	  Web/Modules/Status/pom.xml, Web/Modules/Storage/pom.xml,
+	  Web/Modules/Website/pom.xml, Web/pom.xml, Workflow/pom.xml,
+	  pom.xml:
+	  
+	  Last commit before release of 1.6.7
+
 2010-11-24 09:41  hkirk
 
 	* [r2726]
