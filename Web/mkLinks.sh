@@ -50,7 +50,7 @@ cd ../../../../
 
 # Source
 cd Status/src/main/java/dk/statsbiblioteket/
-ln -s ../../../../../../../src/dk/statsbiblioteket/gwsc/ .
+ln -s ../../../../../../../src/dk/statsbiblioteket/gwsc/ gwsc
 cd summa/web
 ln -s ../../../../../../../../../src/dk/statsbiblioteket/summa/web/RSSChannel.java .
 cd services/
@@ -81,7 +81,7 @@ cd ../../../../
 
 # Source
 cd Website/src/main/java/dk/statsbiblioteket/
-ln -s ../../../../../../../src/dk/statsbiblioteket/gwsc/ .
+ln -s ../../../../../../../src/dk/statsbiblioteket/gwsc/ gwsc
 cd summa/web
 ln -s ../../../../../../../../../src/dk/statsbiblioteket/summa/web/RSSChannel.java .
 cd services/
