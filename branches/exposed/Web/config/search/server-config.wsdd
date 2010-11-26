@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup extendedIndexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup extendedIndexLookup getField getSuggestions getRecentSuggestions commitQuery didYouMean ping"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="didYouMean">
@@ -248,6 +248,17 @@
 
                     This is all optional. If no facets are specified, the default facets are requested.
                 </documentation>
+            </parameter>
+        </operation>
+
+        <operation name="ping">
+            <documentation>
+                Performs a pseudo-search without any keys and returns the time it took
+                to call the searcher. In order to measure properly, the caller should
+                measure the total call time including webservice overhead.
+            </documentation>
+            <parameter name="message" type="tns:string">
+                <documentation>The return message.</documentation>
             </parameter>
         </operation>
     </service>

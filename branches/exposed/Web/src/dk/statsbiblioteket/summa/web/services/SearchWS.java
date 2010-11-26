@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.*;
@@ -710,6 +711,55 @@ public class SearchWS {
     }
 
     /**
+     * Performs a pseudo-search without any keys and returns the time it took
+     * to call the searcher. In order to measure properly, the caller should
+     * measure the total call time including webservice overhead.
+     * @param message the return message.
+     * @return the given message and the time it took to perform a null search.
+     */
+    @WebMethod
+    public String ping(String message) {
+        long pingTime = -System.currentTimeMillis();
+        try {
+            ResponseCollection res = getSearchClient().search(new Request());
+            String returnMessage = "ping".equals(message) ? "pong" : message;
+            returnMessage = returnMessage.replace("&", "&amp;").
+                replace("<", "&lt;").replace(">", "&gt;");
+            pingTime += System.currentTimeMillis();
+            final String pingResponse = String.format(
+                "<pingresponse >\n"
+                + "<message>%s</message>\n"
+                + "<ms>%d</ms>\n"
+                + "</pingresponse>\n",
+                returnMessage, pingTime);
+            res.add(new Response() {
+                @Override
+                public String getName() {
+                    return "PingResponse";
+                }
+                // TODO: Implement ping merge
+                @Override
+                public void merge(Response other) throws ClassCastException {
+                    log.warn("No ping merge right now");
+                }
+                @Override
+                public String toXML() {
+                    return pingResponse;
+                }
+            });
+            log.debug(
+                "Performed ping for '" + message + "' in " + pingTime + "ms");
+            return res.toXML();
+        } catch (IOException e) {
+            String mes = String.format("Error pinging with message '%s': %s",
+                                       message, e.getMessage());
+            log.warn(mes, e);
+            return  getErrorXML("PingResponse", mes, e);
+        }
+
+    }
+
+    /**
      * Cleanup a query string.
      *
      * @param queryString The query string, which should be cleaned.
@@ -897,7 +947,3 @@ public class SearchWS {
         return sw.toString();
     }
 }
-
-
-
-

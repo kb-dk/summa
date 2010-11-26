@@ -65,6 +65,30 @@
         </parameters>
         <return type="xsd:string" />
     </service>
+    <service name="summaextendedindexlookup" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>extendedIndexLookup</operationname>
+        <parameters>
+            <parameter name="query" type="xsd:string" />
+        </parameters>
+        <parameters>
+            <parameter name="field" type="xsd:string" />
+        </parameters>
+        <parameters>
+            <parameter name="term" type="xsd:string" />
+        </parameters>
+        <parameters>
+            <parameter name="delta" type="xsd:int" />
+        </parameters>
+        <parameters>
+            <parameter name="length" type="xsd:int" />
+        </parameters>
+        <parameters>
+            <parameter name="minCount" type="xsd:int" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
     <service name="summadidyoumean" type="soap">
         <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
         <servicename>SearchWS</servicename>
@@ -107,6 +131,15 @@
         <operationname>getRecord</operationname>
         <parameters>
             <parameter name="recordID" type="xsd:string" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
+    <service name="summaping" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>ping</operationname>
+        <parameters>
+            <parameter name="message" type="xsd:string" />
         </parameters>
         <return type="xsd:string" />
     </service>

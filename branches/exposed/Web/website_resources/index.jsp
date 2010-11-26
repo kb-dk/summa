@@ -22,6 +22,16 @@
     String form_query = "";
     String form_sort = "";
     boolean doDidYouMean = false;
+    String pingResult = "No ping result";
+
+    long searchCall = 0;
+    long searchXSLT = 0;
+    long facetCall = 0;
+    long facetXSLT = 0;
+    long dymCall = 0;
+    long dymXSLT = 0;
+    long totalTime = -System.currentTimeMillis();
+    String timing = "No timimg result";
 
     String query = request.getParameter("query");
     if ("".equals(query)) {
@@ -65,25 +75,30 @@
             current_page = 0;
         }
 
-        URL didyoumean_xslt = new File(basepath + "xslt/didyoumean.xsl").toURI().toURL();
-        Properties didyoumean_prop = new Properties();
         // didyoumean_prop.put("query", query == null ? "" : query);
         String xml_didyoumean_result = null;
         if(doDidYouMean) {
+            dymCall = -System.currentTimeMillis();
             xml_didyoumean_result = (String)services.execute(
                     "summadidyoumean", query, 10);
+            dymCall += System.currentTimeMillis();
         }
+        dymXSLT = -System.currentTimeMillis();
         if (xml_didyoumean_result == null) {
             didyoumean_html = "No DidYouMean search/services";
         } else {
             //XSLT.clearTransformerCache();
+            URL didyoumean_xslt = new File(basepath + "xslt/didyoumean.xsl").toURI().toURL();
+            Properties didyoumean_prop = new Properties();
             didyoumean_html = XSLT.transform(didyoumean_xslt, xml_didyoumean_result, didyoumean_prop, false);
         }
-
-
+        dymXSLT += System.currentTimeMillis();
+            
+        searchCall = -System.currentTimeMillis();
         String xml_search_result = (String)services.execute(
                 "summafiltersearchsorted", filter, query,
                 per_page, current_page * per_page, sort, false);
+        searchCall += System.currentTimeMillis();
 
         if (xml_search_result == null) {
             search_html = "Error executing query";
@@ -105,6 +120,7 @@
             }
 
 
+            searchXSLT = -System.currentTimeMillis();
             URL search_xslt = new File(
                     basepath + "xslt/short_records.xsl").toURI().toURL();
 
@@ -127,6 +143,7 @@
             } catch (TransformerException e) {
                 search_html = "Transformer exception: " + e.getMessage();
             }
+            searchXSLT += System.currentTimeMillis();
         }
 
         // TODO: maybe we should use explicit filter/query for faceting too?
@@ -143,12 +160,15 @@
         if ("".equals(merged)) {
             merged = "*";
         }
+        facetCall = -System.currentTimeMillis();
         String xml_facet_result = (String)services.execute(
                 "summasimplefacet", merged);
+        facetCall += System.currentTimeMillis();
 
         if (xml_facet_result == null) {
             facet_html = "Error faceting query";
         } else {
+            facetXSLT = -System.currentTimeMillis();
             URL facet_xslt = new File(
                     basepath + "xslt/facet_overview.xsl").toURI().toURL();
 
@@ -161,9 +181,33 @@
             } catch (TransformerException e) {
                 facet_html = "Transformer exception: " + e.getMessage();
             }
+            facetXSLT += System.currentTimeMillis();
+        }
+
+        try {
+            long RUNS = 10;
+            long totalPing = -System.currentTimeMillis();
+            long maxPing = 0;
+            long minPing = 999999;
+            for (int i = 0 ; i < RUNS ; i++) {
+                long currentPing = -System.currentTimeMillis();
+                pingResult = (String)services.execute("summaping", "foo" + i);
+                currentPing += System.currentTimeMillis();
+                maxPing = Math.max(maxPing, currentPing);
+                minPing = Math.min(minPing, currentPing);
+            }
+            totalPing += System.currentTimeMillis();
+            pingResult = RUNS + " pings: Min=" + minPing + "ms, max=" 
+                + maxPing + "ms, average=" + (totalPing / RUNS) + "ms";
+        } catch (Exception e) {
+            pingResult = "Ping failed: " + e.getMessage();
         }
     }
     out.clearBuffer();
+    totalTime += System.currentTimeMillis();
+    timing = "Search: " + searchCall + "ms + " + searchXSLT + "ms, facet: " 
+        + facetCall + "ms + " + facetXSLT + "ms, dym: " 
+        + dymCall + "ms + " + dymXSLT + "ms, total: " + totalTime + "ms";
 %>
 <?xml version="1.0" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -235,6 +279,10 @@
             </div>
         </form>
 <%= didyoumean_html %>
+<p>
+        <strong>Latency:</strong> <%= pingResult %><br />
+        <strong>Response time:</strong> <%= timing %><br />
+
     </div>
 </div>
 
