@@ -3516,12 +3516,17 @@ public abstract class DatabaseStorage extends StorageBase {
 
         String isBaseStatsInvalid = "SELECT * FROM " + BASE_STATISTICS
             + " WHERE " + VALID_COLUMN + " = 0";
+        String isBastStatsAva = "SELECT * FROM " + BASE_STATISTICS;
 
         try {
             conn = getConnection();
             Statement stmt = conn.createStatement();
+            Statement available = conn.createStatement();
+            boolean resultSetAva = available.execute(isBastStatsAva);
+            
             boolean resultSet = stmt.execute(isBaseStatsInvalid);
-            if(resultSet && !stmt.getResultSet().first()) {
+            if(resultSet && stmt.getResultSet().first()
+               || resultSetAva && !available.getResultSet().first()) {
                 log.debug("Return slow statistic");
                 return getHeavyStatsWithConnection(conn);
             } else {
