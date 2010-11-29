@@ -3521,7 +3521,7 @@ public abstract class DatabaseStorage extends StorageBase {
             conn = getConnection();
             Statement stmt = conn.createStatement();
             boolean resultSet = stmt.execute(isBaseStatsInvalid);
-            if(resultSet && stmt.getResultSet().first()) {
+            if(resultSet && !stmt.getResultSet().first()) {
                 log.debug("Return slow statistic");
                 return getHeavyStatsWithConnection(conn);
             } else {
