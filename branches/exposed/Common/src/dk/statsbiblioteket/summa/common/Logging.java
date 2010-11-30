@@ -49,7 +49,7 @@ public class Logging {
      * warn-level message is given.
      */
     public static final String PROCESS_LOG_NAME = "process";
-    private static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
+    public static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
     private static final int MAX_CONTENT = 1000;
 
     /**
