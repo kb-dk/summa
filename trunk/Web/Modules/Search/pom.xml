@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 														 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>dk.statsbiblioteket.summa</groupId>
@@ -11,7 +11,7 @@
 
   <artifactId>summa-web-search</artifactId>
   <name>Summa Web Search module</name>
-  <description>Creates summa search WAR file for deployment in Web 		container.</description>
+  <description>Creates summa search WAR file for deployment in Web container.</description>
   <packaging>war</packaging>
 
   <reporting>
@@ -41,11 +41,11 @@
               <goal>enforce</goal>
             </goals>
             <configuration>
-							<message>Remember to run cd Web; ./mkLinks.sh; cd 								..</message>
+		      <message>Remember to run cd Web; ./mkLinks.sh; cd ..</message>
               <rules>
                 <requireFilesExist>
                   <files>
-										<file>src/main/java/dk/statsbiblioteket/summa/web/services/SearchWS.java</file>
+					<file>src/main/java/dk/statsbiblioteket/summa/web/services/SearchWS.java</file>
                   </files>
                 </requireFilesExist>
               </rules>
@@ -55,6 +55,5 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 </project> 
