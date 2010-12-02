@@ -1029,11 +1029,10 @@ public class Configuration implements Serializable,
     public static <T> T create(Class<T> configurable, Configuration conf) {
         Security.checkSecurityManager();
 
+        Constructor<T> con = null;
         try {
-            Constructor<T> con =
-                    configurable.getConstructor(Configuration.class);
+            con = configurable.getConstructor(Configuration.class);
             return con.newInstance(conf);
-
         } catch (NoSuchMethodException e) {
             log.debug(String.format(
                     "No constructor taking Configuration in %s."
@@ -1041,11 +1040,14 @@ public class Configuration implements Serializable,
                     configurable.getSimpleName()));
             return createNonConfigurable(configurable);
         } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                              "Error creating new instance, illegal access", e);
         } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                            "Error creating new instnace, invocation error", e);
         } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                         "Error creating new instance, instantiation error", e);
         }
     }
 
@@ -1059,11 +1061,14 @@ public class Configuration implements Serializable,
                     "No empty constructor in  %s",
                     configurable.getSimpleName()), e);
         } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                              "Error creating new instance, illegal access", e);
         } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                            "Error creating new instnace, invocation error", e);
         } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(e.getMessage(), e);
+            throw new Configurable.ConfigurationException(
+                         "Error creating new instance, instantiation error", e);
         }
     }
 
@@ -1122,7 +1127,7 @@ public class Configuration implements Serializable,
     /**
      * Get a {@link Configuration} object as defined by the system property
      * {@code summa.control.configuration}. The value of this property
-     * can be an URL or an rmi service path.
+     * can be an URL or an RMI service path.
      * Use of URL means that the configuration is loaded only once and this
      * is static. Use of RMI means that every lookup in the configuration will
      * result in a RMI call.
