@@ -3676,47 +3676,50 @@ public abstract class DatabaseStorage extends StorageBase {
         ResultSet result = stmt.executeQuery(query);
 
         try {
-            result.next();
-            while (!result.isAfterLast()) {
-                String base = result.getString(baseKey);
-                String lastBase = base;
-                long deletedIndexables = 0;
-                long nonDeletedIndexables = 0;
-                long deletedNonIndexables = 0;
-                long nonDeletedNonIndexables = 0;
-
-                // Collect all statistics for the current base and append it
-                // to the statistics list
-                while (lastBase.equals(base)) {
-                    boolean deleted = intToBool(result.getInt(deletedKey));
-                    boolean indexable = intToBool(result.getInt(indexableKey));
-                    long count = result.getLong(countKey);
-
-                    // These boolean cases could be simplified, but we list
-                    // them all explicitly to help the (human) reader
-                    if (deleted && indexable) {
-                        deletedIndexables = count;
-                    } else if (deleted && !indexable) {
-                        deletedNonIndexables = count;
-                    } else  if (!deleted && indexable) {
-                        nonDeletedIndexables = count;
-                    } else if (!deleted && !indexable) {
-                        nonDeletedNonIndexables = count;
+            if (result.next()) {
+                while (!result.isAfterLast()) {
+                    String base = result.getString(baseKey);
+                    String lastBase = base;
+                    long deletedIndexables = 0;
+                    long nonDeletedIndexables = 0;
+                    long deletedNonIndexables = 0;
+                    long nonDeletedNonIndexables = 0;
+    
+                    // Collect all statistics for the current base and append it
+                    // to the statistics list
+                    while (lastBase.equals(base)) {
+                        boolean deleted = intToBool(result.getInt(deletedKey));
+                        boolean indexable =
+                                         intToBool(result.getInt(indexableKey));
+                        long count = result.getLong(countKey);
+    
+                        // These boolean cases could be simplified, but we list
+                        // them all explicitly to help the (human) reader
+                        if (deleted && indexable) {
+                            deletedIndexables = count;
+                        } else if (deleted && !indexable) {
+                            deletedNonIndexables = count;
+                        } else  if (!deleted && indexable) {
+                            nonDeletedIndexables = count;
+                        } else if (!deleted && !indexable) {
+                            nonDeletedNonIndexables = count;
+                        }
+    
+                        result.next();
+                        if (!result.isAfterLast()) {
+                            base = result.getString(1);
+                        } else {
+                            break;
+                        }
                     }
-
-                    result.next();
-                    if (!result.isAfterLast()) {
-                        base = result.getString(1);
-                    } else {
-                        break;
-                    }
+                    // Insert / update database and create {@link BaseStats}
+                    // object
+                    stats.add(updateBaseStatsTable(lastBase,
+                              getModificationTime(lastBase), startTime,
+                              deletedIndexables, nonDeletedIndexables,
+                              deletedNonIndexables, nonDeletedNonIndexables,
+                              conn));
                 }
-                // Insert / update database and create {@link BaseStats} object
-                stats.add(updateBaseStatsTable(lastBase,
-                          getModificationTime(lastBase), startTime,
-                          deletedIndexables, nonDeletedIndexables,
-                          deletedNonIndexables, nonDeletedNonIndexables,
-                          conn));    
             }
         } finally {
             result.close();
