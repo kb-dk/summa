@@ -32,7 +32,7 @@
         <module>Workflow</module>
         <module>Web</module>
         <module>Samples/Summix/</module>
-        <module>Samples/Assemply/</module>
+        <module>Samples/Assembly/</module>
     </modules>
 
     <!-- Summa dependencies -->
