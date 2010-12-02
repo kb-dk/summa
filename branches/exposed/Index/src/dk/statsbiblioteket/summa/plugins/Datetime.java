@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,16 +54,38 @@ public class Datetime {
      * @return a space-delimited list of tokens with common ways of writing the
      *         given date. This includes YYYY-MM-DD.
      */
-    public static String dateExpand(String iso, String locale) {
+    public static synchronized String dateExpand(String iso, String locale) {
         Matcher matcher = datePattern.matcher(iso);
         if (!matcher.matches()) {
             return iso;
         }
+        String year = matcher.group(1);
+        String month = matcher.group(2);
+        String day = matcher.group(2);
 
-        // TODO: Implement this
-        return null;
+        buffer.setLength(0);
+        buffer.append(year).append("-").append(month).append("-").append(day);
+        buffer.append(" ");
+        buffer.append(day).append("/").append(month).append("-").append(year);
+        buffer.append(" ");
+        buffer.append(month).append("/").append(day).append("-").append(year);
+        buffer.append(" ");
+        buffer.append(day).append("/").append(month).append("/").append(year);
+        buffer.append(" ");
+        buffer.append(year).append(month).append(day).append(" ");
+        buffer.append(day).append("/").append(month).append(" ");
+        buffer.append(month).append("/").append(day).append(" ");
+
+        Locale loc = locale == null || "".equals(locale) ?
+                     new Locale("en") : new Locale(locale);
+        Calendar cal = Calendar.getInstance();
+        cal.set(Integer.parseInt(year), Integer.parseInt(month),
+                Integer.parseInt(day));
+        buffer.append(String.format("%1$tB %1$tb ", cal));
+        return buffer.toString();
     }
 
+    public static final StringBuffer buffer = new StringBuffer(100);
     /**
      * Produces tokens with common variations of entering the given time.
      * If the input does not match the pattern {@link #timePattern}, the
@@ -72,19 +95,76 @@ public class Datetime {
      * @return a space-delimited list of tokens with common ways of writing the
      *         given time. This includes HH:MM:SS.
      */
-    public static String timeExpand(String iso, String locale) {
+    public static synchronized String timeExpand(String iso, String locale) {
         Matcher matcher = timePattern.matcher(iso);
         if (!matcher.matches()) {
             return iso;
         }
-        int hour = Integer.parseInt(matcher.group(1));
-        int minute = Integer.parseInt(matcher.group(2));
+        String hour = matcher.group(1);
+        String minute = matcher.group(2);
+        String second = matcher.groupCount() == 3 ? matcher.group(1) : null;
 
-        int second = matcher.groupCount() == 3 ?
-                     Integer.parseInt(matcher.group(1)) :
-                     -1;
-        // TODO: Implement this
-        return null;
+        buffer.setLength(0);
+        buffer.append(hour).append(":").append(minute).append(" ");
+        buffer.append(hour).append(".").append(minute).append(" ");
+        buffer.append(hour).append(minute).append(" ");
+        buffer.append(hour).append("h").append(minute).append("m");
+        if (second != null) {
+            buffer.append(" ");
+            buffer.append(hour).append(":").append(minute).append(":");
+            buffer.append(second).append(" ");
+            buffer.append(hour).append("h").append(minute).append("m");
+            buffer.append(second).append("s");
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Produce a /-divided representation of the given timestamp, usable as
+     * input for hierarchical faceting.
+     * @param iso      ISO-timestamp such as 2010-11-30T15:58:45+0200.
+     * @param granularity 1=year, 2=year/month, 3=year/month/day,
+     *                    4=year/month/day/hour, 5=year/month/day/hour/minute,
+     *                    6=year/month/day/hour/minute/second.
+     * @return YYYY/MM/DD/HH/MM/SS or YYYY/MM/DD if dateOnly is true. If the
+     *         iso can not be parsed, the empty string is returned.
+     */
+    public static synchronized String divide(String iso, int granularity) {
+        Matcher matcher = datePattern.matcher(iso);
+        if (!matcher.matches()) {
+            return "";
+        }
+        List<String> tokens = new ArrayList<String>(6);
+        for (int i = 0 ; i < matcher.groupCount() ; i ++) {
+            tokens.add(matcher.group(i));
+        }
+
+        Matcher timeMatcher = timePattern.matcher(iso);
+        if (timeMatcher.matches()) {
+            for (int i = 0 ; i < timeMatcher.groupCount() ; i ++) {
+                tokens.add(timeMatcher.group(i));
+            }
+        }
+        buffer.setLength(0);
+        for (int i = 0 ; i < granularity && i < tokens.size() ; i++) {
+            if (i != 0) {
+                buffer.append("/");
+            }
+            buffer.append(tokens.get(i));
+        }
+        return buffer.toString();
+    }
+
+    private static String align2(final int v) {
+        return v < 10 ? "0" + Integer.toString(v) : Integer.toString(v);
+    }
+
+    private static String align4(final int v) {
+        String result = Integer.toString(v);
+        while (result.length() < 4) {
+            result = "0" + result;
+        }
+        return result;
     }
 
     /**
