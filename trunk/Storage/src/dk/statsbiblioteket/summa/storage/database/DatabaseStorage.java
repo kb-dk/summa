@@ -2429,25 +2429,25 @@ public abstract class DatabaseStorage extends StorageBase {
                 ResultSet cursor = stmt.getResultSet();
 
                 // Step into the result set if there are any results
-                cursor.next();
-
-                // Read the current page. Note that we must track
-                // the record id since it's in effect a new record
-                // if it's changed (we must purge the old one).
-                while (!cursor.isAfterLast()) {
-                    minTimestamp = cursor.getLong(MTIME_COLUMN);
-                    Record record = scanRecord(cursor); // advances cursor
-                    if (previousRecord != null &&
-                        applyJobtoRecord(job, previousRecord, previousRecordId,
-                                         base, options, totalCount == 0, false,
-                                         conn)) {
-                        totalCount++;
-                        pageCount++;
+                if (cursor.next()) {
+                    // Read the current page. Note that we must track
+                    // the record id since it's in effect a new record
+                    // if it's changed (we must purge the old one).
+                    while (!cursor.isAfterLast()) {
+                        minTimestamp = cursor.getLong(MTIME_COLUMN);
+                        Record record = scanRecord(cursor); // advances cursor
+                        if (previousRecord != null &&
+                            applyJobtoRecord(job, previousRecord,
+                                             previousRecordId, base, options,
+                                             totalCount == 0, false, conn)) {
+                            totalCount++;
+                            pageCount++;
+                        }
+                        previousRecord = record;
+                        previousRecordId = record.getId();
                     }
-                    previousRecord = record;
-                    previousRecordId = record.getId();
+                    cursor.close();
                 }
-                cursor.close();
             }
 
             // The last iteration, now with last=true
