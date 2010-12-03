@@ -42,7 +42,7 @@ public class Datetime {
     public static final Pattern datePattern =
         Pattern.compile("^([0-9]{4}).?([0-9]{2}).?([0-9]{2}).*");
     public static final Pattern timePattern = // Accepts missing seconds
-        Pattern.compile("^[0-9]{4}.?[0-9]{2}.?[0-9]{2}.?([0-9]{2}).?([0-9]{2}).?([0-9]{2})?");
+        Pattern.compile("^[0-9]{4}.?[0-9]{2}.?[0-9]{2}.?([0-9]{2}).?([0-9]{2}).?([0-9]{2})?.*");
 
     /**
      * Produces tokens with common variations of entering the given date.
@@ -61,7 +61,7 @@ public class Datetime {
         }
         String year = matcher.group(1);
         String month = matcher.group(2);
-        String day = matcher.group(2);
+        String day = matcher.group(3);
 
         buffer.setLength(0);
         buffer.append(year).append("-").append(month).append("-").append(day);
@@ -73,15 +73,28 @@ public class Datetime {
         buffer.append(day).append("/").append(month).append("/").append(year);
         buffer.append(" ");
         buffer.append(year).append(month).append(day).append(" ");
+
         buffer.append(day).append("/").append(month).append(" ");
         buffer.append(month).append("/").append(day).append(" ");
+        buffer.append(month).append("-").append(day).append(" ");
+
+        if (shorten(day).length() == 1 || shorten(month).length() == 1) {
+            buffer.append(shorten(day)).append("/");
+            buffer.append(shorten(month)).append(" ");
+            buffer.append(shorten(month)).append("/");
+            buffer.append(shorten(day)).append(" ");
+            buffer.append(shorten(month)).append("-");
+            buffer.append(shorten(day)).append(" ");
+        }
 
         Locale loc = locale == null || "".equals(locale) ?
                      new Locale("en") : new Locale(locale);
+        Formatter formatter = new Formatter(buffer, loc);
         Calendar cal = Calendar.getInstance();
-        cal.set(Integer.parseInt(year), Integer.parseInt(month),
+        cal.set(Integer.parseInt(year), Integer.parseInt(month)-1,
                 Integer.parseInt(day));
-        buffer.append(String.format("%1$tB %1$tb ", cal));
+        formatter.format("%1$tB %1$tb", cal);
+        formatter.flush();
         return buffer.toString();
     }
 
@@ -122,37 +135,48 @@ public class Datetime {
     /**
      * Produce a /-divided representation of the given timestamp, usable as
      * input for hierarchical faceting.
-     * @param iso      ISO-timestamp such as 2010-11-30T15:58:45+0200.
-     * @param granularity 1=year, 2=year/month, 3=year/month/day,
-     *                    4=year/month/day/hour, 5=year/month/day/hour/minute,
-     *                    6=year/month/day/hour/minute/second.
+     * @param iso   ISO-timestamp such as 2010-11-30T15:58:45+0200.
+     * @param start where to start the output in the tokenized list of datetime
+                    elements:
+                    1=year, 2=month, 3=day, 4=hour, 5=minute, 6=second.
+     * @param end   where to end the output in the tokenized list of datetime
+                    elements. Indexes correspond to the start parameter and are
+                    exclusive.
      * @return YYYY/MM/DD/HH/MM/SS or YYYY/MM/DD if dateOnly is true. If the
      *         iso can not be parsed, the empty string is returned.
      */
-    public static synchronized String divide(String iso, int granularity) {
+    public static synchronized String divide(String iso, int start, int end) {
         Matcher matcher = datePattern.matcher(iso);
         if (!matcher.matches()) {
             return "";
         }
         List<String> tokens = new ArrayList<String>(6);
-        for (int i = 0 ; i < matcher.groupCount() ; i ++) {
+        for (int i = 1 ; i < matcher.groupCount()+1 ; i ++) {
             tokens.add(matcher.group(i));
         }
 
         Matcher timeMatcher = timePattern.matcher(iso);
         if (timeMatcher.matches()) {
-            for (int i = 0 ; i < timeMatcher.groupCount() ; i ++) {
+            for (int i = 1 ; i < timeMatcher.groupCount()+1 ; i ++) {
                 tokens.add(timeMatcher.group(i));
+
             }
         }
         buffer.setLength(0);
-        for (int i = 0 ; i < granularity && i < tokens.size() ; i++) {
-            if (i != 0) {
+        for (int i = start-1 ; i < end && i < tokens.size() ; i++) {
+            if (i != start-1) {
                 buffer.append("/");
             }
             buffer.append(tokens.get(i));
         }
         return buffer.toString();
+    }
+
+    private static String shorten(String s) {
+        if (s.length() <= 1 || s.charAt(0) != '0') {
+            return s;
+        }
+        return s.substring(1, s.length());
     }
 
     private static String align2(final int v) {
