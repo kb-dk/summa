@@ -14,17 +14,17 @@
  */
 package dk.statsbiblioteket.summa.control.api.feedback.rmi;
 
-import dk.statsbiblioteket.summa.control.api.feedback.Message;
-import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
-import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
-import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
+import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
+import dk.statsbiblioteket.summa.control.api.feedback.Message;
+import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
 
-import java.util.List;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +33,8 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class RemoteConsoleFeedback extends UnicastRemoteObject
-                                   implements RemoteFeedback {    
+                                   implements RemoteFeedback {
+    /** Serial version UID. */
     private static final long serialVersionUID = 58799991194L;
     private static Log log = LogFactory.getLog (RemoteConsoleFeedback.class);
 
@@ -47,19 +48,19 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
         try {
             feedback = new ConsoleFeedback(conf);
         } catch (Exception e) {
-            log.warn ("Unable to create ConsoleFeedback. Falling back"
-                         + "to VoidFeedback", e);
+            log.warn("Unable to create ConsoleFeedback. Falling back"
+                     + "to VoidFeedback", e);
             feedback = new VoidFeedback();
         }
         closed = false;
-        registryPort = conf.getInt (CONF_REGISTRY_PORT, 27000);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
         serviceName = conf.getString(CONF_SERVICE_NAME,
                                      "remoteConsole");
 
         RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
     }
 
-    public RemoteConsoleFeedback () throws IOException {
+    public RemoteConsoleFeedback() throws IOException {
         this (Configuration.getSystemConfiguration(true));
     }
 
@@ -67,6 +68,12 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
         return conf.getInt(CONF_SERVICE_PORT, 27091);
     }
 
+    /**
+     * Puts a list over messages onto the RMI console feedback.
+     * @param messages The list of messages.
+     * @throws RemoteException If the output stream is broken.
+     */
+    @Override
     public void putMessages(List<Message> messages) throws RemoteException {
         try {
             feedback.putMessages(messages);
@@ -75,6 +82,12 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Puts a single message onto the console feedback.
+     * @param message The message.
+     * @throws RemoteException If the output stream is broken.
+     */
+    @Override
     public void putMessage(Message message) throws RemoteException {
         try {
             feedback.putMessage(message);
@@ -83,14 +96,16 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
         }
     }
 
-    public void close () throws IOException {
-        if (closed) return;        
+    /**
+     * Closes this RMI console feedback.
+     * @throws IOException If unexporting the RMI interface fails.
+     */
 
+    public void close() throws IOException {
+        if (closed) {
+            return;         
+        }
         closed = true;
         RemoteHelper.unExportRemoteInterface(serviceName, registryPort);
     }
 }
-
-
-
-

@@ -14,16 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import dk.statsbiblioteket.summa.common.index.FieldProvider;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaFieldSeparatingAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
+
 import java.text.ParseException;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
-import dk.statsbiblioteket.summa.common.index.IndexField;
-import dk.statsbiblioteket.summa.common.index.FieldProvider;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaFieldSeparatingAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 
 /**
  * Extension of IndexField to support Lucene-specific behaviour.
@@ -31,17 +32,26 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
  */
 public class LuceneIndexField extends
                               IndexField<Analyzer, Tokenizer, IndexFilter> {
+    /** The field term vector. */
     private Field.TermVector termVector =
-            Field.TermVector.WITH_POSITIONS_OFFSETS;
+                                        Field.TermVector.WITH_POSITIONS_OFFSETS;
 
+    /**
+     * Creates an empty Lucene index field.
+     */
     public LuceneIndexField() {
         super();
     }
 
+    /**
+     * Creates a Lucene Index field with a given name.
+     * @param name The name.
+     */
     public LuceneIndexField(String name) {
         super(name);
     }
 
+    
     public LuceneIndexField(Node node, FieldProvider indexFieldFieldProvider)
                                                          throws ParseException {
         super(node, indexFieldFieldProvider);
@@ -52,10 +62,20 @@ public class LuceneIndexField extends
         super(parent);
     }
 
+    /**
+     * Return a new {@link SummaStandardAnalyzer}.
+     * @return A new {@link SummaStandardAnalyzer}.
+     */
+    @Override
     protected Analyzer getDefaultIndexAnalyzer() {
         return new SummaStandardAnalyzer();
     }
 
+    /**
+     * Return new {@link SummaStandardAnalyzer}.
+     * @return A new {@link SummaStandardAnalyzer}.
+     */
+    @Override
     protected Analyzer getDefaultQueryAnalyzer() {
         return new SummaStandardAnalyzer();
     }
@@ -95,6 +115,10 @@ public class LuceneIndexField extends
         }
     }
 
+    /**
+     * Set the term vector.
+     * @param termVector The new term vector.
+     */
     public void setTermVector(Field.TermVector termVector) {
         this.termVector = termVector;
     }
@@ -134,8 +158,7 @@ public class LuceneIndexField extends
     }
 
     // TODO: Implement methods below to get custom A/T/I in the descriptor
-
-    protected Analyzer createAnalyzer(Node node) {
+    /*protected Analyzer createAnalyzer(Node node) {
         return super.createAnalyzer(node);
     }
 
@@ -157,9 +180,5 @@ public class LuceneIndexField extends
 
     protected String filterToXMLFragment(IndexFilter filter) {
         return super.filterToXMLFragment(filter);
-    }
+    }*/
 }
-
-
-
-

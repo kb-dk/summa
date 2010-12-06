@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.TestCase;
-
-import java.io.StringReader;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+
+import java.io.StringReader;
+
+import junit.framework.TestCase;
 
 /**
  * Test cases for {@link ScriptFilter}
@@ -145,12 +145,12 @@ public class ScriptFilterTest extends TestCase {
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
                        new Record("id1", "base1",
-                                  ("<root>\n" +
-                                   "  <child1>Foo</child1>\n" +
-                                   "  <child2>Bar</child2>\n" +
-                                   "</root>\n").getBytes()));
+                                  ("<root>\n"
+                                   + "  <child1>Foo</child1>\n"
+                                   + "  <child2>Bar</child2>\n"
+                                   + "</root>\n").getBytes()));
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()) { }
 
         assertEquals(1, buf.size());
         assertEquals("Bar", buf.get(0).getRecord().getContentAsUTF8());

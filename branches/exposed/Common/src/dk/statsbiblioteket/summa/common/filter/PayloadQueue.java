@@ -16,13 +16,14 @@ package dk.statsbiblioteket.summa.common.filter;
 
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A queue tailored for Payloads, where the maximum queue size can be defined
@@ -39,10 +40,13 @@ import java.util.concurrent.atomic.AtomicLong;
         comment = "The hard part about this is to ensure that totalSize is"
                   + "true under all conditions")
 public class PayloadQueue extends ArrayBlockingQueue<Payload> {
+    /** Serial version UID. */
     private static final long serialVersionUID = 354681383613L;
+    /** Logger. */
     private static Log log = LogFactory.getLog(PayloadQueue.class);
 
     private AtomicLong totalSize = new AtomicLong(0);
+    /** The maximal size. */
     private long maxSize;
     /**
      * The flag is notified when elements are added or removed from the queue.
@@ -120,11 +124,11 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return false;
     }
 
-    @Override
+    /*@Override
     public boolean add(Payload payload) {
         // Add is a wrapper for offer, so don't update totalSize or flag
         return super.add(payload);
-    }
+    }*/
 
     @Override
     public Payload poll() {
@@ -271,6 +275,11 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         }
     }
 
+    /**
+     * Calculate and returns the payload size.
+     * @param payload The payload.
+     * @return The size of the payload.
+     */
     private long calculateSize(Payload payload) {
         return payload.getRecord() == null ? 200
                : RecordUtil.calculateRecordSize(payload.getRecord(), true);

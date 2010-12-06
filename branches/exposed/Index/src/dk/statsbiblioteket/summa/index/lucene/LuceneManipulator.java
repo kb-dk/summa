@@ -14,28 +14,45 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.*;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.*;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.LogByteSizeMergePolicy;
+import org.apache.lucene.index.LogDocMergePolicy;
+import org.apache.lucene.index.LogMergePolicy;
+import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockObtainFailedException;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
@@ -54,6 +71,7 @@ import java.util.concurrent.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class LuceneManipulator implements IndexManipulator {
+    /** Log instance. */
     private static Log log = LogFactory.getLog(LuceneManipulator.class);
 
     /**
@@ -64,6 +82,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     public static final String CONF_BUFFER_SIZE_PAYLOADS =
             "summa.index.lucene.buffersizepayloads";
+    /** Default value for {@link #CONF_BUFFER_SIZE_PAYLOADS}. */
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
 
     /**
@@ -74,6 +93,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     public static final String CONF_BUFFER_SIZE_MB =
             "summa.index.lucene.buffersizemb";
+    /** Default value for {@link #CONF_BUFFER_SIZE_MB}. */
     public static final double DEFAULT_BUFFER_SIZE_MB =
             IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
@@ -90,6 +110,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     public static final String CONF_WRITER_THREADS =
             "summa.index.lucene.writerthreads";
+    /** Default value for {@link #CONF_WRITER_THREADS}. */
     public static final int DEFAULT_WRITER_THREADS = 1;
 
     /**
@@ -103,6 +124,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     public static final String CONF_MAX_SEGMENTS_ON_CONSOLIDATE =
             "summa.index.lucene.consolidate.maxsegments";
+    /** Default value for {@link #CONF_MAX_SEGMENTS_ON_CONSOLIDATE}. */
     public static final int DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE = 5;
 
     /**
@@ -116,6 +138,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     public static final String CONF_EXPUNGE_DELETES_ON_COMMIT =
             "summa.index.lucene.expungedeletesoncommit";
+    /** Default value for {@link #CONF_EXPUNGE_DELETES_ON_COMMIT}. */
     public static final boolean DEFAULT_EXPUNGE_DELETES_ON_COMMIT = true;
 
     /** The index descriptor, used for providing Analyzers et al. */
@@ -369,7 +392,7 @@ public class LuceneManipulator implements IndexManipulator {
             log.warn(String.format(
                     "Interrupted while waiting for writer job for %s. "
                     + "Signalling that index documents might be out of order",
-                    e));
+                    e), e);
             orderChangedSinceLastCommit();
         } catch (ExecutionException e) {
             Logging.logProcess(

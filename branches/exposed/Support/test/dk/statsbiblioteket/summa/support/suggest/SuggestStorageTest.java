@@ -18,16 +18,18 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.xml.DOM;
+
+import java.io.File;
+
 import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
-
 /**
- * 
+ * Test class for the {@link SuggestStorage}.
  */
 public class SuggestStorageTest extends TestCase {
     private static Log log = LogFactory.getLog(SuggestStorageTest.class);
@@ -38,7 +40,7 @@ public class SuggestStorageTest extends TestCase {
     public void setUp() throws Exception {
         if (storage != null) {
             dbLocation = new File(
-                    System.getProperty("java.io.tmpdir"),
+                    "target/test/",
                     "suggest-" + ++dbCount);
             storage.open(dbLocation);
         } else {
@@ -54,6 +56,23 @@ public class SuggestStorageTest extends TestCase {
         Files.delete(dbLocation);
     }
 
+    /**
+     * Test deletion of suggestion in storage.
+     * @throws Exception If error.
+     */
+    public void testDeleteSuggestions() throws Exception {
+        storage.addSuggestion("foo", 1, 1);
+        
+        SuggestResponse resp = storage.getSuggestion("f", 10);
+        String xml = resp.toXML();
+        assertTrue(xml.contains("foo"));
+
+        storage.deleteSuggestion("foo");
+        resp = storage.getSuggestion("f", 10);
+        xml = resp.toXML();
+        assertFalse(xml.contains("foo"));
+    }
+    
     public void testRecentSuggestions() throws Exception {
         storage.addSuggestion("old-1", 1, 1);
         storage.addSuggestion("old-2", 2, 2);
@@ -129,7 +148,7 @@ public class SuggestStorageTest extends TestCase {
 
         assertEquals("The 'foo' suggestion should have 10 hits", 10, fooHits);
         assertEquals(
-                "The '\"foo\"' suggestion should have 2 hits", 2, fooQuotedHits);
+               "The '\"foo\"' suggestion should have 2 hits", 2, fooQuotedHits);
     }
 
     public void testTwoAdds() throws Exception {

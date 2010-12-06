@@ -23,15 +23,17 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.Iterator;
 
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
- * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.StorageTestBase
+ * FIXME: Missing class docs for StorageTestBase
  *
  * @author mke
  * @since Jan 11, 2010
@@ -40,12 +42,15 @@ import java.util.Iterator;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke, hbk")
 public class StorageTestBase extends TestCase {
-
-    protected static Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
-
+    /** Logger instance. */
+    private Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
+    /** Storage root. */
+    File dbRoot = new File(testDBRoot);
+    /** The storage instantiated by this test helper. */
     protected Storage storage;
 
-    protected static String testDBRoot = "test_db";
+    /** Test db root, for all clases using this storage construction method. */
+    public static String testDBRoot = "target/test_result/test_db";
     protected static String dbPrefix = "db";
     protected static String testBase1 = "foobar";
     protected static String testBase2 = "frobnibar";
@@ -60,7 +65,7 @@ public class StorageTestBase extends TestCase {
 
     protected static String lastStorageLocation = null;
 
-    public static Configuration createConf () throws Exception {
+    public static Configuration createConf() throws Exception {
 
         lastStorageLocation =
                 testDBRoot + File.separator + dbPrefix + (storageCounter++);
@@ -99,33 +104,34 @@ public class StorageTestBase extends TestCase {
         //return conf;
     }
 
+    /**
+     * Dummy test for not failing on hudson server.
+     */
     public void testDummy() {
         assertTrue(true);
     }
 
-    public void setUp () throws Exception {
-        File dbRoot = new File(testDBRoot);
-
+    @Override
+    public void setUp() throws Exception {
+        testStartTime = System.currentTimeMillis();
         if (dbRoot.exists()) {
-            Files.delete (dbRoot);
+            Files.delete(dbRoot);
         }
-
         storage = StorageFactory.createStorage(createConf());
 
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
         Thread.sleep(200);
-
-        testStartTime = System.currentTimeMillis();
     }
 
-    public void tearDown () throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         log.info("Test case tear down commencing");
         if(storage == null) {
             return;
         }
         if (storage instanceof DatabaseStorage) {
-            ((DatabaseStorage)storage).destroyDatabase();
+            //((DatabaseStorage) storage).destroyDatabase();
         }
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
@@ -135,13 +141,16 @@ public class StorageTestBase extends TestCase {
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
         Thread.sleep(200);
+        // cleanup
+        //dbRoot.mkdirs();
+        Files.delete(dbRoot);
     }
 
-    public void assertBaseEmpty (String base) throws Exception {
+    public void assertBaseEmpty(String base) throws Exception {
         assertBaseEmpty(base, -1);
     }
 
-    public void assertBaseEmpty (String base, long count) throws Exception {
+    public void assertBaseEmpty(String base, long count) throws Exception {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long nonDeletedCount = 0;
@@ -167,7 +176,7 @@ public class StorageTestBase extends TestCase {
         }
     }
 
-    public void assertBaseCount (String base, long expected) throws Exception {
+    public void assertBaseCount(String base, long expected) throws Exception {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long actual = 0;
@@ -182,4 +191,3 @@ public class StorageTestBase extends TestCase {
         }
     }
 }
-

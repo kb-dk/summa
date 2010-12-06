@@ -40,15 +40,10 @@ public class SortFactory {
      *         RAM and creates Collator-keys for them.<br />
      *         Pros: Fast startup-time, efficient on re-open.<br />
      *         Cons: Consumes a lot of memory, so-so fast on actual sort.<br />
-     * localstatic: Uses an optimized Collator and creates an array with
-     *         sort-order for the terms in the given field.<br />
-     *         Pros: Fast startup, best actual sort-performance,<br />
-     *         Cons: Temporarily consumes a lot of memory at startup.<br />
-     * multipass: Uses an optimized collator and creates a structure with
-     *         sort-order for the terms in the given field.<br />
-     *         Pros: Customizable memory-usage at the cost of startup time,
-     *               faster than build-in sort in actual sort-performance.<br/ >
-     *         Cons: Long startup-time if low memory-usage is requested.
+     * exposed: Custom ordinal-oriented comparator. Creates a compact map from
+               docIDs to term ordinals by paged sorting.<br />
+               Pros: Fast execution, low memory overhead.<br />
+               cons: Long startup time.
      */
     public static enum COMPARATOR {
         lucene, exposed;

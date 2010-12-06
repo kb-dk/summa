@@ -3,7 +3,6 @@
 set -e
 DEPLOY=`dirname $0`/..
 
-
 #
 # EDIT HERE
 # Variables prepended with ### are suitable for replacement 
@@ -15,6 +14,7 @@ export MAINCLASS=dk.statsbiblioteket.summa.search.tools.SummaSearcherRunner
 export CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 export PRINT_CONFIG=
+export NAME=summa-seacher
 ###LIBDIRS=
 ###JAVA_HOME=
 ###JVM_OPTS="$JVM_OPTS -Dsumma.configuration=$1"

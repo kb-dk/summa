@@ -23,6 +23,7 @@
     String form_sort = "";
     boolean doDidYouMean = false;
     String pingResult = "No ping result";
+    boolean reverseSort = false;
 
     long searchCall = 0;
     long searchXSLT = 0;
@@ -61,6 +62,10 @@
         doDidYouMean = true;
     }
 
+    if("on".equals(request.getParameter("reverse"))) {
+        reverseSort = true;
+    }
+
 
     if (query != null || filter != null) {
         int per_page = 10;
@@ -97,7 +102,7 @@
         searchCall = -System.currentTimeMillis();
         String xml_search_result = (String)services.execute(
                 "summafiltersearchsorted", filter, query,
-                per_page, current_page * per_page, sort, false);
+                per_page, current_page * per_page, sort, reverseSort);
         searchCall += System.currentTimeMillis();
 
         if (xml_search_result == null) {
@@ -133,6 +138,11 @@
             }
             if (sort != null) {
                 search_prop.put("sort", sort);
+            }
+            if (reverseSort) {
+                search_prop.put("reverse", "on");
+            } else {
+                search_prop.put("reverse", "off");
             }
             search_prop.put("per_page", per_page);
             search_prop.put("current_page", current_page);
@@ -272,7 +282,12 @@
                 Filter sorted search<br />
                 <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
                 <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
-                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" /><br />
+                <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
+                <% if (reverseSort) { %>
+                  <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse" checked="checked" /><br />
+                <% } else { %>
+                  <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse"  /><br />
+                <% } %>
                 <label for="dodidyoumean">Do Didyoumean Search:</label> <input type="checkbox" name="dodidyoumean" id="dodidyoumean" /><br />
                 <input type="submit" value="Search" />
                 <input type="hidden" name="userfiltersortsearch" value="true" />

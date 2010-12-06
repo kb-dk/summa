@@ -47,6 +47,8 @@ function detach() {
     sleep 10
     if [ -e /proc/$PID ]; then
         echo "OK"
+    elif [ ! -d /proc/ ]; then
+	echo "We don't know if process is running"
     else
         echo "FAILED"
         exit 2

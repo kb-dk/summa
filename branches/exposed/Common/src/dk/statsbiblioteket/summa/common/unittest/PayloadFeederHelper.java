@@ -18,12 +18,13 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Takes a list of Payloads in the constructor and delivers the Payloads when
@@ -31,14 +32,22 @@ import java.util.List;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "JavaDoc needed")
 public class PayloadFeederHelper implements ObjectFilter {
+    /** Local logger instance. */
     private static Log log = LogFactory.getLog(PayloadFeederHelper.class);
-
+    /** List of payloads. */
     private List<Payload> payloads;
+    /** Delay. */
     private int delay = 0;
+    /** Timestamp of last delivery time. */
     private Long lastDeliveryTime = 0L;
-    
+
+    /**
+     * Creates a payload feeder with a list of payloads.
+     * @param payloads The  list of payloads.
+     */
     public PayloadFeederHelper(List<Payload> payloads) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder with " + payloads.size() + " Payloads");
@@ -46,6 +55,11 @@ public class PayloadFeederHelper implements ObjectFilter {
         this.payloads.addAll(payloads);
     }
 
+    /**
+     * Creates payload feeder which delay each delivery a small or large period.
+     * @param payloads The list of payloads.
+     * @param delayBetweenPayloads The delay between each payload.
+     */
     public PayloadFeederHelper(
             List<Payload> payloads, int delayBetweenPayloads) {
         //noinspection DuplicateStringLiteralInspection
@@ -55,23 +69,28 @@ public class PayloadFeederHelper implements ObjectFilter {
         delay = delayBetweenPayloads;
     }
 
-    public boolean hasNext() {
+    @Override
+    public final boolean hasNext() {
         return payloads.size() > 0;
     }
 
-    public void setSource(Filter filter) {
+    @Override
+    public final void setSource(Filter filter) {
         throw new UnsupportedOperationException("setSource not supported");
     }
 
-    public boolean pump() throws IOException {
+    @Override
+    public final boolean pump() throws IOException {
         return next() != null && hasNext();
     }
 
-    public void close(boolean success) {
+    @Override
+    public final void close(boolean success) {
         payloads.clear();
     }
 
-    public Payload next() {
+    @Override
+    public final Payload next() {
         long sleepTime = lastDeliveryTime + delay - System.currentTimeMillis();
         if (sleepTime > 0) {
             try {
@@ -88,9 +107,12 @@ public class PayloadFeederHelper implements ObjectFilter {
         return payload;
     }
 
-    public void remove() {
+    /**
+     * Remove throws {@link UnsupportedOperationException}.
+     */
+    @Override
+    public final void remove() {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
     }
 }
-

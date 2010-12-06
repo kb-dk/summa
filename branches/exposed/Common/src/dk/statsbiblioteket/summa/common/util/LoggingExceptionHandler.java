@@ -28,14 +28,17 @@ import org.apache.commons.logging.LogFactory;
  * </p><p>
  * The behaviour on uncaught Exceptions is to shut down the JVM.
  */
-public class LoggingExceptionHandler implements Thread.UncaughtExceptionHandler {
-
+public class LoggingExceptionHandler
+                                    implements Thread.UncaughtExceptionHandler {
+    /** The logging instance. */
     private Log log;
+    /** Default shutdown period in milliseconds. */
+    private final int delay = 5;
 
     /**
      * Create a new {@code LoggingExceptionHandler} with a private logger.
      */
-    public LoggingExceptionHandler () {
+    public LoggingExceptionHandler() {
         log = LogFactory.getLog(LoggingExceptionHandler.class);
     }
 
@@ -43,10 +46,15 @@ public class LoggingExceptionHandler implements Thread.UncaughtExceptionHandler 
      * Create a new {@code LoggingExceptionHandler} with a given logger.
      * @param log the log to use for uncaught exceptions
      */
-    public LoggingExceptionHandler (Log log) {
+    public LoggingExceptionHandler(Log log) {
         this.log = log;
     }
 
+    /**
+     * Makes a clean shutdown, when a main method reaches a uncaught exception.
+     * @param thread The thread calling this method.
+     * @param e The throwable exception not caught.
+     */
     public void uncaughtException(Thread thread, Throwable e) {
         String message = String.format(
                 "Uncaught exception in thread '%s'. Processing is unstable "
@@ -55,10 +63,6 @@ public class LoggingExceptionHandler implements Thread.UncaughtExceptionHandler 
         log.fatal(message, e);
         System.err.println(message);
         e.printStackTrace(System.err);
-        new DeferredSystemExit(1, 5);
+        new DeferredSystemExit(1, delay);
     }
 }
-
-
-
-

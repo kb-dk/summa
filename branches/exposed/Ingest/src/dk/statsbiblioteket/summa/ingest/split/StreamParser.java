@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.Iterator;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.Iterator;
 
 /**
  * Parses a stream (provided by a Payload) into multiple Records wrapped in
@@ -36,19 +36,19 @@ public interface StreamParser extends Iterator<Payload>, Configurable {
      * Clears and initializes the parser with the stream from the given Payload.
      * @param streamPayload the Payload with the stream to parse.
      */
-    public void open(Payload streamPayload);
+    void open(Payload streamPayload);
 
     /**
      * If a parsing is underway, it is stopped and any queued Payloads are
      * discarded. The StreamParser can be reused after stop.
      */
-    public void stop();
+    void stop();
 
     /**
      * Shuts down the parser, stopping running Threads and the like. The state
      * of the parser is undefined after close and it is not guaranteed that it
      * can be reused.
      */
-    public void close();
+    void close();
 }
 

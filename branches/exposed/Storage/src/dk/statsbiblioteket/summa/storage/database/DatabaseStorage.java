@@ -32,13 +32,10 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import javax.script.ScriptException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -56,28 +53,56 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.script.ScriptException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * An abstract implementation of a SQL database driven extension
  * of {@link StorageBase}.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings("DuplicateStringLiteralInspection")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke, te")
 public abstract class DatabaseStorage extends StorageBase {
+    /** Log instance. */
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
+    /** Key for ID in a record. */
+    private static final int ID_KEY = 1;
+    /** Key for base in record. */
+    private static final int BASE_KEY = 2;
+    /** Delete flag key in record. */
+    private static final int DELETED_FLAG_KEY = 3;
+    /** Indexable flag key in record. */
+    private static final int INDEXABLE_FLAG_KEY = 4;
+    /** Has relations flag key in record. */
+    private static final int HAS_RELATIONS_FLAG_KEY = 5;
+    /** Gzipped content flag key in record. */
+    private static final int GZIPPED_CONTENT_FLAG_KEY = 6;
+    /** Created time key in record. */
+    private static final int CTIME_KEY = 7;
+    /** Modified time key in record. */
+    private static final int MTIME_KEY = 8;
+    /** Meta-data key in record. */
+    private static final int META_KEY = 9;
+    /** Parents IDs key in record. */
+    private static final int PARENT_IDS_KEY = 10;
+    /** Chils IDs key in record. */
+    private static final int CHILD_IDS_KEY = 11;
 
     /**
      * The number of minutes iterators opened with
      * {@link #getRecordsModifiedAfter} are valid if they are unused. After the
      * specified amount of inactivity they may be cleaned up by the storage.
      * The default value is {@link #DEFAULT_ITERATOR_TIMEOUT}.
-getco     */
+     */
     public static final String CONF_ITERATOR_TIMEOUT =
                                        "summa.storage.database.iteratortimeout";
 
     /**
-     * Default value for the {@link #CONF_ITERATOR_TIMEOUT} property
+     * Default value for the {@link #CONF_ITERATOR_TIMEOUT} property.
      */
     public static final long DEFAULT_ITERATOR_TIMEOUT = 120;
 
@@ -85,7 +110,8 @@ getco     */
      * The property-key for the username for the underlying database, if needed.
      * The default value is {@link #DEFAULT_USERNAME}.
      */
-    public static final String CONF_USERNAME = "summa.storage.database.username";
+    public static final String CONF_USERNAME =
+                                              "summa.storage.database.username";
     /**
      * Default value for {@link #CONF_USERNAME}.
      */
@@ -95,7 +121,8 @@ getco     */
      * The property-key for the the password for the underlying database, if
      * needed.
      */
-    public static final String CONF_PASSWORD = "summa.storage.database.password";
+    public static final String CONF_PASSWORD =
+                                              "summa.storage.database.password";
 
     /**
      * The name of the database to connect to. Default value is
@@ -121,12 +148,12 @@ getco     */
     public static final int DEFAULT_MAX_CONNECTIONS = 10;
 
     /**
-     * The port to connect to the datatbase on.
+     * The port to connect to the database on.
      */
     public static final String CONF_PORT = "summa.storage.database.port";
 
     /**
-     * The hostname to connect to the datatbase on. Default is
+     * The hostname to connect to the database on. Default is
      * {@link #DEFAULT_HOST}.
      */
     public static final String CONF_HOST = "summa.storage.database.host";
@@ -161,13 +188,15 @@ getco     */
      * is deleted and a new one created. If createnew is true and a database
      * exists and forcenew is false, the existing database is reused.
      */
-    public static final String CONF_CREATENEW = "summa.storage.database.createnew";
+    public static final String CONF_CREATENEW =
+                                             "summa.storage.database.createnew";
 
     /**
      * The property-key for the boolean determining if a new database should
      * be created, no matter is a database already exists.
      */
-    public static final String CONF_FORCENEW = "summa.storage.database.forcenew";
+    public static final String CONF_FORCENEW =
+                                              "summa.storage.database.forcenew";
 
     /**
      * The location of the database to use/create. If the location is not an
@@ -175,7 +204,8 @@ getco     */
      * summa.control.client.persistent.dir". If that system property does not
      * exist, the location will be relative to the current dir.
      */
-    public static final String CONF_LOCATION = "summa.storage.database.location";
+    public static final String CONF_LOCATION =
+                                              "summa.storage.database.location";
 
     /**
      * Number of hits to return per-page. This configuration option is only
@@ -188,7 +218,7 @@ getco     */
                                              "summa.storage.database.pagesize";
 
     /**
-     * Default value for the {@link #CONF_PAGE_SIZE} property
+     * Default value for the {@link #CONF_PAGE_SIZE} property.
      */
     public static final int DEFAULT_PAGE_SIZE = 500;
 
@@ -200,10 +230,37 @@ getco     */
 
     /**
      * The name of the table holding the parent/child relations of the records
-     * from {@link #RECORDS}
+     * from {@link #RECORDS}.
      */
     public static final String RELATIONS = "summa_relations";
 
+    /**
+     * The of the table holding statistic on a base level. 
+     */
+    public static final String BASE_STATISTICS = "summa_basestats";
+
+    /**
+     * Number of records in deleted stated and indexable.
+     */
+    public static final String DELETE_INDEXABLES_COLUMN = "deletedindexables";
+
+    /**
+     * Number of records not in deleted stated but indexable.
+     */
+    public static final String NON_DELETED_INDEXABLES_COLUMN =
+                                                         "nondeletedindexables";
+
+    /**
+     * Number of records in deleted state and not indexable. 
+     */
+    public static final String DELETED_NON_INDEXABLES_COLUMN =
+                                                         "deletednonindexables";
+
+    /**
+     * Number of records not deleted and not indexable.
+     */
+    public static final String NON_DELETED_NON_INDEXABLES_COLUMN =
+                                                      "nonDeletedNonIndexables";
     /**
      * The {@code id} column contains the unique identifier for a given record
      * in the database. The value that is mapped directly to the {@code id}
@@ -240,7 +297,7 @@ getco     */
 
     /**
      * The {@code hasRelations} column contains a flag that indicates whether
-     * the record is a part of any parent/child relationsship. This flag
+     * the record is a part of any parent/child relationship. This flag
      * is used as an optimization in the lazy relation lookups strategy
      */
     public static final String HAS_RELATIONS_COLUMN = "hasRelations";
@@ -248,7 +305,7 @@ getco     */
     /**
      * The {@code data} column contains the raw record-data as ingested.
      */
-    public static final String DATA_COLUMN      = "data";
+    public static final String DATA_COLUMN = "data";
 
     /**
      * The {@code ctime} column signifies the time of record creation in the
@@ -260,7 +317,7 @@ getco     */
      * mapped back to a system time value and can be inspected via
      * {@link Record#getCreationTime()} as usual.
      */
-    public static final String CTIME_COLUMN     = "ctime";
+    public static final String CTIME_COLUMN = "ctime";
 
     /**
      * The {@code mtime} column signifies the time of record modification in the
@@ -273,7 +330,7 @@ getco     */
      * mapped back to a system time value and can be inspected via
      * {@link Record#getModificationTime()} as usual.
      */
-    public static final String MTIME_COLUMN     = "mtime";
+    public static final String MTIME_COLUMN = "mtime";
 
     /**
      * The {@code meta} column contains meta-data for the Record in the form of
@@ -281,28 +338,38 @@ getco     */
      * These values are mapped to the {@link Record} meta contents which can
      * be handled with {@link Record#getMeta()} and friends.
      */
-    public static final String META_COLUMN  = "meta";
+    public static final String META_COLUMN = "meta";
 
     /**
      * First column in the {@link #RECORDS} table. Contains the record id of the
-     * parent in a parent/child relationship. The refered parent does
+     * parent in a parent/child relationship. The referred parent does
      * not need to be present in the database.
      */
     public static final String PARENT_ID_COLUMN = "parentId";
 
     /**
      * Second row in the {@link #RELATIONS} table. Contains the record
-     * id of the child record. The refered child record does not need to
+     * id of the child record. The referred child record does not need to
      * exist in the database.
      */
     public static final String CHILD_ID_COLUMN = "childId";
 
+    /**
+     * The valid column id, for the {@link #BASE_STATISTICS} table. The column
+     * holds the state of the indexable, deleted count and ctime.
+     */
+    public static final String VALID_COLUMN = "valid";
+
     /* Constants for database-setup */
-    public static final int ID_LIMIT =       255;
-    public static final int BASE_LIMIT =     31;
+    /** The ID limit. */
+    public static final int ID_LIMIT = 255;
+    /** The base limit. */
+    public static final int BASE_LIMIT = 31;
     //public static final int DATA_LIMIT =     50*1024*1024;
+    /** The fetch size. */
     private static final int FETCH_SIZE = 100;
 
+    /** An empty iterator key. */
     private static final long EMPTY_ITERATOR_KEY = -1;
 
     private StatementHandle stmtGetModifiedAfter;
@@ -318,56 +385,98 @@ getco     */
     private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
+    /** Update statement for modification time of a base. */
+    private StatementHandle stmtUpdateMtimForBase;
+    /** Insert statement for base statistic. */
+    private StatementHandle stmtInsertBaseStats;
+    /** Sets a base statistic row in invalid. */
+    private StatementHandle stmtSetBaseStatsInvalid;
+	/** Retrieves the last modification time for a base. */ 
+    private StatementHandle stmtGetLastModificationTime;
+    /** Insert full set of data into base statistic row. */
+    private StatementHandle stmtInsertFullBaseStats;
+    /** Update full set of base statistic. */
+    private StatementHandle stmtUpdateFullBaseStats;
+    /** String for all columns. */
     private String allColumns;
 
-    private Map<Long, Cursor> iterators =
-                                         new HashMap<Long, Cursor>(10);
+    /** Iterator keys. */
+    private Map<Long, Cursor> iterators = new HashMap<Long, Cursor>(10);
 
     private CursorReaper iteratorReaper;
+    /** Unique time stamp generator. */
     private UniqueTimestampGenerator timestampGenerator;
 
-    // List of base namesfor which we don't track relations
+    /** List of base names for which we don't track relations. */
     private Set<String> disabledRelationsTracking;
 
+    /** True if lazy relation should be used. */
     private boolean useLazyRelations;
+    /** True if paging model should be used. */
     private boolean usePagingModel;
+    /** The page size. */
     private int pageSize;
-    private List<BaseStats> cachedStats;
-    private final Object cachedStatsLock = new Object();
 
     /**
-     * A variation of {@link QueryOptions} used to keep track of recursion depths for expanding
-     * children and parents.
+     * A variation of {@link QueryOptions} used to keep track of recursion
+     * depths for expanding children and parents.
      */
     private static class RecursionQueryOptions extends QueryOptions {
-        private static final long serialVersionUID = 16841L; 
+        /** Serial version UID. */
+        private static final long serialVersionUID = 16841L;
 
+        /** Recursion depth for children. */
         private int childRecursionDepth;
+        /** Parent recursion height. */
         private int parentRecursionHeight;
 
-        public RecursionQueryOptions (QueryOptions original) {
+        /**
+         * Recursion query options constructor.
+         * @param original The original query options.
+         */
+        public RecursionQueryOptions(QueryOptions original) {
             super(original);
             resetRecursionLevels();
         }
 
+        /**
+         * Return the child recursion depth.
+         * @return The child recursion depth.
+         */
         public int childRecursionDepth() {
             return childRecursionDepth;
         }
 
+        /**
+         * Return the parent recursion height.
+         * @return The parent recursion height.
+         */
         public int parentRecursionHeight() {
             return parentRecursionHeight;
         }
 
+        /**
+         * Do a child recursion, count down the child recursion depth.
+         * @return The recursion query options equals this object.
+         */
         public RecursionQueryOptions decChildRecursionDepth() {
             childRecursionDepth--;
             return this;
         }
 
+        /**
+         * Count the parent recursion height down with one.
+         * @return This object.
+         */
         public RecursionQueryOptions decParentRecursionHeight() {
             parentRecursionHeight--;
             return this;
         }
 
+        /**
+         * Reset the child depth and parent height.
+         * @return This object.
+         */
         public RecursionQueryOptions resetRecursionLevels(){
             childRecursionDepth = childDepth();
             parentRecursionHeight = parentHeight();
@@ -381,13 +490,14 @@ getco     */
          * @return the input wrapped as a RecursionQueryOptions, or just the
          *         input if it is already recursive
          */
-        public static RecursionQueryOptions wrap (QueryOptions options) {
+        @SuppressWarnings("unused")
+        public static RecursionQueryOptions wrap(QueryOptions options) {
             if (options == null) {
                 return null;
             }
 
             if (options instanceof RecursionQueryOptions) {
-                return ((RecursionQueryOptions)options).resetRecursionLevels();
+                return ((RecursionQueryOptions) options).resetRecursionLevels();
             } else {
                 return new RecursionQueryOptions(options);
             }
@@ -404,7 +514,7 @@ getco     */
                                                          QueryOptions options) {
             if (options.parentHeight() == 0
                 && options instanceof RecursionQueryOptions) {
-                return (RecursionQueryOptions)options;
+                return (RecursionQueryOptions) options;
             }
 
             RecursionQueryOptions o = new RecursionQueryOptions(options);
@@ -424,7 +534,7 @@ getco     */
                                                          QueryOptions options) {
             if (options.childDepth() == 0
                 && options instanceof RecursionQueryOptions) {
-                return (RecursionQueryOptions)options;
+                return (RecursionQueryOptions) options;
             }
 
             RecursionQueryOptions o = new RecursionQueryOptions(options);
@@ -434,6 +544,12 @@ getco     */
         }
     }
 
+    /**
+     * Constructions a database storage with a given configuration. This means
+     * that the parent is also constructed with the configuration.
+     * @param conf The configuration.
+     * @throws IOException If error occur while starting the storage.
+     */
     public DatabaseStorage(Configuration conf) throws IOException {
         super(updateConfiguration(conf));
 
@@ -473,8 +589,13 @@ getco     */
         }
     }
 
-    private static Configuration updateConfiguration(Configuration
-                                                     configuration) {
+    /**
+     * Update the configurations.
+     * @param configuration The new configurations.
+     * @return A new configurations object.
+     */
+    private static Configuration updateConfiguration(
+                                                  Configuration configuration) {
         String location;
         try {
             location = configuration.getString(CONF_LOCATION);
@@ -507,7 +628,7 @@ getco     */
      * The initializer connects to the database and prepares SQL statements.
      * You <i>must</i> call this in all constructors of sub classes of
      * DatabaseStorage.
-     * @param conf    the setup for the database.
+     * @param conf    The setup for the database.
      * @throws ConfigurationException if the initialization could not finish.
      * @throws IOException on failing to connect to the database
      */
@@ -549,14 +670,14 @@ getco     */
      *
      * @return a connection to a SQL-compatible database. The returned
      *         connection <i>must</i> be closed by the caller to avoid
-     *         connection leaking
+     *         connection leaking.
      */
     protected abstract Connection getConnection();
 
-    /**                                  getrec
-     * Get an auto committing, write enabled connection
-     * @return a pooled connection
-     * @throws SQLException if unable to set write access or auto commit
+    /**
+     * Get an auto committing, write enabled connection.
+     * @return a pooled connection.
+     * @throws SQLException if unable to set write access or auto commit.
      */
     private Connection getDefaultConnection() throws SQLException {
         Connection conn = getConnection();
@@ -577,7 +698,8 @@ getco     */
         Connection conn = getConnection();
         try {
             conn.setAutoCommit(false);
-            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+            conn.setTransactionIsolation(
+                    Connection.TRANSACTION_READ_UNCOMMITTED);
         } catch (SQLException e) {
             // This is non fatal so simply log a warning
             log.warn("Failed to optimize new connection for transaction mode: "
@@ -637,7 +759,7 @@ getco     */
      * @return whether or not {@code e} was due to an integrity constraint
      *         violation
      */
-    protected boolean isIntegrityConstraintViolation (SQLException e) {
+    protected boolean isIntegrityConstraintViolation(SQLException e) {
         return e instanceof SQLIntegrityConstraintViolationException;
     }
 
@@ -698,16 +820,23 @@ getco     */
      */
     protected String getPagingStatement(String sql) {
         throw new UnsupportedOperationException("Non-paging data model. You "
-                                                + "must override "
-                                                + "DatabaseStorage.getPagingStatement "
-                                                + "when using paging result "
-                                                + "sets");
+                                         + "must override "
+                                         + "DatabaseStorage.getPagingStatement "
+                                         + "when using paging result sets");
     }
 
+    /**
+     * Return the unique time stamp generator used by this instance.
+     * @return The unique time stamp generator.
+     */
     public UniqueTimestampGenerator getTimestampGenerator() {
         return timestampGenerator;
     }
 
+    /**
+     * Return the used page size. 
+     * @return The used page size.
+     */
     public int getPageSize() {
         return pageSize;
     }
@@ -798,7 +927,7 @@ getco     */
 
         /* getRecord */
         // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
-        // Fetching single records using a LEFT JOIN is generally not a problem 
+        // Fetching single records using a LEFT JOIN is generally not a problem
         String getRecordQuery = "SELECT " + allColumns
                                 + " FROM " + RECORDS
                                 + " LEFT JOIN " + RELATIONS
@@ -817,7 +946,8 @@ getco     */
         String getRecordsQuery = "SELECT " + allColumns
                                 + " FROM " + RECORDS
                                 + " WHERE " + ID_COLUMN + " IN ?";
-        log.debug("Preparing query recordsQuery with '" + getRecordsQuery + "'");
+        log.debug("Preparing query recordsQuery with '"
+                  + getRecordsQuery + "'");
         stmtGetRecords = prepareStatement(getRecordsQuery);
          */
 
@@ -857,7 +987,7 @@ getco     */
                                    + MTIME_COLUMN + "=?, "
                                    + DATA_COLUMN + "=?, "
                                    + META_COLUMN + "=? "
-                                   + "WHERE " + ID_COLUMN +"=?";
+                                   + "WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing query updateRecord with '" + updateRecordQuery
                   + "'");
         stmtUpdateRecord = prepareStatement(updateRecordQuery);
@@ -866,7 +996,7 @@ getco     */
         /* touchRecord */
         String touchRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + MTIME_COLUMN + "=? "
-                                   + "WHERE " + ID_COLUMN +"=?";
+                                   + "WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
         stmtTouchRecord = prepareStatement(touchRecordQuery);
@@ -904,7 +1034,7 @@ getco     */
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
                                           + RELATIONS + "." + PARENT_ID_COLUMN
                                 + " WHERE " + RELATIONS + "."
-                                            + CHILD_ID_COLUMN + "=?" 
+                                            + CHILD_ID_COLUMN + "=?"
                                 + " ORDER BY " + RECORDS + "." + ID_COLUMN;
         log.debug("Preparing query getParents with '" + getParentsQuery
                   + "'");
@@ -913,8 +1043,9 @@ getco     */
 
         /* getRelatedIds */
         // The obvious thing to do here was to use an OR instead of the UNION,
-        // however some query optimizers have porblems using the right indexes
-        // when ORing (H2 for instance). Using a UNION is easier for the optimizer
+        // however some query optimizers have problems using the right indexes
+        // when ORing (H2 for instance). Using a UNION is easier for the
+        // optimizer
         String getRelatedIdsQuery = "SELECT " + PARENT_ID_COLUMN
                                     + ", " + CHILD_ID_COLUMN
                                     + " FROM " + RELATIONS
@@ -925,7 +1056,7 @@ getco     */
                                     + " FROM " + RELATIONS
                                     + " WHERE " + CHILD_ID_COLUMN + "=?";
 
-        log.debug("Preparing getRelatedIds with '" + getRelatedIdsQuery +"'");
+        log.debug("Preparing getRelatedIds with '" + getRelatedIdsQuery + "'");
         stmtGetRelatedIds = prepareStatement(getRelatedIdsQuery);
         log.debug("getRelatedIds handle: " + stmtGetRelatedIds);
 
@@ -943,19 +1074,73 @@ getco     */
                                 + " (" + PARENT_ID_COLUMN + ","
                                        + CHILD_ID_COLUMN
                                        + ") VALUES (?,?)";
-        log.debug("Preparing query createRelation with '" +
-                                              createRelation + "'");
+        log.debug("Preparing query createRelation with '"
+                + createRelation + "'");
         stmtCreateRelation = prepareStatement(createRelation);
         log.debug("createRelation handle: " + stmtCreateRelation);
 
-        /* deleteRelation */
-        /*String deleteRelation = "DELETE FROM " + RELATIONS
-                                + " WHERE " + PARENT_ID_COLUMN + "=? "
-                                + " OR " + CHILD_ID_COLUMN + "=? ";
-        log.debug("Preparing query deleteRelation with '" +
-                                              deleteRelation + "'");
-        stmtDeleteRelation = prepareStatement(
-                                                     deleteRelation);*/
+        // Updated mtime per base
+        String updateMtimeForBase = "UPDATE " + BASE_STATISTICS
+            + " SET " + MTIME_COLUMN + " = ? WHERE " + BASE_COLUMN
+            + " = ?"; 
+        log.debug("Preparing query updateMtimeforBase with '"
+                  + updateMtimeForBase + "'");
+        stmtUpdateMtimForBase = prepareStatement(updateMtimeForBase);
+        log.debug("updateMtimeForBase handle: " + stmtUpdateMtimForBase);
+
+        // Insert new base statistic row
+        String insertBaseStats = "INSERT INTO " + BASE_STATISTICS
+            + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", "
+            + DELETE_INDEXABLES_COLUMN + ", " + NON_DELETED_INDEXABLES_COLUMN
+            + ", " + DELETED_NON_INDEXABLES_COLUMN + ", "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + ", " + VALID_COLUMN
+            + ") VALUES (?, ?, 0, 0, 0, 0, 0)";
+        log.debug("Preparing query insertBaseStats with '" + insertBaseStats
+                  + "'");
+        stmtInsertBaseStats = prepareStatement(insertBaseStats);
+        log.debug("insertBaseStats handle: " + stmtInsertBaseStats);
+
+        // Set base statistic row invalid
+        String setBaseStatsInvalid = "UPDATE " + BASE_STATISTICS + " SET "
+            + VALID_COLUMN + " = 0 WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query setBaseStatsInvalid with '"
+                + setBaseStatsInvalid + "'");
+        stmtSetBaseStatsInvalid = prepareStatement(setBaseStatsInvalid);
+        log.debug("setBaseStatsInvalid handle: " + stmtSetBaseStatsInvalid);
+
+        // SQL for getting last modification time
+        String getLastModificationTime = "SELECT " + MTIME_COLUMN + " FROM "
+            + BASE_STATISTICS + " WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query getLastModificationTime with '"
+                + getLastModificationTime + "'");
+        stmtGetLastModificationTime = prepareStatement(getLastModificationTime);
+        log.debug("getLastModificationTime handle: "
+                  + stmtGetLastModificationTime);
+
+        // SQL for updating full base statistic
+        String updateFullBaseStats = "UPDATE " + BASE_STATISTICS + " SET "
+            + DELETE_INDEXABLES_COLUMN + " = ?, "
+            + NON_DELETED_INDEXABLES_COLUMN + " = ?, "
+            + DELETED_NON_INDEXABLES_COLUMN + " = ?, "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + " = ?, "
+            + VALID_COLUMN + " = 1 "
+            +" WHERE " + BASE_COLUMN + " = ?";
+        log.debug("Preparing query getLastModificationTime with '"
+                + updateFullBaseStats + "'");
+        stmtUpdateFullBaseStats = prepareStatement(updateFullBaseStats);
+        log.debug("updateFullBaseStats handle: " + stmtUpdateFullBaseStats);
+
+        // SQL for updating full base statistic
+        String insertFullBaseStats = "INSERT INTO " + BASE_STATISTICS
+        + " (" + BASE_COLUMN + ", " + MTIME_COLUMN + ", "
+        + DELETE_INDEXABLES_COLUMN + ", " + NON_DELETED_INDEXABLES_COLUMN
+        + ", " + DELETED_NON_INDEXABLES_COLUMN + ", "
+        + NON_DELETED_NON_INDEXABLES_COLUMN + ", " + VALID_COLUMN
+        + ") VALUES (?, ?, ?, ?, ?, ?, 1)";
+        log.debug("Preparing query getLastModificationTime with '"
+                  + insertFullBaseStats + "'");
+        stmtInsertFullBaseStats = prepareStatement(insertFullBaseStats);
+        log.debug("insertFullBaseStats handle: " + stmtInsertFullBaseStats);
 
         log.debug("Finished preparing SQL statements");
     }
@@ -966,7 +1151,7 @@ getco     */
      *
      * @param stmt the statement to close
      */
-    private void closeStatement (Statement stmt) {
+    private void closeStatement(Statement stmt) {
         if (stmt == null) {
             return;
         }
@@ -985,11 +1170,10 @@ getco     */
      *
      * @param conn the connection to close
      */
-    private void closeConnection (Connection conn) {
+    private void closeConnection(Connection conn) {
         if (conn == null) {
             return;
         }
-
         try {
             conn.close();
         } catch (SQLException e) {
@@ -1031,9 +1215,8 @@ getco     */
         }
 
         if (usePagingModel) {
-            iter = new PagingCursor(this, (ResultSetCursor)iter);
+            iter = new PagingCursor(this, (ResultSetCursor) iter);
         }
-
         return registerCursor(iter);
     }
 
@@ -1055,8 +1238,8 @@ getco     */
      *         caller to avoid leaking connections and locking up the storage.
      * @throws IOException if prepared SQL statement is invalid.
      */
-    public ResultSetCursor getRecordsModifiedAfterCursor (
-             long mtime, String base, QueryOptions options) throws IOException {
+    public ResultSetCursor getRecordsModifiedAfterCursor(long mtime,
+                         String base, QueryOptions options) throws IOException {
         PreparedStatement stmt;
         String statement = "";
         log.debug("DatabaseStorage.getRecordsModifiedAfterCursor(" + mtime
@@ -1072,13 +1255,12 @@ getco     */
             }
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
-                                  + statement +": "
+                                  + statement + ": "
                                   + e.getMessage(), e);
         }
-
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
-        return  doGetRecordsModifiedAfterCursor (mtime, base, options, stmt);
+        return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
     }
 
     /**
@@ -1113,7 +1295,7 @@ getco     */
                                        Connection.TRANSACTION_READ_UNCOMMITTED);
             stmt.getConnection().setReadOnly(true);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
-            
+
             if (usePagingModel) {
                 stmt.setFetchSize(pageSize);
             } else {
@@ -1124,10 +1306,10 @@ getco     */
                                   + e.getMessage(), e);
         }
 
-        if (timestampGenerator.systemTime(mtimeTimestamp) >
-                                                    getModificationTime(base)) {
-            log.debug ("Storage not flushed after " + mtimeTimestamp
-                       + ". Returning empty iterator");
+        if (timestampGenerator.systemTime(mtimeTimestamp)
+                                                  > getModificationTime(base)) {
+            log.debug("Storage not flushed after " + mtimeTimestamp
+                      + " for base '" + base + ". Returning empty iterator");
             try {
                 stmt.close();
             } catch (SQLException e) {
@@ -1161,10 +1343,10 @@ getco     */
         }
 
         return startIterator(stmt, base, options);
-    }    
+    }
 
     @Override
-    public List<Record> getRecords (List<String> ids, QueryOptions options)
+    public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                         throws IOException {
         long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
@@ -1190,9 +1372,16 @@ getco     */
         }
     }
 
-    public List<Record> getRecordsWithConnection(
-            List<String> ids, QueryOptions options, Connection conn)
-                                                            throws IOException {
+    /**
+     * Return a list of records filtered with the given query options.
+     * @param ids The list of ID's.
+     * @param options The query options to filter record by.
+     * @param conn The database connection.
+     * @return A list of records.
+     * @throws IOException If error occur while fetching records.
+     */
+    public List<Record> getRecordsWithConnection(List<String> ids,
+                     QueryOptions options, Connection conn) throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
 
         for (String id : ids) {
@@ -1206,9 +1395,7 @@ getco     */
                           + "' for batch request: " + e.getMessage(), e);
                 result.add(null);
             }
-
         }
-
         return result;
     }
 
@@ -1228,9 +1415,9 @@ getco     */
         try {
             Record record =  getRecordWithConnection(id, options, conn);
             log.debug("Finished getRecord(" + id + ", ...) in "
-                      + (System.currentTimeMillis()-startTime) + "ms");
+                      + (System.currentTimeMillis() - startTime) + "ms");
             return record;
-        } catch (SQLException e){
+        } catch (SQLException e) {
             log.error(String.format("Failed to get record '%s': %s",
                                     id, e.getMessage()), e);
             return null;
@@ -1274,13 +1461,13 @@ getco     */
                 /* Sanity checks if we log on debug */
                 if (log.isDebugEnabled()) {
                     if (!id.equals(record.getId())) {
-                        log.error ("Record id '" + record.getId()
-                                   + "' does not match requested id: " + id);
+                        log.error("Record id '" + record.getId()
+                                  + "' does not match requested id: " + id);
                     }
 
-                    while (resultSet.next()) {                        
+                    while (resultSet.next()) {
                         Record tmpRec = scanRecord(resultSet);
-                        log.warn ("Bogus record in result set: " + tmpRec);
+                        log.warn("Bogus record in result set: " + tmpRec);
                     }
                 }
 
@@ -1330,8 +1517,10 @@ getco     */
         }
     }
 
-    /* Expand child records if we need to and there indeed
-     * are any children to expand */
+    /**
+     * Expand child records if we need to and there indeed
+     * are any children to expand.
+     */
     private void expandChildRecords(
             Record record, RecursionQueryOptions options, Connection conn)
                                                             throws IOException {
@@ -1349,9 +1538,9 @@ getco     */
         if (childIds != null && childIds.size() != 0) {
 
             if (log.isTraceEnabled()) {
-                log.trace ("Expanding children of record '"
-                           + record.getId() + "': "
-                           + Strings.join(childIds, ", "));
+                log.trace("Expanding children of record '"
+                          + record.getId() + "': "
+                          + Strings.join(childIds, ", "));
             }
 
             // Make sure we don't go into an infinite parent/child
@@ -1369,15 +1558,17 @@ getco     */
         }
     }
 
-    /* Expand parent records if we need to and there indeed
-     * are any parents to expand */
-    private void expandParentRecords(
-            Record record, RecursionQueryOptions options, Connection conn)
+    /**
+     * Expand parent records if we need to and there indeed
+     * are any parents to expand.
+     */
+    private void expandParentRecords(Record record,
+                                 RecursionQueryOptions options, Connection conn)
                                                             throws IOException {
         if (options.parentRecursionHeight() == 0) {
             if (options.parentHeight() > 1) {
                 log.debug("Skipping further expansion of parent records for "
-                          + record + " as the maximum expansion height of " 
+                          + record + " as the maximum expansion height of "
                           + options.parentHeight() + " has been reached");
             }
             return;
@@ -1388,7 +1579,7 @@ getco     */
         if (parentIds != null && parentIds.size() != 0) {
 
             if (log.isTraceEnabled()) {
-                log.trace ("Expanding parents of record '"
+                log.trace("Expanding parents of record '"
                            + record.getId() + "': "
                            + Strings.join(parentIds, ", "));
             }
@@ -1424,8 +1615,8 @@ getco     */
         if (!cursor.hasNext()) {
             cursor.close();
             iterators.remove(cursor.getKey());
-            throw new NoSuchElementException ("Iterator " + iteratorKey
-                                              + " depleted");
+            throw new NoSuchElementException("Iterator " + iteratorKey
+                                             + " depleted");
         }
 
         Record r = cursor.next();
@@ -1433,10 +1624,10 @@ getco     */
         try {
             return expandRelations(r, cursor.getQueryOptions());
         } catch (SQLException e) {
-            log.warn("Failed to expand relations for '" + r.getId() +"': "
+            log.warn("Failed to expand relations for '" + r.getId() + "': "
                      + e.getMessage(), e);
             return r;
-        }                               
+        }
     }
 
     private Record expandRelations(Record r, QueryOptions options)
@@ -1457,11 +1648,10 @@ getco     */
         } finally {
             closeConnection(conn);
         }
-
     }
 
-    private Record expandRelationsWithConnection(
-            Record r, QueryOptions options, Connection conn) throws IOException{
+    private Record expandRelationsWithConnection(Record r, QueryOptions options,
+                                           Connection conn) throws IOException {
         if (options == null) {
             return r;
         }
@@ -1470,24 +1660,27 @@ getco     */
         RecursionQueryOptions opts;
 
         if (options.childDepth() != 0) {
-//            opts = RecursionQueryOptions.wrap(options);
+            //opts = RecursionQueryOptions.wrap(options);
             opts = RecursionQueryOptions.asChildOnlyOptions(options);
             expandChildRecords(r, opts, conn);
         }
 
         if (options.parentHeight() != 0) {
-//            opts = RecursionQueryOptions.wrap(options);
+            //opts = RecursionQueryOptions.wrap(options);
             opts = RecursionQueryOptions.asParentsOnlyOptions(options);
             expandParentRecords(r, opts, conn);
         }
-
         return r;
     }
 
-    /*
+    /**
+     * Flush a single record to storage.
      * Note: the 'synchronized' part of this method decl is paramount to
      * allowing us to set our transaction level to
      * Connection.TRANSACTION_READ_UNCOMMITTED
+     * @param record The record to flush.
+     * @param options Query options to filter out record from flushing.
+     * @throws IOException If error occur while flushing.
      */
     @Override
     public synchronized void flush(Record record, QueryOptions options)
@@ -1501,6 +1694,11 @@ getco     */
         try {
             conn.setReadOnly(false);
             flushWithConnection(record, options, conn);
+            // Update last modification time.
+            updateLastModficationTimeForBase(record.getBase(), conn);
+            setBaseStatisticInvalid(record.getBase(), conn);
+            log.debug("Updates last modification time for base '"
+                    + record.getBase() + "'");
         } catch (SQLException e) {
             // This error is logged in the finally clause below
             error = e.getMessage() + '\n' + Strings.getStackTrace(e);
@@ -1512,11 +1710,11 @@ getco     */
                     record, e.getMessage()));
         } finally {
             try {
-                if(error == null) {
+                if (error == null) {
                     // All is OK, write to the DB
                     conn.commit();
-                    log.debug("Committed " + record.getId() + " in " 
-                              + (System.currentTimeMillis()-startTime) + "ms");
+                    log.debug("Committed " + record.getId() + " in "
+                             + (System.currentTimeMillis() - startTime) + "ms");
                 } else {
                     log.warn(String.format(
                             "Not committing %s because of error: %s",
@@ -1528,20 +1726,19 @@ getco     */
                 log.warn(error, e);
                 throw new IOException(error, e);
             } finally {
-                try {
-                    conn.close();
-                } catch(SQLException e) {
-                    log.warn("Error closing connection after committing "
-                             + record.getId() + ": " + e.getMessage(), e);
-                }
+                closeConnection(conn);
             }
         }
     }
 
-    /*
+    /**
+     * Flush a list of records to the storage.
      * Note: the 'synchronized' part of this method decl is paramount to
      * allowing us to set our transaction level to
      * Connection.TRANSACTION_READ_UNCOMMITTED
+     * @param recs The list of options to flush.
+     * @param options The query options to filter out records.
+     * @throws IOException If error occur while flushing.
      */
     @Override
     public synchronized void flushAll(List<Record> recs, QueryOptions options)
@@ -1557,7 +1754,7 @@ getco     */
             // probably does not have the relevant exception class
             throw new IOException("Can not prepare database for write mode: "
                                   + e.getMessage());
-        }
+        } 
 
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
@@ -1565,6 +1762,7 @@ getco     */
         Record lastRecord = null;
         long start = System.nanoTime();
         boolean isDebug = log.isDebugEnabled();
+        Map<String, Boolean> bases = new HashMap<String, Boolean>();
         try {
             for (Record r : recs) {
                 if (isDebug) {
@@ -1572,10 +1770,17 @@ getco     */
                 }
                 lastRecord = r;
                 flushWithConnection(r, options, conn);
+                bases.put(r.getBase(), true);
             }
-            // TODO: Introduce time-based logging on info
+            for(String base: bases.keySet()) {
+                log.debug("Updates last modification time for base '"
+                          + base + "'");
+                updateLastModficationTimeForBase(base, conn);
+                setBaseStatisticInvalid(base, conn);
+            }
+            // TODO Introduce time-based logging on info
             log.debug("Flushed " + recs.size() + " in "
-                      + ((System.nanoTime() - start)/1000000D) + "ms");
+                      + ((System.nanoTime() - start) / 1000000D) + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
             throw new IOException(String.format(
@@ -1583,20 +1788,20 @@ getco     */
                     recs.size(), lastRecord, e.getMessage()), e);
         } finally {
             try {
-                if(error == null) {
+                if (error == null) {
                     // All is OK, write to the DB
                     log.debug("Commiting transaction of "
                               + recs.size() + " records");
                     start = System.nanoTime();
                     conn.commit();
                     log.debug("Transaction of " + recs.size()
-                              + " records completed in " +
-                              + ((System.nanoTime() - start)/1000000D) + "ms");
+                              + " records completed in "
+                             + ((System.nanoTime() - start) / 1000000D) + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
-                            // It may seem dull to iterate over all records *again*,
-                            // but time has taught us that this info is really nice
-                            // to have in the log...
+                            // It may seem dull to iterate over all records
+                            // *again*, but time has taught us that this info is
+                            // really nice to have in the log...
                             log.debug("Committed: " + r.getId());
                         }
                     }
@@ -1626,20 +1831,27 @@ getco     */
         }
     }
 
-    protected void flushWithConnection(
-                          Record r, QueryOptions options, Connection conn)
-                                              throws IOException, SQLException {
+    /**
+     * Flush a record to the database.
+     * @param r The record to flush.
+     * @param options The query options.
+     * @param conn The database connection.
+     * @throws IOException If error occur with connection.
+     * @throws SQLException If error occur while executing SQL.
+     */
+    protected void flushWithConnection(Record r, QueryOptions options,
+                             Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
             log.debug("Flushing: " + r.toString(false));
         }
 
-        /* Update the timestamp we check agaist in getRecordsModifiedAfter */
-        updateModificationTime (r.getBase());
+        // Update the timestamp we check against in getRecordsModifiedAfter
+        updateModificationTime(r.getBase());
         invalidateCachedStats();
 
-        try{
+        try {
             createNewRecordWithConnection(r, options, conn);
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
@@ -1654,18 +1866,18 @@ getco     */
             }
         }
 
-        /* Recursively add child records */
+        // Recursively add child records
         List<Record> children = r.getChildren();
         if (children != null) {
-            log.debug ("Flushing " + children.size()
-                       + " nested child records of '" + r.getId() + "'");
+            log.debug("Flushing " + children.size()
+                      + " nested child records of '" + r.getId() + "'");
             for (Record child : children) {
                 flushWithConnection(child, options, conn);
             }
         }
 
-        /* Touch parents recursively upwards
-         * FIXME: The call to touchParents() might be pretty expensive... */
+        // Touch parents recursively upwards
+        // FIXME: The call to touchParents() might be pretty expensive... 
         try {
             touchParents(r.getId(), null, conn);
         } catch (IOException e) {
@@ -1674,10 +1886,10 @@ getco     */
                       + e.getMessage(), e);
         }
 
-        /* Again - update the timestamp we check agaist in
-         * getRecordsModifiedAfter. This is also done in the end of the flush()
-         * because the operation is non-instantaneous  */
-        updateModificationTime (r.getBase());
+        //Again - update the timestamp we check against in
+        // getRecordsModifiedAfter. This is also done in the end of the flush()
+        // because the operation is non-instantaneous
+        updateModificationTime(r.getBase());
         invalidateCachedStats();
     }
 
@@ -1687,11 +1899,11 @@ getco     */
      * @param id the id of the records which parents to touch.
      * @param options any query options that may affect how the touching is
      *                handled.
-     * @param conn the sql connection.
-     * @throws IOException if error is experienced when closing statement. 
+     * @param conn the SQL connection.
+     * @throws IOException if error is experienced when closing statement.
      * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
-    protected void touchParents (String id, QueryOptions options,
+    protected void touchParents(String id, QueryOptions options,
                                  Connection conn)
                                               throws IOException, SQLException {
         List<Record> parents = getParents(id, options, conn);
@@ -1704,14 +1916,14 @@ getco     */
         }
 
         if (log.isDebugEnabled()) {
-            log.debug ("Touching " + parents.size() + " parents of " + id);
+            log.debug("Touching " + parents.size() + " parents of " + id);
         }
 
         PreparedStatement stmt =
                                conn.prepareStatement(stmtTouchParents.getSql());
         try {
             long nowStamp = timestampGenerator.next();
-            stmt.setLong (1, nowStamp);
+            stmt.setLong(1, nowStamp);
             stmt.setString(2, id);
             stmt.executeUpdate();
 
@@ -1724,7 +1936,7 @@ getco     */
             // parent
 
         } catch (SQLException e) {
-            log.error ("Failed to touch parents of '" + id + "': "
+            log.error("Failed to touch parents of '" + id + "': "
                        + e.getMessage(), e);
             // Consider this non-fatal
             return;
@@ -1738,9 +1950,18 @@ getco     */
         }
     }
 
-    protected List<Record> getParents(
-            String id, QueryOptions options, Connection conn)
-                                              throws IOException, SQLException {
+    /**
+     * Return a list of parent records.
+     * @param id The child ID.
+     * @param options The query option to filter out parents from the return
+     * set.
+     * @param conn The database connection.
+     * @return A list of parent records.
+     * @throws IOException If error occur with database connection.
+     * @throws SQLException If error occur executing the SQL.
+     */
+    protected List<Record> getParents(String id, QueryOptions options,
+                             Connection conn) throws IOException, SQLException {
         PreparedStatement stmt = conn.prepareStatement(stmtGetParents.getSql());
 
         List<Record> parents = new ArrayList<Record>(1);
@@ -1766,8 +1987,8 @@ getco     */
             }
 
             if (log.isTraceEnabled()) {
-                log.trace ("Looked up parents for '" + id +"': "
-                           + Strings.join (parents, ";"));
+                log.trace("Looked up parents for '" + id + "': "
+                           + Strings.join(parents, ";"));
             }
 
             return parents;
@@ -1784,10 +2005,18 @@ getco     */
         }
     }
 
-    private List<Record> getChildren (String id,
-                                      QueryOptions options,
-                                      Connection conn)
-                                              throws IOException, SQLException {
+    /**
+     * Returns a list of children.
+     * @param id The parent record ID.
+     * @param options The query options to filter the children.
+     * @param conn The connection.
+     * @return A list of children to the parent.
+     * @throws IOException If error occur while communication with storage.
+     * @throws SQLException If error occur with executing the storage.
+     */
+    @SuppressWarnings("unused")
+    private List<Record> getChildren(String id, QueryOptions options,
+                             Connection conn) throws IOException, SQLException {
         PreparedStatement stmt =
                                 conn.prepareStatement(stmtGetChildren.getSql());
 
@@ -1800,7 +2029,7 @@ getco     */
 
             ResultSet results = stmt.getResultSet();
             iter = new ResultSetCursor(this, stmt, results, true);
-
+            
             while (iter.hasNext()) {
                 Record r = iter.next();
                 if (options != null && options.allowsRecord(r)) {
@@ -1814,21 +2043,19 @@ getco     */
             }
 
             if (log.isTraceEnabled()) {
-                log.trace ("Looked up children for '" + id +"': "
-                           + Strings.join (children, ";"));
+                log.trace("Looked up children for '" + id + "': "
+                          + Strings.join(children, ";"));
             }
-
+            results.close();
             return children;
-
         } catch (SQLException e) {
             throw new IOException(String.format(
                     "Failed to get children for record '%s': %s",
                     id, e.getMessage()), e);
         } finally {
+            stmt.close();
             if (iter != null) {
                 iter.close();
-            } else {
-                stmt.close();
             }
         }
     }
@@ -1839,10 +2066,10 @@ getco     */
      *
      * @param rec the record to have its parent and child ids expanded
      *            to real nested records
-     * @param conn the sql connection to use for the lookups
+     * @param conn the SQL connection to use for the lookups
      * @throws SQLException if stuff is bad
      */
-    protected void resolveRelatedIds (Record rec, Connection conn)
+    protected void resolveRelatedIds(Record rec, Connection conn)
                                                            throws SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to resolve relations for " + rec.getId());
@@ -1870,16 +2097,17 @@ getco     */
                 String parentId = results.getString(1);
                 String childId = results.getString(2);
 
-                if (parentId != null && !"".equals(parentId) &&
-                    !rec.getId().equals(parentId)) {
+                if (parentId != null && !"".equals(parentId)
+                        && !rec.getId().equals(parentId)) {
                     parentIds.add(parentId);
                 }
 
-                if (childId != null && !"".equals(childId) &&
-                    !rec.getId().equals(childId)) {
+                if (childId != null && !"".equals(childId)
+                        && !rec.getId().equals(childId)) {
                     childIds.add(childId);
                 }
             }
+            results.close();
         } catch (SQLException e) {
             log.warn("Failed to resolve related ids for " + rec.getId() + ": "
                      + e.getMessage(), e);
@@ -1911,12 +2139,15 @@ getco     */
         }
     }
 
-    // The synchronized modifier on clearBase() is paramount to have the
-    // TRANSACTION_READ_UNCOMMITTED transaction isolation level work properly,
-    // in a nutshell this is the only isolation level that gives us the
-    // throughput we want
+    /**
+     * The synchronized modifier on clearBase() is paramount to have the
+     * TRANSACTION_READ_UNCOMMITTED transaction isolation level work properly,
+     * in a nutshell this is the only isolation level that gives us the
+     * throughput we want
+     * @param base The records base.
+     */
     @Override
-    public synchronized void clearBase (String base) throws IOException {
+    public synchronized void clearBase(String base) throws IOException {
         log.debug(String.format("clearBase(%s) called", base));
         Connection conn = null;
 
@@ -1937,27 +2168,32 @@ getco     */
         }
     }
 
-    private void clearBaseWithConnection (String base, Connection conn)
+    /**
+     * Clears the given base, on a connection.
+     * @param base The base.
+     * @param conn The connection.
+     * @throws IOException If error occur while communicating with database
+     * storage.
+     * @throws SQLException If error executing the SQL.
+     */
+    private void clearBaseWithConnection(String base, Connection conn)
                                               throws IOException, SQLException {
         long start = System.currentTimeMillis();
-        log.info ("Clearing base '" + base + "'");
+        log.info("Clearing base '" + base + "'");
 
         int _ID = 1, _MTIME = 2, _DELETED = 3;
         String sql = "SELECT id, mtime, deleted "
                    + " FROM " + RECORDS
-                   + " WHERE " + BASE_COLUMN + "=?"
-                   + " AND " + MTIME_COLUMN + ">?"
-                   + " AND " + MTIME_COLUMN + "<?";
-
+                   + " WHERE " + BASE_COLUMN + " = ?"
+                   + " AND " + MTIME_COLUMN + " > ?"
+                   + " AND " + MTIME_COLUMN + " < ?";
         if (usePagingModel) {
             sql = getPagingStatement(sql);
         }
 
-        PreparedStatement stmt = conn.prepareStatement(
-                                                 sql,
+        PreparedStatement stmt = conn.prepareStatement(sql,
                                                  ResultSet.TYPE_FORWARD_ONLY,
                                                  ResultSet.CONCUR_UPDATABLE);
-
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
@@ -2003,8 +2239,9 @@ getco     */
                 stmt.execute();
                 ResultSet cursor = stmt.getResultSet();
                 while (cursor.next()) {
-                    // We read the data before we start updating the row, not all
-                    // JDBC backends like if we update the row before we read it
+                    // We read the data before we start updating the row, not
+                    // all JDBC backends like if we update the row before we
+                    // read it
                     id = cursor.getString(_ID);
                     lastMtimeTimestamp = cursor.getLong(_MTIME);
 
@@ -2020,7 +2257,7 @@ getco     */
                 log.debug("Comitting at update " + totalCount);
                 stmt.getConnection().commit();
             }
-
+            updateLastModficationTimeForBase(base, conn);
             log.debug("Commit finished, invalidate cache stats");
             invalidateCachedStats();
             log.debug("Updating modification timestamps");
@@ -2031,9 +2268,9 @@ getco     */
                     + (System.currentTimeMillis() - start)
                     + "ms. Marked " + totalCount + " records as deleted");
         } catch (SQLException e) {
-            String msg ="Error clearing base '" + base + "' after " + totalCount
-                    + " records, last record id was '" + id + "': "
-                    + e.getMessage();
+            String msg = "Error clearing base '" + base + "' after "
+                + totalCount + " records, last record id was '" + id + "': "
+                + e.getMessage();
             log.error(msg, e);
             stmt.getConnection().rollback();
             throw new IOException(msg, e);
@@ -2048,7 +2285,7 @@ getco     */
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
      *                resource in the classpath of the storage process.
-     *                Fx {@code count.job.js}
+     *                eq. {@code count.job.js}
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
@@ -2062,7 +2299,7 @@ getco     */
      * @throws IOException
      */
     @Override
-    public synchronized String batchJob (String jobName,
+    public synchronized String batchJob(String jobName,
             String base, long minMtime, long maxMtime, QueryOptions options)
                                                             throws IOException {
         log.info(String.format(
@@ -2076,8 +2313,8 @@ getco     */
             conn = getDefaultConnection();
             String result = batchJobWithConnection(
                     jobName, base, minMtime, maxMtime, options, conn);
-            log.info("Batch job completed in " +
-                     (System.currentTimeMillis() - start)/1000 + "s");
+            log.info("Batch job completed in "
+                    + (System.currentTimeMillis() - start) / 1000 + "s");
             return result;
         } catch (SQLException e) {
             String msg = "Error running batch job: " + e.getMessage();
@@ -2095,7 +2332,7 @@ getco     */
      *                The job name must match the regular expression
      *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
      *                resource in the classpath of the storage process.
-     *                Fx {@code count.job.js}
+     *                eg. {@code count.job.js}
      * @param base Restrict the batch jobs to records in this base. If
      *             {@code base} is {@code null} the records from all bases will
      *             be included in the batch job
@@ -2106,11 +2343,11 @@ getco     */
      * @param options Restrict to records for which
      *                {@link QueryOptions#allowsRecord} returns true
      * @return Output from batch job.
-     * @throws IOException if any error when prepareing for or running batch
+     * @throws IOException if any error when preparing for or running batch
      * job.
-     * @throws SQLException if any error occur while closing sql connection.
+     * @throws SQLException if any error occur while closing SQL connection.
      */
-    private String batchJobWithConnection (String jobName,
+    private String batchJobWithConnection(String jobName,
                                       String base, long minMtime, long maxMtime,
                                       QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
@@ -2131,8 +2368,7 @@ getco     */
             sql = getPagingStatement(sql);
         }
 
-        PreparedStatement stmt = conn.prepareStatement(
-                                                 sql,
+        PreparedStatement stmt = conn.prepareStatement(sql,
                                                  ResultSet.TYPE_FORWARD_ONLY,
                                                  ResultSet.CONCUR_READ_ONLY);
 
@@ -2186,30 +2422,32 @@ getco     */
                 pageCount = 0;
                 stmt.setLong(1, maxTimestamp);
                 stmt.setLong(2, minTimestamp);
-                if (base != null) stmt.setString(3, base);
+                if (base != null) {
+                    stmt.setString(3, base);
+                }
                 stmt.execute();
                 ResultSet cursor = stmt.getResultSet();
 
                 // Step into the result set if there are any results
-                cursor.next();
-
-                // Read the current page. Note that we must track
-                // the record id since it's in effect a new record
-                // if it's changed (we must purge the old one).
-                while (!cursor.isAfterLast()) {                    
-                    minTimestamp = cursor.getLong(MTIME_COLUMN);
-                    Record record = scanRecord(cursor); // advances cursor
-                    if (previousRecord != null &&
-                        applyJobtoRecord(job, previousRecord, previousRecordId,
-                                         base, options, totalCount == 0, false,
-                                         conn)) {
-                        totalCount++;
-                        pageCount++;
+                if (cursor.next()) {
+                    // Read the current page. Note that we must track
+                    // the record id since it's in effect a new record
+                    // if it's changed (we must purge the old one).
+                    while (!cursor.isAfterLast()) {
+                        minTimestamp = cursor.getLong(MTIME_COLUMN);
+                        Record record = scanRecord(cursor); // advances cursor
+                        if (previousRecord != null &&
+                            applyJobtoRecord(job, previousRecord,
+                                             previousRecordId, base, options,
+                                             totalCount == 0, false, conn)) {
+                            totalCount++;
+                            pageCount++;
+                        }
+                        previousRecord = record;
+                        previousRecordId = record.getId();
                     }
-                    previousRecord = record;
-                    previousRecordId = record.getId();
+                    cursor.close();
                 }
-                cursor.close();
             }
 
             // The last iteration, now with last=true
@@ -2235,8 +2473,20 @@ getco     */
         return job.getOutput();
     }
 
-    /* Run a BatchJob on a given record. Returns false if the job was not
-     * run because the record was filtered by the query options. */
+    /**
+     * Run a BatchJob on a given record. Returns false if the job was not
+     * run because the record was filtered by the query options.
+     * @param job The batch job to run.
+     * @param record The record to run the batch job on.
+     * @param oldRecordId The old record ID.
+     * @param jobBase The job record base.
+     * @param options The query options, used to validate the records.
+     * @param isFirst True if it is the first record.
+     * @param isLast True if it is the last record.
+     * @param conn The database connection.
+     * @return False if the batch job wasn't runned because the record was
+     * filtered out. 
+     */
     private boolean applyJobtoRecord(
                 BatchJob job, Record record, String oldRecordId, String jobBase,
                 QueryOptions options, boolean isFirst, boolean isLast,
@@ -2260,7 +2510,7 @@ getco     */
         if (job.shouldCommit()) {
             // If the record id has changed we must flush() the
             // new record (in order to insert/update it) and then
-            // delete the old one from the db
+            // delete the old one from the DB
             if (oldRecordId.equals(record.getId())) {
                 updateRecordWithConnection(record, options, conn);
             } else {
@@ -2286,8 +2536,12 @@ getco     */
         return true;
     }
 
-    /* Create parent/child and child/parent relations for the given record */
-    private void createRelations (Record rec, Connection conn)
+    /**
+     * Create parent/child and child/parent relations for the given record.
+     * @param rec The record.
+     * @param conn The database connection.
+     */
+    private void createRelations(Record rec, Connection conn)
                                                            throws SQLException {
         PreparedStatement stmt =
                              conn.prepareStatement(stmtCreateRelation.getSql());
@@ -2297,7 +2551,7 @@ getco     */
 
             for (String childId : childIds) {
                 if (log.isDebugEnabled()) {
-                    log.debug ("Creating relation: " + rec.getId()
+                    log.debug("Creating relation: " + rec.getId()
                                + " -> " + childId);
                 }
                 stmt.setString(1, rec.getId());
@@ -2308,7 +2562,7 @@ getco     */
                 } catch (SQLException e) {
                     if (isIntegrityConstraintViolation(e)) {
                         if (log.isDebugEnabled()) {
-                            log.debug("Relation "+ rec.getId() + " -> "
+                            log.debug("Relation " + rec.getId() + " -> "
                                       + childId + ", already known");
                         }
                     } else {
@@ -2332,7 +2586,7 @@ getco     */
 
             for (String parentId : parentIds) {
                 if (log.isDebugEnabled()) {
-                    log.debug ("Creating relation: " + parentId
+                    log.debug("Creating relation: " + parentId
                                + " -> " + rec.getId());
                 }
                 stmt.setString(1, parentId);
@@ -2343,7 +2597,7 @@ getco     */
                 } catch (SQLException e) {
                     if (isIntegrityConstraintViolation(e)) {
                         if (log.isDebugEnabled()) {
-                            log.debug ("Relation "+ parentId + " -> "
+                            log.debug("Relation " + parentId + " -> "
                                        + rec.getId() + ", already known");
                         }
                     } else {
@@ -2360,12 +2614,15 @@ getco     */
                 markHasRelations(parentIds, conn);
             }
         }
-
         closeStatement(stmt);
     }
 
-    // Return false if the record should be excepted from relations tracking
-    private boolean shouldTrackRelations (Record rec) {
+    /**
+     * Return false if the record should be excepted from relations tracking.
+     * @param rec The record.
+     * @return False if the record should be excepted from relations tracking.
+     */
+    private boolean shouldTrackRelations(Record rec) {
         return !disabledRelationsTracking.contains(rec.getBase());
     }
 
@@ -2397,6 +2654,12 @@ getco     */
         }
     }
 
+    /**
+     * Updates has relation for a record ID.
+     * @param id The record ID.
+     * @param conn The connection to the database.
+     * @throws SQLException If error occur with SQL execution.
+     */
     private void checkHasRelations(String id, Connection conn)
                                                            throws SQLException {
         PreparedStatement stmt =
@@ -2447,6 +2710,14 @@ getco     */
         }
     }
 
+    /**
+     * Create a new record on the given connection.
+     * @param record The record object to flush into the database.
+     * @param options The query options.
+     * @param conn The database connection.
+     * @throws IOException If error occur while communicating with storage.
+     * @throws SQLException If error occur with SQL execution.
+     */
     private void createNewRecordWithConnection(
                      Record record, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
@@ -2460,18 +2731,17 @@ getco     */
         long nowStamp = timestampGenerator.next();
         boolean hasRelations = record.hasParents() || record.hasChildren();
 
-        try{
-            stmt.setString(1, record.getId());
-            stmt.setString(2, record.getBase());
-            stmt.setInt(3, boolToInt(record.isDeleted()));
-            stmt.setInt(4, boolToInt(record.isIndexable()));
-            stmt.setInt(5, boolToInt(hasRelations));
+        try {
+            stmt.setString(ID_KEY, record.getId());
+            stmt.setString(BASE_KEY, record.getBase());
+            stmt.setInt(DELETED_FLAG_KEY, boolToInt(record.isDeleted()));
+            stmt.setInt(INDEXABLE_FLAG_KEY, boolToInt(record.isIndexable()));
+            stmt.setInt(HAS_RELATIONS_FLAG_KEY, boolToInt(hasRelations));
             stmt.setLong(6, nowStamp);
             stmt.setLong(7, nowStamp);
             stmt.setBytes(8, Zips.gzipBuffer(record.getContent()));
-            stmt.setBytes(9,record.hasMeta() ?
-                                         record.getMeta().toFormalBytes() :
-                                         new byte[0]);
+            stmt.setBytes(9, record.hasMeta() ?
+                                record.getMeta().toFormalBytes() : new byte[0]);
             stmt.executeUpdate();
         } finally {
             closeStatement(stmt);
@@ -2487,18 +2757,81 @@ getco     */
                 checkHasRelations(record.getId(), conn);
             }
         }
-        
     }
 
-    /* Note that creationTime isn't touched */
-    private void updateRecordWithConnection(
-                  Record record, QueryOptions options, Connection conn)
-                                              throws IOException, SQLException {
+    /**
+     * Sets a base statistic row invalid, this is done when a record is flushed,
+     * because the ingester don't know when it is done ingesting and therefore
+     * don't know when to update the deleted, indexable and count.
+     * 
+     * @param base The base to set invalid.
+     * @param conn The connection.
+     */
+    private void setBaseStatisticInvalid(String base, Connection conn)
+                                                           throws SQLException {
+        PreparedStatement stmt =
+                        conn.prepareStatement(stmtSetBaseStatsInvalid.getSql());
+        try {
+            stmt.setString(1, base);
+            stmt.execute();
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Update the last modification time for a single base.
+     *
+     * @param base The base.
+     * @param conn The connection.
+     * @throws SQLException If error occur while executing SQL.
+     */
+    private void updateLastModficationTimeForBase(String base, Connection conn) 
+                                                           throws SQLException {
+        long mtime = System.currentTimeMillis();
+        log.debug("Updating mtime for base '" + base
+                  + " and setting it to " + mtime);
+        PreparedStatement stmt =
+                          conn.prepareStatement(stmtUpdateMtimForBase.getSql());
+        PreparedStatement insertStmt = null;
+        try {
+            // update mtime and base
+            stmt.setLong(1, mtime);
+            stmt.setString(2, base);
+            if (stmt.executeUpdate() == 0) { // This is a new base, update
+                // insert base and mtime
+                log.debug("Base row didn't exists in "+ BASE_STATISTICS
+                          + " insert new row");
+                insertStmt =
+                            conn.prepareStatement(stmtInsertBaseStats.getSql());
+                insertStmt.setString(1, base);
+                insertStmt.setLong(2, mtime);
+                insertStmt.execute();
+            }
+        } finally {
+            closeStatement(stmt);
+            closeStatement(insertStmt);
+        }
+    }
+
+    /**
+     * Update a record.
+     * Note: that creationTime isn't touched
+     * @param record The record to update, the record updated in storage is
+     * depended on the record id.
+     * @param options The query options, see {@link QueryOptions} for
+     * documentation.
+     * @param conn The database connection.
+     * @throws IOException If error communicating with storage.
+     * @throws SQLException If error executing SQL. 
+     */
+    private void updateRecordWithConnection(Record record, QueryOptions options,
+                             Connection conn) throws IOException, SQLException {
         log.debug("Updating: " + record.getId());
 
-        // Respect the TRY_UPDATE meta flag. See docs for QueryOptions
-        if (options != null &&
-            "true".equals(options.meta(TRY_UPDATE))) {
+        // Respect the TRY_UPDATE meta flag. See docs for {@link QueryOptions}
+        if (options != null
+                && "true".equals(options.meta(TRY_UPDATE))) {
             Record old = getRecordWithConnection(record.getId(), options, conn);
             if (record.equals(old)) {
                 log.debug("Record '%s' already up to date, skipping update");
@@ -2520,8 +2853,7 @@ getco     */
             stmt.setLong(5, nowStamp);
             stmt.setBytes(6, Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(7, record.hasMeta() ?
-                                         record.getMeta().toFormalBytes() :
-                                         new byte[0]);
+                                record.getMeta().toFormalBytes() : new byte[0]);
             stmt.setString(8, record.getId());
             stmt.executeUpdate();
 
@@ -2548,18 +2880,27 @@ getco     */
         }
      }
 
-    protected void touchRecord (String id, Connection conn)
+    /**
+     * Touch a record means updating the records timestamp. This also updates
+     * the storage last modification time.
+     * @param id The record ID.
+     * @param conn The database connection, changes are not committed.
+     * @throws IOException If error occurs while communication with the storage.
+     * @throws SQLException If error occur while executing the SQL.
+     */
+    protected void touchRecord(String id, Connection conn)
                                               throws IOException, SQLException {
         PreparedStatement stmt =
                                 conn.prepareStatement(stmtTouchRecord.getSql());
         log.debug("Touching: " + id);
 
         invalidateCachedStats();
-
         try {
             stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
+            Record r = getRecord(id, null);
+            updateLastModficationTimeForBase(r.getBase(), conn);
         } finally {
             closeStatement(stmt);
         }
@@ -2573,7 +2914,7 @@ getco     */
      * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
      * indexes on the database.
      *
-     * @throws IOException if the database could not be created.
+     * @throws IOException If the database could not be created.
      */
     protected void createSchema() throws IOException {
         log.debug("Creating database schema");
@@ -2587,41 +2928,144 @@ getco     */
         }
     }
 
+    /**
+     * Create the tables for the database.
+     * @throws SQLException If the database could not be created.
+     */
     private void doCreateSchema() throws SQLException {
-
         Connection conn = null;
-
         try {
             conn = getDefaultConnection();
 
-            /* RECORDS */
+            // RECORDS
             try {
                 doCreateSummaRecordsTable(conn);
             } catch (SQLException e) {
-                if (log.isDebugEnabled()) {
-                    log.info("Failed to create table for record data: "
-                             + e.getMessage(), e);
-                } else {
-                    log.info("Failed to create table for record data: "
-                             + e.getMessage());
-                }
+                log.info("Failed to create table for record data: "
+                         + e.getMessage(), e);
             }
 
-            /* RELATIONS */
+            // RELATIONS
             try {
                 doCreateSummaRelationsTable(conn);
             } catch (SQLException e) {
-                if (log.isDebugEnabled()) {
-                    log.info("Failed to create table for record relations: "
-                             + e.getMessage(), e);
-                } else {
-                    log.info("Failed to create table for record relations: "
-                             + e.getMessage());
-                }
+                log.info("Failed to create table for record relations: "
+                         + e.getMessage(), e);
+            }
+
+            // BASE STATISTIC
+            try {
+                doCreateSummaBaseStatisticTable(conn);
+            } catch (SQLException e) {
+                log.info("Failed to create table for base statistic: "
+                         + e.getMessage(), e);
             }
         } finally {
             closeConnection(conn);
         }
+    }
+
+    /**
+     * Return the last modification time for a base or the storage, if no
+     * changes to a base has happened yet. This is drawn from the database.
+     * @param base The base.
+     * @return The last modification time.
+     * @throws IOException If error occur while executing the SQL.
+     */
+    @Override
+    public long getModificationTime(String base) throws IOException {
+        Connection conn = null;
+        try {
+            conn = getDefaultConnection(); 
+            conn.commit();
+            return getModifcationTimeWithConnection(base, conn);
+        } catch (SQLException e) {
+            throw new IOException("Error fetching last modification time", e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    /**
+     * Return the last modification time for a single base. If base is
+     * {@code null} then the last modification the for the storage is returned.
+     * If not changes has been made yet, then this is the storage start time
+     * that is returned.
+     * @param base The base.
+     * @param conn The connection, the SQL isn't committed in this method.
+     * @return The last modification time of the storage or storage startup
+     * time.
+     * @throws SQLException If error executing the SQL.
+     */
+    private long getModifcationTimeWithConnection(String base, Connection conn)
+                                                           throws SQLException {
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        try {
+            if (base == null) {
+                String sql = "SELECT " + MTIME_COLUMN + " FROM "
+                    + BASE_STATISTICS + " ORDER BY " + MTIME_COLUMN
+                    + " DESC LIMIT 1";
+                stmt = conn.prepareStatement(sql);
+                stmt.execute();
+                long maxTime = 0;
+                resultSet = stmt.executeQuery();
+                if (resultSet.next()) {
+                    maxTime = resultSet.getLong(1);
+                }
+                return Math.max(getStorageStartTime(), maxTime);
+            } else {
+                stmt =
+                    conn.prepareStatement(stmtGetLastModificationTime.getSql());
+                stmt.setString(1, base);
+                stmt.execute();
+                // We don't have a storage match
+                resultSet = stmt.getResultSet();
+                if (resultSet.next()) {
+                    return resultSet.getLong(
+                                            resultSet.findColumn(MTIME_COLUMN));
+                } else {
+                    long time = 0;
+                    try {
+                        time = super.getModificationTime(base);
+                    } catch (IOException e) {
+                        
+                    }                
+                    log.debug("No data for base, returning storage start time ("
+                              + getStorageStartTime() + ", should have been "
+                              + time);
+                    return getStorageStartTime();
+                }
+            }
+        } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Create a table for holding statistic for each base.
+     * @param conn The database connection.
+     * @throws SQLException If there is an error while executing the SQL.
+     */
+    private void doCreateSummaBaseStatisticTable(Connection conn)
+                                                           throws SQLException {
+        String createBaseStatisticQuery = "CREATE TABLE IF NOT EXISTS " 
+            + BASE_STATISTICS + " (" 
+            + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
+            + MTIME_COLUMN + " BIGINT, "
+            + DELETE_INDEXABLES_COLUMN + " BIGINT, "
+            + NON_DELETED_INDEXABLES_COLUMN + " BIGINT, "
+            + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, "
+            + NON_DELETED_NON_INDEXABLES_COLUMN + " BIGINT, "
+            + VALID_COLUMN + " INTEGER)";
+        log.debug("Creating table " + BASE_STATISTICS + " if not already existing"
+        	  + " with query '" + createBaseStatisticQuery + "'");
+        Statement stmt = conn.createStatement();
+        stmt.execute(createBaseStatisticQuery);
+        stmt.close();
     }
 
     private void doCreateSummaRelationsTable(Connection conn)
@@ -2632,7 +3076,7 @@ getco     */
                 "CREATE TABLE IF NOT EXISTS " + RELATIONS + " ("
                 + PARENT_ID_COLUMN     + " VARCHAR(" + ID_LIMIT + "), "
                 + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
-        log.debug("Creating table "+RELATIONS+" with query: '"
+        log.debug("Creating table " + RELATIONS + " with query: '"
                   + createRelationsQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRelationsQuery);
@@ -2641,8 +3085,9 @@ getco     */
         /* RELATIONS INDEXES */
         String createRelationsPCIndexQuery =
                 "CREATE UNIQUE INDEX IF NOT EXISTS pc ON "
-                + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
-        log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
+                + RELATIONS + "(" + PARENT_ID_COLUMN + "," + CHILD_ID_COLUMN
+                + ")";
+        log.debug("Creating index 'pc' on table " + RELATIONS + " with query: '"
                   + createRelationsPCIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRelationsPCIndexQuery);
@@ -2650,8 +3095,8 @@ getco     */
 
         String createRelationsCIndexQuery =
                 "CREATE INDEX IF NOT EXISTS c ON "
-                + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
-        log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
+                + RELATIONS + "(" + CHILD_ID_COLUMN +  ")";
+        log.debug("Creating index 'c' on table " + RELATIONS + " with query: '"
                   + createRelationsCIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRelationsCIndexQuery);
@@ -2672,7 +3117,7 @@ getco     */
                 + MTIME_COLUMN     + " BIGINT, "
                 + META_COLUMN      + " " + getMetaColumnDataDeclaration()
                 + ")";
-        log.debug("Creating table "+RECORDS+" with query: '"
+        log.debug("Creating table " + RECORDS + " with query: '"
                   + createRecordsQuery + "'");
 
         Statement stmt = conn.createStatement();
@@ -2681,8 +3126,9 @@ getco     */
 
         /* RECORDS INDEXES */
         String createRecordsIdIndexQuery =
-                "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "("+ID_COLUMN+")";
-        log.debug("Creating index 'i' on table "+RECORDS+" with query: '"
+                "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "("
+                + ID_COLUMN + ")";
+        log.debug("Creating index 'i' on table " + RECORDS + " with query: '"
                   + createRecordsIdIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsIdIndexQuery);
@@ -2694,8 +3140,9 @@ getco     */
         // faster we use a covering index on (mtime,base)
         String createRecordsMTimeIndexQuery =
                 "CREATE UNIQUE INDEX IF NOT EXISTS mb ON "
-                               + RECORDS + "("+MTIME_COLUMN+","+BASE_COLUMN+")";
-        log.debug("Creating index 'mb' on table "+RECORDS+" with query: '"
+                               + RECORDS + "(" + MTIME_COLUMN + ","
+                               + BASE_COLUMN + ")";
+        log.debug("Creating index 'mb' on table " + RECORDS + " with query: '"
                   + createRecordsMTimeIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsMTimeIndexQuery);
@@ -2705,13 +3152,40 @@ getco     */
         // deleted- and indexable flags.
         String createRecordsBaseIndexQuery =
                 "CREATE INDEX IF NOT EXISTS bdi ON "
-                + RECORDS +"("
-                + BASE_COLUMN + ","+DELETED_COLUMN+","+INDEXABLE_COLUMN+")";
-        log.debug("Creating index 'bdi' on table "+RECORDS+" with query: '"
+                + RECORDS + "("
+                + BASE_COLUMN + "," + DELETED_COLUMN + "," + INDEXABLE_COLUMN
+                + ")";
+        log.debug("Creating index 'bdi' on table " + RECORDS + " with query: '"
                   + createRecordsBaseIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsBaseIndexQuery);
         stmt.close();
+    }
+
+    protected void checkTableConsistency() {
+        boolean createNew = false;
+        Connection conn = getConnection();
+        try {
+            String query = "SELECT " + NON_DELETED_NON_INDEXABLES_COLUMN
+                + " FROM " + BASE_STATISTICS;
+            Statement stmt = conn.createStatement();
+            stmt.execute(query);
+        } catch (SQLException e) {
+            log.info("Deleting old base statistic table");
+            destroyBaseStatistic();
+            createNew = true;
+            log.info("Creating new base statistic table");
+        }
+
+        try {
+            if (createNew) {
+                doCreateSummaBaseStatisticTable(conn);
+            }
+        } catch (SQLException e) {
+            log.info("Error creating table "
+                     + DatabaseStorage.BASE_STATISTICS, e);
+        }
+        closeConnection(conn);
     }
 
     /**
@@ -2723,9 +3197,7 @@ getco     */
      */
     public void destroyDatabase() throws SQLException {
         log.warn("Preparing to destroy database. All data will be lost");
-
         Connection conn = getDefaultConnection();
-
         try {
             log.warn("Destroying all record data");
             Statement stmt = conn.createStatement();
@@ -2736,13 +3208,33 @@ getco     */
             stmt = conn.createStatement();
             stmt.execute("DROP TABLE " + RELATIONS);
             stmt.close();
+
+            destroyBaseStatistic();
         } finally {
             closeConnection(conn);
         }
-
         log.info("All Summa data wiped from database");
-    }       
+    }
 
+    /**
+     * Destroy the base statistic table.
+     */
+    protected void destroyBaseStatistic() {
+        Connection conn = null;
+        try {
+            conn = getDefaultConnection();
+            log.warn("Destryoing all statistic");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + BASE_STATISTICS);
+            stmt.close();
+        } catch (SQLException e) {
+            log.info("Base statistic table not deleted reason: " + e.getCause()
+                  + "'", e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+    
     protected abstract String getMetaColumnDataDeclaration();
 
     protected abstract String getDataColumnDataDeclaration();
@@ -2752,7 +3244,7 @@ getco     */
      * elements.
      * <p/>
      * This method will position the result set at the beginning of the next
-     * record
+     * record.
      *
      * @param resultSet     a SQL result set. The result set will be stepped
      *                      to the beginning of the following record
@@ -2767,23 +3259,23 @@ getco     */
      */
     public Record scanRecord(ResultSet resultSet, ResultSetCursor iter)
                                               throws SQLException, IOException {
-
         boolean hasNext;
 
-        String id = resultSet.getString(1);
-        String base = resultSet.getString(2);
-        boolean deleted = intToBool(resultSet.getInt(3));
-        boolean indexable = intToBool(resultSet.getInt(4));
-        boolean hasRelations = intToBool(resultSet.getInt(5));
-        byte[] gzippedContent = resultSet.getBytes(6);
-        long ctime = resultSet.getLong(7);
-        long mtime = resultSet.getLong(8);
-        byte[] meta = resultSet.getBytes(9);
-        String parentIds = resultSet.getString(10);
-        String childIds = resultSet.getString(11);
+        String id = resultSet.getString(ID_KEY);
+        String base = resultSet.getString(BASE_KEY);
+        boolean deleted = intToBool(resultSet.getInt(DELETED_FLAG_KEY));
+        boolean indexable = intToBool(resultSet.getInt(INDEXABLE_FLAG_KEY));
+        boolean hasRelations =
+                            intToBool(resultSet.getInt(HAS_RELATIONS_FLAG_KEY));
+        byte[] gzippedContent = resultSet.getBytes(GZIPPED_CONTENT_FLAG_KEY);
+        long ctime = resultSet.getLong(CTIME_KEY);
+        long mtime = resultSet.getLong(MTIME_KEY);
+        byte[] meta = resultSet.getBytes(META_KEY);
+        String parentIds = resultSet.getString(PARENT_IDS_KEY);
+        String childIds = resultSet.getString(CHILD_IDS_KEY);
 
         if (log.isTraceEnabled()) {
-            log.trace ("Scanning record: " + id);
+            log.trace("Scanning record: " + id);
         }
 
         /* If the record is listed as parent or child of something this will
@@ -2801,48 +3293,53 @@ getco     */
          * with different parent and child column values. We need to iterate
          * through all rows with the same id and collect the different parents
          * and children listed */
-        while ((hasNext = resultSet.next()) &&
-               id.equals(resultSet.getString(1))) {
+        while ((hasNext = resultSet.next())
+                && id.equals(resultSet.getString(ID_KEY))) {
 
             /* If we log on debug we do sanity checking of the result set.
             * Of course the parent and child columns should not be checked,
             * since they are the ones changing */
             if (log.isDebugEnabled()) {
                 log.trace("Sanity checking record block for: " + id);
-                if (!base.equals(resultSet.getString(2))) {
+                if (!base.equals(resultSet.getString(BASE_KEY))) {
                     log.warn("Base mismatch for record: " + id);
                     return null;
-                } else if (deleted != intToBool(resultSet.getInt(3))) {
+                } else if (deleted
+                             != intToBool(resultSet.getInt(DELETED_FLAG_KEY))) {
                     log.warn("Deleted state mismatch for record: " + id);
                     return null;
-                } else if (indexable != intToBool(resultSet.getInt(4))) {
+                } else if (indexable
+                           != intToBool(resultSet.getInt(INDEXABLE_FLAG_KEY))) {
                     log.warn("Indexable state mismatch for record: " + id);
                     return null;
-                } else if (hasRelations != intToBool(resultSet.getInt(5))) {
+                } else if (hasRelations
+                       != intToBool(resultSet.getInt(HAS_RELATIONS_FLAG_KEY))) {
                     log.warn("hasRelations state mismatch for record: " + id);
                     return null;
-                }else if (!Arrays.equals(gzippedContent,
-                                          resultSet.getBytes(6))) {
+                } else if (!Arrays.equals(gzippedContent,
+                                resultSet.getBytes(GZIPPED_CONTENT_FLAG_KEY))) {
                     log.warn("Content mismatch for record: " + id);
                     return null;
-                }  else if (ctime != resultSet.getLong(7)) {
+                }  else if (ctime != resultSet.getLong(CTIME_KEY)) {
                     log.warn("CTime state mismatch for record: " + id);
                     return null;
-                } else if (mtime != resultSet.getLong(8)) {
+                } else if (mtime != resultSet.getLong(MTIME_KEY)) {
                     log.warn("MTime state mismatch for record: " + id);
                     return null;
-                }  else if (!Arrays.equals(meta,resultSet.getBytes(9))) {
+                }  else if (!Arrays.equals(meta,
+                                           resultSet.getBytes(META_KEY))) {
                     log.warn("Meta tags mismatch for record: " + id);
                     return null;
                 }
             }
 
-            /* Pick up parent and child ids */
-            String newParent = resultSet.getString (10);
-            String newChild = resultSet.getString (11);
+            /* Pick up parent and child IDs */
+            String newParent = resultSet.getString(PARENT_IDS_KEY);
+            String newChild = resultSet.getString(CHILD_IDS_KEY);
 
             /* If the record is listed as parent or child of something this
-             * will appear in the parent/child columns, so ignore these cases */
+             * will appear in the parent/child columns, so ignore these cases
+             */
             if (id.equals(newParent)) {
                 newParent = null;
             }
@@ -2863,7 +3360,7 @@ getco     */
             }
 
             if (log.isTraceEnabled()) {
-                log.trace ("For record '" + id + "', collected children: "
+                log.trace("For record '" + id + "', collected children: "
                            + childIds + ", collected parents: " + parentIds);
             }
         }
@@ -2902,9 +3399,8 @@ getco     */
          */
         if (useLazyRelations && hasRelations
             && parentIds == null && childIds == null) {
-            resolveRelatedIds(rec,resultSet.getStatement().getConnection());
+            resolveRelatedIds(rec, resultSet.getStatement().getConnection());
         }
-
         return rec;
     }
 
@@ -2919,7 +3415,7 @@ getco     */
      * @throws IOException  If the data (content) could not be uncompressed
      *                      with gunzip.
      */
-    public Record scanRecord (ResultSet resultSet)
+    public Record scanRecord(ResultSet resultSet)
                                               throws SQLException, IOException {
         return scanRecord(resultSet, null);
     }
@@ -2934,10 +3430,8 @@ getco     */
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
-    private ResultSetCursor startIterator (PreparedStatement stmt,
-                                          String base,
-                                          QueryOptions options)
-                                                            throws IOException {
+    private ResultSetCursor startIterator(PreparedStatement stmt, String base,
+                                      QueryOptions options) throws IOException {
         ResultSet resultSet;
 
         log.trace("Getting results for '" + stmt + "'");
@@ -2963,8 +3457,7 @@ getco     */
 
         return iter;
     }
-    
-    
+
     /**
      * Register a {@link Cursor} and return the iterator key for it.
      * Iterators registered with this call will automatically be reaped
@@ -2981,57 +3474,88 @@ getco     */
         return iter.getKey();
     }
 
-    /* Our version of a boolean packed as integer is that 0 = false, everything
-       else = true. This should match common practice.
+    /**
+     * Our version of a boolean packed as integer is that 0 = false, everything
+     * else = true. This should match common practice.
+     * @param isTrue Boolean to convert to integer.
+     * @return Zero if boolean is false, one otherwise.
      */
     private int boolToInt(boolean isTrue) {
         return isTrue ? 1 : 0;
     }
+
+    /**
+     * Convert integer to boolean.
+     * @see #boolToInt(boolean)
+     * @param anInt Integer to convert to boolean.
+     * @return True if integer is one, false otherwise.
+     */
     private static boolean intToBool(int anInt) {
         return anInt != 0;
     }
 
+    /**
+     * Close the database storage, which involves closing all iterators.
+     */
     @Override
     public void close() throws IOException {
         log.info("Closing DatabaseStorage");
-
         iteratorReaper.stop();
-
         log.info("Closed DatabaseStorage");
     }
 
+    /**
+     * Returns the statistic of the used storage. This class holds a cached
+     * copy of the statistic and don't update.
+     * @return List of storage statistic.
+     * @throws IOException If error occur while communicating storage.
+     */
     public List<BaseStats> getStats() throws IOException {
         log.trace("getStats()");
+        Connection conn = null;
 
-        synchronized (cachedStatsLock) {
-            if (cachedStats != null) {
-                log.debug("Retrieving stats from cache");
-                return cachedStats;
-            }
+        String isBaseStatsInvalid = "SELECT * FROM " + BASE_STATISTICS
+            + " WHERE " + VALID_COLUMN + " = 0";
+        String isBastStatsAva = "SELECT * FROM " + BASE_STATISTICS;
 
-            Connection conn = null;
-            try {
-                conn = getConnection();
-                cachedStats = getStatsWithConnection(conn);
-                return cachedStats;
-            } catch (SQLException e) {
-                throw new IOException("Could not get database stats", e);
-            } finally {
-                try {
-                    if (conn != null) {
-                        conn.close();
-                    }
-                } catch (SQLException e) {
-                    log.warn("Failed to close connection database: "
-                             + e.getMessage(), e);
-                }
+        try {
+            conn = getConnection();
+            Statement stmt = conn.createStatement();
+            Statement available = conn.createStatement();
+            boolean resultSetAva = available.execute(isBastStatsAva);
+            
+            boolean resultSet = stmt.execute(isBaseStatsInvalid);
+            if(resultSet && stmt.getResultSet().first()
+               || resultSetAva && !available.getResultSet().first()) {
+                log.debug("Return slow statistic");
+                return getHeavyStatsWithConnection(conn);
+            } else {
+                log.debug("Return fast statistic");
+                return getStatsWithConnection(conn);
             }
+        } catch (SQLException e) {
+            throw new IOException("Could not get database stats", e);
+        } finally {
+            closeConnection(conn);
         }
     }
 
+    /**
+     * Invalidate cached statistic in database.
+     */
     private void invalidateCachedStats() {
-        synchronized (cachedStatsLock) {
-            cachedStats = null;
+        String invalidateCachedStats = "UPDATE " + BASE_STATISTICS 
+        + " SET " + VALID_COLUMN + " = 0";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            Statement stmt = conn.createStatement();
+            stmt.execute(invalidateCachedStats);
+        } catch (SQLException e) {
+            log.error("Error invalidating base statistic in database", e);
+        } finally {
+            closeConnection(conn);
         }
     }
 
@@ -3039,67 +3563,169 @@ getco     */
                                               throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<BaseStats>();
-        String query =
+
+        String query = "SELECT * FROM " + BASE_STATISTICS;
+        Statement stmt = conn.createStatement();
+        ResultSet results = stmt.executeQuery(query);
+
+        try {
+           for(results.first(); !results.isAfterLast(); results.next()) {
+               String baseName = results.getString(1);
+               long lastModified = results.getLong(2);
+               long deletedIndexables = results.getLong(3);
+               long nonDeletedIndexables = results.getLong(4);
+               long deletedNonIndexables = results.getLong(5);
+               long nonDeletedNonIndexables = results.getLong(6);
+               stats.add(new BaseStats(baseName, lastModified, startTime,
+                                       deletedIndexables,
+                                       nonDeletedIndexables,
+                                       deletedNonIndexables,
+                                       nonDeletedNonIndexables));
+           }
+        } finally {
+            if (results != null) {
+                results.close();
+            }
+        }        
+        log.debug(String.format("Extracted storage stats in %sms",
+                (System.currentTimeMillis() - startTime)));
+        return stats;
+    }
+
+    /**
+     * Updates the base statistic table, if no row exists for this table a new
+     * row is inserted into the database.
+     * Note: This method returns a new instantiated {@link BaseStats} object.
+     *
+     * @param baseName The base name.
+     * @param lastModified Last modification time for the base.
+     * @param generationTime The generation time of the base statistic object.
+     * @param deletedIndexables The number of deleted and indexable records.
+     * @param nonDeletedIndexables The number of non deleted and indexable
+     * records.
+     * @param deletedNonIndexables The number of deleted and non indexable
+     * records.
+     * @param nonDeletedNonIndexables the number of non deleted and non
+     * indexable records.
+     * @param conn The database connection.
+     * @return 
+     */
+    private BaseStats updateBaseStatsTable(String baseName, long lastModified,
+                                          long generationTime,
+                                          long deletedIndexables,
+                                          long nonDeletedIndexables,
+                                          long deletedNonIndexables,
+                                          long nonDeletedNonIndexables,
+                                          Connection conn) throws SQLException {
+        // Update base stats table
+        log.debug("Updating base statistic for base '" + baseName + ".");
+        PreparedStatement stmt =
+                        conn.prepareStatement(stmtUpdateFullBaseStats.getSql());
+        PreparedStatement insertStmt = null;
+        try {
+            stmt.setLong(1, deletedIndexables);
+            stmt.setLong(2, nonDeletedIndexables);
+            stmt.setLong(3, deletedNonIndexables);
+            stmt.setLong(4, nonDeletedNonIndexables);
+            stmt.setString(5, baseName);
+            if (stmt.executeUpdate() < 1) { // This is a new base, update
+                // insert base and mtime
+                log.debug("Base row didn't exists in "+ BASE_STATISTICS
+                          + " insert new row");
+                insertStmt =
+                        conn.prepareStatement(stmtInsertFullBaseStats.getSql());
+                insertStmt.setString(1, baseName);
+                insertStmt.setLong(2, lastModified);
+                insertStmt.setLong(3, deletedIndexables);
+                insertStmt.setLong(4, nonDeletedIndexables);
+                insertStmt.setLong(5, deletedNonIndexables);
+                insertStmt.setLong(6, nonDeletedNonIndexables);
+                insertStmt.execute();
+            }
+        } finally {
+            closeStatement(stmt);
+            closeStatement(insertStmt);
+        }
+        // Return new base stats element 
+        return new BaseStats(baseName, lastModified, generationTime,
+                             deletedIndexables, nonDeletedIndexables,
+                             deletedNonIndexables, nonDeletedNonIndexables);
+    }
+
+    /**
+     * Return the database statistic for a given connection.
+     * @param conn The connection.
+     * @return A list of {@link BaseStats}.
+     * @throws SQLException If error getting the SQL exception.
+     * @throws IOException If error handling RMI.
+     */
+    private List<BaseStats> getHeavyStatsWithConnection(Connection conn)
+                                              throws SQLException, IOException {
+        long startTime = System.currentTimeMillis();
+        List<BaseStats> stats = new LinkedList<BaseStats>();
+        final String query =
                 "SELECT base, deleted, indexable, count(base) "
               + "FROM summa_records "
               + "GROUP BY base,deleted,indexable";
+        final int baseKey = 1;
+        final int deletedKey = 2;
+        final int indexableKey = 3;
+        final int countKey = 4;
 
         Statement stmt = conn.createStatement();
         ResultSet result = stmt.executeQuery(query);
 
         try {
-            result.next();
-            while (!result.isAfterLast()) {
-                String base = result.getString(1);
-                String lastBase = base;
-                long deletedIndexables = 0;
-                long nonDeletedIndexables = 0;
-                long deletedNonIndexables = 0;
-                long nonDeletedNonIndexables = 0;
-
-                // Collect all stats for the current base and append it
-                // to the stats list
-                while (lastBase.equals(base)) {
-                    boolean deleted = intToBool(result.getInt(2));
-                    boolean indexable = intToBool(result.getInt(3));
-                    long count = result.getLong(4);
-
-                    // These boolean cases could be simplified, but we list
-                    // them all explicitely to help the (human) reader
-                    if (deleted && indexable) {
-                        deletedIndexables = count;
-                    } else if (deleted && !indexable) {
-                        deletedNonIndexables = count;
-                    } else  if (!deleted && indexable) {
-                        nonDeletedIndexables = count;
-                    } else if (!deleted && !indexable) {
-                        nonDeletedNonIndexables = count;
+            if (result.next()) {
+                while (!result.isAfterLast()) {
+                    String base = result.getString(baseKey);
+                    String lastBase = base;
+                    long deletedIndexables = 0;
+                    long nonDeletedIndexables = 0;
+                    long deletedNonIndexables = 0;
+                    long nonDeletedNonIndexables = 0;
+    
+                    // Collect all statistics for the current base and append it
+                    // to the statistics list
+                    while (lastBase.equals(base)) {
+                        boolean deleted = intToBool(result.getInt(deletedKey));
+                        boolean indexable =
+                                         intToBool(result.getInt(indexableKey));
+                        long count = result.getLong(countKey);
+    
+                        // These boolean cases could be simplified, but we list
+                        // them all explicitly to help the (human) reader
+                        if (deleted && indexable) {
+                            deletedIndexables = count;
+                        } else if (deleted && !indexable) {
+                            deletedNonIndexables = count;
+                        } else  if (!deleted && indexable) {
+                            nonDeletedIndexables = count;
+                        } else if (!deleted && !indexable) {
+                            nonDeletedNonIndexables = count;
+                        }
+    
+                        result.next();
+                        if (!result.isAfterLast()) {
+                            base = result.getString(1);
+                        } else {
+                            break;
+                        }
                     }
-
-                    result.next();
-                    if (!result.isAfterLast()) {
-                        base = result.getString(1);
-                    } else {
-                        break;
-                    }
+                    // Insert / update database and create {@link BaseStats}
+                    // object
+                    stats.add(updateBaseStatsTable(lastBase,
+                              getModificationTime(lastBase), startTime,
+                              deletedIndexables, nonDeletedIndexables,
+                              deletedNonIndexables, nonDeletedNonIndexables,
+                              conn));
                 }
-                stats.add(new BaseStats(
-                        lastBase, getModificationTime(lastBase), startTime,
-                        deletedIndexables, nonDeletedIndexables,
-                        deletedNonIndexables, nonDeletedNonIndexables));
             }
         } finally {
             result.close();
         }
-
         log.debug(String.format("Extracted storage stats in %sms",
                                 (System.currentTimeMillis() - startTime)));
-
         return stats;
     }
-
 }
-
-
-
-

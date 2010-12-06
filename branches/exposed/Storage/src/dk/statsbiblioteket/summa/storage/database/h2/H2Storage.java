@@ -14,9 +14,15 @@
  */
 package dk.statsbiblioteket.summa.storage.database.h2;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.h2.jdbcx.JdbcDataSource;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.StorageUtils;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
+import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,45 +32,49 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-
-import dk.statsbiblioteket.summa.storage.StorageUtils;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.util.Files;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.h2.jdbcx.JdbcDataSource;
 
 /**
  * Storage implementation on top of the H" database engine.
  */
 public class H2Storage extends DatabaseStorage implements Configurable {
-
+    /** Private logger. */
     private static Log log = LogFactory.getLog(H2Storage.class);
+    /** DB file. */
     private static final String DB_FILE = "summa_h2storage";
     //public static final int META_LIMIT = 50*1024*1024; // MAX_VALUE instead?
 
     /**
-     * We optimize the index statistics after this many flushes
+     * We optimize the index statistics after this many flushes.
      */
     public static final int OPTIMIZE_INDEX_THRESHOLD = 100000;
 
+    /** The DB username. */
     private String username;
+    /** The DB password. */
     private String password;
+    /** The DB location. */
     private File location;
+    /** The max allowed connection to the DB. */
     private int maxConnections;
+    /** True if a new database should be created. */
     private boolean createNew = true;
+    /** True if creation of database should be forced. */
     private boolean forceNew = false;
+    /** True if we should us L2 cache. */
     private boolean useL2cache = true;
 
+    /** The database source. */
     private JdbcDataSource dataSource;
+    /** The connection pool. */
     private MiniConnectionPoolManager pool;
+    /** Number of flushes. */
     private long numFlushes;
 
     /**
@@ -78,9 +88,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * Default is {@code false}.
      */
     public static final String CONF_L2CACHE = "summa.storage.database.l2cache";
+    /** Default usage for H2 of L2 cached is false. */
     public static final boolean DEFAULT_L2CACHE = false;
 
-
+    /**
+     * Creates a H2 database storage, given the configuration.
+     * @param conf The configuration.
+     * @throws IOException If error occur while doing IO work for creation of
+     * database.
+     */
     public H2Storage(Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing H2Storage");
@@ -147,8 +163,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.warn(error);
             throw new IOException(error, e);
         }
-        log.info("H2 Storage closed.");
-        
+        log.info("H2 Storage closed.");        
     }
 
     @Override
@@ -160,9 +175,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                  + ", location '" + location + "', createNew " + createNew
                  + " and forceNew " + forceNew);
 
-        if (new File(location, DB_FILE+".h2.db").isFile() ||
-            new File(location, DB_FILE+".data.db").isFile()) {
-            /* Database location exists*/
+        if (new File(location, DB_FILE + ".h2.db").isFile()
+            || new File(location, DB_FILE + ".data.db").isFile()) {
+            // Database location exists
             log.debug("Old database found at '" + location + "'");
             if (forceNew) {
                 log.info("Deleting existing database at '" + location + "'");
@@ -221,29 +236,44 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
             createSchema();
+        } else {
+            log.info("Checking database table consistency");
+            checkTableConsistency();
         }
-
         setMaxMemoryRows();
     }
 
+    /**
+     * Optimizes the tables.
+     */
     private void optimizeTables() {
         Connection conn = getConnection();
+        Statement stmt = null;
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
             log.info("Optimizing table selectivity");
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
             log.warn("Failed to optimize table selectivity", e);
         } finally {
             try {
                 conn.close();
+                stmt.close();
             } catch (SQLException e) {
                 log.warn("Failed to close connection: " + e.getMessage(), e);
             }
         }
     }
 
+    /**
+     * Flush a single record to the storage. If the number of records now
+     * exceeds the maximal number of records before a optimize should happen,
+     * then optimization is done before the call to\
+     * {@link DatabaseStorage#flush(Record)}.
+     * @param rec The record to flush.
+     * @throws IOException If error occur while optimizing or flushing record.
+     */
     @Override
     public synchronized void flush(Record rec) throws IOException {
         numFlushes++;
@@ -252,15 +282,18 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (numFlushes == 0) {
             optimizeTables();
         }
-
         super.flush(rec);
     }
 
-    /*
-    * Note: the 'synchronized' part of this method decl is paramount to
-    * allowing us to set our transaction level to
-    * Connection.TRANSACTION_READ_UNCOMMITTED
-    */
+    /**
+     * Flush a list of records to the storage.
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED.
+     *
+     * @param recs List of records to flush to the storage.
+     * @throws IOException If error occur while flushing.
+     */
     @Override
     public synchronized void flushAll(List<Record> recs) throws IOException {
         if (numFlushes > OPTIMIZE_INDEX_THRESHOLD) {
@@ -278,12 +311,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     private void setMaxMemoryRows() {
         Connection conn = getConnection();
+        Statement stmt = null;
         try {
             // There might be several rows per record if the records has
             // relations. There will be one extra row per relation
             int maxMemoryRows = getPageSize()*3;
             log.debug("Setting MAX_MEMORY_ROWS to " + maxMemoryRows);
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
         } catch (SQLException e) {
             log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance"
@@ -291,6 +325,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         } finally {
             try {
                 conn.close();
+                stmt.close();
             } catch (SQLException e) {
                 log.warn("Failed to close connection: " + e.getMessage(), e);
             }
@@ -300,40 +335,63 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     /**
      * We override this method because H2 only uses its custom
      * JdbcSQLExceptions, and not the proper exceptions according to the
-     * JDBC api
-     * @param e sql exception to inspect
+     * JDBC API.
+     * @param e SQL exception to inspect
      * @return whether or not {@code e} represents an integrity constraint
      *         violation
      */
     @Override
-    protected boolean isIntegrityConstraintViolation (SQLException e) {
+    protected boolean isIntegrityConstraintViolation(SQLException e) {
         // The H2 error codes for integrity constraint violations are
         // numbers between 23000 and 23999
         return (e instanceof SQLIntegrityConstraintViolationException ||
                 (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
     }
 
+    /**
+     * Return a connection from the connection pool.
+     * @return A database connection from the connection pool.
+     */
     @Override
     protected Connection getConnection() {
         return pool.getConnection();
     }
 
+    /**
+     * Prepare a SQL statement.
+     * @param sql The SQL statement.
+     * @return The statement handle created from the SQL statement. 
+     */
     @Override
     protected StatementHandle prepareStatement(String sql) {
         return pool.prepareStatement(sql);
     }
 
+    /**
+     * Return a prepared statement, from the statement handler.
+     * @param handle The statement handler.
+     * @return The prepared statement.
+     * @throws SQLException If error occurs while manage statements.
+     */
     @Override
     protected PreparedStatement getManagedStatement(StatementHandle handle)
                                                            throws SQLException {
         return pool.getManagedStatement(handle);
     }
 
+    /**
+     * Return the meta column data declaration.
+     * @return The meta column " BYTEA".
+     */
     @Override
     protected String getMetaColumnDataDeclaration() {
         return " BYTEA";
     }
 
+    /**
+     * Return the data column data declaration.
+     * @return The data column " BYTEA".
+     */
     @Override
     protected String getDataColumnDataDeclaration() {
         return " BYTEA";
@@ -347,10 +405,12 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * Because of this we override the generic method with one that does manual
      * looping over all parents. It should still perform fairly good.
      *
-     * @param id the record id of the record which parents to update
-     * @param options any query options that may affect how the touching should
-     *                be carried out
-     * @throws IOException in case of communication errors with the database
+     * @param id The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should
+     *                be carried out.
+     * @param conn The database connection.
+     * @throws IOException In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
      */
     @Override
     protected void touchParents(String id,
@@ -359,6 +419,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         touchParents(id, null, options, conn);
     }
 
+    /**
+     * @see #touchParents(String, QueryOptions, Connection);
+     * @param id The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should
+     *                be carried out.
+     * @param conn The database connection.
+     * @param touched The set of already touched IDs.
+     * @throws IOException In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
+     */
     private void touchParents(String id, Set<String> touched,
                               QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
@@ -387,27 +457,35 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             touchRecord(parent.getId(), conn);
             touchParents(parent.getId(), touched, options, conn);
         }
-
     }
 
-    // H2 is very bad at large result sets (_very_)
+    /**
+     * Returns whether not H2 uses the paging model for results.
+     * Note: H2 is very bad at large result sets (_very_)
+     * @return Always true, since H2 is bad performance wise with large results
+     * sets. 
+     */
     @Override
     public boolean usePagingResultSets() {
         return true;
     }
 
-    // Genrally Java embedded DBs are bad at JOINs over tables with many rows
+    /**
+     * Generally Java embedded DBs are bad at JOINs over tables with many rows.
+     * @return Always true.
+     */
     @Override
     public boolean useLazyRelationLookups() {
         return true;
     }
 
+    /**
+     * Return the given SQL statement with a LIMIT statement.
+     * @param sql The SQL statement which should be added page statement.
+     * @return The given SQL statement with a LIMIT statement.
+     */
     @Override
     public String getPagingStatement(String sql) {
         return sql + " LIMIT " + getPageSize();
     }
-
-
-
 }
-

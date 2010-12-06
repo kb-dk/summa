@@ -386,12 +386,12 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
                     Logging.LogLevel.DEBUG, sourcePayload);
             return index;
         }
-        if ((content.charAt(index) == '¤')    // Sort sign
+        if (/*(content.charAt(index) == '¤')    // Sort sign
             || (content.charAt(index) == '@') // Escape escape
             || (content.charAt(index) == '*') // Standard divider
             || (content.charAt(index) == 'å') // aa (we just copy)
             || (content.charAt(index) == 'Å') // Aa (we just copy)
-            || (divider.length() == 1         // Divider
+            ||*/ (divider.length() == 1         // Divider
                 && content.charAt(index) == divider.charAt(0))) {
             // TODO: Sort sign should be handled correctly
             // Unfortunately we have no established escape mechanism

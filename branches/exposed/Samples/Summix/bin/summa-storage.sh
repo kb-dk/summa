@@ -15,6 +15,7 @@ export CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 export PRINT_CONFIG=
 export DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
+export NAME=summa-storage
 ###LIBDIRS=
 ###JAVA_HOME=
 #JVM_OPTS="$JVM_OPTS -Dsumma.configuration=$1"
@@ -30,8 +31,8 @@ export DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
 # Custom code
 export CONFIGURATION=$1
 if [ ! -f "$1" ]; then
-        echo "You must specify a configuration as first parameter" 1>&2
-        exit 1
+    echo "You must specify a configuration as first parameter" 1>&2
+    exit 1
 fi
 
 # All is ready, execute!

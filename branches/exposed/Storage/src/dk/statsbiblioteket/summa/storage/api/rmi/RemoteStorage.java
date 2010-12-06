@@ -14,16 +14,18 @@
  */
 package dk.statsbiblioteket.summa.storage.api.rmi;
 
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
 /**
- * Utility wrapper of the {@link Storage} interface to make RMI work
+ * Utility wrapper of the {@link Storage} interface to make RMI work.
+ * TODO should extends {@link RemoteReadableStorage} and
+ * {@link RemoteWritableStorage}.
  */
 public interface RemoteStorage extends Storage, Remote {
 
@@ -53,7 +55,3 @@ public interface RemoteStorage extends Storage, Remote {
 
     /* Remote methods */
 }
-
-
-
-

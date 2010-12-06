@@ -14,19 +14,20 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import java.net.URL;
-import java.net.MalformedURLException;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -117,7 +118,7 @@ public class XMLTransformerTest extends TestCase {
 
         transformer.processPayload(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
-        System.out.println(transformed);
+        //System.out.println(transformed);
         String[] MUST_CONTAIN = new String[]{"sortLocale", "Yetitæmning",
                                              "<shortrecord>", "boost"};
         for (String must: MUST_CONTAIN) {

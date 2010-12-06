@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.ingest.split;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XMLSplitterFilter extends StreamController {
+    /** Local logger instance. */
     private static Log log = LogFactory.getLog(XMLSplitterFilter.class);
 
     /**
@@ -125,7 +127,7 @@ public class XMLSplitterFilter extends StreamController {
      * The element can be qualified or non-qualified. Non-qualified ids will
      * match qualified documents, but not the other way around.
      * </p><p>
-     * Example 3: "foo" matches <baz:foo>myid</baz:foo> and returns myid. 
+     * Example 3: "foo" matches <baz:foo>myid</baz:foo> and returns myid.
      * Example 4: "baz:foo" does not match <foo>myid</foo>.
      * </p><p>
      * If the id-element is set to the empty string, a dummy-ID will be assigned
@@ -138,7 +140,7 @@ public class XMLSplitterFilter extends StreamController {
 
     /**
      * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
-     * If this property is unset IDs will be extracted as descibed in
+     * If this property is unset IDs will be extracted as described in
      * {@link #CONF_ID_ELEMENT}.
      * </p><p>
      * Default: {@code null}.
@@ -176,21 +178,25 @@ public class XMLSplitterFilter extends StreamController {
     public static final String CONF_REQUIRE_VALID =
             "summa.ingest.xmlsplitter.requirevalid";
 
-    // TODO: Properties with default namespaces?
+    // TODO Properties with default namespaces?
 
     /**
      * The key for meta-info in Record. Valid values are "true" and "false".
      */
     public static final String VALID_XML = "valid_xml";
 
+    /**
+     * Creates an XMLSplitterFilter based on the given configuration.
+     * @param conf The configuration.
+     */
     public XMLSplitterFilter(Configuration conf) {
         super(conf);
         log.info("Created XMLSplitterFilter");
     }
 
     @Override
-    protected Class<? extends StreamParser> getDefaultStreamParserClass() {
+    protected final Class<? extends StreamParser>
+                                                 getDefaultStreamParserClass() {
         return XMLSplitterParser.class;
     }
 }
-

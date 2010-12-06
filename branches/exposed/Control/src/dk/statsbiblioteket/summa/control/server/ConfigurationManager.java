@@ -17,57 +17,75 @@ package dk.statsbiblioteket.summa.control.server;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
+ *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
-        comment="Unfinished")
+        comment = "Unfinished")
 public class ConfigurationManager implements Runnable, Configurable {
-
     /**
      * Property defining which class to use for {@link ConfigurationStorage}.
      * Default is
-     * {@link dk.statsbiblioteket.summa.common.configuration.storage.XStorage}.
+     * {@link MemoryStorage}.
      */
     public static final String CONF_STORAGE =
-                                    "summa.control.configurationmanager.storage";
-
-    private Log log = LogFactory.getLog (ConfigurationManager.class);
+                                   "summa.control.configurationmanager.storage";
+    /** Local log instance. */
+    private Log log = LogFactory.getLog(ConfigurationManager.class);
+    /** Pointer to the local configuration storage. */
     private ConfigurationStorage storage;
+    /** Pointer to the remote storage. */
     private RemoteStorage remote;
 
-    public ConfigurationManager (Configuration conf) {
+    /**
+     * Creates a configuration manager based on the given configuration.
+     * @param conf The configuration.
+     */
+    public ConfigurationManager(Configuration conf) {
         log.debug("Creating ConfigurationManager");
         setupStorage(conf);
         exportRemoteStorage(conf);
     }
 
-    private void setupStorage (Configuration conf) {
+    /**
+     * Setup a configuration storage.
+     * @param conf Configuration on which to base the configuration storage.
+     */
+    private void setupStorage(Configuration conf) {
         Class<? extends ConfigurationStorage> storageClass =
                                        conf.getClass(CONF_STORAGE,
                                                      ConfigurationStorage.class,
-                                                     XStorage.class);
-        log.debug ("Using configuration storage class: "
+                                                     MemoryStorage.class);
+        log.debug("Using configuration storage class: "
                    + storageClass.getName());
         storage = Configuration.create(storageClass, conf);
     }
 
-    private void exportRemoteStorage (Configuration conf) {
+    /**
+     * Export a remote storage based on the created configuration storage.
+     * @param conf The configuration on which to base the storage.
+     */
+    private void exportRemoteStorage(Configuration conf) {
         log.debug("Setting up remote interface");
         remote = Configuration.create(RemoteStorage.class, conf);
         log.trace("Overriding default storage for RemoteStorage");
         remote.setStorage(storage);
     }
 
-    public ConfigurationStorage getExportedStorage () {
+    /**
+     * @return Return the remote storage known by this manager.
+     */
+    @SuppressWarnings("unused")
+    public final ConfigurationStorage getExportedStorage() {
         return remote;
     }
 
@@ -84,24 +102,26 @@ public class ConfigurationManager implements Runnable, Configurable {
      * <p>Currently the only the remote RMI configuration interface
      * is supported. Thus this method will always return an RMI address,
      * but this might be changed in the future.</p>
-     * @return address as descibed above
+     * @return address as described above
      */
-    public String getPublicAddress () {
+    @SuppressWarnings("unused")
+    public String getPublicAddress() {
         return remote.getServiceUrl();
     }
 
+    @Override
     public void run() {
 
     }
 
-    public static void main (String[] args) {
+    /**
+     * Main method for running as stand alone.
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args) {
         Configuration conf = Configuration.getSystemConfiguration();
         ConfigurationManager cm = new ConfigurationManager(conf);
 
         cm.run();
     }
 }
-
-
-
-

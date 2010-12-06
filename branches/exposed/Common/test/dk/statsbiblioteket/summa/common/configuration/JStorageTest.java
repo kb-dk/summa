@@ -16,14 +16,15 @@ package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 import dk.statsbiblioteket.util.Strings;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *

@@ -19,9 +19,6 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -31,6 +28,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A super-class with tests for String Pools.
@@ -60,12 +62,12 @@ public abstract class StringPoolSuper extends TestCase {
         super.setUp();
         if(poolDir.exists()) {
             if(!poolDir.delete()) {
-                System.out.println("Directory '" + poolDir
-                                   + "' was not deleted");
+                //System.out.println("Directory '" + poolDir
+                //                   + "' was not deleted");
             }
         }
         if(!poolDir.mkdirs()) {
-            System.out.println("Directory '" + poolDir + "' was not created");
+            //System.out.println("Directory '" + poolDir + "' was not created");
         }
     }
 
@@ -80,8 +82,7 @@ public abstract class StringPoolSuper extends TestCase {
 
     protected Collator defaultCollator =
         CollatorFactory.createCollator(new Locale("da"), true);
-    protected static File poolDir = new File(
-            System.getProperty("java.io.tmpdir"), "pooltest");
+    protected static File poolDir = new File("target/test_result", "pooltest");
     private List<SortedPool<String>> pools =
             new ArrayList<SortedPool<String>>(10);
     protected SortedPool<String> getPool() throws Exception {
@@ -288,9 +289,9 @@ public abstract class StringPoolSuper extends TestCase {
             pool.insert(Integer.toString(random.nextInt()));
             profiler.beat();
         }
-        System.out.println("Pool add: " + Math.round(profiler.getBps(false))
-                           + " operations/second in "
-                           + profiler.getSpendTime());
+        //System.out.println("Pool add: " + Math.round(profiler.getBps(false))
+        //                   + " operations/second in "
+        //                   + profiler.getSpendTime());
 
         profiler = new Profiler();
         profiler.setExpectedTotal(GET_RUNS);
@@ -299,9 +300,9 @@ public abstract class StringPoolSuper extends TestCase {
             pool.get(random.nextInt(size));
             profiler.beat();
         }
-        System.out.println("Pool get: " + Math.round(profiler.getBps(false))
-                           + " operations/second in "
-                           + profiler.getSpendTime());
+        //System.out.println("Pool get: " + Math.round(profiler.getBps(false))
+        //                  + " operations/second in "
+        //                   + profiler.getSpendTime());
 
     }
     public void makeSmallSample() throws Exception {
@@ -330,25 +331,25 @@ public abstract class StringPoolSuper extends TestCase {
             }
             profiler.beat();
             if (i % feedback == 0) {
-                System.out.println("Added " + i + "/" + samples
-                                   + ". Speed: "
-                                   + Math.round(profiler.getBps(true))
-                                   + " adds/second. ETA: "
-                                   + profiler.getETAAsString(true));
+                //System.out.println("Added " + i + "/" + samples
+                //                   + ". Speed: "
+                //                  + Math.round(profiler.getBps(true))
+                //                   + " adds/second. ETA: "
+                //                   + profiler.getETAAsString(true));
             }
         }
         if (dirty) {
-            System.out.println("Dirty adding took "+ profiler.getSpendTime());
+            //System.out.println("Dirty adding took "+ profiler.getSpendTime());
             pool.cleanup();
-            System.out.println("After cleanup the total time was "
-                               + profiler.getSpendTime());
+            //System.out.println("After cleanup the total time was "
+            //                   + profiler.getSpendTime());
         }
 
-        System.out.println("Construction took "+ profiler.getSpendTime());
+        //System.out.println("Construction took "+ profiler.getSpendTime());
 
         Profiler store = new Profiler();
         pool.store();
-        System.out.println("Storing took "+ store.getSpendTime());
+        //System.out.println("Storing took "+ store.getSpendTime());
         profiler.pause();
         return profiler;
     }
@@ -372,15 +373,15 @@ public abstract class StringPoolSuper extends TestCase {
         pool1.cleanup();
         if (!compareOrderBool("dirtyAdds and normal adds should give the "
                               + "same result after cleanup", pool1, pool2)) {
-            System.out.println("Dumping values:");
+            //System.out.println("Dumping values:");
             for (int i = 0 ; i < Math.max(pool1.size(), pool2.size()) ; i++) {
-                System.out.print("(" +
-                                   (i < pool1.size() ? pool1.get(i) : "NA")
-                                   + ", "
-                                 + (i < pool2.size() ? pool2.get(i) : "NA")
-                                   + ") ");
+                //System.out.print("(" +
+                //                   (i < pool1.size() ? pool1.get(i) : "NA")
+                //                   + ", "
+                //                 + (i < pool2.size() ? pool2.get(i) : "NA")
+                //                   + ") ");
             }
-            System.out.println("");
+            //System.out.println("");
         }
     }
 
@@ -395,18 +396,18 @@ public abstract class StringPoolSuper extends TestCase {
             pool.add(Integer.toString(random.nextInt()));
             profiler.beat();
             if (i % feedback == 0) {
-                System.out.println("Dirty added " + i + "/" + samples
-                                   + ". Speed: "
-                                   + Math.round(profiler.getBps(true))
-                                   + " adds/second. ETA: "
-                                   + profiler.getETAAsString(true));
+                //System.out.println("Dirty added " + i + "/" + samples
+                //                   + ". Speed: "
+                //                   + Math.round(profiler.getBps(true))
+                //                   + " adds/second. ETA: "
+                //                   + profiler.getETAAsString(true));
             }
         }
-        System.out.println("\nAddition took "+ profiler.getSpendTime()
-                           + " - Cleaning up...");
+        //System.out.println("\nAddition took "+ profiler.getSpendTime()
+        //                   + " - Cleaning up...");
         profiler = new Profiler();
         pool.cleanup();
-        System.out.println("Cleaning up took "+ profiler.getSpendTime());
+        //System.out.println("Cleaning up took "+ profiler.getSpendTime());
     }
 
     public static void testPosition(SortedPool<String> pool) throws Exception {
@@ -458,7 +459,7 @@ public abstract class StringPoolSuper extends TestCase {
         }
         for (int i = 0 ; i < pool1.size() ; i++) {
             if (!pool1.get(i).equals(pool2.get(i))) {
-                System.out.println(message);
+                //System.out.println(message);
                 return false;
             }
         }
@@ -591,14 +592,14 @@ public abstract class StringPoolSuper extends TestCase {
         assertTrue("An data-file should be created", datFile.exists());
         try {
             datFile.delete();
-            System.out.println(
-                    "The datFile could be deleted even though it was in use. "
-                    + "This is probably on a system without file-locking");
+            //System.out.println(
+            //        "The datFile could be deleted even though it was in use. "
+            //        + "This is probably on a system without file-locking");
         } catch (Exception e) {
-            System.out.println(
-                    "The datFile could not be deleted. This is probably "
-                    + "running under Windows with a file-locking file-system, "
-                    + "such as NTFS");
+            //System.out.println(
+            //        "The datFile could not be deleted. This is probably "
+            //        + "running under Windows with a file-locking file-system, "
+            //        + "such as NTFS");
         }
     }
 }

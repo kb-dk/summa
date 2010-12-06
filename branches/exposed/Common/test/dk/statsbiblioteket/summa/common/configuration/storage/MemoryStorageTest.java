@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.configuration.storage;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -28,49 +29,75 @@ import junit.framework.TestSuite;
  * @version 1.0
  */
 public class MemoryStorageTest extends TestCase {
+    /**
+     * Constructor with name.
+     * @param name The name.
+     */
     public MemoryStorageTest(String name) {
         super(name);
     }
 
     @Override
-    public void setUp() throws Exception {
+    public final void setUp() throws Exception {
         super.setUp();
     }
 
     @Override
-    public void tearDown() throws Exception {
+    public final void tearDown() throws Exception {
         super.tearDown();
     }
 
-    public void testGet() throws Exception {
-        //TODO: Test goes here...
+    /**
+     * Test get.
+     */
+    public void testGet() {
+        //TODO Test goes here...
     }
 
-
-    public void testGetSubStorages() throws Exception {
-        //TODO: Test goes here...
+    /**
+     * Test get sub storages.
+     */
+    public void testGetSubStorages() {
+        //TODO Test goes here...
     }
 
-    public void testGetSubStorage() throws Exception {
-        MemoryStorage xs = new MemoryStorage();
-        xs.put("seven", 7);
-        xs.createSubStorage("submarine").put("eight", 8);
-        assertEquals("The storage should contain the number 7",
-                     7, xs.get("seven"));
-        ConfigurationStorage sub = xs.getSubStorage("submarine");
-        assertNotNull("There should be a sub storage named submarine", sub);
-        assertEquals("The sub storage should contain 8", 8, sub.get("eight"));
+    /**
+     * Test get sub storage.
+     */
+    public void testGetSubStorage() {
+        final int seven = 7;
+        final int eight = 8;
+        try {
+            MemoryStorage xs = new MemoryStorage();
+            xs.put("seven", seven);
+            xs.createSubStorage("submarine").put("eight", eight);
+            assertEquals("The storage should contain the number 7",
+                         seven, xs.get("seven"));
+            ConfigurationStorage sub = xs.getSubStorage("submarine");
+            assertNotNull("There should be a sub storage named submarine", sub);
+            assertEquals("The sub storage should contain 8", eight,
+                         sub.get("eight"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Exception thrown");
+        }
     }
 
+    /**
+     * @return A test suite.
+     */
     public static Test suite() {
         return new TestSuite(MemoryStorageTest.class);
     }
 
-    public void testMemoryStorageWithConf() throws Exception {
-        // TODO Recreate error described in 
-        // '#6 	Importing Sub Configurations is Broken'
+    /**
+     * Test memory storage with configuration.
+     */
+    public void testMemoryStorageWithConf() {
+        // TODO Recreate error described in
+        // '#6 Importing Sub Configurations is Broken'
         try {
-            XStorage xs = new XStorage(XStorageTest.subLocation);
+            XStorage xs = new XStorage(XStorageTest.SUBSTORAGELOCATION);
             Configuration c = new Configuration(xs);
 
             c.importConfiguration(new Configuration(xs));
@@ -78,7 +105,8 @@ public class MemoryStorageTest extends TestCase {
             MemoryStorage ms = new MemoryStorage(c);
             ms.createSubStorage("storage");
             ConfigurationStorage cs = ms.getSubStorage("storage");
-        } catch(Exception e) {
+            assertNotNull(cs);
+        } catch (Exception e) {
             e.printStackTrace();
             fail("Exception thrown");
         }

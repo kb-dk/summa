@@ -31,7 +31,7 @@ rem
 rem Config Options:
 rem    MAINJAR          The jar containing the main classpath. Set to "." for no jar.
 rem    MAINCLASS        The jar containing the main classpath
-rem    LIBDIRS          Semicolon separated list of jar files, JVM 1.6-style. 
+rem    LIBDIRS          Semicolon separated list of jar files and directories, JVM 1.6-style. 
 rem                     Defaults to ./lib/*.jar
 rem    PRINT_CONFIG     rem Optional. Print config to stderr. Set to empty to not print config.
 rem    JAVA_HOME        Optional. If there is a global JAVA_HOME it will be used.

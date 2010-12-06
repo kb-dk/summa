@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
-import java.rmi.*;
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -57,41 +57,58 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
      *             {@link ConnectionConsumer}.
      */
     public StorageReaderClient(Configuration conf) {
-        super (conf, "//localhost:28000/summa-storage");
+        super(conf, "//localhost:28000/summa-storage");
     }
 
+    /**
+     * Return records modified after the given time stamp and from the given
+     * base. These records are filtered by the query options.
+     * @param time The earliest time stamp for which we want records.
+     * @param base The base from which we want records.
+     * @param options The options records should be filtered by.
+     * @return A iterator key.
+     * @throws IOException If error occur when fetching records from storage.
+     */
     @Override
     public long getRecordsModifiedAfter(long time, String base,
-                                        QueryOptions options)
-                                                            throws IOException {
+                                      QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
             return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecordsModifiedAfter("+time+", "+base
-                                  +") failed: " + t.getMessage(), t);
+            throw new IOException("getRecordsModifiedAfter(" + time + ", "
+                                  + base + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
+    /**
+     * Return the modification time for a specific base in the storage.
+     * @param base The base.
+     * @return Last modification time for the given base.
+     * @throws IOException If error occur while fetching data from stroage.
+     */
     @Override
-    public long getModificationTime (String base) throws IOException {
+    public long getModificationTime(String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getModificationTime (base);
+            return storage.getModificationTime(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getModificationTime("+base+") failed: "
+            throw new IOException("getModificationTime(" + base + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                             throws IOException {
@@ -101,14 +118,17 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecords(ids, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecords("+ Logs.expand(ids, 10)
-                                  +", options="+ options + ") failed: "
+            throw new IOException("getRecords(" + Logs.expand(ids, 10)
+                                  + ", options=" + options + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
@@ -117,7 +137,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecord(id, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecord("+id+", options="
+            throw new IOException("getRecord(" + id + ", options="
                                   + options + ") failed: "
                                   + t.getMessage(), t);
         } finally {
@@ -125,6 +145,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Record next(long iteratorKey) throws IOException {
         ReadableStorage storage = getConnection();
@@ -135,10 +158,11 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             // iterator depleted
             throw new NoSuchElementException();
         } catch (Throwable t) {
-            // TODO: Consider should this be called if NoSuchElement on other site?
+            // TODO: Consider should this be called if NoSuchElement on
+            // other site?
             connectionError(t);
             checkForNoSuchElementException(t);
-            throw new IOException("next("+iteratorKey+") failed: "
+            throw new IOException("next(" + iteratorKey + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
@@ -153,7 +177,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
      * Note: this is a result of an API which throws
      * {@link NoSuchElementException} when a {@link Iterable} is depleted.
      *  
-     * @param e An exception possible nested, which posibly contains a
+     * @param e An exception possible nested, which possibly contains a
      * {@link NoSuchElementException}.
      */
     private void checkForNoSuchElementException(Throwable e) {
@@ -165,6 +189,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Record> next(long iteratorKey, int maxRecords)
                                                             throws IOException {
@@ -177,15 +204,10 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             throw new NoSuchElementException();
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("next("+iteratorKey+", "+maxRecords
-                                  +") failed: " + t.getMessage(), t);
+            throw new IOException("next(" + iteratorKey + ", " + maxRecords
+                                  + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
-
 }
-
-
-
-

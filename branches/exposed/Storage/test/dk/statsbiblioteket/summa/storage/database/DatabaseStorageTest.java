@@ -14,17 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * These test cases are meant to test functionality specifically requiring the
@@ -38,22 +41,36 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class DatabaseStorageTest extends StorageTestBase {
+    /** Database storage logger. */
     private static Log log = LogFactory.getLog(DatabaseStorageTest.class);
+    /** Local instance of this object. */
     DatabaseStorage storage;
 
+    /**
+     * Setup method, calls setup on super object.
+     */
+    @Override
     public void setUp() throws Exception {
         super.setUp();
-        this.storage = (DatabaseStorage)super.storage;
+        this.storage = (DatabaseStorage) super.storage;
     }
 
+    /**
+     * Tests statistic on an empty storage.
+     * @throws Exception If error.
+     */
     public void testStatsOnEmptyStorage() throws Exception {
         List<BaseStats> stats = storage.getStats();
         assertTrue(stats.isEmpty());
     }
 
+    /**
+     * Tests statistic on storage with a single record.
+     * @throws Exception If error.
+     */
     public void testStatsOnSingleRecord() throws Exception {
         long storageStart = storage.getModificationTime(null);
-        Thread.sleep(2); // To make sure we have a timestamp delta
+        Thread.sleep(2); // To make sure we have a time stamp delta
         storage.flush(new Record(testId1, testBase1, testContent1));
         List<BaseStats> stats = storage.getStats();
 
@@ -65,13 +82,17 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(0, base.getDeletedCount());
         assertEquals(1, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
-        assertTrue("Base mtime must be updated, but " +
-                   "base.getModificationTime() <= storageStart: " +
-                   base.getModificationTime() + " <= " +
-                   storageStart,
+        assertTrue("Base mtime must be updated, but "
+                   + "base.getModificationTime() <= storageStart: "
+                   + base.getModificationTime() + " <= "
+                   + storageStart,
                    base.getModificationTime() > storageStart);
     }
 
+    /**
+     * Tests statistic on storage with to records in two different bases.
+     * @throws Exception If error.
+     */
     public void testStatsOnTwoRecordsInTwoBases() throws Exception {
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase2, testContent1));
@@ -94,6 +115,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    /**
+     * Tests statistic on storage with mixed states.
+     * @throws Exception If error.
+     */
     public void testStatsWithMixedStates() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
 
@@ -107,7 +132,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         r4.setDeleted(true);
         r4.setIndexable(false);
 
-        storage.flushAll(Arrays.asList(r1,r2,r3,r4));
+        storage.flushAll(Arrays.asList(r1, r2, r3, r4));
         List<BaseStats> stats = storage.getStats();
 
         assertEquals(1, stats.size());
@@ -120,6 +145,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    /**
+     * Test illegal access to __holdings__ record.
+     * @throws Exception If error.
+     */
     public void testIllegalPrivateAccess() throws Exception {
         try {
             storage.getRecord("__holdings__", null);
@@ -129,6 +158,10 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    /**
+     * Test get __holdings__ object.
+     * @throws Exception If error.
+     */
     public void testGetHoldings() throws Exception {
         storage.flush(new Record(testId1, testBase1, testContent1));
         storage.flush(new Record(testId2, testBase2, testContent1));
@@ -144,5 +177,38 @@ public class DatabaseStorageTest extends StorageTestBase {
 
         log.info(xml);
         // TODO assert equals
+    }
+
+    /**
+     * Test get and set of modification time.
+     * @throws Exception If error occur
+     */
+    public void testGetSetModificationTime() throws Exception {
+        long start = storage.getModificationTime(testBase1);
+        assertEquals(storage.getStorageStartTime(), start);
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        long newMtime = storage.getModificationTime(testBase1);
+        assertTrue(start < newMtime);
+    }
+
+    /**
+     * Test start on an existing storage.
+     * @throws Exception If error.
+     */
+    public void testStatsOnExistingStorage() throws Exception {
+        Configuration conf = createConf();
+        storage = (DatabaseStorage) StorageFactory.createStorage(conf);
+        long start = storage.getModificationTime(testBase1);
+        try {
+            storage.destroyBaseStatistic();
+            storage.close();
+            // Start storage on a old database file
+            storage = (DatabaseStorage) StorageFactory.createStorage(conf);
+            storage.flush(new Record(testId1, testBase1, testContent1));
+            assertTrue(start < storage.getModificationTime(testBase1));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("This should not happen");
+        }
     }
 }

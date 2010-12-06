@@ -18,17 +18,21 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
+import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.net.URL;
+
+import javax.jws.WebMethod;
+import javax.xml.ws.WebEndpoint;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A suggest-search is a low overhead Search meant for interactive use.
@@ -62,6 +66,7 @@ import java.net.URL;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SuggestSearchNode extends SearchNodeImpl {
+    /** Logger for this class. */
     private static Log log = LogFactory.getLog(SuggestSearchNode.class);
 
     /**
@@ -71,7 +76,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is 1000.
      */
     public static final String CONF_MAX_RESULTS =
-            "summa.support.suggest.maxresults";
+                                             "summa.support.suggest.maxresults";
+    /** Default value for {@link #CONF_MAX_RESULTS}. */
     public static final int DEFAULT_MAX_RESULTS = 1000;
 
     /**
@@ -82,7 +88,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * @see SuggestKeys#SEARCH_MAX_RESULTS
      */
     public static final String CONF_DEFAULT_MAX_RESULTS =
-            "summa.support.suggest.defaultmaxresults";
+                                      "summa.support.suggest.defaultmaxresults";
+    /** Default value for {@link #CONF_DEFAULT_MAX_RESULTS}. */
     public static final int DEFAULT_DEFAULT_MAX_RESULTS = 10;
 
     /**
@@ -96,7 +103,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is false.
      */
     public static final String CONF_NORMALIZE_QUERIES =
-            "summa.support.suggest.normalizequeries";
+                                       "summa.support.suggest.normalizequeries";
+    /** Default value for {@link #CONF_NORMALIZE_QUERIES}. */
     public static final boolean DEFAULT_NORMALIZE_QUERIES = false;
 
     /**
@@ -107,6 +115,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     public static final String CONF_STORAGE_CLASS =
                                                 "summa.support.suggest.storage";
+    /** Default value for {@link #CONF_STORAGE_CLASS}. */
     public static final Class<? extends SuggestStorage> DEFAULT_STORAGE =
                                                          SuggestStorageH2.class;
 
@@ -118,7 +127,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is "da" (Danish).
      */
     public static final String CONF_LOWERCASE_LOCALE =
-            "summa.support.suggest.lowercaselocale";
+                                        "summa.support.suggest.lowercaselocale";
+    /** Default value for {@link #CONF_LOWERCASE_LOCALE}. */
     public static final String DEFAULT_LOWERCASE_LOCALE = "da";
 
     /**
@@ -155,15 +165,22 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     static final String SEARCH_EXPORT = "summa.support.suggest.export";
 
-    private int maxResults = DEFAULT_MAX_RESULTS;
-    private int defaultMaxResults = DEFAULT_DEFAULT_MAX_RESULTS;
+    /** The maximum results returned. */
+    private int maxResults;
+    /** Default default max result returned. */
+    private int defaultMaxResults;
+    /** The suggest storage holding the suggestion. */
     private SuggestStorage storage;
 
+    /**
+     * Create a suggest search node.
+     * @param conf The configuration for setting up the search node.
+     */
     public SuggestSearchNode(Configuration conf) {
         super(conf);
-        maxResults = conf.getInt(CONF_MAX_RESULTS, maxResults);
+        maxResults = conf.getInt(CONF_MAX_RESULTS, DEFAULT_MAX_RESULTS);
         defaultMaxResults = conf.getInt(
-                CONF_DEFAULT_MAX_RESULTS, defaultMaxResults);
+                CONF_DEFAULT_MAX_RESULTS, DEFAULT_DEFAULT_MAX_RESULTS);
 
         Class<? extends SuggestStorage> storageClass;
         storageClass = Configuration.getClass(
@@ -177,15 +194,43 @@ public class SuggestSearchNode extends SearchNodeImpl {
                                storageClass.getSimpleName()));
     }
 
+    /**
+     * Do a managed search. This method handles different search requests.
+     * Clear ({@link SuggestStorage#clear()}),
+     * import (@link {@link SuggestStorage#importSuggestions(URL)}),
+     * export ({@link SuggestStorage#exportSuggestions(File)}),
+     * prefix ({@link #suggestSearch(Request, ResponseCollection)}),
+     * update ({@link #suggestUpdate(Request, ResponseCollection)}),
+     * recent ({@link #suggestRecent(Request, ResponseCollection)}),
+     * delete ({@link #deleteSuggestion(String)}).
+     * See documentation for details about the individual search requests.
+     * @param request The search request.
+     * @param responses A collection of responses.
+     * @throws RemoteException If an error occur searching or connection to the
+     * remote searcher.
+     */
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
-            throws RemoteException {
+                                                        throws RemoteException {
         boolean maintenance = false;
+        final int maxResults = 10;
         try {
             if (request.getBoolean(SEARCH_CLEAR, false)) {
                 log.info("Clearing all suggestions");
                 storage.clear();
-                responses.add(new SuggestResponse("Suggestions cleared", 10));
+                responses.add(new SuggestResponse("Suggestions cleared",
+                                                  maxResults));
+                maintenance = true;
+            }
+            if (request.containsKey(SuggestKeys.DELETE_SUGGEST)) {
+                String suggestion =
+                                  request.getString(SuggestKeys.DELETE_SUGGEST);
+                log.info("Deleting suggestion '" + suggestion
+                         + "' from storage");
+                boolean isDeleted = storage.deleteSuggestion(suggestion);
+                if (!isDeleted) {
+                    log.warn("Suggestion still exists in storage");
+                }
                 maintenance = true;
             }
             if (request.containsKey(SEARCH_IMPORT)) {
@@ -194,7 +239,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
                 URL source = new URL(sourceUrl);
                 storage.importSuggestions(source);
-                responses.add(new SuggestResponse("Suggestions imported", 10));
+                responses.add(new SuggestResponse("Suggestions imported",
+                                                  maxResults));
                 maintenance = true;
             }
             if (request.containsKey(SEARCH_EXPORT)) {
@@ -203,7 +249,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 log.info("Exporting suggestions to: " + target);
 
                 storage.exportSuggestions(target);
-                responses.add(new SuggestResponse("Suggestions exported", 10));
+                responses.add(new SuggestResponse("Suggestions exported",
+                                                  maxResults));
                 maintenance = true;
             }
             if (request.containsKey(SuggestKeys.SEARCH_PREFIX)) {
@@ -227,11 +274,18 @@ public class SuggestSearchNode extends SearchNodeImpl {
         }
         log.debug(String.format(
                 "None of the expected keys %s, %s, %s, %s or %s encountered,"
-                + " no suggest will be performed", 
+                + " no suggest will be performed",
                 SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY,
                 SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
     }
 
+    /**
+     * Suggestion search.
+     * @param request The request. This should contain
+     * {@link SuggestKeys#SEARCH_PREFIX}.
+     * @param responses The response collection.
+     * @throws IOException If error occur while doing search.
+     */
     private void suggestSearch(Request request, ResponseCollection responses)
                                                             throws IOException {
         long startTime = System.nanoTime();
@@ -254,6 +308,13 @@ public class SuggestSearchNode extends SearchNodeImpl {
                   + (System.nanoTime() - startTime) / 1000000D + "ms");
     }
 
+    /**
+     * Perform a suggest recent on the suggest storage.
+     * @param request The request. This should contain
+     * {@link SuggestKeys#SEARCH_RECENT}
+     * @param responses The response.
+     * @throws IOException If error occur while querying.
+     */
     private void suggestRecent(Request request, ResponseCollection responses)
                                                             throws IOException {
         long startTime = System.nanoTime();
@@ -277,6 +338,14 @@ public class SuggestSearchNode extends SearchNodeImpl {
                   + (System.nanoTime() - startTime) / 1000000D + "ms");
     }
 
+    /**
+     * Perform a suggestion update.
+     * @param request The request. This should contain
+     * {@link SuggestKeys#SEARCH_UPDATE_QUERY} and
+     * {@link SuggestKeys#SEARCH_UPDATE_HITCOUNT}.
+     * @param responses The response.
+     * @throws IOException If error occur while querying.
+     */
     private void suggestUpdate(Request request, ResponseCollection responses)
                                                             throws IOException {
         long startTime = System.nanoTime();
@@ -331,12 +400,19 @@ public class SuggestSearchNode extends SearchNodeImpl {
         }
     }
 
+    /**
+     * Closes storage.
+     */
     @Override
-    protected void managedClose() throws RemoteException {
+    protected void managedClose() {
         log.debug("managedClose() called. Closing down storage");
         storage.close();
     }
 
+    /**
+     * No warmup is needed for suggestions.
+     * @param request No used
+     */
     @Override
     protected void managedWarmup(String request) {
         log.debug("Warmup is not necessary for Suggest");
@@ -364,5 +440,14 @@ public class SuggestSearchNode extends SearchNodeImpl {
                                                               IOException {
         storage.addSuggestions(suggestions.iterator());
     }
-}
 
+    /**
+     * Delete all suggestion in storage, not depended on case.
+     * @param suggestion The suggestion string to remove from
+     * storage.
+     * @return True if suggestion isn't present i storage anymore.
+     */
+    public boolean deleteSuggestion(String suggestion) {
+        return storage.deleteSuggestion(suggestion);
+    }
+}

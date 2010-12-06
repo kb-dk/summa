@@ -14,15 +14,16 @@
  */
 package dk.statsbiblioteket.summa.control.server.deploy;
 
-import java.io.File;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.File;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * SSHDeployer Tester.
@@ -34,27 +35,35 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class SSHDeployerTest extends TestCase {
-    public static final String PROPERTY_LOGIN =
-            "te@pc990.sb";
-
+    /** Login property. */
+    public static final String PROPERTY_LOGIN = "te@pc990.sb";
+    /** Source property. */
     public static final String PROPERTY_SOURCE =
-            "ClientManager/test/dk/statsbiblioteket/summa/control/server/deploy/FakeZIP.zip";
-    public static final String PROPERTY_DESTINATION =
-            "/tmp/fakeClient";
-    public static final String PROPERTY_START_CONFSERVER =
-            "NA";
-    public static final String PROPERTY_CLIENT_INSTANCEID =
-            "fake client-01";
+            "ClientManager/test/dk/statsbiblioteket/summa/control/"
+            + "server/deploy/FakeZIP.zip";
+    /** Destination property. */
+    public static final String PROPERTY_DESTINATION = "/tmp/fakeClient";
+    /** Configuration server start property. */
+    public static final String PROPERTY_START_CONFSERVER = "NA";
+    /** Fake client instance ID. */
+    public static final String PROPERTY_CLIENT_INSTANCEID = "fake client-01";
+    /** FakeZIP.zip destination. */
+    private static final String DEST = PROPERTY_DESTINATION + "/FakeZIP.zip";
+    /** FakeJAr.jar destination. */
+    private static final String JAR = PROPERTY_DESTINATION + "/FakeJAR.jar";
+    /** output.txt destination. */
+    private static final String OUTPUT = PROPERTY_DESTINATION + "/output.txt";
 
-    private static final String dest = PROPERTY_DESTINATION + "/FakeZIP.zip";
-    private static final String jar = PROPERTY_DESTINATION + "/FakeJAR.jar";
-    private static final String output = PROPERTY_DESTINATION + "/output.txt";
-
+    /**
+     * Constructs a SSH deployer test with a name.
+     * @param name The name.
+     */
     public SSHDeployerTest(String name) {
         super(name);
     }
 
-    public void setUp() throws Exception {
+    @Override
+    public final void setUp() throws Exception {
         /*if (!new File(PROPERTY_SOURCE).exists()) {
             throw new IOException("The test-package " + PROPERTY_SOURCE
                                   + " should be at "
@@ -65,9 +74,10 @@ public class SSHDeployerTest extends TestCase {
         super.setUp();
     }
 
-    public void tearDown() throws Exception {
-        String[] deletables = new String[]{dest, jar, output};
-        for (String deletable: deletables) {
+    @Override
+    public final void tearDown() throws Exception {
+        String[] deletables = new String[]{DEST, JAR, OUTPUT};
+        for (String deletable : deletables) {
             if (new File(deletable).exists()) {
                 new File(deletable).delete();
             }
@@ -75,26 +85,33 @@ public class SSHDeployerTest extends TestCase {
         super.tearDown();
     }
 
+    /**
+     * @return The test suite.
+     */
     public static Test suite() {
         return new TestSuite(SSHDeployerTest.class);
     }
 
-    public void testInstantiation() throws Exception {
+    /**
+     * Test instantiation.
+     */
+    public void testInstantiation() {
+        SSHDeployer deployer = null;
         try {
-            SSHDeployer deployer =
-                new SSHDeployer(new Configuration(new MemoryStorage()));
+            deployer = new SSHDeployer(new Configuration(new MemoryStorage()));
             fail("The deployer should throw an exception when it could not "
                  + "find the right properties");
         } catch (Exception e) {
-            // Expected behaviour
+            // Expected behavior
+            assertNull(deployer);
         }
 
-        // It should work fine with a good config however
+        // It should work fine with a good configuration however
         Configuration conf = makeConfiguration();
         SSHDeployer depl = new SSHDeployer(conf);
         assertNotNull(depl);
 
-        // Try with a malformed port def
+        // Try with a malformed port definition
         try {
             conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "localhost:asdmfhg");
             depl = new SSHDeployer(conf);
@@ -105,6 +122,9 @@ public class SSHDeployerTest extends TestCase {
         }
     }
 
+    /**
+     * @return A usable configuration.
+     */
     private Configuration makeConfiguration() {
         MemoryStorage storage = new MemoryStorage();
         storage.put(SSHDeployer.CONF_DEPLOYER_BUNDLE, PROPERTY_SOURCE);
@@ -118,43 +138,65 @@ public class SSHDeployerTest extends TestCase {
         return new Configuration(storage);
     }
 
-    public void doDeploy() throws Exception {
+    /**
+     * do deployment.
+     */
+    public void doDeploy() {
         assertTrue("The source " + new File(PROPERTY_SOURCE).getAbsoluteFile()
                    + " should exist", new File(PROPERTY_SOURCE).exists());
-        assertFalse("The file " + dest
+        assertFalse("The file " + DEST
                    + " should not exist before deploy",
-                   new File(dest).exists());
+                   new File(DEST).exists());
         Configuration configuration = makeConfiguration();
         SSHDeployer deployer = new SSHDeployer(configuration);
-        deployer.deploy(new ConsoleFeedback());
-        assertTrue("The file " + dest
+        try {
+            deployer.deploy(new ConsoleFeedback());
+        } catch (Exception e) {
+            fail("Should not happen");
+        }
+        assertTrue("The file " + DEST
                    + " should exist after deploy",
-                   new File(dest).exists());
-        assertTrue("The file " + jar
+                   new File(DEST).exists());
+        assertTrue("The file " + JAR
                    + " should exist after deploy",
-                   new File(jar).exists());
+                   new File(JAR).exists());
     }
 
-    public void doStart() throws Exception {
+    /**
+     * Tests a start up.
+     */
+    public void doStart() {
         assertTrue("The source " + new File(PROPERTY_SOURCE).getAbsoluteFile()
                    + " should exist", new File(PROPERTY_SOURCE).exists());
         Configuration configuration = makeConfiguration();
         SSHDeployer deployer = new SSHDeployer(configuration);
-        deployer.deploy(new ConsoleFeedback());
-        assertTrue("The file " + jar
+        try {
+            deployer.deploy(new ConsoleFeedback());
+        } catch (Exception e) {
+            fail("Should not happen");
+        }
+        assertTrue("The file " + JAR
                    + " should exist after deploy",
-                   new File(jar).exists());
+                   new File(JAR).exists());
 
-        assertFalse("The file " + output
+        assertFalse("The file " + OUTPUT
                    + " should not exist before start",
-                   new File(output).exists());
-        deployer.start(new ConsoleFeedback());
-        assertTrue("The file " + output
+                   new File(OUTPUT).exists());
+        try {
+            deployer.start(new ConsoleFeedback());
+        } catch (Exception e) {
+            fail("Should not happen");
+        }
+        assertTrue("The file " + OUTPUT
                    + " should exist after start",
-                   new File(output).exists());
+                   new File(OUTPUT).exists());
     }
 
-    public void testPort() throws Exception {
+    /**
+     * Test get Port method.
+     */
+    public void testPort() {
+        final int specialPort = 222;
         Configuration conf = makeConfiguration();
         conf.set(SSHDeployer.CONF_DEPLOYER_BUNDLE_FILE, "Somefile");
         conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "host");
@@ -166,33 +208,38 @@ public class SSHDeployerTest extends TestCase {
         conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:222");
         assertEquals("User + host + port should work for login",
                      "user@host", new SSHDeployer(conf).getLogin());
-        assertEquals("User + host + port should work for port", 
-                     222, new SSHDeployer(conf).getPort());
+        assertEquals("User + host + port should work for port",
+                     specialPort, new SSHDeployer(conf).getPort());
     }
 
-    public void testGetHostname () throws Exception {
+    /**
+     * Test getHostName with colon in target.
+     */
+    public void testGetHostNameWithColon() {
         Configuration conf = makeConfiguration();
 
-        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:~/dir");
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:~/dir");
         SSHDeployer deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
 
-        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "host:~/dir");
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "host:~/dir");
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
+    }
 
-        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "host");
-        deployer = new SSHDeployer(conf);
+    /**
+     * Test get host name method.
+     */
+    public void testGetHostname() {
+        Configuration conf = makeConfiguration();
+
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "host");
+        SSHDeployer deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
-        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "user@host");
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host");
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
-
     }
 }
-
-
-
-

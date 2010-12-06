@@ -1,6 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sbforge</groupId>
         <artifactId>SBForge-parent</artifactId>
@@ -11,6 +10,10 @@
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
     <version>1.6.3-20101206-SNAPSHOT</version>
+    <ciManagement>
+        <system>hudson</system>
+        <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
+    </ciManagement>
     <inceptionYear>2010</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
@@ -29,6 +32,7 @@
         <module>Workflow</module>
         <module>Web</module>
         <module>Samples/Summix/</module>
+        <module>Samples/Assembly/</module>
     </modules>
 
     <!-- Summa dependencies -->
@@ -45,7 +49,6 @@
         </dependency>
     </dependencies>
 
-    <!-- TODO move versions into properties. -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -71,7 +74,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.2.132</version>
+                <version>1.2.145</version>
             </dependency>
             <dependency>
                 <groupId>commons-discovery</groupId>
@@ -82,6 +85,16 @@
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>1.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>logkit</groupId>
+                        <artifactId>logkit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>avalon-framework</groupId>
+                        <artifactId>avalon-framework</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
@@ -148,6 +161,16 @@
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika</artifactId>
                 <version>0.3</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>ooxml-schemas</artifactId>
+                        <groupId>org.apache.poi</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>pdfbox</artifactId>
+                        <groupId>org.apache.pdfbox</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.archive</groupId>
@@ -169,9 +192,26 @@
     </dependencyManagement>
 
     <!-- General building for summa -->
-    <!-- TOOD create main summa.jar, summa-javadoc.jar, summa-sources -->
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>all-jar.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <!-- <executions>
+                    <execution>
+                        <id>package-all</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions> -->
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -189,6 +229,31 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
+                    <trimStackTrace>false</trimStackTrace>
+                    <forkMode>always</forkMode>
+                    <argLine>-Xms256m -Xmx768m</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>./</directory>
+                            <includes>
+                                <include>**/configuration.*.xml</include>
+                                <include>**/xconfiguration.*.xml</include>
+                            </includes>
+                            <!--
+                                <excludes>
+                                <exclude>**/important.log</exclude>
+                                <exclude>**/another-important.log</exclude>
+                                </excludes>
+                            -->
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
                 </configuration>
             </plugin>
             <!-- Jars -->
@@ -203,15 +268,10 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
-
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-eclipse-plugin</artifactId>
-                <configuration>
-                    <downloadSources>true</downloadSources>
-                    <downloadJavadocs>true</downloadJavadocs>
-                </configuration>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
             </plugin>
         </plugins>
     </build>
@@ -227,12 +287,18 @@
                     <showSuccess>false</showSuccess>
                 </configuration>
             </plugin>
+            <!-- Aggregate javadoc for all sub modules -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
         </plugins>
     </reporting>
 
     <organization>
         <name>Statsbiblioteket</name>
-        <url>http://www.statsbibloteket.dk</url>
+        <url>http://www.statsbiblioteket.dk</url>
     </organization>
     <developers>
         <developer>
@@ -247,7 +313,8 @@
         </developer>
     </developers>
     <issueManagement>
-        <url>https://sourceforge.net/apps/trac/summa/</url>
+        <system>trac</system>
+        <url>https://sourceforge.net/apps/trac/summa/report/1</url>
     </issueManagement>
     <licenses>
         <license>

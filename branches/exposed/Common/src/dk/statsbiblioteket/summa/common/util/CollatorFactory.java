@@ -16,14 +16,15 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.text.Collator;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
 import java.util.Comparator;
 import java.util.Locale;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The standard Collator from Java 1.5 and 1.6 prioritizes spaces below
@@ -41,6 +42,7 @@ import java.util.Locale;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class CollatorFactory {
+    /** Local log instance. */
     private static Log log = LogFactory.getLog(CollatorFactory.class);
 
     /**
@@ -55,6 +57,12 @@ public class CollatorFactory {
         return fixCollator(collator, true);
     }
 
+    /**
+     * Fixes the given collator.
+     * @param collator The collator to fix.
+     * @param check True if check should be done.
+     * @return Return the fixed collator.
+     */
     private static Collator fixCollator(Collator collator, boolean check) {
         if (!(collator instanceof RuleBasedCollator)) {
             log.warn(String.format(
@@ -157,7 +165,7 @@ public class CollatorFactory {
      * </p><p>
      * @param locale the wanted Locale for the Collator..
      * @param cacheChars the characters that are considered safe to sort by on
-     *                   an indidual character basis.
+     *                   an individual character basis.
      * @param cache if true, the Collator is cached.
      * @return a new optionally cached cached Collator with tweaked rules.
      * @see #fixCollator(java.text.Collator)
@@ -165,8 +173,7 @@ public class CollatorFactory {
      */
     public static Collator createCollator(
         Locale locale, String cacheChars, boolean cache) {
-        Collator collator = createCollator(locale);
-        return collator;
+        return createCollator(locale);
         // TODO: Re-introduce CachedCollator when it has been fixed properly
         //return cache ? new CachedCollator(collator, cacheChars) : collator;
     }
@@ -184,4 +191,3 @@ public class CollatorFactory {
         };
     }
 }
-

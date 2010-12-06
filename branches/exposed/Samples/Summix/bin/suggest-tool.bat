@@ -28,6 +28,7 @@ if "%ACTION%."=="." (
     echo clear
     echo import
     echo export
+    echo delete
     goto :end
 )
 
@@ -49,6 +50,10 @@ if "%ACTION%"=="import" (
 )
 if "%ACTION%"=="export" (
     set ARGS=summa.support.suggest.export=true
+    goto :actionOK
+)
+if "%ACTION%"=="delete" (
+    set ARGS=summa.support.suggest.delete=true
     goto :actionOK
 )
 echo Unknown action %ACTION%

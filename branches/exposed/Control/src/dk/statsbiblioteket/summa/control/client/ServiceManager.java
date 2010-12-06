@@ -14,23 +14,23 @@
  */
 package dk.statsbiblioteket.summa.control.client;
 
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Arrays;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ServiceManager extends ConnectionManager<Service>
                             implements Configurable, Iterable<String> {
-
+    /** Local log instance. */
     private static Log log = LogFactory.getLog(ServiceManager.class);
 
     /**
@@ -50,12 +50,20 @@ public class ServiceManager extends ConnectionManager<Service>
      */
     public static final String CONF_CONNECTION_FACTORY =
                                           GenericConnectionFactory.CONF_FACTORY;
+    /** The client ID. */
     private String clientId;
+    /** The base path. */
     private String basePath;
+    /** The service path. */
     private String servicePath;
+    /** The registry port. */
     private int registryPort;
 
-    public ServiceManager (Configuration conf) {
+    /**
+     * Constructs a service manager from the configuration.
+     * @param conf The configuration.
+     */
+    public ServiceManager(Configuration conf) {
         super (getConnectionFactory(conf));
 
         registryPort = conf.getInt(Client.CONF_REGISTRY_PORT,
@@ -67,21 +75,25 @@ public class ServiceManager extends ConnectionManager<Service>
                                                 + Client.CONF_CLIENT_ID
                                                 + "' not set");
         }
-
         basePath = System.getProperty("user.dir");
         servicePath = basePath + File.separator + "services";
     }
 
     @Override
-    public ConnectionContext<Service> get (String serviceId) {
+    public ConnectionContext<Service> get(String serviceId) {
         String address = getServiceAddress(serviceId);
-        log.trace ("Getting address for '"+ serviceId + "': " + address + "");
-        return super.get (address);
+        log.trace("Getting address for '" + serviceId + "': " + address + "");
+        return super.get(address);
     }
 
+    /**
+     * Return a connection factory.
+     * @param conf The configuration.
+     * @return A connection factory.
+     */
     @SuppressWarnings("unchecked")
     private static ConnectionFactory<? extends Service>
-                                     getConnectionFactory (Configuration conf) {
+                                      getConnectionFactory(Configuration conf) {
         Class<? extends ConnectionFactory> connFactClass =
                 conf.getClass(CONF_CONNECTION_FACTORY, ConnectionFactory.class,
                               SummaRMIConnectionFactory.class);
@@ -93,64 +105,100 @@ public class ServiceManager extends ConnectionManager<Service>
         return (ConnectionFactory<Service>) connFact;
     }
 
-    public void register (String instanceId) {
+    /**
+     * Register an instance ID. This is a no-op currently, so this call doesn't
+     * do anything.
+     * @param instanceId The instance ID.
+     */
+    public void register(String instanceId) {
         if (instanceId == null) {
-            throw new NullPointerException ("Trying to register service with id"
-                                            + " 'null'");
+            throw new NullPointerException("Trying to register service with id"
+                                           + " 'null'");
         }
-
         log.debug("Currently regsiter() is a no-op");
     }
 
+    /**
+     * Returns an iterator over all services.
+     * @return An iterator of all services.
+     */
+    @Override
     public Iterator<String> iterator() {
         return getServices().iterator();
     }
 
-    public boolean knows (String instanceId) {
+    /**
+     * Return true if the serviceID is known.
+     * @param instanceId The serviceID.
+     * @return True if the service is known.
+     */
+    public boolean knows(String instanceId) {
         return getServiceFile(instanceId).exists();
     }
 
-    public File getServiceDir (String serviceId) {
-        return new File (servicePath, serviceId);
+    /**
+     * Return the service directory.
+     * @param serviceId The service ID.
+     * @return The service directory.
+     */
+    public File getServiceDir(String serviceId) {
+        return new File(servicePath, serviceId);
     }
 
-    public String getServiceAddress (String serviceId) {
+    /**
+     * Return the service address.
+     * @param serviceId The service ID.
+     * @return the service address.
+     */
+    public String getServiceAddress(String serviceId) {
         if (serviceId == null) {
             throw new NullPointerException("Trying to retrieve service address "
                                            + "for service id 'null'");
         }
-
         return "//localhost:" + registryPort + "/" + serviceId;
     }
 
-    public File getServiceFile (String serviceId) {
-        return new File (getServiceDir(serviceId), "service.xml");
+    /**
+     * Return the service file.
+     * @param serviceId A service ID.
+     * @return The service file.
+     */
+    public File getServiceFile(String serviceId) {
+        return new File(getServiceDir(serviceId), "service.xml");
     }
 
-    public String getBundleId (String serviceId) {
-        return getBundleSpec (serviceId).getBundleId();
+    /**
+     * Return the bundle ID as string.
+     * @param serviceId The service ID.
+     * @return The bundle ID.
+     */
+    public String getBundleId(String serviceId) {
+        return getBundleSpec(serviceId).getBundleId();
     }
 
-    public BundleSpecBuilder getBundleSpec (String serviceId) {
+    /**
+     * Return the bundle specification.
+     * @param serviceId The service ID, for which bundle specification should
+     * be returned.
+     * @return The bundle specification.
+     */
+    public BundleSpecBuilder getBundleSpec(String serviceId) {
         File bundleFile = getServiceFile(serviceId);
         try {
-            BundleSpecBuilder builder = BundleSpecBuilder.open(bundleFile);
-            return builder;
+            return BundleSpecBuilder.open(bundleFile);
         } catch (IOException e) {
             log.warn ("Failed to read bundle file for " + serviceId, e);
             return null;
         }
     }
 
-    public List<String> getServices () {
-        String[] serviceFiles = new File (servicePath).list();
-        List<String> serviceList =
-                            new ArrayList<String>(Arrays.asList(serviceFiles));
-
-        return serviceList;
+    /**
+     * Return the services lists.
+     * @return All services.
+     */
+    public List<String> getServices() {
+        String[] serviceFiles = new File(servicePath).list();
+        return new ArrayList<String>(Arrays.asList(serviceFiles));
     }
 }
-
-
-
 

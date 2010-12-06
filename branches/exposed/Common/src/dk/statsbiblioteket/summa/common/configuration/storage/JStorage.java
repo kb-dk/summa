@@ -19,9 +19,6 @@ import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,6 +34,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  *
@@ -75,14 +76,14 @@ public class JStorage implements ConfigurationStorage {
      */
     public JStorage(String resource) throws IOException {
         this();
-        InputStream _in = ClassLoader.getSystemResourceAsStream(resource);
-        if (_in == null) {
+        InputStream in = ClassLoader.getSystemResourceAsStream(resource);
+        if (in == null) {
             throw new FileNotFoundException("Unable to locate resource: "
                                             + resource);
         }
 
         try {
-            eval(new InputStreamReader(_in));
+            eval(new InputStreamReader(in));
         } catch (Exception e) {
             throw new ConfigurationStorageException("Error reading resource '"
                                                     + resource + "': "
@@ -129,7 +130,8 @@ public class JStorage implements ConfigurationStorage {
     /**
      * Creates a JStorage instance with the given configuration.
      *
-     * @param conf Configuration which should be used for this JStorage instace.
+     * @param conf Configuration which should be used for this JStorage
+     * instance.
      */
     @SuppressWarnings("unused")
     public JStorage(Configuration conf) {
@@ -333,7 +335,7 @@ public class JStorage implements ConfigurationStorage {
      */
     @Override
     public void purge(String key) {
-        eval(config+"['"+key+"'] = null");
+        eval(config + "['" + key + "'] = null");
     }
 
     /**
@@ -342,7 +344,8 @@ public class JStorage implements ConfigurationStorage {
      */
     @Override
     public int size() {
-        return (int) Double.parseDouble(eval(config+".__ext_size()").toString());
+        return (int) Double.parseDouble(eval(config
+                + ".__ext_size()").toString());
     }
 
     /**
@@ -362,7 +365,7 @@ public class JStorage implements ConfigurationStorage {
     @Override
     public JStorage createSubStorage(String key) {
         return new JStorage(engine, engineManager,
-                            config + "['" + key+ "']", true);
+                            config + "['" + key + "']", true);
     }
 
     /**
@@ -373,7 +376,7 @@ public class JStorage implements ConfigurationStorage {
     @Override
     public JStorage getSubStorage(String key) {
         return new JStorage(engine, engineManager,
-                            config + "['" + key+ "']", false);
+                            config + "['" + key +  "']", false);
     }
 
     /**
@@ -412,9 +415,8 @@ public class JStorage implements ConfigurationStorage {
         
         for (int i = 0; i < count; i++) {
             storages.add(new JStorage(engine, engineManager,
-                            subConf + "[" +i+ "]", false));
+                            subConf + "[" + i + "]", false));
         }
-
         return storages;
     }
 
@@ -430,7 +432,7 @@ public class JStorage implements ConfigurationStorage {
             return engine.eval(s);
         } catch (ScriptException e) {
             throw new RuntimeException("Unexpected error executing:\n"
-                                       +s+"\nError: " + e.getMessage(), e);
+                                       + s + "\nError: " + e.getMessage(), e);
         }
     }
 
@@ -542,13 +544,11 @@ public class JStorage implements ConfigurationStorage {
             if (b.length() > 1) {
                 b.append (", ");
             }
-
             b.append("'").append(key).append("'").append(" : ");
             b.append(parseObject(val));
         }
 
         b.append("}");
-
         return b.toString();
     }
 
@@ -635,7 +635,7 @@ public class JStorage implements ConfigurationStorage {
                     .append(prefix)
                     .append("}");
             } else if (val instanceof List) {
-                List list = (List)val;
+                List list = (List) val;
 
                 buf.append(prefix)
                    .append("'").append(key).append("'")

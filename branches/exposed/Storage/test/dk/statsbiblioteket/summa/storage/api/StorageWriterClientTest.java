@@ -14,19 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxyTest;
 import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * StorageWriterClient Tester.
@@ -37,6 +38,8 @@ import java.io.File;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class StorageWriterClientTest extends TestCase {
+    private File testRoot = new File("target/test_result/", "storagetest");
+
     public StorageWriterClientTest(String name) {
         super(name);
     }
@@ -44,19 +47,24 @@ public class StorageWriterClientTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        if (testRoot.exists()) {
+            Files.delete(testRoot);
+        }
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        if(testRoot == null) {
+            return;
+        }
+        Files.delete(testRoot);
     }
 
     public static Test suite() {
         return new TestSuite(StorageWriterClientTest.class);
     }
 
-    private File testRoot = new File(System.getProperty(
-            "java.io.tmpdir", "storagetest"));
     private Storage getRMIStorage() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
                 DatabaseStorage.CONF_LOCATION, testRoot.toString(),

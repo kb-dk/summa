@@ -19,19 +19,18 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.List;
 import java.util.ArrayList;
-import java.io.UnsupportedEncodingException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An {@link ObjectFilter} that assigns or modifies ID, base, and meta tags on
@@ -288,6 +287,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 payload.setID(newId);
             }
         }
+                
         if (assignBase != null) {
             String newBase = getMatch(assignBase, content, payload, "base");
             if (newBase != null && !"".equals(newBase)) {
