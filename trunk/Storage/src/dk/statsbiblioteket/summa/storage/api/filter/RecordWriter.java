@@ -27,12 +27,13 @@ import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Connects to a Storage and ingests received Records into the storage.
@@ -380,7 +381,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format("close(%s) with eofReached==%b called",
+        log.debug(String.format("close(%s) with eofReached == %b called",
                                 success, eofReached));
         boolean initialEofReached = eofReached;
         if (initialEofReached && success) {
