@@ -65,6 +65,17 @@ public class UnpackFilter implements ObjectFilter {
     public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
 
     /**
+     * If no Payload.ORIGIN is specified in the Payload from the source, this
+     * ending is used for selecting the initial unpacker.
+     * </p><p>
+     * Optional. Default is zip.
+     */
+    public static final String CONF_EMPTY_ORIGIN_POSTFIX =
+        "summa.ingest.unpackfilter.emptyoriginpostfix";
+    public static final String DEFAULT_EMPTY_ORIGIN_POSTFIX = "zip";
+
+
+    /**
      * Supported unpackers.
      */
     private static final Map<String, Class<? extends StreamParser>> unpackers;
@@ -102,12 +113,15 @@ public class UnpackFilter implements ObjectFilter {
 
     private Configuration conf;
     private Pattern filePattern;
+    private String emptyOriginPostfix = DEFAULT_EMPTY_ORIGIN_POSTFIX;
 
     // TODO: Extract file ending regexp
 
 
     public UnpackFilter(Configuration conf) {
         this.conf = conf;
+        emptyOriginPostfix = conf.getString(
+            CONF_EMPTY_ORIGIN_POSTFIX, emptyOriginPostfix);
         filePattern = Pattern.compile(conf.getString(
                 CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
 
@@ -171,23 +185,30 @@ public class UnpackFilter implements ObjectFilter {
             return;
         }
         // The existing parsers
-        while (payload == null && active.size() > 0) {
-            StreamParser last = active.peek().getValue();
-            try {
-                if (last.hasNext()) {
-                    payload = last.next();
-                } else {
+        while (payload == null) {
+            while (payload == null && active.size() > 0) {
+                StreamParser last = active.peek().getValue();
+                try {
+                    if (last.hasNext()) {
+                        payload = last.next();
+                    } else {
+                        passive.add(active.pop());
+                    }
+                } catch (Exception e) {
+                    log.warn("Exception requesting payload from parser, "
+                             + "skipping to next stream payload", e);
+                    last.stop();
                     passive.add(active.pop());
                 }
-            } catch (Exception e) {
-                log.warn("Exception requesting payload from parser, "
-                         + "skipping to next stream payload", e);
-                last.stop();
-                passive.add(active.pop());
             }
-            // Exhausted unpackers, try source
-            while (payload == null && source.hasNext()) {
+            // If no Payload, try source
+            if (payload == null && source.hasNext()) {
                 payload = source.next();
+                if (payload.getData(Payload.ORIGIN) == null &&
+                    !"".equals(emptyOriginPostfix)) {
+                    payload.getData().put(
+                        Payload.ORIGIN, "dummyname." + emptyOriginPostfix);
+                }
             }
             if (payload == null) {
                 log.debug("makePayload: No more stream payloads available");
