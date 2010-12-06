@@ -224,7 +224,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         DocIDCollector collectedIDs;
         if (!shared.containsKey(DocumentSearcher.DOCIDS)) {
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
-                log.debug("There were neither '" + DocumentSearcher.DOCIDS
+                log.trace("There were neither '" + DocumentSearcher.DOCIDS
                          + ", nor '" + DocumentSearcher.SEARCH_QUERY
                          + " defined in the request, so no faceting could be "
                          + "performed");
