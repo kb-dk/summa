@@ -14,10 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.*;
 
 /**
  * NativeRunner Tester.
@@ -51,6 +55,25 @@ public class NativeRunnerTest extends TestCase {
 
     public void testDummy() {
         // dummy
+    }
+
+    public void testFileHandles() throws IOException, InterruptedException {
+        int RUNS = 1000000;
+        File input = new File("/home/te/projects/summa/Common/test/data/filter_setup.xml");
+        assertTrue("The file " + input + " must exist", input.exists());
+        for (int i = 0 ; i < RUNS ; i++) {
+            FileReader reader = new FileReader(input);
+            Strings.flush(reader); // We know ... garbage
+            if (i % (RUNS / 10) == 0) {
+                System.gc();
+                Thread.sleep(100);
+                System.gc();
+                System.out.println("Free mem: " +
+                                   (Runtime.getRuntime().totalMemory() - 
+                                    Runtime.getRuntime().freeMemory()) / 1024
+                                   + " KB");
+            }
+        }
     }
 
 /* NativeRunner is deprecated
