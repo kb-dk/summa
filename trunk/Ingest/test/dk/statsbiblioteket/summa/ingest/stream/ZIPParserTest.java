@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.ingest.stream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import junit.framework.Test;
@@ -132,7 +133,7 @@ public class ZIPParserTest extends TestCase {
 
         List<String> expected = Arrays.asList(
                 "foo", "flam", "kaboom", "zoo", "zoo2");
-        assertUnzipContent(unzipper, expected);
+        assertContent(unzipper, expected);
     }
 
     public void testScale() throws Exception {
@@ -152,16 +153,18 @@ public class ZIPParserTest extends TestCase {
         for (int i = 0 ; i < 200 ; i++) {
             expected.add("sample" + i);
         }
-        assertUnzipContent(unzipper, expected);
+        assertContent(unzipper, expected);
     }
 
-    private void assertUnzipContent(StreamController unzipper,
+    public static void assertContent(ObjectFilter source,
                                     List<String> expected) throws IOException {
         int received = 0;
-        while (unzipper.hasNext()) {
-            Payload payload = unzipper.next();
+        while (source.hasNext()) {
+            Payload payload = source.next();
             received++;
-            String origin = payload.getData(Payload.ORIGIN).toString();
+            Object originO = payload.getData(Payload.ORIGIN);
+            String origin = originO == null ? "null.null!null.null" :
+                            originO.toString();
             log.debug("Received Payload with origin " + origin);
 
             // Trim the an origin like 'foo/bar.zip!baz/myfile.xml'
@@ -181,6 +184,6 @@ public class ZIPParserTest extends TestCase {
         }
         assertEquals("The number of processed Payloads should be correct",
                      expected.size(), received);
-        unzipper.close(true);
+        source.close(true);
     }
 }

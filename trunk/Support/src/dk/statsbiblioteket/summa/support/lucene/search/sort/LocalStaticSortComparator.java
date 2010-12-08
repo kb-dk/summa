@@ -21,6 +21,8 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.FieldComparator;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -64,16 +66,14 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
             throws IOException {
             final boolean r = reversed;
             final int[] slots = new int[numHits];
-            //final String fieldName = fieldname;
-        //final int[] order = getOrder(reader, fieldname);
+//        final int[] order = getOrder(reader, fieldName);
 
         return new FieldComparator() {
             IndexReader reader = null;
             int docbase = 0;
             int bottom;
 
-
-            /*
+                         /*
             public int compare (ScoreDoc i, ScoreDoc j) {
                 return order[i.doc] - order[j.doc];
             }
@@ -84,11 +84,11 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
 
             public int sortType(){
                 return SortField.CUSTOM;
-            } */
-
+            }
+                           */
             @Override
             public int compare(int i, int i1) {
-                return (!r) ? i - i1 : i1 - i;
+                return (!r) ? slots[i] - slots[i1] : slots[i1] - slots[i];
             }
 
             @Override
