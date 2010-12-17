@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.3-20101206-SNAPSHOT</version>
+    <version>1.6.7-20101214-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -74,7 +74,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.2.145</version>
+                <version>1.2.139</version>
             </dependency>
             <dependency>
                 <groupId>commons-discovery</groupId>
