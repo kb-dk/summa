@@ -62,7 +62,7 @@ public class UnpackFilter implements ObjectFilter {
      */
     public static final String CONF_FILE_PATTERN =
             "summa.ingest.unpackfilter.filepattern";
-    public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
+    public static final String DEFAULT_FILE_PATTERN = ".*\\.xml|.*\\.XML";
 
     /**
      * If no Payload.ORIGIN is specified in the Payload from the source, this
