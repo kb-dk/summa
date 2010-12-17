@@ -753,7 +753,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * {@link java.sql.SQLException#getErrorCode()}.
      * <p/>
      * The default implementation of this method simply checks if {@code e}
-     * is {@code instanceof SQLIntegrityConstraintViolationExceptio}.
+     * is {@code instanceof SQLIntegrityConstraintViolationException}.
      *
      * @param e the sql exception to inspect the real cause for
      * @return whether or not {@code e} was due to an integrity constraint
@@ -3673,7 +3673,11 @@ public abstract class DatabaseStorage extends StorageBase {
         final int countKey = 4;
 
         Statement stmt = conn.createStatement();
+        log.debug("Getting resultset for '" + query + "'");
+        long st = System.currentTimeMillis();
         ResultSet result = stmt.executeQuery(query);
+        log.debug("Got ResultSet in " + (System.currentTimeMillis() - st)
+                  + "ms. Iterating...");
 
         try {
             if (result.next()) {
@@ -3714,6 +3718,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                     // Insert / update database and create {@link BaseStats}
                     // object
+                    log.debug("Got stats for " + lastBase + " with "
+                              + nonDeletedIndexables + " live records");
                     stats.add(updateBaseStatsTable(lastBase,
                               getModificationTime(lastBase), startTime,
                               deletedIndexables, nonDeletedIndexables,
