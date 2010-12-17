@@ -34,7 +34,6 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.exposed.ExposedComparators;
@@ -46,6 +45,7 @@ import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.util.BytesRef;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -216,13 +216,14 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     protected void managedSearch(Request request, ResponseCollection responses)
         throws RemoteException {
         long startTime = System.currentTimeMillis();
+        Map<String, Object> shared = responses.getTransient();
+        DocIDCollector collectedIDs = assignShared(shared);
 
         indexLookup.lookup(request, responses);
+        handleExposedDirect(request, responses);
 
-        Map<String, Object> shared = responses.getTransient();
         String query = null;
-        DocIDCollector collectedIDs;
-        if (!shared.containsKey(DocumentSearcher.DOCIDS)) {
+        if (collectedIDs == null) {
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.trace("There were neither '" + DocumentSearcher.DOCIDS
                          + ", nor '" + DocumentSearcher.SEARCH_QUERY
@@ -240,15 +241,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 //                      + "='" + request.get(DocumentKeys.SEARCH_QUERY) + "'");
 //            query = (String)shared.get(DocumentKeys.SEARCH_QUERY);
         } else {
-            Object o = shared.get(DocumentSearcher.DOCIDS);
-            if (!(o instanceof DocIDCollector)) {
-                throw new RemoteException(String.format(
-                    "Found transient data for key '%s'. Expected class %s, "
-                    + "but got %s", DocumentSearcher.DOCIDS,
-                    DocIDCollector.class.getName(),
-                    o.getClass().getName()));
-            }
-            collectedIDs = (DocIDCollector)o;
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.debug("Faceting with " + collectedIDs.getDocCount()
                           + " documents IDs");
@@ -261,7 +253,6 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             }
         }
 
-        assignSearcherAndQueryParser(shared, collectedIDs);
         if (searcher == null) {
             throw new RemoteException(
                 "No searcher defined. An IndexSearcher needs to be passed to "
@@ -305,6 +296,25 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                           + (System.currentTimeMillis() - startTime));
             }
         }
+
+    }
+
+    private void handleExposedDirect(
+        Request request, ResponseCollection responses) throws RemoteException {
+        if (!request.containsKey(FacetKeys.SEARCH_FACET_XMLREQUEST)) {
+            return;
+        }
+        String r = request.getString(FacetKeys.SEARCH_FACET_XMLREQUEST);
+        org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest;
+        try {
+        fRequest =
+        org.apache.lucene.search.exposed.facet.request.FacetRequest.parseXML(r);
+        } catch (XMLStreamException e) {
+            throw new RemoteException(
+                "Unable to parse exposed facet XML request'" + r + "'", e);
+        }
+
+//        assignShared(shared, collectedIDs);
 
     }
 
@@ -422,8 +432,21 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             query, groups);
     }
 
-    private void assignSearcherAndQueryParser(
-        Map<String, Object> shared, DocIDCollector collectedIDs) {
+    private DocIDCollector assignShared(Map<String, Object> shared)
+                                                        throws RemoteException {
+        Object o = shared.get(DocumentSearcher.DOCIDS);
+        DocIDCollector collectedIDs = null;
+        if (o != null) {
+            if (!(o instanceof DocIDCollector)) {
+                throw new RemoteException(String.format(
+                    "Found transient data for key '%s'. Expected class %s, "
+                    + "but got %s", DocumentSearcher.DOCIDS,
+                    DocIDCollector.class.getName(),
+                    o.getClass().getName()));
+            }
+            collectedIDs = (DocIDCollector)o;
+        }
+
         if (!shared.containsKey(INDEX_SEARCHER)) {
             log.error("The FacetSearchNode did not contain a value for key '"
                       + INDEX_SEARCHER
@@ -444,10 +467,9 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                           + "collected IDs were present so faceting will "
                           + "commence");
             } else {
-                log.error("The FacetSearchNode did not contain a value for "
+                log.debug("The FacetSearchNode did not contain a value for "
                           + "key '" + QUERY_PARSER
-                          + "'. No faceting can be performed. Please set the "
-                          + QUERY_PARSER + " in the previous SearchNode");
+                          + "'. No standard faceting can be performed");
             }
             qp = null;
         } else {
@@ -457,6 +479,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 qp = newQP;
             }
         }
+        return collectedIDs;
     }
 
     @Override

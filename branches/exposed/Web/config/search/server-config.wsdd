@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup extendedIndexLookup getField getSuggestions getRecentSuggestions deleteSuggestion commitQuery didYouMean ping"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet exposedFacet advancedFacet getMoreLikeThis indexLookup extendedIndexLookup getField getSuggestions getRecentSuggestions deleteSuggestion commitQuery didYouMean ping"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="didYouMean">
@@ -233,6 +233,21 @@
             </documentation>
             <parameter name="query" type="tns:string">
                 <documentation>The query string.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="exposedFacet">
+            <documentation>
+                provides direct access to the exposed facet handler. Allows for
+                faceting on user-selected grouped field and hierarchical
+                faceting.
+            </documentation>
+            <parameter name="request" type="tns:string">
+                <documentation>The facet request.</documentation>
+            </parameter>
+            <parameter name="format" type="tns:string">
+                <documentation>The request format. Currently only XML is allowed.
+                    See FacetRequest.xsd in LUCENE-2369 for details.</documentation>
             </parameter>
         </operation>
 

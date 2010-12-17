@@ -44,6 +44,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.rmi.RemoteException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -833,6 +834,74 @@ public class SearchWS {
         log.debug("simpleFacet('" + query + "') finished in "
                   + (System.currentTimeMillis() - startTime) + "ms");
         return retXML;
+    }
+
+
+    public static final String EXPOSED_FORMAT_XML = "xml";
+
+    /**
+     * Performs a direct call to exposed facets. This exposes all facet-related
+     * functionality of LUCENE-2369.
+     * @param request a format specific request.
+     * @param format the format of the request. Currently only 'xml' is allowed.
+     * xml: See {@link FacetKeys#SEARCH_FACET_XMLREQUEST}.
+     * @return a facet structure conforming to FacetResponse.xsd.
+     */
+    public String exposedFacet(String request, String format) {
+        if (log.isTraceEnabled()) {
+            log.trace("exposedFacet called with format '" + format
+                      + "' and request\n" + request);
+        }
+        long facetTime = -System.currentTimeMillis();
+        if (!EXPOSED_FORMAT_XML.equals(format)) {
+            String message ="exposedFacet called with unknown format '"
+                     + format + "'";
+            log.warn(message);
+            return getErrorXML("exposedFacet", message, null);
+        }
+        ResponseCollection res;
+
+        String retXML;
+        Request req = new Request();
+        req.put(FacetKeys.SEARCH_FACET_XMLREQUEST, request);
+        try {
+            res = getSearchClient().search(req);
+            Document dom = DOM.stringToDOM(res.toXML());
+
+            // remove any response not related to FacetResult
+            NodeList nl =
+                        DOM.selectNodeList(dom, "/responsecollection/response");
+            for (int i = 0; i < nl.getLength(); i++) {
+                Node n = nl.item(i);
+                NamedNodeMap attr = n.getAttributes();
+                Node attr_name = attr.getNamedItem("name");
+                if (attr_name != null) {
+                    if (!"ExposedFacetResult".equals(
+                        attr_name.getNodeValue())) {
+                        // this is not FacetResult so we remove it
+                        n.getParentNode().removeChild(n);
+                    }
+                }
+            }
+
+            // transform dom back into a string
+            retXML = DOM.domToString(dom);
+        } catch (IOException e) {
+            log.warn("Error faceting exposed request: '" + request + "'" +
+                    ". Error was: ", e);
+            String mes = "Error performing request";
+            retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
+        } catch (TransformerException e) {
+            log.warn("Error faceting request: '" + request + "'" +
+                    ". Error was: ", e);
+            String mes = "Error performing request";
+            retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
+        }
+        facetTime += System.currentTimeMillis();
+        log.debug("exposedFacet(..., " + format + ") finished in "
+                  + facetTime + "ms");
+        return retXML;
+
     }
 
     /**
