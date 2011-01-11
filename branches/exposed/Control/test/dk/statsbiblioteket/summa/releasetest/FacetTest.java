@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
@@ -241,12 +242,24 @@ public class FacetTest extends NoExitTestCase {
     }
 
 
-    public static  void verifyFacetResult(SummaSearcher searcher,
-                                          String query) throws IOException {
+    public static  void verifyFacetResult(
+        SummaSearcher searcher, String query) throws IOException {
+        verifyFacetResult(searcher, query, true);
+    }
+
+    public static  void verifyFacetResult(
+        SummaSearcher searcher, String query, boolean shouldExist)
+        throws IOException {
         String res = searcher.search(SearchTest.simpleRequest(query)).toXML();
-        if (!res.contains("<facet name=\"author\">")) {
+        boolean contains = res.contains("<facet name=\"author\">");
+        if ((shouldExist && !contains)) {
             fail("Search for '" + query
                  + "' did not produce any facets. Result was:\n" + res);
+        }
+
+        if ((!shouldExist && contains)) {
+            fail("Search for '" + query + "' did produce facets when it should "
+                 + "not. Result was:\n" + res);
         }
     }
 
@@ -424,6 +437,68 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
+
+    public void testFacetSearchDelete() throws Exception {
+        final String HANS = "fagref:hj@example.com";
+
+//        ExposedSettings.debug = true;
+        log.debug("Getting configuration for searcher");
+        Configuration conf = getSearcherConfiguration();
+        log.debug("Creating Searcher");
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        log.debug("Searcher created");
+        Storage storage = SearchTest.startStorage();
+        log.debug("Storage started");
+        updateIndex();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        log.debug("Ingest 1+2 performed");
+        updateIndex();
+        log.debug("Waiting for the searcher to discover the new index");
+        searcher.checkIndex(); // Make double sure
+        log.debug("Verify index with 3 fagref Records");
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        SearchTest.verifySearch(searcher, "Hans", 1);
+        verifyFacetResult(searcher, "Gurli");
+        verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
+        Record hans = storage.getRecord(HANS, null);
+        assertNotNull("The Hans Record should exist", hans);
+        long originalModTime = hans.getModificationTime();
+
+        log.debug("Sleeping to ensure that progress is properly updated");
+        Thread.sleep(1000);
+
+        log.debug("Deleting document");
+        SearchTest.delete(HANS, "fagref");
+        hans = storage.getRecord(HANS, null);
+        long deleteModTime = hans.getModificationTime();
+        assertTrue("The Hans-Record should be marked as deleted but was "
+                   + hans, hans.isDeleted());
+        assertFalse("The modification time for the Hans Records should differ",
+                    originalModTime == deleteModTime);
+        log.debug("Extracted deleted hans record " + hans.toString(true));
+        log.debug("Updating index after delete of " + HANS);
+        updateIndex();
+        searcher.checkIndex(); // Make double sure
+
+        log.debug("Verifying index after delete of Hans Jensen");
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        SearchTest.verifySearch(searcher, "Hans", 0);
+
+        log.debug("Verifying faceting after delete of Hans Jensen");
+        verifyFacetResult(searcher, "Gurli");
+        verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
+
+        log.debug("Sample output from large search: "
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
+                toXML());
+
+        searcher.close();
+        storage.close();
+    }
+
 
     public void testExplain() throws Exception {
         Configuration conf = getSearcherConfiguration();
