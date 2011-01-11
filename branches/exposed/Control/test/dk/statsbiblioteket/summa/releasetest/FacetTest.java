@@ -26,7 +26,6 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
@@ -34,7 +33,6 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.exposed.ExposedSettings;
 
 import java.io.File;
 import java.io.IOException;
@@ -471,7 +469,8 @@ public class FacetTest extends NoExitTestCase {
         Thread.sleep(1000);
 
         log.debug("Deleting document");
-        SearchTest.delete(HANS, "fagref");
+        hans.setDeleted(true);
+        SearchTest.update(hans);
         hans = storage.getRecord(HANS, null);
         long deleteModTime = hans.getModificationTime();
         assertTrue("The Hans-Record should be marked as deleted but was "
@@ -479,17 +478,13 @@ public class FacetTest extends NoExitTestCase {
         assertFalse("The modification time for the Hans Records should differ",
                     originalModTime == deleteModTime);
         log.debug("Extracted deleted hans record " + hans.toString(true));
-        log.debug("Updating index after delete of " + HANS);
+        log.debug("Updating index after update of " + HANS);
         updateIndex();
         searcher.checkIndex(); // Make double sure
 
-        log.debug("Verifying index after delete of Hans Jensen");
+        log.debug("Verifying index after update of Hans Jensen");
         SearchTest.verifySearch(searcher, "Gurli", 1);
         SearchTest.verifySearch(searcher, "Hans", 0);
-
-        log.debug("Verifying faceting after delete of Hans Jensen");
-        verifyFacetResult(searcher, "Gurli");
-        verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
 
         log.debug("Sample output from large search: "
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).

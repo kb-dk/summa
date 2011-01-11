@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
+import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.OpenBitSet;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class DocIDCollector extends Collector {
     private OpenBitSet bits = new OpenBitSet(100000);
     private int docCount = 0;
     private int docBase = 0;
+    private Bits deleted = null;
 
     /**
      * Constructs a collector and adds it to the given queue.
@@ -78,6 +80,9 @@ public class DocIDCollector extends Collector {
 
     @Override
     public void collect(int doc) {
+        if (deleted != null && deleted.get(doc)) {
+            return; // document is deleted
+        }
         bits.set(docBase + doc);
         docCount++;
     }
@@ -86,6 +91,7 @@ public class DocIDCollector extends Collector {
     public void setNextReader(IndexReader indexReader, int i)
             throws IOException {
         this.docBase = i;
+        deleted = indexReader.getDeletedDocs();
     }
 
     @Override

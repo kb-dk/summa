@@ -127,9 +127,7 @@ public class SearchTest extends NoExitTestCase {
         ingester.stop();
     }
 
-    public static void delete(String recordID, String base) throws Exception {
-        Record record = new Record(recordID, base, new byte[0]);
-        record.setDeleted(true);
+    public static void update(Record record) throws Exception {
         Payload payload = new Payload(record);
         PayloadFeederHelper feeder =
             new PayloadFeederHelper(Arrays.asList(payload));
