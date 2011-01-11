@@ -18,10 +18,12 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
@@ -34,6 +36,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -44,6 +47,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,28 +127,53 @@ public class SearchTest extends NoExitTestCase {
         ingester.stop();
     }
 
+    public static void delete(String recordID, String base) throws Exception {
+        Record record = new Record(recordID, base, new byte[0]);
+        record.setDeleted(true);
+        Payload payload = new Payload(record);
+        PayloadFeederHelper feeder =
+            new PayloadFeederHelper(Arrays.asList(payload));
+
+        Configuration conf = Configuration.load(
+                "data/search/SearchTest_IngestConfiguration.xml");
+        Configuration writerConf =
+            conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
+//                getSubConfiguration("Writer").
+        RecordWriter writer = new RecordWriter(writerConf);
+
+        writer.setSource(feeder);
+        writer.pump();
+        writer.close(true);
+    }
+
     /* Connects to Storage, iterates all records and verifies that the given
-       id exists.
+       id exists. Returns the last found Record with the given ID.
      */
-    public static void verifyStorage(Storage storage, String id) throws
+    public static Record verifyStorage(Storage storage, String id) throws
                                                                      Exception {
         long iterKey = storage.getRecordsModifiedAfter(0, BASE, null);
         Iterator<Record> recordIterator = new StorageIterator(storage, iterKey);
 
+        Record result = null;
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());
         while (recordIterator.hasNext()) {
-            if (recordIterator.next().getId().equals(id)) {
+            Record outer = recordIterator.next();
+            if (outer.getId().equals(id)) {
+                result = outer;
                 while (recordIterator.hasNext()) {
-                    if (recordIterator.next().getId().equals(id)) {
+                    Record record = recordIterator.next();
+                    if (record.getId().equals(id)) {
                         fail("More than ine Record with id '" + id + " was "
                              + "present in the Storage");
                     }
                 }
-                return;
+                return result;
             }
         }
         fail("A Record with id '" + id + "' should be present in the storage");
+        return result; // Just to avoid compiler warnings
     }
 
     public void testIngest() throws Exception {
