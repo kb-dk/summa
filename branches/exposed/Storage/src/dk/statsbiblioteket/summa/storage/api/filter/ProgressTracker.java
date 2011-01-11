@@ -113,8 +113,12 @@ public class ProgressTracker {
     public void updateProgressFile() {
         lastInternalUpdate = System.currentTimeMillis();
 
-        log.debug("Storing progress in '" + progressFile + "' ("
-                  + numUpdates + " records has been extracted so far)");
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                "Storing progress in '%s' (%d records has been extracted so "
+                + "far, last timestamp: %s)", progressFile, numUpdates-1,
+                String.format(ISO_TIME, lastExternalUpdate)));
+        }
         try {
             Files.saveString(
                     String.format(TIMESTAMP_FORMAT,
@@ -122,6 +126,7 @@ public class ProgressTracker {
         } catch (IOException e) {
             log.error("close(true): Unable to store progress in file '"
                       + progressFile + "': " + e.getMessage(), e);
+
         }
         numUpdatesLastFlush = numUpdates;
     }
