@@ -199,6 +199,54 @@ public class RecordReaderTest extends TestCase {
         sto.close();
     }
 
+    public void testDelete() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased());
+
+        Record orig1 = new Record("test1", "base", "Hello".getBytes());
+        Record orig2 = new Record("test2", "base", "Hello".getBytes());
+        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+
+        sto.flushAll(Arrays.asList(orig1, orig2, orig3));
+        waitForHasNext(r, timeout);
+
+        Payload p = r.next();
+        Record rec = p.getRecord();
+        assertEquals(orig1, rec);
+
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig2, rec);
+
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig3, rec);
+        r.close(true);
+
+        r = new RecordReader(Configuration.newMemoryBased());
+        Record orig4 = new Record("test4", "base", "Hello".getBytes());
+        sto.flushAll(Arrays.asList(orig4));
+        waitForHasNext(r, timeout);
+
+        r = new RecordReader(Configuration.newMemoryBased());
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig4, rec);
+        r.close(true);
+
+        r = new RecordReader(Configuration.newMemoryBased());
+        Record orig4del = new Record("test4", "base", "Hello".getBytes());
+        orig4del.setDeleted(true);
+        sto.flushAll(Arrays.asList(orig4del));
+        waitForHasNext(r, timeout);
+        p = r.next();
+        rec = p.getRecord();
+        assertTrue("Record 4 should now be deleted", rec.isDeleted());
+
+        r.close(true);
+        sto.close();
+    }
+
     public void testWatchOne() throws Exception {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased(
