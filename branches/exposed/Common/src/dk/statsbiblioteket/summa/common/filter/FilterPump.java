@@ -70,11 +70,12 @@ public class FilterPump extends StateThread implements Configurable {
         log.debug("Running FilterChain '" + chainName + "'");
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(1000);
+        Payload pumped = null;
         try {
             long startTime;
             while (getStatus() == STATUS.running) {
                 startTime = System.nanoTime();
-                if (!sequence.pump()) {
+                if (!sequence.hasNext()) {
                     profiler.beat();
                     log.info(String.format(
                             "Finished pumping '%s' %d times in %s, overall "
@@ -83,13 +84,16 @@ public class FilterPump extends StateThread implements Configurable {
                             profiler.getSpendTime(), profiler.getBps(false)));
                     break;
                 }
+                pumped = sequence.next();
+                if (log.isTraceEnabled()) {
+                    log.trace("Pump received  "
+                              + (pumped.getRecord() == null ?
+                                 pumped : pumped.getRecord()));
+                }
+                System.out.println("received: " + pumped.getRecord());
                 profiler.beat();
                 logStatistics(profiler, startTime);
             }
-        } catch (IOException e) {
-            String error = "IOException caught running FilterPump";
-            log.error(error, e);
-            setError(error, e);
         } catch (Throwable t) {
             String error = "Throwable caught running FilterPump";
             log.error(error, t);
