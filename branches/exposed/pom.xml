@@ -9,12 +9,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.7-20101214-l4exp-SNAPSHOT</version>
+    <version>1.6.7-20110111-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
     </ciManagement>
-    <inceptionYear>2010</inceptionYear>
+    <inceptionYear>2011</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
     <name>Summa</name>
