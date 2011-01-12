@@ -1066,23 +1066,36 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             amalgam = b;
         }
         log.trace("getHitcount(): Created filter, performing hit count");
-        DocIdSet bits = amalgam.getDocIdSet(searcher.getIndexReader());
+        IndexReader[] readers =
+            searcher.getIndexReader().getSequentialSubReaders() == null ?
+            new IndexReader[]{searcher.getIndexReader()} :
+            searcher.getIndexReader().getSequentialSubReaders();
 
         long count = 0;
-        if (bits instanceof DocIdBitSet) { // Optimization
-            count = ((DocIdBitSet)bits).getBitSet().cardinality();
-        } else if (bits instanceof OpenBitSetDISI) {
-            count = ((OpenBitSetDISI)bits).cardinality();
-        } else {
-            log.debug("getHitCount: Got bits of unknown Class "
-                      + bits.getClass() + ", iterating and counting (slow)");
-            // We'll have to count
-            DocIdSetIterator bitIt =  bits.iterator();
-            while (bitIt.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-                count++;
+        for (IndexReader reader: readers) {
+            DocIdSet bits = amalgam.getDocIdSet(reader);
+            if (bits == null) {
+                continue;
+            }
+            if (bits instanceof DocIdBitSet) { // Optimization
+                count = ((DocIdBitSet)bits).getBitSet().cardinality();
+            } else if (bits instanceof OpenBitSetDISI) {
+                count = ((OpenBitSetDISI)bits).cardinality();
+            } else {
+                log.debug(
+                    "getHitCount: Got bits of unknown Class "
+                    + bits.getClass() + ", iterating and counting (slow)");
+                // We'll have to count
+                DocIdSetIterator bitIt =  bits.iterator();
+                if (bitIt == null) {
+                    continue; // TODO: Check if this is expected behaviour
+                }
+                while (bitIt.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+                    count++;
+                }
             }
         }
-        //noinspection DuplicateStringLiteralInspection
+            //noinspection DuplicateStringLiteralInspection
         log.debug("getHitCount(..., query '" + query + "', filter '"
                   + filter + "') " + "got hit count " + count + " in "
                   + (System.currentTimeMillis() - startTime) + " ms");

@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -489,6 +490,53 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Sample output from large search: "
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
+
+        searcher.close();
+        storage.close();
+    }
+
+    // TODO: Move this to SearchTest
+    public void testFastHitCount() throws Exception {
+        Configuration conf = getSearcherConfiguration();
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        updateIndex();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        searcher.checkIndex();
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        SearchTest.verifySearch(searcher, "Hans", 1);
+
+        {
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, "Gurli");
+            Response response = searcher.search(request).iterator().next();
+            assertTrue("There should be at least one hit for standard search",
+                       SearchTest.getHits(response) > 0);
+        }
+
+        {
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, "Gurli");
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, 0);
+            request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            Response response = searcher.search(request).iterator().next();
+            assertTrue("There should be at least one hit for 0 max result",
+                       SearchTest.getHits(response) > 0);
+        }
+
+        {
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, "Invalid¤%ffd");
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, 0);
+            request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            Response response = searcher.search(request).iterator().next();
+            assertTrue("There should be zero hits for non-existing search term",
+                       SearchTest.getHits(response) == 0);
+        }
 
         searcher.close();
         storage.close();

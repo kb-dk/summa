@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -289,8 +290,18 @@ public class SearchTest extends NoExitTestCase {
         log.debug("Result from search for '" + query + "': " + result);
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
-            throw new NullPointerException("Could not locate hitcount in " 
+            throw new NullPointerException("Could not locate hitcount in "
                                            + result);
+        }
+        return Integer.parseInt(matcher.group(1));
+    }
+
+    public static int getHits(Response response) throws Exception {
+        String result = response.toXML();
+        Matcher matcher = hitPattern.matcher(result);
+        if (!matcher.matches()) {
+            throw new NullPointerException(
+                "Could not locate hitcount in " + result);
         }
         return Integer.parseInt(matcher.group(1));
     }
