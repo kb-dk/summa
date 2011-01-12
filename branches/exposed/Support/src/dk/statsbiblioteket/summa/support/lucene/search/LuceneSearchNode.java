@@ -78,6 +78,7 @@ import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.exposed.ExposedCache;
 import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.DocIdBitSet;
 import org.apache.lucene.util.OpenBitSetDISI;
 
@@ -1033,6 +1034,50 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     protected long getHitCount(
             Request request, String query, String filter) throws IOException {
         long startTime = System.currentTimeMillis();
+
+        // Special handling of match all
+        if ("*".equals(query) && filter != null && !"".equals(filter)) {
+            query = null;
+        }
+        if ("*".equals(filter) && query != null && !"".equals(filter)) {
+            filter = null;
+        }
+        if ("*".equals(query) || "*".equals(filter)) {
+            log.trace("getHitCount for * (match all) called");
+            IndexReader[] readers =
+                searcher.getIndexReader().getSequentialSubReaders() == null ?
+                new IndexReader[]{searcher.getIndexReader()} :
+                searcher.getIndexReader().getSequentialSubReaders();
+
+            long count = 0;
+            for (IndexReader reader: readers) {
+                count += reader.maxDoc();
+                Bits deleted = reader.getDeletedDocs();
+                if (deleted == null) {
+                    continue;
+                }
+                if (deleted instanceof DocIdBitSet) { // Optimization
+                    count -= ((DocIdBitSet)deleted).getBitSet().cardinality();
+                } else if (deleted instanceof OpenBitSetDISI) {
+                    count -= ((OpenBitSetDISI)deleted).cardinality();
+                } else {
+                    log.debug(
+                        "getHitCount: Got bits of unknown Class " + deleted.
+                            getClass() + ", iterating and counting (slow)");
+                    // We'll have to count
+                    for (int i = 0 ; i < deleted.length() ; i++) {
+                        if (deleted.get(i)) {
+                            count--;
+                        }
+                    }
+                }
+
+            }
+            log.debug("getHitCount(..., query '" + query + "', filter '"
+                      + filter + "') " + "got hit count " + count + " in "
+                      + (System.currentTimeMillis() - startTime) + " ms");
+            return count;
+        }
 
         Filter q;
         try {

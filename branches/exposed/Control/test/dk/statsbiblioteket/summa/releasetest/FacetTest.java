@@ -538,6 +538,16 @@ public class FacetTest extends NoExitTestCase {
                        SearchTest.getHits(response) == 0);
         }
 
+        {
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, "*");
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, 0);
+            request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            Response response = searcher.search(request).iterator().next();
+            assertTrue("There should be at least one hit for * search",
+                       SearchTest.getHits(response) > 0);
+        }
+
         searcher.close();
         storage.close();
     }
