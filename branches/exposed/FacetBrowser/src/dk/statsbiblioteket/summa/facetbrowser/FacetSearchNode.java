@@ -88,11 +88,20 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     public static final int BROWSER_THREAD_QUEUE_TIMEOUT = 20 * 1000;
     private static final long BROWSER_THREAD_MARK_TIMEOUT = 30 * 1000;
 
-    // TODO: Make this configurable
-    private static CollectorPoolFactory poolFactory =
-        new CollectorPoolFactory(12, 2, 2);
+    public static final String CONF_COLLECTOR_POOLS =
+        "exposed.collectorpoolfactory.collectorpools";
+    public static final int DEFAULT_COLLECTOR_POOLS = 12;
 
-    private Configuration conf;
+    public static final String CONF_COLLECTOR_FILLED =
+        "exposed.collectorpoolfactory.filledcollectors";
+    public static final int DEFAULT_COLLECTOR_FILLED = 2;
+
+    public static final String CONF_COLLECTOR_FRESH =
+        "exposed.collectorpoolfactory.freshcollectors";
+    public static final int DEFAULT_COLLECTOR_FRESH = 2;
+
+    private static CollectorPoolFactory poolFactory;
+
     private Structure structure = null;
 
     private IndexLookup indexLookup;
@@ -111,7 +120,10 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     public FacetSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         log.info("Constructing FacetSearchNode");
-        this.conf = conf;
+        poolFactory = new CollectorPoolFactory(
+            conf.getInt(CONF_COLLECTOR_POOLS,  DEFAULT_COLLECTOR_POOLS),
+            conf.getInt(CONF_COLLECTOR_FILLED, DEFAULT_COLLECTOR_FILLED),
+            conf.getInt(CONF_COLLECTOR_FRESH,  DEFAULT_COLLECTOR_FRESH));
         // TODO: Add override-switch to state where to get the descriptor
         loadDescriptorFromIndex =
             !Structure.isSetupDefinedInConfiguration(conf);
