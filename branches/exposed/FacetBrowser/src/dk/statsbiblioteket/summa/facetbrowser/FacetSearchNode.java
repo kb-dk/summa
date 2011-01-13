@@ -90,7 +90,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
     // TODO: Make this configurable
     private static CollectorPoolFactory poolFactory =
-        new CollectorPoolFactory(6, 2, 2);
+        new CollectorPoolFactory(12, 2, 2);
 
     private Configuration conf;
     private Structure structure = null;
