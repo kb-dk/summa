@@ -170,6 +170,14 @@ public class DocumentResponse implements Response, DocumentKeys {
                 sw.append(content).append("</field>\n");
             }
         }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getContent() {
+            return content;
+        }
     }
 
     private static void appendIfDefined(StringWriter sw,

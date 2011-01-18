@@ -1,29 +1,26 @@
-/* $Id:$
+/*
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * The Summa project.
- * Copyright (C) 2005-2010  The State and University Library
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -33,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -59,14 +55,28 @@ import java.util.regex.Pattern;
 /**
  * Transforms requests based on {@link DocumentKeys} and {@link FacetKeys} to
  * calls to Serial Solutions Summon API and transform the result to
- * {@link DocumentResponse} and {@link FacetResult}.
+ * {@link DocumentResponse} and
+ * {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetResult}.
  * See http://api.summon.serialssolutions.com/help/api/ for Summon API.
+ * </p><p>
+ * Supported DocumentKeys: {@link DocumentKeys#SEARCH_QUERY},
+ * {@link DocumentKeys#SEARCH_START_INDEX} and
+ * {@link DocumentKeys#SEARCH_MAX_RECORDS}. To adjust for differences between
+ * Summa and Summon, 1 is added to the given start index.
+ * Supported FacetKeys: {@link FacetKeys#SEARCH_FACET_FACETS} without the sort
+ * option.
+ * Note that {@link #SEARCH_SUMMON_RESOLVE_LINKS} is unique to this searcher.
  */
-// Map contenttype, language. Convert date (til år lige nu), potentially library 
+// Map contenttype, language. Convert date (til år lige nu), potentially library
+    // TODO: Support for filter and sort (+ reverse)
+    // TODO: Check if startpos is 0 or 1, adjuct accordingly
+    // TODO: Implement configurable rangefacets
+    // TODO; Fix defaultPageSize
+    // TODO Implement getShortRecord
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummonSearchNode extends DocumentSearcherImpl {
+public class SummonSearchNode extends SearchNodeImpl {
     private static Log log = LogFactory.getLog(SummonSearchNode.class);
 
     /**
@@ -74,10 +84,17 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * </p><p>
      * Optional. Default is api.summon.serialssolutions.com.
      */
-    public static final String CONF_SUMMON_HOST =
-        "summon.host";
+    public static final String CONF_SUMMON_HOST = "summon.host";
     public static final String DEFAULT_SUMMON_HOST =
         "api.summon.serialssolutions.com";
+
+    /**
+     * The rest call at {@link #CONF_SUMMON_HOST}. This is unlikely to change.
+     * </p><p>
+     * Optional. Default is '/search'.
+     */
+    public static final String CONF_SUMMON_RESTCALL = "summon.restcall";
+    public static final String DEFAULT_SUMMON_RESTCALL = "/search";
 
     /**
      * The access ID for Summon. Serial Solutions controls this and in order to
@@ -106,8 +123,21 @@ public class SummonSearchNode extends DocumentSearcherImpl {
     public static final String DEFAULT_SUMMON_IDPREFIX = "summon_";
 
     /**
+     * The default number of documents results to return from a search.
+     * </p><p>
+     * This can be overridden with {@link DocumentKeys#SEARCH_MAX_RECORDS}.
+     * </p><p>
+     * Optional. Default is 15.
+     */
+    public static final String CONF_SUMMON_DEFAULTPAGESIZE =
+        "summon.defaultpagesize";
+    public static final int DEFAULT_SUMMON_DEFAULTPAGESIZE = 15;
+
+    /**
      * The default facets if none are specified. The syntax is a comma-separated
      * list of facet names, optionally with max tags in paranthesis.
+     * This can be overridden with {@link FacetKeys#SEARCH_FACET_FACETS}.
+     * Specifying the empty string turns off faceting.
      * </p><p>
      * Optional. Default is {@link #DEFAULT_SUMMON_FACETS}.
      */
@@ -144,67 +174,102 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         "summon.facets.combinemode";
     public static final String DEFAULT_SUMMON_FACETS_COMBINEMODE = "and";
 
+    /**
+     * Whether or not links in the Summon response should be resolved using the
+     * 360 link resolver.
+     * This can be overridden with {@link #SEARCH_SUMMON_RESOLVE_LINKS}.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SUMMON_RESOLVE_LINKS =
+        "summon.resolvelinks";
+    public static final boolean DEFAULT_SUMMON_RESOLVE_LINKS = false;
+
+    public static final String SEARCH_SUMMON_RESOLVE_LINKS =
+        "search.summon.resolvelinks";
+
     private static final DateFormat formatter =
         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
+    private SummonResponseBuilder responseBuilder;
 
-
-    private String summonHost = DEFAULT_SUMMON_HOST;
+    private String host = DEFAULT_SUMMON_HOST;
+    private String restCall = DEFAULT_SUMMON_RESTCALL;
     private String accessID;
     private String accessKey;
     private String idPrefix = DEFAULT_SUMMON_IDPREFIX;
-    private int defaultPageSize = DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE;
+    private int defaultPageSize = DEFAULT_SUMMON_DEFAULTPAGESIZE;
+    private int defaultFacetPageSize = DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE;
     private String defaultFacets = DEFAULT_SUMMON_FACETS;
     private String combineMode = DEFAULT_SUMMON_FACETS_COMBINEMODE;
+    private boolean defaultResolveLinks = DEFAULT_SUMMON_RESOLVE_LINKS;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        summonHost = conf.getString(CONF_SUMMON_HOST, summonHost);
+        host = conf.getString(CONF_SUMMON_HOST, host);
+        restCall = conf.getString(CONF_SUMMON_RESTCALL, restCall);
         accessID =   conf.getString(CONF_SUMMON_ACCESSID);
         accessKey =  conf.getString(CONF_SUMMON_ACCESSKEY);
         idPrefix =   conf.getString(CONF_SUMMON_IDPREFIX, idPrefix);
         defaultPageSize = conf.getInt(
-            CONF_SUMMON_FACETS_DEFAULTPAGESIZE, defaultPageSize);
+            CONF_SUMMON_DEFAULTPAGESIZE, defaultPageSize);
+        defaultFacetPageSize = conf.getInt(
+            CONF_SUMMON_FACETS_DEFAULTPAGESIZE, defaultFacetPageSize);
         defaultFacets = conf.getString(CONF_SUMMON_FACETS, defaultFacets);
         combineMode = conf.getString(
             CONF_SUMMON_FACETS_COMBINEMODE, combineMode);
+        defaultResolveLinks = conf.getBoolean(
+            CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
+        responseBuilder = new SummonResponseBuilder(conf);
     }
 
     @Override
-    protected void managedOpen(String location) throws RemoteException {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    protected void managedClose() throws RemoteException {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public DocumentResponse fullSearch(
-        Request request, String filter, String query, long startIndex,
-        long maxRecords, String sortKey, boolean reverseSort,
-        String[] resultFields, String[] fallbacks) throws RemoteException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    protected long getHitCount(Request request, String query, String filter)
-                                                            throws IOException {
-        return fullSearch(request, filter, query, 0, 1, null, false,
-                          new String[0], new String[0]).getHitCount();
-    }
-
-    private boolean collectCalled = false;
-    @Override
-    protected DocIDCollector collectDocIDs(
-        Request request, String query, String filter) throws IOException {
-        if (!collectCalled) {
-            log.debug("No collectdocIDs for '" + query + "' as it is not "
-                      + "supported by the Summon API. Further requests "
-                      + "for colelctDocIDs will be silently ignored");
-            collectCalled = true;
+    protected void managedSearch(
+        Request request, ResponseCollection responses) throws RemoteException {
+        String facets =  request.getString(
+            FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
+        if ("".equals(facets)) {
+            facets = null;
         }
-        return null;
+        String query =   request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter =  request.getString(DocumentKeys.SEARCH_FILTER, null);
+        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
+        boolean reverseSort = request.getBoolean(
+            DocumentKeys.SEARCH_REVERSE, false);
+        int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
+        int maxRecords = request.getInt(
+            DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
+        boolean resolveLinks = request.getBoolean(
+            SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
+
+        if (query == null || "".equals(query)) {
+            log.debug("No query, returning immediately");
+            return;
+        }
+        if (filter != null) {
+            log.warn("fullSearch: Filter '" + filter + "' is ignored");
+        }
+        if (!DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
+            log.warn("fullSearch: Sort key '" + sortKey + "' is ignored");
+        }
+
+        long searchTime = -System.currentTimeMillis();
+        log.trace("Performing search for '" + query + "' with facets '"
+                  + facets + "'");
+        String sResponse = summonSearch(
+            query, facets, startIndex, maxRecords, resolveLinks);
+        searchTime += System.currentTimeMillis();
+
+        long buildResponseTime = -System.currentTimeMillis();
+        long hitCount = responseBuilder.buildResponses(
+            request, responses, sResponse);
+        buildResponseTime += System.currentTimeMillis();
+
+        log.debug("fullSearch(..., " + filter + ", " + query + ", " + startIndex
+                  + ", " + maxRecords + ", " + sortKey + ", " + reverseSort
+                  + ") with " + hitCount + " hits finished in "
+                  + searchTime + " ms (" + searchTime + " ms for remote search "
+                  + "call, " + buildResponseTime + " ms for converting to "
+                  + "Summa response)");
     }
 
     private boolean warmupCalled = false;
@@ -218,60 +283,116 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         }
     }
 
+    @Override
+    protected void managedOpen(String location) throws RemoteException {
+        log.info("Open called with location '" + location + "' which is "
+                 + "ignored by this search node as it is stateless");
+    }
 
+    @Override
+    protected void managedClose() throws RemoteException {
+        log.debug("managedClose() called. No effect as this search node is "
+                  + "stateless");
+    }
 
-
-
-
-
-    public static String SUMMON_ID_PREFIX = "summon_";
-    private static final String ACCESSID = "statsbiblioteket";
+    /* Copied and slightly modified from Yellowfoot (internal project at
+       Statsbiblioteket)
+     */
 
     /**
-     * Perform a search in Summon
-     * @param query The query to look for
-     * @param startpage the page to start on
-     * @param perpage number of items per page
-     * @param resolveLinks whether or not to call the link resolver to resolve openurls to actual links
-     * @return A String containing XML describing the search result
+     * Perform a search in Summon.
+     * @param query     a Solr-style query.
+     * @param facets    a comma-separated list of facets, optionally with
+     *                  pageSize in paranthesis after fact name.
+     * @param startpage the page to start on, starting at 1.
+     * @param perpage   number of items per page.
+     * @param resolveLinks whether or not to call the link resolver to resolve
+     *                  openurls to actual links.
+     * @return XML with the search result as per Summon API.
+     * @throws java.rmi.RemoteException if there were an error performing the
+     * remote search call.
      */
-    public static String simpleSearch(String query, String startpage, String perpage, boolean resolveLinks) {
+    public String summonSearch(
+        String query, String facets, int startpage,
+        int perpage, boolean resolveLinks) throws RemoteException {
         long methodStart = System.currentTimeMillis();
-        log.trace("Calling simpleSearch(" + query + ", " + startpage + ", " + perpage + ")");
-        //Building
+        log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
+                  + startpage + ", " + perpage + ")");
+        Map<String, List<String>> querymap =
+            buildSummonQuery(query, facets, startpage, perpage);
+
         Date date = new Date();
+        String idstring = computeIdString(
+            "application/xml", summonDateFormat.format(date), host, restCall,
+            querymap);
+        String queryString = computeSortedQueryString(querymap, true);
+        log.trace("Parameter preparation to Summon done in "
+                  + (System.currentTimeMillis() - methodStart) + "ms");
+        String result = "";
+        try {
+            long serviceStart = System.currentTimeMillis();
+            result = getData("http://" + host, restCall + "?" +
+                    queryString, date, idstring, null);
+            log.trace("Call to Summon done in "
+                      + (System.currentTimeMillis() - serviceStart) + "ms");
+        } catch (Exception e) {
+            throw new RemoteException(
+                "Unable to perform remote call to "  + host + restCall
+                + " with argument '" + queryString, e);
+        }
+
+        String retval = prefixIDs(result, idPrefix);
+        if (resolveLinks) {
+            retval = linkResolve(retval);
+        }
+        log.trace("simpleSearch done in "
+                  + (System.currentTimeMillis() - methodStart) + "ms");
+        return retval;
+    }
+
+    private Map<String, List<String>> buildSummonQuery(
+        String query, String facets, int startpage, int perpage) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
-        List<String> dymstring = new ArrayList<String>();
-        dymstring.add("true");
-        querymap.put("s.dym",dymstring);
+        querymap.put("s.dym", Arrays.asList("true"));
+        querymap.put("s.ho",  Arrays.asList("true"));
+        querymap.put("s.q",   Arrays.asList(query));
+        querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
+        querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
 
-        List<String> hostring = new ArrayList<String>();
-        hostring.add("true");
-        querymap.put("s.ho", hostring);
-
-        List<String> perpagestring = new ArrayList<String>();
-        perpagestring.add(perpage);
-        querymap.put("s.ps",perpagestring);
-
-        List<String> startpagestring = new ArrayList<String>();
-        startpagestring.add(startpage);
-        querymap.put("s.pn",startpagestring);
-
-        List<String> facetstring = new ArrayList<String>();
-        //facetstring.add("Audience,and,1,5");
-        facetstring.add("Author,and,1,15");
-        facetstring.add("ContentType,and,1,15");
-        facetstring.add("Genre,and,1,15");
-        //facetstring.add("GeographicLocation,and,1,5"); // TODO: Gives an error
-        facetstring.add("IsScholarly,and,1,15");
-        facetstring.add("Language,and,1,15");
-        //facetstring.add("Library,and,1,5");
-        //facetstring.add("PackageID,and,1,5");
-        //facetstring.add("SourceID,and,1,5");
-        facetstring.add("SubjectTerms,and,1,15");
-        facetstring.add("TemporalSubjectTerms,and,1,15");
-        querymap.put("s.ff",facetstring);
+        if (facets != null) {
+            List<String> facetQueries = new ArrayList<String>();
+            String[] facetTokens = facets.split(" *, *");
+            for (String facetToken: facetTokens) {
+                // zoo(12 ALPHA)
+                String[] subTokens = facetToken.split(" *\\(", 2);
+                String facetName = subTokens[0];
+                int pageSize = defaultFacetPageSize;
+                if (subTokens.length > 1) {
+                    // "  5  ALPHA)  " | "5)" | " ALPHA) | "vgfsd"
+                    String noParen = subTokens[1].split("\\)", 2)[0].trim();
+                    // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
+                    String[] facetArgs = noParen.split(" +", 2);
+                    // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
+                    if (facetArgs.length > 0) {
+                        pageSize = Integer.parseInt(facetArgs[0]);
+                    }
+                    if (facetArgs.length > 1
+                        && !"POPULARITY".equals(facetArgs[1])) {
+                        log.warn("The facet request '" + facetToken
+                                 + "' specifies sort order '" + facetArgs[1]
+                                 + " which is not supported by this node. "
+                                 + "Defaulting to populatiry sort");
+                    }
+                }
+//                facetstring.add("Author,and,1,15");
+                facetQueries.add(
+                    facetName + "," + combineMode + ",1," + pageSize);
+            }
+            querymap.put("s.ff", facetQueries);
+        } else {
+            log.debug("No facets specified, skipping faceting");
+        }
 
         List<String> rangefacet = new ArrayList<String>();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -286,31 +407,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         rangefacet.add("PublicationDate," + ranges.toString());
         querymap.put("s.rff", rangefacet);
 
-        List<String> querystring = new ArrayList<String>();
-        querystring.add(query);
-        querymap.put("s.q",querystring);
-
-        String idstring = computeIdString("application/xml", formatter.format(date),
-                "api.summon.serialssolutions.com", "/search", querymap);
-        String queryString = computeSortedQueryString(querymap, true);
-        log.trace("Parameter preparation to Summon done in " + (System.currentTimeMillis() - methodStart) + "ms");
-        String result = "";
-        try {
-            long serviceStart = System.currentTimeMillis();
-            result = getData("http://api.summon.serialssolutions.com", "/search?" +
-                    queryString, date, idstring, null);
-                 log.trace("Call to Summon done in " + (System.currentTimeMillis() - serviceStart) + "ms");
-            //log.trace("Result of call to Summon: " + result);
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-        String retval = prefixIDs(result, SUMMON_ID_PREFIX);
-        if (resolveLinks) {
-            retval = linkResolve(retval);
-        }
-        log.trace("simpleSearch done in " + (System.currentTimeMillis() - methodStart) + "ms");
-        return retval;
+        return querymap;
     }
 
     /**
@@ -320,7 +417,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @param commands The commands to apply to the search
      * @return A String containing XML describing the search result
      */
-    public static String continueSearch(String queryString, boolean resolveLinks, String... commands) {
+    public String continueSearch(String queryString, boolean resolveLinks, String... commands) {
         long methodStart = System.currentTimeMillis();
         log.trace("Calling continueSearch(" + queryString + ", " + commands + ")");
         String result = "";
@@ -369,7 +466,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        String retval = prefixIDs(result, SUMMON_ID_PREFIX);
+        String retval = prefixIDs(result, idPrefix);
         if (resolveLinks) {
             retval = linkResolve(retval);
         }
@@ -458,6 +555,14 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         }
     }
 
+
+    static {
+        System.setProperty("java.protocol.handler.pkgs",
+                           "com.sun.net.ssl.internal.www.protocol");
+        Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+    }
+    DateFormat summonDateFormat =
+        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     /**
      * Gets the data from the remote Summon server
      * @param target
@@ -468,21 +573,20 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @return A String containing XML describing the result of the call
      * @throws Exception
      */
-    private static String getData(String target, String content, Date date,
-                                  String idstring, String sessionId) throws Exception {
+    private String getData(
+        String target, String content, Date date, String idstring,
+        String sessionId) throws Exception {
         StringBuilder retval = new StringBuilder();
-
-        System.setProperty("java.protocol.handler.pkgs","com.sun.net.ssl.internal.www.protocol");
-        Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
 
         URL url = new URL(target + content);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestProperty("Host", "api.summon.serialssolutions.com");
+        conn.setRequestProperty("Host", host);
         conn.setRequestProperty("Accept", "application/xml");
         conn.setRequestProperty("Accept-Charset", "utf-8");
-        DateFormat formatter = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-        conn.setRequestProperty("x-summon-date", formatter.format(date));
-        conn.setRequestProperty("Authorization", "Summon " + ACCESSID + ";" + buildDigest(SECRETKEY, idstring));
+        conn.setRequestProperty("x-summon-date", summonDateFormat.format(date));
+        conn.setRequestProperty(
+            "Authorization",
+            "Summon " + accessID + ";" + buildDigest(accessKey, idstring));
         if (sessionId != null && !sessionId.equals("")) {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
@@ -492,20 +596,22 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         Long readStart = System.currentTimeMillis();
         BufferedReader in;
         try {
-            in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            in = new BufferedReader(new InputStreamReader(
+                conn.getInputStream(), "UTF-8"));
             String str;
             while ((str = in.readLine()) != null) {
                 retval.append(str);
             }
-            log.trace("Reading from Summon done in " + (System.currentTimeMillis() - readStart) + "ms");
+            log.trace("Reading from Summon done in "
+                      + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
         } catch (IOException e) {
-            e.printStackTrace();
-            BufferedReader err = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
-            String str;
-            while ((str = err.readLine()) != null) {
-                log.error(str);
-            }
+            log.warn(String.format(
+                "getData(target=%s, content=%s, date=%s, idstring=%s, "
+                + "sessionID=%s failed with error stream\n%s",
+                target, content, date, idstring, sessionId,
+                Strings.flush(
+                    new InputStreamReader(conn.getErrorStream(), "UTF-8"))), e);
         }
 
         return retval.toString();
@@ -516,15 +622,15 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @param id Summon id
      * @return A String containing XML in shortformat
      */
-    public static String getShortRecord(String id) {
+    public String getShortRecord(String id) throws RemoteException {
         // TODO: include id in shortrecord tag to help out sendListEmail.jsp and ExportToExternalFormat.java
         StringBuilder retval = new StringBuilder();
 
-        if (id.startsWith(SUMMON_ID_PREFIX)) {
-            id = id.substring(SUMMON_ID_PREFIX.length());
+        if (id.startsWith(idPrefix)) {
+            id = id.substring(idPrefix.length());
         }
 
-        String temp = simpleSearch("ID:" + id, "1", "1", false);
+        String temp = summonSearch("ID:" + id, null, 1, 1, false);
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -565,7 +671,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @param id Summon id
      * @return A String containing a Summon record in XML
      */
-    public static String getRecord(String id) {
+    public String getRecord(String id) throws RemoteException {
         return getRecord(id, false);
     }
 
@@ -575,14 +681,15 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @param resolveLinks Whether or not to resolve links through the link resolver
      * @return A String containing a Summon record in XML
      */
-    public static String getRecord(String id, boolean resolveLinks) {
+    public String getRecord(String id, boolean resolveLinks)
+                                                        throws RemoteException {
         String retval = "";
 
-        if (id.startsWith(SUMMON_ID_PREFIX)) {
-            id = id.substring(SUMMON_ID_PREFIX.length());
+        if (id.startsWith(idPrefix)) {
+            id = id.substring(idPrefix.length());
         }
 
-        String temp = simpleSearch("ID:" + id, "1", "1", false);
+        String temp = summonSearch("ID:" + id, null, 1, 1, false);
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
@@ -634,6 +741,9 @@ public class SummonSearchNode extends DocumentSearcherImpl {
      * @return The searchResult where the documents have been enriched with links
      */
     private static String linkResolve(String searchResult) {
+        throw new UnsupportedOperationException(
+            "Link resolving is not yet a part of this implementation");
+        /*
         long methodStart = System.currentTimeMillis();
         log.trace("Calling linkResolve");
 
@@ -658,12 +768,12 @@ public class SummonSearchNode extends DocumentSearcherImpl {
 
             long serviceStart = System.currentTimeMillis();
             // TODO: Consider how to handle this
-//            WebServices services = WebServices.getInstance();
-//            String links = (String) services.execute("getfrom360linkmulti", arg);
+            WebServices services = WebServices.getInstance();
+            String links = (String) services.execute("getfrom360linkmulti", arg);
             long serviceTime = System.currentTimeMillis() - serviceStart;
             log.trace("Called getfrom360linkmulti in : " + serviceTime + "ms");
 
-/*            Document linksDom = DOM.stringToDOM(links);
+            Document linksDom = DOM.stringToDOM(links);
             NodeList linksNL = DOM.selectNodeList(linksDom, "//links");
             Node imp;
             for (int i = 0; i < linksNL.getLength(); i++) {
@@ -678,7 +788,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
                 }
             }
 
-*/
+
             try {
                 retval = DOM.domToString(dom);
             } catch (TransformerException e) {
@@ -692,9 +802,11 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         }  else {
             return retval;
         }
+        */
     }
 
-    public static void main(String[] args) {
+/*    public static void main(String[] args) {
+
         String temp;
 
 
@@ -704,7 +816,7 @@ public class SummonSearchNode extends DocumentSearcherImpl {
         temp = simpleSearch("CatchAll:foo", "1", "3", false);
         System.out.println(temp);
     }
-
+  */
 
 
 }
