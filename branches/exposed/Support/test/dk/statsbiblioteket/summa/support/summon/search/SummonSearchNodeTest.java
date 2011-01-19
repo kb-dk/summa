@@ -75,8 +75,8 @@ public class SummonSearchNodeTest extends TestCase {
     public void testBasicSearch() throws RemoteException {
         Configuration conf = Configuration.newMemoryBased(
             SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            SummonSearchNode.CONF_SUMMON_FACETS, ""
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
         );
 
         log.debug("Creating SummonSearchNode");

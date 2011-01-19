@@ -20,6 +20,8 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -35,6 +37,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -63,8 +66,14 @@ public class SummonResponseBuilder {
     }
 
 
-    public long buildResponses(Request request, ResponseCollection responses,
-                              String summonResponse) throws RemoteException {
+    public long buildResponses(
+        Request request, SummonFacetRequest facets,
+        ResponseCollection responses,
+        String summonResponse) throws XMLStreamException {
+
+        System.out.println("");
+        System.out.println(summonResponse);
+        System.out.println("");
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(
@@ -106,9 +115,14 @@ public class SummonResponseBuilder {
             if ("rangeFacetFields".equals(currentTag)) {
                 // TODO: Implement this
             }
+            if ("facetFields".equals(currentTag)) {
+                FacetResult facetResult = extractFacetResult(xml, facets);
+                if (facetResult != null) {
+                    responses.add(facetResult);
+                }
+            }
             if ("documents".equals(currentTag)) {
                 records = extractRecords(xml);
-                // TODO: Implement this
             }
         }
         DocumentResponse documentResponse = new DocumentResponse(
@@ -122,38 +136,124 @@ public class SummonResponseBuilder {
     }
 
     /**
+     * Extracts all facet responses.
+     * @param xml    the stream to extract Summon facet information from.
+     *               Must be positioned at 'facetFields'.
+     * @param facets a definition of the facets to extract.
+     * @return a Summa FacetResponse.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * accessing the xml stream.
+     */
+    private FacetResult extractFacetResult(
+        XMLStreamReader xml, SummonFacetRequest facets)
+                                                     throws XMLStreamException {
+        HashMap<String, Integer> facetIDs =
+            new HashMap<String, Integer>(facets.getFacets().size());
+        // 1 facet = 1 field in Summon-world
+        HashMap<String, String[]> fields =
+            new HashMap<String, String[]>(facets.getFacets().size());
+        for (int i = 0 ; i < facets.getFacets().size() ; i++) {
+            SummonFacetRequest.Facet facet = facets.getFacets().get(i);
+            facetIDs.put(facet.getField(), i);
+            // TODO: Consider displayname
+            fields.put(facet.getField(), new String[]{facet.getField()});
+        }
+        final FacetResultExternal summaFacetResult = new FacetResultExternal(
+            facets.getMaxTags(), facetIDs, fields);
+        iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                extractFacet(xml, summaFacetResult);
+            }
+
+        });
+        return summaFacetResult;
+    }
+
+    /**
+     * Extracts a single facet response and adds it to the facet result.
+     * @param xml    the stream to extract Summon facet information from.
+     *               Must be positioned at 'facetField'.
+     * @param summaFacetResult where to store the extracted facet.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * accessing the xml stream.
+     */
+    private void extractFacet(
+        XMLStreamReader xml, final FacetResultExternal summaFacetResult)
+                                                     throws XMLStreamException {
+         // TODO: Consider fieldname and other attributes?
+        final String facetName = getAttribute(xml, "displayName", null);
+        iterateElements(xml, "facetField", "facetCount", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml)  {
+                String tagName = getAttribute(xml, "value", null);
+                Integer tagCount =
+                    Integer.parseInt(getAttribute(xml, "count", "0"));
+                summaFacetResult.addTag(facetName, tagName, tagCount);
+            }
+        });
+    }
+
+    private abstract static class XMLCallback {
+        public abstract void execute(XMLStreamReader xml)
+                                                      throws XMLStreamException;
+        public void close() { } // Called when iteration has finished
+    }
+
+    /**
+     * Iterates over elements in the stream until end element is encountered
+     * or end of document is reached. For each element matching actionElement,
+     * callback is called.
+     * @param xml        the stream to iterate.
+     * @param endElement the stopping element.
+     * @param actionElement callback is activated when encountering elements
+     *                   with this name.
+     * @param callback   called for each encountered element.
+     * @throws javax.xml.stream.XMLStreamException if the stream could not
+     * be iterated or an error occured during callback.
+     */
+    private void iterateElements(
+        XMLStreamReader xml, String endElement, String actionElement,
+        XMLCallback callback) throws XMLStreamException {
+        while (true) {
+            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT
+                || (xml.getEventType() == XMLStreamReader.END_ELEMENT
+                    && xml.getLocalName().equals(endElement))) {
+                break;
+            }
+            if (xml.getEventType() == XMLStreamReader.START_ELEMENT
+                && xml.getLocalName().equals(actionElement)) {
+                callback.execute(xml);
+            }
+            xml.next();
+        }
+    }
+    
+    /**
      * Extracts all Summon documents and converts them to
      * {@link }DocumentResponse#Record}.
      * @param xml the stream to extract records from. Must be positioned at
      * ELEMENT_START for "documents".
      * @return an array of record or the empty list if no documents were found.
      * @throws java.rmi.RemoteException if there were an error advancing.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * during stream access.
      */
     private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml)
-                                                        throws RemoteException {
+        throws XMLStreamException {
         // Positioned at documents
-        List<DocumentResponse.Record> records =
+        final List<DocumentResponse.Record> records =
             new ArrayList<DocumentResponse.Record>(50);
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT
-                || (xml.getEventType() == XMLStreamReader.END_ELEMENT
-                    && xml.getLocalName().equals("documents"))) {
-                break;
-            }
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT
-                && xml.getLocalName().equals("document")) {
+        iterateElements(xml, "documents", "document", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
                 DocumentResponse.Record record = extractRecord(xml);
                 if (record != null) {
                     records.add(record);
                 }
             }
-            try {
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new RemoteException(
-                    "Exception advancing through XMLStreamReader", e);
-            }
-        }
+
+        });
         return records;
     }
 
@@ -164,10 +264,11 @@ public class SummonResponseBuilder {
      * @param xml the stream to extract the record from. Must be positioned at
      * ELEMENT_START for "document".
      * @return a record or null if no document could be extracted.
-     * @throws java.rmi.RemoteException if there were an error advancing.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * accessing the xml stream.
      */
     private DocumentResponse.Record extractRecord(XMLStreamReader xml)
-                                                        throws RemoteException {
+                                                    throws XMLStreamException {
     // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
@@ -201,12 +302,7 @@ public class SummonResponseBuilder {
                     fields.add(field);
                 }
             }
-            try {
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new RemoteException(
-                    "Exception advancing through XMLStreamReader", e);
-            }
+            xml.next();
         }
         if (id == null) {
             log.warn("Unable to locate field 'ID' in Summon document. "
@@ -237,10 +333,11 @@ public class SummonResponseBuilder {
      * @param xml the stream to extract the field from. Must be positioned at
      * ELEMENT_START for "field".
      * @return a field or null if no field could be extracted.
-     * @throws java.rmi.RemoteException if there were an error advancing.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * accessing the xml stream.
      */
     private DocumentResponse.Field extractField(XMLStreamReader xml)
-                                                        throws RemoteException {
+        throws XMLStreamException {
         String name = getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
@@ -252,54 +349,41 @@ public class SummonResponseBuilder {
                 "XML fields are not supported yet. Skipping '" + name + "'");
             return null;
         }
-        String value = null;
-        while (true) {
-            try {
-                if (xml.getEventType() == XMLStreamReader.END_DOCUMENT
-                    || (xml.getEventType() == XMLStreamReader.END_ELEMENT
-                        && xml.getLocalName().equals("field"))) {
-                    break;
-                }
-                if (xml.getEventType() == XMLStreamReader.START_ELEMENT
-                    && xml.getLocalName().equals("value")) {
-                    value = value == null ? xml.getElementText() :
-                            value + "\n" + xml.getElementText();
-                }
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new RemoteException(
-                    "Exception advancing through XMLStreamReader", e);
+        final StringBuffer value = new StringBuffer(50);
+        iterateElements(xml, "field", "value", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                value.append(value.length() == 0 ? xml.getElementText() :
+                        "\n" + xml.getElementText());
             }
-        }
-        if (value == null) {
+        });
+        if (value.length() == 0) {
             log.debug("No value for field '" + name + "'");
+            return null;
         }
-        return new DocumentResponse.Field(name, value, true);
+        return new DocumentResponse.Field(name, value.toString(), true);
     }
 
     /**
      * Skips everything until a start tag is reacted or the readers is depleted.
      * @param xml the stream to iterate over.
      * @return the name of the start tag or null if EOD.
-     * @throws java.rmi.RemoteException if a Stream error occurred during seek.
+     * @throws javax.xml.stream.XMLStreamException if there was an error
+     * accessing the xml stream.
      */
     private String jumpToNextTagStart(XMLStreamReader xml)
-                                                        throws RemoteException {
-        try {
+        throws XMLStreamException {
+        if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
+            xml.next(); // Skip if already located at a start
+        }
+        while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-                xml.next(); // Skip if already located at a start
+                return xml.getLocalName();
             }
-            while (true) {
-                if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-                    return xml.getLocalName();
-                }
-                if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                    return null;
-                }
-                xml.next();
+            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
+                return null;
             }
-        } catch (XMLStreamException e) {
-            throw new RemoteException("Error seeking for start tag", e);
+            xml.next();
         }
     }
 
@@ -318,11 +402,12 @@ public class SummonResponseBuilder {
      * @param xml          the stream to iterate over.
      * @param startTagName the name of the tag to locate.
      * @return true if the tag was found, else false.
-     * @throws java.rmi.RemoteException if there was an error seeking.
+     * @throws javax.xml.stream.XMLStreamException if there were an error
+     * seeking the xml stream.
      */
     private boolean findTagStart(
-        XMLStreamReader xml, String startTagName) throws RemoteException {
-        while (true) {
+        XMLStreamReader xml, String startTagName) throws XMLStreamException {
+        while (true)  {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT
                 && startTagName.equals(xml.getLocalName())) {
                 return true;
@@ -333,7 +418,7 @@ public class SummonResponseBuilder {
             try {
                 xml.next();
             } catch (XMLStreamException e) {
-                throw new RemoteException(
+                throw new XMLStreamException(
                     "Error seeking to start tag for element '" + startTagName
                     + "'", e);
             }

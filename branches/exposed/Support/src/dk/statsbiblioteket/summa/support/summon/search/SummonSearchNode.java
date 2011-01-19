@@ -33,6 +33,7 @@ import org.w3c.dom.Node;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -71,8 +72,8 @@ import java.util.regex.Pattern;
     // TODO: Support for filter and sort (+ reverse)
     // TODO: Check if startpos is 0 or 1, adjuct accordingly
     // TODO: Implement configurable rangefacets
-    // TODO; Fix defaultPageSize
     // TODO Implement getShortRecord
+    // TOD: Implement getRecord in Storage
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -225,11 +226,8 @@ public class SummonSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(
         Request request, ResponseCollection responses) throws RemoteException {
-        String facets =  request.getString(
-            FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
-        if ("".equals(facets)) {
-            facets = null;
-        }
+
+
         String query =   request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter =  request.getString(DocumentKeys.SEARCH_FILTER, null);
         String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
@@ -252,6 +250,15 @@ public class SummonSearchNode extends SearchNodeImpl {
             log.warn("fullSearch: Sort key '" + sortKey + "' is ignored");
         }
 
+        String facetsDef =  request.getString(
+            FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
+        if ("".equals(facetsDef)) {
+            facetsDef = null;
+        }
+        SummonFacetRequest facets = null == facetsDef || "".equals(facetsDef) ?
+                                    null : new SummonFacetRequest(
+            facetsDef, defaultFacetPageSize, combineMode);
+
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
@@ -260,8 +267,15 @@ public class SummonSearchNode extends SearchNodeImpl {
         searchTime += System.currentTimeMillis();
 
         long buildResponseTime = -System.currentTimeMillis();
-        long hitCount = responseBuilder.buildResponses(
-            request, responses, sResponse);
+        long hitCount;
+        try {
+            hitCount = responseBuilder.buildResponses(
+                request, facets, responses, sResponse);
+        } catch (XMLStreamException e) {
+            throw new RemoteException(
+                "Unable to transform Summon XML response to Summa response "
+                + "for '" + request + "'");
+        }
         buildResponseTime += System.currentTimeMillis();
 
         log.debug("fullSearch(..., " + filter + ", " + query + ", " + startIndex
@@ -302,8 +316,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     /**
      * Perform a search in Summon.
      * @param query     a Solr-style query.
-     * @param facets    a comma-separated list of facets, optionally with
-     *                  pageSize in paranthesis after fact name.
+     * @param facets    which facets to request or null if no facets are wanted.
      * @param startpage the page to start on, starting at 1.
      * @param perpage   number of items per page.
      * @param resolveLinks whether or not to call the link resolver to resolve
@@ -313,7 +326,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * remote search call.
      */
     public String summonSearch(
-        String query, String facets, int startpage,
+        String query, SummonFacetRequest facets, int startpage,
         int perpage, boolean resolveLinks) throws RemoteException {
         long methodStart = System.currentTimeMillis();
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
@@ -351,7 +364,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     }
 
     private Map<String, List<String>> buildSummonQuery(
-        String query, String facets, int startpage, int perpage) {
+        String query, SummonFacetRequest facets, int startpage, int perpage) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
         querymap.put("s.dym", Arrays.asList("true"));
@@ -361,35 +374,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
 
         if (facets != null) {
-            List<String> facetQueries = new ArrayList<String>();
-            String[] facetTokens = facets.split(" *, *");
-            for (String facetToken: facetTokens) {
-                // zoo(12 ALPHA)
-                String[] subTokens = facetToken.split(" *\\(", 2);
-                String facetName = subTokens[0];
-                int pageSize = defaultFacetPageSize;
-                if (subTokens.length > 1) {
-                    // "  5  ALPHA)  " | "5)" | " ALPHA) | "vgfsd"
-                    String noParen = subTokens[1].split("\\)", 2)[0].trim();
-                    // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
-                    String[] facetArgs = noParen.split(" +", 2);
-                    // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
-                    if (facetArgs.length > 0) {
-                        pageSize = Integer.parseInt(facetArgs[0]);
-                    }
-                    if (facetArgs.length > 1
-                        && !"POPULARITY".equals(facetArgs[1])) {
-                        log.warn("The facet request '" + facetToken
-                                 + "' specifies sort order '" + facetArgs[1]
-                                 + " which is not supported by this node. "
-                                 + "Defaulting to populatiry sort");
-                    }
-                }
-//                facetstring.add("Author,and,1,15");
-                facetQueries.add(
-                    facetName + "," + combineMode + ",1," + pageSize);
-            }
-            querymap.put("s.ff", facetQueries);
+            querymap.put("s.ff", facets.getFacetQueries());
         } else {
             log.debug("No facets specified, skipping faceting");
         }
