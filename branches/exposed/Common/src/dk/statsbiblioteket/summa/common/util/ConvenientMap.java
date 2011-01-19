@@ -122,6 +122,78 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
     }
 
+    public Double getDouble(String key) {
+        Object o = get(key);
+        //noinspection OverlyBroadCatchBlock
+        try {
+            if (o instanceof Double) {
+                return (Double)o;
+            }
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Integer or Character */
+            return Double.parseDouble(o.toString());
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception extracting Double for key '%s'", key), e);
+            return null;
+        }
+    }
+    public Double getDouble(String key, Double defaultValue) {
+        try {
+            return getDouble(key);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public Float getFloat(String key) {
+        Object o = get(key);
+        //noinspection OverlyBroadCatchBlock
+        try {
+            if (o instanceof Float) {
+                return (Float)o;
+            }
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Integer or Character */
+            return Float.parseFloat(o.toString());
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception extracting Float for key '%s'", key), e);
+            return null;
+        }
+    }
+    public Float getFloat(String key, Float defaultValue) {
+        try {
+            return getFloat(key);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public Short getShort(String key) {
+        Object o = get(key);
+        //noinspection OverlyBroadCatchBlock
+        try {
+            if (o instanceof Short) {
+                return (Short)o;
+            }
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Integer or Character */
+            return Short.parseShort(o.toString());
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception extracting Short for key '%s'", key), e);
+            return null;
+        }
+    }
+    public Short getShort(String key, Short defaultValue) {
+        try {
+            return getShort(key);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
     public Boolean getBoolean(String key) {
         Object o = get(key);
         try {
