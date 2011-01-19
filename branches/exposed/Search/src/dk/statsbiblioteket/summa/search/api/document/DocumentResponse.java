@@ -139,6 +139,10 @@ public class DocumentResponse implements Response, DocumentKeys {
             return score;
         }
 
+        public void setScore(float score) {
+            this.score = score;
+        }
+
         public String getSortValue() {
             return sortValue;
         }
@@ -339,7 +343,7 @@ public class DocumentResponse implements Response, DocumentKeys {
 
     /* Getters and setters */
 
-    private List<Record> getRecords() {
+    public List<Record> getRecords() {
         return records;
     }
     // Because building the DocumentResponse takes time
