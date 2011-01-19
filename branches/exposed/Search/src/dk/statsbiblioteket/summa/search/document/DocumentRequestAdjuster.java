@@ -24,14 +24,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 /**
- * Transforms the scores in the records in a {@link DocumentResponse} according
- * to a given setup. Intended for merging of results from separate setups.
+ * Adjusts requestsActs as a transformator of requests and responses. Queries can be rewritten
+ * with weight-adjustment of terms, scores for returned documents can be
+ * tweaked.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ScoreAdjuster {
-    private static Log log = LogFactory.getLog(ScoreAdjuster.class);
+public class DocumentRequestAdjuster {
+    private static Log log = LogFactory.getLog(DocumentRequestAdjuster.class);
 
-    
+    // recordID, recordBase
 }

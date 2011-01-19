@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -27,6 +28,8 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
@@ -36,9 +39,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Takes a Summon response as per
@@ -113,6 +114,8 @@ public class SummonResponseBuilder {
                 continue;
             }
             if ("rangeFacetFields".equals(currentTag)) {
+                log.warn("Currently there is no support for returning range" 
+                         + " facets");
                 // TODO: Implement this
             }
             if ("facetFields".equals(currentTag)) {
@@ -235,7 +238,6 @@ public class SummonResponseBuilder {
      * @param xml the stream to extract records from. Must be positioned at
      * ELEMENT_START for "documents".
      * @return an array of record or the empty list if no documents were found.
-     * @throws java.rmi.RemoteException if there were an error advancing.
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
@@ -260,7 +262,8 @@ public class SummonResponseBuilder {
 
     /**
      * Extracts a Summon document and converts it to
-     * {@link }DocumentResponse#Record}.
+     * {@link }DocumentResponse#Record}. The compact representation
+     * "shortformat" is generated on the fly and added to the list of fields.
      * @param xml the stream to extract the record from. Must be positioned at
      * ELEMENT_START for "document".
      * @return a record or null if no document could be extracted.
@@ -278,32 +281,28 @@ public class SummonResponseBuilder {
         String availibilityToken = getAttribute(xml, "availabilityToken", null);
         String hasFullText =       getAttribute(xml, "hasFullText", "false");
         String inHoldings =        getAttribute(xml, "inHoldings", "false");
-        float score = 0f;
-        String id = null;
-        
-        List<DocumentResponse.Field> fields =
+
+        final Set<String> wanted = new HashSet<String>(Arrays.asList(
+            "ID", "Score", "Title", "Subtitle", "Author", "ContentType",
+            "PublicationDate_xml"));
+        final ConvenientMap extracted = new ConvenientMap();
+        final List<DocumentResponse.Field> fields =
             new ArrayList<DocumentResponse.Field>(50);
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT
-                || (xml.getEventType() == XMLStreamReader.END_ELEMENT
-                    && xml.getLocalName().equals("document"))) {
-                break;
-            }
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT
-                && xml.getLocalName().equals("field")) {
+        iterateElements(xml, "document", "field", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
                 DocumentResponse.Field field = extractField(xml);
                 if (field!= null) {
-                    if ("ID".equals(field.getName())) {
-                        id = field.getContent();
-                    }
-                    if ("Score".equals(field.getName())) {
-                        score = Float.parseFloat(field.getContent());
+                    if (wanted.contains(field.getName())) {
+                        extracted.put(field.getName(), field.getContent());
                     }
                     fields.add(field);
                 }
             }
-            xml.next();
-        }
+
+        });
+        String id = extracted.getString("ID", null);
+
         if (id == null) {
             log.warn("Unable to locate field 'ID' in Summon document. "
                      + "Skipping document");
@@ -315,12 +314,52 @@ public class SummonResponseBuilder {
             "hasFullText", hasFullText, true));
         fields.add(new DocumentResponse.Field(
             "inHoldings", inHoldings, true));
+
+        fields.add(new DocumentResponse.Field(
+            "shortformat", createShortformat(extracted), false));
+
         DocumentResponse.Record record =
-            new DocumentResponse.Record(id, "Summon", score, null);
+            new DocumentResponse.Record(
+                id, "Summon", extracted.getFloat("Score", 0f), null);
         for (DocumentResponse.Field field: fields) {
             record.addField(field);
         }
         return record;
+    }
+
+    private String createShortformat(ConvenientMap extracted) {
+        // TODO: Incorporate this properly instead of String-hacking
+        final StringBuffer shortformat = new StringBuffer(500);
+        shortformat.append("  <shortrecord>\n");
+        shortformat.append("    <rdf:RDF xmlns:dc=\"http://purl.org/dc/element"
+                           + "s/1.1/\" xmlns:rdf=\"http://www.w3.org/1999/02/"
+                           + "22-rdf-syntax-ns#\">\n");
+        shortformat.append("      <rdf:Description>\n");
+
+        shortformat.append("        <dc:title>").
+            append(XMLUtil.encode(extracted.getString("Title", ""))).
+            append(" : ").
+            append(XMLUtil.encode(extracted.getString("Subtitle", ""))).
+            append("</dc:title>\n");
+        shortformat.append("        <dc:creator>").
+            append(XMLUtil.encode(extracted.getString("Author", ""))).
+            append("</dc:creator>\n");
+        shortformat.append("        <dc:type xml:lang=\"da\">").
+            append(XMLUtil.encode(extracted.getString("ContentType", ""))).
+            append("</dc:type>\n");
+        shortformat.append("        <dc:type xml:lang=\"en\">").
+            append(XMLUtil.encode(extracted.getString("ContentType", ""))).
+            append("</dc:type>\n");
+        shortformat.append("        <dc:date>").
+            append(extracted.getString("PublicationDate_xml", "????")).
+            append("</dc:date>\n");
+
+
+        shortformat.append("        <dc:format></dc:format>\n");
+        shortformat.append("      </rdf:Description>\n");
+        shortformat.append("    </rdf:RDF>\n");
+        shortformat.append("  </shortrecord>\n");
+        return shortformat.toString();
     }
 
     /**
@@ -345,6 +384,17 @@ public class SummonResponseBuilder {
         }
         // TODO: Implement XML handling and multiple values properly
         if (name.endsWith("_xml")) {
+            if ("PublicationDate_xml".equals(name)) {
+                /*
+                  <field name="PublicationDate_xml">
+                    <datetime text="20081215" month="12" year="2008" day="15"/>
+                  </field>
+                 */
+                findTagStart(xml, "datetime");
+                return new DocumentResponse.Field(name, getAttribute(
+                    xml, "text", "????").substring(0, 4), false);
+            }
+
             log.debug(
                 "XML fields are not supported yet. Skipping '" + name + "'");
             return null;
