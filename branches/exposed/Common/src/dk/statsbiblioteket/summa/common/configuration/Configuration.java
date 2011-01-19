@@ -450,6 +450,64 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Look up a Double property.
+     *
+     * @param key The name of the property to look up.
+     * @return Value as a Double.
+     * @throws NullPointerException          If the property is not found.
+     * @throws IllegalArgumentException      If the property is found but does
+     *                                       not parse as a Double.
+     * @throws ConfigurationStorageException If there is an error communicating
+     *                                       with the storage backend.
+     */
+    public Double getDouble(String key) throws ConfigurationStorageException,
+                                IllegalArgumentException, NullPointerException {
+        Object val = get(key);
+        if (val == null) {
+            throw new NullPointerException("No such property: " + key);
+        }
+
+        String sval = Environment.escapeSystemProperties(val.toString()).trim();
+        try {
+            return Double.parseDouble(sval);
+        } catch (NumberFormatException e) {
+            try {
+                return (Double) Double.parseDouble(sval);
+            } catch (NumberFormatException ee) {
+                throw new IllegalArgumentException("Bad number format for '"
+                                                   + key + "': "
+                                                   + e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Look up a Double property. If it is not defined or does not parse
+     * as a Double, return {@code defaultValue}.
+     *
+     * @param key          The name of the property to look up.
+     * @param defaultValue The value to return if the value for the key could
+     *                     not be extracted.
+     * @return The value for key as a Double.
+     */
+    public Double getDouble(String key, Double defaultValue) {
+        try {
+            Double result = getDouble(key);
+            log.debug("Found property for '" + key + "' using '"
+                  + result + "'");
+            return result;
+        } catch (NullPointerException e) {
+            log.debug("Unable to find property '" + key + "', using default "
+                      + defaultValue);
+            return defaultValue;
+        } catch (NumberFormatException e) {
+            log.warn("Bad number format for property '" + key + "': "
+                     + e.getMessage() + ". Using default " + defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
      * Look up a boolean property.
      *
      * @param key The name of the property to look up.
