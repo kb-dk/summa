@@ -17,12 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search.document;
+package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
-import dk.statsbiblioteket.summa.search.SearchNode;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -32,7 +30,7 @@ import org.apache.commons.logging.Log;
 import java.rmi.RemoteException;
 
 /**
- * Pipes requests and responses to and from a SearchNode through a
+ * Pipes requests and responses to and from a SearchNode through an
  * {@link InteractionAdjuster}.
  * The property {@link #CONF_INNER_SEARCHNODE} must be specified and appropriate
  * properties from {@link InteractionAdjuster} should be specified.

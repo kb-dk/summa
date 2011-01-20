@@ -66,6 +66,16 @@ public class SummaSearcherAggregator implements SummaSearcher {
             "search.aggregator.searcher.designation";
 
     /**
+     * Whether or not an {@link InteractionAdjuster} should be attached to
+     * the remote searcher that is being constructed.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SEARCH_ADJUSTING =
+        "search.aggregator.searcher.adjusting";
+    public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
+
+    /**
      * The maximum number of threads. A fixed list is created, so don't set
      * this too high.
      * </p><p>
@@ -95,7 +105,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
         searchers = new ArrayList<Pair<String, SearchClient>>(
                 searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
-            SearchClient searcher = new SearchClient(searcherConf);
+            SearchClient searcher = searcherConf.getBoolean(
+                CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING) ?
+                                    new AdjustingSearchClient(searcherConf) :
+                                    new SearchClient(searcherConf);
             String searcherName = searcherConf.getString(
                     CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             searchers.add(new Pair<String, SearchClient>(
