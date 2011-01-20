@@ -58,4 +58,8 @@ public class AdjustingSearchClient extends SearchClient {
         adjuster.adjust(adjusted, responses);
         return responses;
     }
+
+    public InteractionAdjuster getAdjuster() {
+        return adjuster;
+    }
 }

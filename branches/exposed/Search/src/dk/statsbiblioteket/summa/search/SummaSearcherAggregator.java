@@ -105,12 +105,25 @@ public class SummaSearcherAggregator implements SummaSearcher {
         searchers = new ArrayList<Pair<String, SearchClient>>(
                 searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
-            SearchClient searcher = searcherConf.getBoolean(
-                CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING) ?
-                                    new AdjustingSearchClient(searcherConf) :
-                                    new SearchClient(searcherConf);
+            SearchClient searcher;
+             if (searcherConf.getBoolean(
+                CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
+                 searcher = new AdjustingSearchClient(searcherConf);
+             } else {
+                 searcher = new SearchClient(searcherConf);
+             }
             String searcherName = searcherConf.getString(
                     CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
+            if (searcher instanceof AdjustingSearchClient) {
+                String adjustID = ((AdjustingSearchClient)searcher).
+                    getAdjuster().getId();
+                if (!adjustID.equals(searcherName)) {
+                    throw new ConfigurationException(
+                        "An AdjustingSearchClient was created with ID '" 
+                        + adjustID + "' with an inner searcherID of '"
+                        + searcherName + "'. Equal designations are required");
+                }
+            }
             searchers.add(new Pair<String, SearchClient>(
                     searcherName, searcher));
             log.debug("Connected to " + searcherName + " at "
