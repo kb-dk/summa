@@ -33,9 +33,9 @@ import java.rmi.RemoteException;
 
 /**
  * Pipes requests and responses to and from a SearchNode through a
- * {@link SearchAdjuster}. The property {@link #CONF_INNER_SEARCHNODE} must
- * be specified and appropriate properties from {@link SearchAdjuster} should
- * be specified.
+ * {@link InteractionAdjuster}.
+ * The property {@link #CONF_INNER_SEARCHNODE} must be specified and appropriate
+ * properties from {@link InteractionAdjuster} should be specified.
  * </p><p>
  * Note that rewriting of warmup queries is not performed as there are no
  * standard for the nature of these queries.
@@ -58,7 +58,7 @@ public class SearchNodeAdjuster implements SearchNode {
         "adjuster.inner.searchnode";
 
     private final SearchNode inner;
-    private final SearchAdjuster adjuster;
+    private final InteractionAdjuster adjuster;
 
     public SearchNodeAdjuster(Configuration conf) {
         if (!conf.valueExists(CONF_INNER_SEARCHNODE)) {
@@ -79,7 +79,7 @@ public class SearchNodeAdjuster implements SearchNode {
                 + "provided for the adjuster and must contain a sub "
                 + "configuration with key " + CONF_INNER_SEARCHNODE);
         }
-        adjuster = new SearchAdjuster(conf);
+        adjuster = new InteractionAdjuster(conf);
         log.debug("Created SearchNodeAdjuster with inner SearchNode " + inner);
     }
 

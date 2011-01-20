@@ -33,7 +33,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * Acts as a transformator of requests and responses. Queries can be rewritten
+ * Acts as a transformer of requests and responses. Queries can be rewritten
  * with weight-adjustment of terms, scores for returned documents can be
  * tweaked.
  * </p><p>
@@ -47,8 +47,8 @@ import java.util.Map;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchAdjuster implements Configurable {
-    private static Log log = LogFactory.getLog(SearchAdjuster.class);
+public class InteractionAdjuster implements Configurable {
+    private static Log log = LogFactory.getLog(InteractionAdjuster.class);
 
     /**
      * The id for this search adjuster. All search-time arguments must be
@@ -88,7 +88,7 @@ public class SearchAdjuster implements Configurable {
     private double baseFactor = 1.0;
     private double baseAddition = 0.0;
 
-    public SearchAdjuster(Configuration conf) {
+    public InteractionAdjuster(Configuration conf) {
         id = conf.getString(CONF_IDENTIFIER);
         prefix = id + ".";
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
