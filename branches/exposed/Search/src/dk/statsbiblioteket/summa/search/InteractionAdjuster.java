@@ -24,12 +24,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,6 +49,10 @@ import java.util.Map;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: disable facets? empty/null? force specific facets?
+// TODO: Rewrite facet- and field-names (many-to-many?)
+// TODO: Map tag names (many-to-many)
+// TODO: Term weight rewrite from lookup-table (share tables if possible)
 public class InteractionAdjuster implements Configurable {
     private static Log log = LogFactory.getLog(InteractionAdjuster.class);
 
@@ -58,14 +64,6 @@ public class InteractionAdjuster implements Configurable {
      * {@code remote_a.adjust.score.multiply=1.5}.
      */
     public static final String CONF_IDENTIFIER = "adjuster.id";
-
-    // TODO: disable facets? empty/null?
-    // facet-names
-    // field-names (many-to-many) recordID, recordBase
-    // tag-names
-    // Weight-rewrite from lookup-table (share tables if possible)
-
-    
 
     /**
      * Add a constant to returned scores for documents.
@@ -83,17 +81,60 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_ADJUST_SCORE_MULTIPLY =
         SEARCH_ADJUST_SCORE_MULTIPLY;
 
+    /**
+     * Maps from field names to field names, one way when rewriting queries,
+     * the other way when adjusting the returned result. This involves only
+     * document-related elements.
+     * </p><p>
+     * The format is a comma-separated list of rewrite-rules. The format of
+     * a single rule is 'fieldname - fieldname'.
+     * Example: {@code author - AuthorField, title - main_title}.
+     * </p><p>
+     * This option is not cumulative. Search-time overrides base configuration.
+     * </p><p>
+     * Optional. Default is no rewriting.
+     */
+    // TODO: Handle many-to-many re-writing
+    public static final String CONF_ADJUST_DOCUMENT_FIELDS =
+        "adjust.document.fields";
+    public static final String
+        SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
+
     private final String id;
     private final String prefix;
     private double baseFactor = 1.0;
     private double baseAddition = 0.0;
+    private Map<String, String> defaultDocumentFields = null;
 
     public InteractionAdjuster(Configuration conf) {
         id = conf.getString(CONF_IDENTIFIER);
         prefix = id + ".";
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
+        if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
+            defaultDocumentFields = parseDocumentFields(
+                conf.getString(CONF_ADJUST_DOCUMENT_FIELDS));
+        }
         log.debug("Constructed search adjuster for '" + id + "'");
+    }
+
+    // a - b, c - d, e - f
+    private Map<String, String> parseDocumentFields(String str) {
+        String[] rules = str.split(" *, *");
+        if (rules.length == 0 || (rules.length == 1 && "".equals(rules[0]))) {
+            return null;
+        }
+        Map<String, String> map = new HashMap<String, String>(rules.length);
+        for (String rule: rules) {
+            String[] parts = rule.split(" *- *");
+            if (parts.length != 2) {
+                throw new IllegalArgumentException(
+                    "Unable to split '" + rule + "' from '" + str
+                    + "' in exactly 2 parts using the delimiter '-'");
+            }
+            map.put(parts[0].trim(), parts[1].trim());
+        }
+        return map;
     }
 
     /**
@@ -104,14 +145,102 @@ public class InteractionAdjuster implements Configurable {
      * @return an adjusted request.
      */
     public Request rewrite(Request request) {
-        Request adjusted = new Request();
-        for (Map.Entry<String, Serializable> entry: request.entrySet()) {
-            adjusted.put(entry.getKey(), entry.getValue());
+        Request adjusted = clone(request);
+        Map<String, String> documentFields = resolveDocumentFields(request);
+        if (documentFields != null) {
+            log.trace("Adjusting fields in document filter and query");
+            if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
+                request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
+                    request.getString(DocumentKeys.SEARCH_FILTER),
+                    documentFields));
+            }
+            if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                request.put(DocumentKeys.SEARCH_QUERY, replaceFields(
+                    request.getString(DocumentKeys.SEARCH_QUERY),
+                    documentFields));
+            }
         }
         return adjusted;
     }
 
+    private Map<String, String> resolveDocumentFields(Request request) {
+        Map<String, String> documentFields = defaultDocumentFields;
+        if (request.containsKey(SEARCH_ADJUST_DOCUMENT_FIELDS)) {
+            documentFields = parseDocumentFields(request.getString(
+                SEARCH_ADJUST_DOCUMENT_FIELDS));
+        }
+        if (request.containsKey(prefix + SEARCH_ADJUST_DOCUMENT_FIELDS)) {
+            documentFields = parseDocumentFields(request.getString(
+                prefix + SEARCH_ADJUST_DOCUMENT_FIELDS));
+        }
+        return documentFields;
+    }
+
+    // TODO: Make a proper parser that handles quotes
+    private Serializable replaceFields(
+        String query, Map<String, String> documentFields) {
+        for (Map.Entry<String, String> entry: documentFields.entrySet()) {
+            // TODO: Optimize by using the replace-framework
+            query = query.replaceAll(entry.getKey() + ":", entry.getValue());
+        }
+        return query;
+    }
+
+    private Request clone(Request request) {
+        Request cloned = new Request();
+        for (Map.Entry<String, Serializable> entry: request.entrySet()) {
+            cloned.put(entry.getKey(), entry.getValue());
+        }
+        return cloned;
+    }
+
     public void adjust(Request request, ResponseCollection responses) {
+        adjustDocuments(request, responses);
+    }
+
+    private void adjustDocuments(
+        Request request, ResponseCollection responses) {
+        DocumentResponse documentResponse = null;
+        for (Response response: responses) {
+            if (!DocumentResponse.NAME.equals(response.getName())) {
+                continue;
+            }
+            if (!(response instanceof DocumentResponse)) {
+                log.error("adjustDocuments found response wil name "
+                          + DocumentResponse.NAME + " and expected Class "
+                          + DocumentResponse.class + " but got "
+                          + response.getClass());
+                continue;
+            }
+            documentResponse = (DocumentResponse)response;
+        }
+        if (documentResponse == null) {
+            log.debug("No DocumentResponse found in adjustDocuments. Exiting");
+            return;
+        }
+        adjustDocumentScores(request, documentResponse);
+        replaceDocumentFields(request, documentResponse);
+    }
+
+    private void replaceDocumentFields(
+        Request request, DocumentResponse documentResponse) {
+        Map<String, String> documentFields = resolveDocumentFields(request);
+        if (documentFields == null) {
+            return;
+        }
+        log.trace("Replacing document fields (" + documentFields.size()
+                  + " replacements)");
+        
+    }
+
+    /**
+     * If the responses contain a {@link DocumentResponse}, the scores for the
+     * documents are adjusted with the given factor and addition.
+     * @param request   potential tweaks to factor and addition.
+     * @param documentResponse the response to adjust.
+     */
+    private void adjustDocumentScores(
+        Request request, DocumentResponse documentResponse) {
         double factor = baseFactor;
         double addition = baseAddition;
         if (request.containsKey(SEARCH_ADJUST_SCORE_MULTIPLY)) {
@@ -128,38 +257,14 @@ public class InteractionAdjuster implements Configurable {
         }
         // It is okay to compare as worst case is an unnecessary adjustment
         //noinspection FloatingPointEquality
-        if (baseAddition != 0 || baseFactor != 1.0) {
-            adjustDocuments(responses, factor, addition);
+        if (baseAddition == 0 && baseFactor == 1.0) {
+            return;
         }
-    }
 
-    /**
-     * If the responses contain a {@link DocumentResponse}, the scores for the
-     * documents are adjusted with the given factor and addition.
-     * @param responses a collection of responses of which DocumentResponse will
-     *                  be adjusted.
-     * @param factor    multiplied to the document scores.
-     * @param addition  added to the document scores after multiplication.
-     */
-    private void adjustDocuments(
-        ResponseCollection responses, double factor, double addition) {
         log.trace("adjustDocuments called with factor " + factor + ", addition "
                   + addition);
-        for (Response response: responses) {
-            if (!DocumentResponse.NAME.equals(response.getName())) {
-                continue;
-            }
-            if (!(response instanceof DocumentResponse)) {
-                log.error("adjustDocuments found response wil name "
-                          + DocumentResponse.NAME + " and expected Class "
-                          + DocumentResponse.class + " but got "
-                          + response.getClass());
-                continue;
-            }
-            DocumentResponse documentResponse = (DocumentResponse) response;
-            for (DocumentResponse.Record record: documentResponse.getRecords()){
-                record.setScore((float)(record.getScore() * factor + addition));
-            }
+        for (DocumentResponse.Record record: documentResponse.getRecords()){
+            record.setScore((float)(record.getScore() * factor + addition));
         }
     }
 
