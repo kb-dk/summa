@@ -19,9 +19,17 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Merges responses from different searchers based on specified strategies.
@@ -36,7 +44,10 @@ import org.apache.commons.logging.Log;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ResponseMerger {
+// TODO: slope (measuring steep drops in scores)
+// TODO: Concatenate
+// TODO: interleave
+public class ResponseMerger implements Configurable {
     private static Log log = LogFactory.getLog(ResponseMerger.class);
 
     /**
@@ -46,7 +57,7 @@ public class ResponseMerger {
      * @see {@link MERGE_MODE} for details.
      */
     public static final String CONF_MODE = "responsemerger.mode";
-    public static final String DEFAULT_MODE = MERGE_MODE.score.toString();
+    public static final MERGE_MODE DEFAULT_MODE = MERGE_MODE.score;
     public static final String SEARCH_MODE = CONF_MODE;
     
     /**
@@ -57,7 +68,7 @@ public class ResponseMerger {
      * @see {@link MERGE_POST} for details.
      */
     public static final String CONF_POST = "responsemerger.post";
-    public static final String DEFAULT_POST = MERGE_POST.none.toString();
+    public static final MERGE_POST DEFAULT_POST = MERGE_POST.none;
     public static final String SEARCH_POST = CONF_POST;
 
     /**
@@ -72,7 +83,6 @@ public class ResponseMerger {
      *              The parameters {@link #CONF_ORDER} or {@link #SEARCH_ORDER}
      *              must be specified to use this merger.<br/>
      */
-    // TODO: slope (measuring steep drops in scores)
     public static enum MERGE_MODE {
         /**
          * Direct sort by score. This is equivalent to the default merger for
@@ -123,6 +133,8 @@ public class ResponseMerger {
      * documents from sources not specified in the rules will be pushed down
      * in the list, starting from document #X and up.
      * </p><p>
+     * This option will only have effect if {@link #CONF_FORCE_RULES} is set.
+     * </p><p>
      * Optional. Default is 20.
      */
     public static final String CONF_FORCE_TOPX = "responsemerger.force.topx";
@@ -139,8 +151,127 @@ public class ResponseMerger {
     public static final String CONF_FORCE_RULES = "responsemerger.force.rules";
     public static final String SEARCH_FORCE_RULES = CONF_FORCE_RULES;
 
-    private MERGE_MODE defaultMode = MERGE_MODE.valueOf(DEFAULT_MODE);
-    private MERGE_POST defaultPost = MERGE_POST.valueOf(DEFAULT_POST);
+    private MERGE_MODE defaultMode = DEFAULT_MODE;
+    private MERGE_POST defaultPost = DEFAULT_POST;
+    private List<String> defaultOrder = new ArrayList<String>();
+    private int defaultForceTopX = DEFAULT_FORCE_TOPX;
+    private List<Pair<String, Integer>> defaultForceRules = null;
 
+    public ResponseMerger(Configuration conf) {
+        defaultMode = MERGE_MODE.valueOf(
+            conf.getString(CONF_MODE, defaultMode.toString()));
+        defaultPost = MERGE_POST.valueOf(
+            conf.getString(CONF_POST, defaultPost.toString()));
+        defaultOrder = conf.getStrings(CONF_ORDER, defaultOrder);
+        defaultForceTopX = conf.getInt(CONF_FORCE_TOPX, defaultForceTopX);
+        if (conf.valueExists(CONF_FORCE_RULES)) {
+            defaultForceRules =
+                parseForceRules(conf.getString(CONF_FORCE_RULES));
+        }
+        log.debug("Created response merger");
+    }
+
+    /**
+     * Merges the given packages and returns the result based on basic setup and
+     * parameters given in the request. 
+     * @param request  the original request then resulted in the packages.
+     * @param packages a collection og ResponseCollections to merge.
+     * @return a merge of the given ResponseCollections.
+     */
+    public ResponseCollection merge(
+        Request request, List<MergePackage> packages) {
+        ResponseCollection merged = new ResponseCollection();
+        merge(request, merged, packages);
+        postProcess(request, merged, packages);
+        return merged;
+    }
+
+    private void merge(Request request, ResponseCollection merged,
+                       List<MergePackage> packages) {
+        MERGE_MODE mode = MERGE_MODE.valueOf(
+            request.getString(SEARCH_MODE, defaultMode.toString()));
+        List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
+        switch (mode) {
+            case score: {
+                for (MergePackage mp: packages) {
+                    merged.addAll(mp.getResponses());
+                }
+                break;
+            }
+            default: throw new UnsupportedOperationException(
+                "Merge mode " + mode + " not supported yet");
+        }
+    }
+
+    private void postProcess(Request request, ResponseCollection merged,
+                             List<MergePackage> packages) {
+        MERGE_POST post = MERGE_POST.valueOf(
+            request.getString(SEARCH_POST, defaultPost.toString()));
+        if (post == MERGE_POST.none) {
+            return;
+        }
+        List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
+        int forceTopX = request.getInt(SEARCH_FORCE_TOPX, defaultForceTopX);
+        List<Pair<String, Integer>> forceRules = defaultForceRules;
+        if (request.containsKey(SEARCH_FORCE_RULES)) {
+            forceRules = parseForceRules(request.getString(CONF_FORCE_RULES));
+        }
+        switch (post) {
+            default: throw new UnsupportedOperationException(
+                "Post merge processing does not yet support '" + post + "'");
+        }
+    }
+
+    public static class MergePackage {
+        private final String id;
+        private final Request request;
+        private final ResponseCollection responses;
+
+        public MergePackage(String id,
+                            Request request, ResponseCollection responses) {
+            this.id = id;
+            this.request = request;
+            this.responses = responses;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public Request getRequest() {
+            return request;
+        }
+
+        public ResponseCollection getResponses() {
+            return responses;
+        }
+    }
+
+    private List<Pair<String, Integer>> parseForceRules(String s) {
+        String[] ruleTokens = s.split(" *, *");
+        if (ruleTokens.length == 0) {
+            log.trace("parceForceRules found no rules in '" + s + "'");
+            return null;
+        }
+        List<Pair<String, Integer>> rules =
+            new ArrayList<Pair<String, Integer>>(ruleTokens.length);
+        for (String ruleToken: ruleTokens) {
+            // zoo(12)
+            String[] subTokens = ruleToken.split(" *\\(", 2);
+            // zoo
+            if (subTokens.length < 2) {
+                throw new IllegalArgumentException(
+                    "The syntax for a rule is 'id(minCount)' but the input "
+                    + "was '" + ruleToken + "'");
+            }
+            // "  5)  "
+            String noParen = subTokens[1].split("\\)", 2)[0].trim();
+            Integer count = Integer.parseInt(noParen);
+            log.debug("parseForceRules adding rule " + subTokens[0] + ", "
+                      + count);
+            rules.add(new Pair<String, Integer>(subTokens[0], count));
+        }
+        return rules;
+    }
 
 }
