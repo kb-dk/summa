@@ -135,6 +135,14 @@ public class DocumentResponse implements Response, DocumentKeys {
             sw.append("  </record>\n");
         }
 
+        public String getId() {
+            return id;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
         public float getScore() {
             return score;
         }
@@ -145,6 +153,10 @@ public class DocumentResponse implements Response, DocumentKeys {
 
         public String getSortValue() {
             return sortValue;
+        }
+
+        public List<Field> getFields() {
+            return fields;
         }
     }
 
@@ -177,6 +189,10 @@ public class DocumentResponse implements Response, DocumentKeys {
 
         public String getName() {
             return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
 
         public String getContent() {

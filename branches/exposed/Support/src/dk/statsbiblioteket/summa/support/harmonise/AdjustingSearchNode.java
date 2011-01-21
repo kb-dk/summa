@@ -17,10 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search;
+package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -41,14 +43,14 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchNodeAdjuster implements SearchNode {
-    private static Log log = LogFactory.getLog(SearchNodeAdjuster.class);
+public class AdjustingSearchNode implements SearchNode {
+    private static Log log = LogFactory.getLog(AdjustingSearchNode.class);
 
     /**
      * A sub-configuration with the setup for the SearchNode that is to be
      * created and used for all calls. The configuration must contain the
-     * property {@link SearchNodeFactory#CONF_NODE_CLASS} as
-     * {@link SearchNodeFactory} is used for creating the single inner node.
+     * property {@link dk.statsbiblioteket.summa.search.SearchNodeFactory#CONF_NODE_CLASS} as
+     * {@link dk.statsbiblioteket.summa.search.SearchNodeFactory} is used for creating the single inner node.
      * </p><p>
      * Mandatory.
      */
@@ -58,7 +60,7 @@ public class SearchNodeAdjuster implements SearchNode {
     private final SearchNode inner;
     private final InteractionAdjuster adjuster;
 
-    public SearchNodeAdjuster(Configuration conf) {
+    public AdjustingSearchNode(Configuration conf) {
         if (!conf.valueExists(CONF_INNER_SEARCHNODE)) {
             throw new ConfigurationException(
                 "No inner search node defined. A proper sub-configuration must "
@@ -78,7 +80,7 @@ public class SearchNodeAdjuster implements SearchNode {
                 + "configuration with key " + CONF_INNER_SEARCHNODE);
         }
         adjuster = new InteractionAdjuster(conf);
-        log.debug("Created SearchNodeAdjuster with inner SearchNode " + inner);
+        log.debug("Created AdjustingSearchNode with inner SearchNode " + inner);
     }
 
     @Override
@@ -113,7 +115,7 @@ public class SearchNodeAdjuster implements SearchNode {
 
     @Override
     public String toString() {
-        return "SearchNodeAdjuster(" + adjuster.getId()
+        return "AdjustingSearchNode(" + adjuster.getId()
                + " for " + super.toString() + ")";
     }
 }

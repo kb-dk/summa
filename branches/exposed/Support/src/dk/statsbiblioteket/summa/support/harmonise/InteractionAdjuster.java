@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search;
+package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -50,7 +50,7 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: disable facets? empty/null? force specific facets?
-// TODO: Rewrite facet- and field-names (many-to-many?)
+// TODO: Rewrite facet-names (many-to-many?)
 // TODO: Map tag names (many-to-many)
 // TODO: Term weight rewrite from lookup-table (share tables if possible)
 public class InteractionAdjuster implements Configurable {
@@ -100,11 +100,31 @@ public class InteractionAdjuster implements Configurable {
     public static final String
         SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
+    /**
+     * Maps from field names to field names, one way when rewriting queries,
+     * the other way when adjusting the returned result. This involves only
+     * facet-related elements.
+     * </p><p>
+     * The format is a comma-separated list of rewrite-rules. The format of
+     * a single rule is 'fieldname - fieldname'.
+     * Example: {@code author - AuthorField, title - main_title}.
+     * </p><p>
+     * This option is not cumulative. Search-time overrides base configuration.
+     * </p><p>
+     * Optional. Default is no rewriting.
+     */
+    // TODO: Handle many-to-many re-writing
+    public static final String CONF_ADJUST_FACET_FIELDS =
+        "adjust.facet.fields";
+    public static final String 
+        SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
+
     private final String id;
     private final String prefix;
     private double baseFactor = 1.0;
     private double baseAddition = 0.0;
     private Map<String, String> defaultDocumentFields = null;
+    private Map<String, String> defaultFacetFields = null;
 
     public InteractionAdjuster(Configuration conf) {
         id = conf.getString(CONF_IDENTIFIER);
@@ -112,14 +132,18 @@ public class InteractionAdjuster implements Configurable {
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
-            defaultDocumentFields = parseDocumentFields(
+            defaultDocumentFields = parseSingleMapRules(
                 conf.getString(CONF_ADJUST_DOCUMENT_FIELDS));
+        }
+        if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
+            defaultFacetFields = parseSingleMapRules(
+                conf.getString(CONF_ADJUST_FACET_FIELDS));
         }
         log.debug("Constructed search adjuster for '" + id + "'");
     }
 
     // a - b, c - d, e - f
-    private Map<String, String> parseDocumentFields(String str) {
+    private Map<String, String> parseSingleMapRules(String str) {
         String[] rules = str.split(" *, *");
         if (rules.length == 0 || (rules.length == 1 && "".equals(rules[0]))) {
             return null;
@@ -146,36 +170,61 @@ public class InteractionAdjuster implements Configurable {
      */
     public Request rewrite(Request request) {
         Request adjusted = clone(request);
-        Map<String, String> documentFields = resolveDocumentFields(request);
-        if (documentFields != null) {
-            log.trace("Adjusting fields in document filter and query");
-            if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
-                request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
-                    request.getString(DocumentKeys.SEARCH_FILTER),
-                    documentFields));
-            }
-            if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
-                request.put(DocumentKeys.SEARCH_QUERY, replaceFields(
-                    request.getString(DocumentKeys.SEARCH_QUERY),
-                    documentFields));
-            }
-        }
+        rewriteDocumentQueryFields(request);
+        rewriteFacetQueryFields(request);
         return adjusted;
     }
 
-    private Map<String, String> resolveDocumentFields(Request request) {
-        Map<String, String> documentFields = defaultDocumentFields;
-        if (request.containsKey(SEARCH_ADJUST_DOCUMENT_FIELDS)) {
-            documentFields = parseDocumentFields(request.getString(
-                SEARCH_ADJUST_DOCUMENT_FIELDS));
+    private void rewriteDocumentQueryFields(Request request) {
+        Map<String, String> documentFields = resolveMap(
+            request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
+        if (documentFields == null) {
+            return;
         }
-        if (request.containsKey(prefix + SEARCH_ADJUST_DOCUMENT_FIELDS)) {
-            documentFields = parseDocumentFields(request.getString(
-                prefix + SEARCH_ADJUST_DOCUMENT_FIELDS));
+        log.trace("Adjusting fields in document filter and query");
+        if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
+            request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
+                request.getString(DocumentKeys.SEARCH_FILTER),
+                documentFields));
         }
-        return documentFields;
+        if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+            request.put(DocumentKeys.SEARCH_QUERY, replaceFields(
+                request.getString(DocumentKeys.SEARCH_QUERY),
+                documentFields));
+        }
     }
 
+    private void rewriteFacetQueryFields(Request request) {
+        Map<String, String> facetFields = resolveMap(
+            request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
+        if (facetFields == null) {
+            return;
+        }
+        log.trace("Adjusting fields in facet request");
+        if (request.containsKey(FacetKeys.DocumentKeys.SEARCH_FILTER)) {
+            request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
+                request.getString(DocumentKeys.SEARCH_FILTER),
+                facetFields));
+        }
+        if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+            request.put(DocumentKeys.SEARCH_QUERY, replaceFields(
+                request.getString(DocumentKeys.SEARCH_QUERY),
+                facetFields));
+        }
+    }
+
+    private Map<String, String> resolveMap(
+        Request request, Map<String, String> defaultMap, String key) {
+        Map<String, String> map = defaultMap;
+        if (request.containsKey(key)) {
+            map = parseSingleMapRules(request.getString(key));
+        }
+        if (request.containsKey(prefix + key)) {
+            map = parseSingleMapRules(request.getString(prefix + key));
+        }
+        return map;
+    }
+    
     // TODO: Make a proper parser that handles quotes
     private Serializable replaceFields(
         String query, Map<String, String> documentFields) {
@@ -224,13 +273,30 @@ public class InteractionAdjuster implements Configurable {
 
     private void replaceDocumentFields(
         Request request, DocumentResponse documentResponse) {
-        Map<String, String> documentFields = resolveDocumentFields(request);
+        Map<String, String> documentFields = resolveMap(
+            request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         if (documentFields == null) {
             return;
         }
+        Map<String, String> reverse = new HashMap<String, String>(documentFields.size());
+        for (Map.Entry<String, String> entry: documentFields.entrySet()) {
+            reverse.put(entry.getValue(), entry.getKey());
+        }
+
         log.trace("Replacing document fields (" + documentFields.size()
                   + " replacements)");
-        
+        for (DocumentResponse.Record record: documentResponse.getRecords()) {
+            for (DocumentResponse.Field field: record.getFields()) {
+                if (reverse.containsValue(field.getName())) {
+                    if (log.isTraceEnabled()) {
+                        log.trace("Changing field name '" + field.getName()
+                                  + "' to '" + reverse.get(field.getName())
+                                  + " for " + record.getId());
+                    }
+                    field.setName(reverse.get(field.getName()));
+                }
+            }
+        }
     }
 
     /**

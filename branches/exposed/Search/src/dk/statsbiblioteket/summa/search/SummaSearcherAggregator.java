@@ -66,16 +66,6 @@ public class SummaSearcherAggregator implements SummaSearcher {
             "search.aggregator.searcher.designation";
 
     /**
-     * Whether or not an {@link InteractionAdjuster} should be attached to
-     * the remote searcher that is being constructed.
-     * </p><p>
-     * Optional. Default is false.
-     */
-    public static final String CONF_SEARCH_ADJUSTING =
-        "search.aggregator.searcher.adjusting";
-    public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
-
-    /**
      * The maximum number of threads. A fixed list is created, so don't set
      * this too high.
      * </p><p>
@@ -105,25 +95,9 @@ public class SummaSearcherAggregator implements SummaSearcher {
         searchers = new ArrayList<Pair<String, SearchClient>>(
                 searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
-            SearchClient searcher;
-             if (searcherConf.getBoolean(
-                CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
-                 searcher = new AdjustingSearchClient(searcherConf);
-             } else {
-                 searcher = new SearchClient(searcherConf);
-             }
+            SearchClient searcher = createClient(searcherConf);
             String searcherName = searcherConf.getString(
                     CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
-            if (searcher instanceof AdjustingSearchClient) {
-                String adjustID = ((AdjustingSearchClient)searcher).
-                    getAdjuster().getId();
-                if (!adjustID.equals(searcherName)) {
-                    throw new ConfigurationException(
-                        "An AdjustingSearchClient was created with ID '" 
-                        + adjustID + "' with an inner searcherID of '"
-                        + searcherName + "'. Equal designations are required");
-                }
-            }
             searchers.add(new Pair<String, SearchClient>(
                     searcherName, searcher));
             log.debug("Connected to " + searcherName + " at "
@@ -141,6 +115,17 @@ public class SummaSearcherAggregator implements SummaSearcher {
                   + ". Ready for use");
     }
 
+    /**
+     * Creates a searchClien from the given configuration. Intended to be
+     * overridden in subclasses that want special SearchClients.
+     * @param searcherConf the configuration for the SearchClient.
+     * @return a SearchClient build for the given configuration.
+     */
+    protected SearchClient createClient(Configuration searcherConf) {
+        return new SearchClient(searcherConf);
+    }
+
+    @Override
     public ResponseCollection search(Request request) throws IOException {
         long startTime = System.nanoTime();
         if (log.isTraceEnabled()) {
@@ -189,6 +174,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         return response;
     }
 
+    @Override
     public void close() throws IOException {
         log.info("Close called for aggregator. Remote SummaSearchers will be "
                  + "disconnected but not closed");
@@ -210,6 +196,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             this.request = request;
         }
 
+        @Override
         public ResponseCollection call() throws Exception {
             return client.search(request);
         }
