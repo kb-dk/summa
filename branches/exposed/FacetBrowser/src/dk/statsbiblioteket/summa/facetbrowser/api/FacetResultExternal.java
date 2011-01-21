@@ -49,10 +49,12 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         this.fields = fields;
     }
 
+    @Override
     public FacetResult externalize() {
         return this;
     }
 
+    @Override
     public String getName() {
         //noinspection DuplicateStringLiteralInspection
         return NAME;
@@ -88,10 +90,13 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         return sw.toString();
     }
 
-    private HashMap<String, String[]> getFields() {
+    public HashMap<String, String[]> getFields() {
         return fields;
     }
 
+    public void setFields(HashMap<String, String[]> fields) {
+        this.fields = fields;
+    }
 
     @Override
     public void merge(Response otherResponse) throws ClassCastException {
@@ -124,6 +129,22 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         String[] result = new String[merged.size()];
         merged.toArray(result);
         return result;
+    }
+
+    /**
+     * Renames the facet. and the field-names according to the map.
+     * @param map oldName -> newName for facets and fields.
+     */
+    @Override
+    public void renameFacetsAndFields(Map<String, String> map) {
+        HashMap<String, String[]> newFields =
+            new HashMap<String, String[]>(fields.size());
+        for (Map.Entry<String, String[]> entry: fields.entrySet()) {
+            newFields.put(adjust(map, entry.getKey()),
+                          adjust(map, entry.getValue()));
+        }
+        fields = newFields;
+        super.renameFacetsAndFields(map);
     }
 }
 

@@ -77,6 +77,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * all elements are trimmed and sorted.
      * @return an XML representation of the facet browser structure.
      */
+    @Override
     public synchronized String toXML() {
         log.trace("Entering toXML");
         StringWriter sw = new StringWriter(10000);
@@ -132,6 +133,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         return sw.toString();
     }
 
+    @Override
     public synchronized void reduce(TagSortOrder tagSortOrder) {
         LinkedHashMap<String, List<FlexiblePair<T, Integer>>> newMap =
                 new LinkedHashMap<String,
@@ -159,10 +161,11 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * Used by the default merge.
      * @return the internal map.
      */
-    protected Map<String, List<FlexiblePair<T, Integer>>> getMap() {
+    public Map<String, List<FlexiblePair<T, Integer>>> getMap() {
         return map;
     }
 
+    @Override
     @SuppressWarnings({"unchecked"})
     public void merge(Response otherResponse) throws ClassCastException {
         if (!(otherResponse instanceof FacetResult)) {
@@ -239,6 +242,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 case tag:
                     Collections.sort(facet.getValue(),
                         new Comparator<FlexiblePair<T, Integer>>() {
+                            @Override
                             public int compare(FlexiblePair<T, Integer> o1,
                                                FlexiblePair<T, Integer> o2) {
                                 return compareTags(o1, o2);
@@ -248,6 +252,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 case popularity:                    
                     Collections.sort(facet.getValue(),
                         new Comparator<FlexiblePair<T, Integer>>() {
+                            @Override
                             public int compare(FlexiblePair<T, Integer> o1,
                                                FlexiblePair<T, Integer> o2) {
                                 return o1.getValue().compareTo(o2.getValue());
@@ -275,6 +280,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         // Sort it
         Collections.sort(ordered,
             new Comparator<Pair<String, List<FlexiblePair<T, Integer>>>>() {
+                @Override
                 public int compare(Pair<String,
                                         List<FlexiblePair<T, Integer>>> o1,
                                    Pair<String,
@@ -316,6 +322,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @param tag The tag to convert to String.
      * @return a String-representation of the Tag.
      */
+    @SuppressWarnings({"UnusedDeclaration"})
     protected String getTagString(String facet, T tag) {
         log.trace("Default-implementation of getTagString called with Tag " 
                   + tag);
@@ -449,6 +456,45 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      */
     protected String queryEscapeTag(String cleanTag) {
         return cleanTag.replace("\"", "\\\"");
+    }
+
+    protected String adjust(Map<String, String> replacements, String s) {
+        return replacements.containsKey(s) ? replacements.get(s) : s;
+    }
+
+    protected String[] adjust(Map<String, String> replacements, String[] s) {
+        for (int i = 0 ; i < s.length ; i++) {
+            s[i] = adjust(replacements, s[i]);
+        }
+        return s;
+    }
+
+    /**
+     * Renames the facet. and the field-names according to the map.
+     * @param replacements oldName -> newName for facets and fields.
+     */
+    public synchronized void renameFacetsAndFields(
+                                             Map<String, String> replacements) {
+        LinkedHashMap<String, List<FlexiblePair<T, Integer>>> newTags =
+            new LinkedHashMap<String, List<FlexiblePair<T, Integer>>>(map.size());
+        for (Map.Entry<String, List<FlexiblePair<T, Integer>>> entry:
+            map.entrySet()) {
+            newTags.put(adjust(replacements, entry.getKey()), entry.getValue());
+        }
+        map = newTags;
+
+        maxTags = adjust(replacements, maxTags);
+        facetIDs = adjust(replacements, facetIDs);
+    }
+
+    private HashMap<String, Integer> adjust(
+        Map<String, String> replacements, HashMap<String, Integer> map) {
+        HashMap<String, Integer> adjusted = new HashMap<String, Integer>(map.size());
+        for (Map.Entry<String, Integer> entry: map.entrySet()) {
+            adjusted.put(adjust(
+                replacements, entry.getKey()), entry.getValue());
+        }
+        return adjusted;
     }
 }
 
