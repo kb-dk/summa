@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
@@ -116,13 +117,28 @@ public class SummaSearcherAggregator implements SummaSearcher {
     }
 
     /**
-     * Creates a searchClien from the given configuration. Intended to be
+     * Creates a searchClient from the given configuration. Intended to be
      * overridden in subclasses that want special SearchClients.
      * @param searcherConf the configuration for the SearchClient.
      * @return a SearchClient build for the given configuration.
      */
     protected SearchClient createClient(Configuration searcherConf) {
         return new SearchClient(searcherConf);
+    }
+
+    /**
+     * Merges response collections after the searches has been performed.
+     * Intended to be overridden in subclasses than wants custom merging.
+     * @param responses a collection of responses, one from each searcher.
+     * @return a merge of the responses.
+     */
+    protected ResponseCollection merge(
+        List<Triple<String, Request, ResponseCollection>> responses) {
+        ResponseCollection merged = new ResponseCollection();
+        for (Triple<String, Request, ResponseCollection> triple: responses) {
+            merged.addAll(triple.getValue3());
+        }
+        return merged;
     }
 
     @Override
@@ -145,16 +161,16 @@ public class SummaSearcherAggregator implements SummaSearcher {
         }
         log.trace("All searchers started, collecting and waiting");
 
-        ResponseCollection response = null;
+
+        List<Triple<String, Request, ResponseCollection>> responses =
+            new ArrayList<Triple<String, Request, ResponseCollection>>(
+                searchFutures.size());
         for (Pair<String, Future<ResponseCollection>> searchFuture:
                 searchFutures) {
             try {
-                if (response == null) {
-                    // TODO: Consider explicit timeout
-                    response = searchFuture.getValue().get();
-                } else {
-                    response.addAll(searchFuture.getValue().get());
-                }
+                responses.add(new Triple<String, Request, ResponseCollection>(
+                    searchFuture.getKey(), request,
+                    searchFuture.getValue().get()));
             } catch (InterruptedException e) {
                 throw new IOException(
                         "Interrupted while waiting for searcher result from "
@@ -169,9 +185,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
                         + searchFuture.getKey(), e);
             }
         }
+        ResponseCollection merged = merge(responses);
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
-        return response;
+        return merged;
     }
 
     @Override

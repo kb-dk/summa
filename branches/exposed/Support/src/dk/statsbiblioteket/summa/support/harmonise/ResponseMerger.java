@@ -17,11 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search;
+package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -179,22 +180,24 @@ public class ResponseMerger implements Configurable {
      * @return a merge of the given ResponseCollections.
      */
     public ResponseCollection merge(
-        Request request, List<MergePackage> packages) {
+        Request request,
+        List<Triple<String, Request, ResponseCollection>> packages) {
         ResponseCollection merged = new ResponseCollection();
         merge(request, merged, packages);
         postProcess(request, merged, packages);
         return merged;
     }
 
-    private void merge(Request request, ResponseCollection merged,
-                       List<MergePackage> packages) {
+    private void merge(
+        Request request, ResponseCollection merged,
+        List<Triple<String, Request, ResponseCollection>> packages) {
         MERGE_MODE mode = MERGE_MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         switch (mode) {
             case score: {
-                for (MergePackage mp: packages) {
-                    merged.addAll(mp.getResponses());
+                for (Triple<String, Request, ResponseCollection> mp: packages) {
+                    merged.addAll(mp.getValue3());
                 }
                 break;
             }
@@ -203,8 +206,9 @@ public class ResponseMerger implements Configurable {
         }
     }
 
-    private void postProcess(Request request, ResponseCollection merged,
-                             List<MergePackage> packages) {
+    private void postProcess(
+        Request request, ResponseCollection merged,
+        List<Triple<String, Request, ResponseCollection>> packages) {
         MERGE_POST post = MERGE_POST.valueOf(
             request.getString(SEARCH_POST, defaultPost.toString()));
         if (post == MERGE_POST.none) {
@@ -219,31 +223,6 @@ public class ResponseMerger implements Configurable {
         switch (post) {
             default: throw new UnsupportedOperationException(
                 "Post merge processing does not yet support '" + post + "'");
-        }
-    }
-
-    public static class MergePackage {
-        private final String id;
-        private final Request request;
-        private final ResponseCollection responses;
-
-        public MergePackage(String id,
-                            Request request, ResponseCollection responses) {
-            this.id = id;
-            this.request = request;
-            this.responses = responses;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public Request getRequest() {
-            return request;
-        }
-
-        public ResponseCollection getResponses() {
-            return responses;
         }
     }
 

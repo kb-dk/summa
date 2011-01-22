@@ -20,14 +20,23 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.util.List;
+
 /**
- *
+ * Optionally replaces standard SearchClients with AdjustingSearchClients.
+ * Note that adjustments of individual search nodes must be enabled explicitly.
+ * </p><p>
+ * A {@link ResponseMerger} is attached automatically. Settings for the merger
+ * must be provided in the configuration given to the conctructor.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -45,8 +54,11 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         "search.aggregator.searcher.adjusting";
     public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
 
+    private final ResponseMerger responseMerger;
+
     public AdjustingSearcherAggregator(Configuration conf) {
         super(conf);
+        responseMerger = new ResponseMerger(conf);
     }
 
     @Override
@@ -68,5 +80,11 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
              return searcher;
          }
          return super.createClient(searcherConf);
+    }
+
+    @Override
+    protected ResponseCollection merge(
+        List<Triple<String, Request, ResponseCollection>> responses) {
+        return super.merge(responses);    // TODO: Implement this
     }
 }
