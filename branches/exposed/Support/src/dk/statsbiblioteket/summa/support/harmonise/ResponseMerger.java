@@ -24,7 +24,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -39,7 +41,7 @@ import java.util.List;
  * Properties are generally specified both at startup and runtime, where runtime
  * overrides startup. 
  * </p><p>
- * Currently only {@link DocumentResult}s are explicitly processed.
+ * Currently only {@link DocumentResponse}s are explicitly processed.
  * Other results are merged with the default merger.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -152,11 +154,22 @@ public class ResponseMerger implements Configurable {
     public static final String CONF_FORCE_RULES = "responsemerger.force.rules";
     public static final String SEARCH_FORCE_RULES = CONF_FORCE_RULES;
 
+    /**
+     * If true, the response collections are treated as being generated
+     * sequentially. If true, time measurements are added, if false, time
+     * measurements are calculated by taking the maximum value.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SEQUENTIAL = "responsemerger.sequential";
+    public static final boolean DEFAULT_SEQUENTIAL = false;
+
     private MERGE_MODE defaultMode = DEFAULT_MODE;
     private MERGE_POST defaultPost = DEFAULT_POST;
     private List<String> defaultOrder = new ArrayList<String>();
     private int defaultForceTopX = DEFAULT_FORCE_TOPX;
     private List<Pair<String, Integer>> defaultForceRules = null;
+    private boolean sequential = DEFAULT_SEQUENTIAL;
 
     public ResponseMerger(Configuration conf) {
         defaultMode = MERGE_MODE.valueOf(
@@ -169,6 +182,7 @@ public class ResponseMerger implements Configurable {
             defaultForceRules =
                 parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
+        sequential = conf.getBoolean(CONF_SEQUENTIAL, sequential);
         log.debug("Created response merger");
     }
 
@@ -191,6 +205,7 @@ public class ResponseMerger implements Configurable {
     private void merge(
         Request request, ResponseCollection merged,
         List<Triple<String, Request, ResponseCollection>> packages) {
+        log.trace("merge called");
         MERGE_MODE mode = MERGE_MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
@@ -201,9 +216,93 @@ public class ResponseMerger implements Configurable {
                 }
                 break;
             }
+            case concatenate:
+            case interleave: {
+                List<Pair<String, DocumentResponse>> documentResponses =
+                    new ArrayList<Pair<String, DocumentResponse>>(packages.size());
+                for (Triple<String, Request, ResponseCollection> mp: packages) {
+                    for (Response response: mp.getValue3()) {
+                        if (response instanceof DocumentResponse) {
+                            documentResponses.add(
+                                new Pair<String, DocumentResponse>(
+                                    mp.getValue1(),(DocumentResponse)response));
+                        } else {
+                            merged.add(response);
+                        }
+
+                    }
+                }
+                documentMerge(merged, mode, order, documentResponses);
+                break;
+            }
             default: throw new UnsupportedOperationException(
                 "Merge mode " + mode + " not supported yet");
         }
+    }
+
+    private void documentMerge(
+        ResponseCollection merged, MERGE_MODE mode, List<String> order,
+        List<Pair<String, DocumentResponse>> documentResponses) {
+        log.trace("documentMerge called with mode " + mode + " and order "
+                  + order + " for " + documentResponses.size() + " responses");
+        documentResponses = sort(documentResponses, order);
+        switch (mode) {
+            case concatenate: {
+                documentMergeConcatenate(merged, documentResponses);
+                break;
+            }
+            default: throw new UnsupportedOperationException(
+                "Document merge mode " + mode + " not supported yet");
+        }
+    }
+
+    private List<Pair<String, DocumentResponse>> sort(
+        List<Pair<String, DocumentResponse>> documentResponses,
+        List<String> order) {
+        log.trace("sort called with " + documentResponses.size()
+                  + " document responses");
+        if (documentResponses.size() <= 0) {
+            return documentResponses;
+        }
+        List<Pair<String, DocumentResponse>> drs =
+            new ArrayList<Pair<String, DocumentResponse>>(
+                documentResponses.size());
+        for (String id : order) {
+            for (int dr = 0; dr < documentResponses.size(); dr++) {
+                if (documentResponses.get(dr).getKey().equals(id)) {
+                    drs.add(documentResponses.remove(dr));
+                    break;
+                }
+            }
+        }
+        for (Pair<String, DocumentResponse> dr: documentResponses) {
+            drs.add(dr);
+        }
+        return drs;
+    }
+
+    // It is assumed that the document responses are ordered
+    private void documentMergeConcatenate(
+        ResponseCollection merged,
+        List<Pair<String, DocumentResponse>> documentResponses) {
+        log.trace("documentMergeConcatenate called");
+        if (documentResponses.size() == 0) {
+            return;
+        }
+        // Responses are now in the given order
+        Pair<String, DocumentResponse> base = documentResponses.remove(0);
+        for (Pair<String, DocumentResponse> dr: documentResponses) {
+            base.getValue().getRecords().addAll(dr.getValue().getRecords());
+            base.getValue().setHitCount(
+                base.getValue().getHitCount() + dr.getValue().getHitCount());
+            base.getValue().setSearchTime(
+                sequential ?
+                base.getValue().getSearchTime() + dr.getValue().getSearchTime():
+                Math.max(base.getValue().getSearchTime(),
+                         dr.getValue().getSearchTime())
+            );
+        }
+        merged.add(base.getValue());
     }
 
     private void postProcess(

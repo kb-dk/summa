@@ -42,6 +42,7 @@ import java.util.concurrent.Future;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: Rewrite requests to adjust number of records to return for paging
 public class SummaSearcherAggregator implements SummaSearcher {
     private static Log log = LogFactory.getLog(SummaSearcherAggregator.class);
 

@@ -286,6 +286,7 @@ public class DocumentResponse implements Response, DocumentKeys {
         }
 
         hitCount += docResponse.getHitCount();
+        // TODO: This is only right for sequential searches
         searchTime += docResponse.getSearchTime();
     }
     private Comparator<Record> scoreComparator = new ScoreComparator();
@@ -362,6 +363,15 @@ public class DocumentResponse implements Response, DocumentKeys {
     public List<Record> getRecords() {
         return records;
     }
+
+    public void setRecords(List<Record> records) {
+        this.records = records;
+    }
+
+    public void setHitCount(long hitCount) {
+        this.hitCount = hitCount;
+    }
+
     // Because building the DocumentResponse takes time
     public void setSearchTime(long searchTime) {
         this.searchTime = searchTime;
@@ -382,7 +392,3 @@ public class DocumentResponse implements Response, DocumentKeys {
         return hitCount;
     }
 }
-
-
-
-

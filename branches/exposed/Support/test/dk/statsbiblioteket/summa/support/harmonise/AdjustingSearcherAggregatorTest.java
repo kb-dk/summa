@@ -16,7 +16,9 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -48,7 +50,10 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
     // addresses on the local machine
     public void testAggregator() throws IOException {
         Configuration conf = Configuration.newMemoryBased(
-            ResponseMerger.CONF_MODE, "score");
+            ResponseMerger.CONF_ORDER, "summon, sb",
+            ResponseMerger.CONF_MODE,
+            ResponseMerger.MERGE_MODE.concatenate.toString());
+//            ResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 2);
         // SB
@@ -79,7 +84,17 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         log.debug("Searching");
         ResponseCollection responses = aggregator.search(request);
         log.debug("Finished searching");
-        System.out.println(responses.toXML());
+//        System.out.println(responses.toXML());
+
+        System.out.println("Records");
+        BufferedReader lines =
+            new BufferedReader(new StringReader(responses.toXML()));
+        String line;
+        while ((line = lines.readLine()) != null) {
+            if (line.contains("record score")) {
+                System.out.println(line);
+            }
+        }
         aggregator.close();
     }
 

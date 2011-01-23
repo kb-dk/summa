@@ -44,6 +44,8 @@ public interface Response extends Serializable {
      */
     public void merge(Response other) throws ClassCastException;
 
+    // TODO: Introduce trimming to be called after marge has finished
+
     /**
      * The XML returned should be an XML-snippet: UTF-8 is used and no header
      * should be included. A proper response could be:
