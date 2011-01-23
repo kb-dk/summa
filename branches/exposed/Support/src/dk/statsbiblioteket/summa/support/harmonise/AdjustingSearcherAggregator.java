@@ -46,7 +46,8 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
 
     /**
      * Whether or not an {@link InteractionAdjuster} should be attached to
-     * the remote searcher that is being constructed.
+     * the remote searcher that is being constructed. Note that this setting
+     * must be set for each SearchClient-configuration individually.
      * </p><p>
      * Optional. Default is false.
      */

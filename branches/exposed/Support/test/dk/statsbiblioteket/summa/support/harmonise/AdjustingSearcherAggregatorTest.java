@@ -48,22 +48,25 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
     // addresses on the local machine
     public void testAggregator() throws IOException {
         Configuration conf = Configuration.newMemoryBased(
-            AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true,
             ResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 2);
         // SB
         Configuration sbConf = searcherConfs.get(0);
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, 
+        sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
+        sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
+        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
                    "//localhost:55000/sb-searcher");
-        sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 2.0);
+        sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
         
         // Summon
         Configuration summonConf = searcherConfs.get(1);
         summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION,
                        "summon");
-        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET, 
+        summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "summon");
+        summonConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
+        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
                    "//localhost:55400/summon-searcher");
         summonConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_ADD, -0.5);
 
