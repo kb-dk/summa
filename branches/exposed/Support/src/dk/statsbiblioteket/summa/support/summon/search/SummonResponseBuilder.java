@@ -57,15 +57,33 @@ import java.util.*;
 public class SummonResponseBuilder {
     private static Log log = LogFactory.getLog(SummonResponseBuilder.class);
 
+    /**
+     * Recommended behaviour for a Summa document searcher is to provide a
+     * recordBase as this makes backtracking easier and allows for optimized
+     * lookups.
+     * </p><p>
+     * Specifying a recordBase results in the field 'recordBase' being added
+     * to records in DocumentResponses.
+     * </p><p>
+     * Optional. Default is 'summon'.
+     */
+    public static final String CONF_RECORDBASE =
+        "summonresponsebuilder.recordbase";
+    public static final String DEFAULT_RECORDBASE = "summon";
+
     private XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
     }
 
-    public SummonResponseBuilder(Configuration conf) {
-        // No current configuration for Summon response builder
-    }
+    private String recordBase = DEFAULT_RECORDBASE;
 
+    public SummonResponseBuilder(Configuration conf) {
+        recordBase = conf.getString(CONF_RECORDBASE, recordBase);
+        if ("".equals(recordBase)) {
+            recordBase = null;
+        }
+    }
 
     public long buildResponses(
         Request request, SummonFacetRequest facets,
@@ -314,6 +332,11 @@ public class SummonResponseBuilder {
 
         fields.add(new DocumentResponse.Field(
             "shortformat", createShortformat(extracted), false));
+
+        if (recordBase != null) {
+            fields.add(new DocumentResponse.Field(
+            "recordBase", recordBase, false));
+        }
 
         DocumentResponse.Record record =
             new DocumentResponse.Record(
