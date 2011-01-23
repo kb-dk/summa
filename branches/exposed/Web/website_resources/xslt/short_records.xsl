@@ -40,9 +40,9 @@
                     (<xsl:value-of select="@hitCount" />)
                 </div>
                 <div class="searchResult">
-                    <div class="searchResultItemHeader searchResultItemStatus">
+<!--                    <div class="searchResultItemHeader searchResultItemStatus">
                         &#160;
-                    </div>
+                    </div>-->
                     <div class="searchResultItemHeader searchResultItemTitle">
                         Title
                     </div>
@@ -54,6 +54,9 @@
                     </div>
                     <div class="searchResultItemHeader searchResultItemType">
                         Type
+                    </div>
+                    <div class="searchResultItemHeader searchResultItemScore">
+                        Score
                     </div>
                 </div>
 
@@ -89,6 +92,8 @@
 
     <xsl:template name="showfields-classic">
         <xsl:variable name="record_id" select="../../../../field[@name='recordID']"/>
+        <xsl:variable name="recordBase" select="../../../../field[@name='recordBase']"/>
+        <xsl:variable name="score" select="../../../../@score"/>
 
         <xsl:variable name="mattype" select="type[@lang='da']"/>
         <xsl:variable name="mattype_en" select="type[@lang='en']"/>
@@ -170,6 +175,13 @@
                         <xsl:value-of select="$mattype"/>
                     </xsl:otherwise>
                 </xsl:choose>
+                <xsl:text> </xsl:text>
+                <span class="searchResultItemRecordBase"><xsl:value-of select="$recordBase"/></span>
+            </div>
+
+            <!-- score -->
+            <div class="searchResultItemCommon searchResultItemScore">
+                <xsl:value-of select="$score"/>
             </div>
         </div>
     </xsl:template>

@@ -162,6 +162,11 @@ h1 {
 .searchResultItemAuthor {
     width: 15em;
     float: left;
+    text-align: left;
+}
+
+.searchResultItemRecordBase {
+    color: #888;
 }
 
 .searchResultItemTitle {
@@ -195,7 +200,13 @@ h1 {
 }
 
 .searchResultItemYear {
-    width: 4em;
+    width: 5em;
+    float: left;
+    overflow: hidden;
+}
+
+.searchResultItemScore {
+    width: 6em;
     float: left;
     overflow: hidden;
 }
