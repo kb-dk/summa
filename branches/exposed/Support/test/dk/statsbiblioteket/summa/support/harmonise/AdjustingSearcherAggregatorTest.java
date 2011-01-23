@@ -48,11 +48,12 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
 
     // Very bogus as it requires already running searchers at specific
     // addresses on the local machine
+    // TODO: Create a unit test that works independently of running searchers
     public void testAggregator() throws IOException {
         Configuration conf = Configuration.newMemoryBased(
             ResponseMerger.CONF_ORDER, "summon, sb",
             ResponseMerger.CONF_MODE,
-            ResponseMerger.MERGE_MODE.concatenate.toString());
+            ResponseMerger.MERGE_MODE.interleave.toString());
 //            ResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 2);

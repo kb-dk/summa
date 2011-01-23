@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -246,9 +247,18 @@ public class ResponseMerger implements Configurable {
         log.trace("documentMerge called with mode " + mode + " and order "
                   + order + " for " + documentResponses.size() + " responses");
         documentResponses = sort(documentResponses, order);
+        if (documentResponses.size() <= 1) {
+            log.debug("Only " + documentResponses.size() + " responses, "
+                      + "documentMerge skipped");
+            return;
+        }
         switch (mode) {
             case concatenate: {
                 documentMergeConcatenate(merged, documentResponses);
+                break;
+            }
+            case interleave: {
+                documentMergeInterleave(merged, documentResponses);
                 break;
             }
             default: throw new UnsupportedOperationException(
@@ -281,18 +291,60 @@ public class ResponseMerger implements Configurable {
         return drs;
     }
 
-    // It is assumed that the document responses are ordered
+    // It is assumed that the document responses are ordered and that there are
+    // at least 2 documentResponses
+    private void documentMergeInterleave(
+        ResponseCollection merged,
+        List<Pair<String, DocumentResponse>> documentResponses) {
+        log.trace("documentMergeInterleave called");
+        List<Pair<String, DocumentResponse>> working =
+            new ArrayList<Pair<String, DocumentResponse>>(
+                documentResponses.size());
+        for (Pair<String, DocumentResponse> response: documentResponses) {
+            working.add(response);
+        }
+        List<DocumentResponse.Record> records =
+            new ArrayList<DocumentResponse.Record>(
+                working.size() *
+                working.get(0).getValue().getRecords().size() * 2);
+        while (working.size() > 0) {
+            Iterator<Pair<String, DocumentResponse>> iterator =
+                working.iterator();
+            while (iterator.hasNext()) {
+                Pair<String, DocumentResponse> response = iterator.next();
+                if (response.getValue().getRecords().size() == 0) {
+                    iterator.remove();
+                    continue;
+                }
+                // TODO: A bit inefficient with arraylists. Could be optimized
+                records.add(response.getValue().getRecords().remove(0));
+            }
+        }
+        Pair<String, DocumentResponse> base = documentResponses.remove(0);
+        mergeHitcountAndTime(base, documentResponses);
+        base.getValue().setRecords(records);
+        merged.add(base.getValue());
+    }
+
+    // It is assumed that the document responses are ordered and that there are
+    // at least 2 documentResponses
     private void documentMergeConcatenate(
         ResponseCollection merged,
         List<Pair<String, DocumentResponse>> documentResponses) {
         log.trace("documentMergeConcatenate called");
-        if (documentResponses.size() == 0) {
-            return;
-        }
         // Responses are now in the given order
         Pair<String, DocumentResponse> base = documentResponses.remove(0);
         for (Pair<String, DocumentResponse> dr: documentResponses) {
             base.getValue().getRecords().addAll(dr.getValue().getRecords());
+        }
+        mergeHitcountAndTime(base, documentResponses);
+        merged.add(base.getValue());
+    }
+
+    private void mergeHitcountAndTime(
+        Pair<String, DocumentResponse> base,
+        List<Pair<String, DocumentResponse>> documentResponses) {
+        for (Pair<String, DocumentResponse> dr: documentResponses) {
             base.getValue().setHitCount(
                 base.getValue().getHitCount() + dr.getValue().getHitCount());
             base.getValue().setSearchTime(
@@ -302,7 +354,6 @@ public class ResponseMerger implements Configurable {
                          dr.getValue().getSearchTime())
             );
         }
-        merged.add(base.getValue());
     }
 
     private void postProcess(
