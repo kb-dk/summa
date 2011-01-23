@@ -15,9 +15,12 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
+import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -25,10 +28,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.rmi.RemoteException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -81,7 +81,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
-        summon.open(""); // Fake open for setting permits
+//        summon.open(""); // Fake open for setting permits
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
@@ -91,4 +91,25 @@ public class SummonSearchNodeTest extends TestCase {
         System.out.println(responses.toXML());
     }
 
+    public void testAdjustingSearcher() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+            InteractionAdjuster.CONF_IDENTIFIER, "summon",
+            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
+        Configuration inner = conf.createSubConfiguration(
+            AdjustingSearchNode.CONF_INNER_SEARCHNODE);
+        inner.set(SearchNodeFactory.CONF_NODE_CLASS,
+                  SummonSearchNode.class.getCanonicalName());
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, id);
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, key);
+
+        log.debug("Creating adjusting SummonSearchNode");
+        AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        log.debug("Searching");
+        adjusting.search(request, responses);
+        log.debug("Finished searching");
+        System.out.println(responses.toXML());
+    }
 }

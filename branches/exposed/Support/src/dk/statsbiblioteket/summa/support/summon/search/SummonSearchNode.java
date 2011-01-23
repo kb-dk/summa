@@ -73,7 +73,8 @@ import java.util.regex.Pattern;
     // TODO: Check if startpos is 0 or 1, adjuct accordingly
     // TODO: Implement configurable rangefacets
     // TODO Implement getShortRecord
-    // TOD: Implement getRecord in Storage
+    // TODO: Implement getRecord in Storage
+    // TODO: Discard facets when COLLECT_RECORD_IDS=false
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -221,6 +222,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         defaultResolveLinks = conf.getBoolean(
             CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
         responseBuilder = new SummonResponseBuilder(conf);
+        readyWithoutOpen();
+        log.info("Serial Solutions Summon search node ready for host " + host);
     }
 
     @Override
@@ -264,6 +267,10 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + facets + "'");
         String sResponse = summonSearch(
             query, facets, startIndex, maxRecords, resolveLinks);
+        if (sResponse == null || "".equals(sResponse)) {
+            throw new RemoteException(
+                "Summon search for '" + query + " yielded empty result");
+        }
         searchTime += System.currentTimeMillis();
 
         long buildResponseTime = -System.currentTimeMillis();
@@ -272,9 +279,12 @@ public class SummonSearchNode extends SearchNodeImpl {
             hitCount = responseBuilder.buildResponses(
                 request, facets, responses, sResponse);
         } catch (XMLStreamException e) {
-            throw new RemoteException(
-                "Unable to transform Summon XML response to Summa response "
-                + "for '" + request + "'");
+            String message = "Unable to transform Summon XML response to Summa "
+                             + "response for '" + request + "'";
+            if (log.isDebugEnabled()) {
+                log.debug(message + ". Full XML follows:\n" + sResponse);
+            }
+            throw new RemoteException(message, e);
         }
         buildResponseTime += System.currentTimeMillis();
 

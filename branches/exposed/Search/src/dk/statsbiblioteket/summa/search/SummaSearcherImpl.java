@@ -86,8 +86,19 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     /** Default value for {@link #CONF_STATIC_ROOT}. */
     public static final String DEFAULT_STATIC_ROOT = null;
 
+    /**
+     * If true, a local index is assumed. This will activate IndexWatcher if
+     * a static root is not defined.
+     * </p><p>
+     * Optional. Default is true;
+     */
+    public static final String CONF_USE_LOCAL_INDEX =
+        "summa.search.uselocalindex";
+    public static final boolean DEFAULT_USE_LOCAL_INDEX = true;
+
     private int searcherAvailabilityTimeout =
             DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
+    private boolean useLocalIndex = DEFAULT_USE_LOCAL_INDEX;
 
     private ChangingSemaphore searchQueue;
     private ChangingSemaphore freeSlots = new ChangingSemaphore(0);
@@ -127,15 +138,20 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                 conf, SearchNodeDummy.class);
 
         // Ready for open
-        String staticRoot =
+        if (conf.getBoolean(CONF_USE_LOCAL_INDEX, useLocalIndex)) {
+            String staticRoot =
                 conf.getString(CONF_STATIC_ROOT, DEFAULT_STATIC_ROOT);
-        if (staticRoot == null || "".equals(staticRoot)) {
-            log.trace("Starting watcher");
-            watcher = new IndexWatcher(conf);
-            watcher.addIndexListener(this);
-            watcher.startWatching(); // This fires an open to the indexes
+            if (staticRoot == null || "".equals(staticRoot)) {
+                log.debug("Starting index watcher");
+                watcher = new IndexWatcher(conf);
+                watcher.addIndexListener(this);
+                watcher.startWatching(); // This fires an open to the indexes
+            } else {
+                log.debug("Using static index '" + staticRoot + "'");
+                indexChanged(Resolver.getPersistentFile(new File(staticRoot)));
+            }
         } else {
-            indexChanged(Resolver.getPersistentFile(new File(staticRoot)));
+            log.debug("Not using local index. No index watcher, no open");
         }
         log.debug("Finished constructing SummaSearcherImpl");
     }

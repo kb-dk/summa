@@ -58,7 +58,6 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: disable facets? empty/null? force specific facets?
-// TODO: Map tag names (many-to-many)
 // TODO: Term weight rewrite from lookup-table (share tables if possible)
 public class InteractionAdjuster implements Configurable {
     private static Log log = LogFactory.getLog(InteractionAdjuster.class);
@@ -76,7 +75,7 @@ public class InteractionAdjuster implements Configurable {
      * Add a constant to returned scores for documents.
      * Additions are performed after multiplications.
      */
-    public static final String SEARCH_ADJUST_SCORE_ADD = "adjust.score.add";
+    public static final String SEARCH_ADJUST_SCORE_ADD = "adjuster.score.add";
     public static final String CONF_ADJUST_SCORE_ADD = SEARCH_ADJUST_SCORE_ADD;
 
     /**
@@ -84,7 +83,7 @@ public class InteractionAdjuster implements Configurable {
      * Multiplications are performed before additions.
      */
     public static final String SEARCH_ADJUST_SCORE_MULTIPLY =
-        "adjust.score.multiply";
+        "adjuster.score.multiply";
     public static final String CONF_ADJUST_SCORE_MULTIPLY =
         SEARCH_ADJUST_SCORE_MULTIPLY;
 
@@ -103,7 +102,7 @@ public class InteractionAdjuster implements Configurable {
      */
     // TODO: Handle many-to-many re-writing
     public static final String CONF_ADJUST_DOCUMENT_FIELDS =
-        "adjust.document.fields";
+        "adjuster.document.fields";
     public static final String
         SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
@@ -122,7 +121,7 @@ public class InteractionAdjuster implements Configurable {
      */
     // TODO: Handle many-to-many re-writing
     public static final String CONF_ADJUST_FACET_FIELDS =
-        "adjust.facet.fields";
+        "adjuster.facet.fields";
     public static final String 
         SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
 
@@ -136,7 +135,7 @@ public class InteractionAdjuster implements Configurable {
      * </p><p>
      * Optional. Default is no adjustments.
      */
-    public static final String CONF_ADJUST_FACET_TAGS = "adjust.facet.tags";
+    public static final String CONF_ADJUST_FACET_TAGS = "adjuster.facet.tags";
 
     private final String id;
     private final String prefix;
@@ -176,7 +175,15 @@ public class InteractionAdjuster implements Configurable {
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
-        log.debug("Constructed search adjuster for '" + id + "'");
+        log.debug(String.format(
+            "Constructed search adjuster with id='%s', "
+            + "baseFactor=%f, baseAddition=%f, "
+            + "adjustingDocumentFields='%s', "
+            + "adjustingFacetFields='%s', tagAdjusters=%d",
+            id, baseFactor, baseAddition,
+            conf.getString(CONF_ADJUST_DOCUMENT_FIELDS, ""),
+            conf.getString(CONF_ADJUST_FACET_FIELDS, ""),
+            tagAdjusters == null ? 0 : tagAdjusters.size()));
     }
 
     // a - b, c - d, e - f
@@ -206,6 +213,7 @@ public class InteractionAdjuster implements Configurable {
      * @return an adjusted request.
      */
     public Request rewrite(Request request) {
+        log.trace("Rewrite called");
         Request adjusted = clone(request);
         rewriteDocumentQueryFields(request);
         rewriteFacetQueryFields(request);
@@ -262,7 +270,7 @@ public class InteractionAdjuster implements Configurable {
         String query, Map<String, String> documentFields) {
         for (Map.Entry<String, String> entry: documentFields.entrySet()) {
             // TODO: Optimize by using the replace-framework
-            query = query.replaceAll(entry.getKey() + ":", entry.getValue());
+            query = query.replace(entry.getKey() + ":", entry.getValue());
         }
         return query;
     }
@@ -275,19 +283,20 @@ public class InteractionAdjuster implements Configurable {
         return cloned;
     }
 
-
     /**
      * Modifies the responses according to the given settings.
      * @param request   the rewritten request that resulted in the responses.
      * @param responses non-modified responses.
      */
     public void adjust(Request request, ResponseCollection responses) {
+        log.trace("adjust called");
         adjustDocuments(request, responses);
         adjustFacets(request, responses);
     }
 
     private void adjustDocuments(
         Request request, ResponseCollection responses) {
+        log.trace("adjustDocuments called");
         DocumentResponse documentResponse = null;
         for (Response response: responses) {
             if (!DocumentResponse.NAME.equals(response.getName())) {
@@ -312,6 +321,7 @@ public class InteractionAdjuster implements Configurable {
 
     private void adjustFacets(
         Request request, ResponseCollection responses) {
+        log.trace("adjustFacets called");
         FacetResultExternal facetResponse = null;
         for (Response response: responses) {
             if (!FacetResultExternal.NAME.equals(response.getName())) {
@@ -333,13 +343,16 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
         replaceFacetFields(request, facetResponse);
-        for (TagAdjuster tagAdjuster: tagAdjusters) {
-            tagAdjuster.adjust(facetResponse);
+        if (tagAdjusters != null) {
+            for (TagAdjuster tagAdjuster: tagAdjusters) {
+                tagAdjuster.adjust(facetResponse);
+            }
         }
     }
 
     private void replaceFacetFields(
         Request request, FacetResultExternal facetResponse) {
+        log.trace("adjustFacetFields called");
         Map<String, String> reverse = resolveReversedMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (reverse == null) {
@@ -350,6 +363,7 @@ public class InteractionAdjuster implements Configurable {
 
     private void replaceDocumentFields(
         Request request, DocumentResponse documentResponse) {
+        log.trace("replaceDocumentFields called");
         Map<String, String> reverse = resolveReversedMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         if (reverse == null) {
@@ -360,7 +374,7 @@ public class InteractionAdjuster implements Configurable {
                   + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
             for (DocumentResponse.Field field: record.getFields()) {
-                if (reverse.containsValue(field.getName())) {
+                if (reverse.containsKey(field.getName())) {
                     if (log.isTraceEnabled()) {
                         log.trace("Changing field name '" + field.getName()
                                   + "' to '" + reverse.get(field.getName())

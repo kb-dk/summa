@@ -72,9 +72,6 @@ public class SummonResponseBuilder {
         ResponseCollection responses,
         String summonResponse) throws XMLStreamException {
 
-        System.out.println("");
-        System.out.println(summonResponse);
-        System.out.println("");
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(

@@ -129,6 +129,15 @@ public abstract class SearchNodeImpl implements SearchNode {
     }
 
     /**
+     * Helper method for sub classes that does not use open to be ready.
+     * This method sets the configuration-defined number of permits.
+     */
+    protected void readyWithoutOpen() {
+        slots.setOverallPermits(concurrentSearches);
+
+    }
+
+    /**
      * Fetches warm-up data from the location specified by
      * {@link #CONF_WARMUP_DATA} and calls {@link #warmup(String)} with each
      * line in the data.

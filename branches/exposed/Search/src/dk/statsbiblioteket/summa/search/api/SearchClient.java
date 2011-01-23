@@ -44,12 +44,14 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
                           implements Configurable {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
+    private String target;
+
     public SearchClient(Configuration conf) {
         super(conf);
+        target = conf.getString(ConnectionConsumer.CONF_RPC_TARGET);
         log.debug(String.format(
                 "Created SearchClient with %s=%s",
-                ConnectionConsumer.CONF_RPC_TARGET,
-                conf.getString(ConnectionConsumer.CONF_RPC_TARGET)));
+                ConnectionConsumer.CONF_RPC_TARGET, target));
     }
 
     /**
@@ -67,6 +69,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
             final String msg =
                            "The searcher retrieved from getConnection was null";
             log.warn(msg);
+            throw new IOException("Unable to connect to '" + target + "'");
         }
         try {
             return searcher.search(request);

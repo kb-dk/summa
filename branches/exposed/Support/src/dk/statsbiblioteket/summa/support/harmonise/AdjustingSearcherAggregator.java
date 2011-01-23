@@ -64,27 +64,30 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     @Override
     protected SearchClient createClient(Configuration searcherConf) {
         SearchClient searcher;
-         if (searcherConf.getBoolean(
+        if (searcherConf.getBoolean(
             CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
-             searcher = new AdjustingSearchClient(searcherConf);
-             String searcherName = searcherConf.getString(
-                     CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
-             String adjustID = ((AdjustingSearchClient)searcher).
-                 getAdjuster().getId();
-             if (!adjustID.equals(searcherName)) {
-                 throw new ConfigurationException(
-                     "An AdjustingSearchClient was created with ID '"
-                     + adjustID + "' with an inner searcherID of '"
-                     + searcherName + "'. Equal designations are required");
-             }
-             return searcher;
-         }
-         return super.createClient(searcherConf);
+            log.debug("Creating adjusting search client");
+            searcher = new AdjustingSearchClient(searcherConf);
+            String searcherName = searcherConf.getString(
+                CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
+            String adjustID = ((AdjustingSearchClient)searcher).
+                getAdjuster().getId();
+            if (!adjustID.equals(searcherName)) {
+                throw new ConfigurationException(
+                    "An AdjustingSearchClient was created with ID '"
+                    + adjustID + "' with an inner searcherID of '"
+                    + searcherName + "'. Equal designations are required");
+            }
+            return searcher;
+        }
+        log.debug("Creating standard search client");
+        return super.createClient(searcherConf);
     }
 
     @Override
-    protected ResponseCollection merge(
+    protected ResponseCollection merge(Request request,
         List<Triple<String, Request, ResponseCollection>> responses) {
-        return super.merge(responses);    // TODO: Implement this
+        log.debug("Merging " + responses.size());
+        return responseMerger.merge(request, responses);
     }
 }

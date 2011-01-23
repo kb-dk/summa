@@ -129,10 +129,13 @@ public class SummaSearcherAggregator implements SummaSearcher {
     /**
      * Merges response collections after the searches has been performed.
      * Intended to be overridden in subclasses than wants custom merging.
+     * @param request the original request that resulted in the responses.
      * @param responses a collection of responses, one from each searcher.
      * @return a merge of the responses.
      */
+    @SuppressWarnings({"UnusedDeclaration"})
     protected ResponseCollection merge(
+        Request request,
         List<Triple<String, Request, ResponseCollection>> responses) {
         ResponseCollection merged = new ResponseCollection();
         for (Triple<String, Request, ResponseCollection> triple: responses) {
@@ -185,7 +188,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                         + searchFuture.getKey(), e);
             }
         }
-        ResponseCollection merged = merge(responses);
+        ResponseCollection merged = merge(request, responses);
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
         return merged;
