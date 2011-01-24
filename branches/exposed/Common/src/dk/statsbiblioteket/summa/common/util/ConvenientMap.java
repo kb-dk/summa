@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -48,6 +50,16 @@ import java.util.regex.Pattern;
 public class ConvenientMap extends HashMap<String, Serializable> {
     public static final long serialVersionUID = 384681318L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
+
+    /**
+     * Partial JSON-absorber. Adds all readily available JSON key:value-pairs
+     * to the map.
+     * @param json a list of key:value-pairs.
+     */
+    public void addJSON(String json) {
+        XStream xstream = new XStream(new JettisonMappedXmlDriver());
+        System.out.println(xstream.fromXML(json));
+    }
 
     public Serializable get(String key) {
         Serializable value = super.get(key);

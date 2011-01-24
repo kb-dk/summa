@@ -594,6 +594,49 @@ public class SearchWS {
                                              DocumentKeys.SORT_ON_SCORE, false);
     }
 
+    /**
+     * A do-all method that takes a JSON list of key-value pairs as input and
+     * returns an XML structure representing document responses. The caller is
+     * responsible for defining all necessary keys.
+     * </p><p>
+     * Sample: {"search.document.query":"foo bar",
+     *          "search.document.sortkey":"sort_title",
+     *          "search.document.startindex":100}
+     * </p><p>
+     * Warning: Here be dragons. It is not recommended to expose this method
+     *          directly to uncontrolled parties, as there is no contract
+     *          in place that limit Searcher behaviour to be non-destructive.
+     *          E.g. one Searcher could expose a method for performing rollback
+     *          to an earlier index. Another could expose a delete document
+     *          feature.
+     * </p><p>
+     * See http://json.org for details on JSON.
+     * @param json a key-value list.
+     * @return XML representing DocumentResponses.
+     */
+    public String directJSON(String json) {
+        long startTime = System.currentTimeMillis();
+        String retXML;
+        ResponseCollection res;
+        Request req = new Request();
+        req.addJSON(json);
+        try {
+            res = getSearchClient().search(req);
+            log.trace("Got result, converting to XML");
+            retXML = res.toXML();
+        } catch (IOException e) {
+            String mes = String.format(
+                "Error performing JSON query '%s': %s", json, e.getMessage());
+            log.warn(mes, e);
+            retXML = getErrorXML(DocumentResponse.NAME, mes, e);
+        }
+
+        log.debug(String.format(
+                "directJSON(" + json + ") finished in %s ms",
+                json, System.currentTimeMillis() - startTime));
+        return retXML;
+    }
+
     public static final Pattern PROCESSING_OPTIONS =
             Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
     /**

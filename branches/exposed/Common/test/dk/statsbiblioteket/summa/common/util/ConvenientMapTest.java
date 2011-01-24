@@ -26,12 +26,27 @@ public class ConvenientMapTest extends TestCase {
 
     ConvenientMap map;
 
+    @Override
     public void setUp () throws Exception {
         map = new ConvenientMap();
     }
 
+    @Override
     public void tearDown () throws Exception {
 
+    }
+
+    public void testJSON() throws Exception {
+        final String SIMPLE = "{ \"foo\":\"bar\" }";
+        final String DUAL = "{ \"foo\":\"bar\", \"zoo\":\"baz\" }";
+        final String INT = "{ \"noo\":87 }";
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON(SIMPLE);
+        map.addJSON(DUAL);
+        map.addJSON(INT);
+        assertEquals("bar", map.getString("foo"));
+        assertEquals("baz", map.getString("zoo"));
+        assertEquals(Integer.valueOf(87), map.getInt("noo"));
     }
 
     public void testClear () throws Exception {
