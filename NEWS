@@ -1,5 +1,19 @@
 ========================
-2010-11-25: Summa 1.6.8
+2011-01-25: Summa 1.6.9
+========================
+
+ * Lib: Updated to H2 1.2.139 (.140-.145 does not handle large queries well)
+        Updated to sbutil 0.5.2
+
+ * Build: Maven will fail when mkLinks.sh hasn't been run
+
+ * Feature: Added Samples/Assembly/ module for creating standalone jar
+
+ * Index: Added Datetime XSLT-callback for producing variants of 
+   dates for searching.
+
+========================
+2010-11-25: Summa 1.6.8 (never released)
 ========================
 
  * Bugfix: Removes asterisk from default transliteration as it made
