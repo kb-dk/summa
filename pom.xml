@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.8-SNAPSHOT</version>
+    <version>1.6.9</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -109,7 +109,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil</artifactId>
-                <version>0.5.1</version>
+                <version>0.5.2</version>
             </dependency>
             <dependency>
                 <groupId>fastutil</groupId>
