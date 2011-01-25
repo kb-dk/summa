@@ -1,0 +1,1429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejournals>
+<ejournal>
+	<id is_issn="true">0000-0019</id>
+	<title>Publishers weekly</title>
+	<publisher>Reed Business Information</publisher>
+	<dewey>070.5</dewey>
+	<keywords type="serial solutions">
+		<keyword>Bibliography - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>PUBLISHING AND BOOK TRADE</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0000-0019</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>jan 1990</startdate>
+		<enddate>3 months ago</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=29305</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>jan 1996</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=ehh&amp;jid=PWK&amp;scope=site</url>
+		<resource id="educationresearchcomplete">Education Research Complete</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-0782</id>
+	<title>Communications of the ACM</title>
+	<acronym_title>Commun ACM</acronym_title>
+	<publisher>Association for Computing Machinery, Inc.</publisher>
+	<refereed>Yes</refereed>
+	<dewey>004.6</dewey>
+	<keywords type="serial solutions">
+		<keyword>Computer Science</keyword>
+		<keyword>Mathematical Theory</keyword>
+		<keyword>Telecommunications</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>COMPUTERS</keyword>
+		<keyword>DATA COMMUNICATIONS AND DATA TRANSMISSION SYSTEMS</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://portal.acm.org/toc.cfm?id=J79</url>
+		<resource id="acmdigitallibrary">ACM Digital Library</resource>
+		<startdate>jan 1958</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-0782</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>jan 1988</startdate>
+		<enddate>apr 2001</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=ACM&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>jan 1999</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-1541</id>
+	<title>AIChE journal</title>
+	<acronym_title>AIChE J</acronym_title>
+	<publisher>John Wiley &amp; Sons, Inc.</publisher>
+	<refereed>Yes</refereed>
+	<dewey>660</dewey>
+	<keywords type="serial solutions">
+		<keyword>Chemical Engineering</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>ENGINEERING</keyword>
+		<keyword>CHEMICAL ENGINEERING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=17862</url>
+		<resource id="proquestsciencejournals">ProQuest Science Journals</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>dec 2003</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-1541</url>
+		<resource id="wileyintersciencejournals">Wiley InterScience Journals</resource>
+		<startdate>jan 1998</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-1843</id>
+	<title>American medical news</title>
+	<acronym_title>Am Med News</acronym_title>
+	<publisher>American Medical Association</publisher>
+	<dewey>610</dewey>
+	<keywords type="serial solutions">
+		<keyword>Medicine - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-1843</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>jan 1990</startdate>
+		<enddate>jul 2002</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2092</id>
+	<title>AORN journal</title>
+	<acronym_title>AORN J</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Nursing</keyword>
+		<keyword>Surgery - General and By Type</keyword>
+	</keywords>
+	<keywords type="svb">
+		<keyword>Anæstesiologisk/Intensiv Afdeling I, Skejby Sygehus</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00012092</url>
+		<resource id="sciencedirectnursingandhealthprofessionsbackfile">ScienceDirect Nursing and Health Professions Backfile</resource>
+		<startdate>1963</startdate>
+		<enddate>1994</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=35897</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>jan 1998</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=c8h&amp;jid=1FR&amp;scope=site</url>
+		<resource id="cinahlwithfulltext">CINAHL with Full Text</resource>
+		<startdate>jun 2004</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2351</id>
+	<title>Transactions of the ASAE</title>
+	<acronym_title>Trans ASAE</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Agriculture - General</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://asae.frymulti.com/toc.asp</url>
+		<resource id="asabetechnicallibrary">ASABE Technical Library</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>dec 2005</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2475</id>
+	<title>ASHA (Rockville, Md.)</title>
+	<acronym_title>ASHA</acronym_title>
+	<publisher>American Speech - Language - Hearing Association</publisher>
+	<dewey>617.8</dewey>
+	<keywords type="serial solutions">
+		<keyword>Disabilities</keyword>
+		<keyword>Medicine - General</keyword>
+		<keyword>Neurology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>HANDICAPPED</keyword>
+		<keyword>HEARING IMPAIRED</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=ufh&amp;jid=SHH&amp;scope=site</url>
+		<resource id="communicationmassmediacomplete">Communication &amp; Mass Media Complete</resource>
+		<startdate>jan 1994</startdate>
+		<enddate>nov 1999</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=17690</url>
+		<resource id="proquesteducationjournals">ProQuest Education Journals</resource>
+		<startdate>apr 1997</startdate>
+		<enddate>nov 1999</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2491</id>
+	<title>ASHRAE journal</title>
+	<keywords type="serial solutions">
+		<keyword>Civil Engineering</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=27934</url>
+		<resource id="proquestsciencejournals">ProQuest Science Journals</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2505</id>
+	<title>ASHRAE transactions</title>
+	<keywords type="serial solutions">
+		<keyword>Civil Engineering</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=37032</url>
+		<resource id="proquestsciencejournals">ProQuest Science Journals</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-253X</id>
+	<title>Aslib proceedings</title>
+	<acronym_title>Aslib Proc</acronym_title>
+	<publisher>Emerald Group Publishing Limited</publisher>
+	<refereed>Yes</refereed>
+	<dewey>20</dewey>
+	<keywords type="serial solutions">
+		<keyword>Library &amp; Information Science</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>LIBRARY AND INFORMATION SCIENCES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.emeraldinsight.com/0001-253X.htm</url>
+		<resource id="emeraldbackfiles">Emerald Backfiles</resource>
+		<startdate>1949</startdate>
+		<enddate>1998</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=38172</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>nov 1998</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.emeraldinsight.com/0001-253X.htm</url>
+		<resource id="emeraldjournals">Emerald Journals</resource>
+		<startdate>1999</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2610</id>
+	<title>Planning (Chicago, Ill. 1969)</title>
+	<publisher>American Planning Association</publisher>
+	<dewey>307.1</dewey>
+	<keywords type="serial solutions">
+		<keyword>Economic History</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>HOUSING AND URBAN PLANNING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=19523</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>dec 1987</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-2610</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>jan 1992</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=PLG&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>jul 1993</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2645</id>
+	<title>ASTE bulletin</title>
+	<keywords type="serial solutions">
+		<keyword>Economic History</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=J6L&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>mar 1965</startdate>
+		<enddate>sep 1971</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-267X</id>
+	<title>A T A news</title>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=55026</url>
+		<resource id="cbcaeducation">CBCA Education</resource>
+		<startdate>jan 1999</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2793</id>
+	<title>A.U.M.L.A.</title>
+	<keywords type="serial solutions">
+		<keyword>Western European Languages - General</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=78919</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>dec 2000</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2815</id>
+	<title>Tissue antigens</title>
+	<acronym_title>Tissue Antigens</acronym_title>
+	<publisher>Blackwell Munksgaard</publisher>
+	<refereed>Yes</refereed>
+	<dewey>571,964</dewey>
+	<keywords type="serial solutions">
+		<keyword>Biology - General</keyword>
+		<keyword>Medicine - General</keyword>
+		<keyword>Microbiology &amp; Immunology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-2815</url>
+		<resource id="blackwellsynergy">Blackwell-Synergy</resource>
+		<startdate>jan 1999</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2890</id>
+	<title>AV communication review</title>
+	<acronym_title>Av Commun Rev</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Communication &amp; Mass Media</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=1042-1629</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>dec 1977</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-2998</id>
+	<title>Seminars in nuclear medicine</title>
+	<acronym_title>Semin Nucl Med</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Radiology, MRI, Ultrasonography &amp; Medical Physics</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00012998</url>
+		<resource id="sciencedirectjournals">ScienceDirect Journals</resource>
+		<startdate>jul 1971</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-3072</id>
+	<title>Abacus (Sydney)</title>
+	<publisher>Blackwell Publishing Asia</publisher>
+	<refereed>Yes</refereed>
+	<dewey>657</dewey>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BUSINESS AND ECONOMICS</keyword>
+		<keyword>ACCOUNTING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=AUB&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>sep 1965</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-3072</url>
+		<resource id="blackwellsynergy">Blackwell-Synergy</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-3714</id>
+	<title>Revista de microbiologia</title>
+	<publisher>Sociedade Brasileira de Microbiologia</publisher>
+	<keywords type="serial solutions">
+		<keyword>Microbiology &amp; Immunology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BIOLOGY</keyword>
+		<keyword>MICROBIOLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.scielo.br/scielo.php/script_sci_serial/pid_0001-3714/lng_pt/nrm_iso</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>1998</startdate>
+		<enddate>1999</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-3765</id>
+	<title>Anais da Academia Brasileira de Ciências</title>
+	<acronym_title>An Acad Bras Cienc</acronym_title>
+	<publisher>Academia Brasileira de Ciencias</publisher>
+	<refereed>Yes</refereed>
+	<dewey>500</dewey>
+	<keywords type="serial solutions">
+		<keyword>Sciences - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>SCIENCES: COMPREHENSIVE WORKS</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.scielo.br/scielo.php?pid=0001-3765&amp;script=sci_serial</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2000</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4001</id>
+	<title>Chirurgie (Paris)</title>
+	<acronym_title>Chirurgie</acronym_title>
+	<publisher>Elsevier France, Editions Scientifiques et Medicales</publisher>
+	<refereed>Yes</refereed>
+	<dewey>617</dewey>
+	<keywords type="serial solutions">
+		<keyword>Surgery - General and By Type</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>SURGERY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00014001</url>
+		<resource id="sciencedirectjournals">ScienceDirect Journals</resource>
+		<startdate>feb 1998</startdate>
+		<enddate>dec 1999</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4273</id>
+	<title>Academy of Management journal</title>
+	<acronym_title>Acad Manage J</acronym_title>
+	<publisher>Academy of Management</publisher>
+	<refereed>Yes</refereed>
+	<dewey>658</dewey>
+	<keywords type="serial solutions">
+		<keyword>Management Theory</keyword>
+		<keyword>Office &amp; Personnel Management</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BUSINESS AND ECONOMICS</keyword>
+		<keyword>MANAGEMENT</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.jstor.org/action/showPublication?journalCode=acadmanaj</url>
+		<resource id="jstorartsandsciencesivcollection">JSTOR Arts and Sciences IV Collection</resource>
+		<startdate>1963</startdate>
+		<enddate>2002</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=AMJ&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>mar 1963</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=46808</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>mar 1963</startdate>
+		<enddate>dec 1985</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=24476</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>mar 1987</startdate>
+		<enddate>dec 2001</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4338</id>
+	<title>Izvestiya. Atmospheric and oceanic physics</title>
+	<publisher>M A I K Nauka - Interperiodica</publisher>
+	<dewey>551.5</dewey>
+	<keywords type="serial solutions">
+		<keyword>Meteorology &amp; Climatology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>METEOROLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-4338</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 2006</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4346</id>
+	<title>Mathematical notes of the Academy of Sciences of the USSR</title>
+	<publisher>Consultants Bureau</publisher>
+	<keywords type="serial solutions">
+		<keyword>Mathematical Theory</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MATHEMATICS</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-4346</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>jan 1967</startdate>
+		<enddate>dec 1991</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4508</id>
+	<title>Accent on living</title>
+	<publisher>Cheever Publishing, Inc.</publisher>
+	<dewey>362.4</dewey>
+	<keywords type="serial solutions">
+		<keyword>Disabilities</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>HANDICAPPED</keyword>
+		<keyword>PHYSICALLY IMPAIRED</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=afh&amp;jid=AOL&amp;scope=site</url>
+		<resource id="academicsearchelite">Academic Search Elite</resource>
+		<startdate>mar 1990</startdate>
+		<enddate>jun 2001</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=22603</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>jan 1994</startdate>
+		<enddate>jul 2001</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4575</id>
+	<title>Accident analysis and prevention</title>
+	<acronym_title>Accid Anal Prev</acronym_title>
+	<publisher>Pergamon</publisher>
+	<refereed>Yes</refereed>
+	<dewey>614.8</dewey>
+	<keywords type="serial solutions">
+		<keyword>Public Health - General</keyword>
+		<keyword>Social Welfare &amp; Social Work - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>PUBLIC HEALTH AND SAFETY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00014575</url>
+		<resource id="sciencedirectsocialsciencebackfile">ScienceDirect Social Science Backfile</resource>
+		<startdate>1969</startdate>
+		<enddate>1994</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00014575</url>
+		<resource id="sciencedirectjournals">ScienceDirect Journals</resource>
+		<startdate>jul 1969</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4664</id>
+	<title>Accountancy (London)</title>
+	<publisher>Institute of Chartered Accountants in England and Wales</publisher>
+	<dewey>657</dewey>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BUSINESS AND ECONOMICS</keyword>
+		<keyword>ACCOUNTING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=27333</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>jan 1992</startdate>
+		<enddate>jul 1999</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=27333</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>may 2001</startdate>
+		<enddate>mar 2006</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=ACC&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>nov 2003</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4672</id>
+	<title>Accountancy age</title>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-4672</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>sep 2004</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4699</id>
+	<title>Accountancy Ireland</title>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=21498</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>dec 1996</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-4699</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>dec 2001</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=1JA&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>feb 2005</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4710</id>
+	<title>Accountant (London)</title>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-4710</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>nov 2000</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4788</id>
+	<title>Accounting and business research</title>
+	<publisher>Institute of Chartered Accountants in England and Wales</publisher>
+	<refereed>Yes</refereed>
+	<dewey>657</dewey>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BUSINESS AND ECONOMICS</keyword>
+		<keyword>ACCOUNTING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=ABR&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>mar 1982</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=20316</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>oct 1987</startdate>
+		<enddate>jun 1999</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=20316</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>jul 2006</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4826</id>
+	<title>Accounting review</title>
+	<publisher>American Accounting Association</publisher>
+	<refereed>Yes</refereed>
+	<dewey>657</dewey>
+	<keywords type="serial solutions">
+		<keyword>Accounting</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BUSINESS AND ECONOMICS</keyword>
+		<keyword>ACCOUNTING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.jstor.org/action/showPublication?journalCode=accountingreview</url>
+		<resource id="jstorartsandsciencesivcollection">JSTOR Arts and Sciences IV Collection</resource>
+		<startdate>1926</startdate>
+		<enddate>2002</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://gateway.proquest.com/openurl?url_ver=Z39.88-2004&amp;res_dat=xri:pao:&amp;rft_dat=xri:pao:journal:5030</url>
+		<resource id="paoperiodicalsarchiveonlinefullsubscriptioninternationalclients">PAO - Periodicals Archive Online (Full Subscription) - International Clients</resource>
+		<startdate>1926</startdate>
+		<enddate>1995</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=buh&amp;jid=ARW&amp;scope=site</url>
+		<resource id="businesssourcepremier">Business Source Premier</resource>
+		<startdate>mar 1926</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=21305</url>
+		<resource id="academicresearchlibrary">Academic Research Library</resource>
+		<startdate>jan 1988</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://galenet.galegroup.com/servlet/IOURL?locID=gale&amp;prod=BCRC&amp;issn=0001-4826</url>
+		<resource id="businesscompanyresourcecenter">Business &amp; Company Resource Center</resource>
+		<startdate>jul 2001</startdate>
+		<enddate>apr 2004</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-4842</id>
+	<title>Accounts of chemical research</title>
+	<acronym_title>Acc Chem Res</acronym_title>
+	<publisher>American Chemical Society</publisher>
+	<refereed>Yes</refereed>
+	<dewey>540</dewey>
+	<keywords type="serial solutions">
+		<keyword>Chemistry - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>CHEMISTRY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://pubs.acs.org/journals/achre4/index.html</url>
+		<resource id="americanchemicalsocietywebeditions">American Chemical Society Web Editions</resource>
+		<startdate>1968</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5113</id>
+	<title>Acta Adriatica</title>
+	<publisher>Institut za Oceanografiju i Ribarstvo</publisher>
+	<refereed>Yes</refereed>
+	<dewey>551.46</dewey>
+	<keywords type="serial solutions">
+		<keyword>Marine Science</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>EARTH SCIENCES</keyword>
+		<keyword>OCEANOGRAPHY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.izor.hr/acta/eng/</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2004</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5172</id>
+	<title>Acta anaesthesiologica Scandinavica</title>
+	<acronym_title>Acta Anaesthesiol Scand</acronym_title>
+	<publisher>Blackwell Munksgaard</publisher>
+	<refereed>Yes</refereed>
+	<dewey>617.96</dewey>
+	<keywords type="serial solutions">
+		<keyword>Anesthesiology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>ANAESTHESIOLOGY</keyword>
+	</keywords>
+	<keywords type="svb">
+		<keyword>Anæstesiologisk Afdeling, Århus Sygehus</keyword>
+		<keyword>Anæstesiologisk/Intensiv Afdeling I, Skejby Sygehus</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-5172</url>
+		<resource id="blackwellsynergy">Blackwell-Synergy</resource>
+		<startdate>jan 1999</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-527X</id>
+	<title>Acta biochimica polonica</title>
+	<acronym_title>Acta Biochim Pol</acronym_title>
+	<publisher>Polskie Towarzystwo Biochemiczne</publisher>
+	<refereed>Yes</refereed>
+	<dewey>572</dewey>
+	<keywords type="serial solutions">
+		<keyword>Animal Biochemistry</keyword>
+		<keyword>Biology - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BIOLOGY</keyword>
+		<keyword>BIOCHEMISTRY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.actabp.pl/</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2000</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5342</id>
+	<title>Acta biotheoretica</title>
+	<acronym_title>Acta Biotheor</acronym_title>
+	<publisher>Springer Netherlands</publisher>
+	<refereed>Yes</refereed>
+	<dewey>570</dewey>
+	<keywords type="serial solutions">
+		<keyword>Biology - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BIOLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5342</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>dec 1935</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5342</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5385</id>
+	<title>Acta cardiologica</title>
+	<acronym_title>Acta Cardiol</acronym_title>
+	<publisher>La Societe Belge de Cardiologie</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616.1</dewey>
+	<keywords type="serial solutions">
+		<keyword>Cardiovascular Diseases</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>CARDIOVASCULAR DISEASES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://poj.peeters-leuven.be/content.php?url=journal&amp;journal_code=AC</url>
+		<resource id="stateanduniversitylibraryejournalholdings">State and University Library E-Journal Holdings</resource>
+		<startdate>2001</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5393</id>
+	<title>Acta chemica Scandinavica</title>
+	<acronym_title>Acta Chem Scand</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Chemistry - General</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://actachemscand.dk/</url>
+		<resource id="freelyaccessiblesciencejournals">Freely Accessible Science Journals</resource>
+		<startdate>1947</startdate>
+		<enddate>1973</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-544X</id>
+	<title>Acta Chirurgica Austriaca</title>
+	<keywords type="serial solutions">
+		<keyword>Surgery - General and By Type</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=1682-8631</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>jan 1969</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=1682-8631</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>dec 2001</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5504</id>
+	<title>Acta científica venezolana</title>
+	<acronym_title>Acta Cient Venez</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Sciences - General</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://acta.ivic.ve/</url>
+		<resource id="freelyaccessiblesciencejournals">Freely Accessible Science Journals</resource>
+		<startdate>1999</startdate>
+		<enddate>2004</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5547</id>
+	<title>Acta cytologica</title>
+	<acronym_title>Acta Cytol</acronym_title>
+	<keywords type="serial solutions">
+		<keyword>Gynecology &amp; Obstetrics</keyword>
+	</keywords>
+	<item>
+		<requires_password>true</requires_password>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.acta-cytol.com/#</url>
+		<resource id="scienceprintersandpublishersonlinemedicaljournals">Science Printers and Publishers Online Medical Journals</resource>
+		<startdate>jan 1996</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5555</id>
+	<title>Acta dermato-venereologica</title>
+	<acronym_title>Acta Derm Venereol</acronym_title>
+	<publisher>Taylor &amp; Francis Ltd.</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616.5</dewey>
+	<keywords type="serial solutions">
+		<keyword>Dermatology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>DERMATOLOGY AND VENEREOLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://adv.medicaljournals.se/content</url>
+		<resource id="stateanduniversitylibraryejournalholdings">State and University Library E-Journal Holdings</resource>
+		<startdate>1998</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.informaworld.com/openurl?genre=journal&amp;issn=0001-5555</url>
+		<resource id="informaworld">InformaWorld</resource>
+		<startdate>1998</startdate>
+		<enddate>2005</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5652</id>
+	<title>Human heredity</title>
+	<acronym_title>Hum Hered</acronym_title>
+	<publisher>S. Karger AG</publisher>
+	<refereed>Yes</refereed>
+	<dewey>599,935</dewey>
+	<keywords type="serial solutions">
+		<keyword>Genetics</keyword>
+		<keyword>Medicine - General</keyword>
+		<keyword>Pathology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>BIOLOGY</keyword>
+		<keyword>GENETICS</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://content.karger.com/ProdukteDB/produkte.asp?Aktion=JournalHome&amp;ProduktNr=224250</url>
+		<resource id="kargeronline">Karger Online</resource>
+		<startdate>1998</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=66447</url>
+		<resource id="proquestsciencejournals">ProQuest Science Journals</resource>
+		<startdate>jan 1998</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5709</id>
+	<title>Acta geologica polonica</title>
+	<keywords type="serial solutions">
+		<keyword>Geology - General</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.geo.uw.edu.pl/agp/index.html</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2002</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://www.geo.uw.edu.pl/agp/</url>
+		<resource id="freelyaccessiblesciencejournals">Freely Accessible Science Journals</resource>
+		<startdate>2004</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5792</id>
+	<title>Acta haematologica</title>
+	<acronym_title>Acta Haematol</acronym_title>
+	<publisher>S. Karger AG</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616.15</dewey>
+	<keywords type="serial solutions">
+		<keyword>Hematologic Diseases</keyword>
+		<keyword>Physiology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>HEMATOLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://content.karger.com/ProdukteDB/produkte.asp?Aktion=JournalHome&amp;ProduktNr=223829</url>
+		<resource id="kargeronline">Karger Online</resource>
+		<startdate>1998</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5903</id>
+	<title>Acta informatica</title>
+	<publisher>Springer</publisher>
+	<refereed>Yes</refereed>
+	<dewey>003.54</dewey>
+	<keywords type="serial solutions">
+		<keyword>Computer Science</keyword>
+		<keyword>Information Technology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>COMPUTERS</keyword>
+		<keyword>INFORMATION SCIENCE AND INFORMATION THEORY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5903</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>may 1971</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5903</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=65711</url>
+		<resource id="abiinformglobal">ABI/INFORM Global</resource>
+		<startdate>jan 2002</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5962</id>
+	<title>Acta mathematica</title>
+	<publisher>Springer Netherlands</publisher>
+	<refereed>Yes</refereed>
+	<dewey>510</dewey>
+	<keywords type="serial solutions">
+		<keyword>Mathematical Theory</keyword>
+		<keyword>Mathematics - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MATHEMATICS</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5962</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>dec 1882</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5962</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-5970</id>
+	<title>Acta mechanica</title>
+	<publisher>Springer Wien</publisher>
+	<refereed>Yes</refereed>
+	<dewey>621</dewey>
+	<keywords type="serial solutions">
+		<keyword>Civil Engineering</keyword>
+		<keyword>Mechanical Engineering - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>ENGINEERING</keyword>
+		<keyword>MECHANICAL ENGINEERING</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5970</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>mar 1965</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-5970</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://proquest.umi.com/pqdweb?RQT=318&amp;pmid=65712</url>
+		<resource id="proquestsciencejournals">ProQuest Science Journals</resource>
+		<startdate>jan 2003</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6012</id>
+	<title>Acta medica costarricense</title>
+	<acronym_title>Acta Med Costarric</acronym_title>
+	<publisher>Colegio de Medicos y Cirujanos</publisher>
+	<dewey>610</dewey>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.scielo.sa.cr/scielo.php?script=sci_serial&amp;pid=0001-6002&amp;lng=en&amp;nrm=iso</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2000</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6055</id>
+	<title>Acta medica nagasakiensia</title>
+	<acronym_title>Acta Med Nagasaki</acronym_title>
+	<publisher>Nagasaki Daigaku, Igakubu</publisher>
+	<refereed>Yes</refereed>
+	<dewey>610</dewey>
+	<keywords type="serial solutions">
+		<keyword>Medicine - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://www.jstage.jst.go.jp/browse/amn</url>
+		<resource id="directoryofopenaccessjournals">Directory of Open Access Journals</resource>
+		<startdate>2004</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6160</id>
+	<title>Acta metallurgica</title>
+	<publisher>Pergamon</publisher>
+	<keywords type="serial solutions">
+		<keyword>Industrial &amp; Management Engineering</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>METALLURGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00016160</url>
+		<resource id="sciencedirectjournals">ScienceDirect Journals</resource>
+		<startdate>jan 1953</startdate>
+		<enddate>dec 1989</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.sciencedirect.com/science/journal/00016160</url>
+		<resource id="sciencedirectmaterialssciencebackfile">ScienceDirect Materials Science Backfile</resource>
+		<startdate>1953</startdate>
+		<enddate>1989</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6241</id>
+	<title>Acta musicologica</title>
+	<publisher>Baerenreiter Verlag</publisher>
+	<refereed>Yes</refereed>
+	<dewey>780.01</dewey>
+	<keywords type="serial solutions">
+		<keyword>Music Literature</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MUSIC</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.jstor.org/action/showPublication?journalCode=actamusicologica</url>
+		<resource id="jstorartsandsciencesiiicollection">JSTOR Arts and Sciences III Collection</resource>
+		<startdate>1931</startdate>
+		<enddate>2002</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6268</id>
+	<title>Acta neurochirurgica</title>
+	<acronym_title>Acta Neurochir (Wien)</acronym_title>
+	<publisher>Springer Wien</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616</dewey>
+	<keywords type="serial solutions">
+		<keyword>Surgery - General and By Type</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>SURGERY</keyword>
+	</keywords>
+	<keywords type="svb">
+		<keyword>Anæstesiologisk Afdeling, Århus Sygehus</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-6268</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>feb 1950</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-6268</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6314</id>
+	<title>Acta neurologica Scandinavica</title>
+	<acronym_title>Acta Neurol Scand</acronym_title>
+	<publisher>Blackwell Munksgaard</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616.8</dewey>
+	<keywords type="serial solutions">
+		<keyword>Neurology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>PSYCHIATRY AND NEUROLOGY</keyword>
+	</keywords>
+	<keywords type="svb">
+		<keyword>Anæstesiologisk Afdeling, Århus Sygehus</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-6314</url>
+		<resource id="blackwellsynergy">Blackwell-Synergy</resource>
+		<startdate>jan 2000</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://search.ebscohost.com/direct.asp?db=afh&amp;jid=8DP&amp;scope=site</url>
+		<resource id="academicsearchelite">Academic Search Elite</resource>
+		<startdate>jan 2000</startdate>
+		<enddate>1 year ago</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6322</id>
+	<title>Acta neuropathologica</title>
+	<acronym_title>Acta Neuropathol (Berl)</acronym_title>
+	<publisher>Springer</publisher>
+	<refereed>Yes</refereed>
+	<dewey>616.8</dewey>
+	<keywords type="serial solutions">
+		<keyword>Neurology</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>PSYCHIATRY AND NEUROLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-6322</url>
+		<resource id="springeronlinejournalarchivesthrough1996">Springer Online Journal Archives (Through 1996)</resource>
+		<startdate>jan 1961</startdate>
+		<enddate>dec 1996</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.springerlink.com/openurl.asp?genre=journal&amp;issn=0001-6322</url>
+		<resource id="springerlinkcontemporary1997present">SpringerLink Contemporary (1997 - Present)</resource>
+		<startdate>jan 1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6349</id>
+	<title>Acta obstetricia et gynecologica Scandinavica</title>
+	<acronym_title>Acta Obstet Gynecol Scand</acronym_title>
+	<publisher>Informa Healthcare</publisher>
+	<refereed>Yes</refereed>
+	<dewey>618</dewey>
+	<keywords type="serial solutions">
+		<keyword>Gynecology &amp; Obstetrics</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>OBSTETRICS AND GYNECOLOGY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.informaworld.com/openurl?genre=journal&amp;issn=0001-6349</url>
+		<resource id="informaworld">InformaWorld</resource>
+		<startdate>1997</startdate>
+		<enddate>present</enddate>
+	</item>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www3.interscience.wiley.com/cgi-bin/issn?DESCRIPTOR=PRINTISSN&amp;VALUE=0001-6349</url>
+		<resource id="blackwellsynergy">Blackwell-Synergy</resource>
+		<startdate>2001</startdate>
+		<enddate>2005</enddate>
+	</item>
+</ejournal>
+<ejournal>
+	<id is_issn="true">0001-6357</id>
+	<title>Acta odontologica Scandinavica</title>
+	<acronym_title>Acta Odontol Scand</acronym_title>
+	<publisher>Informa Healthcare</publisher>
+	<refereed>Yes</refereed>
+	<dewey>617.6</dewey>
+	<keywords type="serial solutions">
+		<keyword>Dentistry - General</keyword>
+	</keywords>
+	<keywords type="ulrichs">
+		<keyword>MEDICAL SCIENCES</keyword>
+		<keyword>DENTISTRY</keyword>
+	</keywords>
+	<item>
+		<comment></comment>
+		<url>http://dummy.natureview.un:1612/login?url=http://www.informaworld.com/openurl?genre=journal&amp;issn=0001-6357</url>
+		<resource id="informaworld">InformaWorld</resource>
+		<startdate>1997</startdate>
+		<enddate>present</enddate>
+	</item>
+</ejournal>
+</ejournals>
