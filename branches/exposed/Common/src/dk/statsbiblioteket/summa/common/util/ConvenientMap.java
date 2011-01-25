@@ -14,10 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -57,8 +58,23 @@ public class ConvenientMap extends HashMap<String, Serializable> {
      * @param json a list of key:value-pairs.
      */
     public void addJSON(String json) {
-        XStream xstream = new XStream(new JettisonMappedXmlDriver());
-        System.out.println(xstream.fromXML(json));
+        log.trace("Adding JSON-object " + json);
+        JSONObject jsonObject = JSONObject.fromObject(json);
+        addJSON(jsonObject);
+    }
+
+    private void addJSON(JSONObject jsonObject) {
+        for (int i = 0 ; i < jsonObject.size() ; i++) {
+            for (Object o: jsonObject.entrySet()) {
+                ListOrderedMap.Entry entry = (ListOrderedMap.Entry)o;
+                if (log.isTraceEnabled()) {
+                    log.trace("Putting " + entry.getKey() + ", "
+                              + entry.getValue());
+                }
+                // TODO Make better error messages on cast fail
+                put((String)entry.getKey(), (Serializable)entry.getValue());
+            }
+        }
     }
 
     public Serializable get(String key) {

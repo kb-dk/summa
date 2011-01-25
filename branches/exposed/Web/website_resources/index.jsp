@@ -19,6 +19,7 @@
     String facet_html = "";
     String didyoumean_html = "";
     String form_filter = "";
+    String form_json = "";
     String form_query = "";
     String form_sort = "";
     boolean doDidYouMean = false;
@@ -40,6 +41,14 @@
     }
     if (query != null) {
         form_query = query.replaceAll("\"", "&quot;");
+    }
+
+    String json = request.getParameter("json");
+    if ("".equals(query)) {
+        json = null;
+    }
+    if (json != null) {
+        form_json = json.replaceAll("\"", "&quot;");
     }
 
     String filter = request.getParameter("filter");
@@ -67,7 +76,7 @@
     }
 
 
-    if (query != null || filter != null) {
+    if (query != null || filter != null || json != null) {
         int per_page = 10;
         int current_page;
         try {
@@ -100,9 +109,15 @@
         dymXSLT += System.currentTimeMillis();
             
         searchCall = -System.currentTimeMillis();
-        String xml_search_result = (String)services.execute(
-                "summafiltersearchsorted", filter, query,
-                per_page, current_page * per_page, sort, reverseSort);
+        String xml_search_result = null;
+
+        if (json != null) {
+            xml_search_result = (String)services.execute("directjson", json);
+        } else {
+            xml_search_result = (String)services.execute(
+                    "summafiltersearchsorted", filter, query,
+                    per_page, current_page * per_page, sort, reverseSort);
+        }
         searchCall += System.currentTimeMillis();
 
         if (xml_search_result == null) {
@@ -238,6 +253,7 @@
             $('#q2').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             $('#q3').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             $('#f3').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#j1').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             <%-- $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' }); --%>
         }
     </script>
@@ -282,6 +298,7 @@
                 Filter sorted search<br />
                 <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
                 <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
+                <label for="j1">JSON:</label> <input type="text" name="json" size="55" id="j1" value="<%= form_json %>" /><br />
                 <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
                 <% if (reverseSort) { %>
                   <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse" checked="checked" /><br />
