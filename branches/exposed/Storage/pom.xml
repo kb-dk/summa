@@ -5,13 +5,12 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.6.7-20110122-l4exp-SNAPSHOT</version>
+        <version>1.6.7-20110124-l4exp-SNAPSHOT</version>
     </parent>
 
 
     <artifactId>summa-storage</artifactId>
     <name>Summa Storage module</name>
-    <!-- TODO What about config -->
 
     <build>
         <!-- Source -->
@@ -19,6 +18,9 @@
         <resources>
             <resource>
                 <directory>data/</directory>
+            </resource>
+            <resource>
+                <directory>config/</directory>
             </resource>
             <!-- We have some resource down in code directory -->
             <resource>
