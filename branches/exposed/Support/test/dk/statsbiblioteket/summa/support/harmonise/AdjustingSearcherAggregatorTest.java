@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -49,7 +50,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
     // Very bogus as it requires already running searchers at specific
     // addresses on the local machine
     // TODO: Create a unit test that works independently of running searchers
-    public void testAggregator() throws IOException {
+    public void testAggregator() throws IOException, SubConfigurationsNotSupportedException {
         Configuration conf = Configuration.newMemoryBased(
             ResponseMerger.CONF_ORDER, "summon, sb",
             ResponseMerger.CONF_MODE,
@@ -75,6 +76,15 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
                    "//localhost:55400/summon-searcher");
         summonConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_ADD, -0.5);
+        summonConf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
+                       "author_normalised - Author, lma_long - ContentType, "
+                       + "llang - Language, lsubject - SubjectTerms");
+        Configuration llang = summonConf.createSubConfigurations(
+            InteractionAdjuster.CONF_ADJUST_FACET_TAGS, 1).get(0);
+        llang.set(TagAdjuster.CONF_FACET_NAME, "llang");
+        llang.set(TagAdjuster.CONF_TAG_MAP,
+                 "Spanish - spa");
+        // Unmapped: Genre, IsScholary, TemporalSubjectTerms
 
         log.debug("Creating adjusting aggregator");
         AdjustingSearcherAggregator aggregator =
@@ -85,9 +95,9 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         log.debug("Searching");
         ResponseCollection responses = aggregator.search(request);
         log.debug("Finished searching");
-//        System.out.println(responses.toXML());
+        System.out.println(responses.toXML());
 
-        System.out.println("Records");
+/*        System.out.println("Records");
         BufferedReader lines =
             new BufferedReader(new StringReader(responses.toXML()));
         String line;
@@ -95,7 +105,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             if (line.contains("record score")) {
                 System.out.println(line);
             }
-        }
+        }*/
         aggregator.close();
     }
 

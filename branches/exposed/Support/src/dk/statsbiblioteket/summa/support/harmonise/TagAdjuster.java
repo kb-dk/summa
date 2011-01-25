@@ -91,7 +91,7 @@ public class TagAdjuster implements Configurable {
                     + "' with delimiter '-' but got " + parts.length);
             }
             String[] sources = parts[0].split(" *; *");
-            String[] destinations = parts[0].split(" *; *");
+            String[] destinations = parts[1].split(" *; *");
             for (String source: sources) {
                 map.put(source, destinations);
             }
@@ -140,6 +140,8 @@ public class TagAdjuster implements Configurable {
         Map<String, Integer> tags, String key, Integer value) {
         if (tags.containsKey(key)) {
             tags.put(key, value + tags.get(key));
+        } else {
+            tags.put(key, value);
         }
     }
 }

@@ -44,7 +44,7 @@
     }
 
     String json = request.getParameter("json");
-    if ("".equals(query)) {
+    if ("".equals(json)) {
         json = null;
     }
     if (json != null) {
