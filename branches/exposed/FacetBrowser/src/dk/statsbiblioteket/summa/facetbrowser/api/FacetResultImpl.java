@@ -47,6 +47,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         implements FacetResult<T> {
     private static final transient Log log =
             LogFactory.getLog(FacetResultImpl.class);
+    private static final long serialVersionUID = 7879716848L;
 
     private int DEFAULTFACETCAPACITY = 20;
     private static final int DEFAULT_MAXTAGS = 100;

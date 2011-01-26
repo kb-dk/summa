@@ -71,7 +71,7 @@ public class SummonResponseBuilder {
         "summonresponsebuilder.recordbase";
     public static final String DEFAULT_RECORDBASE = "summon";
 
-    private XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
+    private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
     }
@@ -89,6 +89,8 @@ public class SummonResponseBuilder {
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
         String summonResponse) throws XMLStreamException {
+        boolean collectdocIDs = request.getBoolean(
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(
@@ -127,12 +129,12 @@ public class SummonResponseBuilder {
                     xml, "queryString", summonQueryString);
                 continue;
             }
-            if ("rangeFacetFields".equals(currentTag)) {
+            if ("rangeFacetFields".equals(currentTag) && collectdocIDs) {
                 log.warn("Currently there is no support for returning range" 
                          + " facets");
                 // TODO: Implement this
             }
-            if ("facetFields".equals(currentTag)) {
+            if ("facetFields".equals(currentTag) && collectdocIDs) {
                 FacetResult facetResult = extractFacetResult(xml, facets);
                 if (facetResult != null) {
                     responses.add(facetResult);

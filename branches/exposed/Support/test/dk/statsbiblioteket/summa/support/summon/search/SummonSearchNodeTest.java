@@ -107,6 +107,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         adjusting.search(request, responses);
         log.debug("Finished searching");

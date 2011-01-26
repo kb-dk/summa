@@ -241,6 +241,8 @@ public class SummonSearchNode extends SearchNodeImpl {
             DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
         boolean resolveLinks = request.getBoolean(
             SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
+        boolean collectdocIDs = request.getBoolean(
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         if ("".equals(rawQuery)) {
             rawQuery = null;
@@ -263,7 +265,11 @@ public class SummonSearchNode extends SearchNodeImpl {
         } else if (rawQuery == null) {
             query = filter;
         } else {
-            query = "(" + filter + ") AND (" + rawQuery + ")";
+            if ("*".equals(rawQuery)) {
+                query = filter;
+            } else {
+                query = "(" + filter + ") AND (" + rawQuery + ")";
+            }
         }
 
         String facetsDef =  request.getString(
@@ -279,7 +285,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
         String sResponse = summonSearch(
-            query, facets, startIndex, maxRecords, resolveLinks);
+            query, collectdocIDs ? facets : null, startIndex, maxRecords,
+            resolveLinks);
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");
