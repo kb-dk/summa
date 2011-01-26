@@ -89,7 +89,6 @@ public class SummonResponseBuilder {
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
         String summonResponse) throws XMLStreamException {
-
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(

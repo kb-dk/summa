@@ -231,7 +231,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         Request request, ResponseCollection responses) throws RemoteException {
 
 
-        String query =   request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String rawQuery =   request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter =  request.getString(DocumentKeys.SEARCH_FILTER, null);
         String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
         boolean reverseSort = request.getBoolean(
@@ -242,15 +242,28 @@ public class SummonSearchNode extends SearchNodeImpl {
         boolean resolveLinks = request.getBoolean(
             SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
 
-        if (query == null || "".equals(query)) {
-            log.debug("No query, returning immediately");
-            return;
+        if ("".equals(rawQuery)) {
+            rawQuery = null;
         }
-        if (filter != null) {
-            log.warn("fullSearch: Filter '" + filter + "' is ignored");
+        if ("".equals(filter)) {
+            filter = null;
+        }
+        
+        if (rawQuery == null && filter == null) {
+            log.debug("No filter or query, returning immediately");
+            return;
         }
         if (!DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
             log.warn("fullSearch: Sort key '" + sortKey + "' is ignored");
+        }
+
+        String query;
+        if (filter == null) {
+            query = rawQuery;
+        } else if (rawQuery == null) {
+            query = filter;
+        } else {
+            query = "(" + filter + ") AND (" + rawQuery + ")";
         }
 
         String facetsDef =  request.getString(
@@ -288,9 +301,9 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
         buildResponseTime += System.currentTimeMillis();
 
-        log.debug("fullSearch(..., " + filter + ", " + query + ", " + startIndex
-                  + ", " + maxRecords + ", " + sortKey + ", " + reverseSort
-                  + ") with " + hitCount + " hits finished in "
+        log.debug("fullSearch(..., " + filter + ", " + rawQuery + ", "
+                  + startIndex + ", " + maxRecords + ", " + sortKey + ", "
+                  + reverseSort + ") with " + hitCount + " hits finished in "
                   + searchTime + " ms (" + searchTime + " ms for remote search "
                   + "call, " + buildResponseTime + " ms for converting to "
                   + "Summa response)");

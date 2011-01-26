@@ -89,7 +89,6 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         log.debug("Creating adjusting aggregator");
         AdjustingSearcherAggregator aggregator =
             new AdjustingSearcherAggregator(conf);
-
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
         log.debug("Searching");
