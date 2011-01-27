@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -26,8 +28,8 @@ import org.apache.lucene.util.BytesRef;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Creates and merges dumps of the term-statistics for Lucene-indexes.
@@ -39,31 +41,12 @@ import java.util.ArrayList;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class TermStatExtractor {
+public class TermStatExtractor implements Configurable {
     private static Log log = LogFactory.getLog(TermStatExtractor.class);
 
-    // TODO: Optimize space by discarding all terms with count 1 in the merger
-    // When the count for a term is requested, "not found" should be taken as 1
-
-    /**
-     * The maximum number of sources to open at the same time in
-     * {@link #mergeStats}. If the number of sources exceeds this, the merging
-     * will be done using multiple steps, which slows down the merging speed.
-     * </p><p>
-     * Warning: Do not set this value without knowledge of the limitations on
-     * the number of open file handles in the JVM and the operating system.
-     * </p><p>
-     * Optional. Default is 100.
-     */
-    public static final String CONF_MAXOPENSOURCES =
-            "summa.common.termstatextractor.maxopensources";
-    public static final int DEFAULT_MAXOPENSOURCES = 100;
-
-    private int maxOpenSources = DEFAULT_MAXOPENSOURCES;
     private Configuration termStatConf;
 
     public TermStatExtractor(Configuration conf) {
-        maxOpenSources = conf.getInt(CONF_MAXOPENSOURCES, maxOpenSources);
         termStatConf = conf;
     }
     private TermStatExtractor() {
@@ -75,47 +58,210 @@ public class TermStatExtractor {
             usage();
             return;
         }
-        if ("-e".equals((args[0]))) {
-            if (args.length != 3) {
-                System.err.println("Extraction takes only 2 arguments");
-                usage();
-            } else {
-                System.out.println(String.format(
-                        "Extracting term stats fron index at '%s' to '%s'",
-                        args[1], args[2]));
-                long startTime = System.currentTimeMillis();
-                new TermStatExtractor().dumpStats(
-                        new File(args[1]), new File(args[2]));
-                System.out.println(String.format(
-                        "Finished term stat extraction in %d seconds",
-                        (System.currentTimeMillis() - startTime) / 1000));
-            }
-        } else if ("-m".equals((args[0]))) {
-            List<File> sources = new ArrayList<File>(args.length-2);
-            for (int i = 1 ; i < args.length - 1 ; i++) {
-                sources.add(new File(args[i]));
-            }
-            File dest = new File(args[args.length-1]);
-            System.out.println(String.format("Merging %d sources into '%s'",
-                                             sources.size(), dest));
-            long startTime = System.currentTimeMillis();
-            new TermStatExtractor().mergeStats(sources, dest);
-            System.out.println(String.format(
-                    "Finished term stat merging in %d seconds",
-                    (System.currentTimeMillis() - startTime) / 1000));
+        List<String> arguments = Arrays.asList(args);
+        String first = arguments.remove(0);
+        if ("-e".equals(first)) {
+            extract(arguments);
+        } else if ("-m".equals(first)) {
+            merge(arguments);
         } else {
-            usage();
+            System.out.println(
+                "First argument must be -e or -m but was " + first);
         }
+    }
+
+    private static void extract(List<String> arguments) throws IOException {
+        int mdf = 1;
+        File index = null;
+        String columnname = null;
+        String destination = null;
+        List<String> fields = new ArrayList<String>(10);
+        boolean fieldsActive = false;
+        while (arguments.size() > 0) {
+            String argument = arguments.remove(0);
+            if ("-i".equals((argument))) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-i must be followed by a path");
+                }
+                index = new File(arguments.remove(0));
+            } else if ("-d".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-d must be followed by a path");
+                }
+                destination = arguments.remove(0);
+            } else if ("-c".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-c must be followed by a column name");
+                }
+                columnname = arguments.remove(0);
+            } else if ("-f".equals(argument)) {
+                fieldsActive = true;
+                continue;
+            } else if ("-mdf".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-mdf must be followed by an integer");
+                }
+                mdf = Integer.parseInt(arguments.remove(0));
+            } else if (fieldsActive) {
+                fields.add(argument);
+                continue;
+            } else {
+                throw new IllegalArgumentException(
+                    "Unknown argument: " + argument);
+            }
+            fieldsActive = false;
+        }
+        new TermStatExtractor().extract(
+            index, destination, columnname, fields, mdf);
+    }
+
+    private enum MODE {none, input, column}
+    private static void merge(List<String> arguments) {
+        List<File> inputs = new ArrayList<File>(10);
+        List<String> columns = new ArrayList<String>(10);
+        int mdf = 1;
+        String destination = null;
+        MODE mode = MODE.none;
+        while (arguments.size() > 0) {
+            String argument = arguments.remove(0);
+            if ("-d".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-d must be followed by a path");
+                }
+                destination = arguments.remove(0);
+            } else if ("-c".equals(argument)) {
+                mode = MODE.column;
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-f must be followed by one or more fields");
+                }
+                continue;
+            } else if ("-i".equals(argument)) {
+                mode = MODE.input;
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-i must be followed by one or more fields");
+                }
+                continue;
+            } else if ("-mdf".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-mdf must be followed by an integer");
+                }
+                mdf = Integer.parseInt(arguments.remove(0));
+            } else if (mode == MODE.column) {
+                columns.add(argument);
+                continue;
+            } else if (mode == MODE.input) {
+                inputs.add(new File(argument));
+                continue;
+            } else {
+                throw new IllegalArgumentException(
+                    "Unknown argument: " + argument);
+            }
+            mode = MODE.none;
+        }
+        new TermStatExtractor().merge(inputs, columns, destination, mdf);
     }
 
     public static void usage() {
         System.out.println(
                 "Usage:\n"
-                + "TermStatExtractor [-e index destination]\n"
-                + "TermStatExtractor [-m termstats* destination]\n\n"
+                + "TermStatExtractor [-e [-mdf minimumdocumentfrequency] "
+                +                    "-i index -d destination -f field* "
+                +                    "-c columnname ]\n"
+                + "TermStatExtractor [-m [-mdf minimumdocumentfrequency] "
+                +                    "-i termstat* -d destination "
+                +                    "-c columnregexp*]\n"
+                + "\n"
                 + "-e: Extract termstats from index and store the stats at "
                 + "destination\n"
-                + "-m: Merge termstats into destination");
+                + " -i: Lucene index"
+                + " -f: Lucene fields as regexp"
+                + " -c: Destination column name"
+                + " -d: Destination for the term stats"
+                + "\n"
+                + "-m: Merge termstats into destination"
+                + " -i: Input termstats"
+                + " -c: column names as regexp"
+                + " -d: Destination for the merged term stats"
+                + "\n"
+                + "-mdf: Only store terms where the document frequency is the "
+                + "given number or above\n"
+        );
+    }
+
+    public void extract(
+        File index, String destination, String column,
+        List<String> fieldRegexps, int mdf) throws IOException {
+        if (index == null) {
+            throw new IllegalArgumentException("No index specified");
+        }
+        if (destination == null) {
+            throw new IllegalArgumentException("No destination specified");
+        }
+        if (fieldRegexps.size() == 0) {
+            log.info("No fields specified. Extracting all fields");
+            fieldRegexps.add(".*");
+        }
+        log.info(String.format(
+            "Extracting fields %s from %s with mdf=%d to %s",
+            Strings.join(fieldRegexps, ", "), index, mdf, destination));
+        Profiler profiler = new Profiler();
+
+        Set<String> fields = new HashSet<String>(20);
+        IndexReader ir = IndexReader.open(new NIOFSDirectory(index));
+        FieldsEnum fieldsEnum = ir.fields().iterator();
+        String fieldName;
+        while ((fieldName = fieldsEnum.next()) != null) {
+            for (String regexp: fieldRegexps) {
+                if (Pattern.compile(regexp).matcher(fieldName).matches()) {
+                    fields.add(fieldName);
+                }
+            }
+        }
+        if (fields.size() == 0) {
+            log.warn("Unable to expand " + Strings.join(fieldRegexps, ", ")
+                     + " to any fields in " + index);
+        }
+
+        TermStat termStat = new TermStat(Configuration.newMemoryBased());
+        // TODO: Add timestamp for extraction
+        termStat.create(new File(destination),
+                        "Termstats extracted from " + index,
+                        new String[]{column});
+        // TODO: Implement this. Remember docCount
+
+        log.info("Finished extraction in " + profiler.getSpendTime());
+    }
+
+    public void merge(
+        List<File> inputs, List<String> columns, String destination, int mdf) {
+        if (inputs.size() == 0) {
+            throw new IllegalArgumentException(
+                "One or more inputs must be specified");
+        }
+        if (destination == null) {
+            throw new IllegalArgumentException("No destination specified");
+        }
+        if (columns.size() == 0) {
+            log.info("No columns specified. Merging all columns");
+            columns.add(".*");
+        }
+        log.info(String.format(
+            "Merging columns %s from inputs %s with mdf %d to %s",
+            Strings.join(columns, ", "), Strings.join(inputs, ", "), mdf,
+            destination));
+        Profiler profiler = new Profiler();
+
+        // TODO: Implement this. Remember docCount
+
+        log.info("Finished merging in " + profiler.getSpendTime());
     }
 
     /**
@@ -125,7 +271,7 @@ public class TermStatExtractor {
      * @param destination where to store the Term-statistics.
      * @throws IOException if extraction failed due to an I/O error.
      */
-    public void dumpStats(File index, File destination) throws IOException {
+/*    public void dumpStats(File index, File destination) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("dumpStats(%s, %s) called",
                                 index, destination));
@@ -156,7 +302,7 @@ public class TermStatExtractor {
                 profiler.getBeats(), profiler.getSpendTime(),
                 profiler.getBps(false)));
     }
-
+  */
     /**
      * Merges multiple stats created by {@link #dumpStats} into a single file.
      * Merging simply adds the docFreq's for the different Terms. In order for
@@ -176,7 +322,7 @@ public class TermStatExtractor {
     // TODO: Make the merger more robust with regard to errors in the sources
     private void doMerge(List<File> fileSources, File destinationFile)
                                                             throws IOException {
-        Profiler profiler = new Profiler();
+/*        Profiler profiler = new Profiler();
         TermStat destination = new TermStat(termStatConf);
         destination.create(destinationFile);
 
@@ -249,9 +395,10 @@ public class TermStatExtractor {
         log.debug(String.format(
                 "Finished merging %d sources to '%s' in %s",
                 fileSources.size(), destination, profiler.getSpendTime()));
+                */
     }
 
-    private void updateMergeStats(List<TermStat> sources, TermStat destination) {
+/*    private void updateMergeStats(List<TermStat> sources, TermStat destination) {
         long docCount = 0;
         StringWriter sw = new StringWriter(sources.size() * 50);
         sw.append("merge(");
@@ -264,6 +411,6 @@ public class TermStatExtractor {
         sw.append(")");
         destination.setDocCount(docCount);
         destination.setSource(sw.toString());
-    }
+    }*/
 }
 

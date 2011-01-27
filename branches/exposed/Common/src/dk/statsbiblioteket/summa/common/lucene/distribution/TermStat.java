@@ -14,41 +14,48 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.LineReader;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
-import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.util.FactoryPool;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.w3c.dom.Document;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * Persistent structure for TermStats from an index. The structure must be
- * filled in sequential order and allows for lookups in O(log n) using binary
+ * filled in sequential order and allows for look ups in O(log n) using binary
  * search.
+ * </p><p>
+ * The structure uses a human readable persistence layer with an index table
+ * for fast lookup. The format of the persistence layer is heading lines
+ * prepended with '#', one line with column names, lines with terms and stats;
+ * {@code
+# My stat file
+Term\tstat1\tstat2
+Foo\t87\t123
+Zoo\t54\t89
+}
+ * The terms must be in natural order.
  * </p><p>
  * Note: {@link #open} or {@link #create} must be called before the TermStat
  * can be updated or queried.
+ * </p><p>
+ * Note: this TermStat-component is limited to Integer.MAX_VALUE terms.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class TermStat {
+public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private static Log log = LogFactory.getLog(TermStat.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -66,12 +73,12 @@ public class TermStat {
   */
 
     /**
-     * The size of the LRU-cache used for {@link #getTermCount(String)}.
+     * The size of the LRU-cach.}.
      * </p><p>
      * Optional. Default is 10000.
      */
     public static final String CONF_CACHE_SIZE =
-            "common.distribution.termstat.cachesize";
+        "common.distribution.termstat.cachesize";
     public static final int DEFAULT_CACHE_SIZE = 10000;
 
     /**
@@ -79,34 +86,56 @@ public class TermStat {
      * </p><p>
      * The buffer for the reader. If a readLine is not within the buffer, the
      * bugger will be filled from the position. The buffer size should
-     * correspond to the term length as described in
+     * correspond to the maximum term length as described in
      * {@link LineReader#binaryLineSearch}.
      * </p><p>
      * Optional. Default is 400.
      */
     public static final String CONF_READER_BUFFER =
-            "common.distribution.reader.buffer";
+        "common.distribution.reader.buffer";
     public static final int DEFAULT_READER_BUFFER = 400;
+
+    /**
+     * Lines at the beginning of the persisten files that are prepended with
+     * this are treated as comments.
+     * </p><p>
+     * Optional. Default is "#".
+     */
+    public static final String CONF_COMMENT_PREFIX =
+        "common.distribution.comment.prefix";
+    public static final String DEFAULT_COMMENT_PREFIX = "#";
 
 
     private LineReader persistent;
-  //  private boolean memoryBased = DEFAULT_MEMORYBASED;
-    private FactoryPool<TermEntry> entryPool;
+    //  private boolean memoryBased = DEFAULT_MEMORYBASED;
     private long docCount = 0;
-    private long termCount = 0;
+    private int termCount = 0;
+    private long minDocumentFrequency = 0;
     private String source = "No source defined";
     private int cacheSize = DEFAULT_CACHE_SIZE;
     private int bufferSize = DEFAULT_READER_BUFFER;
+    private String commentPrefix = DEFAULT_COMMENT_PREFIX;
+
+    /**
+     * Holds offsets in the backing persistent file for all line entries.
+     * lookupTable[i] =   start offset for entry #i.
+     * lookupTable[i+1] = start offset for entry #(i+1). If entry #(i+1) does
+     *                    not exist, the table will hold the offset for
+     *                    potential new entries.
+     */
+    private long[] lookupTable = new long[1];
+    private String[] columns = null;
 
     /**
      * The cache facilitates faster look ups. It caches the mapping from
-     * term string to term count.
+     * term string to entry.
      */
-    private final HashMap<String, Integer> cache = createCache();
+    private final HashMap<String, TermEntry> cache = createCache();
 
     public TermStat(Configuration conf) {
         cacheSize = conf.getInt(CONF_CACHE_SIZE, cacheSize);
         bufferSize = conf.getInt(CONF_READER_BUFFER, bufferSize);
+        commentPrefix = conf.getString(CONF_COMMENT_PREFIX, commentPrefix);
 //        memoryBased = conf.getBoolean(CONF_MEMORYBASED, memoryBased);
         //noinspection DuplicateStringLiteralInspection
 //        log.debug(String.format("Constructed %s-based TermStat",
@@ -118,17 +147,11 @@ public class TermStat {
             persistent = new DiskPool<TermEntry>(
                     new TermValueConverter(), null);
         }*/
-        entryPool = new FactoryPool<TermEntry>() {
-            @Override
-            protected TermEntry createNewElement() {
-                return new TermEntry("DummyTermEntry", 0); 
-            }
-        };
     }
 
     /**
      * Open the TermStats at the given location. The TermStats are always opened
-     * in read-only mode. For brulding term stats, call {@link #create}.
+     * in read-only mode. For building term stats, call {@link #create}.
      * @param location where the TermStats are stored.
      * @return true if the open was successful.
      * @throws IOException if the open failed due to invalid persistent data.
@@ -142,6 +165,7 @@ public class TermStat {
                                location));
         persistent = new LineReader(getFile(location, ".dat"), "r");
         persistent.setBufferSize(bufferSize);
+        openLookup();
         return openMeta();
     }
 
@@ -153,7 +177,17 @@ public class TermStat {
         docCount = 0;
         termCount = 0;
         cache.clear();
+        lookupTable = new long[1];
         source = "No Source";
+    }
+
+    @Override
+    public void clear() {
+        try {
+            close();
+        } catch (IOException e) {
+            throw new RuntimeException("IOException clearing", e);
+        }
     }
 
     private boolean openMeta() {
@@ -166,20 +200,24 @@ public class TermStat {
             }
             Document dom = DOM.stringToDOM(meta, false);
             docCount = Long.parseLong(DOM.selectString(
-                    dom,"termstatmeta/doccount"));
-            termCount = Long.parseLong(DOM.selectString(
-                    dom,"termstatmeta/termcount"));
+                dom,"termstatmeta/doccount"));
+            termCount = Integer.parseInt(DOM.selectString(
+                dom,"termstatmeta/termcount"));
+            minDocumentFrequency = Long.parseLong(DOM.selectString(
+                dom,"termstatmeta/mindocumentfrequency", "0"));
+            columns = DOM.selectString(dom,"termstatmeta/termcount").
+                split(" *, *");
             source = DOM.selectString(dom, "termstatmeta/source");
             log.debug(String.format(
-                    "Extracted docCount %d, termCount %d and source '%s' from "
-                    + "'%s'",
-                    docCount, termCount, source, metaFile));
+                "Extracted docCount %d, termCount %d and source '%s' from "
+                + "'%s'",
+                docCount, termCount, source, metaFile));
             return true;
         } catch (Exception e) {
             log.error(String.format(
-                    "Unable to open '%s' which holds the docCount. Count will "
-                    + "be set to 0, which will lead to wonky ranking",
-                    metaFile), e);
+                "Unable to open '%s' which holds the docCount. Count will "
+                + "be set to 0, which will lead to wonky ranking",
+                metaFile), e);
             return false;
         }
     }
@@ -190,23 +228,95 @@ public class TermStat {
 
 
     /**
+     * Get stat at the given index for the given term. If the term does not
+     * exist, 0 is returned.
+     * @param term  the term to request stat for.
+     * @param index the index for the wanted stat.
+     *              Use {@link #getIndex(String)} to resolve the index.
+     * @return the stat at the given index.
+     */
+    public long getStat(String term, int index) {
+        TermEntry entry = getEntry(term);
+        return entry == null ? 0 : entry.getStat(index);
+    }
+
+    /**
+     * Summing equivalent to {@link #getStat(String, int)}.
+     * @param term    the term to request stats for.
+     * @param indexes the indexes for the stats to sum.
+     *                Use {@link #getIndex(String)} to resolve the indexes.
+     * @return the sum of the stats for the given indexes.
+     */
+    public long getSum(String term, int[] indexes) {
+        TermEntry entry = getEntry(term);
+        return entry == null ? 0 : entry.getSum(indexes);
+    }
+
+    /**
+     * @param column the wanted column. If this matches the column for the
+     *                term, -1 is returned.
+     * @return the stat-index for the given column.
+     * @throws ArrayIndexOutOfBoundsException if the column could not be
+     *         located.
+     */
+    public int getIndex(String column) throws ArrayIndexOutOfBoundsException {
+        for (int i = 0 ; i < columns.length ; i++) {
+            if (column.equals(columns[i])) {
+                return i-1;
+            }
+        }
+        throw new ArrayIndexOutOfBoundsException(
+            "Unable to locate '" + column + " in "
+            + Strings.join(columns, ", "));
+    }
+
+
+    /**
      * Create a persistent structure at the given location, making it ready for
      * updates.
      * </p><p>
-     * It is recommended to call {@link #setSource(String)} after this.
-     * @param location where the TermStats should be stored.
-     * @return true if the creation succeded.
+     * @param location the folder where the TermStats should be stored.
+     * @param header   the header is inserted at the top of the file and
+     *                 contains non-constrained information.
+     *                 Optional (specify null for no header).
+     * @param columns column names. The number of columns must match the
+     *                 number of stat-columns plus 1. the column names will
+     *                 be written after the custom heading.
+     * @return true if the creation succeeded.
      * @throws IOException if the structure could not be created.
      */
-    public boolean create(File location) throws IOException {
+    public boolean create(
+        File location, String header, String[] columns) throws IOException {
         closeExisting();
+        if (columns.length <= 1) {
+            throw new IllegalArgumentException(
+                "There must be at least 2 column names, got "
+                + Strings.join(columns, ", "));
+        }
+        if (columns[0].startsWith("#")) {
+            throw new IllegalArgumentException(
+                "The first column name must not start with '#', got "
+                + Strings.join(columns, ", "));
+        }
+        this.columns = columns;
         if (!location.exists()) {
             if (!location.mkdirs()) {
                 throw new IOException(String.format(
-                        "Unable to create the folder '%s'", location));
+                    "Unable to create the folder '%s'", location));
             }
         }
         persistent = new LineReader(getFile(location, ".dat"), "rw");
+        if (header != null && !"".equals(header)) {
+            String[] lines = header.split("\n");
+            for (String line: lines) {
+                persistent.write(commentPrefix + " ");
+                persistent.write(line);
+                persistent.write("\n");
+            }
+        }
+        persistent.write(Strings.join(columns, "\t"));
+        persistent.write("\n");
+        lookupTable[0] = persistent.getPosition();
         persistent.setBufferSize(bufferSize);
         return true;
     }
@@ -219,6 +329,7 @@ public class TermStat {
      */
     public void store() throws IOException {
         persistent.flush();
+        storeLookup();
         storeMeta();
     }
 
@@ -236,18 +347,27 @@ public class TermStat {
             xmlOut.writeCharacters(Long.toString(getDocCount()));
             if (getDocCount() == 0) {
                 log.warn(String.format(
-                        "docCount for source '%s' was 0. Unless the index has "
-                        + "no terms, this is normally an error", getSource()));
+                    "docCount for source '%s' was 0. Unless the index has "
+                    + "no terms, this is normally an error", getSource()));
             }
             xmlOut.writeEndElement();
             xmlOut.writeStartElement("termcount");
             xmlOut.writeCharacters(Long.toString(getTermCount()));
             if (getDocCount() == 0) {
                 log.warn(String.format(
-                        "termCount for source '%s' was 0. Unless the index is "
-                        + "empty, this is normally an error", getSource()));
+                    "termCount for source '%s' was 0. Unless the index is "
+                    + "empty, this is normally an error", getSource()));
             }
             xmlOut.writeEndElement();
+
+            xmlOut.writeStartElement("mindocumentfrequence");
+            xmlOut.writeCharacters(Long.toString(minDocumentFrequency));
+            xmlOut.writeEndElement();
+
+            xmlOut.writeStartElement("columns");
+            xmlOut.writeCharacters(Strings.join(columns, ", "));
+            xmlOut.writeEndElement();
+
             //noinspection DuplicateStringLiteralInspection
             xmlOut.writeStartElement("source");
             xmlOut.writeCharacters(getSource());
@@ -257,52 +377,81 @@ public class TermStat {
             fileOut.close();
             log.debug("StoreMeta completed for '" + metaFile + "'");
         } catch (Exception e) {
-            throw new IOException("Unable to write meta to '" + metaFile + "'",
-                                  e);
+            throw new IOException(
+                "Unable to write meta to '" + metaFile + "'", e);
         }
     }
 
-    private static String DELIMITER = " ";
-    private static final ReplaceReader newlineEscaper;
-    private static final ReplaceReader newlineUnEscaper;
-    static {
-        Map<String, String> escape = new LinkedHashMap<String, String>(10);
-        escape.put("\\", "\\\\");
-        escape.put("\n", "\\n");
-        newlineEscaper = ReplaceFactory.getReplacer(escape);
-
-        Map<String, String> unEscape = new LinkedHashMap<String, String>(10);
-        escape.put("\\n", "\\n");
-        escape.put("\\\\", "\\");
-        newlineUnEscaper = ReplaceFactory.getReplacer(unEscape);
-
+    private void storeLookup() throws IOException {
+        log.debug("Storing lookup at " + getLookupFile());
+        FileOutputStream fileOut = new FileOutputStream(getLookupFile());
+        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        for (long offset: lookupTable) {
+            out.writeLong(offset);
+        }
+        out.flush();
+        out.close();
+        fileOut.close();
     }
+
+    private void openLookup() throws IOException {
+        log.trace("openLookup called");
+        if (!getLookupFile().exists()) {
+            createLookup();
+            return;
+        }
+        log.debug("Opening existing lookup file from " + getLookupFile());
+        FileInputStream fileIn = new FileInputStream(getLookupFile());
+        ObjectInputStream in = new ObjectInputStream(fileIn);
+        lookupTable = new long[termCount+1];
+        for (int i = 0 ; i < lookupTable.length ; i++) {
+            lookupTable[i] = in.readLong();
+        }
+        in.close();
+        fileIn.close();
+    }
+
+    private void createLookup() throws IOException {
+        log.trace("Creating lookup table for " + getLookupFile());
+        lookupTable = new long[termCount+1];
+        persistent.seek(0);
+        String line = null;
+        // Skip heading
+        while ((line = persistent.readLine()) != null) {
+            if (!line.startsWith(commentPrefix)) {
+                break;
+            }
+        }
+        if (line == null) {
+            throw new IOException("No column names in " + getLookupFile());
+        }
+
+        // columns
+        columns = line.split("\t");
+        log.debug("Column names: " + Strings.join(columns, ", "));
+
+        for (int i = 0 ; i < lookupTable.length ; i++) {
+            lookupTable[i] = persistent.getPosition();
+            try {
+                persistent.readLine();
+            } catch (IOException e) {
+                throw new IOException(
+                    "IOException while reading row #" + i
+                    +" (starting from 0) from " + getLookupFile(), e);
+            }
+        }
+        storeLookup();
+    }
+
+    private File getLookupFile() {
+        return getFile(persistent.getFile().getParentFile(), ".lookup");
+    }
+
     private String termToString(TermEntry value) {
-        return newlineEscaper.transform(value.getTerm()) + DELIMITER
-               + Integer.toString(value.getCount()) + "\n";
+        return value.toPersistent() + "\n";
     }
     private TermEntry stringToTerm(String content) {
-        int pos = content.lastIndexOf(DELIMITER);
-        // No explicit check for existence of delimiter as we don't care whether
-        // a "No DELIMITER found or an ArrayIndexOutOfBounds is thrown
-        // The same goes for the Integer.parseInt-call. In all three cases, we
-        // can infer what happened.
-        return this.entryPool.get().
-                setTerm(newlineUnEscaper.transform(content.substring(0, pos))).
-                setCount(Integer.parseInt(
-                        content.substring(pos + 1, content.length())));
-    }
-
-    private String extractTermStringWithEscapes(String line) {
-        // No explicit check for existence of delimiter as we don't care whether
-        // a "No DELIMITER found or an ArrayIndexOutOfBounds is thrown
-        // The same goes for the Integer.parseInt-call. In all three cases, we
-        // can infer what happened.
-        return line.substring(0, line.lastIndexOf(DELIMITER));
-    }
-    private int extractTermCount(String line) {
-        int pos = line.lastIndexOf(DELIMITER);
-        return Integer.parseInt(line.substring(pos + 1, line.length()));
+        return new TermEntry(content, columns);
     }
 
     /**
@@ -321,103 +470,128 @@ public class TermStat {
      * Add the term entry to the stats. Adds must be done sequentially with the
      * terms in unicode order.
      * @param value the term and term count to add.
-     * @throws java.io.IOException in case of errors with the persistence layer.
      */
-    public void add(TermEntry value) throws IOException {
-        persistent.write(termToString(value));
-        termCount++;
+    @Override
+    public synchronized boolean add(TermEntry value) {
+        try {
+            if (persistent.getPosition() != lookupTable[termCount]) {
+                persistent.seek(lookupTable[termCount]);
+            }
+            persistent.write(termToString(value));
+            termCount++;
+            lookupTable =
+                ArrayUtil.makeRoom(lookupTable, termCount, 1.2, 10000, 0);
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to add entry " + value + " to persistent layer", e);
+        }
     }
 
     /**
-     * Locate the given value in the Structure. Note that this matches on the
-     * String part of a previously added term entry.
-     * @param termString the String to locate
-     * @return the position of the given value in the structure or -1 if it does
-     *         not exist.
-     * @throws java.io.IOException in case of IO-errors with persistent data.
+     * The contains takes either a TermEntry or a term (String). Given a
+     * TermEntry, only termEntry.getTerm()-existence is verified.
+     * @param o the object to seek.
+     * @return true if the object exists.
      */
-    private long indexOf(String termString) throws IOException {
-        return persistent.binaryLineSearch(
-                termLocator, newlineEscaper.transform(termString));
+    @Override
+    public boolean contains(Object o) {
+        if (o instanceof TermEntry) {
+            return indexOf(o) >= 0;
+        } else if (o instanceof String) {
+            return indexOf(o) >= 0;
+        }
+        return indexOf(o) >= 0;
     }
-    private Comparator<String> termLocator = new Comparator<String>() {
-        // o1 will always be the search value, o2 is the line
-        public int compare(String o1, String o2) {
-            return o1.compareTo(extractTermStringWithEscapes(o2));
-        }
-    };
 
-    /**
-     * Returns the number of times the term occur.
-     * @param term the (@code field:value} to resolve the count for.
-     * @return the count for the given term or -1 if the term does not exist.
-     * @throws java.io.IOException in case of IO-errors with persistent data.
-     */
-    public int getTermCount(String term) throws IOException {
-        Integer tc = cache.get(term);
-        if (tc != null) {
-            return tc;
-        }
-        long pos = indexOf(term);
-        if (pos < 0) {
-            tc = -1;
+    @Override
+    public int indexOf(Object o) {
+        String key;
+        if (o instanceof TermEntry) {
+            key = ((TermEntry)o).getTerm();
+        } else if (o instanceof String) {
+            key = (String)o;
         } else {
-            persistent.seek(pos);
-            tc = extractTermCount(persistent.readLine());
+            return -1;
         }
-        cache.put(term, tc);
-        return tc;
+        return binarySearch(key);
+    }
+
+    // Returns -1 if not found
+    private int binarySearch(String term) {
+        int low = 0;
+        int high = termCount;
+        while (low <= high) {
+            int middle = low + high >>> 1;
+            String midVal = getLine(middle);
+            final int compareResult = TermEntry.comparePersistent(term, midVal);
+            if (compareResult > 0) {
+                low = middle + 1;
+            } else if (compareResult < 0) {
+                high = middle - 1;
+            } else {
+                return middle;
+            }
+        }
+        return -1;
     }
 
     /**
-     * Set the position to the first TermEntry.
-     * @throws java.io.IOException in case of IO-errors with persistent data.
+     * Finds the entry with the given term in {@code log2(n)} time.
+     * The look ups are LRU cached so multiple calls for the same term in
+     * short order are cheap..
+     * @param term the term for the wanted entry.
+     * @return the entry for the term if it exists, else null;
      */
-    public void reset() throws IOException {
-        persistent.seek(0);
-    }
-
-    /**
-     * @return true if there are more entries.
-     */
-    public boolean hasNext() {
-        return !persistent.eof();
-    }
-
-    /**
-     * @return the TermEntry at the current position, without advancing to the
-     *         next TermEntry. If null is returned, there are no more entries.
-     * @throws java.io.IOException in case of IO-errors with persistent data.
-     */
-    public TermEntry peek() throws IOException {
-        return read(true);
-    }
-
-    /**
-     * @return the TermEntry at the current position, advancing the pointer to
-     *         the next TermEntry. If null is returned, there are no more
-     *         entries.
-     * @throws java.io.IOException in case of IO-errors with persistent data.
-     */
-    public TermEntry get() throws IOException {
-        return read(false);
-    }
-
-    private TermEntry read(boolean resetPos) throws IOException {
-        if (!hasNext()) {
+    public TermEntry getEntry(String term) {
+        TermEntry entry = cache.get(term);
+        if (entry != null) {
+            cache.put(term, entry);
+            return entry;
+        }
+        int index = indexOf(term);
+        if (index == -1) {
             return null;
         }
-        long startPos = persistent.getPosition();
-        String line = persistent.readLine();
-        if (resetPos) {
-            persistent.seek(startPos);
-        }
-        if (line == null || "".equals(line)) {
-            return null;
-        }
-        return stringToTerm(line);
+        entry = get(index);
+        cache.put(term, entry);
+        return entry;
     }
 
+    @Override
+    public TermEntry get(int index) {
+        return new TermEntry(getLine(index), columns);
+    }
+
+    protected String getLine(int index) {
+        if (index >= termCount) {
+            throw new ArrayIndexOutOfBoundsException(
+                "There is " + termCount + " terms in the collection, the perm "
+                + "at position " + index + " were requested");
+        }
+        try {
+            persistent.seek(lookupTable[index]);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "IOException seeking to file offset " + lookupTable[index]
+                + " for index " + index + " in " + getLookupFile(), e);
+        }
+        try {
+            return persistent.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "IOException getting data for line at file offset "
+                + lookupTable[index] + " for index " + index + " in "
+                + getLookupFile(), e);
+        }
+    }
+
+
+
+    @Override
+    public int size() {
+        return termCount;
+    }
 
     /**
      * @return the number of documents in the (potentially virtual) index that
@@ -428,14 +602,7 @@ public class TermStat {
     }
 
     /**
-     * @param docCount the number of documents in the index.
-     */
-    public void setDocCount(long docCount) {
-        this.docCount = docCount;
-    }
-
-    /**
-     * @return the number of terms with counts in this structure.
+     * @return the number of terms with stats in this structure.
      */
     public long getTermCount() {
         return termCount;
@@ -448,13 +615,6 @@ public class TermStat {
      */
     public String getSource() {
         return source;
-    }
-
-    /**
-     * @param source the source for these data.
-     */
-    public void setSource(String source) {
-        this.source = source;
     }
 
     @Override
@@ -470,16 +630,14 @@ public class TermStat {
         return persistent.getFile().getParentFile();
     }
 
-    private HashMap<String, Integer> createCache() {
-        return new LinkedHashMap<String, Integer>(cacheSize) {
-            private static final long serialVersionUID = 16846864L;
+    private HashMap<String, TermEntry> createCache() {
+        return new LinkedHashMap<String, TermEntry>(cacheSize) {
             @Override
             protected boolean removeEldestEntry(
-                    Map.Entry<String, Integer> eldest) {
+                Map.Entry<String, TermEntry> eldest) {
                 return size() >= cacheSize;
             }
         };
     }
-
 }
 
