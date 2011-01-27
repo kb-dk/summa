@@ -213,7 +213,7 @@ public class InteractionAdjuster implements Configurable {
      * @return an adjusted request.
      */
     public Request rewrite(Request request) {
-        log.trace("Rewrite called");
+        log.trace("rewrite called");
         Request adjusted = clone(request);
         rewriteDocumentQueryFields(request);
         rewriteFacetQueryFields(request);
@@ -221,12 +221,14 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private void rewriteDocumentQueryFields(Request request) {
+        log.trace("rewriteDocumentQueryFields called");
         Map<String, String> documentFields = resolveMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         if (documentFields == null) {
+            log.trace("No document fields for rewriteDocumentQueryFields");
             return;
         }
-        log.trace("Adjusting fields in document filter and query");
+        log.trace("rewriting fields in document filter and query");
         if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
             request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
                 request.getString(DocumentKeys.SEARCH_FILTER),
@@ -240,6 +242,7 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private void rewriteFacetQueryFields(Request request) {
+        log.trace("rewriteFacetQueryFields called");
         Map<String, String> facetFields = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (facetFields == null) {
@@ -255,6 +258,7 @@ public class InteractionAdjuster implements Configurable {
 
     private Map<String, String> resolveMap(
         Request request, Map<String, String> defaultMap, String key) {
+        log.trace("resolveMap called");
         Map<String, String> map = defaultMap;
         if (request.containsKey(key)) {
             map = parseSingleMapRules(request.getString(key));
@@ -408,6 +412,7 @@ public class InteractionAdjuster implements Configurable {
      */
     private void adjustDocumentScores(
         Request request, DocumentResponse documentResponse) {
+        log.trace("adjustDocumentScores called");
         double factor = baseFactor;
         double addition = baseAddition;
         if (request.containsKey(SEARCH_ADJUST_SCORE_MULTIPLY)) {
@@ -424,7 +429,9 @@ public class InteractionAdjuster implements Configurable {
         }
         // It is okay to compare as worst case is an unnecessary adjustment
         //noinspection FloatingPointEquality
-        if (baseAddition == 0 && baseFactor == 1.0) {
+        if (addition == 0 && factor == 1.0) {
+            log.trace("No adjustment to make to scores "
+                      + "(factor == 1.0, addition == 0.0");
             return;
         }
 
