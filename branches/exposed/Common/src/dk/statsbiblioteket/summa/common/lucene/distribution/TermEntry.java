@@ -281,6 +281,15 @@ public class TermEntry implements Comparable<TermEntry> {
 
     @Override
     public String toString() {
-        return "TermEntry('" + term + "', " + stats.length  + " stats";
+        StringWriter sw = new StringWriter();
+        sw.append("TermEntry('").append(term).append("', [");
+        for (int i = 0 ; i < stats.length ; i++) {
+            if (i > 0) {
+                sw.append(", ");
+            }
+            sw.append(Long.toString(stats[i]));
+        }
+        sw.append("])");
+        return sw.toString();
     }
 }

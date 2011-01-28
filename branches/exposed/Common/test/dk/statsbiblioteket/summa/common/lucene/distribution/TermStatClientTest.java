@@ -129,7 +129,6 @@ public class TermStatClientTest extends TestCase {
         }
     }
 
-
     public void testLookup() throws Exception {
         generateIndex(100);
         Configuration conf = Configuration.newMemoryBased();
@@ -143,20 +142,24 @@ public class TermStatClientTest extends TestCase {
         termStat.open(dumpLocation);
         String FIXED = "fixedcontent";
         TermEntry fixed = termStat.getEntry(FIXED);
-        if (fixed == null) {
-            for (int i = 0 ; i < termStat.size() ; i++) {
-                TermEntry entry = termStat.get(i);
-                log.debug("Entry #" + i + ": " + entry);
-            }
-        }
         assertNotNull("There should be an entry for '" + FIXED + "'", fixed);
-        assertEquals("The termcount for " + FIXED + " should be numDocs",
-                     100, fixed.getStat(1));
+        assertEquals("The doccount for " + FIXED + " should be numDocs",
+                     100, fixed.getStat(0));
         String VARIABLE_A = "variablecontent1";
+        if (termStat.getEntry(VARIABLE_A).getStat(1) != 1) {
+            dumpTermStats(termStat);
+        }
         assertEquals("The termcount for " + VARIABLE_A
-                     + " should be indexcount",
-                     1, termStat.getEntry(VARIABLE_A).getStat(1));
+                     + " should be indexcount*3",
+                     3, termStat.getEntry(VARIABLE_A).getStat(1));
         termStat.close();
+    }
+
+    private void dumpTermStats(TermStat termStat) {
+        for (int i = 0 ; i < termStat.size() ; i++) {
+            TermEntry entry = termStat.get(i);
+            log.debug("Entry #" + i + ": " + entry);
+        }
     }
 
 
