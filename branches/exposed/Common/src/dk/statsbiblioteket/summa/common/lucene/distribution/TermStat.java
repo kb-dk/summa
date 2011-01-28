@@ -105,9 +105,17 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         "common.distribution.comment.prefix";
     public static final String DEFAULT_COMMENT_PREFIX = "#";
 
+    /**
+     * If true, column names are assumed not to be a part of the persistent
+     * file when {@link #open} results in a lookup table rebuild.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SKIP_COLUMNNAMES_ON_OPEN =
+        "common.distribution.skipcolumnnamesonopen";
+    public static final boolean DEFAULT_SKIP_COLUMNNAMES_ON_OPEN = false;
 
     private LineReader persistent;
-    //  private boolean memoryBased = DEFAULT_MEMORYBASED;
     private long docCount = 0;
     private int termCount = 0;
     private long minDocumentFrequency = 0;
@@ -115,6 +123,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private int cacheSize = DEFAULT_CACHE_SIZE;
     private int bufferSize = DEFAULT_READER_BUFFER;
     private String commentPrefix = DEFAULT_COMMENT_PREFIX;
+    private boolean skipColumnNames = DEFAULT_SKIP_COLUMNNAMES_ON_OPEN;
 
     /**
      * Holds offsets in the backing persistent file for all line entries.
@@ -136,17 +145,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         cacheSize = conf.getInt(CONF_CACHE_SIZE, cacheSize);
         bufferSize = conf.getInt(CONF_READER_BUFFER, bufferSize);
         commentPrefix = conf.getString(CONF_COMMENT_PREFIX, commentPrefix);
-//        memoryBased = conf.getBoolean(CONF_MEMORYBASED, memoryBased);
-        //noinspection DuplicateStringLiteralInspection
-//        log.debug(String.format("Constructed %s-based TermStat",
-//                                memoryBased ? "memory" : "storage"));
-/*        if (memoryBased) {
-            persistent = new MemoryPool<TermEntry>(
-                    new TermValueConverter(), null);
-        } else {
-            persistent = new DiskPool<TermEntry>(
-                    new TermValueConverter(), null);
-        }*/
+        skipColumnNames = conf.getBoolean(
+            CONF_SKIP_COLUMNNAMES_ON_OPEN, skipColumnNames);
     }
 
     /**
@@ -157,16 +157,18 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * @throws IOException if the open failed due to invalid persistent data.
      */
     public boolean open(File location) throws IOException {
-        if (!location.exists()) {
-            throw new FileNotFoundException("Unable to locate " + location);
+        File realFile = getFile(location, ".dat");
+        if (!realFile.exists()) {
+            throw new FileNotFoundException("Unable to locate " + realFile);
         }
         closeExisting();
         log.info(String.format("Opening TermStats at '%s' as readonly",
                                location));
-        persistent = new LineReader(getFile(location, ".dat"), "r");
+        persistent = new LineReader(realFile, "r");
         persistent.setBufferSize(bufferSize);
+        boolean result = openMeta();
         openLookup();
-        return openMeta();
+        return result;
     }
 
     private void closeExisting() throws IOException {
@@ -195,8 +197,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         try {
             log.debug("Opening meta data from '" + metaFile + "'");
             String meta = Resolver.getUTF8Content(metaFile.toURI().toURL());
-            if (log.isDebugEnabled()) {
-                log.debug("Got meta data:\n" + meta);
+            if (log.isTraceEnabled()) {
+                log.trace("Got meta data:\n" + meta);
             }
             Document dom = DOM.stringToDOM(meta, false);
             docCount = Long.parseLong(DOM.selectString(
@@ -209,9 +211,9 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                 split(" *, *");
             source = DOM.selectString(dom, "termstatmeta/source");
             log.debug(String.format(
-                "Extracted docCount %d, termCount %d and source '%s' from "
-                + "'%s'",
-                docCount, termCount, source, metaFile));
+                "Extracted docCount %d, termCount %d, mdf %d and source '%s'"
+                + " from '%s'",
+                docCount, termCount, minDocumentFrequency, source, metaFile));
             return true;
         } catch (Exception e) {
             log.error(String.format(
@@ -335,7 +337,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
 
     private void storeMeta() throws IOException {
         File metaFile = getFile(persistent.getFile().getParentFile(), ".meta");
-        log.debug("StoreMeta called, storing in '" + metaFile + "'");
+        log.debug(String.format(
+            "StoreMeta called, storing in '%s' with docCount=%d, termCount=%d, "
+            + "mdf=%d, columns=%s", metaFile, docCount, termCount,
+            minDocumentFrequency, Strings.join(columns, ", ")));
         XMLOutputFactory xmlFactory = XMLOutputFactory.newInstance();
         FileOutputStream fileOut = new FileOutputStream(metaFile);
         XMLStreamWriter xmlOut;
@@ -383,11 +388,12 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     }
 
     private void storeLookup() throws IOException {
-        log.debug("Storing lookup at " + getLookupFile());
+        log.debug("Storing offsets for " + termCount + " terms from lookup "
+                  + "table at " + getLookupFile());
         FileOutputStream fileOut = new FileOutputStream(getLookupFile());
         ObjectOutputStream out = new ObjectOutputStream(fileOut);
-        for (long offset: lookupTable) {
-            out.writeLong(offset);
+        for (int i = 0 ; i <= termCount ; i++) {
+            out.writeLong(lookupTable[i]);
         }
         out.flush();
         out.close();
@@ -400,7 +406,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             createLookup();
             return;
         }
-        log.debug("Opening existing lookup file from " + getLookupFile());
+        log.debug("Opening existing lookup file with offsets for " + termCount
+                  + " terms from " + getLookupFile());
         FileInputStream fileIn = new FileInputStream(getLookupFile());
         ObjectInputStream in = new ObjectInputStream(fileIn);
         lookupTable = new long[termCount+1];
@@ -417,18 +424,26 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         persistent.seek(0);
         String line = null;
         // Skip heading
+        long previous = 0;
         while ((line = persistent.readLine()) != null) {
             if (!line.startsWith(commentPrefix)) {
                 break;
+            } else {
+                previous = persistent.getPosition();
             }
         }
-        if (line == null) {
+        if (line == null && !skipColumnNames) {
             throw new IOException("No column names in " + getLookupFile());
         }
 
         // columns
-        columns = line.split("\t");
-        log.debug("Column names: " + Strings.join(columns, ", "));
+        if (!skipColumnNames) {
+            columns = line.split("\t");
+            log.debug("Column names: " + Strings.join(columns, ", "));
+        } else {
+            log.debug("Skipping loading of column names");
+            persistent.seek(previous);
+        }
 
         for (int i = 0 ; i < lookupTable.length ; i++) {
             lookupTable[i] = persistent.getPosition();
@@ -477,10 +492,16 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             if (persistent.getPosition() != lookupTable[termCount]) {
                 persistent.seek(lookupTable[termCount]);
             }
+            if (log.isTraceEnabled()) {
+                log.trace("Writing " + value + " at offset "
+                          + persistent.getPosition());
+            }
+//            log.debug(value);
             persistent.write(termToString(value));
             termCount++;
             lookupTable =
                 ArrayUtil.makeRoom(lookupTable, termCount, 1.2, 10000, 0);
+            lookupTable[termCount] = persistent.getPosition();
             return true;
         } catch (IOException e) {
             throw new RuntimeException(
@@ -601,6 +622,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         return docCount;
     }
 
+    public void setDocCount(long docCount) {
+        this.docCount = docCount;
+    }
+
     /**
      * @return the number of terms with stats in this structure.
      */
@@ -615,6 +640,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      */
     public String getSource() {
         return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     @Override

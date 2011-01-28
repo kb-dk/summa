@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
@@ -23,11 +24,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.*;
+import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -38,18 +39,19 @@ import java.util.regex.Pattern;
  * line-breaks in text are escaped with \n and frequency is written with
  * {@code Integer.toString()}.
  */
+// TODO: Add Java String order to BytesRef order sorter
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class TermStatExtractor implements Configurable {
-    private static Log log = LogFactory.getLog(TermStatExtractor.class);
+public class TermStatClient implements Configurable {
+    private static Log log = LogFactory.getLog(TermStatClient.class);
 
     private Configuration termStatConf;
 
-    public TermStatExtractor(Configuration conf) {
+    public TermStatClient(Configuration conf) {
         termStatConf = conf;
     }
-    private TermStatExtractor() {
+    private TermStatClient() {
         this(Configuration.newMemoryBased());
     }
 
@@ -115,7 +117,7 @@ public class TermStatExtractor implements Configurable {
             }
             fieldsActive = false;
         }
-        new TermStatExtractor().extract(
+        new TermStatClient().extract(
             index, destination, columnname, fields, mdf);
     }
 
@@ -166,16 +168,16 @@ public class TermStatExtractor implements Configurable {
             }
             mode = MODE.none;
         }
-        new TermStatExtractor().merge(inputs, columns, destination, mdf);
+        new TermStatClient().merge(inputs, columns, destination, mdf);
     }
 
     public static void usage() {
         System.out.println(
                 "Usage:\n"
-                + "TermStatExtractor [-e [-mdf minimumdocumentfrequency] "
+                + "TermStatClient [-e [-mdf minimumdocumentfrequency] "
                 +                    "-i index -d destination -f field* "
                 +                    "-c columnname ]\n"
-                + "TermStatExtractor [-m [-mdf minimumdocumentfrequency] "
+                + "TermStatClient [-m [-mdf minimumdocumentfrequency] "
                 +                    "-i termstat* -d destination "
                 +                    "-c columnregexp*]\n"
                 + "\n"
@@ -183,7 +185,7 @@ public class TermStatExtractor implements Configurable {
                 + "destination\n"
                 + " -i: Lucene index"
                 + " -f: Lucene fields as regexp"
-                + " -c: Destination column name"
+                + " -c: Destination column prefix"
                 + " -d: Destination for the term stats"
                 + "\n"
                 + "-m: Merge termstats into destination"
@@ -197,7 +199,7 @@ public class TermStatExtractor implements Configurable {
     }
 
     public void extract(
-        File index, String destination, String column,
+        File index, String destination, String columnPrefix,
         List<String> fieldRegexps, int mdf) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException("No index specified");
@@ -214,14 +216,60 @@ public class TermStatExtractor implements Configurable {
             Strings.join(fieldRegexps, ", "), index, mdf, destination));
         Profiler profiler = new Profiler();
 
-        Set<String> fields = new HashSet<String>(20);
         IndexReader ir = IndexReader.open(new NIOFSDirectory(index));
-        FieldsEnum fieldsEnum = ir.fields().iterator();
-        String fieldName;
-        while ((fieldName = fieldsEnum.next()) != null) {
-            for (String regexp: fieldRegexps) {
-                if (Pattern.compile(regexp).matcher(fieldName).matches()) {
-                    fields.add(fieldName);
+        Set<String> fields = getFields(ir, fieldRegexps, index);
+
+        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
+        TermStat termStat = new TermStat(Configuration.newMemoryBased());
+        // TODO: Add timestamp for extraction
+        String header = String.format(
+            "TermStats created from %s at %2$tF %2$tT",
+            index, System.currentTimeMillis());
+        final String[] columns = new String[]{
+            "term", "tf_" + columnPrefix, "df_" + columnPrefix};
+        termStat.create(new File(destination), header, columns);
+        termStat.setDocCount(getDocCount(ir));
+        termStat.setSource(index.toString());
+
+        TermStatSource factory = new TermStatSource(index);
+        // TODO: docCount
+        Iterator<Triple<BytesRef, Long, Long>> source =
+            factory.getTerms(fields);
+        final long[] cache = new long[2];
+        while (source.hasNext()) {
+            Triple<BytesRef, Long, Long> triple = source.next();
+            cache[0] =  triple.getValue2(); // tf
+            cache[1] =  triple.getValue3(); // df
+
+            if (triple.getValue3() >= mdf) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Adding " + triple);
+                }
+                termStat.add(new TermEntry(
+                    triple.getValue1().utf8ToString(), cache, columns));
+            } else if (log.isTraceEnabled()) {
+                log.trace("Skipping " + triple + " as mdf=" + mdf);
+            }
+        }
+        termStat.store();
+        termStat.close();
+        log.info("Finished extraction in " + profiler.getSpendTime());
+    }
+
+    private Set<String> getFields(IndexReader ir, List<String> fieldRegexps,
+                                  File index) throws IOException {
+        Set<String> fields = new HashSet<String>(20);
+        IndexReader[] readers = ir.getSequentialSubReaders() == null ?
+                                new IndexReader[]{ir} :
+                                ir.getSequentialSubReaders();
+        for (IndexReader sub: readers) {
+            FieldsEnum fieldsEnum = sub.fields().iterator();
+            String fieldName;
+            while ((fieldName = fieldsEnum.next()) != null) {
+                for (String regexp: fieldRegexps) {
+                    if (Pattern.compile(regexp).matcher(fieldName).matches()) {
+                        fields.add(fieldName);
+                    }
                 }
             }
         }
@@ -229,15 +277,28 @@ public class TermStatExtractor implements Configurable {
             log.warn("Unable to expand " + Strings.join(fieldRegexps, ", ")
                      + " to any fields in " + index);
         }
+        return fields;
+    }
 
-        TermStat termStat = new TermStat(Configuration.newMemoryBased());
-        // TODO: Add timestamp for extraction
-        termStat.create(new File(destination),
-                        "Termstats extracted from " + index,
-                        new String[]{column});
-        // TODO: Implement this. Remember docCount
-
-        log.info("Finished extraction in " + profiler.getSpendTime());
+    private long getDocCount(IndexReader ir) {
+        if (ir.getSequentialSubReaders() == null) {
+            Bits deletedDocs = ir.getDeletedDocs();
+            if (deletedDocs == null) {
+                return ir.maxDoc();
+            }
+            long count = ir.maxDoc();
+            for (int i = 0 ; i < deletedDocs.length() ; i++) {
+                if (deletedDocs.get(i)) {
+                    count--;
+                }
+            }
+            return count;
+        }
+        long count = 0;
+        for (IndexReader i: ir.getSequentialSubReaders()) {
+            count += getDocCount(i);
+        }
+        return count;
     }
 
     public void merge(
@@ -265,46 +326,26 @@ public class TermStatExtractor implements Configurable {
     }
 
     /**
-     * Iterates through all terms in the IndexReader and dumps the docFreq of
+     * Iterates through all terms in the index and dumps the tf and df stats of
      * the terms to the destination.
+     * </p><p>
+     * This is a shorthand for the method
+     * {@link #extract(java.io.File, String, String, java.util.List, int)}
+     * called as {@code }
      * @param index       the location of a Lucene index.
      * @param destination where to store the Term-statistics.
      * @throws IOException if extraction failed due to an I/O error.
      */
-/*    public void dumpStats(File index, File destination) throws IOException {
+    public void dumpStats(File index, File destination) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("dumpStats(%s, %s) called",
                                 index, destination));
-        IndexReader ir = IndexReader.open(new NIOFSDirectory(index));
-        Profiler profiler = new Profiler();
-        TermStat stats = new TermStat(termStatConf);
-        stats.create(destination);
-        FieldsEnum fields = ir.fields().iterator();
-        String field;
-        while ((field = fields.next()) != null) {
-            TermsEnum terms = ir.terms(field).iterator();
-            BytesRef ref;
-            while ((ref = terms.next()) != null) {
-                stats.add(new TermEntry(
-                        field + ":" + ref.utf8ToString(),
-                        terms.docFreq()));
-                profiler.beat();
-            }
-        }
-        stats.setDocCount(ir.maxDoc());
-        stats.setSource(index.toString());
-        stats.store();
-        stats.close();
-        ir.close();
-        log.info(String.format(
-                "Finished extracting %d terms with docFreqs in %s. "
-                + "Average extraction speed: %s docFreq's/sec",
-                profiler.getBeats(), profiler.getSpendTime(),
-                profiler.getBps(false)));
+        extract(
+            index, destination.toString(), "dumpstats", Arrays.asList(".*"), 1);
     }
-  */
+
     /**
-     * Merges multiple stats created by {@link #dumpStats} into a single file.
+     * Merges multiple stats created by @link #dumpStats into a single file.
      * Merging simply adds the docFreq's for the different Terms. In order for
      * the merger to work, the term-statics must be ordered (dumpStats does
      * this automatically).

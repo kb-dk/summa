@@ -54,7 +54,7 @@ DEPLOY=`dirname $0`/..
 #
 
 MAINJAR=$DEPLOY/summa-common-1.4.7.jar
-MAINCLASS=dk.statsbiblioteket.summa.common.lucene.distribution.TermStatExtractor
+MAINCLASS=dk.statsbiblioteket.summa.common.lucene.distribution.TermStatClient
 
 PRINT_CONFIG=true
 ###LIBDIRS=

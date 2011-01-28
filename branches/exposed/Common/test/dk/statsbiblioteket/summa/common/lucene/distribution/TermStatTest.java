@@ -59,7 +59,7 @@ public class TermStatTest extends TestCase {
     public void testPersistence() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         TermStat ts = new TermStat(conf);
-        ts.create(TMP);
+        ts.create(TMP, "foo", new String[]{"bar", "zoo"});
         ts.setDocCount(87);
         ts.setSource("foo");
         ts.store();

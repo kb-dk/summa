@@ -124,7 +124,8 @@ public class TermProviderImpl implements IndexListener, TermProvider {
      * @throws java.io.IOException if an error happened during resolving.
      */
     public int docFreq(String term) throws IOException {
-        return termStatActive ? termStat.getTermCount(term) : -1;
+        throw new UnsupportedOperationException("Not supported yet");
+        //return termStatActive ? termStat.getTermCount(term) : -1;
     }
 
     /**

@@ -71,7 +71,7 @@ public class TermStatPerformance {
             int test = random.nextInt(terms);
             //noinspection DuplicateStringLiteralInspection
             String term = "term_" + leader(test, digits);
-            ts.getTermCount(term);
+            ts.getEntry(term);
             profiler.beat();
             if (i % feedback == 0) {
                 System.out.println(String.format(
@@ -94,15 +94,16 @@ public class TermStatPerformance {
         int digits = Integer.toString(terms).length();
         Profiler profiler = new Profiler();
         TermStat ts = new TermStat(Configuration.newMemoryBased());
-        ts.create(location);
+        String[] columns = new String[]{"term", "number"};
+        ts.create(location, "Tester", columns);
         for (int i = 0 ; i < terms ; i++) {
             //noinspection DuplicateStringLiteralInspection
-            ts.add(new TermEntry("term_" + leader(i, digits), i + 2));
+            ts.add(new TermEntry(
+                "term_" + leader(i, digits), new long[]{i + 2}, columns));
         }
         ts.store();
         ts.setDocCount(terms);
         ts.setSource("TermStatPerformance test data for " + terms + " terms");
-        ts.reset();
         System.out.println("Finished creating sample term stats with " + terms
                            + " terms in " + profiler.getSpendTime());
         return ts;

@@ -33,7 +33,7 @@ import java.io.IOException;
  *
  * @author Hans Lund, State and University Library, Aarhus Denmark
  * @version $Id: DistributedIndexStatCreator.java,v 1.3 2007/10/04 13:28:19 te Exp $
- * @deprecated use {@link dk.statsbiblioteket.summa.common.lucene.distribution.TermStatExtractor} instead.
+ * @deprecated use {@link dk.statsbiblioteket.summa.common.lucene.distribution.TermStatClient} instead.
  */
 @Deprecated
 public class DistributedIndexStatCreator {
