@@ -126,9 +126,6 @@ public class TermStatSource implements Closeable {
                     pi.remove();
                 }
                 values.add(provider.next());
-                if (values.get(values.size()-1).getValue1().utf8ToString().equals("fixedcontent")) {
-                    System.out.println(designation + "Stored fixed content as first");
-                }
             }
         }
 
@@ -139,14 +136,15 @@ public class TermStatSource implements Closeable {
 
         @Override
         public Triple<BytesRef, Long, Long> next() {
+            if (values.size() != providers.size()) {
+                throw new IllegalStateException(
+                    "There were " + providers.size() + " and " + values.size() 
+                    + " values. The two numbers should be the same. There is "
+                    + "an error in the internal bookkeeping");
+            }
+
             int index = -1;
             BytesRef term = null;
-            for (Triple<BytesRef, Long, Long> value: values) {
-                if (value.getValue1().utf8ToString().equals("fixedcontent")) {
-                    System.out.println(designation + "Contains Stored fixed content");
-                }
-
-            }
 
             int counter = 0;
             for (Triple<BytesRef, Long, Long> value: values) {
@@ -154,15 +152,6 @@ public class TermStatSource implements Closeable {
                     term = value.getValue1();
                     index = counter;
                 }
-            }
-
-            boolean hasIt = false;
-            for (Triple<BytesRef, Long, Long> value: values) {
-                if (value.getValue1().utf8ToString().equals("fixedcontent")) {
-                    hasIt = true;
-                    System.out.println(designation + "Contains Stored fixed content b");
-                }
-
             }
 
             // Found the term, now sum the stats
@@ -188,19 +177,6 @@ public class TermStatSource implements Closeable {
                     }
                 }
             }
-            if (hasIt) {
-                System.out.println("Checking for existence");
-                for (Triple<BytesRef, Long, Long> value: values) {
-                    if (value.getValue1().utf8ToString().equals("fixedcontent")) {
-                        System.out.println(designation + "Contains Stored fixed content b still got it");
-                    }
-
-                }
-                if (term.utf8ToString().equals("fixedcontent")) {
-                    System.out.println(designation + "Contains Stored fixed content term has it");
-                }
-
-            }
 
             Triple<BytesRef, Long, Long> result =
                 new Triple<BytesRef, Long, Long>(term, tf, df);
@@ -212,9 +188,6 @@ public class TermStatSource implements Closeable {
             }
             if (log.isTraceEnabled()) {
                 log.trace("Merging iterator delivered " + result);
-            }
-            if (result.getValue1().utf8ToString().equals("fixedcontent")) {
-                System.out.println("Merge-delivering fixed");
             }
             return result;
         }

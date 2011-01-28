@@ -83,10 +83,17 @@ public class TermEntry implements Comparable<TermEntry> {
      */
     public TermEntry(String persistent, String[] headings) {
         String tokens[] = persistent.split("\t");
+        if (tokens.length != headings.length) {
+            throw new IllegalArgumentException(String.format(
+                "The persistent String '%s' was split in %d tokens. "
+                + "Expected %d tokens due to heading '%s'",
+                persistent, tokens.length, headings.length,
+                Strings.join(headings, ", ")));
+        }
         long[] stats = new long[tokens.length-1];
         for (int i = 1 ; i < tokens.length ; i++) {
-            stats[i] = "".equals(tokens[i]) || "-".equals(tokens[i]) ? 0 :
-                       Long.parseLong(tokens[i]);
+            stats[i-1] = "".equals(tokens[i]) || "-".equals(tokens[i])
+                         ? 0 : Long.parseLong(tokens[i]);
         }
         check(tokens[0], stats, headings);
         this.term = unEscaper.transform(tokens[0]);

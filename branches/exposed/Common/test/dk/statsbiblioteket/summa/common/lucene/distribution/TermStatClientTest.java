@@ -90,6 +90,23 @@ public class TermStatClientTest extends TestCase {
         // TODO: Enable this again
     }
 
+    public void testGe() throws Exception {
+        generateIndex(100);
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatClient extractor = new TermStatClient(conf);
+        File dumpLocation = new File(TEST_DIR, "dump");
+        extractor.dumpStats(INDEX_LOCATION, dumpLocation);
+        log.info("Dump-filder contains "
+                 + Strings.join(dumpLocation.listFiles(), ", "));
+
+        TermStat termStat = new TermStat(conf);
+        termStat.open(dumpLocation);
+        for (int i = 0 ; i < termStat.size() ; i++) {
+            termStat.get(i);
+        }
+    }
+
+
     public void testLookup() throws Exception {
         generateIndex(100);
         Configuration conf = Configuration.newMemoryBased();
@@ -102,9 +119,16 @@ public class TermStatClientTest extends TestCase {
         TermStat termStat = new TermStat(conf);
         termStat.open(dumpLocation);
         String FIXED = "fixedcontent";
+        TermEntry fixed = termStat.getEntry(FIXED);
+        if (fixed == null) {
+            for (int i = 0 ; i < termStat.size() ; i++) {
+                TermEntry entry = termStat.get(i);
+                System.out.println(entry);
+            }
+        }
+        assertNotNull("There should be an entry for '" + FIXED + "'", fixed);
         assertEquals("The termcount for " + FIXED + " should be numDocs",
-                     100, termStat.getEntry(FIXED).getStat(1));
-
+                     100, fixed.getStat(1));
         String VARIABLE_A = "variablecontent1";
         assertEquals("The termcount for " + VARIABLE_A
                      + " should be indexcount",

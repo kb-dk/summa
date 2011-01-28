@@ -207,13 +207,14 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                 dom,"termstatmeta/termcount"));
             minDocumentFrequency = Long.parseLong(DOM.selectString(
                 dom,"termstatmeta/mindocumentfrequency", "0"));
-            columns = DOM.selectString(dom,"termstatmeta/termcount").
+            columns = DOM.selectString(dom,"termstatmeta/columns").
                 split(" *, *");
             source = DOM.selectString(dom, "termstatmeta/source");
             log.debug(String.format(
-                "Extracted docCount %d, termCount %d, mdf %d and source '%s'"
-                + " from '%s'",
-                docCount, termCount, minDocumentFrequency, source, metaFile));
+                "Extracted docCount %d, termCount %d, mdf %d, columns '%s' "
+                + "and source '%s'  from '%s'",
+                docCount, termCount, minDocumentFrequency,
+                Strings.join(columns, ", "), source, metaFile));
             return true;
         } catch (Exception e) {
             log.error(String.format(
