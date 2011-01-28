@@ -72,6 +72,15 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_IDENTIFIER = "adjuster.id";
 
     /**
+     * If false, no adjustments are performed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String SEARCH_ADJUST_ENABLED = "adjuster.enabled";
+    public static final String CONF_ADJUST_ENABLED = SEARCH_ADJUST_ENABLED;
+    public static final boolean DEFAULT_ADJUST_ENABLED = true;
+
+    /**
      * Add a constant to returned scores for documents.
      * Additions are performed after multiplications.
      */
@@ -144,10 +153,12 @@ public class InteractionAdjuster implements Configurable {
     private Map<String, String> defaultDocumentFields = null;
     private Map<String, String> defaultFacetFields = null;
     private List<TagAdjuster> tagAdjusters = null;
+    private boolean enabled = DEFAULT_ADJUST_ENABLED;
 
     public InteractionAdjuster(Configuration conf)
                                                  throws ConfigurationException {
         id = conf.getString(CONF_IDENTIFIER);
+        enabled = conf.getBoolean(CONF_ADJUST_ENABLED, enabled);
         prefix = id + ".";
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
@@ -176,11 +187,11 @@ public class InteractionAdjuster implements Configurable {
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
         log.debug(String.format(
-            "Constructed search adjuster with id='%s', "
+            "Constructed search adjuster with id='%s', enabled=%b, "
             + "baseFactor=%f, baseAddition=%f, "
             + "adjustingDocumentFields='%s', "
             + "adjustingFacetFields='%s', tagAdjusters=%d",
-            id, baseFactor, baseAddition,
+            id, enabled, baseFactor, baseAddition,
             conf.getString(CONF_ADJUST_DOCUMENT_FIELDS, ""),
             conf.getString(CONF_ADJUST_FACET_FIELDS, ""),
             tagAdjusters == null ? 0 : tagAdjusters.size()));
@@ -215,6 +226,10 @@ public class InteractionAdjuster implements Configurable {
     public Request rewrite(Request request) {
         log.trace("rewrite called");
         Request adjusted = clone(request);
+        if (!adjusted.getBoolean(SEARCH_ADJUST_ENABLED, enabled)) {
+            log.trace("The adjuster is disabled. Exiting rewrite");
+            return adjusted;
+        }
         rewriteDocumentQueryFields(request);
         rewriteFacetQueryFields(request);
         return adjusted;
@@ -294,6 +309,10 @@ public class InteractionAdjuster implements Configurable {
      */
     public void adjust(Request request, ResponseCollection responses) {
         log.trace("adjust called");
+        if (!request.getBoolean(SEARCH_ADJUST_ENABLED, enabled)) {
+            log.trace("The adjuster is disabled. Exiting adjust");
+            return;
+        }
         adjustDocuments(request, responses);
         adjustFacets(request, responses);
     }
