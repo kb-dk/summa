@@ -49,8 +49,6 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: slope (measuring steep drops in scores)
-// TODO: Concatenate
-// TODO: interleave
 public class ResponseMerger implements Configurable {
     private static Log log = LogFactory.getLog(ResponseMerger.class);
 
