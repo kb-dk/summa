@@ -542,7 +542,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     // Returns -1 if not found
     private int binarySearch(String term) {
         int low = 0;
-        int high = termCount;
+        // TODO: Test whether termCount or termCount+1 should be used
+        int high = termCount+1;
         while (low <= high) {
             int middle = low + high >>> 1;
             String midVal = getLine(middle);

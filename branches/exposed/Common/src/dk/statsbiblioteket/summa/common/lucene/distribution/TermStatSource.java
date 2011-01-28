@@ -148,10 +148,11 @@ public class TermStatSource implements Closeable {
 
             int counter = 0;
             for (Triple<BytesRef, Long, Long> value: values) {
-                if (term == null || term.compareTo(value.getValue1()) < 0) {
+                if (term == null || term.compareTo(value.getValue1()) > 0) {
                     term = value.getValue1();
                     index = counter;
                 }
+                counter++;
             }
 
             // Found the term, now sum the stats

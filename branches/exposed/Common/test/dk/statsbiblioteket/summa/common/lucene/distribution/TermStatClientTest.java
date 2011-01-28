@@ -90,7 +90,7 @@ public class TermStatClientTest extends TestCase {
         // TODO: Enable this again
     }
 
-    public void testGe() throws Exception {
+    public void testGet() throws Exception {
         generateIndex(100);
         Configuration conf = Configuration.newMemoryBased();
         TermStatClient extractor = new TermStatClient(conf);
@@ -106,6 +106,29 @@ public class TermStatClientTest extends TestCase {
         }
     }
 
+    public void testOrder() throws Exception {
+        generateIndex(100);
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatClient extractor = new TermStatClient(conf);
+        File dumpLocation = new File(TEST_DIR, "dump");
+        extractor.dumpStats(INDEX_LOCATION, dumpLocation);
+
+        TermStat termStat = new TermStat(conf);
+        termStat.open(dumpLocation);
+        TermEntry oldEntry = null;
+        for (int i = 0 ; i < termStat.size() ; i++) {
+            TermEntry current = termStat.get(i);
+            if (oldEntry != null
+                && oldEntry.getTerm().compareTo(current.getTerm()) > 0) {
+                fail(String.format(
+                    "Entry #%d and #%d were '%s' and '%s', but the order "
+                    + "should be reversed",
+                    i-1, i, oldEntry.getTerm(), current.getTerm()));
+            }
+            oldEntry = current;
+        }
+    }
+
 
     public void testLookup() throws Exception {
         generateIndex(100);
@@ -113,7 +136,7 @@ public class TermStatClientTest extends TestCase {
         TermStatClient extractor = new TermStatClient(conf);
         File dumpLocation = new File(TEST_DIR, "dump");
         extractor.dumpStats(INDEX_LOCATION, dumpLocation);
-        log.info("Dump-filder contains "
+        log.info("Dump-folder contains "
                  + Strings.join(dumpLocation.listFiles(), ", "));
 
         TermStat termStat = new TermStat(conf);
@@ -123,7 +146,7 @@ public class TermStatClientTest extends TestCase {
         if (fixed == null) {
             for (int i = 0 ; i < termStat.size() ; i++) {
                 TermEntry entry = termStat.get(i);
-                System.out.println(entry);
+                log.debug("Entry #" + i + ": " + entry);
             }
         }
         assertNotNull("There should be an entry for '" + FIXED + "'", fixed);
