@@ -36,7 +36,13 @@ import java.util.List;
  * Note that adjustments of individual search nodes must be enabled explicitly.
  * </p><p>
  * A {@link ResponseMerger} is attached automatically. Settings for the merger
- * must be provided in the configuration given to the conctructor.
+ * must be provided in the configuration given to the constructor.
+ * </p><p>
+ * A {@link TermStatQueryRewriter} is attached if the key
+ * {@link TermStatQueryRewriter#CONF_TARGETS} is present in properties.
+ * It is the responsibility of the caller to ensure that the rewriter is
+ * configured with a target for each search client and that the ids os the
+ * target matches the search clients.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -56,10 +62,18 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
 
     private final ResponseMerger responseMerger;
+    private final TermStatQueryRewriter rewriter;
 
     public AdjustingSearcherAggregator(Configuration conf) {
         super(conf);
         responseMerger = new ResponseMerger(conf);
+        if (conf.valueExists(TermStatQueryRewriter.CONF_TARGETS)) {
+            log.debug("Assigning term stat query rewriter");
+            rewriter = new TermStatQueryRewriter(conf);
+        } else {
+            log.debug("No term stat query rewriter");
+            rewriter = null;
+        }
     }
 
     @Override
@@ -68,7 +82,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         if (searcherConf.getBoolean(
             CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
             log.debug("Creating adjusting search client");
-            searcher = new AdjustingSearchClient(searcherConf);
+            searcher = new AdjustingSearchClient(searcherConf, rewriter);
             String searcherName = searcherConf.getString(
                 CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             String adjustID = ((AdjustingSearchClient)searcher).

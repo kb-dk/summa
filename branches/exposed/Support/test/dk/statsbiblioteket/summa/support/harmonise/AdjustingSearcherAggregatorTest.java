@@ -107,5 +107,4 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         }*/
         aggregator.close();
     }
-
 }

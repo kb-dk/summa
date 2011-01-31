@@ -193,6 +193,56 @@ public class TermStatQueryRewriter implements Configurable {
         return result;
     }
 
+    /**
+     * Rewrites the given query by adjusting weights according to term stats.
+     * Only the query given in {@link DocumentKeys#SEARCH_QUERY} is rewritten.
+     * </p><p>
+     * Example: The query {@code foo bar^0.5} is given. The rewriter determines
+     * that the calculated weights for id summon should be {@code 1.2} for
+     * {@code foo} and {@code 2.5} for {@code bar}. The new query for summon
+     * will be {@code foo^1.2 bar^1.25}.
+     * @param request a standard search request.
+     * @param id      the id for the Target to rewrite for.
+     */
+    public void rewrite(Request request, String id) {
+        long rewriteTime = -System.currentTimeMillis();
+        if (!request.getBoolean(SEARCH_TERMSTATS_ENABLED, enabled)) {
+            log.trace("Rewriting disabled. Skipping rewrite");
+            return;
+        }
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        if (query == null) {
+            log.trace("No query present. Skipping rewrite");
+            return;
+        }
+        Target target = null;
+        for (Target t: targets) {
+            if (t.getID().equals(id)) {
+                target = t;
+            }
+        }
+        if (target == null) {
+            log.trace("No target found for id '" + id + "'. Skipping rewrite");
+            return;
+        }
+
+        if (!IS_SAFE.matcher(query).matches()) {
+            log.debug("The query '" + query + "' is not considered safe for"
+                      + " rewriting. skipping rewrite");
+            return;
+        }
+
+        Matcher matcher = SAFE.matcher(query);
+        if (!matcher.find()) {
+            log.debug("Query '" + query + "' not matched. No rewriting");
+            return;
+        }
+        String rewritten = rewrite(request, target, query);
+        request.put(DocumentKeys.SEARCH_QUERY, rewritten);
+        log.debug("Finished rewriting '" + query + "' to '" + rewritten 
+                  + "' in " + rewriteTime + " ms");
+    }
+
     private String rewrite(Request request, Target target, String query) {
         Matcher matcher = SAFE.matcher(query);
         StringWriter sw = new StringWriter(query.length() * 2);

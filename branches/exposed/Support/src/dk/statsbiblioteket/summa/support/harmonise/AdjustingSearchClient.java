@@ -42,18 +42,29 @@ public class AdjustingSearchClient extends SearchClient {
     private static Log log = LogFactory.getLog(AdjustingSearchClient.class);
 
     private final InteractionAdjuster adjuster;
+    private final TermStatQueryRewriter rewriter;
 
     public AdjustingSearchClient(Configuration conf) {
+        this(conf, null);
+    }
+
+    public AdjustingSearchClient(
+        Configuration conf, TermStatQueryRewriter rewriter) {
         super(conf);
-        adjuster = new InteractionAdjuster(conf);
-        log.debug("Created AdjustingSearchClient");
+        this.adjuster = new InteractionAdjuster(conf);
+        this.rewriter = rewriter;
+        log.debug("Created AdjustingSearchClient with term stat query rewriter "
+                  + (rewriter == null ? "not " : "") + "present");
     }
 
     @Override
     public ResponseCollection search(Request request) throws IOException {
         log.debug(
             "Rewriting request, performing search and adjusting responses");
-        Request adjusted = adjuster.rewrite(request);
+        Request adjusted = adjuster.rewrite(request); // Creates new request
+        if (rewriter != null) {
+            rewriter.rewrite(request, adjuster.getId());
+        }
         ResponseCollection responses = super.search(request);
         adjuster.adjust(adjusted, responses);
         return responses;
