@@ -60,7 +60,7 @@ public class TermStatClient implements Configurable {
             usage();
             return;
         }
-        List<String> arguments = Arrays.asList(args);
+        List<String> arguments = new ArrayList<String>(Arrays.asList(args));
         String first = arguments.remove(0);
         if ("-e".equals(first)) {
             extract(arguments);
@@ -176,22 +176,22 @@ public class TermStatClient implements Configurable {
                 "Usage:\n"
                 + "TermStatClient [-e [-mdf minimumdocumentfrequency] "
                 +                    "-i index -d destination -f field* "
-                +                    "-c columnname ]\n"
+                +                    "-c columnprefix ]\n"
                 + "TermStatClient [-m [-mdf minimumdocumentfrequency] "
                 +                    "-i termstat* -d destination "
                 +                    "-c columnregexp*]\n"
                 + "\n"
                 + "-e: Extract termstats from index and store the stats at "
                 + "destination\n"
-                + " -i: Lucene index"
-                + " -f: Lucene fields as regexp"
-                + " -c: Destination column prefix"
-                + " -d: Destination for the term stats"
+                + " -i: Lucene index\n"
+                + " -f: Lucene fields as regexp\n"
+                + " -c: Destination column prefix\n"
+                + " -d: Destination for the term stats\n"
                 + "\n"
-                + "-m: Merge termstats into destination"
-                + " -i: Input termstats"
-                + " -c: column names as regexp"
-                + " -d: Destination for the merged term stats"
+                + "-m: Merge termstats into destination\n"
+                + " -i: Input termstats\n"
+                + " -c: column names as regexp\n"
+                + " -d: Destination for the merged term stats\n"
                 + "\n"
                 + "-mdf: Only store terms where the document frequency is the "
                 + "given number or above\n"
