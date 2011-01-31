@@ -74,6 +74,8 @@ public class TermStatClient implements Configurable {
 
     private static void extract(List<String> arguments) throws IOException {
         int mdf = 1;
+        int mtl = -1;
+        boolean skipSpace = false;
         File index = null;
         String columnname = null;
         String destination = null;
@@ -102,12 +104,20 @@ public class TermStatClient implements Configurable {
             } else if ("-f".equals(argument)) {
                 fieldsActive = true;
                 continue;
+            } else if ("-s".equals(argument)) {
+                skipSpace = true;
             } else if ("-mdf".equals(argument)) {
                 if (arguments.size() == 0) {
                     throw new IllegalArgumentException(
                         "-mdf must be followed by an integer");
                 }
                 mdf = Integer.parseInt(arguments.remove(0));
+            } else if ("-mtl".equals(argument)) {
+                if (arguments.size() == 0) {
+                    throw new IllegalArgumentException(
+                        "-mtl must be followed by an integer");
+                }
+                mtl = Integer.parseInt(arguments.remove(0));
             } else if (fieldsActive) {
                 fields.add(argument);
                 continue;
@@ -118,7 +128,7 @@ public class TermStatClient implements Configurable {
             fieldsActive = false;
         }
         new TermStatClient().extract(
-            index, destination, columnname, fields, mdf);
+            index, destination, columnname, fields, mdf, mtl, skipSpace);
     }
 
     private enum MODE {none, input, column}
@@ -174,12 +184,13 @@ public class TermStatClient implements Configurable {
     public static void usage() {
         System.out.println(
                 "Usage:\n"
-                + "TermStatClient [-e [-mdf minimumdocumentfrequency] "
-                +                    "-i index -d destination -f field* "
-                +                    "-c columnprefix ]\n"
-                + "TermStatClient [-m [-mdf minimumdocumentfrequency] "
+                + "TermStatClient -e [-mdf minimumdocumentfrequency] "
+                +                    "-i index -d destination [-f field*] "
+                +                    "-c columnprefix [-s] "
+                +                    "[-mtl maxtermlength]\n"
+                + "TermStatClient -m [-mdf minimumdocumentfrequency] "
                 +                    "-i termstat* -d destination "
-                +                    "-c columnregexp*]\n"
+                +                    "-c columnregexp*\n"
                 + "\n"
                 + "-e: Extract termstats from index and store the stats at "
                 + "destination\n"
@@ -195,12 +206,19 @@ public class TermStatClient implements Configurable {
                 + "\n"
                 + "-mdf: Only store terms where the document frequency is the "
                 + "given number or above\n"
+                + "-mtl: Only store terms when the length is <= this\n"
+                + " -s: Skip terms containing space\n"
         );
+        // TODO: Add skipSpace + mtl to merge
     }
 
     public void extract(
         File index, String destination, String columnPrefix,
-        List<String> fieldRegexps, int mdf) throws IOException {
+        List<String> fieldRegexps, int mdf, int mtl, boolean skipSpace)
+        throws IOException {
+        if (mtl == -1) {
+            mtl = Integer.MAX_VALUE;
+        }
         if (index == null) {
             throw new IllegalArgumentException("No index specified");
         }
@@ -245,8 +263,22 @@ public class TermStatClient implements Configurable {
                 if (log.isTraceEnabled()) {
                     log.trace("Adding " + triple);
                 }
-                termStat.add(new TermEntry(
-                    triple.getValue1().utf8ToString(), cache, columns));
+                String term = triple.getValue1().utf8ToString();
+                if ("".equals(term)) {
+                    log.warn("Received empty term, which should not happen. "
+                             + "Skipping " + triple);
+                    continue;
+                }
+                if (skipSpace && term.contains(" ")) {
+                    log.trace("Skipping '" + term + "' as it contains a space");
+                    continue;
+                }
+                if (term.length() > mtl) {
+                    log.trace("Skipping '" + term + "' as it is longer than "
+                              + mtl);
+                    continue;
+                }
+                termStat.add(new TermEntry(term, cache, columns));
             } else if (log.isTraceEnabled()) {
                 log.trace("Skipping " + triple + " as mdf=" + mdf);
             }
@@ -330,8 +362,8 @@ public class TermStatClient implements Configurable {
      * the terms to the destination.
      * </p><p>
      * This is a shorthand for the method
-     * {@link #extract(java.io.File, String, String, java.util.List, int)}
-     * called as {@code }
+     * {@link #extract(java.io.File, String, String, java.util.List, int, int, boolean)}
+     * called as {@code extract(index, destination, .*, 1, false)}.
      * @param index       the location of a Lucene index.
      * @param destination where to store the Term-statistics.
      * @throws IOException if extraction failed due to an I/O error.
@@ -340,8 +372,8 @@ public class TermStatClient implements Configurable {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("dumpStats(%s, %s) called",
                                 index, destination));
-        extract(
-            index, destination.toString(), "dumpstats", Arrays.asList(".*"), 1);
+        extract(index, destination.toString(), "dumpstats",
+                Arrays.asList(".*"), 1, -1, false);
     }
 
     /**
