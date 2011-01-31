@@ -376,7 +376,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             }
             xmlOut.writeEndElement();
 
-            xmlOut.writeStartElement("mindocumentfrequence");
+            xmlOut.writeStartElement("mindocumentfrequency");
             xmlOut.writeCharacters(Long.toString(minDocumentFrequency));
             xmlOut.writeEndElement();
 
@@ -665,7 +665,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     @Override
     public String toString() {
         return "TermStat(docs " + getDocCount()
-               + ", source '" + getSource() + ")";
+               + ", source '" + getSource() + "')";
     }
 
     /**

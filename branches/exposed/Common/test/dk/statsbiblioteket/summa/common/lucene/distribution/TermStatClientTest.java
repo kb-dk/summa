@@ -154,6 +154,13 @@ public class TermStatClientTest extends TestCase {
         assertEquals("The termcount for " + VARIABLE_A
                      + " should be indexcount*3",
                      3, termStat.getEntry(VARIABLE_A).getStat(1));
+
+        TermEntry world = termStat.getEntry("world");
+        assertNotNull("There should be an entry for 'world'", world);
+
+        TermEntry na = termStat.getEntry("nonexisting");
+        assertNull("There should be no entry for 'nonexisting'", na);
+
         termStat.close();
     }
 

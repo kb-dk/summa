@@ -49,7 +49,7 @@ public class AdjustingSearchClient extends SearchClient {
     }
 
     public AdjustingSearchClient(
-        Configuration conf, TermStatQueryRewriter rewriter) {
+        final Configuration conf, final TermStatQueryRewriter rewriter) {
         super(conf);
         this.adjuster = new InteractionAdjuster(conf);
         this.rewriter = rewriter;
@@ -59,14 +59,19 @@ public class AdjustingSearchClient extends SearchClient {
 
     @Override
     public ResponseCollection search(Request request) throws IOException {
-        log.debug(
+        log.trace(
             "Rewriting request, performing search and adjusting responses");
         Request adjusted = adjuster.rewrite(request); // Creates new request
         if (rewriter != null) {
+            log.trace("Calling term stat based query rewriter with id "
+                      + adjuster.getId());
             rewriter.rewrite(request, adjuster.getId());
         }
+        log.trace("Calling super.search");
         ResponseCollection responses = super.search(request);
+        log.trace("Adjusting response");
         adjuster.adjust(adjusted, responses);
+        log.trace("Finished response adjustment, returning responses");
         return responses;
     }
 

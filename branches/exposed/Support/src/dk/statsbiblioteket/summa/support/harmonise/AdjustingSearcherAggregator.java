@@ -39,7 +39,8 @@ import java.util.List;
  * must be provided in the configuration given to the constructor.
  * </p><p>
  * A {@link TermStatQueryRewriter} is attached if the key
- * {@link TermStatQueryRewriter#CONF_TARGETS} is present in properties.
+ * {@link TermStatQueryRewriter#CONF_TARGETS} is present in properties and
+ * the adjustment is enabled for the search client.
  * It is the responsibility of the caller to ensure that the rewriter is
  * configured with a target for each search client and that the ids os the
  * target matches the search clients.
@@ -62,11 +63,15 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
 
     private final ResponseMerger responseMerger;
-    private final TermStatQueryRewriter rewriter;
+    private TermStatQueryRewriter rewriter;
 
     public AdjustingSearcherAggregator(Configuration conf) {
         super(conf);
         responseMerger = new ResponseMerger(conf);
+    }
+
+    @Override
+    protected void preConstruction(Configuration conf) {
         if (conf.valueExists(TermStatQueryRewriter.CONF_TARGETS)) {
             log.debug("Assigning term stat query rewriter");
             rewriter = new TermStatQueryRewriter(conf);
@@ -81,7 +86,8 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         SearchClient searcher;
         if (searcherConf.getBoolean(
             CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
-            log.debug("Creating adjusting search client");
+            log.debug("Creating adjusting search client with term stat based "
+                      + "rewriter " + rewriter);
             searcher = new AdjustingSearchClient(searcherConf, rewriter);
             String searcherName = searcherConf.getString(
                 CONF_SEARCHER_DESIGNATION, searcher.getVendorId());

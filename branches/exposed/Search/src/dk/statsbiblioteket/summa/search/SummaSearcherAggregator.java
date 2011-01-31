@@ -81,6 +81,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
     private ExecutorService executor;
 
     public SummaSearcherAggregator(Configuration conf) {
+        preConstruction(conf);
         List<Configuration> searcherConfs;
         try {
              searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
@@ -115,6 +116,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
         log.debug("Finished connecting to " + searchers.size()
                   + ". Ready for use");
+    }
+
+    protected void preConstruction(Configuration conf) {
+        // Override if needed
     }
 
     /**
