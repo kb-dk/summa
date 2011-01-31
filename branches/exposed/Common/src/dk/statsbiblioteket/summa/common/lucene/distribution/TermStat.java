@@ -96,7 +96,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     public static final int DEFAULT_READER_BUFFER = 400;
 
     /**
-     * Lines at the beginning of the persisten files that are prepended with
+     * Lines at the beginning of the persistent files that are prepended with
      * this are treated as comments.
      * </p><p>
      * Optional. Default is "#".
@@ -308,7 +308,17 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                     "Unable to create the folder '%s'", location));
             }
         }
-        persistent = new LineReader(getFile(location, ".dat"), "rw");
+
+        File per = getFile(location, ".dat");
+        if (per.exists()) {
+            log.debug("The data file " + per + " already exists. "
+                      + "Deleting old file");
+            if (!per.delete()) {
+                throw new IOException(
+                    "Unable to delete old data file " + per.getAbsolutePath());
+            }
+        }
+        persistent = new LineReader(per, "rw");
         if (header != null && !"".equals(header)) {
             String[] lines = header.split("\n");
             for (String line: lines) {
@@ -646,6 +656,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public void setMinDocumentFrequency(long minDocumentFrequency) {
+        this.minDocumentFrequency = minDocumentFrequency;
     }
 
     @Override

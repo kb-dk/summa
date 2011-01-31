@@ -248,6 +248,7 @@ public class TermStatClient implements Configurable {
         termStat.create(new File(destination), header, columns);
         termStat.setDocCount(getDocCount(ir));
         termStat.setSource(index.toString());
+        termStat.setMinDocumentFrequency(mdf);
 
         TermStatSource factory = new TermStatSource(index);
         // TODO: docCount
