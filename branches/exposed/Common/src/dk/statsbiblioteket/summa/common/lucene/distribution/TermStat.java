@@ -553,7 +553,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private int binarySearch(String term) {
         int low = 0;
         // TODO: Test whether termCount or termCount+1 should be used
-        int high = termCount-1;
+        int high = termCount;
         while (low <= high) {
             int middle = low + high >>> 1;
             String midVal = getLine(middle);
@@ -611,6 +611,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         }
         try {
             return persistent.readLine();
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(String.format(
+                "Illegal argument after seeking to position %d for index %d in "
+                + "'%s'", lookupTable[index], index, getLookupFile()), e);
         } catch (IOException e) {
             throw new RuntimeException(
                 "IOException getting data for line at file offset "
