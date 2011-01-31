@@ -374,9 +374,9 @@ public class TermStatQueryRewriter implements Configurable {
         public static final int DEFAULT_TERMSTAT_DF_INDEX = 0;
 
         /**
-         * The location of the termstat file.
+         * The folder holding the term stat files.
          * </p><p>
-         * Optional. Default is {@code PERSISTENT_ROOT/termstats/id/id}.
+         * Optional. Default is {@code PERSISTENT_ROOT/termstats/id}.
          */
         public static final String CONF_TERMSTAT_LOCATION =
             "target.termstat.location";
@@ -399,7 +399,7 @@ public class TermStatQueryRewriter implements Configurable {
                 Resolver.getPersistentFile(
                     conf.valueExists(CONF_TERMSTAT_LOCATION) ?
                     new File(conf.getString(CONF_TERMSTAT_LOCATION)) :
-                    new File("termstats/id/id"));
+                    new File("termstats/" + id));
             try {
                 termStats.open(termstatLocation);
             } catch (IOException e) {
