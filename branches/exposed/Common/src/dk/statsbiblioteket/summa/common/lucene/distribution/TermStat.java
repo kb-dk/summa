@@ -543,7 +543,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private int binarySearch(String term) {
         int low = 0;
         // TODO: Test whether termCount or termCount+1 should be used
-        int high = termCount+1;
+        int high = termCount-1;
         while (low <= high) {
             int middle = low + high >>> 1;
             String midVal = getLine(middle);
@@ -589,7 +589,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     protected String getLine(int index) {
         if (index >= termCount) {
             throw new ArrayIndexOutOfBoundsException(
-                "There is " + termCount + " terms in the collection, the perm "
+                "There is " + termCount + " terms in the collection, the term "
                 + "at position " + index + " were requested");
         }
         try {

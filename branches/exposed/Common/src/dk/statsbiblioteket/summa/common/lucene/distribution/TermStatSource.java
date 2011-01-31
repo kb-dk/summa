@@ -41,6 +41,7 @@ import java.util.List;
 
 /**
  * Encapsulates an IndexReader and exposes factory methods for term iterators.
+ * Used by {@link TermStatClient} to create {@link TermStat}s.
  * </p><p>
  * Iterators returns triples with term, termFrequency and documentFrequency.
  */
