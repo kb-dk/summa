@@ -247,7 +247,7 @@ public class TermStatSource implements Closeable {
                 while ((read = docsEnum.read()) != 0) {
                     for (int i = 0 ; i < read ; i++) {
                         tf += bulk.freqs.ints[i];
-                        df += bulk.docs.ints[i];
+                        df++;
                     }
                 }
                 final Triple<BytesRef, Long, Long> result =

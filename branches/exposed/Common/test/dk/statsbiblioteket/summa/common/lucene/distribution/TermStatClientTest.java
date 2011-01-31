@@ -143,8 +143,10 @@ public class TermStatClientTest extends TestCase {
         String FIXED = "fixedcontent";
         TermEntry fixed = termStat.getEntry(FIXED);
         assertNotNull("There should be an entry for '" + FIXED + "'", fixed);
-        assertEquals("The doccount for " + FIXED + " should be numDocs",
+        assertEquals("The doc count for " + FIXED + " should be numDocs",
                      100, fixed.getStat(0));
+        assertEquals("The term count for " + FIXED + " should be numDocs",
+                     100, fixed.getStat(1));
         String VARIABLE_A = "variablecontent1";
         if (termStat.getEntry(VARIABLE_A).getStat(1) != 1) {
             dumpTermStats(termStat);
