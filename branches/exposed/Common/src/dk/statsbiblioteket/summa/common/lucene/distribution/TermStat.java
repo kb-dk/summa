@@ -473,6 +473,10 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         return getFile(persistent.getFile().getParentFile(), ".lookup");
     }
 
+    private File getDataFile() {
+        return getFile(persistent.getFile().getParentFile(), ".dat");
+    }
+
     private String termToString(TermEntry value) {
         return value.toPersistent() + "\n";
     }
@@ -613,8 +617,9 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             return persistent.readLine();
         } catch (IllegalArgumentException e) {
             throw new RuntimeException(String.format(
-                "Illegal argument after seeking to position %d for index %d in "
-                + "'%s'", lookupTable[index], index, getLookupFile()), e);
+                "Illegal argument after seeking to position %d and reading line"
+                + " for index %d in '%s'",
+                lookupTable[index], index, getDataFile()), e);
         } catch (IOException e) {
             throw new RuntimeException(
                 "IOException getting data for line at file offset "
