@@ -425,9 +425,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             }
             // TODO: Use a factory for collator
             Comparator<BytesRef> comparator =
-                ExposedComparators.collatorToBytesRef(
-                    locale == null ? null :
-                    CollatorFactory.createCollator(locale));
+                ExposedComparators.localeToBytesRef(locale);
 
             List<ExposedRequest.Field> fields =
                 new ArrayList<ExposedRequest.Field>();

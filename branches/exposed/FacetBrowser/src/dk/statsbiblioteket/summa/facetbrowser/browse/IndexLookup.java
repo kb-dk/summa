@@ -227,8 +227,7 @@ public class IndexLookup {
 
         // TODO: Use a factory for collator
         Comparator<BytesRef> comparator =
-            ExposedComparators.collatorToBytesRef(
-                locale == null ? null : CollatorFactory.createCollator(locale));
+            ExposedComparators.localeToBytesRef(locale);
         List<ExposedRequest.Field> fields =
             new ArrayList<ExposedRequest.Field>();
         fields.add(new ExposedRequest.Field(

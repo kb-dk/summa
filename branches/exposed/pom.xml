@@ -130,7 +130,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-exposed</artifactId>
-                <version>4.0-dev-20101123</version>
+                <version>4.0-dev-20110201b</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>
