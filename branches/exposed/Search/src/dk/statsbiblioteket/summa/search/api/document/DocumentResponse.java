@@ -94,6 +94,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     public static class Record implements Serializable {
         private static final long serialVersionUID = 48785612L;
         private float score;
+        private final float originalScore;
         private String sortValue;
         private String id;
         private String source;
@@ -115,6 +116,7 @@ public class DocumentResponse implements Response, DocumentKeys {
             this.id = id;
             this.source = source;
             this.score = score;
+            this.originalScore = score;
             this.sortValue = sortValue;
         }
 
@@ -125,6 +127,12 @@ public class DocumentResponse implements Response, DocumentKeys {
         public void toXML(StringWriter sw) {
             sw.append("  <record score=\"").append(Float.toString(score));
             sw.append("\"");
+            // Only not equal if the score has been changed
+            //noinspection FloatingPointEquality
+            if (score != originalScore) {
+                sw.append(" unadjustedscore").append("=\"");
+                sw.append(Float.toString(originalScore)).append("\"");
+            }
             appendIfDefined(sw, "sortValue", sortValue);
             appendIfDefined(sw, "id", id);
             appendIfDefined(sw, "source", source);
