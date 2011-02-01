@@ -69,12 +69,10 @@ import java.util.regex.Pattern;
  * Note that {@link #SEARCH_SUMMON_RESOLVE_LINKS} is unique to this searcher.
  */
 // Map contenttype, language. Convert date (til år lige nu), potentially library
-    // TODO: Support for filter and sort (+ reverse)
     // TODO: Check if startpos is 0 or 1, adjuct accordingly
     // TODO: Implement configurable rangefacets
     // TODO Implement getShortRecord
     // TODO: Implement getRecord in Storage
-    // TODO: Discard facets when COLLECT_RECORD_IDS=false
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -347,8 +345,10 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Perform a search in Summon.
      * @param query     a Solr-style query.
      * @param facets    which facets to request or null if no facets are wanted.
-     * @param startpage the page to start on, starting at 1.
-     * @param perpage   number of items per page.
+     * @param startIndex the index for the first Record to return, counting
+     *                   from 0. This is translated to startpage for Solr.
+     *
+     * @param maxRecords number of items per page.
      * @param resolveLinks whether or not to call the link resolver to resolve
      *                  openurls to actual links.
      * @return XML with the search result as per Summon API.
@@ -356,11 +356,14 @@ public class SummonSearchNode extends SearchNodeImpl {
      * remote search call.
      */
     public String summonSearch(
-        String query, SummonFacetRequest facets, int startpage,
-        int perpage, boolean resolveLinks) throws RemoteException {
+        String query, SummonFacetRequest facets, int startIndex,
+        int maxRecords, boolean resolveLinks) throws RemoteException {
         long methodStart = System.currentTimeMillis();
+        int startpage = startIndex / maxRecords;
+        @SuppressWarnings({"UnnecessaryLocalVariable"})
+        int perpage = maxRecords;
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
-                  + startpage + ", " + perpage + ")");
+                  + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> querymap =
             buildSummonQuery(query, facets, startpage, perpage);
 
