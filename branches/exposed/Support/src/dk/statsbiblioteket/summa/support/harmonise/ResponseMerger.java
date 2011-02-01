@@ -26,7 +26,9 @@ import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -169,6 +171,7 @@ public class ResponseMerger implements Configurable {
     private int defaultForceTopX = DEFAULT_FORCE_TOPX;
     private List<Pair<String, Integer>> defaultForceRules = null;
     private boolean sequential = DEFAULT_SEQUENTIAL;
+    private final long maxRecords;
 
     public ResponseMerger(Configuration conf) {
         defaultMode = MERGE_MODE.valueOf(
@@ -182,6 +185,8 @@ public class ResponseMerger implements Configurable {
                 parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
         sequential = conf.getBoolean(CONF_SEQUENTIAL, sequential);
+        maxRecords = conf.getLong(
+            DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
         log.debug("Created response merger");
     }
 
@@ -198,7 +203,23 @@ public class ResponseMerger implements Configurable {
         ResponseCollection merged = new ResponseCollection();
         merge(request, merged, packages);
         postProcess(request, merged, packages);
+        trim(request, merged);
         return merged;
+    }
+
+    private void trim(Request request, ResponseCollection merged) {
+        log.trace("trim called");
+        long maxRecords = request.getLong(
+            DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
+        for (Response response: merged) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docResponse = ((DocumentResponse)response);
+                List<DocumentResponse.Record> rs = docResponse.getRecords();
+                int newSize = Math.min((int)maxRecords, rs.size());
+                log.trace("Trimming " + rs.size() + " to " + newSize);
+                docResponse.setRecords(rs.subList(0, newSize));
+            }
+        }
     }
 
     private void merge(

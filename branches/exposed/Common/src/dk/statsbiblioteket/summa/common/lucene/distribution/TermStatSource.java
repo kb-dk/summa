@@ -233,6 +233,10 @@ public class TermStatSource implements Closeable {
         // TODO: Do we know for sure that the order is Unicode?
         @Override
         public Triple<BytesRef, Long, Long> next() {
+            if (depleted) {
+                throw new IllegalStateException(
+                    "next was called when hasNext returns false");
+            }
             try {
                 BytesRef current = termsEnum.term();
                 if (current == null) {
