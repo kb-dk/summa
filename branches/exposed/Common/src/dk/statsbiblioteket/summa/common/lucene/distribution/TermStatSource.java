@@ -217,7 +217,9 @@ public class TermStatSource implements Closeable {
             this.ir = ir;
             this.field = field;
             Terms terms = ir.fields().terms(field);
-            if (terms != null) {
+            if (terms == null) {
+                depleted = true;
+            } else {
                 termsEnum = terms.iterator();
                 depleted = termsEnum.next() == null;
             }
