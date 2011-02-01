@@ -438,7 +438,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     }
 
     private void createLookup() throws IOException {
-        log.trace("Creating lookup table for " + getLookupFile());
+        log.debug("Creating lookup table for " + getLookupFile());
+        long creationTime = -System.currentTimeMillis();
         lookupTable = new long[termCount+1];
         persistent.seek(0);
         String line = null;
@@ -475,6 +476,9 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             }
         }
         storeLookup();
+        creationTime += System.currentTimeMillis();
+        log.info("Created lookup file " + getLookupFile() + " for "
+                 + getDataFile() + " in " + creationTime + " ms");
     }
 
     private File getLookupFile() {
