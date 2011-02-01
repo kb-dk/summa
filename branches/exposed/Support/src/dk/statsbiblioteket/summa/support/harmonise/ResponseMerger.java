@@ -217,7 +217,8 @@ public class ResponseMerger implements Configurable {
                 List<DocumentResponse.Record> rs = docResponse.getRecords();
                 int newSize = Math.min((int)maxRecords, rs.size());
                 log.trace("Trimming " + rs.size() + " to " + newSize);
-                docResponse.setRecords(rs.subList(0, newSize));
+                docResponse.setRecords(new ArrayList<DocumentResponse.Record>(
+                    rs.subList(0, newSize)));
             }
         }
     }

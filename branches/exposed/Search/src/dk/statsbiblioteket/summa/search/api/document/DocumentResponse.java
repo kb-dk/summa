@@ -372,7 +372,36 @@ public class DocumentResponse implements Response, DocumentKeys {
         return records;
     }
 
+    public String getFilter() {
+        return filter;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public long getStartIndex() {
+        return startIndex;
+    }
+
+    public long getMaxRecords() {
+        return maxRecords;
+    }
+
+    public String getSortKey() {
+        return sortKey;
+    }
+
+    public boolean isReverseSort() {
+        return reverseSort;
+    }
+
     public void setRecords(List<Record> records) {
+        if (!(records instanceof Serializable)) {
+            throw new IllegalArgumentException(
+                "The records list was of class " + records.getClass()
+                + " which is not serializable");
+        }
         this.records = records;
     }
 
@@ -383,6 +412,30 @@ public class DocumentResponse implements Response, DocumentKeys {
     // Because building the DocumentResponse takes time
     public void setSearchTime(long searchTime) {
         this.searchTime = searchTime;
+    }
+
+    public void setStartIndex(long startIndex) {
+        this.startIndex = startIndex;
+    }
+
+    public void setMaxRecords(long maxRecords) {
+        this.maxRecords = maxRecords;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public void setSortKey(String sortKey) {
+        this.sortKey = sortKey;
+    }
+
+    public void setReverseSort(boolean reverseSort) {
+        this.reverseSort = reverseSort;
     }
 
     /**

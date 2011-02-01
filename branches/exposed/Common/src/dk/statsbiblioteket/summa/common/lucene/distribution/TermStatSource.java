@@ -84,7 +84,13 @@ public class TermStatSource implements Closeable {
             new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(
                 readers.length);
         for (IndexReader reader: readers) {
-            providers.add(new LeafIterator(reader, field));
+            LeafIterator li = new LeafIterator(reader, field);
+            if (!li.hasNext()) {
+                log.debug("LeafIterator was not added to merger as it is empty "
+                          + "from the beginning");
+            } else {
+                providers.add(li);
+            }
         }
         return new Merger(providers, field);
     }
@@ -125,8 +131,9 @@ public class TermStatSource implements Closeable {
                 if (!provider.hasNext()) {
                     log.debug("Merger init: Removed empty provider");
                     pi.remove();
+                } else {
+                    values.add(provider.next());
                 }
-                values.add(provider.next());
             }
         }
 

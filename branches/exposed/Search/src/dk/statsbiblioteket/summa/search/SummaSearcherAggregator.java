@@ -18,10 +18,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.Triple;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.*;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -150,6 +149,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         return merged;
     }
 
+    // TODO: Add explicit handling of query rewriting for paging
     @Override
     public ResponseCollection search(Request request) throws IOException {
         long startTime = System.nanoTime();
@@ -159,6 +159,21 @@ public class SummaSearcherAggregator implements SummaSearcher {
         if (searchers.size() == 0) {
             throw new IOException("No remote summaSearchers connected");
         }
+
+        long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L);
+        long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 0L);
+        if (startIndex > 0) {
+            if (log.isTraceEnabled()) {
+                log.debug(
+                    "Start index is " + startIndex + " and maxRecords is "
+                    + maxRecords + ". Setting startIndex=0 and maxRecords="
+                    + (startIndex + maxRecords) + " for " + request);
+            }
+            request.put(DocumentKeys.SEARCH_START_INDEX, 0);
+            request.put(
+                DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
+        }
+
         List<Pair<String, Future<ResponseCollection>>> searchFutures =
                 new ArrayList<Pair<String, Future<ResponseCollection>>>(
                         searchers.size());
@@ -195,9 +210,38 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
         }
         ResponseCollection merged = merge(request, responses);
+        postProcessPaging(merged, startIndex, maxRecords);
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
         return merged;
+    }
+
+    private void postProcessPaging(
+        ResponseCollection merged, long startIndex, long maxRecords) {
+        if (startIndex == 0) {
+            log.trace("No paging fix needed");
+            return;
+        }
+        log.trace("Fixing paging with startIndex=" + startIndex
+                  + " and maxRecords=" + maxRecords);
+        for (Response response: merged) {
+            if (!(response instanceof DocumentResponse)) {
+                continue;
+            }
+            DocumentResponse docResponse = (DocumentResponse)response;
+            docResponse.setStartIndex(startIndex);
+            docResponse.setMaxRecords(maxRecords);
+            List<DocumentResponse.Record> records = docResponse.getRecords();
+            if (records.size() < startIndex) {
+                records.clear();
+            } else {
+                records = new ArrayList<DocumentResponse.Record>(
+                    records.subList(
+                        (int)startIndex,
+                        (int)Math.min(records.size(), startIndex+maxRecords)));
+            }
+            docResponse.setRecords(records);
+        }
     }
 
     @Override
