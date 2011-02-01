@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
@@ -227,7 +228,7 @@ public class IndexLookup {
         // TODO: Use a factory for collator
         Comparator<BytesRef> comparator =
             ExposedComparators.collatorToBytesRef(
-                locale == null ? null : Collator.getInstance(locale));
+                locale == null ? null : CollatorFactory.createCollator(locale));
         List<ExposedRequest.Field> fields =
             new ArrayList<ExposedRequest.Field>();
         fields.add(new ExposedRequest.Field(
