@@ -29,6 +29,7 @@ import org.w3c.dom.Document;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.*;
+import java.nio.BufferOverflowException;
 import java.util.*;
 
 /**
@@ -161,14 +162,16 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         if (!realFile.exists()) {
             throw new FileNotFoundException("Unable to locate " + realFile);
         }
-        closeExisting();
-        log.info(String.format("Opening TermStats at '%s' as readonly",
-                               location));
-        persistent = new LineReader(realFile, "r");
-        persistent.setBufferSize(bufferSize);
-        boolean result = openMeta();
-        openLookup();
-        return result;
+        synchronized (this) {
+            closeExisting();
+            log.info(String.format("Opening TermStats at '%s' as readonly",
+                                   location));
+            persistent = new LineReader(realFile, "r");
+            persistent.setBufferSize(bufferSize);
+            boolean result = openMeta();
+            openLookup();
+            return result;
+        }
     }
 
     private void closeExisting() throws IOException {
@@ -290,48 +293,51 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      */
     public boolean create(
         File location, String header, String[] columns) throws IOException {
-        closeExisting();
-        if (columns.length <= 1) {
-            throw new IllegalArgumentException(
-                "There must be at least 2 column names, got "
-                + Strings.join(columns, ", "));
-        }
-        if (columns[0].startsWith("#")) {
-            throw new IllegalArgumentException(
-                "The first column name must not start with '#', got "
-                + Strings.join(columns, ", "));
-        }
-        this.columns = columns;
-        if (!location.exists()) {
-            if (!location.mkdirs()) {
-                throw new IOException(String.format(
-                    "Unable to create the folder '%s'", location));
+        synchronized (this) {
+            closeExisting();
+            if (columns.length <= 1) {
+                throw new IllegalArgumentException(
+                    "There must be at least 2 column names, got "
+                    + Strings.join(columns, ", "));
             }
-        }
+            if (columns[0].startsWith("#")) {
+                throw new IllegalArgumentException(
+                    "The first column name must not start with '#', got "
+                    + Strings.join(columns, ", "));
+            }
+            this.columns = columns;
+            if (!location.exists()) {
+                if (!location.mkdirs()) {
+                    throw new IOException(String.format(
+                        "Unable to create the folder '%s'", location));
+                }
+            }
 
-        File per = getFile(location, ".dat");
-        if (per.exists()) {
-            log.debug("The data file " + per + " already exists. "
-                      + "Deleting old file");
-            if (!per.delete()) {
-                throw new IOException(
-                    "Unable to delete old data file " + per.getAbsolutePath());
+            File per = getFile(location, ".dat");
+            if (per.exists()) {
+                log.debug("The data file " + per + " already exists. "
+                          + "Deleting old file");
+                if (!per.delete()) {
+                    throw new IOException(
+                        "Unable to delete old data file "
+                        + per.getAbsolutePath());
+                }
             }
-        }
-        persistent = new LineReader(per, "rw");
-        if (header != null && !"".equals(header)) {
-            String[] lines = header.split("\n");
-            for (String line: lines) {
-                persistent.write(commentPrefix + " ");
-                persistent.write(line);
-                persistent.write("\n");
+            persistent = new LineReader(per, "rw");
+            if (header != null && !"".equals(header)) {
+                String[] lines = header.split("\n");
+                for (String line: lines) {
+                    persistent.write(commentPrefix + " ");
+                    persistent.write(line);
+                    persistent.write("\n");
+                }
             }
+            persistent.write(Strings.join(columns, "\t"));
+            persistent.write("\n");
+            lookupTable[0] = persistent.getPosition();
+            persistent.setBufferSize(bufferSize);
+            return true;
         }
-        persistent.write(Strings.join(columns, "\t"));
-        persistent.write("\n");
-        lookupTable[0] = persistent.getPosition();
-        persistent.setBufferSize(bufferSize);
-        return true;
     }
 
     /**
@@ -341,9 +347,11 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * @throws IOException if the data could not be stored.
      */
     public void store() throws IOException {
-        persistent.flush();
-        storeLookup();
-        storeMeta();
+        synchronized (this) {
+            persistent.flush();
+            storeLookup();
+            storeMeta();
+        }
     }
 
     private void storeMeta() throws IOException {
@@ -490,9 +498,11 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * @throws java.io.IOException if the close failed.
      */
     public void close() throws IOException {
-        if (persistent != null) {
-            persistent.flush();
-            persistent.close();
+        synchronized (this) {
+            if (persistent != null) {
+                persistent.flush();
+                persistent.close();
+            }
         }
     }
 
@@ -503,24 +513,26 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      */
     @Override
     public synchronized boolean add(TermEntry value) {
-        try {
-            if (persistent.getPosition() != lookupTable[termCount]) {
-                persistent.seek(lookupTable[termCount]);
-            }
-            if (log.isTraceEnabled()) {
-                log.trace("Writing " + value + " at offset "
-                          + persistent.getPosition());
-            }
+        synchronized (this) {
+            try {
+                if (persistent.getPosition() != lookupTable[termCount]) {
+                    persistent.seek(lookupTable[termCount]);
+                }
+                if (log.isTraceEnabled()) {
+                    log.trace("Writing " + value + " at offset "
+                              + persistent.getPosition());
+                }
 //            log.debug(value);
-            persistent.write(termToString(value));
-            termCount++;
-            lookupTable =
-                ArrayUtil.makeRoom(lookupTable, termCount, 1.2, 10000, 0);
-            lookupTable[termCount] = persistent.getPosition();
-            return true;
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "Unable to add entry " + value + " to persistent layer", e);
+                persistent.write(termToString(value));
+                termCount++;
+                lookupTable =
+                    ArrayUtil.makeRoom(lookupTable, termCount, 1.2, 10000, 0);
+                lookupTable[termCount] = persistent.getPosition();
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException(
+                    "Unable to add entry " + value + " to persistent layer", e);
+            }
         }
     }
 
@@ -606,28 +618,34 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                 "There is " + termCount + " terms in the collection, the term "
                 + "at position " + index + " were requested");
         }
-        try {
-            persistent.seek(lookupTable[index]);
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "IOException seeking to file offset " + lookupTable[index]
-                + " for index " + index + " in " + getLookupFile(), e);
-        }
-        try {
-            return persistent.readLine();
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException(String.format(
-                "Illegal argument after seeking to position %d and reading line"
-                + " for index %d in '%s'",
-                lookupTable[index], index, getDataFile()), e);
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "IOException getting data for line at file offset "
-                + lookupTable[index] + " for index " + index + " in "
-                + getLookupFile(), e);
+        synchronized (this) {
+            try {
+                persistent.seek(lookupTable[index]);
+            } catch (IOException e) {
+                throw new RuntimeException(
+                    "IOException seeking to file offset " + lookupTable[index]
+                    + " for index " + index + " in " + getLookupFile(), e);
+            }
+            try {
+                return persistent.readLine();
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException(String.format(
+                    "Illegal argument after seeking to position %d and reading "
+                    + "line for index %d in '%s'",
+                    lookupTable[index], index, getDataFile()), e);
+            } catch (BufferOverflowException e) {
+                throw new RuntimeException(String.format(
+                    "Buffer overflow after seeking to position %d and reading "
+                    + "line for index %d in '%s'",
+                    lookupTable[index], index, getDataFile()), e);
+            } catch (IOException e) {
+                throw new RuntimeException(
+                    "IOException getting data for line at file offset "
+                    + lookupTable[index] + " for index " + index + " in "
+                    + getLookupFile(), e);
+            }
         }
     }
-
 
 
     @Override
