@@ -239,8 +239,9 @@ public class TermStatQueryRewriter implements Configurable {
         }
         String rewritten = rewrite(request, target, query);
         request.put(DocumentKeys.SEARCH_QUERY, rewritten);
-        log.debug("Finished rewriting '" + query + "' to '" + rewritten 
-                  + "' in " + rewriteTime + " ms");
+        rewriteTime += System.currentTimeMillis();
+        log.debug("Finished rewriting target " + id + " '" + query + "' to '"
+                  + rewritten + "' in " + rewriteTime + " ms");
     }
 
     private String rewrite(Request request, Target target, String query) {
@@ -255,8 +256,8 @@ public class TermStatQueryRewriter implements Configurable {
                 1.0d : Double.parseDouble(matcher.group(3))));
         }
         String result = sw.toString();
-        log.debug("rewrite for " + target.getID() + ": '"
-                  + query + "' -> '" + result + "'");
+//        log.debug("rewrite for " + target.getID() + ": '"
+//                  + query + "' -> '" + result + "'");
         return result;
     }
 
