@@ -108,7 +108,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     @Override
     protected ResponseCollection merge(Request request,
         List<Triple<String, Request, ResponseCollection>> responses) {
-        log.debug("Merging " + responses.size());
+        log.debug("Merging " + responses.size() + " responses");
         return responseMerger.merge(request, responses);
     }
 }
