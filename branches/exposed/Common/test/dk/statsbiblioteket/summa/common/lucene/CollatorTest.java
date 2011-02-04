@@ -83,8 +83,6 @@ public class CollatorTest extends TestCase {
             com.ibm.icu.text.Collator.getInstance(DA);
     }
 
-
-
     private Comparator<String> wrapO(
         final com.ibm.icu.text.Collator icuCollator) {
         return new Comparator<String>() {

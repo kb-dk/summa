@@ -92,6 +92,17 @@ public class TermStatQueryRewriter implements Configurable {
     public static final boolean DEFAULT_TERMSTATS_ENABLED = true;
 
     /**
+     * If true, all terms that are to be adjusted are lowercased bafor they
+     * are looked up in the term stats.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LOWERCASE_QUERY =
+        "queryrewriter.lowercase.query";
+    public static final String SEARCH_LOWERCASE_QUERY = CONF_LOWERCASE_QUERY;
+    public static final boolean DEFAULT_LOWERCASE_QUERY = true;
+
+    /**
      * If the calculated boost is 1 +- ROUND_DELTA, it is treated as 1.
      */
     public static final double ROUND_DELTA = 0.001;
@@ -106,12 +117,13 @@ public class TermStatQueryRewriter implements Configurable {
      */
     static final Pattern SAFE = Pattern.compile(
         "(?:([a-zA-Z0-9._\\-]+):)?"
-        + "([\\p{L}.,_0-9\\-]+)"
+        + "([\\p{L}.,\\+-_0-9\\-]+)"
         + "(?:\\^([0-9]+(\\.[0-9]+)?))?");
     static final Pattern IS_SAFE = Pattern.compile("[\\p{L}._0-9\\-\\^,\\s]+");
 
     private boolean enabled = DEFAULT_TERMSTATS_ENABLED;
     private final List<Target> targets;
+    private final boolean lowercase;
 
     public TermStatQueryRewriter(Configuration conf) {
         enabled = conf.getBoolean(CONF_TERMSTATS_ENABLED, enabled);
@@ -132,6 +144,8 @@ public class TermStatQueryRewriter implements Configurable {
             log.warn("No targets specified. Rewriting will have zero effect");
             targets = new ArrayList<Target>(0);
         }
+        lowercase = conf.getBoolean(
+            CONF_LOWERCASE_QUERY, DEFAULT_LOWERCASE_QUERY);
         log.info("Constructed query rewriter with " + targets.size()
                  + " targets. Enabled: " + enabled);
     }
@@ -185,7 +199,12 @@ public class TermStatQueryRewriter implements Configurable {
         Map<String, String> result =
             new HashMap<String, String>(targets.size());
         for (Target target: targets) {
-            result.put(target.getID(), rewrite(request, target, query));
+            boolean doLowercase =
+                request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
+            doLowercase = request.getBoolean(
+                target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
+            result.put(target.getID(),
+                       rewrite(request, target, query, doLowercase));
         }
         rewriteTime += System.currentTimeMillis();
         log.debug("Finished rewriting '" + query + "' to " + targets.size()
@@ -237,23 +256,41 @@ public class TermStatQueryRewriter implements Configurable {
             log.debug("Query '" + query + "' not matched. No rewriting");
             return;
         }
-        String rewritten = rewrite(request, target, query);
+        
+        boolean doLowercase = 
+            request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
+        doLowercase = request.getBoolean(
+            target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
+        String rewritten = query;
+        try {
+            rewritten = rewrite(request, target, query, doLowercase);
+        } catch (Exception e) {
+            log.warn("The query '" + query + "' was not rewritten due to an "
+                     + "exception. Returning the unmodified query", e);
+        }
         request.put(DocumentKeys.SEARCH_QUERY, rewritten);
         rewriteTime += System.currentTimeMillis();
         log.debug("Finished rewriting target " + id + " '" + query + "' to '"
                   + rewritten + "' in " + rewriteTime + " ms");
     }
 
-    private String rewrite(Request request, Target target, String query) {
+    private String rewrite(Request request, Target target, String query, 
+                           boolean doLowercase) {
         Matcher matcher = SAFE.matcher(query);
         StringWriter sw = new StringWriter(query.length() * 2);
         // TODO: Handle non-matching terms
+        boolean first = true;
         while (matcher.find()) {
+            if (!first) {
+                sw.append(" ");
+            }
+            first = false;
             sw.append(rewrite(
                 request, target,
                 matcher.group(1), matcher.group(2),
                 matcher.group(3) == null ?
-                1.0d : Double.parseDouble(matcher.group(3))));
+                1.0d : Double.parseDouble(matcher.group(3)),
+                doLowercase));
         }
         String result = sw.toString();
 //        log.debug("rewrite for " + target.getID() + ": '"
@@ -272,13 +309,25 @@ public class TermStatQueryRewriter implements Configurable {
 
     private CharSequence rewrite(
         Request request, Target target,
-        final String field, final String term, final double boost) {
+        final String field, final String originalTerm, final double boost,
+        final boolean doLowercase) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                 "rewrite(..., field='%s', term='%s', boost=%f) called",
-                field, term, boost));
+                field, originalTerm, boost));
         }
 
+        if (field == null && (
+            "AND".equals(originalTerm) || "OR".equals(originalTerm)
+            || "NOT".equals(originalTerm)
+            || "-".equals(originalTerm) || "+".equals(originalTerm))) {
+            log.trace("Conditional '" + originalTerm + "' detected");
+            return originalTerm;
+        }
+
+        // TODO: Locale for lowercase
+        String term = originalTerm == null ? null :
+                      (doLowercase ? originalTerm.toLowerCase() : originalTerm);
         double docFreq = 0;
         double numDocs = 0;
         for (Target t: targets) {

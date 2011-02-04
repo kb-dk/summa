@@ -412,8 +412,14 @@ public class SummonResponseBuilder {
                   </field>
                  */
                 findTagStart(xml, "datetime");
-                return new DocumentResponse.Field(name, getAttribute(
-                    xml, "text", "????").substring(0, 4), false);
+                String date = null;
+                try {
+                    date = getAttribute(xml, "text", "????");
+                    return new DocumentResponse.Field(name, date.substring(0, 4), false);
+                } catch (StringIndexOutOfBoundsException e) {
+                    log.warn("Expected attribute 'text' for tag 'datetime' to "
+                             + "contain a year, but got '" + date + "'");
+                }
             }
 
             log.debug(

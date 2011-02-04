@@ -95,6 +95,28 @@ public class TermStatQueryRewriterTest extends TestCase {
         assertRewriteResults(rewriter, TESTS, request);
     }
 
+    public void testNumber() throws IOException {
+        TermStatQueryRewriter rewriter = setupTestTermStats();
+        String[] TESTS = new String[]{ // query, expectedA, expectedB
+            "birds of prey",
+            "localhost 2010 hello",
+            "localhost OR hello",
+            "localhost AND -hello"
+        };
+        for (String test: TESTS) {
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, test);
+            Map<String, String> rewrittenMap = rewriter.rewrite(request);
+
+            String actualA = rewrittenMap.get("a");
+            System.out.println("'" + test + "'' -> '" + actualA + "'");
+            assertEquals(
+                "There should be the same number of tokens in input '" + test
+                + "' and result '" + actualA + "'",
+                test.split(" ").length, actualA.split(" ").length);
+        }
+    }
+
     public void testRewriteBoost() throws IOException {
         TermStatQueryRewriter rewriter = setupTestTermStats();
 

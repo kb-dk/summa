@@ -52,7 +52,7 @@
     <orderEntry type="module" module-name="summa-storage" />
     <orderEntry type="module" module-name="summa-index" />
     <orderEntry type="module" module-name="summa-search" />
-    <orderEntry type="library" name="Maven: dk.statsbiblioteket.lucene:lucene-exposed:4.0-dev-20101123" level="project" />
+    <orderEntry type="library" name="Maven: dk.statsbiblioteket.lucene:lucene-exposed:4.0-dev-20110201b" level="project" />
     <orderEntry type="library" name="Maven: dk.statsbiblioteket.lucene:lucene-queries:4.0-dev-20101123" level="project" />
     <orderEntry type="module" module-name="summa-search" />
     <orderEntry type="module" module-name="summa-support" />

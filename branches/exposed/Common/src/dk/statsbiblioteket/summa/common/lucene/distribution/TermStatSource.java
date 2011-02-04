@@ -45,6 +45,7 @@ import java.util.List;
  * </p><p>
  * Iterators returns triples with term, termFrequency and documentFrequency.
  */
+// TODO Ensure that everything is lowercased?
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

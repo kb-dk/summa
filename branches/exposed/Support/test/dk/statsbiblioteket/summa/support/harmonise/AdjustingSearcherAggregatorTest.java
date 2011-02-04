@@ -91,10 +91,37 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             new AdjustingSearcherAggregator(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         ResponseCollection responses = aggregator.search(request);
         log.debug("Finished searching");
         System.out.println(responses.toXML());
+        assertTrue("The combined result should contain at least one record",
+                   responses.toXML().contains("<record score"));
+        assertTrue("The combined result should contain at least one tag",
+                   responses.toXML().contains("<tag name"));
+
+        String SECURITY = "security crisis";
+        request.put(DocumentKeys.SEARCH_QUERY, SECURITY);
+        log.debug("Searching for " + SECURITY);
+        responses = aggregator.search(request);
+        log.debug("Finished searching");
+        System.out.println(responses.toXML());
+        assertTrue("The combined result should contain at least one record",
+                   responses.toXML().contains("<record score"));
+        assertTrue("The combined result should contain at least one tag",
+                   responses.toXML().contains("<tag name"));
+
+        String LOCALHOST = "localhost 2010";
+        request.put(DocumentKeys.SEARCH_QUERY, LOCALHOST);
+        log.debug("Searching for " + LOCALHOST);
+        responses = aggregator.search(request);
+        log.debug("Finished searching");
+        System.out.println(responses.toXML());
+        assertTrue("The combined result should contain at least one record",
+                   responses.toXML().contains("<record score"));
+        assertTrue("The combined result should contain at least one tag",
+                   responses.toXML().contains("<tag name"));
 
 /*        System.out.println("Records");
         BufferedReader lines =
