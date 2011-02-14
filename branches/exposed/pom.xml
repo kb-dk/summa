@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.9-20110204-l4exp-SNAPSHOT</version>
+    <version>1.6.9-20110214-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -51,6 +51,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>4.6</version>
+            </dependency>
             <dependency>
                 <groupId>net.sf.json-lib</groupId>
                 <artifactId>json-lib</artifactId>
@@ -131,6 +136,7 @@
                 <groupId>dk.statsbiblioteket.lucene</groupId>
                 <artifactId>lucene-exposed</artifactId>
                 <version>4.0-dev-20110201b</version>
+<!--                <version>4.0-dev-20101123</version>-->
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.lucene</groupId>

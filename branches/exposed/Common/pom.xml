@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.6.9-20110204-l4exp-SNAPSHOT</version>
+        <version>1.6.9-20110214-l4exp-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-common</artifactId>
@@ -13,6 +13,10 @@
     <description>Common source code for the Summa modules.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+        </dependency>
         <dependency>
             <groupId>net.sf.json-lib</groupId>
             <artifactId>json-lib</artifactId>

@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.6.9-20110204-l4exp-SNAPSHOT</version>
+        <version>1.6.9-20110214-l4exp-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-search</artifactId>
