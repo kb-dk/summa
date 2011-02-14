@@ -51,7 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 

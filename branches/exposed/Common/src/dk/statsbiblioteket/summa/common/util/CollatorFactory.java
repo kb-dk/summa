@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.ibm.icu.text.RuleBasedCollator;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.text.ParseException;
-import java.text.RuleBasedCollator;
 import java.util.Comparator;
 import java.util.Locale;
 
@@ -58,7 +58,7 @@ public class CollatorFactory {
     }
 
     /**
-     * Fixes the given collator.
+     * Fixes the given collator so that is sorts spaces first.
      * @param collator The collator to fix.
      * @param check True if check should be done.
      * @return Return the fixed collator.
@@ -85,6 +85,9 @@ public class CollatorFactory {
         } catch (ParseException e) {
             throw new RuntimeException(
                     "ParseException while parsing\n" + rules, e);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Exception while parsing\n" + rules, e);
         }
     }
 
@@ -118,24 +121,29 @@ public class CollatorFactory {
             return newCollator;
         } catch (ParseException e) {
             throw new RuntimeException(
-                    "ParseException while parsing\n" + rules, e);
+                "ParseException while parsing\n" + rules, e);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while parsing\n" + rules, e);
         }
 
     }
 
     /**
-     * Create a Collator from the given Locale, prioritizing space before other
-     * characters. If the locale is "da", the Collator also treats aa as 2*a.
+     * Create a Collator from the given Locale where punctuation and spaces are
+     * ignored when comparing Strings.
      * @param locale the wanted Locale for the Collator..
      * @return a new Collator with tweaked rules.
-     * @see #fixCollator(java.text.Collator)
-     * @see #adjustAASorting(java.text.Collator)
+     * @see #fixCollator(com.ibm.icu.text.Collator)
      */
     // TODO: Make this produce fixed CachedCollators
     public static Collator createCollator(Locale locale) {
-        Collator collator = fixCollator(Collator.getInstance(locale), false);
-        if ("da".equals(locale.getLanguage())) {
-            collator = adjustAASorting(collator);
+        Collator collator = Collator.getInstance(locale);
+        if (collator instanceof RuleBasedCollator) {
+            ((RuleBasedCollator)collator).setAlternateHandlingShifted(true);
+        } else {
+            log.warn("Expected the ICU Collator to be a "
+                     + RuleBasedCollator.class.getSimpleName()
+                     + " but got " + collator.getClass());
         }
         return collator;
     }
@@ -150,8 +158,8 @@ public class CollatorFactory {
      * @param locale the wanted Locale for the Collator..
      * @param cache if true, the Collator is cached.
      * @return a new optionally cached cached Collator with tweaked rules.
-     * @see #fixCollator(java.text.Collator)
-     * @see #adjustAASorting(java.text.Collator)
+     * @see #fixCollator(com.ibm.icu.text.Collator)
+     * @see #adjustAASorting(com.ibm.icu.text.Collator)
      */
     public static Collator createCollator(Locale locale, boolean cache) {
         return createCollator(
@@ -168,8 +176,8 @@ public class CollatorFactory {
      *                   an individual character basis.
      * @param cache if true, the Collator is cached.
      * @return a new optionally cached cached Collator with tweaked rules.
-     * @see #fixCollator(java.text.Collator)
-     * @see #adjustAASorting(java.text.Collator)
+     * @see #fixCollator(com.ibm.icu.text.Collator)
+     * @see #adjustAASorting(com.ibm.icu.text.Collator)
      */
     public static Collator createCollator(
         Locale locale, String cacheChars, boolean cache) {

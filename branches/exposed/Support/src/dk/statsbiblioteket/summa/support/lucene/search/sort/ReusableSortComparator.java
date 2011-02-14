@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.util.Locale;
 
 /**

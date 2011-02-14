@@ -65,8 +65,7 @@ public class CollatorTest extends TestCase {
         int MAX = 30;
         Locale DA = new Locale("da");
 
-        java.text.Collator javaCollator =
-            java.text.Collator.getInstance(DA);
+        Collator javaCollator = Collator.getInstance(DA);
         com.ibm.icu.text.Collator icuCollator =
             com.ibm.icu.text.Collator.getInstance(DA);
         for (int termC: TERMS) {
@@ -77,8 +76,8 @@ public class CollatorTest extends TestCase {
 
     public void testKeys() {
         Locale DA = new Locale("da");
-        java.text.Collator javaC =
-            java.text.Collator.getInstance(DA);
+        com.ibm.icu.text.Collator javaC =
+            com.ibm.icu.text.Collator.getInstance(DA);
         com.ibm.icu.text.Collator icuC =
             com.ibm.icu.text.Collator.getInstance(DA);
     }

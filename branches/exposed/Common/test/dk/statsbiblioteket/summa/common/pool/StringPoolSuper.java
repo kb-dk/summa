@@ -22,7 +22,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
 import java.io.StringWriter;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

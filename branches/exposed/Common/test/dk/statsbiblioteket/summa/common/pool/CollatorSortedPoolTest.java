@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.util.Arrays;
 import java.util.Locale;
 

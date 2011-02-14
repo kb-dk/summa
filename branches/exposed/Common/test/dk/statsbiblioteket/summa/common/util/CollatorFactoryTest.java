@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import dk.statsbiblioteket.util.CachedCollator;
+import com.ibm.icu.text.RuleBasedCollator;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.text.Collator;
-import java.text.RuleBasedCollator;
+import com.ibm.icu.text.Collator;
+
 import java.util.*;
 
 public class CollatorFactoryTest extends TestCase {
@@ -44,36 +44,59 @@ public class CollatorFactoryTest extends TestCase {
         return new TestSuite(CollatorFactoryTest.class);
     }
 
-    public void testModifiedCollator() throws Exception {
+/*    public void testModifiedCollator() throws Exception {
         List<String> EXPECTED = Arrays.asList("ko", "kost er bedst", "koste");
         List<String> input = Arrays.asList("koste", "kost er bedst", "ko");
 
         Collator daCollator = CollatorFactory.createCollator(new Locale("da"));
-        testCompare("Spaces hould be sorted before anything else by rule "
+        testCompare("EOL should be sorted before anything else by rule "
                     + "collator", daCollator, EXPECTED, input);
     }
+  */
+    public void testSpace() throws Exception {
+        List<String> EXPECTED = Arrays.asList("a", " b");
+        List<String> input = Arrays.asList(" b", "a");
 
-    public void testUnModifiedCollator() throws Exception {
+        Collator DA = CollatorFactory.createCollator(new Locale("da"));
+        if (DA instanceof RuleBasedCollator) {
+            ((RuleBasedCollator)DA).setAlternateHandlingShifted(true);
+        }
+        testCompare("Inline space should not be significant",
+                    DA, EXPECTED, input);
+    }
+
+    public void testAA() throws Exception {
+        List<String> EXPECTED = Arrays.asList("a", "b", "aa");
+        List<String> input = Arrays.asList("aa", "b", "a");
+
+        Collator DA = CollatorFactory.createCollator(new Locale("da"));
+        DA.setStrength(Collator.QUATERNARY);
+        testCompare("'aa' should be after 'b' in Danish",
+                    DA, EXPECTED, input);
+    }
+
+/*    public void testUnModifiedCollator() throws Exception {
         List<String> EXPECTED = Arrays.asList("ko", "koste", "kost er bedst");
         List<String> input = Arrays.asList("koste", "kost er bedst", "ko");
 
         Collator daCollator = Collator.getInstance(new Locale("da"));
-        testCompare("Spaces hould be sorted after everything else by standard "
+        daCollator.setStrength(Collator.SECONDARY);
+        testCompare("Spaces should be sorted after everything else by standard "
                     + "collator", daCollator, EXPECTED, input);
     }
-
+  */
 /*    public void testUnModifiedCollatorAA() throws Exception {
         List<String> EXPECTED = Arrays.asList("aa", "a a");
         List<String> input = Arrays.asList("a a", "aa");
 
         Collator daCollator = Collator.getInstance(new Locale("da"));
-        testCompare("Spaces hould be sorted after everything else by standard "
+        testCompare("Spaces should be sorted after everything else by standard "
                     + "collator", daCollator, EXPECTED, input);
     }
   */
     // TODO: check why "a a" vs. "aa" does not behave as below
     
-    public void testUnModifiedCollatorAB() throws Exception {
+/*    public void testUnModifiedCollatorAB() throws Exception {
         List<String> EXPECTED = Arrays.asList("ab", "a b");
         List<String> input = Arrays.asList("ab", "a b");
 
@@ -82,7 +105,7 @@ public class CollatorFactoryTest extends TestCase {
                     + "collator", daCollator, EXPECTED, input);
     }
 
-
+  */
     private void testCompare(String message, Comparator comparator,
                             List<String> expected, List<String> actual)
                                                               throws Exception {
@@ -93,37 +116,33 @@ public class CollatorFactoryTest extends TestCase {
                      Strings.join(expected, ", "), Strings.join(sorted, ", "));
     }
 
-
-
     public void testAAsorting() throws Exception {
-        Collator plain = Collator.getInstance(new Locale("da"));
+        Collator plain = CollatorFactory.createCollator(new Locale("da"));
         assertTrue("Aalborg should be after Assens",
                    plain.compare("Aalborg", "Assens") > 0);
 
-        Collator aa = CollatorFactory.adjustAASorting(plain);
+/*        Collator aa = CollatorFactory.adjustAASorting(plain);
         assertTrue("Aalborg should now come before Assens",
                    aa.compare("Aalborg", "Assens") < 0);
-
-        Collator factoried = CollatorFactory.createCollator(
+  */
+/*        Collator factoried = CollatorFactory.createCollator(
             new Locale("da"), true);
         assertTrue("Aalborg should now come before Assens",
-                   factoried.compare("Aalborg", "Assens") < 0);
+                   factoried.compare("Aalborg", "Assens") < 0);*/
     }
 
     public void testSpaceSort() throws Exception {
         assertTrue("Standard compareTo should sort space first",
                    "a b".compareTo("aa") < 0);
 
-        Collator sansSpaceStandard = Collator.getInstance(new Locale("da"));
+/*        Collator sansSpaceStandard = Collator.getInstance(new Locale("da"));
         assertTrue("Standard Collator should sort space last",
-                   sansSpaceStandard.compare("a b", "ab") > 0);
-        testCompare("Standard Collator should sort space last", 
-                    sansSpaceStandard, Arrays.asList("ab", "a b"),
-                    Arrays.asList("a b", "ab"));
+                   sansSpaceStandard.compare("a b", "ab") > 0);*/
 
-        Collator sansSpace = new CachedCollator(new Locale("da"), "");
+        // TODO: Speed-measure if CachedCollator is still needed
+/*        Collator sansSpace = new CachedCollator(new Locale("da"), "");
         assertTrue("None-space-modified Collator should sort space last",
-                   sansSpace.compare("a b", "ab") > 0);
+                   sansSpace.compare("a b", "ab") > 0);*/
     }
 }
 

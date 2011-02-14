@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.StringWriter;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 import java.util.*;
 
 /**

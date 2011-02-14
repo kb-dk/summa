@@ -19,7 +19,7 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.IOException;
-import java.text.Collator;
+import com.ibm.icu.text.Collator;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.pool.StringConverter;
