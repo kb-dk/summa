@@ -90,7 +90,6 @@ public class FilterPump extends StateThread implements Configurable {
                               + (pumped.getRecord() == null ?
                                  pumped : pumped.getRecord()));
                 }
-                System.out.println("received: " + pumped.getRecord());
                 profiler.beat();
                 logStatistics(profiler, startTime);
             }
