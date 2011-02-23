@@ -139,13 +139,19 @@ public class CollatorFactory {
     public static Collator createCollator(Locale locale) {
         Collator collator = Collator.getInstance(locale);
         if (collator instanceof RuleBasedCollator) {
-            ((RuleBasedCollator)collator).setAlternateHandlingShifted(true);
+            // true ignores spaces and punctuation but at SB space is just
+            // as significant as letters (and comes before them)
+            ((RuleBasedCollator)collator).setAlternateHandlingShifted(false);
         } else {
             log.warn("Expected the ICU Collator to be a "
                      + RuleBasedCollator.class.getSimpleName()
                      + " but got " + collator.getClass());
         }
         return collator;
+    }
+
+    public static String getCollatorKey(Locale locale) {
+        return "icu_collator_" + locale.toString();
     }
 
     /**

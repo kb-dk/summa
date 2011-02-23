@@ -19,14 +19,19 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import com.ibm.icu.text.Collator;
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.FieldComparator;
+import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedFieldComparatorSource;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Locale;
 
 /**
@@ -38,6 +43,7 @@ import java.util.Locale;
 public class ExposedComparator extends ReusableSortComparator {
     private static Log log = LogFactory.getLog(ExposedComparator.class);
     private IndexReader reader = null;
+    private Comparator<BytesRef> comparator;
     private Locale locale;
     private ExposedFieldComparatorSource exposedFCS = null;
 
@@ -45,6 +51,9 @@ public class ExposedComparator extends ReusableSortComparator {
         super(language);
         locale = language == null || "".equals(language) ? null :
                  new Locale(language);
+        comparator = locale == null ? null :
+                     ExposedComparators.collatorToBytesRef(
+                         CollatorFactory.createCollator(locale));
     }
 
     @Override
@@ -62,6 +71,10 @@ public class ExposedComparator extends ReusableSortComparator {
     @Override
     public void indexChanged(IndexReader reader) {
         this.reader = reader;
-        exposedFCS = new ExposedFieldComparatorSource(reader, locale);
+        exposedFCS = comparator == null ?
+                     new ExposedFieldComparatorSource(reader, locale) :
+                     new ExposedFieldComparatorSource(
+                         reader, comparator,
+                         CollatorFactory.getCollatorKey(locale), false);
     }
 }

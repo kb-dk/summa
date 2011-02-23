@@ -134,6 +134,10 @@ public class CollatorFactoryTest extends TestCase {
     public void testSpaceSort() throws Exception {
         assertTrue("Standard compareTo should sort space first",
                    "a b".compareTo("aa") < 0);
+        Collator standard = CollatorFactory.createCollator(new Locale("da"));
+        assertTrue("Standard Collator should sort space first", // House rule
+                   standard.compare("a b", "ab") < 0);
+
 
 /*        Collator sansSpaceStandard = Collator.getInstance(new Locale("da"));
         assertTrue("Standard Collator should sort space last",

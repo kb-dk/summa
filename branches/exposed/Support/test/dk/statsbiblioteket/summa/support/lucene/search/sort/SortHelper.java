@@ -36,8 +36,9 @@ public class SortHelper {
     public static final String[] BASIC_TERMS = {
             "b", "a", "c", "d", "e"};
     public static final String[] TRICKY_TERMS = {
-            "z", null, "abe", "a be", "a aa", "ægir", "Ægir", "Ødis",
-            "foo", null, "bar", "moo moo", null};
+        "z", null, "abe", "b1", "b 1", "b 3", "b2", "a be", "a aa",
+        "ægir", "Ægir", "Ødis", "å",
+        "foo", null, "bar", "moo moo", null};
 
     public static final String SORT_FIELD = "sortfield";
 

@@ -409,23 +409,23 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             Locale locale = structure.getLocale() ==
                             null ? null : new Locale(structure.getLocale());
             String comparatorID;
+            Comparator<BytesRef> comparator;
             org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER facetOrder;
             if (structure.getSortType().equals(FacetStructure.SORT_ALPHA)) {
                 comparatorID = locale == null ?
                                ExposedRequest.LUCENE_ORDER :
-                               structure.getLocale();
+                               CollatorFactory.getCollatorKey(locale);
                 facetOrder = locale == null ?
                              org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.index :
                              org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.locale;
-
+                comparator = ExposedComparators.collatorToBytesRef(
+                    CollatorFactory.createCollator(locale));
             } else { // Popularity
                 comparatorID = ExposedRequest.LUCENE_ORDER;
                 locale = null;
                 facetOrder = org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.count;
+                comparator = ExposedComparators.localeToBytesRef(locale);
             }
-            // TODO: Use a factory for collator
-            Comparator<BytesRef> comparator =
-                ExposedComparators.localeToBytesRef(locale);
 
             List<ExposedRequest.Field> fields =
                 new ArrayList<ExposedRequest.Field>();
