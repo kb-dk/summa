@@ -116,6 +116,19 @@ public class CollatorFactoryTest extends TestCase {
                      Strings.join(expected, ", "), Strings.join(sorted, ", "));
     }
 
+    public void testJavaStandardCollator() throws Exception {
+        java.text.Collator javaC =
+            java.text.Collator.getInstance(new Locale("EN"));
+        assertTrue("Spaces should be ignored per default",
+                   javaC.compare("liu yu", "l yy") < 0);
+
+        java.text.RuleBasedCollator adjustedC = new java.text.RuleBasedCollator(
+                ((java.text.RuleBasedCollator)javaC).getRules().
+                    replace("<'\u005f'", "<' '<'\u005f'"));
+        assertTrue("Spaces should be significant inside strings after adjust",
+                   adjustedC.compare("liu yu", "l yy") > 0);
+    }
+
     public void testAAsorting() throws Exception {
         Collator plain = CollatorFactory.createCollator(new Locale("da"));
         assertTrue("Aalborg should be after Assens",
