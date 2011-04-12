@@ -117,7 +117,7 @@ public class TermStatQueryRewriter implements Configurable {
      */
     static final Pattern SAFE = Pattern.compile(
         "(?:([a-zA-Z0-9._\\-]+):)?"
-        + "([\\p{L}.,\\+-_0-9\\-]+)"
+        + "([\\p{L}.,+\\-_0-9\\-]+)"
         + "(?:\\^([0-9]+(\\.[0-9]+)?))?");
     static final Pattern IS_SAFE = Pattern.compile("[\\p{L}._0-9\\-\\^,\\s]+");
 

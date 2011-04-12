@@ -137,7 +137,7 @@ public class TermStatQueryRewriterTest extends TestCase {
   */
 
         String[][] TESTS2 = new String[][]{ // query, expectedA, expectedB
-            {"b^" + queryBoost, "a^" + boostBa, "a^" + boostBb}
+            {"b^" + queryBoost, "a^" + boostBa, "b^" + boostBb}
         };
 
         Request request = new Request();
@@ -244,6 +244,23 @@ public class TermStatQueryRewriterTest extends TestCase {
             assertTrue("The text '" + test + "' should match regexp '"
                        + TermStatQueryRewriter.SAFE.pattern() + "'",
                        matcher.matches());
+            System.out.println(String.format(
+                "Matching '%s' to field=='%s', term=='%s', boost=='%s'",
+                test, matcher.group(1), matcher.group(2), matcher.group(3)));
+        }
+    }
+
+    public void testPatternWeight() {
+        String[] MATCHING = new String[]{
+            "foo^2", "foo^2.3", "bar:zoo^4", "bar:zoo^4.5"
+        };
+        for (String test: MATCHING) {
+            Matcher matcher = TermStatQueryRewriter.SAFE.matcher(test);
+            assertTrue("The text '" + test + "' should match regexp '"
+                       + TermStatQueryRewriter.SAFE.pattern() + "'",
+                       matcher.matches());
+            assertNotNull("The weight for '" + test + "' should not be null",
+                          matcher.group(3));
         }
     }
 
