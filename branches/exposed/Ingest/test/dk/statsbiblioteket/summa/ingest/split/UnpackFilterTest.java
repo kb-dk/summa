@@ -3,13 +3,20 @@ package dk.statsbiblioteket.summa.ingest.split;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.ingest.stream.PullParserTest;
 import dk.statsbiblioteket.summa.ingest.stream.ZIPParserTest;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import sun.awt.windows.ThemeReader;
 
+import java.awt.image.ImagingOpException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,22 +59,91 @@ public class UnpackFilterTest extends TestCase {
         }
     }
 
-    public void testBasics() throws Exception {
+    public void testRecursive() throws Exception {
+        assertContains(
+            "data/zip/subdouble/sub2/double_stuffed.zip",
+            Arrays.asList(
+                "double_zipped_foo2", "foo", "kaboom", "zoo", "zoo2"));
+    }
+
+    public void testRecursiveDoubleSub() throws Exception {
+        assertContains(
+            "data/zip/double_stuffed2.zip",
+            Arrays.asList(
+                "double_zipped_foo2", "double_zipped_foo2b",
+                "foo", "kaboom", "zoo", "zoo2"));
+    }
+
+    public void assertContains(String source, List<String> expected)
+                                                              throws Exception {
+        ZIPParserTest.assertContent(getUnpackChain(source), expected);
+    }
+
+    public ObjectFilter getUnpackChain(String source) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         UnpackFilter unpacker = new UnpackFilter(conf);
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(
-                Arrays.asList(new Payload(Resolver.getURL(
-                        "data/zip/subdouble/sub2/double_stuffed.zip").
+                Arrays.asList(new Payload(Resolver.getURL(source).
                     openStream())));
         unpacker.setSource(feeder);
 
         assertTrue("The unpacker should have at least one element",
                    unpacker.hasNext());
+        return unpacker;
+    }
 
-        List<String> expected = Arrays.asList(
-                "double_zipped_foo2", "foo", "kaboom", "zoo", "zoo2");
-        ZIPParserTest.assertContent(unpacker, expected);
+    public void testContent1() throws IOException {
+        assertSimpleIteration("data/zip/double_stuffed2.zip");
+    }
+
+    public void testContentSingleGiant() throws IOException {
+        assertSimpleIteration(
+            "data/zip/sb:aleph:1266199637.735.21556:full.zip");
+    }
+
+/*    public void testContentAleph() throws IOException {
+        assertSimpleIteration(
+            "data/zip/sb:aleph:1293268834.954.18412:full.zip");
+    }*/
+
+    public void testContentAlephSub() throws IOException {
+        assertSimpleIteration("data/zip/full_part.zip");
+    }
+
+    public void testContentAlephSubRepack() throws IOException {
+        assertSimpleIteration("data/zip/full_part_repack.zip");
+    }
+
+    public void assertSimpleIteration(String source) throws IOException {
+        ObjectFilter chain = getUnpackChain(source);
+        int counter = 0;
+        long content = 0;
+        while (chain.hasNext()) {
+            Payload payload = chain.next();
+            content += countStreamContent(payload);
+            assertNotNull("The stream content for " + payload
+                          + " (Payload #" + counter + ") should not be null",
+                          content);
+            counter++;
+            if (counter % 1000 == 0) {
+                System.out.print(".");
+                if (counter % 10000 == 0) {
+                    System.out.println(
+                        " " + counter + " elements unpacked ("
+                        + content / 1048576 + "MB)");
+                }
+            }
+        }
+        chain.close(true);
+        System.out.println("\nUnpacked " + counter + " elements from '"
+                           + source + "' (" + content / 1048576 + "MB)");
+    }
+
+    public static long countStreamContent(Payload payload) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipe(payload.getStream(), out);
+        return out.size();
     }
 
 }

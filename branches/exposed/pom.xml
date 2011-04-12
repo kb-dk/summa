@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.6.9-20110223-l4exp-SNAPSHOT</version>
+    <version>1.6.9-20110412-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -55,6 +55,11 @@
                 <groupId>com.ibm.icu</groupId>
                 <artifactId>icu4j</artifactId>
                 <version>4.6</version>
+            </dependency>
+            <dependency>
+                <groupId>de.schlichtherle.truezip</groupId>
+                <artifactId>truezip-file</artifactId>
+                <version>7.0-rc1</version>
             </dependency>
             <dependency>
                 <groupId>net.sf.json-lib</groupId>

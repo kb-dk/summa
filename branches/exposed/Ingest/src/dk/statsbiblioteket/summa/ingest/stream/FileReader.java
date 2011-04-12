@@ -87,7 +87,7 @@ public class FileReader implements ObjectFilter {
      */
     public static final String CONF_FILE_PATTERN =
             "summa.ingest.filereader.filepattern";
-    private static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
+    public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
     /**
      * The postfix for the file when it has been fully processed.
      * Setting this to null or the empty String means that no renaming is done.
@@ -288,123 +288,6 @@ public class FileReader implements ObjectFilter {
     }
 
     /**
-     * FileInputStream that is capable of renaming the file upon close.
-     * The Stream is auto-closing, meaning that the file handle is automatically
-     * freed when EOF is reached.
-     */
-    class RenamingFileStream extends FileInputStream {
-        private Log log = LogFactory.getLog(RenamingFileStream.class);
-
-        private boolean success = true;
-        private File file;
-        private boolean closed = false;
-        private boolean renamed = false;
-
-        /**
-         * Constructs a FileInputStream where the postfix will potentially be
-         * used upon close.
-         * @param file    the file to open.
-         * @param postfix the postfix to add, is setSuccess(true) has been
-         *                called and close is called.
-         * @throws FileNotFoundException if the file could not be located.
-         */
-        public RenamingFileStream(File file, String postfix) throws
-                                                         FileNotFoundException {
-            super(file);
-            log.trace("Created reader for '" + file
-                      + "' with potential postfix '" + postfix + "'");
-            this.file = file;
-        }
-        public synchronized void setSuccess(boolean success) {
-            this.success = success;
-            try {
-                close();
-            } catch (IOException e) {
-                log.warn("setSuccess(" + success + "): Unable to close file '"
-                         + file + "'. Attempting rename()");
-            }
-            rename();
-        }
-        @Override
-        public synchronized void close() throws IOException {
-            if (closed) {
-                return;
-            }
-            log.trace("Closing stream to file '" + file + "'");
-            super.close();
-            closed = true;
-            rename();
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        @Override
-        public int read() throws IOException {
-            int result = super.read();
-            if (result == -1) {
-                close();
-            }
-            return result;
-        }
-
-        @Override
-        public int read(byte b[]) throws IOException {
-            int result = super.read(b);
-            if (result == -1) {
-                close();
-            }
-            return result;
-        }
-
-        @Override
-        public int read(byte b[], int off, int len) throws IOException {
-            int result = super.read(b, off, len);
-            if (result == -1) {
-                close();
-            }
-            return result;
-        }
-
-        @Override
-        public boolean markSupported() {
-            // The Stream is auto-closing, so we cannot support marking
-            return false;
-        }
-
-        private void rename() {
-            if (renamed) {
-                log.trace("File '" + file + "' already renamed");
-                return;
-            }
-            if (closed && success && postfix != null && !"".equals(postfix)) {
-                File newName = new File(file.getPath() + postfix);
-                try {
-                    log.trace("Renaming '" + file + "' to '" + newName + "'");
-                    renamed = file.renameTo(newName);
-                    if (!file.setLastModified(System.currentTimeMillis())) {
-                        log.trace("Unable to set last modification time for '"
-                                  + file + "'");
-                    }
-                } catch(Exception e) {
-                    log.error("Could not rename '" + file
-                              + "' to '" + newName + "'", e);
-                }
-            } else if (log.isTraceEnabled()) {
-                log.trace("No renaming of '" + file + "'. closed=" + closed
-                          + ", success=" + success + ", postfix='" 
-                          + postfix + "'");
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "RenamingFileStream(" + file + ")";
-        }
-    }
-
-    /**
      * Opens the next file in {@link #todo} and produces a Payload with a
      * stream to the file content.
      * @return a Payload with a stream for the next file or null if no further
@@ -489,7 +372,7 @@ public class FileReader implements ObjectFilter {
                 } else {
                     RenamingFileStream stream =
                             (RenamingFileStream)payload.getStream();
-                    log.debug("Closing stream " + stream.file
+                    log.debug("Closing stream " + stream.getFile()
                               + " with success: " + success);
                     stream.setSuccess(success);
                 }
