@@ -14,18 +14,19 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import com.sun.xml.internal.ws.message.EmptyMessageImpl;
+import de.schlichtherle.truezip.file.TFileInputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.util.ArrayUtil;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -48,66 +49,344 @@ import de.schlichtherle.truezip.file.TFile;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ArchiveReader {//} implements ObjectFilter {
+public class ArchiveReader implements ObjectFilter {
     private static Log log = LogFactory.getLog(ArchiveReader.class);
 
-    protected TFile root;
-    private boolean recursive;
-    private boolean reverseSort = FileReader.DEFAULT_REVERSE_SORT;
-    private Pattern filePattern;
-    private String postfix = FileReader.DEFAULT_COMPLETED_POSTFIX;
+    protected FileProvider provider;
 
     public ArchiveReader(Configuration conf) {
+        boolean recursive = conf.getBoolean(
+            FileReader.CONF_RECURSIVE, FileReader.DEFAULT_RECURSIVE);
+        boolean reverseSort = conf.getBoolean(
+            FileReader.CONF_REVERSE_SORT, FileReader.DEFAULT_REVERSE_SORT);
+        Pattern filePattern = Pattern.compile(conf.getString(
+            FileReader.CONF_FILE_PATTERN, FileReader.DEFAULT_FILE_PATTERN));
+        String postfix = conf.getString(FileReader.CONF_COMPLETED_POSTFIX,
+                                 FileReader.DEFAULT_COMPLETED_POSTFIX);
         String rootString = conf.getString(FileReader.CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
-            throw new Configurable.ConfigurationException(
-                "No root. This must be specified with "
-                + FileReader.CONF_ROOT_FOLDER);
+            throw new Configurable.ConfigurationException(String.format(
+                "No root. This must be specified with %s",
+                FileReader.CONF_ROOT_FOLDER));
         }
         log.trace("Got root-property '" + rootString + "'");
-        root = new TFile(rootString).getAbsoluteFile();
-        log.debug("Setting root to '" + root + "' from value '"
-                  + rootString + "'");
+        TFile root = new TFile(rootString).getAbsoluteFile();
+        log.debug(String.format(
+            "Setting root to '%s' from value '%s'", root, rootString));
+
         if (!root.exists()) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn("Root '" + root + "' does not exist");
+            log.warn(String.format(
+                "Root '%s'' does not exist. No files will be read", root));
+            provider = new EmptyProvider();
+        } else if (root.isFile()) {
+            log.debug(String.format(
+                "Root '%s' is a single regular file", root));
+            provider = new SingleFile(null, root, false, postfix);
+        } else {
+            log.debug(String.format(
+                "Root '%s' is a folder or an archive", root));
+            provider = new FileContainer(
+                null, root, false, postfix, filePattern, reverseSort);
         }
 
-        recursive = conf.getBoolean(
-            FileReader.CONF_RECURSIVE, FileReader.DEFAULT_RECURSIVE);
-        reverseSort = conf.getBoolean(
-            FileReader.CONF_REVERSE_SORT, reverseSort);
-        filePattern = Pattern.compile(conf.getString(
-            FileReader.CONF_FILE_PATTERN, FileReader.DEFAULT_FILE_PATTERN));
-        postfix = conf.getString(FileReader.CONF_COMPLETED_POSTFIX, postfix);
         log.info("ArchiveReader created. Root: '" + root
                  + "', recursive: " + recursive
                  + ", file pattern: '" + filePattern.pattern()
                  + "', completed postfix: '" + postfix + "'");
     }
 
-//    @Override
+    @Override
     public void setSource(Filter source) {
         throw new UnsupportedOperationException(String.format(
                 "A %s must be positioned at the start of a filter chain",
                 getClass().getName()));
     }
 
+    @Override
+    public boolean hasNext() {
+        log.trace("hasNext() called");
+        return provider.hasNext();
+    }
+
+    @Override
+    public boolean pump() throws IOException {
+        log.trace("pump() called");
+        if (hasNext()) {
+            Payload next = next();
+            //noinspection StatementWithEmptyBody
+            while (next.pump()); // Empty the Payload
+        }
+        return hasNext();
+    }
+
+    @Override
+    public void close(boolean success) {
+        log.debug("close(" + success + ") called");
+        provider.close(success);
+    }
+
+    @Override
+    public Payload next() {
+        log.trace("next() called");
+        return provider.next();
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("No remove allowed");
+    }
+
     private static final List<FileProvider> EMPTY =
         new ArrayList<FileProvider>(0);
-    private class FileProvider implements Iterator<FileProvider> {
-        private final FileProvider parent;
-        private final TFile root;
-        private final boolean closable;
 
-        private List<FileProvider> subs = null; // null means not expanded yet
-        private List<FileProvider> open = new ArrayList<FileProvider>(1);
-        private boolean closed = false;
+    private static abstract class FileProvider
+        implements Iterator<Payload> {
+        /**
+         * Optional parent (folder or archive).
+         */
+        protected final FileProvider parent;
+        /**
+         * The main entry representing the provider. If the entry is a file,
+         * this will be the only entry.
+         */
+        protected final TFile root;
+        /**
+         * If true, the provider is an inner element of an archive. The direct
+         * consequence is that no renaming will take place on close.
+         */
+        protected final boolean inArchive;
+        
+        protected final String postfix;
+        
+        private boolean isRenamed = false;
+        private boolean allOK = true;
 
-        public FileProvider(FileProvider parent, TFile root, boolean closable) {
-            this.root = root;
-            this.closable = closable;
+        private FileProvider(FileProvider parent, TFile root, boolean inArchive, 
+                             String postfix) {
             this.parent = parent;
+            this.root = root;
+            this.inArchive = inArchive;
+            this.postfix = postfix;
+        }
+        
+        public synchronized void cleanup() {
+            if (parent != null) {
+                parent.cleanup();
+            }
+        }
+
+        /**
+         * @return true iff {@link #isSafeToRemove()} is true and the provider
+         * is a file or an archive, not embedded in another archive.
+         */
+        public boolean isSafeToRename() {
+            return isSafeToRemove() && !"".equals(postfix) && !inArchive
+                   && (root.isArchive() || root.isFile());
+        }
+
+        /**
+         * @return true iff all files has been delivered as streams and all
+         * streams has been closed.
+         */
+        protected abstract boolean isSafeToRemove();
+
+        /**
+         * Rename the file or archive if {@link #isSafeToRename()} is true and
+         * the file or archive has not been renamed previously.
+         * This method is safe to call multiple times.
+         */
+        public synchronized void rename() {
+            if (isRenamed || !allOK || !isSafeToRename()) {
+                return;
+            }
+            log.debug(String.format(
+                "Renaming '%s' with completed postfix '%s'",
+                root.getAbsolutePath(), postfix));
+            TFile newName = new TFile(root.getPath() + postfix);
+            if (!root.renameTo(newName)) {
+                log.warn(String.format(
+                    "Unable to rename '%s' to '%s'", root, newName));
+            } else {
+                isRenamed = true;
+            }
+            if (!root.setLastModified(System.currentTimeMillis())) {
+                log.trace(String.format(
+                    "Unable to set last modification time for '%s'", root));
+            }
+        }
+
+        /**
+         * Premature close, allowing delivered Payloads to finish processing.
+         * @param success if the close war benign.
+         */
+        public void close(boolean success) {
+            allOK = false;
+        }
+    }
+
+    private static class EmptyProvider extends FileProvider {
+
+        private EmptyProvider() {
+            super(null, new TFile("dummy"), false, "");
+        }
+
+        @Override
+        protected boolean isSafeToRemove() {
+            return true;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public Payload next() {
+            throw new IllegalAccessError(
+                "next() must never be called on the empty provider");
+        }
+
+        @Override
+        public void remove() {
+            // Do nothing
+        }
+
+        @Override
+        public void close(boolean success) {
+            // Do nothing
+        }
+    }
+
+    private static class SingleFile extends FileProvider {
+        private boolean open = false;
+        private boolean finished = false;
+        private boolean removed = false;
+
+        public SingleFile(FileProvider parent, TFile root, boolean inArchive,
+                          String postfix) {
+            super(parent, check(root), inArchive, postfix);
+        }
+
+        private static TFile check(TFile root) {
+            if (!root.isFile()) {
+                throw new IllegalArgumentException(String.format(
+                    "The TFile '%s' was not a regular file", root));
+            }
+            return root;
+        }
+
+        @Override
+        public synchronized boolean hasNext() {
+            return !open && !finished && !removed;
+        }
+
+        @Override
+        public synchronized Payload next() {
+            if (!hasNext()) {
+                throw new IllegalStateException(
+                    "hasNext() is false so no next() is allowed");
+            }
+            open = true;
+            TFileInputStream stream;
+            try {
+                stream = new TFileInputStream(root);
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(
+                    "Unable to open stream for '" + root + "'", e);
+            }
+            InputStream closingStream = new CloseCallbackStream(stream) {
+                @Override
+                public void callback() {
+                    open = false;
+                    finished = true;
+                    cleanup();
+                }
+            };
+            Payload payload = new Payload(closingStream);
+            payload.getData().put(Payload.ORIGIN, root.getPath());
+            if (log.isTraceEnabled()) {
+                log.trace("Created " + payload);
+            }
+            return payload;
+        }
+
+        @Override
+        public synchronized void remove() {
+            if (open) {
+                throw new IllegalStateException(
+                    "The file '" + root + " is currently open");
+            }
+            log.debug("Skipping '" + root + "'");
+            removed = true;
+            cleanup();
+        }
+
+        @Override
+        protected boolean isSafeToRemove() {
+            return finished || removed;
+        }
+
+        @Override
+        public synchronized void close(boolean success) {
+            log.trace("close(" + success + ") called");
+            if (hasNext()) {
+                remove();
+            }
+            super.close(success);
+        }
+    }
+
+    /**
+     * A folder or an archive.
+     * </p><p>
+     * As renaming of archives should only take place when all containing files
+     * has been processed, a hierarchy of FileProviders with open streams is
+     * held in memory. The hierarchy is auto collapsed as streams are closed.
+     */
+    private static class FileContainer extends FileProvider {
+        private final Pattern filePattern;
+        private final boolean reverseSort;
+
+        /**
+         * If the root is a folder or an archive, it can have 0 or more sub
+         * providers, representing the content.
+         * </p><p>
+         * subs is lazily expanded where null means not expanded yet.
+         */
+        private List<FileProvider> subs = null; // null means not expanded yet
+        /**
+         * A list of providers with open streams. Providers from subs are placed
+         * here when they have no more unopened files and removed when the files
+         * are closed.
+         */
+        private List<FileProvider> open = new ArrayList<FileProvider>(1);
+
+        /**
+         * Constructs a lazily expanded provider.
+         * @param parent    optional parent.
+         * @param root      the entry in the file system/archive hierarchy.
+         * @param inArchive if true, the provider resides in an archive and
+         *                  should never have its name changes as part of close.
+         * @param postfix   optional postfix for completed files.
+         * @param filePattern the pattern that files must match to be streamed.
+         * @param reverseSort if true, entries are expanded in reverse order.
+         */
+        public FileContainer(FileProvider parent, TFile root, boolean inArchive,
+                             String postfix, Pattern filePattern,
+                             boolean reverseSort){
+            super(parent, checkContainer(root), inArchive, postfix);
+            this.filePattern = filePattern;
+            this.reverseSort = reverseSort;
+        }
+
+        private static TFile checkContainer(TFile root) {
+            if (!root.isDirectory() && !root.isArchive()) {
+                throw new IllegalArgumentException(
+                    "The provided file '" + root
+                    + "' must not be a regular file");
+            }
+            return root;
         }
 
         private List<FileProvider> expand(TFile source) {
@@ -118,17 +397,20 @@ public class ArchiveReader {//} implements ObjectFilter {
             List<FileProvider> providers =
                 new ArrayList<FileProvider>(files.length);
             for (TFile file: files) {
-                if (file.isDirectory() || file.isArchive()
-                    || filePattern.matcher(file.getName()).matches()) {
-                    providers.add(new FileProvider(
-                        this, file, closable && !root.isArchive()));
+                if (file.isDirectory() || file.isArchive()) {
+                    providers.add(new FileContainer(
+                        this, file, inArchive || root.isArchive(), postfix,
+                        filePattern, reverseSort));
+                } else { // Regular file
+                    providers.add(new SingleFile(
+                        this, file, inArchive || root.isArchive(), postfix));
                 }
             }
             Collections.sort(providers, new Comparator<FileProvider>() {
                 @Override
                 public int compare(FileProvider o1, FileProvider o2) {
-                    return o1.getRoot().getName().compareTo(
-                        o2.getRoot().getName());
+                    return o1.root.getName().compareTo(
+                        o2.root.getName());
                 }
             });
             if (reverseSort) {
@@ -137,98 +419,86 @@ public class ArchiveReader {//} implements ObjectFilter {
             return providers;
         }
 
-        public TFile getRoot() {
-            return root;
-        }
-
-        public boolean safeToRename() {
-            return subs.size() == 0 && closed && closable
-                   && (root.isArchive() || root.isFile());
-        }
-
-        private void close(boolean success) {
-            if (closed) {
-                log.warn("File '" + root + "' already closed");
-                return;
-            }
-            closed = true;                         // No renaming of folders
-            if (!success) {
-                log.debug(String.format(
-                    "Closing '%s' with success==false",
-                    root.getAbsolutePath()));
-                return;
-            }
-            if (postfix == null || "".equals(postfix)) {
-                log.debug(String.format(
-                    "Closing '%s' with success==true and no completed postfix",
-                    root.getAbsolutePath()));
-                return;
-            }
-            log.debug(String.format(
-                "Closing '%s' with success==true and completed postfix '%s'",
-                root.getAbsolutePath(), postfix));
-            TFile newName = new TFile(root.getPath() + postfix);
-            log.trace("Renaming '" + root + "' to '" + newName + "'");
-            if (!root.renameTo(newName)) {
-                log.warn(String.format(
-                    "Unable to rename '%s' to '%s'", root, newName));
-            }
-            if (!root.setLastModified(System.currentTimeMillis())) {
-                log.trace("Unable to set last modification time for '"
-                          + root + "'");
-            }
+        @Override
+        public boolean isSafeToRemove() {
+            return subs != null && subs.size() == 0 && open.size() == 0;
         }
 
         @Override
-        public boolean hasNext() {
-            if (closed) {
-                return false;
-            }
+        public synchronized boolean hasNext() {
             if (subs == null) { // Expand if possible
                 subs = expand(root);
             }
             while (subs.size() > 0) {
-                if (subs.get(0).getRoot().isFile()) {
-                    if (filePattern.matcher(
-                        subs.get(0).getRoot().getName()).matches()) {
-                        return true;
-                    }
-                    log.trace("Skipping file '" + subs.get(0).root.getName()
-                              + "' as it does not matches the pattern "
-                              + filePattern.pattern());
-                    subs.remove(0);
-                    continue;
-                }
-                // We have a folder or an archive so we go down
                 if (subs.get(0).hasNext()) {
                     return true;
                 }
-                // No dice, remove it and go to next
-                subs.remove(0);
+                if (subs.size() > 0) { // hasNext might trigger cleanup
+                    FileProvider sub = subs.remove(0);
+                    if (!sub.isSafeToRemove()) {
+                        open.add(sub);
+                    }
+                }
             }
-            if (root.isFile()
-                   && filePattern.matcher(root.getName()).matches()) {
-                return true;
-            }
-            close(true); // Assuming true seems problematic
+            cleanup();
             return false;
         }
 
+        /**
+         * Call this whenever there is a chance that the provider has been
+         * depleted. Clean will call parent.clean() if the current provider
+         * is fully depleted.
+         */
         @Override
-        public FileProvider next() {
-            if (hasNext()) {
+        public synchronized void cleanup() {
+            if (subs == null) {
+                return; // Not expanded yet
+            }
+            cleanup(subs);
+            cleanup(open);
+            if (!isSafeToRemove()) {
+                return;
+            }
+            rename();
+            super.cleanup();
+        }
+        private void cleanup(List<FileProvider> p) {
+            // Only remove until something unfinished is reached
+            while (p.size() > 0 && p.get(0).isSafeToRemove()) {
+                p.remove(0).rename();
+            }
+        }
+
+        @Override
+        public synchronized Payload next() {
+            if (!hasNext()) {
                 throw new IllegalStateException(
                     "hasNext() is false so next() should not be called");
             }
-            if (subs.size() > 0) {
+            if (subs.size() > 0) { // hasNext guarantees content in the first
                 return subs.get(0).next();
             }
-            return null;
+            throw new InternalError(
+                "There were no next in the first sub, but this was guaranteed "
+                + "by hasNext()");
         }
 
         @Override
         public void remove() {
             throw new UnsupportedOperationException("Remove not allowed");
+        }
+
+        @Override
+        public synchronized void close(boolean success) {
+            close(success, subs);
+            close(success, open);
+            super.close(success);    
+        }
+        private synchronized void close(boolean success, List<FileProvider> p) {
+            int index = p.size()-1;
+            while (index >= 0) {
+                p.get(index--).close(success);
+            }
         }
     }
 }
