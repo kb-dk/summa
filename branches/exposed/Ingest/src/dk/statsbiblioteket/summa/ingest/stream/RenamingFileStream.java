@@ -36,12 +36,11 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class RenamingFileStream extends FileInputStream {
+public class RenamingFileStream extends CloseCallbackStream {
     private Log log = LogFactory.getLog(RenamingFileStream.class);
 
     private boolean success = true;
     private File file;
-    private boolean closed = false;
     private boolean renamed = false;
     private String postfix;
 
@@ -55,7 +54,7 @@ public class RenamingFileStream extends FileInputStream {
      */
     public RenamingFileStream(File file, String postfix) throws
                                                          FileNotFoundException {
-        super(file);
+        super(new FileInputStream(file));
         log.trace("Created reader for '" + file
                   + "' with potential postfix '" + postfix + "'");
         this.file = file;
@@ -69,17 +68,6 @@ public class RenamingFileStream extends FileInputStream {
             log.warn("setSuccess(" + success + "): Unable to close file '"
                      + file + "'. Attempting rename()");
         }
-        rename();
-    }
-    @Override
-    public synchronized void close() throws IOException {
-        if (closed) {
-            return;
-        }
-        log.trace("Closing stream to file '" + file + "'");
-        super.close();
-        closed = true;
-        rename();
     }
 
     public File getFile() {
@@ -87,36 +75,8 @@ public class RenamingFileStream extends FileInputStream {
     }
 
     @Override
-    public int read() throws IOException {
-        int result = super.read();
-        if (result == -1) {
-            close();
-        }
-        return result;
-    }
-
-    @Override
-    public int read(byte b[]) throws IOException {
-        int result = super.read(b);
-        if (result == -1) {
-            close();
-        }
-        return result;
-    }
-
-    @Override
-    public int read(byte b[], int off, int len) throws IOException {
-        int result = super.read(b, off, len);
-        if (result == -1) {
-            close();
-        }
-        return result;
-    }
-
-    @Override
-    public boolean markSupported() {
-        // The Stream is auto-closing, so we cannot support marking
-        return false;
+    public void callback() {
+        rename();
     }
 
     private void rename() {
@@ -124,7 +84,7 @@ public class RenamingFileStream extends FileInputStream {
             log.trace("File '" + file + "' already renamed");
             return;
         }
-        if (closed && success && postfix != null && !"".equals(postfix)) {
+        if (isClosed() && success && postfix != null && !"".equals(postfix)) {
             File newName = new File(file.getPath() + postfix);
             try {
                 log.trace("Renaming '" + file + "' to '" + newName + "'");
@@ -138,7 +98,7 @@ public class RenamingFileStream extends FileInputStream {
                           + "' to '" + newName + "'", e);
             }
         } else if (log.isTraceEnabled()) {
-            log.trace("No renaming of '" + file + "'. closed=" + closed
+            log.trace("No renaming of '" + file + "'. closed=" + isClosed()
                       + ", success=" + success + ", postfix='"
                       + postfix + "'");
         }
@@ -146,6 +106,6 @@ public class RenamingFileStream extends FileInputStream {
 
     @Override
     public String toString() {
-        return "RenamingFileStream(" + file + ")";
+        return "RenamingFileStream(" + super.toString() + ")";
     }
 }

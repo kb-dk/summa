@@ -97,11 +97,11 @@ public class UnpackFilterTest extends TestCase {
         assertSimpleIteration("data/zip/double_stuffed2.zip");
     }
 
-    public void testContentSingleGiant() throws IOException {
+/*    public void testContentSingleGiant() throws IOException {
         assertSimpleIteration(
             "data/zip/sb:aleph:1266199637.735.21556:full.zip");
     }
-
+  */
 /*    public void testContentAleph() throws IOException {
         assertSimpleIteration(
             "data/zip/sb:aleph:1293268834.954.18412:full.zip");

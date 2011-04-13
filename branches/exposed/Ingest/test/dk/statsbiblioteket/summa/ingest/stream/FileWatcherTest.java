@@ -166,7 +166,7 @@ public class FileWatcherTest extends TestCase {
     }
 
     private File getOriginFile(int index) {
-        return ((FileReader.RenamingFileStream)received.get(index).
+        return ((RenamingFileStream)received.get(index).
                 getStream()).getFile();
     }
 
