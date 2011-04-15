@@ -397,13 +397,21 @@ public class ArchiveReader implements ObjectFilter {
             List<FileProvider> providers =
                 new ArrayList<FileProvider>(files.length);
             for (TFile file: files) {
-                if (file.isDirectory() || file.isArchive()) {
-                    providers.add(new FileContainer(
-                        this, file, inArchive || root.isArchive(), postfix,
-                        filePattern, reverseSort));
-                } else { // Regular file
-                    providers.add(new SingleFile(
-                        this, file, inArchive || root.isArchive(), postfix));
+                try {
+                    if (file.isDirectory() || file.isArchive()) {
+                        providers.add(new FileContainer(
+                            this, file, inArchive || root.isArchive(), postfix,
+                            filePattern, reverseSort));
+                    } else { // Regular file
+                        providers.add(new SingleFile(
+                            this, file, inArchive || root.isArchive(), postfix));
+                    }
+                } catch (NullPointerException e) {
+                    NullPointerException e2 = new NullPointerException(
+                        "NPE during access to '" + file + "' from '"
+                        + root + "'");
+                    e2.initCause(e);
+                    throw e2;
                 }
             }
             Collections.sort(providers, new Comparator<FileProvider>() {

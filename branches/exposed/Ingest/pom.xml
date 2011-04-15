@@ -45,6 +45,14 @@
             <artifactId>truezip-file</artifactId>
         </dependency>
         <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-zip</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-tar</artifactId>
+        </dependency>
+        <dependency>
             <groupId>dk.statsbiblioteket.lucene</groupId>
             <artifactId>lucene-core</artifactId>
         </dependency>
