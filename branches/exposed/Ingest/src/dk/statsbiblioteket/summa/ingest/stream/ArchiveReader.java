@@ -402,11 +402,23 @@ public class ArchiveReader implements ObjectFilter {
                         providers.add(new FileContainer(
                             this, file, inArchive || root.isArchive(), postfix,
                             filePattern, reverseSort));
-                    } else { // Regular file
+                    } else if (filePattern.matcher(file.getName()).matches()) {
                         providers.add(new SingleFile(
                             this, file, inArchive || root.isArchive(), postfix));
+                    } else {
+                        log.debug("Skipping '" + file.getName()
+                                  + "' as it does not match the pattern '"
+                                  + filePattern.pattern() + "'");
                     }
                 } catch (NullPointerException e) {
+                    if (file.getName().contains(":")) {
+                        log.warn("Got NPE while accessing a name with colon. "
+                                 + "TrueZIP 7.0-pr2 does not support this and "
+                                 + "it is likely the cause for the NPE. "
+                                 + "The offending name is '"
+                                 + file.getAbsolutePath() + "'");
+                        continue;
+                    }
                     NullPointerException e2 = new NullPointerException(
                         "NPE during access to '" + file + "' from '"
                         + root + "'");
