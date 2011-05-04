@@ -13,6 +13,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -37,38 +38,43 @@ public class ArchiveReaderTest extends TestCase {
         super(name);
     }
 
+    File TMP;
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        File t = Resolver.getFile("data/zip");
+        assertTrue(
+            "The test data source 'data/zip' should exist", t.exists());
+        TMP = new File(t.getParent(), "ZIPTMP").getAbsoluteFile();
+        if (TMP.exists()) {
+            Files.delete(TMP);
+        }
+        Files.copy(t, TMP, false);
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+//        Files.delete(TMP);
     }
 
     public static Test suite() {
         return new TestSuite(ArchiveReaderTest.class);
     }
 
-    public void testFileColon() throws IOException {
-        File TMP = File.createTempFile("foo:bar", ".zip");
-        TMP.deleteOnExit();
-//        System.out.println("Testing existence of '" + TMP + "'");
-//        System.out.println("'" + TMP + "'.toURI() == " + TMP.toURI());
-        new TFile(TMP.toURI()).exists();
-    }
-
     public void testZIPFilenames() throws Exception {
-        testZIPDetection("data/zip/zip32.zip");
+        testZIPDetection(
+            new File(TMP, "zip32.zip").getAbsolutePath());
         // Colon is not supported by TrueZIP 7.0pr1
         //testZIPDetection("data/zip/zip:colon.zip");
-        testZIPDetection("data/zip/double_stuffed2.zip");
+        testZIPDetection(
+            new File(TMP, "double_stuffed2.zip").getAbsolutePath());
     }
 
     public void testVerifyTrueZIPCapabilities() throws Exception {
         TArchiveDetector detector = TFile.getDefaultArchiveDetector();
-        System.out.println(detector);
+        assertTrue("TrueZIP should support ZIP",
+                   detector.toString().contains("zip"));
     }
 
     public void testZIPDetection(String zipString) throws Exception {
@@ -98,20 +104,59 @@ public class ArchiveReaderTest extends TestCase {
     }
 
     public void testDeep() throws Exception {
-        testRecursive(Resolver.getFile("data/zip/").getAbsolutePath());
+        testRecursive(TMP.getAbsolutePath(), null);
     }
 
     public void testSimple() throws Exception {
-        testRecursive(Resolver.getFile("data/zip/subfolder/").getAbsolutePath());
+        testRecursive(new File(TMP, "subfolder/").getAbsolutePath(),
+                      Arrays.asList("kaboom.xml",
+                                    "zoo.xml",
+                                    "zoo2.xml"));
     }
 
-    public void testDoubleZIP() throws Exception {
-        testRecursive(Resolver.getFile("data/zip/subdouble/").getAbsolutePath());
+    public void testDoubleZIP() {
+        testRecursive(new File(TMP, "subdouble/").getAbsolutePath(),
+                      Arrays.asList("foo.xml",
+                                    "double_zipped_foo2.xml",
+                                    "kaboom.xml",
+                                    "zoo.xml",
+                                    "zoo2.xml",
+                                    "non_zipped_foo.xml"));
     }
 
-    public void testRecursive(String source) throws Exception {
-        List<String> EXPECTED = Arrays.asList("foo", "bar");
+    public void testRename() {
+        assertFile(new File(TMP, "subfolder/zoo.xml"));
+        testRecursive(new File(TMP, "subfolder").getAbsolutePath(), null);
+        assertFile(new File(TMP, "subfolder/zoo.xml.finito"));
+    }
 
+    public void testRenameEmbedded() {
+        assertFile(new File(TMP, "subdouble/sub2/non_zipped_foo.xml"));
+        assertFile(
+            new File(TMP, "subdouble/sub2/double_stuffed.zip").getAbsolutePath()
+            + "/foo.xml");
+        testRecursive(new File(TMP, "subdouble/").getAbsolutePath(), null);
+        assertFile(new File(TMP, "subdouble/sub2/non_zipped_foo.xml.finito"));
+        assertFile(new File(TMP, "subdouble/sub2/double_stuffed.zip.finito"));
+        assertNotFile(
+            new File(TMP, "subdouble/sub2/double_stuffed.zip").getAbsolutePath()
+            + "/foo.xml.finito");
+    }
+
+    private void assertFile(File file) {
+        assertTrue("The file '" + file.getAbsolutePath() + "' should exist",
+                   new TFile(file).exists());
+    }
+    private void assertFile(String path) {
+        assertTrue("The file '" + path + "' should exist",
+                   new TFile(path).exists());
+    }
+    private void assertNotFile(String path) {
+        assertTrue("The file '" + path + "' should not exist",
+                   !new TFile(path).exists());
+    }
+
+    public void testRecursive(String source, List<String> expected) {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, source);
         conf.set(FileReader.CONF_RECURSIVE, true);
@@ -119,18 +164,21 @@ public class ArchiveReaderTest extends TestCase {
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".finito");
         ArchiveReader reader = new ArchiveReader(conf);
 
-        ArrayList<String> actual = new ArrayList<String>(EXPECTED.size());
+        ArrayList<String> actual = new ArrayList<String>();
         while (reader.hasNext()) {
             Payload payload = reader.next();
             actual.add(new File((String)
                     payload.getData(Payload.ORIGIN)).getName());
             payload.close();
         }
-        for (String a: actual) {
-            System.out.println(a);
+        if (expected == null) {
+            for (String a: actual) {
+                System.out.println(a);
+            }
+        } else {
+            ExtraAsserts.assertEquals(
+                "The resulting files should be as expected", expected, actual);
         }
-//        ExtraAsserts.assertEquals(
-//            "The resulting files should be as expected", EXPECTED, actual);
     }
 
 }

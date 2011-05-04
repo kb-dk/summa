@@ -42,6 +42,12 @@
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.8.1" level="project" />
     <orderEntry type="library" name="Maven: asm:asm:3.1" level="project" />
     <orderEntry type="module" module-name="summa-ingest" />
+    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-file:7.0-rc1" level="project" />
+    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-kernel:7.0-rc1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: de.schlichtherle.truezip:truezip-driver-file:7.0-rc1" level="project" />
+    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-driver-zip:7.0-rc1" level="project" />
+    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-driver-tar:7.0-rc1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.ant:ant:1.8.1" level="project" />
     <orderEntry type="library" name="Maven: org.archive:heritrix:1.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.marc4j:marc4j:2.4" level="project" />
     <orderEntry type="module" module-name="summa-storage" />

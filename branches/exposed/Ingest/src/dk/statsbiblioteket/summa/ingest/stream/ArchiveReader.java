@@ -335,6 +335,11 @@ public class ArchiveReader implements ObjectFilter {
             }
             super.close(success);
         }
+
+        @Override
+        public String toString() {
+            return "SingleFile(" + root + ")";
+        }
     }
 
     /**
@@ -393,16 +398,19 @@ public class ArchiveReader implements ObjectFilter {
             if (source.isFile()) {
                 return EMPTY;
             }
-            TFile[] files = root.listFiles();
+//            System.out.println("Listing files for " + source);
+            TFile[] files = source.listFiles();
             List<FileProvider> providers =
                 new ArrayList<FileProvider>(files.length);
             for (TFile file: files) {
                 try {
                     if (file.isDirectory() || file.isArchive()) {
+//                        System.out.println(" Adding folder " + file);
                         providers.add(new FileContainer(
                             this, file, inArchive || root.isArchive(), postfix,
                             filePattern, reverseSort));
                     } else if (filePattern.matcher(file.getName()).matches()) {
+//                        System.out.println(" Adding file  " + file);
                         providers.add(new SingleFile(
                             this, file, inArchive || root.isArchive(), postfix));
                     } else {
@@ -421,7 +429,7 @@ public class ArchiveReader implements ObjectFilter {
                     }
                     NullPointerException e2 = new NullPointerException(
                         "NPE during access to '" + file + "' from '"
-                        + root + "'");
+                        + source + "'");
                     e2.initCause(e);
                     throw e2;
                 }
@@ -450,15 +458,17 @@ public class ArchiveReader implements ObjectFilter {
                 subs = expand(root);
             }
             while (subs.size() > 0) {
+                FileProvider currentProvider = subs.get(0);
                 if (subs.get(0).hasNext()) {
                     return true;
                 }
-                if (subs.size() > 0) { // hasNext might trigger cleanup
-                    FileProvider sub = subs.remove(0);
-                    if (!sub.isSafeToRemove()) {
-                        open.add(sub);
-                    }
+                if (subs.get(0) != currentProvider) {
+                    // Cleanup has been triggered, start over
+                    continue;
                 }
+                // Current does not have next but has open files
+                FileProvider sub = subs.remove(0);
+                open.add(sub);
             }
             cleanup();
             return false;
@@ -485,6 +495,7 @@ public class ArchiveReader implements ObjectFilter {
         private void cleanup(List<FileProvider> p) {
             // Only remove until something unfinished is reached
             while (p.size() > 0 && p.get(0).isSafeToRemove()) {
+//                System.out.println("Removing " + p.get(0));
                 p.remove(0).rename();
             }
         }
@@ -519,6 +530,14 @@ public class ArchiveReader implements ObjectFilter {
             while (index >= 0) {
                 p.get(index--).close(success);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "FileContainer('" + root + ", "
+                   + (subs == null ? "subs not expanded" :
+                      subs.size() + " subs")
+                   + ")";
         }
     }
 }
