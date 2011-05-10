@@ -203,8 +203,11 @@ public class DumpFilter extends ObjectFilterImpl {
                 meta.append("\n").append(payload.getRecord().toString(true));
                 Files.saveString(payload.getRecord().getContentAsUTF8(),
                                  new File(output, fileName + ".content"));
-                Files.saveString(RecordUtil.toXML(payload.getRecord(), false),
-                                 new File(output, fileName + ".xml"));
+                if (dumpXML) {
+                    Files.saveString(
+                        RecordUtil.toXML(payload.getRecord(), false),
+                        new File(output, fileName + ".xml"));
+                }
             }
             Files.saveString(meta.toString(),
                              new File(output, fileName + ".meta"));
@@ -236,9 +239,10 @@ public class DumpFilter extends ObjectFilterImpl {
                 payload.getStream(), out, true));
     }
 
-    private Pattern safePattern = Pattern.compile("[a-zA-Z0-9\\-\\_\\.]");
-    private int counter = 0;
-    private String getFileName(Payload payload) {
+    private static Pattern safePattern =
+        Pattern.compile("[a-zA-Z0-9\\-\\_\\.]");
+    private static int counter = 0;
+    public static String getFileName(Payload payload) {
         String candidate = payload.getId();
         if (candidate == null || "".equals(candidate)) {
             Calendar calendar = Calendar.getInstance();
