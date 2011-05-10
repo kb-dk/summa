@@ -15,6 +15,8 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.DumpFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -33,12 +35,8 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Helpers for processing Records.
@@ -819,6 +817,36 @@ public class RecordUtil {
             }
         }
         return size;
+    }
+
+    public static Pattern safePattern =
+        Pattern.compile("[a-zA-Z0-9\\-\\_\\.]");
+    public static int counter = 0;
+
+    /**
+     * Use the Payload ID to generate a safe file name.
+     * @param payload the base for the file name.
+     * @return a conservative file name.
+     */
+    public static String getFileName(Payload payload) {
+        String candidate = payload.getId();
+        if (candidate == null || "".equals(candidate)) {
+            Calendar calendar = Calendar.getInstance();
+            return String.format("%1$tF_%1$tH%1$tM%1$tS_", calendar)
+                   + Integer.toString(counter++);
+        }
+        StringWriter fn = new StringWriter(candidate.length());
+        for (char c: candidate.toCharArray()) {
+            if (safePattern.matcher("" + c).matches()) {
+                fn.append(c);
+            } else {
+                fn.append("_");
+            }
+        }
+        String actual = fn.toString();
+        log.trace("Transformed the name '" + candidate + "' into '"
+                  + actual + "'");
+        return actual;
     }
 }
 

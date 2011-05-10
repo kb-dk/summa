@@ -20,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.util.Calendar;
 import java.util.regex.Pattern;
 
 /**
@@ -194,7 +193,7 @@ public class DumpFilter extends ObjectFilterImpl {
     }
 
     private void dump(Payload payload) throws PayloadException {
-        String fileName = getFileName(payload);
+        String fileName = RecordUtil.getFileName(payload);
 
         StringWriter meta = new StringWriter(1000);
         meta.append(payload.toString(true));
@@ -224,7 +223,7 @@ public class DumpFilter extends ObjectFilterImpl {
 
     private void wrapStream(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
-        File outFile = new File(output, getFileName(payload) + ".stream");
+        File outFile = new File(output, RecordUtil.getFileName(payload) + ".stream");
         OutputStream out;
         try {
 
@@ -237,29 +236,5 @@ public class DumpFilter extends ObjectFilterImpl {
         }
         payload.setStream(new CopyingInputStream(
                 payload.getStream(), out, true));
-    }
-
-    private static Pattern safePattern =
-        Pattern.compile("[a-zA-Z0-9\\-\\_\\.]");
-    private static int counter = 0;
-    public static String getFileName(Payload payload) {
-        String candidate = payload.getId();
-        if (candidate == null || "".equals(candidate)) {
-            Calendar calendar = Calendar.getInstance();
-            return String.format("%1$tF_%1$tH%1$tM%1$tS_", calendar)
-                   + Integer.toString(counter++);
-        }
-        StringWriter fn = new StringWriter(candidate.length());
-        for (char c: candidate.toCharArray()) {
-            if (safePattern.matcher("" + c).matches()) {
-                fn.append(c);
-            } else {
-                fn.append("_");
-            }
-        }
-        String actual = fn.toString();
-        log.trace("Transformed the name '" + candidate + "' into '"
-                  + actual + "'");
-        return actual;
     }
 }
