@@ -158,15 +158,30 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String CONF_META = "record.meta";
 
     /**
-     * The meta-key to assign.
+     * The destination to assign the result of the regexp to. This follows the
+     * same rules as {@link #CONF_META_SOURCE} except that fallback is to use
+     * the stated value directly to lookup in record.meta.
      * </p><p>
      * Mandatory.
      */
     public static final String CONF_META_KEY = "record.meta.key";
 
     /**
+     * Where tot ake the source for the regexp from. Valid values are
+     * "id", "base", "content" and "meta.metakey". If "meta.metakey" is
+     * specified, the "meta."-part will be stripped and the metakey-part will
+     * be used as key for getting the meta-value.
+     * </p><p>
+     * Optional. Default is "content".
+     */
+    public static final String CONF_META_SOURCE = "record.meta.source";
+    public static final String DEFAULT_META_SOURCE = "content";
+
+    /**
      * This regexp will be used with {@link #CONF_META_TEMPLATE} to
      * specify the value for the {@link #CONF_META_KEY}.
+     * </p><p>
+     * Mandatory.
      */
     public static final String CONF_META_REGEXP = "record.meta.regexp";
 
@@ -192,7 +207,6 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String CONF_COPY_META = "record.meta.copy";
     public static final boolean DEFAULT_COPY_META = false;
 
-
     /* regexp -> template */
     private Pair<Pattern, String> assignId;
     private Pair<Pattern, String> assignBase;
@@ -203,9 +217,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private int idHashMinLength = DEFAULT_ID_HASH_MINLENGTH;
     private boolean copyMeta = DEFAULT_COPY_META;
 
-    /* (key, (regexp, template))* */
-    private List<Pair<String, Pair<Pattern, String>>> assignMetas =
-            new ArrayList<Pair<String, Pair<Pattern, String>>>(10);
+    private List<Shaper> metas = new ArrayList<Shaper>();
 
     public RecordShaperFilter(Configuration conf) {
         super(conf);
@@ -228,28 +240,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     Pattern.compile(conf.getString(CONF_BASE_REGEXP)),
                     conf.getString(CONF_BASE_TEMPLATE, DEFAULT_BASE_TEMPLATE));
         }
-        if (conf.valueExists(CONF_META)) {
-            List<Configuration> confs;
-            try {
-                confs = conf.getSubConfigurations(CONF_META);
-            } catch (SubConfigurationsNotSupportedException e) {
-                throw new ConfigurationException(
-                        "Storage doesn't support sub configurations");
-            } catch (NullPointerException e) {
-                throw new ConfigurationException(String.format(
-                        "Unable to extract sub configurations with key %s from"
-                        + " configuration", CONF_META), e);
-            }
-            for (Configuration metaConf: confs) {
-                assignMetas.add(new Pair<String, Pair<Pattern, String>>(
-                        metaConf.getString(CONF_META_KEY),
-                        new Pair<Pattern, String>(
-                                Pattern.compile(
-                                        metaConf.getString(CONF_META_REGEXP)),
-                                metaConf.getString(CONF_META_TEMPLATE,
-                                                   DEFAULT_META_TEMPLATE))));
-            }
-        }
+        parseMetas(conf);
         idHash = conf.getString(CONF_ID_HASH, idHash);
         if ("".equals(idHash)) {
             idHash = null;
@@ -262,7 +253,160 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         idHashMinLength = conf.getInt(CONF_ID_HASH_MINLENGTH, idHashMinLength);
         log.info(String.format(
                 "Created an assign meta filter with %d meta extractions",
-                assignMetas.size()));
+                metas.size()));
+    }
+
+    private void parseMetas(Configuration conf) {
+        if (!conf.valueExists(CONF_META)) {
+            return;
+        }
+        List<Configuration> confs;
+        try {
+            confs = conf.getSubConfigurations(CONF_META);
+        } catch (SubConfigurationsNotSupportedException e) {
+            throw new ConfigurationException(
+                "Storage must support sub configurations", e);
+        } catch (NullPointerException e) {
+            throw new ConfigurationException(String.format(
+                "Unable to extract sub configurations with key %s from"
+                + " configuration", CONF_META), e);
+        }
+        for (Configuration metaConf: confs) {
+            metas.add(new Shaper(metaConf));
+        }
+    }
+
+    private class Shaper {
+        private final String  source;
+        private final String  destination;
+        private final Pattern regexp;
+        private final String  template;
+
+        private Shaper(Configuration conf) {
+            if (!conf.valueExists(CONF_META_KEY)) {
+                throw new ConfigurationException(String.format(
+                    "No value for mandatory key '%s' present",
+                    CONF_META_KEY));
+            }
+            if (!conf.valueExists(CONF_META_REGEXP)) {
+                throw new ConfigurationException(String.format(
+                    "No value for mandatory key '%s' present",
+                    CONF_META_REGEXP));
+            }
+
+            source = conf.getString(CONF_META_SOURCE, DEFAULT_META_SOURCE);
+            destination = conf.getString(CONF_META_KEY);
+            regexp = Pattern.compile(conf.getString(CONF_META_REGEXP));
+            template = conf.getString(
+                CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                    "Shaper created with source='%s', destination='%s', "
+                    + "regexp='%s', template='%s'",
+                    source, destination, regexp.pattern(), template));
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "Shaper(source='%s', destination='%s', regexp='%s', "
+                    + "template='%s')",
+                    source, destination, regexp.pattern(), template);
+        }
+
+        public void shape(Payload payload) throws PayloadException {
+            final Record record = payload.getRecord();
+            String sourceString;
+            sourceString = getShapeString(record);
+            if (sourceString == null) {
+                String message = String.format(
+                        "Unable to get String from source '%s'", source);
+                if (discardOnErrors) {
+                    throw new PayloadException(message, payload);
+                }
+                Logging.logProcess("RecordShaperFilter", message,
+                                   Logging.LogLevel.DEBUG, payload);
+                return;
+            }
+
+            Matcher matcher = regexp.matcher(sourceString);
+            if (!matcher.find()) {
+                String message = String.format(
+                        "Unable to match String with Pattern '%s'",
+                        regexp.pattern());
+                if (discardOnErrors) {
+                    throw new PayloadException(message, payload);
+                }
+                Logging.logProcess("RecordShaperFilter", message,
+                                   Logging.LogLevel.DEBUG, payload);
+                return;
+            }
+            buffer.setLength(0);
+            int matchPos = matcher.start();
+            matcher.appendReplacement(buffer, template);
+            String newText = buffer.toString().substring(matchPos);
+            if (newText == null || "".equals(newText)) {
+                String message = String.format(
+                        "Match found with Pattern '%s' but no text was "
+                        + "extracted using template '%s'",
+                        regexp.pattern(), template);
+                if (discardOnErrors) {
+                    throw new PayloadException(message, payload);
+                }
+                Logging.logProcess("RecordShaperFilter", message,
+                                   Logging.LogLevel.DEBUG, payload);
+                return;
+            }
+            if (log.isTraceEnabled()) {
+                log.debug(String.format(
+                    "Transformed %s to %s stored in %s for %s",
+                    source, newText, destination, payload));
+            }
+
+            setShapeString(payload, newText);
+        }
+
+        private String getShapeString(Record record) {
+            String sourceString;
+            if ("content".equals(source)) {
+                sourceString = record.getContentAsUTF8();
+            } else if ("id".equals(source)) {
+                sourceString = record.getId();
+            } else if ("base".equals(source)) {
+                sourceString = record.getBase();
+            } else if (source.startsWith("meta.")) {
+                String key = source.substring(5, source.length());
+                sourceString = record.getMeta(key);
+            } else {
+                sourceString = null;
+            }
+            return sourceString;
+        }
+
+        private void setShapeString(Payload payload, String newText)
+                                                       throws PayloadException {
+            Record record = payload.getRecord();
+            if ("content".equals(destination)) {
+                try {
+                    payload.getRecord().setContent(
+                        newText.getBytes("utf-8"), false);
+                } catch (UnsupportedEncodingException e) {
+                    throw new PayloadException(
+                            "Exception while conterting content to UTF-8 bytes",
+                            e);
+                }
+            } else if ("id".equals(destination)) {
+                record.setId(newText);
+            } else if ("base".equals(destination)) {
+                record.setBase(newText);
+            } else if (destination.startsWith("meta.")) {
+                String key = destination.substring(5, destination.length());
+                record.getMeta().put(key, newText);
+            } else {
+                record.getMeta().put(destination, newText);
+            }
+        }
     }
 
     private StringBuffer buffer = new StringBuffer(50);
@@ -304,24 +448,13 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                         newContent.getBytes("utf-8"), false);
                 } catch (UnsupportedEncodingException e) {
                     throw new PayloadException(
-                            "Exception while conterting content to UTF-8 bytes",
+                            "Exception while converting content to UTF-8 bytes",
                             e);
                 }
             }
         }
-        for (Pair<String, Pair<Pattern, String>> assignMeta: assignMetas) {
-            String result = getMatch(assignMeta.getValue(), content, payload,
-                                     assignMeta.getKey());
-            if (log.isTraceEnabled()) {
-                log.trace(String.format(
-                        "Got result '%s' for key '%s' with pattern '%s' for %s",
-                        result, assignMeta.getKey(),
-                        assignMeta.getValue().getKey().pattern(), payload));
-            }
-            if (result == null || "".equals(result)) {
-                continue;
-            }
-            payload.getRecord().getMeta().put(assignMeta.getKey(), result);
+        for (Shaper meta: metas) {
+            meta.shape(payload);
         }
         if (idHash != null && payload.getId().length() > idHashMinLength) {
             String oldID = payload.getId();
@@ -371,7 +504,14 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         buffer.setLength(0);
         int matchPos = matcher.start();
-        matcher.appendReplacement(buffer, assignment.getValue());
+        try {
+            matcher.appendReplacement(buffer, assignment.getValue());
+        } catch (IndexOutOfBoundsException e) {
+            throw new PayloadException(
+                "IndexOutOfBounds while processing " + payload + " with "
+                + "regexp '" + assignment.getKey().pattern() + "' and "
+                + "destination '" + assignment.getValue(), e, payload);
+        }
         String newText = buffer.toString().substring(matchPos);
         if (newText == null || "".equals(newText)) {
             String message = String.format(

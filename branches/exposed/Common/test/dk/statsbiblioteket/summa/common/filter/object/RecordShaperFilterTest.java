@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -142,29 +143,21 @@ public class RecordShaperFilterTest extends TestCase {
             + "</foo>";
     /** ID regular expression. */
     public static final String ID_REGEXP =
-            "(?s)<foo.*>.*<bar .*class=\"id\".*>(.+)</bar>";
+            "(?s)<foo.*>.*<bar .*class=\"id\">(.+?)</bar>";
             //"(?m)<foo.*>.*<bar .*class=\"id\".*>(.+)</bar>";
 
-    /**
-     * Test multiline.
-     */
-    public void testMultiline() {
-        try {
-            Configuration conf = Configuration.newMemoryBased(
-                    RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
-                    RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
+    public void testMultiline() throws UnsupportedEncodingException {
+        Configuration conf = Configuration.newMemoryBased(
+            RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
+            RecordShaperFilter.CONF_ID_TEMPLATE, "$1");
 
-            List<Payload> payloads = new ArrayList<Payload>(1);
-            payloads.add(new Payload(new Record("id1", "base1",
-                                                CONTENT.getBytes("utf-8"))));
-            RecordShaperFilter assigner = new RecordShaperFilter(conf);
-            assigner.setSource(new PayloadFeederHelper(payloads));
-            Record record = assigner.next().getRecord();
-            assertEquals("The ID should match", "21", record.getId());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception is expected here");
-        }
+        List<Payload> payloads = new ArrayList<Payload>(1);
+        payloads.add(new Payload(new Record(
+            "id1", "base1", CONTENT.getBytes("utf-8"))));
+        RecordShaperFilter assigner = new RecordShaperFilter(conf);
+        assigner.setSource(new PayloadFeederHelper(payloads));
+        Record record = assigner.next().getRecord();
+        assertEquals("The ID should match", "21", record.getId());
     }
 
     /**
