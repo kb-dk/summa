@@ -41,7 +41,7 @@ import java.io.IOException;
         state = QAInfo.State.QA_OK,
         author = "mke")
 public class SearchClient extends ConnectionConsumer<SummaSearcher>
-                          implements Configurable {
+                          implements Configurable, SummaSearcher {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
     private String target;
@@ -62,6 +62,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
      * @return What ever response the search engine returns.
      * @throws IOException on communication errors with the search engine.
      */
+    @Override
     public ResponseCollection search(Request request) throws IOException {
         SummaSearcher searcher = getConnection();
 
@@ -79,5 +80,10 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
         } finally {
             releaseConnection();
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        releaseConnection();
     }
 }
