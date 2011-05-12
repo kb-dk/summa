@@ -23,10 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.Files;
@@ -134,7 +131,7 @@ public class RelationResolver extends ObjectFilterImpl {
         "relationresolver.assign.children";
     public static final boolean DEFAULT_ASSIGN_CHILDREN = false; 
     
-    private final SearchClient searcher;
+    private final SummaSearcher searcher;
     private final String searchField;
     private final int maxHits;
     private final File nonmatchedFolder;
@@ -145,7 +142,6 @@ public class RelationResolver extends ObjectFilterImpl {
 
     public RelationResolver(Configuration conf) {
         super(conf);
-        searcher = new SearchClient(conf);
         searchField = conf.getString(CONF_SEARCH_FIELD, DEFAULT_SEARCH_FIELD);
         maxHits = conf.getInt(CONF_SEARCH_MAXHITS, DEFAULT_SEARCH_MAXHITS);
         metaKey = conf.getString(CONF_SEARCH_METAKEY);
@@ -196,12 +192,17 @@ public class RelationResolver extends ObjectFilterImpl {
             log.warn("maxHits is 0, effectively making RelationResolver a "
                      + "discard-all filter");
         }
+        searcher = createSearchClient(conf);
         log.info(String.format(
             "Created RelationResolver with searcher '%s', searchField '%s', "
             + "maxHits %d, metaKey '%s', discard non-matched %b and " 
             + "non-matching folder '%s'",
             conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField,
             maxHits, metaKey, discardNonmatched, nonmatchedFolder));
+    }
+
+    protected SummaSearcher createSearchClient(Configuration conf) {
+        return new SearchClient(conf);
     }
 
     @Override
@@ -237,14 +238,15 @@ public class RelationResolver extends ObjectFilterImpl {
         return true;
     }
 
-    private DocumentResponse getHits(Payload payload, String searchValue)
-        throws PayloadException {
+    protected DocumentResponse getHits(Payload payload, String searchValue)
+                                                       throws PayloadException {
         Request request = new Request();
         String query =
             "".equals(searchField) ? searchValue : 
             searchField + ":\"" + searchValue + "\"";
         request.put(DocumentKeys.SEARCH_QUERY, query);
         request.put(DocumentKeys.SEARCH_MAX_RECORDS, maxHits);
+        request.put(DocumentKeys.SEARCH_RESULT_FIELDS, DocumentKeys.RECORD_ID);
         ResponseCollection responses;
         try {
             log.debug("Searching with query '" + query + "'");
@@ -302,6 +304,7 @@ public class RelationResolver extends ObjectFilterImpl {
                 }
                 parents.add(hitRecord.getId());
             }
+            record.setParentIds(parents);
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned '" + docResponse.getRecords().size() + "' parents. "
@@ -320,6 +323,7 @@ public class RelationResolver extends ObjectFilterImpl {
                 }
                 children.add(hitRecord.getId());
             }
+            record.setChildIds(children);
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned '" + docResponse.getRecords().size() + "' children. "
