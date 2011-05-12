@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,6 +59,9 @@ import java.util.regex.Pattern;
  * Hint 2: When using multiline patterns, prepending {@code (?s)} to the regexp
  * sets the pattern matcher in DOTALL-mode. 
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
 public class RecordShaperFilter extends ObjectFilterImpl {
     private static final Log log = LogFactory.getLog(RecordShaperFilter.class);
 
@@ -176,6 +180,46 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      */
     public static final String CONF_META_SOURCE = "record.meta.source";
     public static final String DEFAULT_META_SOURCE = "content";
+
+    public static final String META_PREFIX = "meta.";
+    public static enum PART {id, base, content;
+        public static String getContent(Record record, String source) {
+            String sourceString;
+            if (content.toString().equals(source)) {
+                sourceString = record.getContentAsUTF8();
+            } else if (id.toString().equals(source)) {
+                sourceString = record.getId();
+            } else if (base.toString().equals(source)) {
+                sourceString = record.getBase();
+            } else if (source.startsWith(META_PREFIX)) {
+                String key = source.substring(5, source.length());
+                sourceString = record.getMeta(key);
+            } else {
+                sourceString = null;
+            }
+            return sourceString;
+        }
+        public static void setContent(
+            Record record, String contentS, String destination) {
+            if (content.toString().equals(destination)) {
+                try {
+                    record.setContent(contentS.getBytes("utf-8"), false);
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(
+                        "Exception while converting content to UTF-8 bytes", e);
+                }
+            } else if (id.toString().equals(destination)) {
+                record.setId(contentS);
+            } else if (base.toString().equals(destination)) {
+                record.setBase(contentS);
+            } else if (destination.startsWith(META_PREFIX)) {
+                String key = destination.substring(5, destination.length());
+                record.getMeta().put(key, contentS);
+            } else {
+                record.getMeta().put(destination, contentS);
+            }
+        }
+    }
 
     /**
      * This regexp will be used with {@link #CONF_META_TEMPLATE} to
@@ -318,7 +362,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         public void shape(Payload payload) throws PayloadException {
             final Record record = payload.getRecord();
             String sourceString;
-            sourceString = getShapeString(record);
+            sourceString = PART.getContent(record, source);
             if (sourceString == null) {
                 String message = String.format(
                         "Unable to get String from source '%s'", source);
@@ -364,48 +408,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     source, newText, destination, payload));
             }
 
-            setShapeString(payload, newText);
-        }
-
-        private String getShapeString(Record record) {
-            String sourceString;
-            if ("content".equals(source)) {
-                sourceString = record.getContentAsUTF8();
-            } else if ("id".equals(source)) {
-                sourceString = record.getId();
-            } else if ("base".equals(source)) {
-                sourceString = record.getBase();
-            } else if (source.startsWith("meta.")) {
-                String key = source.substring(5, source.length());
-                sourceString = record.getMeta(key);
-            } else {
-                sourceString = null;
-            }
-            return sourceString;
-        }
-
-        private void setShapeString(Payload payload, String newText)
-                                                       throws PayloadException {
-            Record record = payload.getRecord();
-            if ("content".equals(destination)) {
-                try {
-                    payload.getRecord().setContent(
-                        newText.getBytes("utf-8"), false);
-                } catch (UnsupportedEncodingException e) {
-                    throw new PayloadException(
-                            "Exception while conterting content to UTF-8 bytes",
-                            e);
-                }
-            } else if ("id".equals(destination)) {
-                record.setId(newText);
-            } else if ("base".equals(destination)) {
-                record.setBase(newText);
-            } else if (destination.startsWith("meta.")) {
-                String key = destination.substring(5, destination.length());
-                record.getMeta().put(key, newText);
-            } else {
-                record.getMeta().put(destination, newText);
-            }
+            PART.setContent(payload.getRecord(), newText, destination);
         }
     }
 
@@ -415,13 +418,11 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         String content = payload.getRecord().getContentAsUTF8();
         if (copyMeta && payload.getRecord() != null && payload.hasData()) {
-            int counter = 0;
             for (Map.Entry entry: payload.getData().entrySet()) {
                 if (entry.getKey() instanceof String &&
                     entry.getValue() instanceof String) {
                     payload.getRecord().getMeta().put(
                         (String)entry.getKey(), (String)entry.getValue());
-                    counter++;
                 }
             }
         }

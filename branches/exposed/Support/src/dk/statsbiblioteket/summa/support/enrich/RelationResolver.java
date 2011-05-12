@@ -71,12 +71,13 @@ public class RelationResolver extends ObjectFilterImpl {
     public static final String DEFAULT_SEARCH_FIELD = "";
 
     /**
-     * The record metadata key for the searchvalue value.
+     * The record metadata keys for the searchvalue value. One search will be
+     * performed for each key.
      * </p><p>
-     * Mandatory.
+     * Mandatory. This must be 1 or more keys for the Record meta data map.
      */
-    public static final String CONF_SEARCH_METAKEY =
-        "relationresolver.search.metakey";
+    public static final String CONF_SEARCH_METAKEYS =
+        "relationresolver.search.metakeys";
 
     /**
      * The maximum number of hits to receive. The Record will be assigned as
@@ -135,7 +136,7 @@ public class RelationResolver extends ObjectFilterImpl {
     private final String searchField;
     private final int maxHits;
     private final File nonmatchedFolder;
-    private final String metaKey;
+    private final List<String> metaKeys;
     private final boolean discardNonmatched;
     private final boolean assignAsParents;
     private final boolean assignAsChildren;
@@ -144,7 +145,7 @@ public class RelationResolver extends ObjectFilterImpl {
         super(conf);
         searchField = conf.getString(CONF_SEARCH_FIELD, DEFAULT_SEARCH_FIELD);
         maxHits = conf.getInt(CONF_SEARCH_MAXHITS, DEFAULT_SEARCH_MAXHITS);
-        metaKey = conf.getString(CONF_SEARCH_METAKEY);
+        metaKeys = conf.getStrings(CONF_SEARCH_METAKEYS);
         assignAsParents = conf.getBoolean(
             CONF_ASSIGN_PARENTS, DEFAULT_ASSIGN_PARENTS);
         assignAsChildren = conf.getBoolean(
@@ -164,9 +165,9 @@ public class RelationResolver extends ObjectFilterImpl {
         }
         discardNonmatched = conf.getBoolean(
             CONF_NONMATCHED_DISCARD, DEFAULT_NONMATCHED_DISCARD);
-        if (metaKey == null) {
+        if (metaKeys == null || metaKeys.size() == 0) {
             throw new ConfigurationException(
-                "No value for key '" + CONF_SEARCH_METAKEY + "' present");
+                "No values for key '" + CONF_SEARCH_METAKEYS + "' present");
         }
         String non = conf.getString(
             CONF_NONMATCHED_FOLDER, DEFAULT_NONMATCHED_FOLDER);
@@ -198,7 +199,8 @@ public class RelationResolver extends ObjectFilterImpl {
             + "maxHits %d, metaKey '%s', discard non-matched %b and " 
             + "non-matching folder '%s'",
             conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField,
-            maxHits, metaKey, discardNonmatched, nonmatchedFolder));
+            maxHits, Strings.join(metaKeys, ", "),
+            discardNonmatched, nonmatchedFolder));
     }
 
     protected SummaSearcher createSearchClient(Configuration conf) {
@@ -212,29 +214,38 @@ public class RelationResolver extends ObjectFilterImpl {
             throw new PayloadException("Payload with Record required", payload);
         }
 
-        String searchValue = payload.getRecord().getMeta(metaKey);
-        if (searchValue == null) {
-            Logging.logProcess(
-                "RelationResolver",
-                "Unable to get search value from meta with key '" + metaKey 
-                + "', classifying Payload as non-matching",
-                Logging.LogLevel.DEBUG, payload);
+        int matched = 0;
+        for (String metaKey: metaKeys) {
+            String searchValue = payload.getRecord().getMeta(metaKey);
+            if (searchValue == null) {
+                Logging.logProcess(
+                    "RelationResolver",
+                    "Unable to get search value from meta with key '" + metaKey
+                    + "'",
+                    Logging.LogLevel.TRACE, payload);
+                continue;
+            }
+            DocumentResponse docResponse = getHits(payload, searchValue);
+            if (docResponse.getHitCount() == 0) {
+                log.trace(
+                    "No hits found for search value '" + searchValue + "'");
+                Logging.logProcess(
+                    "RelationResolver",
+                    "Unable to find any documents matching search value '"
+                    + searchValue + "'",
+                    Logging.LogLevel.TRACE, payload);
+                continue;
+            }
+            matched += docResponse.getHitCount();
+            assignRelatives(payload, docResponse);
+        }
+        if (matched == 0) {
             nonmatching(payload);
+            Logging.logProcess(
+                "RelationResolver", "Unable to resolve anything",
+                Logging.LogLevel.DEBUG, payload);
             return !discardNonmatched;
         }
-        // We got search value, let's pair it up
-        DocumentResponse docResponse = getHits(payload, searchValue);
-        if (docResponse.getHitCount() == 0) {
-            nonmatching(payload);
-            Logging.logProcess(
-                "RelationResolver",
-                "Unable to resolve find any documents matching '" 
-                + searchValue + "'",
-                Logging.LogLevel.DEBUG, payload);
-            return !discardNonmatched;
-        }
-
-        assignRelatives(payload, docResponse);
         return true;
     }
 
@@ -307,7 +318,7 @@ public class RelationResolver extends ObjectFilterImpl {
             record.setParentIds(parents);
             Logging.logProcess(
                 "RelationResolver",
-                "Assigned '" + docResponse.getRecords().size() + "' parents. "
+                "Assigned " + docResponse.getRecords().size() + " parents. "
                 + "Parents are now " + Strings.join(parents, ", "),
                 Logging.LogLevel.DEBUG, payload);
         }
