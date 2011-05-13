@@ -374,4 +374,39 @@ public class RelationResolverTest extends TestCase {
         storage.close();
     }
 
+    /*
+    This is not a proper unit-test. For all practical purposes it will only work
+    for Toke Eskildsen at Statsbiblioteket after a specific setup.
+    // TODO: Create a proper test with a test-searcher
+     */
+    public void testSearcherConnection() throws IOException {
+        final String EXPECTED = "sb_2257916";
+        Record enricherR = new Record("enricher1", "foo", new byte[0]);
+        enricherR.getMeta().put("isbn10", "8759308656");
+
+        Configuration resolverConf = Configuration.newMemoryBased(
+            RelationResolver.CONF_ASSIGN_PARENTS, true,
+            RelationResolver.CONF_SEARCH_FIELD, "isbn",
+            RelationResolver.CONF_SEARCH_MAXHITS, 1,
+            RelationResolver.CONF_SEARCH_METAKEYS,
+            new ArrayList<String>(Arrays.asList("isbn10")),
+            ConnectionConsumer.CONF_RPC_TARGET,
+            "//localhost:55000/sb-searcher"
+        );
+
+        Filter feeder = new PayloadFeederHelper(Arrays.asList(
+            new Payload(enricherR)));
+        ObjectFilter resolver = new RelationResolver(resolverConf);
+        resolver.setSource(feeder);
+
+        assertTrue("The RelationResolver should provide at least one Payload",
+                   resolver.hasNext());
+        Payload enriched = resolver.next();
+        assertNotNull("The enriched " + enriched.getRecord()
+                      + " should have parents",
+                      enriched.getRecord().getParentIds());
+        assertEquals("The enriched Payload should have the right parent",
+                     EXPECTED, enriched.getRecord().getParentIds().get(0));
+    }
+
 }
