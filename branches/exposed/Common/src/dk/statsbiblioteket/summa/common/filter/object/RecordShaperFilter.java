@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * An {@link ObjectFilter} that assigns or modifies ID, base, and meta tags on
@@ -340,7 +341,13 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
             source = conf.getString(CONF_META_SOURCE, DEFAULT_META_SOURCE);
             destination = conf.getString(CONF_META_KEY);
-            regexp = Pattern.compile(conf.getString(CONF_META_REGEXP));
+            try {
+                regexp = Pattern.compile(conf.getString(CONF_META_REGEXP));
+            } catch (PatternSyntaxException e) {
+                throw new ConfigurationException(String.format(
+                    "Unable to parse pattern '%s'",
+                    conf.getString(CONF_META_REGEXP)), e);
+            }
             template = conf.getString(
                 CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
             if (log.isTraceEnabled()) {
@@ -383,7 +390,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     throw new PayloadException(message, payload);
                 }
                 Logging.logProcess("RecordShaperFilter", message,
-                                   Logging.LogLevel.DEBUG, payload);
+                                   Logging.LogLevel.TRACE, payload);
                 return;
             }
             buffer.setLength(0);

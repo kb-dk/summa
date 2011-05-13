@@ -35,7 +35,9 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Uses an external SummaSearcher to resolve relations for the given Payload.
@@ -304,10 +306,10 @@ public class RelationResolver extends ObjectFilterImpl {
     private void assignRelatives(Payload payload, DocumentResponse docResponse) {
         Record record = payload.getRecord();
         if (assignAsParents) {
-            List<String> parents =
+            Set<String> parents =
                 record.getParentIds() == null ?
-                new ArrayList<String>(docResponse.getRecords().size()) :
-                record.getParentIds();
+                new HashSet<String>(docResponse.getRecords().size()) :
+                new HashSet<String>(record.getParentIds());
             for (DocumentResponse.Record hitRecord: docResponse.getRecords()) {
                 if (log.isTraceEnabled()) {
                     log.trace("Assigning parent ID '" + hitRecord.getId()
@@ -315,7 +317,7 @@ public class RelationResolver extends ObjectFilterImpl {
                 }
                 parents.add(hitRecord.getId());
             }
-            record.setParentIds(parents);
+            record.setParentIds(new ArrayList<String>(parents));
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned " + docResponse.getRecords().size() + " parents. "
@@ -323,10 +325,10 @@ public class RelationResolver extends ObjectFilterImpl {
                 Logging.LogLevel.DEBUG, payload);
         }
         if (assignAsChildren) {
-            List<String> children =
+            Set<String> children =
                 record.getChildIds() == null ?
-                new ArrayList<String>(docResponse.getRecords().size()) :
-                record.getChildIds();
+                new HashSet<String>(docResponse.getRecords().size()) :
+                new HashSet<String>(record.getChildIds());
             for (DocumentResponse.Record hitRecord: docResponse.getRecords()) {
                 if (log.isTraceEnabled()) {
                     log.trace("Assigning child ID '" + hitRecord.getId()
@@ -334,7 +336,7 @@ public class RelationResolver extends ObjectFilterImpl {
                 }
                 children.add(hitRecord.getId());
             }
-            record.setChildIds(children);
+            record.setChildIds(new ArrayList<String>(children));
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned '" + docResponse.getRecords().size() + "' children. "
@@ -342,5 +344,4 @@ public class RelationResolver extends ObjectFilterImpl {
                 Logging.LogLevel.DEBUG, payload);
         }
     }
-
 }

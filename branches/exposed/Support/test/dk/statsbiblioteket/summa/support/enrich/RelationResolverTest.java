@@ -43,6 +43,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -174,6 +176,50 @@ public class RelationResolverTest extends TestCase {
         + "  <pb n=\"4\"/>\n"
         + "  <p>Lorem Ipsum and all that</p>\n"
         + "</div>\n";
+
+    private static final String TEI13 =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        + "      <publicationStmt>\n"
+        + "          <idno type=\"ISBN\">12-3456-789-0-123</idno>\n"
+        + "</div>\n";
+
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private final String CONTENT10 = "(?s).*<publicationStmt.*?>.+?<idno.+?type=\"ISBN\">[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*?</idno>.*";
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private final String CONTENT13 = "(?s).*<publicationStmt.*?>.+?<idno.+?type=\"ISBN\">[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*?([0-9])[^0-9]*([0-9])[^0-9]*([0-9])[^0-9]*?</idno>.*";
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private final String ORIGIN10 = ".*[^0-9/]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*[^/]*$";
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private final String ORIGIN13 = ".*[^0-9/]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*([0-9])[^0-9/a-zA-Z]*[^/]*$";
+    private final String GROUP10 = "$1$2$3$4$5$6$7$8$9$10";
+    private final String GROUP13 = "$1$2$3$4$5$6$7$8$9$10$11$12$13";
+
+    public void testRegexprs() {
+        testRegexprs(CONTENT10, GROUP10, TEI, "1234567890");
+        testRegexprs(CONTENT13, GROUP13, TEI13, "1234567890123");
+        testRegexprs(ORIGIN10, GROUP10,
+                     "somefolder/somezip7!/1234 567 890 - Svamperiget 876.xml",
+                     "1234567890");
+        testRegexprs(ORIGIN13, GROUP13,
+                     "somefolder/somezip7!/1234 567 890-123 - Svamperiget 876.xml",
+                     "1234567890123");
+    }
+    public void testRegexprs(
+        String regexp, String template, String input, String expected) {
+        Pattern pattern = Pattern.compile(regexp);
+        Matcher matcher = pattern.matcher(input);
+        assertTrue("The pattern '" + regexp + "' should match input '"
+                   + input + "'",
+                   matcher.matches());
+        StringBuffer buffer = new StringBuffer(50);
+        int matchPos = matcher.start();
+        matcher.appendReplacement(buffer, template);
+        String actual = buffer.toString().substring(matchPos);
+        assertEquals("The result from pattern '" + regexp + "' and input '"
+                     + input + "' should be as expected",
+                     expected, actual);
+    }
+
     /*
     A near full-chain test of an enrichment workflow
      */
@@ -181,35 +227,54 @@ public class RelationResolverTest extends TestCase {
         Record parentR1 = new Record("internal_id1", "foo", new byte[0]);
         Record parentR2 = new Record("internal_id2", "foo", new byte[0]);
         Record parentR3 = new Record("internal_id3", "foo", new byte[0]);
-        Record teiR = new Record("TEIRecord1", "bar", TEI.getBytes("utf-8"));
+        Record teiR1 = new Record("TEIRecord1", "bar", TEI.getBytes("utf-8"));
+        Record teiR2 = new Record("TEIRecord2", "bar", TEI13.getBytes("utf-8"));
 
         Configuration shaperConf = Configuration.newMemoryBased();
+        shaperConf.set(RecordShaperFilter.CONF_DISCARD_ON_ERRORS, false);
+        shaperConf.set(RecordShaperFilter.CONF_COPY_META, true);
         List<Configuration> metaConfs = shaperConf.createSubConfigurations(
-            RecordShaperFilter.CONF_META, 1);
-        Configuration metaConfContent = metaConfs.get(0); 
-        metaConfContent.set(RecordShaperFilter.CONF_META_SOURCE,
-                     RecordShaperFilter.PART.content);
-        metaConfContent.set(RecordShaperFilter.CONF_META_KEY,
-                     RecordShaperFilter.META_PREFIX + "isbn");
-        metaConfContent.set(RecordShaperFilter.CONF_META_REGEXP,
-                     "(?s)<publicationStmt.*?>.+?<idno.+?type=\"ISBN\">(.+?)</idno>");
-        metaConfContent.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1");
-        Configuration metaConfOrigin = metaConfs.get(0); 
-        metaConfOrigin.set(RecordShaperFilter.CONF_META_SOURCE,
-                     RecordShaperFilter.META_PREFIX + Payload.ORIGIN);
-        metaConfOrigin.set(RecordShaperFilter.CONF_META_KEY,
-                     RecordShaperFilter.META_PREFIX + "isbn_from_origin");
-        // TODO: Write the proper regexp here
-        metaConfOrigin.set(RecordShaperFilter.CONF_META_REGEXP,
-                     "([0-9]((?s)<publicationStmt.*?>.+?<idno.+?type=\"ISBN\">(.+?)</idno>");
-        metaConfOrigin.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1");
+            RecordShaperFilter.CONF_META, 4);
+
+        Configuration conf10Content = metaConfs.get(0);
+        conf10Content.set(RecordShaperFilter.CONF_META_SOURCE,
+                          RecordShaperFilter.PART.content);
+        conf10Content.set(RecordShaperFilter.CONF_META_KEY,
+                          RecordShaperFilter.META_PREFIX + "isbn10");
+        conf10Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT10);
+        conf10Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
+
+        Configuration conf13Content = metaConfs.get(1);
+        conf13Content.set(RecordShaperFilter.CONF_META_SOURCE,
+                          RecordShaperFilter.PART.content);
+        conf13Content.set(RecordShaperFilter.CONF_META_KEY,
+                          RecordShaperFilter.META_PREFIX + "isbn13");
+        conf13Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT13);
+        conf13Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
+
+        Configuration conf10Origin = metaConfs.get(2);
+        conf10Origin.set(RecordShaperFilter.CONF_META_SOURCE,
+                         RecordShaperFilter.META_PREFIX + Payload.ORIGIN);
+        conf10Origin.set(RecordShaperFilter.CONF_META_KEY,
+                         RecordShaperFilter.META_PREFIX + "isbn10origin");
+        conf10Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN10);
+        conf10Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
+
+        Configuration conf13Origin = metaConfs.get(3);
+        conf13Origin.set(RecordShaperFilter.CONF_META_SOURCE,
+                         RecordShaperFilter.META_PREFIX + Payload.ORIGIN);
+        conf13Origin.set(RecordShaperFilter.CONF_META_KEY,
+                         RecordShaperFilter.META_PREFIX + "isbn10origin");
+        conf13Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN13);
+        conf13Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
 
         Configuration resolverConf = Configuration.newMemoryBased(
             RelationResolver.CONF_ASSIGN_PARENTS, true,
             RelationResolver.CONF_SEARCH_FIELD, "id",
             RelationResolver.CONF_SEARCH_MAXHITS, 10,
             RelationResolver.CONF_SEARCH_METAKEYS,
-            new ArrayList<String>(Arrays.asList("isbn", "isbn_from_origin")),
+            new ArrayList<String>(Arrays.asList(
+                "isbn10", "isbn13", "isbn10origin", "isbn13")),
             ConnectionConsumer.CONF_RPC_TARGET, "NotUsed"
         );
 
@@ -217,10 +282,6 @@ public class RelationResolverTest extends TestCase {
                 Storage.CONF_CLASS, H2Storage.class,
                 DatabaseStorage.CONF_LOCATION, STORAGE.getAbsolutePath());
 
-        Payload teiP = new Payload(teiR);
-        teiP.getData().put(
-            Payload.ORIGIN,
-            "somefolder/somezip!/01234 567 890 - Svamperiget 8.xml");
 
         Storage storage = StorageFactory.createStorage(storageConf);
         storage.flush(parentR1);
@@ -229,7 +290,17 @@ public class RelationResolverTest extends TestCase {
         assertNotNull("The parent Records should be stored",
                       storage.getRecord(parentR1.getId(), null));
 
-        ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(teiP));
+        Payload teiP1 = new Payload(teiR1);
+        teiP1.getData().put(
+            Payload.ORIGIN,
+            "somefolder/somezip7!/09876 543 21 - Svamperiget 8.xml");
+        Payload teiP2 = new Payload(teiR2);
+        teiP2.getData().put(
+            Payload.ORIGIN,
+            "somefolder/somezip7!/09876 543 21 - 098 - Svamperiget 8.xml");
+
+        ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(
+            teiP1, teiP2));
         ObjectFilter shaper = new RecordShaperFilter(shaperConf);
         shaper.setSource(feeder);
         ObjectFilter resolver = new RelationResolver(resolverConf) {
@@ -242,18 +313,30 @@ public class RelationResolverTest extends TestCase {
             protected DocumentResponse getHits(
                 Payload payload, String searchValue) throws PayloadException {
                 DocumentResponse response;
-                if (searchValue.equals("01234 567 890")) {
+                if (searchValue.equals("0987654321")) {
                     response = new DocumentResponse(
                         null, searchValue, 0, 2, "LUCENE", false,
                         new String[]{DocumentKeys.RECORD_ID}, 1, 1);
                     response.addRecord(new DocumentResponse.Record(
                         "internal_id1", "foo", 1.0f, ""));
-                } else if (searchValue.equals("12-3456-789-0")) {
+                } else if (searchValue.equals("1234567890")) {
                     response = new DocumentResponse(
                         null, searchValue, 0, 2, "LUCENE", false,
                         new String[]{DocumentKeys.RECORD_ID}, 1, 2);
                     response.addRecord(new DocumentResponse.Record(
-                        "internal_id1", "foo", 1.0f, ""));
+                        "internal_id2", "foo", 1.0f, ""));
+                    response.addRecord(new DocumentResponse.Record(
+                        "internal_id3", "foo", 1.0f, ""));
+                } else if (searchValue.equals("0987654321098")) {
+                        response = new DocumentResponse(
+                            null, searchValue, 0, 2, "LUCENE", false,
+                            new String[]{DocumentKeys.RECORD_ID}, 1, 1);
+                        response.addRecord(new DocumentResponse.Record(
+                            "internal_id1", "foo", 1.0f, ""));
+                } else if (searchValue.equals("1234567890123")) {
+                    response = new DocumentResponse(
+                        null, searchValue, 0, 2, "LUCENE", false,
+                        new String[]{DocumentKeys.RECORD_ID}, 1, 1);
                     response.addRecord(new DocumentResponse.Record(
                         "internal_id2", "foo", 1.0f, ""));
                 } else {
@@ -268,15 +351,26 @@ public class RelationResolverTest extends TestCase {
         ObjectFilter writer = new RecordWriter(storage, 100, 10000);
         writer.setSource(resolver);
 
-        //noinspection StatementWithEmptyBody
-        while (writer.pump());
+        int counter = 1;
+        while (writer.pump()) {
+            counter++;
+        }
+        assertEquals(
+            "The correct number of Records should be pulled through the chain",
+            2, counter);
         writer.close(true);
 
-        Record enriched = storage.getRecord(
-            teiR.getId(), new QueryOptions(null, null, 10, 10));
-        assertNotNull("The enriching Record should be stored", enriched);
-        assertEquals("The enriching Record should have the right parent count",
-                     3, enriched.getParents().size());
+        Record enriched1 = storage.getRecord(
+            teiR1.getId(), new QueryOptions(null, null, 10, 10));
+        assertNotNull("The enriching Record1 should be stored", enriched1);
+        assertEquals("The enriching Record1 should have the right parent count",
+                     3, enriched1.getParents().size());
+
+        Record enriched2 = storage.getRecord(
+            teiR2.getId(), new QueryOptions(null, null, 10, 10));
+        assertNotNull("The enriching Record2 should be stored", enriched2);
+        assertEquals("The enriching Record2 should have the right parent count",
+                     2, enriched2.getParents().size());
         storage.close();
     }
 
