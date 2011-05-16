@@ -1019,7 +1019,8 @@ public class RecordUtil {
                 record.setContent(value.getBytes("utf-8"), false);
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(
-                    "Exception while converting content to UTF-8 bytes", e);
+                    "Exception while converting content to UTF-8 bytes for "
+                    + record, e);
             }
         } else if (PART_ID.equals(destination)) {
             record.setId(value);
@@ -1030,6 +1031,30 @@ public class RecordUtil {
             record.getMeta().put(key, value);
         } else {
             record.getMeta().put(destination, value);
+        }
+    }
+
+    /**
+     * Assign the given value to the Record's content, id, base of meta-field.
+     * @param record the receiver of the value.
+     * @param value the value to assign.
+     * @param destination for the given value. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value. If no known destination is given, the
+     *        fallback is to assign the value with the destination used directly
+     *        as key.
+     */
+    public static void setBytes(
+        Record record, byte[] value, String destination) {
+        if (PART_CONTENT.equals(destination)) {
+            record.setContent(value, false);
+        }
+        try {
+            setString(record, new String(value, "utf-8"), destination);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(
+                "Exception while converting value to UTF-8 bytes for " + record,
+                e);
         }
     }
 }
