@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.filter.object.RecordShaperFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -240,33 +241,33 @@ public class RelationResolverTest extends TestCase {
 
         Configuration conf10Content = metaConfs.get(0);
         conf10Content.set(RecordShaperFilter.CONF_META_SOURCE,
-                          RecordShaperFilter.PART.content);
+                          RecordUtil.PART_CONTENT);
         conf10Content.set(RecordShaperFilter.CONF_META_KEY,
-                          RecordShaperFilter.META_PREFIX + "isbn10");
+                          RecordUtil.PART_META_PREFIX + "isbn10");
         conf10Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT10);
         conf10Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
 
         Configuration conf13Content = metaConfs.get(1);
         conf13Content.set(RecordShaperFilter.CONF_META_SOURCE,
-                          RecordShaperFilter.PART.content);
+                          RecordUtil.PART_CONTENT);
         conf13Content.set(RecordShaperFilter.CONF_META_KEY,
-                          RecordShaperFilter.META_PREFIX + "isbn13");
+                          RecordUtil.PART_META_PREFIX + "isbn13");
         conf13Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT13);
         conf13Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
 
         Configuration conf10Origin = metaConfs.get(2);
         conf10Origin.set(RecordShaperFilter.CONF_META_SOURCE,
-                         RecordShaperFilter.META_PREFIX + Payload.ORIGIN);
+                         RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
         conf10Origin.set(RecordShaperFilter.CONF_META_KEY,
-                         RecordShaperFilter.META_PREFIX + "isbn10origin");
+                         RecordUtil.PART_META_PREFIX + "isbn10origin");
         conf10Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN10);
         conf10Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
 
         Configuration conf13Origin = metaConfs.get(3);
         conf13Origin.set(RecordShaperFilter.CONF_META_SOURCE,
-                         RecordShaperFilter.META_PREFIX + Payload.ORIGIN);
+                         RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
         conf13Origin.set(RecordShaperFilter.CONF_META_KEY,
-                         RecordShaperFilter.META_PREFIX + "isbn10origin");
+                         RecordUtil.PART_META_PREFIX + "isbn10origin");
         conf13Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN13);
         conf13Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
 
@@ -354,7 +355,7 @@ public class RelationResolverTest extends TestCase {
             teiR1.getId(), new QueryOptions(null, null, 10, 10));
         assertNotNull("The enriching Record1 should be stored", enriched1);
         assertNotNull("The enriching Record1 should have parents",
-                     enriched1.getParents());
+                      enriched1.getParents());
         assertEquals("The enriching Record1 should have the right parent count",
                      3, enriched1.getParents().size());
 

@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -167,6 +168,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * same rules as {@link #CONF_META_SOURCE} except that fallback is to use
      * the stated value directly to lookup in record.meta.
      * </p><p>
+     * See {@link RecordUtil#setString(Record, String, String)} for details.
+     * </p><p>
      * Mandatory.
      */
     public static final String CONF_META_KEY = "record.meta.key";
@@ -177,50 +180,12 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * specified, the "meta."-part will be stripped and the metakey-part will
      * be used as key for getting the meta-value.
      * </p><p>
+     * See {@link RecordUtil#getString(Record, String)} for details.
+     * </p><p>
      * Optional. Default is "content".
      */
     public static final String CONF_META_SOURCE = "record.meta.source";
     public static final String DEFAULT_META_SOURCE = "content";
-
-    public static final String META_PREFIX = "meta.";
-    public static enum PART {id, base, content;
-        public static String getContent(Record record, String source) {
-            String sourceString;
-            if (content.toString().equals(source)) {
-                sourceString = record.getContentAsUTF8();
-            } else if (id.toString().equals(source)) {
-                sourceString = record.getId();
-            } else if (base.toString().equals(source)) {
-                sourceString = record.getBase();
-            } else if (source.startsWith(META_PREFIX)) {
-                String key = source.substring(5, source.length());
-                sourceString = record.getMeta(key);
-            } else {
-                sourceString = null;
-            }
-            return sourceString;
-        }
-        public static void setContent(
-            Record record, String contentS, String destination) {
-            if (content.toString().equals(destination)) {
-                try {
-                    record.setContent(contentS.getBytes("utf-8"), false);
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(
-                        "Exception while converting content to UTF-8 bytes", e);
-                }
-            } else if (id.toString().equals(destination)) {
-                record.setId(contentS);
-            } else if (base.toString().equals(destination)) {
-                record.setBase(contentS);
-            } else if (destination.startsWith(META_PREFIX)) {
-                String key = destination.substring(5, destination.length());
-                record.getMeta().put(key, contentS);
-            } else {
-                record.getMeta().put(destination, contentS);
-            }
-        }
-    }
 
     /**
      * This regexp will be used with {@link #CONF_META_TEMPLATE} to
@@ -369,7 +334,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         public void shape(Payload payload) throws PayloadException {
             final Record record = payload.getRecord();
             String sourceString;
-            sourceString = PART.getContent(record, source);
+            sourceString = RecordUtil.getString(record, source);
             if (sourceString == null) {
                 String message = String.format(
                         "Unable to get String from source '%s'", source);
@@ -415,7 +380,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     source, newText, destination, payload));
             }
 
-            PART.setContent(payload.getRecord(), newText, destination);
+            RecordUtil.setString(payload.getRecord(), newText, destination);
         }
     }
 

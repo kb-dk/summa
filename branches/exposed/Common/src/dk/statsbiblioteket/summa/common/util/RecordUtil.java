@@ -16,7 +16,7 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.DumpFilter;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -28,18 +28,15 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.XMLEvent;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Helpers for processing Records.
+ * Helpers for processing Records. utf-8 is implicit assumed for Streams and
+ * Record content.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -118,7 +115,7 @@ public class RecordUtil {
      * @return the Record as UTF-8 XML, without header.
      * @throws IOException if an error occured during
      *         XML creation op input record.
-     * @see #fromXML
+     * @see #fromXML.
      */
     public static String toXML(Record record) throws IOException {
         return toXML(record, DEFAULT_ESCAPE_CONTENT);
@@ -291,7 +288,7 @@ public class RecordUtil {
     }
 
     /*
-     * The underlyiongWriter-hack is necessary to write XML directly.
+     * The underlying Writer-hack is necessary to write XML directly.
      */
     private static void writeContent(XMLStreamWriter out, Record record,
             boolean escapeContent) throws XMLStreamException, IOException {
@@ -847,6 +844,193 @@ public class RecordUtil {
         log.trace("Transformed the name '" + candidate + "' into '"
                   + actual + "'");
         return actual;
+    }
+
+    public static final String PART_ID = "id";
+    public static final String PART_BASE = "base";
+    public static final String PART_CONTENT = "content";
+    public static final String PART_META_PREFIX = "meta.";
+
+    /**
+     * Return a String from a Record's content, id, base of meta-field.
+     * @param record the String provider.
+     * @param source where to extract the String from. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value.
+     * @return a String extracted from the Record.
+     */
+    public static String getString(Record record, String source) {
+        if (PART_CONTENT.equals(source)) {
+            return record.getContentAsUTF8();
+        } else if (PART_ID.equals(source)) {
+            return record.getId();
+        } else if (PART_BASE.equals(source)) {
+            return record.getBase();
+        } else if (source.startsWith(PART_META_PREFIX)) {
+            String key = source.substring(5, source.length());
+            String content = record.getMeta(key);
+            if (content == null) {
+                throw new IllegalArgumentException(
+                    "No value for key '" + key + "' in " + record);
+            }
+            return content;
+        }
+        throw new IllegalArgumentException("Unknown source '" + source + "'");
+    }
+
+    /**
+     * Wrapper for {@link #getString(Record, String)}. If the Payload
+     * encapsulates a Stream, the Stream is returned regardless of source.
+     * If not, the Record-based getString is called.
+     * </p><p>
+     * Warning: When the Payload is Stream-based, resolving to an in-memory
+     * String might require a lot of memory.
+     * @param payload the source of the String if the Payload does not contain
+     *        a Stream.
+     * @param source where to extract the String from if the Payload does not
+     *        contain a Stream.
+     * @return a String extracted from the Payload.
+     */
+    public static String getString(Payload payload, String source) {
+        if (payload.getStream() == null) {
+            return getString(payload.getRecord(), source);
+        }
+        try {
+            return Strings.flush(payload.getStream());
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to flush the Stream in " + payload);
+        }
+    }
+
+    /**
+     * Shorthand for getString(payload, "content").
+     * @param payload see the JavaDoc for {@link #getString(Payload, String)}.
+     * @return see the JavaDoc for {@link #getString(Payload, String)}.
+     */
+    public static String getString(Payload payload) {
+        return getString(payload, PART_CONTENT);
+    }
+
+
+    /**
+     * Return a stream from a Record's content, id, base of meta-field.
+     * @param record the stream provider.
+     * @param source where to construct the stream. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value.
+     * @return a stream constructed from the Record.
+     */
+    public static InputStream getStream(Record record, String source) {
+        if (PART_CONTENT.equals(source)) {
+            return new ByteArrayInputStream(record.getContent());
+        }
+        return new ReaderInputStream(new StringReader(
+            getString(record, source)), "utf-8");
+    }
+
+    /**
+     * Wrapper for {@link #getStream(Record, String)}. If the Payload
+     * encapsulates a Stream, the Stream is returned regardless of source.
+     * If not, the Record-based getStream is called.
+     * @param payload the source of the Stream if the Payload does not contain
+     *        a Stream.
+     * @param source where to construct the Stream from if the Payload does not
+     *        contain a Stream.
+     * @return a Stream based on the Payload.
+     */
+    public static InputStream getStream(Payload payload, String source) {
+        if (payload.getStream() == null) {
+            return getStream(payload.getRecord(), source);
+        }
+        return payload.getStream();
+    }
+
+    /**
+     * Shorthand for getStream(payload, "content").
+     * @param payload see the JavaDoc for {@link #getStream(Payload, String)}.
+     * @return see the JavaDoc for {@link #getStream(Payload, String)}.
+     */
+    public static InputStream getStream(Payload payload) {
+        return getStream(payload, PART_CONTENT);
+    }
+
+    /**
+     * Return a reader from a Record's content, id, base of meta-field.
+     * @param record the reader provider.
+     * @param source where to construct the reader. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value.
+     * @return a reader constructed from the Record.
+     */
+    public static Reader getReader(Record record, String source) {
+        if (PART_CONTENT.equals(source)) {
+            return new InputStreamReader(new ByteArrayInputStream(
+                record.getContent()));
+        }
+        return new StringReader(getString(record, source));
+    }
+
+    /**
+     * Wrapper for {@link #getReader(Record, String)}. If the Payload
+     * encapsulates a Stream, the Stream is returned regardless of source.
+     * If not, the Record-based getReader is called.
+     * @param payload the source of the reader if the Payload does not contain
+     *        a Stream.
+     * @param source where to construct the reader from if the Payload does not
+     *        contain a Stream.
+     * @return a reader based on the Payload.
+     */
+    public static Reader getReader(Payload payload, String source) {
+        if (payload.getStream() == null) {
+            return getReader(payload.getRecord(), source);
+        }
+        try {
+            return new InputStreamReader(payload.getStream(), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(
+                "The utf-8 encoding was not supported");
+        }
+    }
+
+    /**
+     * Shorthand for getReader(payload, "content").
+     * @param payload see the JavaDoc for {@link #getReader(Payload, String)}.
+     * @return see the JavaDoc for {@link #getReader(Payload, String)}.
+     */
+    public static Reader getReader(Payload payload) {
+        return getReader(payload, PART_CONTENT);
+    }
+
+    /**
+     * Assign the given value to the Record's content, id, base of meta-field.
+     * @param record the receiver of the value.
+     * @param value the value to assign.
+     * @param destination for the given value. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value. If no known destination is given, the
+     *        fallback is to assign the value with the destination used directly
+     *        as key.
+     */
+    public static void setString(
+        Record record, String value, String destination) {
+        if (PART_CONTENT.equals(destination)) {
+            try {
+                record.setContent(value.getBytes("utf-8"), false);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(
+                    "Exception while converting content to UTF-8 bytes", e);
+            }
+        } else if (PART_ID.equals(destination)) {
+            record.setId(value);
+        } else if (PART_BASE.equals(destination)) {
+            record.setBase(value);
+        } else if (destination.startsWith(PART_META_PREFIX)) {
+            String key = destination.substring(5, destination.length());
+            record.getMeta().put(key, value);
+        } else {
+            record.getMeta().put(destination, value);
+        }
     }
 }
 
