@@ -82,7 +82,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * Note: Using true might have a noticeable impact on processor-load and
      *       temporary object allocation.
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Default is false.
      */
     public static final String CONF_STRIP_XML_NAMESPACES =
             "summa.xmltransformer.ignorexmlnamespaces";
