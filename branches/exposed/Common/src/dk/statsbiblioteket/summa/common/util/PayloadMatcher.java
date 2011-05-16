@@ -78,8 +78,6 @@ public class PayloadMatcher {
     private List<String> metaKeys;
     private List<Matcher> metaValueMatchers;
 
-    private static final String PAYLOAD_WITHOUT_RECORD =
-            "Payload without record, can not check record %s. No match";
 
     public PayloadMatcher(Configuration conf) {
         this(conf, true);
@@ -148,38 +146,16 @@ public class PayloadMatcher {
             return true;
         }
 
-        if (baseMatchers != null) {
-            Record r = payload.getRecord();
-
-            if (r == null) {
+        if (baseMatchers != null || contentMatchers != null ||
+            metaKeys != null) {
+            if (payload.getRecord() == null) {
                 Logging.logProcess(this.getClass().getSimpleName(),
-                        String.format(PAYLOAD_WITHOUT_RECORD, "base"),
-                        Logging.LogLevel.WARN, payload);
-                return true;
-            }
-
-            if (isMatch(baseMatchers, r.getBase())) {
-                return true;
-            }
-        }
-
-        if (contentMatchers != null) {
-            Record r = payload.getRecord();
-
-            if (r == null) {
-                //noinspection DuplicateStringLiteralInspection
-                Logging.logProcess(
-                        this.getClass().getSimpleName(),
-                        String.format(PAYLOAD_WITHOUT_RECORD, "content"),
+                        String.format("Payload without Record. "
+                                      + "Cannot perform extended matching"),
                         Logging.LogLevel.WARN, payload);
                 return false;
             }
-
-            if (isMatch(contentMatchers, r.getContentAsUTF8())) {
-                return true;
-            }
         }
-
         if (metaKeys != null) {
             for (int i = 0 ; i < metaKeys.size() ; i++) {
                 String metaKey = metaKeys.get(i);
@@ -190,17 +166,40 @@ public class PayloadMatcher {
                             value.toString()).matches())) {
                     return true;
                 }
-                if (payload.getRecord() != null 
-                    && (value = payload.getRecord().getMeta(metaKey)) != null) {
+            }
+        }
+
+        return isMatch(payload.getRecord());
+    }
+
+    /**
+     * @param record the Record to match against.
+     * @return true if the Record matched, else false.
+     */
+    public boolean isMatch(Record record) {
+        if (isMatch(idMatchers, record.getId())) {
+            return true;
+        }
+        if (baseMatchers != null && isMatch(baseMatchers, record.getBase())) {
+            return true;
+        }
+        if (contentMatchers != null &&
+            isMatch(contentMatchers, record.getContentAsUTF8())) {
+            return true;
+        }
+        if (metaKeys != null) {
+            for (int i = 0 ; i < metaKeys.size() ; i++) {
+                String metaKey = metaKeys.get(i);
+                Object value;
+                if ((value = record.getMeta(metaKey)) != null) {
                     if (metaValueMatchers == null ||
                         metaValueMatchers.get(i).reset(
-                                value.toString()).matches()) {
+                            value.toString()).matches()) {
                         return true;
                     }
                 }
             }
         }
-        log.trace("No match for payload");
         return false;
     }
 
@@ -215,5 +214,6 @@ public class PayloadMatcher {
         }
         return false;
     }
+
 }
 
