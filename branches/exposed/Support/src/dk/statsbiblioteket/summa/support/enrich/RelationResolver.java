@@ -322,7 +322,8 @@ public class RelationResolver extends ObjectFilterImpl {
                 new HashSet<String>(docResponse.getRecords().size()) :
                 new HashSet<String>(record.getParentIds());
             parents.addAll(hitIDs);
-            record.setParentIds(new ArrayList<String>(parents));
+            record.setParentIds(
+                parents.size() == 0 ? null : new ArrayList<String>(parents));
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned " + docResponse.getRecords().size() + " parents. "
@@ -335,7 +336,8 @@ public class RelationResolver extends ObjectFilterImpl {
                 new HashSet<String>(docResponse.getRecords().size()) :
                 new HashSet<String>(record.getChildIds());
             children.addAll(hitIDs);
-            record.setChildIds(new ArrayList<String>(children));
+            record.setChildIds(
+                children.size() == 0 ? null : new ArrayList<String>(children));
             Logging.logProcess(
                 "RelationResolver",
                 "Assigned '" + docResponse.getRecords().size() + "' children. "

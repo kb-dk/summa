@@ -54,7 +54,9 @@ public class RelationResolverTest extends TestCase {
         super(name);
     }
 
-    private File STORAGE = new File("RelationResolverTest.storage");
+    private File STORAGE = new File("RelationResolverTest/storage");
+    private File NONMATCHED =
+        new File("RelationResolverTest/relations/nonmatched");
 
     @Override
     public void setUp() throws Exception {
@@ -69,6 +71,9 @@ public class RelationResolverTest extends TestCase {
         super.tearDown();
         if (STORAGE.exists()) {
             Files.delete(STORAGE);
+        }
+        if (NONMATCHED.exists()) {
+            Files.delete(NONMATCHED);
         }
     }
 
@@ -87,6 +92,8 @@ public class RelationResolverTest extends TestCase {
             RelationResolver.CONF_SEARCH_MAXHITS, 1,
             RelationResolver.CONF_SEARCH_METAKEYS,
             new ArrayList<String>(Arrays.asList("SearchTerm")),
+            RelationResolver.CONF_NONMATCHED_FOLDER,
+            NONMATCHED.getAbsolutePath(),
             ConnectionConsumer.CONF_RPC_TARGET, "NotUsed"
         );
 
@@ -110,12 +117,7 @@ public class RelationResolverTest extends TestCase {
             @Override
             protected DocumentResponse getHits(
                 Payload payload, String searchValue) throws PayloadException {
-                DocumentResponse response = new DocumentResponse(
-                    null, searchValue, 0, 10, "LUCENE", false,
-                    new String[]{DocumentKeys.RECORD_ID}, 1, 1);
-                response.addRecord(new DocumentResponse.Record(
-                    searchValue, "na", 1.0f, ""));
-                return response;
+                return  createResponse(searchValue, searchValue);
             }
         };
         resolver.setSource(feeder);
@@ -272,6 +274,8 @@ public class RelationResolverTest extends TestCase {
             RelationResolver.CONF_ASSIGN_PARENTS, true,
             RelationResolver.CONF_SEARCH_FIELD, "id",
             RelationResolver.CONF_SEARCH_MAXHITS, 10,
+            RelationResolver.CONF_NONMATCHED_FOLDER,
+            NONMATCHED.getAbsolutePath(),
             RelationResolver.CONF_SEARCH_METAKEYS,
             new ArrayList<String>(Arrays.asList(
                 "isbn10", "isbn13", "isbn10origin", "isbn13")),
@@ -314,31 +318,17 @@ public class RelationResolverTest extends TestCase {
                 Payload payload, String searchValue) throws PayloadException {
                 DocumentResponse response;
                 if (searchValue.equals("0987654321")) {
-                    response = new DocumentResponse(
-                        null, searchValue, 0, 2, "LUCENE", false,
-                        new String[]{DocumentKeys.RECORD_ID}, 1, 1);
-                    response.addRecord(new DocumentResponse.Record(
-                        "internal_id1", "foo", 1.0f, ""));
+                    response = createResponse(
+                        searchValue, "internal_id1");
                 } else if (searchValue.equals("1234567890")) {
-                    response = new DocumentResponse(
-                        null, searchValue, 0, 2, "LUCENE", false,
-                        new String[]{DocumentKeys.RECORD_ID}, 1, 2);
-                    response.addRecord(new DocumentResponse.Record(
-                        "internal_id2", "foo", 1.0f, ""));
-                    response.addRecord(new DocumentResponse.Record(
-                        "internal_id3", "foo", 1.0f, ""));
+                    response = createResponse(
+                        searchValue, "internal_id2", "internal_id3");
                 } else if (searchValue.equals("0987654321098")) {
-                        response = new DocumentResponse(
-                            null, searchValue, 0, 2, "LUCENE", false,
-                            new String[]{DocumentKeys.RECORD_ID}, 1, 1);
-                        response.addRecord(new DocumentResponse.Record(
-                            "internal_id1", "foo", 1.0f, ""));
+                    response = createResponse(
+                        searchValue, "internal_id1");
                 } else if (searchValue.equals("1234567890123")) {
-                    response = new DocumentResponse(
-                        null, searchValue, 0, 2, "LUCENE", false,
-                        new String[]{DocumentKeys.RECORD_ID}, 1, 1);
-                    response.addRecord(new DocumentResponse.Record(
-                        "internal_id2", "foo", 1.0f, ""));
+                    response = createResponse(
+                        searchValue, "internal_id2");
                 } else {
                     response = new DocumentResponse(
                         null, searchValue, 0, 2, "LUCENE", false,
@@ -363,15 +353,34 @@ public class RelationResolverTest extends TestCase {
         Record enriched1 = storage.getRecord(
             teiR1.getId(), new QueryOptions(null, null, 10, 10));
         assertNotNull("The enriching Record1 should be stored", enriched1);
+        assertNotNull("The enriching Record1 should have parents",
+                     enriched1.getParents());
         assertEquals("The enriching Record1 should have the right parent count",
                      3, enriched1.getParents().size());
 
         Record enriched2 = storage.getRecord(
             teiR2.getId(), new QueryOptions(null, null, 10, 10));
         assertNotNull("The enriching Record2 should be stored", enriched2);
+        assertNotNull("The enriching Record2 should have parents",
+                     enriched2.getParents());
         assertEquals("The enriching Record2 should have the right parent count",
                      2, enriched2.getParents().size());
         storage.close();
+    }
+
+    private DocumentResponse createResponse(String searchValue, String... ids) {
+        DocumentResponse response = new DocumentResponse(
+            null, searchValue, 0, 2, "LUCENE", false,
+            new String[]{DocumentKeys.RECORD_ID}, 1, ids.length);
+        int counter = 0;
+        for (String id: ids) {
+            DocumentResponse.Record record = new DocumentResponse.Record(
+                Integer.toString(counter++), "foo", 1.0f, "");
+            record.addField(new DocumentResponse.Field(
+                DocumentKeys.RECORD_ID, id, false));
+            response.addRecord(record);
+        }
+        return response;
     }
 
     /*
@@ -388,6 +397,8 @@ public class RelationResolverTest extends TestCase {
             RelationResolver.CONF_ASSIGN_PARENTS, true,
             RelationResolver.CONF_SEARCH_FIELD, "isbn",
             RelationResolver.CONF_SEARCH_MAXHITS, 1,
+            RelationResolver.CONF_NONMATCHED_FOLDER,
+            NONMATCHED.getAbsolutePath(),
             RelationResolver.CONF_SEARCH_METAKEYS,
             new ArrayList<String>(Arrays.asList("isbn10")),
             ConnectionConsumer.CONF_RPC_TARGET,
