@@ -23,14 +23,19 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -46,6 +51,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -113,6 +119,18 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "    </fields>\n"
             + "</SummaDocument>";
 
+    public static final String CHILD_RECORD =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
+            + "id=\"mybase:grimme_aellinger_subbie\""
+            + " xmlns:Index=\"" + StreamingDocumentCreator.SUMMA_NAMESPACE
+            + "\""
+            + " xmlns=\"" + StreamingDocumentCreator.SUMMA_NAMESPACE + "\">\n"
+            + "    <fields>\n"
+            + "        <field name=\"mystored\">Subway</field>\n"
+            + "    </fields>\n"
+            + "</SummaDocument>";
+
     public static final String CREATOR_SETUP =
             "<xproperties>\n"
             + "    <xproperties>\n"
@@ -152,7 +170,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                 evaluate(dom, XPathConstants.NODE)).getTextContent());
     }
 
-    public void testXPath() throws Exception {
+/*    public void testXPath() throws Exception {
         DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
         nsCon.setNameSpace(StreamingDocumentCreator.SUMMA_NAMESPACE,
                            DocumentCreator.SUMMA_NAMESPACE_PREFIX);
@@ -176,7 +194,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                                                     XPathConstants.NODESET);
         assertEquals("There should be the correct number of fields",
                      4, singleFields.getLength());
-    }
+    }*/
 
     public void testsimpletransformation() throws Exception {
         Configuration conf = getCreatorConf();
@@ -195,20 +213,17 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
         log.info("Creating creators");
         Configuration conf = getCreatorConf();
-        ObjectFilter dom = new StreamingDocumentCreator(conf);
         ObjectFilter stream = new StreamingDocumentCreator(conf);
 
         log.info("Performing warm up");
         for (int i = 0; i < WARM; i++) {
-            speed(dom, SUBRUNS);
             speed(stream, SUBRUNS);
         }
 
         log.info("\nNumbers are transformation/s");
         log.info("DOM\tStream");
         for (int i = 0; i < RUNS; i++) {
-            log.info(speed(dom, SUBRUNS) + "\t"
-                               + speed(stream, SUBRUNS));
+            log.info(speed(stream, SUBRUNS));
         }
         // TODO assert
     }
@@ -255,14 +270,55 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Document doc = (Document) processed.getData(Payload.LUCENE_DOCUMENT);
         assertTrue("The document should have some fields",
                    doc.getFields().size() > 0);
-        for (String fieldName : new String[] {"mystored", "freetext",
-                                              "nonexisting",
-                                              IndexUtils.RECORD_FIELD}) {
+        for (String fieldName : new String[] {
+            "mystored", "freetext", "nonexisting"}) {
             assertNotNull("The document should contain the field " + fieldName,
                           doc.getField(fieldName));
         }
         assertEquals("The document boost should be correct",
                      1.5f, doc.getBoost());
+    }
+
+    public void testEnrichedRecord() throws Exception {
+        Record parent = new Record(
+            "parent", "foo", NAMESPACED_RECORD.getBytes("utf-8"));
+        Record child = new Record(
+            "child", "foo", CHILD_RECORD.getBytes("utf-8"));
+        parent.setChildren(Arrays.asList(child));
+
+        testEnrichedRecord(new Payload(parent), true,
+                           new String[]{"Foo bar", "Kazam", "Subway"});
+        testEnrichedRecord(new Payload(parent), false,
+                           new String[]{"Foo bar", "Kazam"});
+        parent.setChildren(null);
+        testEnrichedRecord(new Payload(parent), true,
+                           new String[]{"Foo bar", "Kazam"});
+    }
+    public void testEnrichedRecord(Payload payload, boolean visitChildren,
+                                   String[] EXPECTED) throws Exception {
+
+        PayloadFeederHelper feeder =
+            new PayloadFeederHelper(Arrays.asList(payload));
+        Configuration conf = getCreatorConf();
+        conf.set(StreamingDocumentCreator.CONF_VISIT_CHILDREN, visitChildren);
+        ObjectFilter creator = new StreamingDocumentCreator(conf);
+        creator.setSource(feeder);
+
+        Payload processed = creator.next();
+        Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
+        assertNotNull("A document should be created");
+
+        Set<String> expected = new HashSet<String>(Arrays.asList(EXPECTED));
+        for (Field field: doc.getFields("mystored")) {
+            assertTrue("The value " + field.stringValue() + " should exist in"
+                       + " the expected list "
+                       + Strings.join(Arrays.asList(EXPECTED), ", "),
+                       expected.contains(field.stringValue()));
+            expected.remove(field.stringValue());
+        }
+        assertTrue("There should be no more expected values. Remaining: "
+                   + Strings.join(Arrays.asList(expected), ", "),
+                   expected.size() == 0);
     }
 
     /* ObjectFilter implementation */
@@ -277,6 +333,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 //                                          SIMPLE_RECORD.getBytes("utf-8")));
             NAMESPACED_RECORD.getBytes("utf-8")));
         } catch (UnsupportedEncodingException e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
         return null;

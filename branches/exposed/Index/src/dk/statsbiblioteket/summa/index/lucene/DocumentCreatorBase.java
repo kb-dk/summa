@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
+import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
@@ -31,7 +31,7 @@ import org.apache.lucene.document.Field;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class DocumentCreatorBase extends ObjectFilterImpl {
+public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
     private static final Log log = LogFactory.getLog(DocumentCreatorBase.class);
 
     protected DocumentCreatorBase(Configuration conf) {

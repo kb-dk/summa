@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.index;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
@@ -50,11 +51,20 @@ public class LegacyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLTransformer.CONF_XSLT, xslt);
         conf.set(XMLTransformer.CONF_STRIP_XML_NAMESPACES, false);
-        XMLTransformer transformer = new XMLTransformer(conf);
+        OpenTransformer transformer = new OpenTransformer(conf);
 
-        transformer.processPayload(payload);
+        transformer.process(payload);
         return payload.getRecord().getContentAsUTF8();
     }
+    private class OpenTransformer extends XMLTransformer {
+         private OpenTransformer(Configuration conf) {
+             super(conf);
+         }
+         public boolean process(Payload payload) throws PayloadException {
+             return processPayload(payload);
+         }
+     }
+
 /*
     public void testMultiVolume() throws Exception {
         String CONCATENATED = "data/horizon/oldConcatenated.xml";
