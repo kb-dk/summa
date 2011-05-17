@@ -18,12 +18,15 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -90,14 +93,14 @@ public class XMLTransformerTest extends TestCase {
         conf.set(XMLTransformer.CONF_XSLT, "data/identity.xslt");
         conf.set(
                 XMLTransformer.CONF_ENTITY_RESOLVER, XHTMLEntityResolver.class);
-        XMLTransformer transformer = new XMLTransformer(conf);
+        OpenTransformer transformer = new OpenTransformer(conf);
 
         String content =
                 Streams.getUTF8Resource("data/webpage_xhtml-1.0-strict.xml");
         Record record = new Record("validwebpage", "xhtml",
                                    content.getBytes("utf-8"));
         Payload payload = new Payload(record);
-        transformer.processPayload(payload);
+        transformer.process(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
         String expected = "Rødgrød med fløde → mæthed";
         assertTrue("The transformed content '" + transformed
@@ -114,16 +117,54 @@ public class XMLTransformerTest extends TestCase {
 
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLTransformer.CONF_XSLT, xsltFagrefEntryURL);
-        XMLTransformer transformer = new XMLTransformer(conf);
+        OpenTransformer transformer = new OpenTransformer(conf);
 
-        transformer.processPayload(payload);
+        transformer.process(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
         //System.out.println(transformed);
-        String[] MUST_CONTAIN = new String[]{"sortLocale", "Yetitæmning",
-                                             "<shortrecord>", "boost"};
+        String[] MUST_CONTAIN = new String[]{
+            "sortLocale", "Yetitæmning</Index:field>", "<shortrecord>",
+            "boost"};
         for (String must: MUST_CONTAIN) {
             assertTrue("The result must contain " + must,
                        transformed.contains(must));
+        }
+    }
+    private class OpenTransformer extends XMLTransformer {
+        private OpenTransformer(Configuration conf) {
+            super(conf);
+        }
+        public boolean process(Payload payload) throws PayloadException {
+            return processPayload(payload);
+        }
+    }
+
+    public static final String HANS = "data/fagref/hans.jensen.xml";
+    public void testTraversal() throws IOException, PayloadException {
+        String gurli = Streams.getUTF8Resource(GURLI);
+        String hans = Streams.getUTF8Resource(HANS);
+        Record gRecord = new Record(
+            "fagref:gurli_margrethe", "fagref", gurli.getBytes("utf-8"));
+        Record hRecord = new Record(
+            "fagref:hans_jensen", "fagref", hans.getBytes("utf-8"));
+        gRecord.setChildren(Arrays.asList(hRecord));
+        Payload payload = new Payload(gRecord);
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, xsltFagrefEntryURL);
+        conf.set(XMLTransformer.CONF_VISIT_CHILDREN, true);
+        conf.set(XMLTransformer.CONF_SUCCESS_REQUIREMENT,
+                 XMLTransformer.REQUIREMENT.all);
+
+        OpenTransformer transformer = new OpenTransformer(conf);
+        transformer.process(payload);
+
+        String transformedChild =
+            payload.getRecord().getChildren().get(0).getContentAsUTF8();
+        String[] MUST_CONTAIN = new String[]{
+            "Python</Index:field>"};
+        for (String must: MUST_CONTAIN) {
+            assertTrue("The result must contain " + must,
+                       transformedChild.contains(must));
         }
     }
 }

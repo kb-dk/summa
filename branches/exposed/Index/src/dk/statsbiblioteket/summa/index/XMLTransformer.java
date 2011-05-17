@@ -20,7 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
@@ -44,9 +44,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Transform arbitrary XML in Payload.Record.content using XSLT. This is
@@ -71,11 +69,16 @@ import java.util.Set;
  * In addition to the stated parameters, the parameters from
  * {@link PayloadMatcher} can optionally be applied. If none of these parameters
  * are present, all Payloads are accepted.
+ * </p><p>
+ * this class inherits from GraphFilter so
+ * {@link GraphFilter#CONF_VISIT_CHILDREN} and
+ * {@link GraphFilter#CONF_VISIT_PARENTS} should be specified if traversal is
+ * required.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te")
-public class XMLTransformer extends ObjectFilterImpl {
+public class XMLTransformer extends GraphFilter<Object> {
     private static Log log = LogFactory.getLog(XMLTransformer.class);
 
     /**
@@ -87,24 +90,6 @@ public class XMLTransformer extends ObjectFilterImpl {
      * Optional.
      */
     public static final String CONF_SETUPS = "summa.xmltransformer.setups";
-
-    /**
-     * If true, children and parents of the given Record will be transformed.
-     * </p><p>
-     * Optional. Default is false.
-     */
-    public static final String CONF_TRAVERSE = "summa.xmltransformer.traverse";
-    public static final boolean DEFAULT_TRAVERSE = false;
-
-    /**
-     * It true, non-matching Payloads are discarded.
-     * If false, non-matched Payloads are passed on non-transformed.
-     * </p><p>
-     *     Optional. Default is true.
-     */
-    public static final String CONF_NONMATCHING_DISCARD =
-        "summa.xmltransformer.nonmatching.discard";
-    public static final boolean DEFAULT_NONMATCHING_DISCARD = true;
 
     /* Parameters below can be used at the topmost level of the Configuration
        and in Configurations under CONF_SETUPS.
@@ -162,8 +147,6 @@ public class XMLTransformer extends ObjectFilterImpl {
             "summa.xmltransformer.entityresolver";
 
     private List<Changeling> changelings = new ArrayList<Changeling>();
-    private final boolean traverse;
-    private final boolean discardNonmatching;
 
     /**
      * Sets up the transformer stated in the configuration.
@@ -172,9 +155,6 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public XMLTransformer(Configuration conf) {
         super(conf);
-        traverse = conf.getBoolean(CONF_TRAVERSE, DEFAULT_TRAVERSE);
-        discardNonmatching = conf.getBoolean(
-            CONF_NONMATCHING_DISCARD, DEFAULT_NONMATCHING_DISCARD);
         Changeling base = new Changeling(conf, false);
         if (base.isValid()) {
             changelings.add(base);
@@ -200,41 +180,9 @@ public class XMLTransformer extends ObjectFilterImpl {
     }
 
 
-
-    // TODO: Consider accepting Streams as source & destination
-    /**
-     * Transform the content of Record from one XML-block to another, using the
-     * {@link Changeling#xsltLocation}.
-     * @param payload the wrapper containing the Record with the content.
-     * @return true if payload is processed correctly, false otherwise.
-     */
     @Override
-    protected boolean processPayload(Payload payload) throws PayloadException {
-        //noinspection DuplicateStringLiteralInspection
-        if (log.isTraceEnabled()) {
-            log.trace("processPayload(" + payload + ") called for " + this);
-        }
-        if (payload.getRecord() == null) {
-            throw new PayloadException("No Record defined", payload);
-        }
-        if (!processRecord(payload.getRecord(), null)) {
-            Logging.logProcess(
-                "XMLTransformer", "Unable to transform root Record",
-                Logging.LogLevel.DEBUG, payload);
-            return !discardNonmatching;
-        }
-        return true;
-    }
-
-    private boolean processRecord(Record record, Set<String> processed)
+    public boolean processRecord(Record record, boolean origin, Object o)
                                                        throws PayloadException {
-        if (processed != null && processed.contains(record.getId())) {
-            log.debug("Already transformed " + record + ". Skipping");
-            return false;
-        }
-        if (log.isTraceEnabled()) {
-            log.trace("Processing " + record);
-        }
         Changeling changeling = getChangeling(record);
         if (changeling == null) {
             Logging.logProcess(
@@ -246,27 +194,25 @@ public class XMLTransformer extends ObjectFilterImpl {
             log.trace("Located changeling for (" + record + ")");
         }
         changeling.transform(record);
-        if (traverse &&
-            (record.getChildren() != null && record.getChildren().size() == 0)||
-            (record.getParents() != null && record.getParents().size() == 0)) {
-            if (processed == null) {
-                processed = new HashSet<String>();
-                log.debug("Initiating traversal of " + record);
-            }
-            processed.add(record.getId());
-            if (record.getChildren() != null) {
-                for (Record child: record.getChildren()) {
-                    processRecord(child, processed);
-                }
-            }
-            if (record.getParents() != null) {
-                for (Record parent: record.getParents()) {
-                    processRecord(parent, processed);
-                }
-            }
-        }
-        return true; // At least one record is processed
+        return true;
     }
+
+    @Override
+    public Object createState() {
+        return null; // Not used for anything in this filter
+    }
+
+    @Override
+    public boolean finish(Payload payload, Object state, boolean success)
+                                                       throws PayloadException {
+        if (!success) {
+            Logging.logProcess(
+                "XMLTransformer", "Unable to transform. discarding",
+                Logging.LogLevel.DEBUG, payload);
+        }
+        return success;
+    }
+
 
     private Changeling getChangeling(Record record) {
         for (Changeling changeling: changelings) {
