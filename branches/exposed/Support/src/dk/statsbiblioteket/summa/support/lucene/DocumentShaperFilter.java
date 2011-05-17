@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
@@ -54,7 +55,7 @@ import java.io.Serializable;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DocumentShaperFilter extends DocumentCreatorBase {
+public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
     private static Log log = LogFactory.getLog(DocumentShaperFilter.class);
 
     /**
@@ -149,26 +150,38 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
     }
 
     @Override
-    protected boolean processPayload(Payload payload) throws PayloadException {
+    public Document createState(Payload payload) throws PayloadException {
         Object docO = payload.getData(Payload.LUCENE_DOCUMENT);
         if (docO == null) {
-            log.warn(String.format("No Lucene Document for %s", payload));
-            return false;
+            throw new PayloadException("No Lucene Document", payload);
         }
-        Document lucenedoc = (Document)docO;
+        Document doc = (Document)docO;
         for (SimpleTriple<Pattern, String, String> keyPair: keys) {
             for (Map.Entry<String, Serializable> entry:
                     payload.getData().entrySet()) {
-                assign(payload, lucenedoc, keyPair, entry.getKey(),
-                       entry.getValue());
+                assign(payload.getRecord(), doc, keyPair,
+                       entry.getKey(),entry.getValue());
             }
+        }
+        return doc;
+    }
 
-            if (payload.getRecord() != null &&
-                payload.getRecord().getMeta() != null) {
+    @Override
+    public boolean finish(Payload payload, Document doc, boolean success)
+                                                       throws PayloadException {
+        return success;
+    }
+
+    @Override
+    public boolean processRecord(Record record, boolean origin, Document doc)
+                                                       throws PayloadException {
+        for (SimpleTriple<Pattern, String, String> keyPair: keys) {
+            if (record != null &&
+                record.getMeta() != null) {
                 for (Map.Entry<String, String> entry:
-                        payload.getRecord().getMeta().entrySet()) {
-                    assign(payload, lucenedoc, keyPair, entry.getKey(),
-                           entry.getValue());
+                        record.getMeta().entrySet()) {
+                    assign(record, doc, keyPair,
+                           entry.getKey(), entry.getValue());
                 }
             }
         }
@@ -176,7 +189,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
     }
 
     // False if not assigned
-    private boolean assign(Payload payload, Document document,
+    private boolean assign(Record record, Document document,
                            SimpleTriple<Pattern, String, String> key,
                            String metaKey, Object content)
                                                        throws PayloadException {
@@ -186,7 +199,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "assign(%s, ..., (%s, %s, %s), %s, %s) called",
-                    payload, key.getKey(), key.getValue1(), key.getValue2(),
+                    record, key.getKey(), key.getValue1(), key.getValue2(),
                     metaKey, content.toString()));
         }
         String fieldName = getFieldName(key.getKey(), key.getValue1(), metaKey);
@@ -197,7 +210,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
             log.trace(String.format(
                     "Assigning field '%s' with content '%s' to %s with "
                     + "content-template '%s'",
-                    fieldName, content, payload,
+                    fieldName, content, record,
                     key.getValue2() == null ? DEFAULT_FIELD_CONTENT :
                     key.getValue2()));
         }
@@ -205,7 +218,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
         if (c == null) {
             log.debug(String.format(
                     "Null from content.toString() in assign for field '%s' to " 
-                    + "%s", fieldName, payload));
+                    + "%s", fieldName, record));
             return false;
         }
         if ("".equals(c)) {
@@ -227,8 +240,9 @@ public class DocumentShaperFilter extends DocumentCreatorBase {
             addFieldToDocument(descriptor, document, fieldName, c, 1.0F);
         } catch (IndexServiceException e) {
             throw new PayloadException(String.format(
-                    "Unable to add field '%s' with content '%s' to document", 
-                    fieldName, content.toString()), e, payload);
+                    "Unable to add field '%s' with content '%s' to document for"
+                    + " %s",
+                    fieldName, content.toString(), record), e);
         }
         return true;
     }

@@ -198,7 +198,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     }
 
     @Override
-    public Object createState() {
+    public Object createState(Payload payload) {
         return null; // Not used for anything in this filter
     }
 

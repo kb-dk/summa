@@ -101,8 +101,9 @@ public class StreamingDocumentCreator
 
     // TODO: Check whether resolver is used for anything
     @Override
-    public Document createState() {
+    public Document createState(Payload payload) {
         // TODO: Use a pool of Documents so that they can be reused
+        // TODO: Consider moving this to super class
         return new org.apache.lucene.document.Document();
     }
 

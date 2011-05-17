@@ -22,13 +22,24 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.w3c.dom.Node;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,24 +47,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -90,7 +83,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "</defaultSearchFields>\n"
             + "</IndexDescriptor>";
 
-    public static final String SIMPLE_RECORD =
+/*    public static final String SIMPLE_RECORD =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
             + "id=\"mybase:grimme_aellinger\" xmlns=\""
@@ -102,7 +95,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "        <field name=\"nonexisting\">Should be default</field>\n"
             + "    </fields>\n"
             + "</SummaDocument>";
-
+    */
     public static final String NAMESPACED_RECORD =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<SummaDocument version=\"1.0\" boost=\"1.5\" "

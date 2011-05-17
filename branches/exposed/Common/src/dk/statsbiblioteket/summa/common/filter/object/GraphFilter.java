@@ -93,7 +93,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
         if (payload.getRecord() == null) {
             throw new PayloadException("No Record defined", payload);
         }
-        T state = createState();
+        T state = createState(payload);
         boolean success = processRecord(payload.getRecord(), null, state);
         return finish(payload, state, success);
     }
@@ -142,11 +142,14 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
         Record record, boolean origin, T state) throws PayloadException;
 
     /**
-     * The state-object will be send to all Records visited during traversal.
+     * The state-object is created before any other processing is done and will
+     * be send to all Records visited during traversal.
      * null is a valid value as all processing of the object is optional.
+     * @param payload the Payload that is about to be processed.
      * @return a custom object for preserving state between process-calls.
+     * @throws PayloadException if the state could not be created.
      */
-    public abstract T createState();
+    public abstract T createState(Payload payload) throws PayloadException;
 
     /**
      * Called with the originating payload when traversal has finished.

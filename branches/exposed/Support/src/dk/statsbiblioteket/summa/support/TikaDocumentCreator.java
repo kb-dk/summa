@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -57,6 +58,7 @@ import java.net.URL;
  * </p><p>
  * Note 2: The id is taken from the Payload.
  */
+// TOD: Un-hack the missing graph traversal capabilities
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -84,7 +86,8 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
 
     /**
      * Initialize the underlying parser and set up internal structures.
-     * {@link #setSource} must be called before further use.
+     * {@link #setSource(dk.statsbiblioteket.summa.common.filter.Filter)} must
+     * be called before further use.
      * @param conf the configuration for the document creator..
      * @throws dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException if there was a problem with
      *         the configuration.
@@ -127,6 +130,23 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
     @Override
     public String getName() {
         return "Tika document creator";
+    }
+
+    @Override
+    public boolean processRecord(Record record, boolean origin, Object state)
+                                                       throws PayloadException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Object createState(Payload payload) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public boolean finish(Payload payload, Object state, boolean success)
+                                                       throws PayloadException {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     /**
