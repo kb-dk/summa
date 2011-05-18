@@ -19,9 +19,11 @@ import dk.statsbiblioteket.summa.common.MarcAnnotations;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
@@ -84,8 +86,19 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             "summa.ingest.marcmultivolume.ignorexmlnamespaces";
     public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
 
+    /**
+     * If defined, this contain a sub-Configuration with parameters for
+     * {@link PayloadMatcher}. Any sub-Record that does not match is ignored
+     * when a merge is performed.
+     * </p><p>
+     * Optional. If not defined, all sub Records are merged.
+     */
+    public static final String CONF_MERGE_RECORDS =
+        "summa.ingest.marcmultivolume.mergerecords";
+
     private URL xsltLocation;
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
+    private final PayloadMatcher keep;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
@@ -97,8 +110,20 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                     CONF_MERGE_XSLT,
                     conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
-        stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
-                                             stripXMLNamespaces);
+        stripXMLNamespaces = conf.getBoolean(
+            CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces);
+        if (conf.valueExists(CONF_MERGE_RECORDS)) {
+            log.debug("Creating ignore matcher");
+            try {
+                keep = new PayloadMatcher(
+                    conf.getSubConfiguration(CONF_MERGE_RECORDS));
+            } catch (SubConfigurationsNotSupportedException e) {
+                throw new ConfigurationException(
+                    "Sub configuration not supported", e);
+            }
+        } else {
+            keep = null;
+        }
         log.info("MarcMultiVolumeMerger for '" + xsltLocation
                  + "' ready for use.  Namespaces will "
                  + (stripXMLNamespaces ? "" : "not ")
@@ -251,7 +276,12 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
 
         if (record.getChildren() != null) {
             for (Record child: record.getChildren()) {
-                addProcessedContent(output, true, child, level+1);
+                if (keep != null && !keep.isMatch(child)) {
+                    log.debug("Ignoring sub Record as it matches the ignore "
+                              + "setup. Ignored is " + record);
+                } else {
+                    addProcessedContent(output, true, child, level+1);
+                }
             }
         }
         if (level == 0) {

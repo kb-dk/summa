@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -100,7 +101,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
 
     private Record createAlephRecord(String filename) throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        return new Record(filename, "Dummy", Resolver.getUTF8Content(
+        return new Record(filename, "aleph", Resolver.getUTF8Content(
                 "aleph/" + filename).getBytes("utf-8"));
     }
 
@@ -142,8 +143,26 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         String processed = merger.next().getRecord().getContentAsUTF8();
         assertNotNull("DOM-parsing should succeed for\n" + countTestCases(),
                       DOM.stringToDOM(processed));
-        log.info("Processed:\n" + processed);
-        // TODO: Check here
+        assertTrue("The result should contain 'Frühe'\n" + processed,
+                   processed.contains("Frühe"));
+    }
+
+    public void testExtraContent() throws Exception {
+        makeSampleAleph();
+        List<Record> children = records.get(0).getChildren();
+        children.add(new Record("Dummy", "bar", new byte[10]));
+        records.get(0).setChildren(children);
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration ignoreConf = conf.createSubConfiguration(
+            MarcMultiVolumeMerger.CONF_MERGE_RECORDS);
+        ignoreConf.set(PayloadMatcher.CONF_BASE_REGEX, "aleph");
+        MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(conf);
+        merger.setSource(this);
+        String processed = merger.next().getRecord().getContentAsUTF8();
+        assertNotNull("DOM-parsing should succeed for\n" + countTestCases(),
+                      DOM.stringToDOM(processed));
+        assertTrue("The result should contain 'Frühe'\n" + processed,
+                   processed.contains("Frühe"));
     }
 
     private void assertContains(String main, String sub) {
