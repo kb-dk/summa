@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common.configuration.storage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -43,7 +44,8 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     private static Log log = LogFactory.getLog(XStorageTest.class);
     /** Sub storage XML location. */
     public static final File SUBSTORAGELOCATION =
-               new File("test/data/substorage.xml").getAbsoluteFile();
+               Resolver.getFile("data/configurationFiles/substorage.xml").
+                   getAbsoluteFile();
 
     /**
      * Create s XStorageTest instance.
