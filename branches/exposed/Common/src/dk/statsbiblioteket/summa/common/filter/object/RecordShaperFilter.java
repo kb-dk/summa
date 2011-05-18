@@ -157,6 +157,23 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String DEFAULT_BASE_TEMPLATE = "$0";
 
     /**
+     * If {@link #CONF_META} is specified, the requirement can be optionally
+     * specified. Valid values are all, none or one.
+     * </p><p>
+     * Important: The legacy {@link #CONF_DISCARD_ON_ERRORS} must be true for
+     * this setting to have effect.
+     * </p><p>
+     * Optional. Default is all.
+     */
+    public static final String CONF_META_REQUIREMENT =
+        "record.meta.requirement";
+    public static final String DEFAULT_META_REQUIREMENT =
+        REQUIREMENT.all.toString();
+
+    public static enum REQUIREMENT {all, none, one}
+
+
+    /**
      * A list of sub-configurations specifying regexps for the extraction of
      * snippets into meta-data. The regular expression will be matched against
      * the record contents. See all CONT_META_*-properties below.
@@ -226,6 +243,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private String idHashPrefix = "";
     private int idHashMinLength = DEFAULT_ID_HASH_MINLENGTH;
     private boolean copyMeta = DEFAULT_COPY_META;
+    private final REQUIREMENT metaRequirement;
 
     private List<Shaper> metas = new ArrayList<Shaper>();
 
@@ -261,6 +279,21 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         idHashPrefix = conf.getString(CONF_ID_HASH_PREFIX, idHashPrefix);
         idHashMinLength = conf.getInt(CONF_ID_HASH_MINLENGTH, idHashMinLength);
+        metaRequirement = REQUIREMENT.valueOf(
+            conf.getString(CONF_META_REQUIREMENT, DEFAULT_META_REQUIREMENT));
+        if (metaRequirement == null) {
+            throw new ConfigurationException(
+                "Unable to resolve " + CONF_META_REQUIREMENT + " value '"
+                + conf.getString(CONF_META_REQUIREMENT) + "' to any known "
+                + "requirement. Valid values are all, none and one");
+        }
+        if (metaRequirement == RecordShaperFilter.REQUIREMENT.one
+            && metas.size() == 0) {
+            throw new ConfigurationException(
+                "There were 0 metas specified with a requirement of 1 in order"
+                + " for a Payload to pass. Set requirements to something else "
+                + "or add at least 1 meta");
+        }
         log.info(String.format(
                 "Created an assign meta filter with %d meta extractions",
                 metas.size()));
@@ -426,8 +459,36 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 }
             }
         }
+        int count = 0;
+        PayloadException lastException = null;
         for (Shaper meta: metas) {
-            meta.shape(payload);
+            try {
+                meta.shape(payload);
+                count++;
+            } catch (PayloadException e) {
+                if (metaRequirement == RecordShaperFilter.REQUIREMENT.all) {
+                    throw new PayloadException(
+                        "The requirement of passed metas was 'all'. "
+                        + "Payload did not pass '" + meta
+                        + "' and will be discarded", e, payload);
+                }
+                lastException = e;
+            }
+        }
+        if (count != metas.size()) {
+            if (metaRequirement == REQUIREMENT.one && count == 0) {
+                throw new PayloadException(
+                    "The requirement of passed metas was 'one'. "
+                    + "Payload did not pass any metas", lastException, payload);
+            }
+            Logging.logProcess(
+                "RecordShaperFilter",
+                "Payload passed " + count + "/" + metas.size() + " metas",
+                Logging.LogLevel.TRACE, payload);
+        } else {
+            Logging.logProcess("RecordShaperFilter",
+                               "Payload passed all " + metas.size()
+                               + " metas", Logging.LogLevel.TRACE, payload);
         }
         if (idHash != null && payload.getId().length() > idHashMinLength) {
             String oldID = payload.getId();

@@ -234,10 +234,11 @@ public class RelationResolverTest extends TestCase {
         Record teiR2 = new Record("TEIRecord2", "bar", TEI13.getBytes("utf-8"));
 
         Configuration shaperConf = Configuration.newMemoryBased();
-        shaperConf.set(RecordShaperFilter.CONF_DISCARD_ON_ERRORS, false);
+        shaperConf.set(RecordShaperFilter.CONF_DISCARD_ON_ERRORS, true);
+        shaperConf.set(RecordShaperFilter.CONF_META_REQUIREMENT, "one");
         shaperConf.set(RecordShaperFilter.CONF_COPY_META, true);
         List<Configuration> metaConfs = shaperConf.createSubConfigurations(
-            RecordShaperFilter.CONF_META, 4);
+            RecordShaperFilter.CONF_META, 5);
 
         Configuration conf10Content = metaConfs.get(0);
         conf10Content.set(RecordShaperFilter.CONF_META_SOURCE,
@@ -270,6 +271,14 @@ public class RelationResolverTest extends TestCase {
                          RecordUtil.PART_META_PREFIX + "isbn10origin");
         conf13Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN13);
         conf13Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
+
+        Configuration confUnmatching = metaConfs.get(4);
+        confUnmatching.set(RecordShaperFilter.CONF_META_SOURCE,
+                         RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
+        confUnmatching.set(RecordShaperFilter.CONF_META_KEY,
+                         RecordUtil.PART_META_PREFIX + "nonmatching");
+        confUnmatching.set(RecordShaperFilter.CONF_META_REGEXP, "nomatch");
+        confUnmatching.set(RecordShaperFilter.CONF_META_TEMPLATE, "$0");
 
         Configuration resolverConf = Configuration.newMemoryBased(
             RelationResolver.CONF_ASSIGN_PARENTS, true,
