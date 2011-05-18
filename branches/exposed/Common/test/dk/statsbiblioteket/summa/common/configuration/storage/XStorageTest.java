@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -46,6 +47,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     public static final File SUBSTORAGELOCATION =
                Resolver.getFile("data/configurationFiles/substorage.xml").
                    getAbsoluteFile();
+
 
     /**
      * Create s XStorageTest instance.
@@ -158,5 +160,21 @@ public class XStorageTest extends ConfigurationStorageTestCase {
         String name = xs.getFilename();
         assertTrue(p.matcher(name).find());
         new File(name).delete();
+    }
+
+    public void testStringsList() throws IOException {
+        File MISCSTORAGELOCATION =
+            Resolver.getFile("data/configurationFiles/misc_storage.xml").
+                getAbsoluteFile();
+        XStorage xs = new XStorage(MISCSTORAGELOCATION);
+        Configuration conf = new Configuration(xs);
+        assertEquals("Single String value should be resolvable",
+                     "foo", conf.getString("single"));
+        assertEquals("Single-line multi String value should return the right "
+                     + "number of Strings",
+                     2, conf.getStrings("single_line").size());
+        assertEquals("Multi-value multi String should return the right "
+                     + "number of Strings",
+                     2, conf.getStrings("multi_line").size());
     }
 }
