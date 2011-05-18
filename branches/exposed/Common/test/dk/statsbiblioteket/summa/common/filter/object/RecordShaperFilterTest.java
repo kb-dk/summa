@@ -19,12 +19,15 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -169,5 +172,39 @@ public class RecordShaperFilterTest extends TestCase {
         assertTrue("The pattern " + ID_REGEXP
                    + " should match somewhere in the content",
                    matcher.find());
+    }
+
+    public void testLimit() throws IOException {
+        Configuration shaperConf = Configuration.newMemoryBased();
+        shaperConf.set(RecordShaperFilter.CONF_DISCARD_ON_ERRORS, true);
+        shaperConf.set(RecordShaperFilter.CONF_META_REQUIREMENT, "none");
+        shaperConf.set(RecordShaperFilter.CONF_COPY_META, true);
+        List<Configuration> metaConfs = shaperConf.createSubConfigurations(
+            RecordShaperFilter.CONF_META, 1);
+
+        Configuration partConf = metaConfs.get(0);
+        partConf.set(RecordShaperFilter.CONF_META_SOURCE,
+                     RecordUtil.PART_CONTENT);
+        partConf.set(RecordShaperFilter.CONF_META_KEY,
+                     RecordUtil.PART_META_PREFIX + "result");
+        partConf.set(RecordShaperFilter.CONF_META_LIMIT, 10);
+        partConf.set(RecordShaperFilter.CONF_META_REGEXP, ".*(foo.).*");
+        partConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1");
+
+        Record small = new Record(
+            "small", "bar", "zoofoo7maz".getBytes("utf-8"));
+        Record large = new Record(
+            "large", "bar", "1234567890zoofoo7maz".getBytes("utf-8"));
+        ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(
+            new Payload(small), new Payload(large)));
+
+        ObjectFilter shaper = new RecordShaperFilter(shaperConf);
+        shaper.setSource(feeder);
+
+        assertNotNull("The first Payload should have the result assigned",
+                      shaper.next().getRecord().getMeta("result"));
+        assertNull("The second Payload should not have the result assigned",
+                   shaper.next().getRecord().getMeta("result"));
+
     }
 }

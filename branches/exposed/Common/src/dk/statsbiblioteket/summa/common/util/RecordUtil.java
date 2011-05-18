@@ -1057,5 +1057,45 @@ public class RecordUtil {
                 e);
         }
     }
-}
 
+    /**
+     * Returns at most limit characters from the source in the given Record.
+     * The implementation creates a temporary Reader and Writer if the source is
+     * {@link #PART_CONTENT}.
+     * @param record the String provider.
+     * @param source where to extract the String from. Valid values are 'id',
+     *        'base', 'content' and 'meta.key' where the key in meta.key is
+     *        used to get a meta-value.
+     * @param limit the maximum number of characters to return.
+     *              0 means no limit ans is equivalent to a plain getString.
+     * @return a String extracted from the Record.
+     */
+    public static String getString(Record record, String source, int limit) {
+        if (limit == 0) {
+            return getString(record, source);
+        }
+
+        if (PART_ID.equals(source) || PART_BASE.equals(source) ||
+            source.startsWith(PART_META_PREFIX)) {
+            String full = getString(record, source);
+            return full.length() <= limit ? full : full.substring(0, limit);
+        }
+
+        Reader reader = RecordUtil.getReader(record, source);
+        StringWriter sw = new StringWriter(Math.min(limit, 1000000));
+        int count = 0;
+        int c;
+        try {
+            // TODO: Optimize this by using a buffer
+            while (count < limit && ((c = reader.read()) != -1)) {
+                sw.append((char)c);
+                count++;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "IOException while flushing reader for " + record
+                + " with source " + source + " and limit " + limit, e);
+        }
+        return sw.toString();
+    }
+}

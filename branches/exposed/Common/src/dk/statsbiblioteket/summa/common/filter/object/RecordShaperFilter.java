@@ -20,10 +20,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -205,6 +208,24 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String DEFAULT_META_SOURCE = "content";
 
     /**
+     * The maximum number of characters to fetch from the source. For large
+     * amounts of text, regexps might perform poorly. If the relevant data are
+     * known to be in the beginning of the text, limiting the amount of
+     * characters to match against can yield a considerable increase in speed.
+     * </p><p>
+     * Note: For small amounts of text, the extra logistics will slow down
+     * processing a little bit, compared to not specifying a limit.
+     * </p><p>
+     * Warning: The states limit is used as the initial size of an internal
+     * buffer. Specifying a very large number will have a serious impact on
+     * memory allocation and subsequent garbage collection.
+     * </p><p>
+     * Optional. Default is 0 (unlimited).
+     */
+    public static final String CONF_META_LIMIT = "record.meta.limit";
+    public static final int DEFAULT_META_LIMIT = 0;
+
+    /**
      * This regexp will be used with {@link #CONF_META_TEMPLATE} to
      * specify the value for the {@link #CONF_META_KEY}.
      * </p><p>
@@ -324,6 +345,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         private final String  destination;
         private final Pattern regexp;
         private final String  template;
+        private final int limit;
 
         private Shaper(Configuration conf) {
             if (!conf.valueExists(CONF_META_KEY)) {
@@ -348,26 +370,33 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             }
             template = conf.getString(
                 CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
+            limit = conf.getInt(CONF_META_LIMIT, DEFAULT_META_LIMIT);
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
                     "Shaper created with source='%s', destination='%s', "
-                    + "regexp='%s', template='%s'",
-                    source, destination, regexp.pattern(), template));
+                    + "limit=%d, regexp='%s', template='%s'",
+                    source, destination, limit, regexp.pattern(), template));
             }
         }
 
         @Override
         public String toString() {
             return String.format(
-                    "Shaper(source='%s', destination='%s', regexp='%s', "
-                    + "template='%s')",
-                    source, destination, regexp.pattern(), template);
+                    "Shaper(source='%s', destination='%s', limit=%d, "
+                    + "regexp='%s', template='%s')",
+                    source, destination, limit, regexp.pattern(), template);
         }
 
         public void shape(Payload payload) throws PayloadException {
             final Record record = payload.getRecord();
             String sourceString;
-            sourceString = RecordUtil.getString(record, source);
+            if (limit == 0) {
+                sourceString = RecordUtil.getString(record, source);
+            } else {
+                log.trace("Extracting with limit " + limit + " from "
+                          + record.getId() + " with source " + source);
+                sourceString = RecordUtil.getString(record, source, limit);
+            }
             if (sourceString == null) {
                 String message = String.format(
                         "Unable to get String from source '%s'", source);
