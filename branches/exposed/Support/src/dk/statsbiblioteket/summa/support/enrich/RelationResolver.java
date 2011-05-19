@@ -73,6 +73,15 @@ public class RelationResolver extends ObjectFilterImpl {
     public static final String DEFAULT_SEARCH_FIELD = "";
 
     /**
+     * If true, the search-value part of the query is put in quotes.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SEARCH_QUOTE =
+        "relationresolver.search.quote";
+    public static final boolean DEFAULT_SEARCH_QUOTE = false;
+
+    /**
      * The record metadata keys for the searchvalue value. One search will be
      * performed for each key.
      * </p><p>
@@ -87,7 +96,7 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is 1.
      */
-    public static final String CONF_SEARCH_MAXHITS = 
+    public static final String CONF_SEARCH_MAXHITS =
         "relationresolver.search.maxhits";
     public static final int DEFAULT_SEARCH_MAXHITS = 1;
 
@@ -142,6 +151,7 @@ public class RelationResolver extends ObjectFilterImpl {
     private final boolean discardNonmatched;
     private final boolean assignAsParents;
     private final boolean assignAsChildren;
+    private final boolean quote;
 
     public RelationResolver(Configuration conf) {
         super(conf);
@@ -196,12 +206,13 @@ public class RelationResolver extends ObjectFilterImpl {
                      + "discard-all filter");
         }
         searcher = createSearchClient(conf);
+        quote = conf.getBoolean(CONF_SEARCH_QUOTE, DEFAULT_SEARCH_QUOTE);
         log.info(String.format(
             "Created RelationResolver with searcher '%s', searchField '%s', "
-            + "maxHits %d, metaKey '%s', discard non-matched %b and " 
+            + "quote %b, maxHits %d, metaKey '%s', discard non-matched %b and "
             + "non-matching folder '%s'",
             conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField,
-            maxHits, Strings.join(metaKeys, ", "),
+            quote, maxHits, Strings.join(metaKeys, ", "),
             discardNonmatched, nonmatchedFolder));
     }
 
@@ -254,9 +265,10 @@ public class RelationResolver extends ObjectFilterImpl {
     protected DocumentResponse getHits(Payload payload, String searchValue)
                                                        throws PayloadException {
         Request request = new Request();
+        String qw = quote ? "\"" : "";
         String query =
             "".equals(searchField) ? searchValue : 
-            searchField + ":\"" + searchValue + "\"";
+            searchField + ":" +qw + searchValue + qw;
         request.put(DocumentKeys.SEARCH_QUERY, query);
         request.put(DocumentKeys.SEARCH_MAX_RECORDS, maxHits);
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, DocumentKeys.RECORD_ID);
