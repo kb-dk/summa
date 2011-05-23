@@ -240,13 +240,16 @@ public class RelationResolver extends ObjectFilterImpl {
             }
             DocumentResponse docResponse = getHits(payload, searchValue);
             if (docResponse.getHitCount() == 0) {
-                log.trace(
-                    "No hits found for search value '" + searchValue + "'");
+                if (log.isDebugEnabled()) {
+                    log.debug(
+                        "No hits found for search value '" + searchValue
+                        + "' for " + payload);
+                }
                 Logging.logProcess(
                     "RelationResolver",
                     "Unable to find any documents matching search value '"
                     + searchValue + "'",
-                    Logging.LogLevel.TRACE, payload);
+                    Logging.LogLevel.DEBUG, payload);
                 continue;
             }
             matched += docResponse.getHitCount();
@@ -274,7 +277,7 @@ public class RelationResolver extends ObjectFilterImpl {
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, DocumentKeys.RECORD_ID);
         ResponseCollection responses;
         try {
-            log.debug("Searching with query '" + query + "'");
+            log.trace("Searching with query '" + query + "'");
             responses = searcher.search(request);
         } catch (IOException e) {
             nonmatching(payload);
@@ -290,6 +293,7 @@ public class RelationResolver extends ObjectFilterImpl {
             }
         }
         if (docResponse == null) {
+            log.debug("No hits for query '" + query + "'");
             nonmatching(payload);
             throw new PayloadException(
                 "Did not receive a DocumentResponse when searching for query '"
@@ -327,13 +331,17 @@ public class RelationResolver extends ObjectFilterImpl {
             }
         }
 
+        int parentAdd = 0;
+        int childAdd = 0;
         Record record = payload.getRecord();
+        Set<String> parents =
+            record.getParentIds() == null ?
+            new HashSet<String>(docResponse.getRecords().size()) :
+            new HashSet<String>(record.getParentIds());
         if (assignAsParents) {
-            Set<String> parents =
-                record.getParentIds() == null ?
-                new HashSet<String>(docResponse.getRecords().size()) :
-                new HashSet<String>(record.getParentIds());
+            parentAdd = -parents.size();
             parents.addAll(hitIDs);
+            parentAdd += parents.size();
             record.setParentIds(
                 parents.size() == 0 ? null : new ArrayList<String>(parents));
             Logging.logProcess(
@@ -342,19 +350,23 @@ public class RelationResolver extends ObjectFilterImpl {
                 + "Parents are now " + Strings.join(parents, ", "),
                 Logging.LogLevel.DEBUG, payload);
         }
+        Set<String> children =
+            record.getChildIds() == null ?
+            new HashSet<String>(docResponse.getRecords().size()) :
+            new HashSet<String>(record.getChildIds());
         if (assignAsChildren) {
-            Set<String> children =
-                record.getChildIds() == null ?
-                new HashSet<String>(docResponse.getRecords().size()) :
-                new HashSet<String>(record.getChildIds());
+            childAdd = -children.size();
             children.addAll(hitIDs);
+            childAdd += children.size();
             record.setChildIds(
                 children.size() == 0 ? null : new ArrayList<String>(children));
-            Logging.logProcess(
-                "RelationResolver",
-                "Assigned '" + docResponse.getRecords().size() + "' children. "
-                + "children are now " + Strings.join(children, ", "),
-                Logging.LogLevel.DEBUG, payload);
         }
+        Logging.logProcess(
+            "RelationResolver",
+            "Assigned '" + parentAdd + " new parents (total parents: "
+            + Strings.join(parents, ", ") + ") and " + childAdd
+            + " new children (total children: " + Strings.join(children, ", ")
+            + ") from query '" + docResponse.getQuery() + "'",
+            Logging.LogLevel.DEBUG, payload);
     }
 }
