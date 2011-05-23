@@ -193,7 +193,7 @@ public class LuceneBooster {
             //noinspection DuplicateStringLiteralInspection
             log.trace("applyBoost(Query, " + listBoosts(boosts) + ") entered");
         }
-        expandBoosts(boosts);
+        expandBoosts(boosts); // TODO: Should this only be done once?
         boolean applied = false;
         if (query instanceof BooleanQuery) {
             log.trace("applyBoost: BooleanQuery found");
@@ -226,15 +226,23 @@ public class LuceneBooster {
         }  else if(query instanceof FilteredQuery) {
             log.trace("applyBoost: FilteredQuery ignored");
         } else if(query instanceof FuzzyQuery) {
-            log.trace("applyBoost: FuzzyQuery ignored");
+            FuzzyQuery fq = ((FuzzyQuery)query);
+            return doBoost(query, boosts, fq.getField());
         } else if(query instanceof MatchAllDocsQuery) {
             log.trace("applyBoost: MatchAllDocsQuery ignored");
         } else if (query instanceof PrefixQuery) {
-            log.trace("applyBoost: PrefixQuery ignored");
+            PrefixQuery pq = ((PrefixQuery)query);
+            return doBoost(query, boosts, pq.getField());
         } else if(query instanceof MultiTermQuery) {
-            log.trace("applyBoost: MultiTermQuery ignored");
+            MultiTermQuery mq = ((MultiTermQuery)query);
+            return doBoost(query, boosts, mq.getField());
         } else if (query instanceof PhraseQuery) {
-            log.trace("applyBoost: PhraseQuery ignored");
+            PhraseQuery pq = (PhraseQuery)query;
+            if (pq.getTerms() == null || pq.getTerms().length == 0) {
+                log.trace("No terms in PhraseQuery. Skipping");
+                return false;
+            }
+            return doBoost(query, boosts, pq.getTerms()[0].field());
         }
         else {
             log.warn("applyBoost: Unexpected Query '" + query.getClass()
@@ -242,6 +250,30 @@ public class LuceneBooster {
         }
         log.trace("applyBoost(Query, Map) exited");
         return applied;
+    }
+
+    private boolean doBoost(Query query, Map<String, Float> boosts,
+                            String fieldName) {
+        final float oldBoost = query.getBoost();
+        if (boosts.containsKey(fieldName)) {
+            float factor = boosts.get(fieldName);
+            if (log.isTraceEnabled()) {
+                log.trace(
+                    "getBoost: Query type " + query.getClass().getSimpleName()
+                    + " multiplying old boost " + oldBoost + " for field "
+                    + fieldName + " with " + factor + " to get boost "
+                    + factor * oldBoost);
+            }
+            query.setBoost(factor * oldBoost);
+            return true;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace(
+                "getBoost: Query type " + query.getClass().getSimpleName()
+                + " has no new boost for field " + fieldName
+                + ". Keeping old boost " + oldBoost);
+        }
+        return false;
     }
 
     private String listBoosts(Map<String, Float> boosts) {
