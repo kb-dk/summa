@@ -80,6 +80,7 @@ import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.DocIdBitSet;
+import org.apache.lucene.util.OpenBitSet;
 import org.apache.lucene.util.OpenBitSetDISI;
 
 /**
@@ -1059,6 +1060,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 }
                 if (deleted instanceof DocIdBitSet) { // Optimization
                     count -= ((DocIdBitSet)deleted).getBitSet().cardinality();
+                } else if (deleted instanceof OpenBitSet) {
+                    count -= ((OpenBitSet)deleted).cardinality();
                 } else if (deleted instanceof OpenBitSetDISI) {
                     count -= ((OpenBitSetDISI)deleted).cardinality();
                 } else {
@@ -1125,6 +1128,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             }
             if (bits instanceof DocIdBitSet) { // Optimization
                 count = ((DocIdBitSet)bits).getBitSet().cardinality();
+            } else if (bits instanceof OpenBitSet) {
+                    count = ((OpenBitSet)bits).cardinality();
             } else if (bits instanceof OpenBitSetDISI) {
                 count = ((OpenBitSetDISI)bits).cardinality();
             } else {
