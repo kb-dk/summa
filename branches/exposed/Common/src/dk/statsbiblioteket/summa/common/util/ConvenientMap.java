@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * For all the convenience methods it holds true that empty underlying String-
  * values are equaled to null.
  * </p><p>
- * As a deviation of normal map-practice, the convenience methods and
+ * As a deviation from normal map-practice, the convenience methods and
  * {@link #get(String)} throws a NullPointerException if no value can be found
  * for the given key.
  */
@@ -51,6 +51,19 @@ import java.util.regex.Pattern;
 public class ConvenientMap extends HashMap<String, Serializable> {
     public static final long serialVersionUID = 384681318L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
+
+    public ConvenientMap(Serializable... args) {
+        super();
+        log.trace("Constructing with " + args.length + " arguments");
+        if (args.length % 2 != 0) {
+            throw new IllegalArgumentException(
+                "There must be an even number of arguments. Argument count was "
+                + args.length);
+        }
+        for (int i = 0 ; i < args.length ; i += 2) {
+            put((String)args[i], args[i+1]);
+        }
+    }
 
     /**
      * Partial JSON-absorber. Adds all readily available JSON key:value-pairs
