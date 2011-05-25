@@ -17,6 +17,8 @@ package dk.statsbiblioteket.summa.search.api;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 
+import java.io.Serializable;
+
 /**
  * A request to a SummaSearcher contains arguments to every SearchNode under the Searcher.
  * <p></p>
@@ -34,6 +36,9 @@ import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 public class Request extends ConvenientMap {
     private static final long serialVersionUID = 12L;
 
+    public Request(Serializable... args) {
+        super(args);
+    }
 }
 
 
