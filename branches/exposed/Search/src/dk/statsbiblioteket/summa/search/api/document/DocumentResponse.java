@@ -75,7 +75,7 @@ public class DocumentResponse implements Response, DocumentKeys {
                         String sortKey, boolean reverseSort,
                         String[] resultFields, long searchTime,
                         long hitCount) {
-        log.debug("Creating search result for query '" + query + "'");
+        log.trace("Creating search result for query '" + query + "'");
         this.filter = filter;
         this.query = query;
         this.startIndex = startIndex;
@@ -229,6 +229,7 @@ public class DocumentResponse implements Response, DocumentKeys {
         records.add(record);
     }
 
+    @Override
     public String getName() {
         return NAME;
     }
@@ -244,6 +245,7 @@ public class DocumentResponse implements Response, DocumentKeys {
      * warning is returned.
      * @param other The search result that should be merged into this.
      */
+    @Override
     public void merge(Response other) {
         log.trace("merge called");
         if (!(other instanceof DocumentResponse)) {
@@ -269,6 +271,7 @@ public class DocumentResponse implements Response, DocumentKeys {
             Collections.sort(records, scoreComparator);
         } else {
             Comparator<Record> collatorComparator = new Comparator<Record>() {
+                @Override
                 public int compare(Record o1, Record o2) {
                     String s1 =
                             o1.getSortValue() == null ? "" : o1.getSortValue();
@@ -302,6 +305,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     private static class ScoreComparator implements Comparator<Record>,
                                                    Serializable {
         private static final long serialVersionUID = 168413841L;
+        @Override
         public int compare(Record o1, Record o2) {
             float diff = o2.getScore() - o1.getScore();
             return diff < 0 ? -1 : diff > 0 ? 1 : 0;
@@ -330,6 +334,7 @@ public class DocumentResponse implements Response, DocumentKeys {
      * searchTime is the number of milliseconds it took to perform the search.
      * @return The search-result as XML, suitable for web-services et al.
      */
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String toXML() {
         log.trace("toXML() called");
