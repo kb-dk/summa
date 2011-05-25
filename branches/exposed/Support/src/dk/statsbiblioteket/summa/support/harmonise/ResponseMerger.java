@@ -372,7 +372,7 @@ public class ResponseMerger implements Configurable {
                                    AdjustWrapper.AdjustRecord o2) {
                     int order1 = order.indexOf(o1.getSearcherID());
                     order1 = order1 == -1 ? Integer.MAX_VALUE : order1;
-                    int order2 = order.indexOf(o1.getSearcherID());
+                    int order2 = order.indexOf(o2.getSearcherID());
                     order2 = order2 == -1 ? Integer.MAX_VALUE : order2;
                     return order1 != order2 ? order1 - order2 :
                            -Float.compare(o1.getScore(), o2.getScore());

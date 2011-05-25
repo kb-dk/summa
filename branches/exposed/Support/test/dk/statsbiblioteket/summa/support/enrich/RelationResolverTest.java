@@ -412,6 +412,7 @@ public class RelationResolverTest extends TestCase {
             RelationResolver.CONF_SEARCH_METAKEYS,
             new ArrayList<String>(Arrays.asList("isbn10")),
             ConnectionConsumer.CONF_RPC_TARGET,
+            //"//prod-search01:55000/sb-searcher"
             "//localhost:55000/sb-searcher"
         );
 
