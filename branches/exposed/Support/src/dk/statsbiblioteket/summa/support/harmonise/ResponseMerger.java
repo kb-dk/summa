@@ -64,10 +64,10 @@ public class ResponseMerger implements Configurable {
      * The overall way of merging DocumentResponses.
      * </p><p>
      * Optional. Default is 'score'. 
-     * @see {@link MERGE_MODE} for details.
+     * @see {@link .MODE} for details.
      */
     public static final String CONF_MODE = "responsemerger.mode";
-    public static final MERGE_MODE DEFAULT_MODE = MERGE_MODE.score;
+    public static final MODE DEFAULT_MODE = MODE.score;
     public static final String SEARCH_MODE = CONF_MODE;
     
     /**
@@ -75,10 +75,10 @@ public class ResponseMerger implements Configurable {
      * post-processed.
      * </p><p>
      * Optional. Default is 'none'. 
-     * @see {@link MERGE_POST} for details.
+     * @see {@link POST} for details.
      */
     public static final String CONF_POST = "responsemerger.post";
-    public static final MERGE_POST DEFAULT_POST = MERGE_POST.none;
+    public static final POST DEFAULT_POST = POST.none;
     public static final String SEARCH_POST = CONF_POST;
 
     /**
@@ -93,7 +93,7 @@ public class ResponseMerger implements Configurable {
      *              The parameters {@link #CONF_ORDER} or {@link #SEARCH_ORDER}
      *              must be specified to use this merger.<br/>
      */
-    public static enum MERGE_MODE {
+    public static enum MODE {
         /**
          * Direct sort by score. This is equivalent to the default merger for
          * DocumentResponses.
@@ -115,8 +115,8 @@ public class ResponseMerger implements Configurable {
     }
 
     /**
-     * Used with {@link MERGE_MODE#concatenate} and
-     * {@link MERGE_MODE#interleave} to specify the order of the sources.
+     * Used with {@link MODE#concatenate} and
+     * {@link MODE#interleave} to specify the order of the sources.
      * </p><p>
      * Optional but highly recommended. The IDs for all possible sources
      * is stated separated by comma. Sources not specified here will be merged
@@ -139,7 +139,7 @@ public class ResponseMerger implements Configurable {
      *          the enforced option. If one or more documents are present, no
      *          change is done.
      */
-    public static enum MERGE_POST {none, enforce, ifnone}
+    public static enum POST {none, enforce, ifnone}
 
     /**
      * Documents from the sources specified in {@link #CONF_FORCE_RULES} will
@@ -175,8 +175,8 @@ public class ResponseMerger implements Configurable {
     public static final String CONF_SEQUENTIAL = "responsemerger.sequential";
     public static final boolean DEFAULT_SEQUENTIAL = false;
 
-    private MERGE_MODE defaultMode = DEFAULT_MODE;
-    private MERGE_POST defaultPost = DEFAULT_POST;
+    private MODE defaultMode = DEFAULT_MODE;
+    private POST defaultPost = DEFAULT_POST;
     private List<String> defaultOrder = new ArrayList<String>();
     private int defaultForceTopX = DEFAULT_FORCE_TOPX;
     private List<Pair<String, Integer>> defaultForceRules = null;
@@ -184,9 +184,9 @@ public class ResponseMerger implements Configurable {
     private final long maxRecords;
 
     public ResponseMerger(Configuration conf) {
-        defaultMode = MERGE_MODE.valueOf(
+        defaultMode = MODE.valueOf(
             conf.getString(CONF_MODE, defaultMode.toString()));
-        defaultPost = MERGE_POST.valueOf(
+        defaultPost = POST.valueOf(
             conf.getString(CONF_POST, defaultPost.toString()));
         defaultOrder = conf.getStrings(CONF_ORDER, defaultOrder);
         defaultForceTopX = conf.getInt(CONF_FORCE_TOPX, defaultForceTopX);
@@ -296,7 +296,7 @@ public class ResponseMerger implements Configurable {
     private void merge(
         Request request, AdjustWrapper aw) {
         log.trace("merge called");
-        MERGE_MODE mode = MERGE_MODE.valueOf(
+        MODE mode = MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         switch (mode) {
@@ -416,9 +416,9 @@ public class ResponseMerger implements Configurable {
     }
 
     private void postProcess(Request request, AdjustWrapper aw) {
-        MERGE_POST post = MERGE_POST.valueOf(
+        POST post = POST.valueOf(
             request.getString(SEARCH_POST, defaultPost.toString()));
-        if (post == MERGE_POST.none) {
+        if (post == POST.none) {
             return;
         }
         int forceTopX = request.getInt(SEARCH_FORCE_TOPX, defaultForceTopX);
@@ -487,7 +487,7 @@ public class ResponseMerger implements Configurable {
         List<AdjustWrapper.AdjustRecord> first =
             new ArrayList<AdjustWrapper.AdjustRecord>(required);
         int position = 0;
-        while (position < records.size() && first.size() < topX) {
+        while (position < records.size() && first.size() < required) {
             if (searchID.equals(records.get(position).getSearcherID())) {
                 first.add(records.remove(position));
                 continue;
@@ -499,7 +499,8 @@ public class ResponseMerger implements Configurable {
         // by hashing query & filter
         Random random = new Random(
             (request.getString(DocumentKeys.SEARCH_QUERY, "N/A")
-            + request.getString(DocumentKeys.SEARCH_FILTER, "N/A")).hashCode());
+            + request.getString(DocumentKeys.SEARCH_FILTER, "N/A")).hashCode()
+            << 12);
         List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
         for (int i = 0 ; i < topX ; i++) {
             insertionPoints.add(i < required);

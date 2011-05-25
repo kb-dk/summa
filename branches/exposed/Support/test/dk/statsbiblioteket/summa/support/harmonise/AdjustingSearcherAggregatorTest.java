@@ -2,14 +2,10 @@ package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -17,9 +13,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -54,7 +48,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased(
             ResponseMerger.CONF_ORDER, "summon, sb",
             ResponseMerger.CONF_MODE,
-            ResponseMerger.MERGE_MODE.interleave.toString());
+            ResponseMerger.MODE.interleave.toString());
 //            ResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 2);

@@ -1,9 +1,6 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
-import de.schlichtherle.truezip.entry.Entry;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -14,7 +11,6 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import org.apache.tools.ant.types.resources.selectors.InstanceOf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +37,7 @@ public class ResponseMergerTest extends TestCase {
 
     public void testInterleave() {
         assertEquals(Configuration.newMemoryBased(
-            ResponseMerger.CONF_MODE, ResponseMerger.MERGE_MODE.interleave,
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.interleave,
             ResponseMerger.CONF_ORDER, "searcherB, searcherC"),
             new Request(), generateResponses(), Arrays.asList(
             "B1", "C1", "A1", "B2", "C2", "A2", "B3", "C3", "A3"
@@ -50,7 +46,7 @@ public class ResponseMergerTest extends TestCase {
 
     public void testConcatenate() {
         assertEquals(Configuration.newMemoryBased(
-            ResponseMerger.CONF_MODE, ResponseMerger.MERGE_MODE.concatenate,
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.concatenate,
             ResponseMerger.CONF_ORDER, "searcherC, searcherA"),
             new Request(), generateResponses(), Arrays.asList(
             "C1", "C2", "C3", "A1", "A2", "A3", "B1", "B2", "B3"
@@ -62,12 +58,51 @@ public class ResponseMergerTest extends TestCase {
     // "C1", 0.2f, "C2", 0.1f, "C3", 0.01f
     public void testScore() {
         assertEquals(Configuration.newMemoryBased(
-            ResponseMerger.CONF_MODE, ResponseMerger.MERGE_MODE.score),
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.score),
             new Request(), generateResponses(), Arrays.asList(
             "A1", "A2", "B1", "B2", "C1", "A3", "B3", "C2", "C3"
         ));
     }
 
+    // "A1", 1.0f, "A2", 1.0f, "A3", 0.1f
+    // "B1", 0.7f, "B2", 0.5f, "B3", 0.1f
+    // "C1", 0.2f, "C2", 0.1f, "C3", 0.01f
+    // Note: The insertion-points for Bs are semi-random with a seed from query
+    public void testForce() {
+        assertEquals(Configuration.newMemoryBased(
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.concatenate,
+            ResponseMerger.CONF_ORDER, "searcherC, searcherA",
+            ResponseMerger.CONF_POST, ResponseMerger.POST.enforce,
+            ResponseMerger.CONF_FORCE_TOPX, 4,
+            ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
+            new Request(), generateResponses(), Arrays.asList(
+            "B1", "C1", "C2", "B2", "C3", "A1", "A2", "A3", "B3"
+        ));
+    }
+
+    // Note: The insertion-points for Bs are semi-random with a seed from query
+    public void testIfNone() {
+        // Plain enforce
+        assertEquals(Configuration.newMemoryBased(
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.concatenate,
+            ResponseMerger.CONF_ORDER, "searcherC, searcherA",
+            ResponseMerger.CONF_POST, ResponseMerger.POST.enforce,
+            ResponseMerger.CONF_FORCE_TOPX, 7,
+            ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
+            new Request(), generateResponses(), Arrays.asList(
+            "B1", "C1", "C2", "C3", "B2", "A1", "A2", "A3", "B3"
+        ));
+        // IfNone
+        assertEquals(Configuration.newMemoryBased(
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.concatenate,
+            ResponseMerger.CONF_ORDER, "searcherC, searcherA",
+            ResponseMerger.CONF_POST, ResponseMerger.POST.ifnone,
+            ResponseMerger.CONF_FORCE_TOPX, 7,
+            ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
+            new Request(), generateResponses(), Arrays.asList(
+            "C1", "C2", "C3", "A1", "A2", "A3", "B1", "B2", "B3"
+        ));
+    }
 
     private void assertEquals(
         Configuration conf, Request request,
@@ -103,7 +138,7 @@ public class ResponseMergerTest extends TestCase {
             new ArrayList<SummaSearcherAggregator.ResponseHolder>(3);
         Request request = new Request(
             DocumentKeys.SEARCH_FILTER, null,
-            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_QUERY, "foozoo",
             DocumentKeys.SEARCH_MAX_RECORDS, 20);
         List<Object> hitsA = Arrays.asList(new Object[]{
             "A1", 1.0f,
