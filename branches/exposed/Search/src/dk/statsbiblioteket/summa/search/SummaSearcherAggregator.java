@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.Pair;
-import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -141,10 +140,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
     @SuppressWarnings({"UnusedDeclaration"})
     protected ResponseCollection merge(
         Request request,
-        List<Triple<String, Request, ResponseCollection>> responses) {
+        List<ResponseHolder> responses) {
         ResponseCollection merged = new ResponseCollection();
-        for (Triple<String, Request, ResponseCollection> triple: responses) {
-            merged.addAll(triple.getValue3());
+        for (ResponseHolder holder: responses) {
+            merged.addAll(holder.getResponses());
         }
         return merged;
     }
@@ -186,13 +185,12 @@ public class SummaSearcherAggregator implements SummaSearcher {
         log.trace("All searchers started, collecting and waiting");
 
 
-        List<Triple<String, Request, ResponseCollection>> responses =
-            new ArrayList<Triple<String, Request, ResponseCollection>>(
-                searchFutures.size());
+        List<ResponseHolder> responses =
+            new ArrayList<ResponseHolder>(searchFutures.size());
         for (Pair<String, Future<ResponseCollection>> searchFuture:
                 searchFutures) {
             try {
-                responses.add(new Triple<String, Request, ResponseCollection>(
+                responses.add(new ResponseHolder(
                     searchFuture.getKey(), request,
                     searchFuture.getValue().get()));
             } catch (InterruptedException e) {
@@ -214,6 +212,29 @@ public class SummaSearcherAggregator implements SummaSearcher {
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
         return merged;
+    }
+
+    public static class ResponseHolder {
+        private final String searcherID;
+        private final Request request;
+        private final ResponseCollection responses;
+
+        public ResponseHolder(
+            String searcherID, Request request, ResponseCollection responses) {
+            this.searcherID = searcherID;
+            this.request = request;
+            this.responses = responses;
+        }
+
+        public String getSearcherID() {
+            return searcherID;
+        }
+        public Request getRequest() {
+            return request;
+        }
+        public ResponseCollection getResponses() {
+            return responses;
+        }
     }
 
     private void postProcessPaging(
