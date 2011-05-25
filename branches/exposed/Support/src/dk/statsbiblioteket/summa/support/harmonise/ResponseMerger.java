@@ -511,8 +511,7 @@ public class ResponseMerger implements Configurable {
         // We want the order to be the same between searches so we seed
         // by hashing query & filter
         Random random = new Random(
-            (request.getString(DocumentKeys.SEARCH_QUERY, "N/A")
-            + request.getString(DocumentKeys.SEARCH_FILTER, "N/A")).hashCode()
+            (request.getString(DocumentKeys.SEARCH_QUERY, "N/A")).hashCode()
             << 12);
         List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
         for (int i = 0 ; i < topX ; i++) {
