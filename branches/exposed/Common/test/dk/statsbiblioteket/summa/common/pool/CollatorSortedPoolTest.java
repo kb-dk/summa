@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 

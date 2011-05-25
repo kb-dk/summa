@@ -14,15 +14,9 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 
 /**
  * ClusterProviderImpl Tester.

@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
-import java.io.Serializable;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

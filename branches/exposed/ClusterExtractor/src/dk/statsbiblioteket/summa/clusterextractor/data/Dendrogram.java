@@ -14,14 +14,9 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.data;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * The Dendrogram is a tree (or forest) of centroids or cluster representations.

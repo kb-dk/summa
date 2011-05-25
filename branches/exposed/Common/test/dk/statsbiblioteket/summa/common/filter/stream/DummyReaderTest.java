@@ -16,12 +16,9 @@ package dk.statsbiblioteket.summa.common.filter.stream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.io.InputStream;
 
 /**
  * DummyReader Tester.

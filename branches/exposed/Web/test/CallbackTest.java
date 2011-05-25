@@ -14,16 +14,13 @@
  */
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.w3c.dom.Document;
 import junit.framework.TestCase;
 
 import java.util.Properties;
-import java.io.File;
 
 /**
  *

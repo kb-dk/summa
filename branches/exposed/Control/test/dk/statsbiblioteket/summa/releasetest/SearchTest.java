@@ -45,7 +45,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;

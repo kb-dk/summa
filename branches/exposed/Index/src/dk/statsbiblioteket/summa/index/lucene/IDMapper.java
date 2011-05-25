@@ -21,12 +21,9 @@ import java.util.Set;
 import java.util.Collection;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 
 /**
  * Maps from RecordIDs to LuceneIDs for a given Lucene Index. The RecordIDs must

@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common.rpc;
 
 import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 

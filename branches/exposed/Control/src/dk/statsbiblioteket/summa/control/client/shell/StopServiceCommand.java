@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;

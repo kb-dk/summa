@@ -20,8 +20,6 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.logging.Log;

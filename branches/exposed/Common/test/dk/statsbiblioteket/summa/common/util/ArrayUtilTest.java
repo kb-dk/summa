@@ -18,7 +18,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
-import dk.statsbiblioteket.util.Strings;
 
 import java.util.Arrays;
 

@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.search;
 
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;

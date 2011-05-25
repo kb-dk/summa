@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 
-import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
 import org.apache.lucene.index.*;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Document;

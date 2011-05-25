@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import org.apache.lucene.document.Document;
-import dk.statsbiblioteket.summa.common.lucene.index.FieldType;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * ClusterProvider provides clusters for given records.
  *

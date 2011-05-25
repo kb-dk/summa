@@ -23,7 +23,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
-import dk.statsbiblioteket.summa.ingest.split.SBMARCParser;
 import dk.statsbiblioteket.util.Streams;
 
 import java.io.ByteArrayInputStream;

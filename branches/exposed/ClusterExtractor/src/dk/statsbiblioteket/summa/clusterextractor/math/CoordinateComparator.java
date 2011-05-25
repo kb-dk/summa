@@ -17,8 +17,6 @@ package dk.statsbiblioteket.summa.clusterextractor.math;
 import java.util.Map;
 import java.util.Comparator;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * CoordinateComparator compares {@link Map}.Entry<String, Number>.
  * The coordinates (map entries) are compared by the double value of their

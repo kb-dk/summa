@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database.neo;
 
-import com.sun.org.apache.regexp.internal.RE;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;

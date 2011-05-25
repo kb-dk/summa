@@ -14,11 +14,7 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import junit.framework.TestCase;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 
 /**
  * Top level work flow test.

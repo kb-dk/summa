@@ -11,7 +11,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.exposed.ExposedComparators;
 
 import java.io.IOException;
 import java.util.Arrays;

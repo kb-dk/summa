@@ -5,16 +5,13 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.ingest.stream.PullParserTest;
 import dk.statsbiblioteket.summa.ingest.stream.ZIPParserTest;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import sun.awt.windows.ThemeReader;
 
-import java.awt.image.ImagingOpException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;

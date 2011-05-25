@@ -6,11 +6,6 @@ package dk.statsbiblioteket.summa.common.util.bits;
 
 import junit.framework.TestCase;
 
-import java.util.List;
-import java.util.Random;
-import java.util.ArrayList;
-import java.io.StringWriter;
-
 import dk.statsbiblioteket.summa.common.util.bits.test.BitsArrayPerformance;
 
 public class BitsArrayPerformanceTest extends TestCase {

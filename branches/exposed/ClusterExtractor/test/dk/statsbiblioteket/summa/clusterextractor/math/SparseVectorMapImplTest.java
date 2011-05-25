@@ -21,8 +21,6 @@ import junit.framework.TestCase;
 import java.util.HashMap;
 import java.util.Map;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * SparseVectorMapImpl Tester.
  */

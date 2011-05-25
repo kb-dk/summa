@@ -24,7 +24,6 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Jan 31, 2008 Time: 11:09:01 AM

@@ -19,11 +19,9 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.UnsupportedEncodingException;
-import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.LineReader;
 
 /**
  * Simple conversion of Strings to and from bytes.

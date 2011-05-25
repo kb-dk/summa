@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.CircularCharBuffer;
 
-import java.io.FilterReader;
 import java.io.Reader;
 import java.io.IOException;
 import java.io.StringReader;

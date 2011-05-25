@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.data;
 
-import dk.statsbiblioteket.summa.clusterextractor.ClusterProvider;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.document.Field;
-
 import java.util.HashSet;
 import java.util.Set;
 

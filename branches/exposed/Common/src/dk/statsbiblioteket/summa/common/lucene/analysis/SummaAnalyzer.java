@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import org.apache.lucene.analysis.*;
 
 import java.io.Reader;
-import java.io.IOException;
 import java.util.LinkedList;
 
 import dk.statsbiblioteket.util.qa.QAInfo;

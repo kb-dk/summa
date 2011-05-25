@@ -19,7 +19,6 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;

@@ -7,12 +7,9 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 
 /**
  * Interface defining the search keys used by Summa's {@code BrowserImpl}.

@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
-import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * ClusterMerger is responsible for merging centroid sets.
  *

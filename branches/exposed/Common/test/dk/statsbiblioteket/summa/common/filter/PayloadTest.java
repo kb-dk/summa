@@ -15,14 +15,12 @@
 package dk.statsbiblioteket.summa.common.filter;
 
 import java.util.Random;
-import java.io.UnsupportedEncodingException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.util.Strings;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 

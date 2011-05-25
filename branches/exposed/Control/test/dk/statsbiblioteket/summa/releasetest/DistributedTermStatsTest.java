@@ -26,7 +26,6 @@ import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
-import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;

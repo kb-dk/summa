@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;

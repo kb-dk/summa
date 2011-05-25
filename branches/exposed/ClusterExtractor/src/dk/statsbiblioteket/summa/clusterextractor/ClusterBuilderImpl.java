@@ -14,20 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
-import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
-import dk.statsbiblioteket.summa.clusterextractor.math.CoordinateComparator;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;

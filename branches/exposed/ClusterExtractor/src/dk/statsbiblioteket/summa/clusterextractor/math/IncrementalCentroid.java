@@ -14,12 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.math;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterRepresentative;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.*;
 
 /**

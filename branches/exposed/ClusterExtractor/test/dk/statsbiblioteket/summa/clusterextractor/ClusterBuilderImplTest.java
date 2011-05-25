@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterRepresentative;
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

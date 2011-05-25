@@ -1,14 +1,7 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import de.schlichtherle.truezip.file.TArchiveDetector;
-import de.schlichtherle.truezip.file.TDefaultArchiveDetector;
 import de.schlichtherle.truezip.file.TFile;
-import de.schlichtherle.truezip.fs.FsCompositeDriver;
-import de.schlichtherle.truezip.fs.FsDefaultDriver;
-import de.schlichtherle.truezip.fs.FsDriver;
-import de.schlichtherle.truezip.fs.FsScheme;
-import de.schlichtherle.truezip.fs.sl.FsDriverLocator;
-import de.schlichtherle.truezip.fs.spi.FsDriverProvider;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -20,15 +13,9 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.SignedObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

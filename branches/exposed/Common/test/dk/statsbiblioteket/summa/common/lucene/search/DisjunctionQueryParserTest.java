@@ -1,13 +1,8 @@
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-
-import java.io.IOException;
 
 public class DisjunctionQueryParserTest extends TestCase {
     public DisjunctionQueryParserTest(String name) {

@@ -33,7 +33,6 @@ import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 

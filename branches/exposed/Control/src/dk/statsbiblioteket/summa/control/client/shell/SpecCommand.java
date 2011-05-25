@@ -22,9 +22,6 @@ import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.ByteArrayInputStream;
-import java.util.Map;
-
-import java.io.Serializable;
 
 /**
  * {@link dk.statsbiblioteket.summa.common.shell.Command} implementation

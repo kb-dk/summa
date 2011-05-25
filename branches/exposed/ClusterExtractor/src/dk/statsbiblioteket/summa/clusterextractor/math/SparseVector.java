@@ -17,8 +17,6 @@ package dk.statsbiblioteket.summa.clusterextractor.math;
 import java.util.Map;
 import java.io.Serializable;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * SparseVector represents a vector with few non-zero entries.
  *

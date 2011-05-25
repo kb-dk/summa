@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * ClusterExtractorWorkflow.
  * <p>

@@ -14,17 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
-import dk.statsbiblioteket.summa.clusterextractor.data.DendrogramNode;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-
 import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

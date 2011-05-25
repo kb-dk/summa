@@ -18,10 +18,6 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
-import java.io.*;
-import java.util.Map;
-import java.util.HashMap;
-
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 

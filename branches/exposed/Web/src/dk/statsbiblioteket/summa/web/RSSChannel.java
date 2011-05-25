@@ -20,7 +20,6 @@ import dk.statsbiblioteket.util.xml.DOM;
 import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.logging.Formatter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.io.IOException;

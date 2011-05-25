@@ -28,9 +28,6 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import javax.jws.WebMethod;
-import javax.xml.ws.WebEndpoint;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

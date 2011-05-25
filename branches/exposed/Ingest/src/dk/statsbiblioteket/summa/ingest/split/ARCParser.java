@@ -33,10 +33,8 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.io.*;
-import java.util.Map;
 
 /**
  * Receives a stream in the ARC file format and extracts the content, along with

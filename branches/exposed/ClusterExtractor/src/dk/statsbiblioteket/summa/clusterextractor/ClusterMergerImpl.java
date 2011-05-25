@@ -14,15 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.*;
-import dk.statsbiblioteket.summa.clusterextractor.math.CoordinateComparator;
-import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

@@ -16,7 +16,6 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.commons.logging.Log;

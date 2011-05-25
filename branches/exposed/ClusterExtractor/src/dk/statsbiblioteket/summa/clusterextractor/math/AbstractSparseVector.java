@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.math;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * AbstractSparseVector is a sparse vector with a norm method.
  */

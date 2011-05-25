@@ -16,13 +16,10 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-
-import java.io.IOException;
 
 /**
  * Building block for making a filter that discards Payloads based on some

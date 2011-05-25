@@ -25,8 +25,6 @@ import java.net.URI;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Streams;
 import junit.framework.*;
 
 /**

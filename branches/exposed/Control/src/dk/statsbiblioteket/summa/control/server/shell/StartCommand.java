@@ -19,8 +19,6 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.*;
-import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteConsoleFeedback;
-import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;

@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
@@ -44,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import com.ibm.icu.text.Collator;
 import java.util.*;
 
 /**

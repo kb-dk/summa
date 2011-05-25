@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Logs;
 import junit.framework.Test;
 import junit.framework.TestCase;

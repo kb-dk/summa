@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.data;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 /**
  * PQueueSimilarity is a similarity holder entry used in a priority queue.
  *

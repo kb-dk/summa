@@ -17,8 +17,6 @@ package dk.statsbiblioteket.summa.common.shell;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
-import java.net.SocketException;
-
 /**
  * Abstract helper class to facilitate command implementations that need
  * a connection to a remote RPC service to work.

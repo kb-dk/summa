@@ -26,7 +26,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.search.exposed.ExposedComparators;
 
 import java.util.Locale;
 

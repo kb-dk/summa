@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import dk.statsbiblioteket.util.Files;
 import org.apache.lucene.store.*;

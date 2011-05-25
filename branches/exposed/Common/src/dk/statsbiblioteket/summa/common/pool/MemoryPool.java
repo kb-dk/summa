@@ -21,7 +21,6 @@ package dk.statsbiblioteket.summa.common.pool;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

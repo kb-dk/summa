@@ -16,8 +16,6 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
-
 
 /**
  * Trivial implementation of generic triple.

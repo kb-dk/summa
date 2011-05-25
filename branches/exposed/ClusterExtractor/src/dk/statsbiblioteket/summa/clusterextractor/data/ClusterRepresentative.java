@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.data;
 
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-
 import java.io.Serializable;
 
 /**

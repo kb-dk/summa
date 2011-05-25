@@ -17,21 +17,10 @@ package dk.statsbiblioteket.summa.clusterextractor;
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
-import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
-import dk.statsbiblioteket.util.Profiler;
 
 /**
  * Class for testing the memory needed, if we want a vector-map.

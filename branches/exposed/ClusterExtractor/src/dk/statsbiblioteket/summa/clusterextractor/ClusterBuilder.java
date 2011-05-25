@@ -14,9 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-
 /**
  * ClusterBuilder is responsible for building local centroid sets.
  *

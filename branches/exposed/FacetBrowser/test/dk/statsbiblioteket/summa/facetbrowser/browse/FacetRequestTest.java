@@ -17,15 +17,12 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.Strings;
 
-import java.util.List;
 import java.util.Map;
 import java.io.StringWriter;
 

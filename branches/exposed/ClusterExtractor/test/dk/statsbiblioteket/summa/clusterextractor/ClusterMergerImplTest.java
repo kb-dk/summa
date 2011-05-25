@@ -14,12 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
-import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
-import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

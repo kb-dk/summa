@@ -16,8 +16,6 @@ package dk.statsbiblioteket.summa.common.shell;
 
 import junit.framework.*;
 
-import java.io.IOException;
-
 /**
  * Test the Layout class
  */

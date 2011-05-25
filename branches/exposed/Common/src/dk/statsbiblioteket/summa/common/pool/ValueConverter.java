@@ -14,10 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.IOException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.LineReader;
 
 /**
  * Handles value-specific conversions. To be used together with the pool

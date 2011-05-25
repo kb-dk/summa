@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermEnum;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.util.Collection;
 
