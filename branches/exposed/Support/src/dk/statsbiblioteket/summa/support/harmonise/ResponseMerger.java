@@ -22,7 +22,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
-import dk.statsbiblioteket.summa.common.util.Triple;
+import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -33,13 +33,19 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Merges responses from different searchers based on specified strategies.
  * Intended for federated or fine tuning of distributed integrated search.
+ * </p><p>
+ * Seen from the sky, this class deconstructs received responses into
+ * DocumentResponses and everything else. Responses that are not
+ * DocumentResponses are passed on as usual. DocumentResponses are deconstructed
+ * into records paired with the ID from the searcher that produced them. Those
+ * records are merged into a list, adjusted according to preference and
+ * extracted to a single DocumentResponse that is returned with the unmodified
+ * responses.
  * </p><p>
  * Properties are generally specified both at startup and runtime, where runtime
  * overrides startup. 
@@ -128,8 +134,12 @@ public class ResponseMerger implements Configurable {
      *          The parameters {@link #CONF_FORCE_TOPX} and
      *          {@link #CONF_FORCE_RULES} must be specified to use this
      *          post-processor.
+     * ifnodoc: If no documents from a source given in {@link #CONF_FORCE_RULES}
+     *          are present in the {@link #CONF_FORCE_TOPX} hits, this works as
+     *          the enforced option. If one or more documents are present, no
+     *          change is done.
      */
-    public static enum MERGE_POST {none, enforce}
+    public static enum MERGE_POST {none, enforce, ifnone}
 
     /**
      * Documents from the sources specified in {@link #CONF_FORCE_RULES} will
@@ -190,70 +200,116 @@ public class ResponseMerger implements Configurable {
         log.debug("Created response merger");
     }
 
-    /**
-     * Merges the given packages and returns the result based on basic setup and
-     * parameters given in the request. 
-     * @param request  the original request then resulted in the packages.
-     * @param packages a collection og ResponseCollections to merge.
-     * @return a merge of the given ResponseCollections.
-     */
-    public ResponseCollection merge(
-        Request request,
-        List<Triple<String, Request, ResponseCollection>> packages) {
-        ResponseCollection merged = new ResponseCollection();
-        merge(request, merged, packages);
-        postProcess(request, merged, packages);
-        trim(request, merged);
-        return merged;
-    }
+    private static class AdjustWrapper {
+        /* Contains everything besides DocumentResponse until externalize is
+           called.
+         */
+        private final ResponseCollection merged = new ResponseCollection();
+        /* Merged hitcount and time. The only DocumentResponse in the wrapper */
+        private DocumentResponse base = null;
+        /* All records from the DocumentResponses, held until externalise */
+        private List<AdjustRecord> records = new ArrayList<AdjustRecord>();
 
-    private void trim(Request request, ResponseCollection merged) {
-        log.trace("trim called");
-        long maxRecords = request.getLong(
-            DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
-        for (Response response: merged) {
-            if (response instanceof DocumentResponse) {
-                DocumentResponse docResponse = ((DocumentResponse)response);
-                List<DocumentResponse.Record> rs = docResponse.getRecords();
-                int newSize = Math.min((int)maxRecords, rs.size());
-                log.trace("Trimming " + rs.size() + " to " + newSize);
-                docResponse.setRecords(new ArrayList<DocumentResponse.Record>(
-                    rs.subList(0, newSize)));
+        /* Merge everything into the ResponseCollection. This class should not
+         be used further after this call.
+          */
+        public ResponseCollection externalize() {
+            log.trace("Externalizing AdjustWrapper");
+            ArrayList<DocumentResponse.Record> docR =
+                new ArrayList<DocumentResponse.Record>(records.size());
+            for (AdjustRecord adjR: records) {
+                docR.add(adjR.getRecord());
+            }
+            base.setRecords(docR);
+            merged.add(base);
+            return merged;
+        }
+
+        public ResponseCollection getMerged() {
+            return merged;
+        }
+
+        public List<AdjustRecord> getRecords() {
+            return records;
+        }
+
+        public void setRecords(List<AdjustRecord> records) {
+            this.records = records;
+        }
+
+        public DocumentResponse getBase() {
+            return base;
+        }
+
+        public void setBase(DocumentResponse base) {
+            this.base = base;
+        }
+
+        private static class AdjustRecord {
+            private final String searcherID;
+            private final DocumentResponse.Record record;
+
+            private AdjustRecord(String searcherID,
+                                DocumentResponse.Record record) {
+                this.searcherID = searcherID;
+                this.record = record;
+            }
+
+            public String getSearcherID() {
+                return searcherID;
+            }
+            public float getScore() {
+                return record.getScore();
+            }
+            public DocumentResponse.Record getRecord() {
+                return record;
             }
         }
     }
 
+    /**
+     * Merges the given packages and returns the result based on basic setup and
+     * parameters given in the request. 
+     * @param request  the original request then resulted in the packages.
+     * @param responses a collection of ResponseCollections to merge.
+     * @return a merge of the given ResponseCollections.
+     */
+    public ResponseCollection merge(
+        Request request,
+        List<SummaSearcherAggregator.ResponseHolder> responses) {
+        AdjustWrapper aw = deconstruct(responses);
+        merge(request, aw);
+        postProcess(request, aw);
+        trim(request, aw);
+        return aw.externalize();
+    }
+
+    private void trim(Request request, AdjustWrapper aw) {
+        long maxRecords = request.getLong(
+            DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
+        log.trace("trim called with maxRecords " + maxRecords);
+        if (aw.getRecords().size() > maxRecords) {
+            aw.setRecords(aw.getRecords().subList(0, (int)maxRecords));
+        }
+    }
+
     private void merge(
-        Request request, ResponseCollection merged,
-        List<Triple<String, Request, ResponseCollection>> packages) {
+        Request request, AdjustWrapper aw) {
         log.trace("merge called");
         MERGE_MODE mode = MERGE_MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         switch (mode) {
             case score: {
-                for (Triple<String, Request, ResponseCollection> mp: packages) {
-                    merged.addAll(mp.getValue3());
-                }
+                sortByScore(aw);
                 break;
             }
-            case concatenate:
+            case concatenate: {
+                sortByID(aw, order);
+                break;
+            }
             case interleave: {
-                List<Pair<String, DocumentResponse>> documentResponses =
-                    new ArrayList<Pair<String, DocumentResponse>>(packages.size());
-                for (Triple<String, Request, ResponseCollection> mp: packages) {
-                    for (Response response: mp.getValue3()) {
-                        if (response instanceof DocumentResponse) {
-                            documentResponses.add(
-                                new Pair<String, DocumentResponse>(
-                                    mp.getValue1(),(DocumentResponse)response));
-                        } else {
-                            merged.add(response);
-                        }
-
-                    }
-                }
-                documentMerge(merged, mode, order, documentResponses);
+                interleave(aw, order);
                 break;
             }
             default: throw new UnsupportedOperationException(
@@ -261,139 +317,208 @@ public class ResponseMerger implements Configurable {
         }
     }
 
-    private void documentMerge(
-        ResponseCollection merged, MERGE_MODE mode, List<String> order,
-        List<Pair<String, DocumentResponse>> documentResponses) {
-        log.trace("documentMerge called with mode " + mode + " and order "
-                  + order + " for " + documentResponses.size() + " responses");
-        documentResponses = sort(documentResponses, order);
-        if (documentResponses.size() <= 1) {
-            log.debug("Only " + documentResponses.size() + " responses, "
-                      + "documentMerge skipped");
-            return;
+    private void interleave(AdjustWrapper aw, List<String> order) {
+        log.trace("Sorting by interleaving");
+        // (searchID, records*)*
+        Map<String, List<AdjustWrapper.AdjustRecord>> providers =
+            new LinkedHashMap<String, List<AdjustWrapper.AdjustRecord>>();
+        for (String o: order) { // Ordered first
+            providers.put(o, new ArrayList<AdjustWrapper.AdjustRecord>());
         }
-        switch (mode) {
-            case concatenate: {
-                documentMergeConcatenate(merged, documentResponses);
-                break;
+        for (AdjustWrapper.AdjustRecord ar: aw.getRecords()) {
+            if (!providers.containsKey(ar.getSearcherID())) {
+                providers.put(ar.getSearcherID(),
+                              new ArrayList<AdjustWrapper.AdjustRecord>());
             }
-            case interleave: {
-                documentMergeInterleave(merged, documentResponses);
-                break;
-            }
-            default: throw new UnsupportedOperationException(
-                "Document merge mode " + mode + " not supported yet");
+            providers.get(ar.getSearcherID()).add(ar);
         }
-    }
-
-    private List<Pair<String, DocumentResponse>> sort(
-        List<Pair<String, DocumentResponse>> documentResponses,
-        List<String> order) {
-        log.trace("sort called with " + documentResponses.size()
-                  + " document responses");
-        if (documentResponses.size() <= 0) {
-            return documentResponses;
-        }
-        List<Pair<String, DocumentResponse>> drs =
-            new ArrayList<Pair<String, DocumentResponse>>(
-                documentResponses.size());
-        for (String id : order) {
-            for (int dr = 0; dr < documentResponses.size(); dr++) {
-                if (documentResponses.get(dr).getKey().equals(id)) {
-                    drs.add(documentResponses.remove(dr));
-                    break;
+        // providers now contains ordered lists of records split by search ID
+        List<AdjustWrapper.AdjustRecord> interleaved =
+            new ArrayList<AdjustWrapper.AdjustRecord>();
+        boolean any = true;
+        while (any) {
+            any = false;
+            for (Map.Entry<String, List<AdjustWrapper.AdjustRecord>> entry:
+                providers.entrySet()) {
+                if (entry.getValue().size() > 0) {
+                    any = true;
+                    interleaved.add(entry.getValue().remove(0));
                 }
             }
         }
-        for (Pair<String, DocumentResponse> dr: documentResponses) {
-            drs.add(dr);
-        }
-        return drs;
+        aw.setRecords(interleaved);
     }
 
-    // It is assumed that the document responses are ordered and that there are
-    // at least 2 documentResponses
-    private void documentMergeInterleave(
-        ResponseCollection merged,
-        List<Pair<String, DocumentResponse>> documentResponses) {
-        log.trace("documentMergeInterleave called");
-        List<Pair<String, DocumentResponse>> working =
-            new ArrayList<Pair<String, DocumentResponse>>(
-                documentResponses.size());
-        for (Pair<String, DocumentResponse> response: documentResponses) {
-            working.add(response);
-        }
-        List<DocumentResponse.Record> records =
-            new ArrayList<DocumentResponse.Record>(
-                working.size() *
-                working.get(0).getValue().getRecords().size() * 2);
-        while (working.size() > 0) {
-            Iterator<Pair<String, DocumentResponse>> iterator =
-                working.iterator();
-            while (iterator.hasNext()) {
-                Pair<String, DocumentResponse> response = iterator.next();
-                if (response.getValue().getRecords().size() == 0) {
-                    iterator.remove();
+    private void sortByScore(AdjustWrapper aw) {
+        log.trace("Sorting records by score");
+        Collections.sort(
+            aw.getRecords(),
+            new Comparator<AdjustWrapper.AdjustRecord>() {
+                @Override
+                public int compare(AdjustWrapper.AdjustRecord o1,
+                                   AdjustWrapper.AdjustRecord o2) {
+                    return -Float.compare(o1.getScore(), o2.getScore());
+                }
+            });
+    }
+
+    private void sortByID(AdjustWrapper aw, final List<String> order) {
+        log.trace("Sorting records by searcher ID, secondarily by score");
+        Collections.sort(
+            aw.getRecords(),
+            new Comparator<AdjustWrapper.AdjustRecord>() {
+                @Override
+                public int compare(AdjustWrapper.AdjustRecord o1,
+                                   AdjustWrapper.AdjustRecord o2) {
+                    int order1 = order.indexOf(o1.getSearcherID());
+                    order1 = order1 == -1 ? Integer.MAX_VALUE : order1;
+                    int order2 = order.indexOf(o1.getSearcherID());
+                    order2 = order2 == -1 ? Integer.MAX_VALUE : order2;
+                    return order1 != order2 ? order1 - order2 :
+                           -Float.compare(o1.getScore(), o2.getScore());
+                }
+            });
+    }
+
+
+    private AdjustWrapper deconstruct(
+        List<SummaSearcherAggregator.ResponseHolder> responses) {
+        AdjustWrapper aw = new AdjustWrapper();
+        List<AdjustWrapper.AdjustRecord> adjustRecords =
+            new ArrayList<AdjustWrapper.AdjustRecord>();
+        for (SummaSearcherAggregator.ResponseHolder response: responses) {
+            for (Response r: response.getResponses()) {
+                if (!(r instanceof DocumentResponse)) {
+                    aw.getMerged().add(r);
                     continue;
                 }
-                // TODO: A bit inefficient with arraylists. Could be optimized
-                records.add(response.getValue().getRecords().remove(0));
+                DocumentResponse dr = (DocumentResponse)r;
+                for (DocumentResponse.Record record: dr.getRecords()) {
+                    adjustRecords.add(new AdjustWrapper.AdjustRecord(
+                        response.getSearcherID(), record));
+                }
+                if (aw.getBase() == null) {
+                    aw.setBase(dr);
+                } else { // Merge hit and time
+                    aw.getBase().setHitCount(
+                        aw.getBase().getHitCount() + dr.getHitCount());
+                    aw.getBase().setSearchTime(
+                        sequential ?
+                        aw.getBase().getSearchTime() + dr.getSearchTime() :
+                        Math.max(aw.getBase().getSearchTime(),
+                                 dr.getSearchTime()));
+
+                }
             }
         }
-        Pair<String, DocumentResponse> base = documentResponses.remove(0);
-        mergeHitcountAndTime(base, documentResponses);
-        base.getValue().setRecords(records);
-        merged.add(base.getValue());
+        aw.setRecords(adjustRecords);
+        return aw;
     }
 
-    // It is assumed that the document responses are ordered and that there are
-    // at least 2 documentResponses
-    private void documentMergeConcatenate(
-        ResponseCollection merged,
-        List<Pair<String, DocumentResponse>> documentResponses) {
-        log.trace("documentMergeConcatenate called");
-        // Responses are now in the given order
-        Pair<String, DocumentResponse> base = documentResponses.remove(0);
-        for (Pair<String, DocumentResponse> dr: documentResponses) {
-            base.getValue().getRecords().addAll(dr.getValue().getRecords());
-        }
-        mergeHitcountAndTime(base, documentResponses);
-        merged.add(base.getValue());
-    }
-
-    private void mergeHitcountAndTime(
-        Pair<String, DocumentResponse> base,
-        List<Pair<String, DocumentResponse>> documentResponses) {
-        for (Pair<String, DocumentResponse> dr: documentResponses) {
-            base.getValue().setHitCount(
-                base.getValue().getHitCount() + dr.getValue().getHitCount());
-            base.getValue().setSearchTime(
-                sequential ?
-                base.getValue().getSearchTime() + dr.getValue().getSearchTime():
-                Math.max(base.getValue().getSearchTime(),
-                         dr.getValue().getSearchTime())
-            );
-        }
-    }
-
-    private void postProcess(
-        Request request, ResponseCollection merged,
-        List<Triple<String, Request, ResponseCollection>> packages) {
+    private void postProcess(Request request, AdjustWrapper aw) {
         MERGE_POST post = MERGE_POST.valueOf(
             request.getString(SEARCH_POST, defaultPost.toString()));
         if (post == MERGE_POST.none) {
             return;
         }
-        List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         int forceTopX = request.getInt(SEARCH_FORCE_TOPX, defaultForceTopX);
         List<Pair<String, Integer>> forceRules = defaultForceRules;
         if (request.containsKey(SEARCH_FORCE_RULES)) {
             forceRules = parseForceRules(request.getString(CONF_FORCE_RULES));
         }
         switch (post) {
+            case enforce: {
+                postProcessEnforce(request, aw, forceTopX, forceRules);
+                break;
+            }
+            case ifnone:
+                postProcessIfNone(request, aw, forceTopX, forceRules);
+                break;
             default: throw new UnsupportedOperationException(
                 "Post merge processing does not yet support '" + post + "'");
         }
+    }
+
+    private void postProcessIfNone(
+        Request request, AdjustWrapper aw, int topX,
+        List<Pair<String, Integer>> rules) {
+        log.trace("postProcessIfNone called");
+        outer:
+        for (Pair<String, Integer> rule: rules) {
+            for (int i = 0 ; i < Math.min(aw.getRecords().size(), topX) ; i++) {
+                if (aw.getRecords().get(i).getSearcherID().equals(
+                    rule.getKey())) { // Got a hit within topX, so skip the rule
+                    continue outer;
+                }
+            }
+            // No hit. Enforce the rule!
+            enforce(request, aw, topX, rule.getKey(), rule.getValue());
+        }
+    }
+
+    private void postProcessEnforce(Request request, AdjustWrapper aw, int topX,
+                                    List<Pair<String, Integer>> rules) {
+        log.trace("postProcessEnforce called");
+        for (Pair<String, Integer> rule: rules) {
+            enforce(request, aw, topX, rule.getKey(), rule.getValue());
+        }
+    }
+
+    /* Ensure that there are the required number of records with the given
+       search ID among the topX records.
+      */
+    private void enforce(Request request, AdjustWrapper aw, int topX,
+                         String searchID, int required) {
+        // Do we need to do this?
+        List<AdjustWrapper.AdjustRecord> records = aw.getRecords();
+        if (records.size() < topX) {
+            return; // Not enough Records
+        }
+        int matches = 0;
+        for (int i = 0 ; i < topX && i < records.size() ; i++) {
+            if (searchID.equals(records.get(i).getSearcherID())) {
+                matches++;
+            }
+        }
+        if (matches >= topX) {
+            return; // Enough matches already
+        }
+        // Extract the required records
+        List<AdjustWrapper.AdjustRecord> first =
+            new ArrayList<AdjustWrapper.AdjustRecord>(required);
+        int position = 0;
+        while (position < records.size() && first.size() < topX) {
+            if (searchID.equals(records.get(position).getSearcherID())) {
+                first.add(records.remove(position));
+                continue;
+            }
+            position++;
+        }
+        // Generate semi-random insertion-points among the topX
+        // We want the order to be the same between searches so we seed
+        // by hashing query & filter
+        Random random = new Random(
+            (request.getString(DocumentKeys.SEARCH_QUERY, "N/A")
+            + request.getString(DocumentKeys.SEARCH_FILTER, "N/A")).hashCode());
+        List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
+        for (int i = 0 ; i < topX ; i++) {
+            insertionPoints.add(i < required);
+        }
+        Collections.shuffle(insertionPoints, random);
+        // Insert!
+        List<AdjustWrapper.AdjustRecord> result =
+            new ArrayList<AdjustWrapper.AdjustRecord>(
+                records.size() + first.size());
+        for (int i = 0 ; i < topX ; i++) {
+            if (insertionPoints.get(i) || records.size() <= 0) {
+                result.add(first.remove(0));
+            } else {
+                result.add(records.remove(0));
+            }
+        }
+        result.addAll(records);
+        result.addAll(first); // Just to be sure
+        aw.setRecords(result);
     }
 
     private List<Pair<String, Integer>> parseForceRules(String s) {
@@ -422,5 +547,4 @@ public class ResponseMerger implements Configurable {
         }
         return rules;
     }
-
 }
