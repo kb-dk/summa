@@ -424,7 +424,7 @@ public class ResponseMerger implements Configurable {
         int forceTopX = request.getInt(SEARCH_FORCE_TOPX, defaultForceTopX);
         List<Pair<String, Integer>> forceRules = defaultForceRules;
         if (request.containsKey(SEARCH_FORCE_RULES)) {
-            forceRules = parseForceRules(request.getString(CONF_FORCE_RULES));
+            forceRules = parseForceRules(request.getString(SEARCH_FORCE_RULES));
         }
         switch (post) {
             case enforce: {

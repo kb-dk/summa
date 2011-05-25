@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.unittest;
 
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -105,9 +106,15 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             Object expectedO = expectedI.next();
             Object actualO = actualI.next();
             if (!expectedO.equals(actualO)) {
+                String extra = expected.size() < 20 && actual.size() < 20 ?
+                               "\nExpected [" + Strings.join(expected, ", ")
+                               + "]\nActual   [" + Strings.join(actual, ", ")
+                               + "]" : "";
+
+
                 fail(message + ". The objects at position " + counter
                      + " were not equal. Expected '" + expectedO
-                     + "', got '" + actualO + "'");
+                     + "', got '" + actualO + "'" + extra);
             }
             counter++;
         }
