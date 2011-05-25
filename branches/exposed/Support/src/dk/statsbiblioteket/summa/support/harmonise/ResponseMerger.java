@@ -215,6 +215,15 @@ public class ResponseMerger implements Configurable {
           */
         public ResponseCollection externalize() {
             log.trace("Externalizing AdjustWrapper");
+            if (base == null) {
+                log.trace("No DocumentResponse to externalize");
+                if (records != null && records.size() > 0) {
+                    log.warn("Internal inconsistency: No DocumentResponse "
+                             + "present, but " + records.size()
+                             + " Records exist");
+                }
+                return merged;
+            }
             ArrayList<DocumentResponse.Record> docR =
                 new ArrayList<DocumentResponse.Record>(records.size());
             for (AdjustRecord adjR: records) {
@@ -278,6 +287,11 @@ public class ResponseMerger implements Configurable {
         Request request,
         List<SummaSearcherAggregator.ResponseHolder> responses) {
         AdjustWrapper aw = deconstruct(responses);
+        if (aw.getBase() == null) {
+            log.debug(
+                "No DocumentResponses present in responses, skipping merge");
+            return aw.externalize();
+        }
         merge(request, aw);
         postProcess(request, aw);
         trim(request, aw);
@@ -379,7 +393,6 @@ public class ResponseMerger implements Configurable {
                 }
             });
     }
-
 
     private AdjustWrapper deconstruct(
         List<SummaSearcherAggregator.ResponseHolder> responses) {
@@ -511,14 +524,14 @@ public class ResponseMerger implements Configurable {
             new ArrayList<AdjustWrapper.AdjustRecord>(
                 records.size() + first.size());
         for (int i = 0 ; i < topX ; i++) {
-            if (insertionPoints.get(i) || records.size() <= 0) {
+            if (insertionPoints.get(i) && first.size() > 0) {
                 result.add(first.remove(0));
-            } else {
+            } else if (records.size() > 0) {
                 result.add(records.remove(0));
             }
         }
         result.addAll(records);
-        result.addAll(first); // Just to be sure
+        result.addAll(first); // Just to be sure (it should be empty)
         aw.setRecords(result);
     }
 

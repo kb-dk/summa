@@ -64,6 +64,14 @@ public class ResponseMergerTest extends TestCase {
         ));
     }
 
+    public void testEmpty() {
+        assertEquals(Configuration.newMemoryBased(
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.score),
+            new Request(), generateEmptyResponses(), Arrays.asList(
+            "A1", "A2", "C1", "A3", "C2", "C3"
+        ));
+    }
+
     // "A1", 1.0f, "A2", 1.0f, "A3", 0.1f
     // "B1", 0.7f, "B2", 0.5f, "B3", 0.1f
     // "C1", 0.2f, "C2", 0.1f, "C3", 0.01f
@@ -179,7 +187,7 @@ public class ResponseMergerTest extends TestCase {
             new Request(
                 ResponseMerger.SEARCH_FORCE_TOPX, 6
             ), generateResponses(), Arrays.asList(
-            "C1", "C2", "C3", "A1", "A2", "A3", "B1", "B2", "B3"
+            "C1", "C2", "B1", "C3", "A1", "B2", "A2", "A3", "B3"
         ));
     }
 
@@ -230,6 +238,32 @@ public class ResponseMergerTest extends TestCase {
             "B2", 0.5f,
             "B3", 0.1f
         });
+        holders.add(generateResponse("searcherB", request, 12, 321, hitsB));
+        List<Object> hitsC = Arrays.asList(new Object[]{
+            "C1", 0.2f,
+            "C2", 0.1f,
+            "C3", 0.01f
+        });
+        holders.add(generateResponse("searcherC", request, 3, 43, hitsC));
+        return holders;
+    }
+
+    @SuppressWarnings({"RedundantArrayCreation"})
+    private List<SummaSearcherAggregator.ResponseHolder>
+    generateEmptyResponses() {
+        List<SummaSearcherAggregator.ResponseHolder> holders =
+            new ArrayList<SummaSearcherAggregator.ResponseHolder>(3);
+        Request request = new Request(
+            DocumentKeys.SEARCH_FILTER, null,
+            DocumentKeys.SEARCH_QUERY, "foozoo",
+            DocumentKeys.SEARCH_MAX_RECORDS, 20);
+        List<Object> hitsA = Arrays.asList(new Object[]{
+            "A1", 1.0f,
+            "A2", 1.0f,
+            "A3", 0.1f
+        });
+        holders.add(generateResponse("searcherA", request, 87, 123, hitsA));
+        List<Object> hitsB = Arrays.asList(new Object[]{});
         holders.add(generateResponse("searcherB", request, 12, 321, hitsB));
         List<Object> hitsC = Arrays.asList(new Object[]{
             "C1", 0.2f,
