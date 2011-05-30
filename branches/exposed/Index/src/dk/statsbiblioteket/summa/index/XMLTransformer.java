@@ -252,7 +252,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 throw new ConfigurationException(String.format(
                         "The property %s must be defined", CONF_XSLT));
             }
-            matcher = new PayloadMatcher(conf);
+            matcher = new PayloadMatcher(conf, false);
             //noinspection DuplicateStringLiteralInspection
             log.debug("Extracted XSLT location '" + xsltLocationString
                       + "' from properties");
