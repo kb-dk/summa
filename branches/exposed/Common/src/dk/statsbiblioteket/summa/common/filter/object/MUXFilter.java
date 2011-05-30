@@ -116,12 +116,6 @@ public class MUXFilter implements ObjectFilter, Runnable {
         "summa.muxfilter.allow.unmatched";
     public static final boolean DEFAULT_ALLOW_UNMATCHED = false;
 
-    /**
-     * The number of ms to wait after trying to get a Payload from all feeders
-     * before a retry is performed.
-     */
-    public static final int POLL_INTERVAL = 10;
-
     private ObjectFilter source = null;
 
     private final List<MUXFilterFeeder> feeders;
