@@ -106,6 +106,17 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public static final int DEFAULT_OUTQUEUE_MAXBYTES = 1024 * 1024;
 
     /**
+     * If true, Payloads that does not match any feeders will be passed on
+     * directly without logging any errors. If false, non-matched Payloads will
+     * be discarded and an error will be logged.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_ALLOW_UNMATCHED =
+        "summa.muxfilter.allow.unmatched";
+    public static final boolean DEFAULT_ALLOW_UNMATCHED = false;
+
+    /**
      * The number of ms to wait after trying to get a Payload from all feeders
      * before a retry is performed.
      */
@@ -113,11 +124,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
 
     private ObjectFilter source = null;
 
-    private List<MUXFilterFeeder> feeders;
+    private final List<MUXFilterFeeder> feeders;
     private Payload availablePayload = null;
     private boolean eofReached = false;
-    private Profiler profiler;
-    private PayloadQueue outqueue;
+    private final Profiler profiler;
+    private final PayloadQueue outqueue;
+    private final boolean allowUnmatched;
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
@@ -156,9 +168,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
             log.warn("No feeders defined for MUXFilter. There will never be any"
                      + " output although the source will be drained");
         }
+        allowUnmatched = conf.getBoolean(
+            CONF_ALLOW_UNMATCHED, DEFAULT_ALLOW_UNMATCHED);
         profiler = new Profiler();
         profiler.setBpsSpan(100);
         profiler.pause();
+        log.info(String.format(
+            "Constructed MUXFilter with %d feeders, allow unmatched: %b",
+            feeders.size(), allowUnmatched));
     }
 
     /**
@@ -173,6 +190,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * feeders.
      * If no feeders at all will accept the Payload, a warning is issued.
      */
+    @Override
     public void run() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Starting run");
@@ -211,7 +229,10 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 continue;
             }
             if (feeder == null) {
-                // Warnings are issued by getFeeder
+                // Logging is handled by getFeeder when feeder == null
+                if (allowUnmatched) {
+                    outqueue.uninterruptablePut(nextPayload);
+                }
                 continue;
             }
             if (log.isTraceEnabled()) {
@@ -254,17 +275,26 @@ public class MUXFilter implements ObjectFilter, Runnable {
             }
         }
         if (feederCandidate == null) {
-            log.warn("Unable to locate a MUXFilterFeeder for " + payload
-                     + ". The Payload will be discarded");
-            Logging.logProcess(
-                "MUXFilter", "Unable to locate feeder. Discarding Payload",
-                Logging.LogLevel.WARN, payload);
+            if (allowUnmatched) {
+                log.debug("Unable to locate a MUXFilterFeeder for " + payload
+                         + ". The Payload will be passed on directly");
+                Logging.logProcess(
+                    "MUXFilter", "Unable to locate feeder. Passing unmodified",
+                    Logging.LogLevel.TRACE, payload);
+            } else {
+                log.warn("Unable to locate a MUXFilterFeeder for " + payload
+                         + ". The Payload will be discarded");
+                Logging.logProcess(
+                    "MUXFilter", "Unable to locate feeder. Discarding Payload",
+                    Logging.LogLevel.WARN, payload);
+            }
         }
         return feederCandidate;
     }
 
     /* Objectfilter interface */
 
+    @Override
     public synchronized void setSource(Filter source) {
         if (!(source instanceof ObjectFilter)) {
             throw new IllegalArgumentException(String.format(
@@ -310,6 +340,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
     }*/
 
+    @Override
     public boolean pump() throws IOException {
         if (!hasNext()) {
             return false;
@@ -322,12 +353,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
         return hasNext();
     }
 
+    @Override
     public void close(boolean success) {
         // No closing for feeders as they are push-oriented and EOF is signalled
         // when an EOF is received from the source.
         source.close(success);
     }
 
+    @Override
     public synchronized boolean hasNext() {
         while (true) {
             if (availablePayload != null) {
@@ -385,6 +418,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         return next == MUXFilterFeeder.STOP ? null : next;
     }
 
+    @Override
     public Payload next() {
         log.trace("Next() called");
         if (!hasNext()) {
@@ -395,6 +429,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         return returnPayload;
     }
 
+    @Override
     public void remove() {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
