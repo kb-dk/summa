@@ -282,7 +282,7 @@ public abstract class SearchNodeImpl implements SearchNode {
     @Override
     public synchronized void close() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("close() called");
+        log.debug("close() called");
         try {
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
@@ -312,6 +312,7 @@ public abstract class SearchNodeImpl implements SearchNode {
             throw new RemoteException("close: Exception calling managedClose",
                                       e);
         }
+        log.debug("Close finished");
     }
 
     /**

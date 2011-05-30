@@ -460,8 +460,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             sortPool = new SortPool(sortComparator, sortBuffer, descriptor);
         }
         try {
+            log.debug("Opening searcher from '" + urlLocation + "'");
             searcher = new IndexSearcher(getIndexreader(urlLocation));
             searcher.setDefaultFieldSortScoring(true, false);
+            log.debug("Notifying sortpool of index change");
             sortPool.indexChanged(searcher.getIndexReader());
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
