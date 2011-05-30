@@ -162,8 +162,9 @@ public class XStorage implements ConfigurationStorage {
     @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() throws
                                                                    IOException {
-        log.warn("Iterators are not fully supported by XStorage. "
-                 + "This won't work well with nesting");
+        // TODO: Fully support iterators
+        log.debug("Iterators are not fully supported by XStorage. "
+                  + "This won't work well with nesting");
         Map<String, Serializable> tempMap =
                 new HashMap<String, Serializable>(size());
         for (Map.Entry<Object, Object> entry : xprops.entrySet()) {
