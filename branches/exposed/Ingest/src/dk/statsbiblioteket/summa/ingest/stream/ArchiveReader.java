@@ -24,6 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -203,8 +204,9 @@ public class ArchiveReader implements ObjectFilter {
             log.debug(String.format(
                 "Renaming '%s' with completed postfix '%s'",
                 root.getAbsolutePath(), postfix));
-            TFile newName = new TFile(root.getPath() + postfix);
-            if (!root.renameTo(newName)) {
+            // We use File instead of TFile for rename to avoid folder creation
+            File newName = new File(root.getPath() + postfix);
+            if (!new File(root.getPath()).renameTo(newName)) {
                 log.warn(String.format(
                     "Unable to rename '%s' to '%s'", root, newName));
             } else {
@@ -404,7 +406,11 @@ public class ArchiveReader implements ObjectFilter {
                 new ArrayList<FileProvider>(files.length);
             for (TFile file: files) {
                 try {
-                    if (file.isDirectory() || file.isArchive()) {
+                    if (postfix != null && file.getName().endsWith(postfix)) {
+                        log.trace("Skipping '" + file.getName() + "' as it is "
+                                  + "marked with the completed postfix");
+
+                    } else if (file.isDirectory() || file.isArchive()) {
 //                        System.out.println(" Adding folder " + file);
                         providers.add(new FileContainer(
                             this, file, inArchive || root.isArchive(), postfix,
@@ -461,6 +467,10 @@ public class ArchiveReader implements ObjectFilter {
                 FileProvider currentProvider = subs.get(0);
                 if (subs.get(0).hasNext()) {
                     return true;
+                }
+                // A remove might have been triggered
+                if (subs.size() == 0) {
+                    break;
                 }
                 if (subs.get(0) != currentProvider) {
                     // Cleanup has been triggered, start over

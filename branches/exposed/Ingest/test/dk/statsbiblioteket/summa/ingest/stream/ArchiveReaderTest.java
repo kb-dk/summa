@@ -2,17 +2,19 @@ package dk.statsbiblioteket.summa.ingest.stream;
 
 import de.schlichtherle.truezip.file.TArchiveDetector;
 import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.file.TFileInputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -115,10 +117,14 @@ public class ArchiveReaderTest extends TestCase {
         assertFile(new File(TMP, "subfolder/zoo.xml"));
         testRecursive(new File(TMP, "subfolder").getAbsolutePath(), null);
         assertFile(new File(TMP, "subfolder/zoo.xml.finito"));
+        assertFalse("The renamed file should be a file and not a directory",
+                    new File(TMP, "subfolder/zoo.xml.finito").isDirectory());
     }
 
     public void testRenameEmbedded() {
         assertFile(new File(TMP, "subdouble/sub2/non_zipped_foo.xml"));
+        assertFile(new File(
+            TMP, "subdouble/sub2/double_stuffed.zip").getAbsolutePath());
         assertFile(
             new File(TMP, "subdouble/sub2/double_stuffed.zip").getAbsolutePath()
             + "/foo.xml");
@@ -130,13 +136,69 @@ public class ArchiveReaderTest extends TestCase {
             + "/foo.xml.finito");
     }
 
+    public void testFolderCreation() throws IOException {
+        final File F = new File(TMP, "subdouble/sub2/double_stuffed.zip");
+        assertTrue(
+            "The file '" + F + "' should exist", F.exists());
+        assertFalse(
+            "The file '" + F + "' should not be a directory", F.isDirectory());
+
+        TFile tf = new TFile(F);
+        assertTrue(
+            "The tfile '" + tf + "' should exist", tf.exists());
+        assertTrue(
+            "The tfile '" + tf + "' should be an archive", tf.isArchive());
+        //noinspection ConstantConditions
+        assertTrue(
+            "The tfile '" + tf.getParentFile() + "' should be a directory",
+            tf.getParentFile().isDirectory());
+
+        TFile tif = new TFile(tf, "foo.xml");
+        assertTrue(
+            "The embedded tfile '" + tif + "' should exist", tif.exists());
+
+        TFileInputStream is = new TFileInputStream(tif);
+        OutputStream out = new ByteArrayOutputStream(100);
+        Streams.pipe(is, out);
+        is.close();
+
+        assertTrue(
+            "After streaming, the tfile '" + tf + "' should exist",
+            tf.exists());
+        assertTrue(
+            "After streaming, the tfile '" + tf + "' should be an archive",
+            tf.isArchive());
+    }
+
+    /* Fails due to curious handling of rename in TFile */
+    /*
+    public void testBasicRename() throws IOException {
+        TFile F = new TFile(TMP, "subdouble/sub2/double_stuffed.zip");
+        TFile FR = new TFile(F.getPath() + "completed");
+        assertTrue("Rename should work", F.renameTo(FR));
+        assertFalse(
+            "The old file '" + F + "' should not exist", F.exists());
+        assertTrue(
+            "The renamed file '" + FR + "' should exist", FR.exists());
+        assertFalse(
+            "The renamed file '" + FR + "' should be an archive",
+            FR.isArchive());
+        assertFalse(
+            "The renamed file '" + FR + "' should not be a directory",
+            FR.isDirectory());
+    }
+      */
     private void assertFile(File file) {
         assertTrue("The file '" + file.getAbsolutePath() + "' should exist",
                    new TFile(file).exists());
+        assertFalse("The file '" + file + "' should not be a directory",
+                    file.isDirectory());
     }
     private void assertFile(String path) {
         assertTrue("The file '" + path + "' should exist",
                    new TFile(path).exists());
+        assertFalse("The file '" + path + "' should not be a directory",
+                    new File(path).isDirectory());
     }
     private void assertNotFile(String path) {
         assertTrue("The file '" + path + "' should not exist",
