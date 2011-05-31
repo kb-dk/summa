@@ -201,18 +201,34 @@ public class ArchiveReader implements ObjectFilter {
             if (isRenamed || !allOK || !isSafeToRename()) {
                 return;
             }
+            if (postfix == null || "".equals(postfix)) {
+                log.debug("No renaming of '" + root + "' as postfix is empty");
+                return;
+            }
             log.debug(String.format(
                 "Renaming '%s' with completed postfix '%s'",
                 root.getAbsolutePath(), postfix));
             // We use File instead of TFile for rename to avoid folder creation
-            File newName = new File(root.getPath() + postfix);
-            if (!new File(root.getPath()).renameTo(newName)) {
+            File newFile = new File(root.getPath() + postfix);
+            if (newFile.exists()) {
+                log.warn("A file with the name '" + newFile + "' already "
+                         + "exists. The file will be deleted");
+                if (!newFile.delete()) {
+                    log.warn("Deletion of '" + newFile + "' was unsuccessful");
+                }
+            }
+            if (!new File(root.getPath()).renameTo(newFile)) {
                 log.warn(String.format(
-                    "Unable to rename '%s' to '%s'", root, newName));
+                    "Unable to rename '%s' to '%s'", root, newFile));
             } else {
                 isRenamed = true;
+                if (root.exists()) {
+                    log.warn("Although the renaming of '" + root + "' to '"
+                             + newFile + "' was reported successfully, a file "
+                             + "with the old name is still present");
+                }
             }
-            if (!root.setLastModified(System.currentTimeMillis())) {
+            if (!newFile.setLastModified(System.currentTimeMillis())) {
                 log.trace(String.format(
                     "Unable to set last modification time for '%s'", root));
             }
