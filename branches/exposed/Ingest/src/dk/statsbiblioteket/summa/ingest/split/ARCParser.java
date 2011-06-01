@@ -20,7 +20,6 @@
 package dk.statsbiblioteket.summa.ingest.split;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Logging;
@@ -28,11 +27,13 @@ import dk.statsbiblioteket.summa.common.util.FutureInputStream;
 import dk.statsbiblioteket.summa.common.util.LineInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.archive.io.RepositionableInputStream;
 import org.archive.io.arc.ARCReaderFactory;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
+import java.security.cert.TrustAnchor;
 import java.util.Iterator;
 import java.io.*;
 
@@ -99,6 +100,30 @@ public class ARCParser extends ThreadedStreamParser {
                   + " and removeHTTPHeaders=" + removeHTTPHeaders);
     }
 
+    public static class MyARCReaderFactory extends ARCReaderFactory {
+        public MyARCReaderFactory() {
+            super();
+        }
+        public ArchiveReader getWithFallback(String id, InputStream stream) {
+            RepositionableInputStream ris =
+                (RepositionableInputStream)asRepositionable(stream);
+            ArchiveReader archiveReader;
+            try {
+                return ARCReaderFactory.get(id, ris, true);
+            } catch (IOException e) {
+                log.debug("Got IOException while creating ArchiveReader. "
+                         + "Attempting direct creation of "
+                         + "UncompressedArchiveReader");
+                ris.position(0);
+                return new UncompressedARCReader(id, ris);
+            }
+        }
+        public ArchiveReader getUncompressed(File location) throws IOException {
+            return new UncompressedARCReader(location);
+        }
+    }
+    private MyARCReaderFactory marf = new MyARCReaderFactory();
+
     private long runCount = 0;
     @Override
     protected void protectedRun() throws Exception {
@@ -116,9 +141,9 @@ public class ARCParser extends ThreadedStreamParser {
         String origin = sourcePayload.getData(Payload.ORIGIN) == null ? "N/A" :
                         sourcePayload.getData(Payload.ORIGIN).toString();
         ArchiveReader archiveReader =
-                useFileHack
-                ? ARCReaderFactory.get(new File(origin), false, 0)
-                : ARCReaderFactory.get(origin, sourcePayload.getStream(), true);
+            useFileHack ?
+            ARCReaderFactory.get(new File(origin), false, 0) :
+            marf.getWithFallback(origin, sourcePayload.getStream());
 
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
