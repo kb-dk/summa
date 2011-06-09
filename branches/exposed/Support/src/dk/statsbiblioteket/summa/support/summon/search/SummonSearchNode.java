@@ -35,10 +35,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -188,6 +185,22 @@ public class SummonSearchNode extends SearchNodeImpl {
     public static final String SEARCH_SUMMON_RESOLVE_LINKS =
         "search.summon.resolvelinks";
 
+    /**
+     * Properties with this prefix are added to the summon query. Values are
+     * lists of Strings. If one or more {@link #SEARCH_SUMMON_PARAM_PREFIX} are
+     * specified as part of a search query, the parameters are added to the
+     * configuration defaults. Existing params with the same key are
+     * overwritten.
+     * </p><p>
+     * Optional. Default is empty.
+     */
+    public static final String CONF_SUMMON_PARAM_PREFIX = "summonparam.";
+    /**
+     * Search-time variation of {@link #CONF_SUMMON_PARAM_PREFIX}.
+     */
+    public static final String SEARCH_SUMMON_PARAM_PREFIX =
+        CONF_SUMMON_PARAM_PREFIX;
+
     private static final DateFormat formatter =
         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     private SummonResponseBuilder responseBuilder;
@@ -202,6 +215,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     private String defaultFacets = DEFAULT_SUMMON_FACETS;
     private String combineMode = DEFAULT_SUMMON_FACETS_COMBINEMODE;
     private boolean defaultResolveLinks = DEFAULT_SUMMON_RESOLVE_LINKS;
+    private final Map<String, List<String>> summonDefaultParams;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -220,8 +234,72 @@ public class SummonSearchNode extends SearchNodeImpl {
         defaultResolveLinks = conf.getBoolean(
             CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
         responseBuilder = new SummonResponseBuilder(conf);
+        summonDefaultParams = new HashMap<String, List<String>>();
+        for (Map.Entry<String, Serializable> entry : conf) {
+            convertSummonParam(summonDefaultParams, entry);
+        }
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
+    }
+
+    /**
+     * Extracts parameters with key prefix "summonparam." and stores the
+     * truncated keys with their value(s) as a list of Strings.
+     * </p><p>
+     * If the key is not prefixed by "summonparam.", it is ignored.
+     * </p>
+     * @param summonParam the map where the key/value is stored.
+     * @param entry the source for the key/value pair.
+     */
+    private void convertSummonParam(Map<String, List<String>> summonParam,
+                                    Map.Entry<String, Serializable> entry) {
+        if (!entry.getKey().startsWith(CONF_SUMMON_PARAM_PREFIX)) {
+            log.trace("convertSummonParam got unsupported key "
+                      + entry.getKey() + ". Ignoring entry");
+            return;
+        }
+        String key = entry.getKey().substring(
+                CONF_SUMMON_PARAM_PREFIX.length(), entry.getKey().length());
+        if (entry.getValue() instanceof String) {
+            summonParam.put(key, Arrays.asList((String)entry.getValue()));
+            if (log.isTraceEnabled()) {
+                log.trace(
+                    "convertSummonParam assigning " + key + ":"
+                    + entry.getValue());
+            }
+        } else if (entry.getValue() instanceof List) {
+            ArrayList<String> values = new ArrayList<String>();
+            for (Object v: (List)entry.getValue()) {
+                if (v instanceof String) {
+                    values.add((String)v);
+                } else {
+                    log.warn(
+                        "Expected List entry of type String in Summon "
+                        + "parameter " + key + ", but got Object of class "
+                        + v.getClass());
+                }
+            }
+            if (values.size() == 0) {
+                log.warn(
+                    "Got empty list for Summon param " + key+ ". Ignoring");
+            } else {
+                if (log.isTraceEnabled()) {
+                    log.trace("convertSummonParam assigning list " + key + ":"
+                              + Strings.join(values, ", "));
+                }
+                summonParam.put(key, values);
+            }
+        } else if (entry.getValue() instanceof String[]) {
+            if (log.isTraceEnabled()) {
+                log.trace("convertSummonParam assigning array " + key + ":"
+                          + Strings.join((String[])entry.getValue(), ", "));
+            }
+            summonParam.put(key, Arrays.asList((String[])entry.getValue()));
+        } else {
+            log.warn("convertSummonParam expected String, List<String> og "
+                     + "String[] for key " + key + " but got value of class "
+                     + entry.getValue().getClass());
+        }
     }
 
     @Override
@@ -279,12 +357,19 @@ public class SummonSearchNode extends SearchNodeImpl {
                                     null : new SummonFacetRequest(
             facetsDef, defaultFacetPageSize, combineMode);
 
+        Map<String, List<String>> summonSearchParams =
+            new HashMap<String, List<String>>(summonDefaultParams);
+        for (Map.Entry<String, Serializable> entry : request.entrySet()) {
+            convertSummonParam(summonSearchParams, entry);
+        }
+
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
         String sResponse = summonSearch(
-            query, collectdocIDs ? facets : null, startIndex, maxRecords,
-            resolveLinks);
+            query, summonSearchParams, collectdocIDs ? facets : null,
+            startIndex, maxRecords, resolveLinks);
+        System.out.println(sResponse);
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");
@@ -344,6 +429,8 @@ public class SummonSearchNode extends SearchNodeImpl {
     /**
      * Perform a search in Summon.
      * @param query     a Solr-style query.
+     * @param summonParams optional extended params for Summon. If not null,
+     *                  these will be added to the Summon request.
      * @param facets    which facets to request or null if no facets are wanted.
      * @param startIndex the index for the first Record to return, counting
      *                   from 0. This is translated to startpage for Solr.
@@ -356,7 +443,8 @@ public class SummonSearchNode extends SearchNodeImpl {
      * remote search call.
      */
     public String summonSearch(
-        String query, SummonFacetRequest facets, int startIndex,
+        String query, Map<String, List<String>> summonParams,
+        SummonFacetRequest facets, int startIndex,
         int maxRecords, boolean resolveLinks) throws RemoteException {
         long methodStart = System.currentTimeMillis();
         int startpage = startIndex / maxRecords;
@@ -366,6 +454,9 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> querymap =
             buildSummonQuery(query, facets, startpage, perpage);
+        if (summonParams != null) {
+            querymap.putAll(summonParams);
+        }
 
         Date date = new Date();
         String idstring = computeIdString(
@@ -596,6 +687,10 @@ public class SummonSearchNode extends SearchNodeImpl {
         String sessionId) throws Exception {
         StringBuilder retval = new StringBuilder();
 
+        if (log.isDebugEnabled()) {
+            log.debug("Performing Summon request for '" + content + "'");
+        }
+
         URL url = new URL(target + content);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestProperty("Host", host);
@@ -648,7 +743,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch("ID:" + id, null, 1, 1, false);
+        String temp = summonSearch("ID:" + id, null, null, 1, 1, false);
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -707,7 +802,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch("ID:" + id, null, 1, 1, false);
+        String temp = summonSearch("ID:" + id, null, null, 1, 1, false);
         if (resolveLinks) {
             temp = linkResolve(temp);
         }

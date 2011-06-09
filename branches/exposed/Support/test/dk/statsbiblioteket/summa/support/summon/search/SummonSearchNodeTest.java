@@ -17,8 +17,10 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -30,6 +32,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -95,6 +99,66 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
 
+    }
+
+    public void testCustomParams() throws RemoteException {
+        final String QUERY = "reactive arthritis yersinia lassen";
+
+        Configuration confInside = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+        Configuration confOutside = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+            new ArrayList<String>(Arrays.asList("false"))
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, QUERY);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+
+        SummonSearchNode summonInside = new SummonSearchNode(confInside);
+        ResponseCollection responsesInside = new ResponseCollection();
+        summonInside.search(request, responsesInside);
+
+        SummonSearchNode summonOutside = new SummonSearchNode(confOutside);
+        ResponseCollection responsesOutside = new ResponseCollection();
+        summonOutside.search(request, responsesOutside);
+
+        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+                    new ArrayList<String>(Arrays.asList("false")));
+        ResponseCollection responsesSearchTweak = new ResponseCollection();
+        summonInside.search(request, responsesSearchTweak);
+
+        int countInside = countResults(responsesInside);
+        int countOutside = countResults(responsesOutside);
+        assertTrue("The number of results for a search for '" + QUERY
+                   + "' within holdings (" + confInside + ") should be less "
+                   + "that outside holdings (" + confOutside + ")",
+                   countInside < countOutside);
+        log.info(String.format(
+            "The search for '%s' gave %d hits within holdings and %d hits in"
+            + " total", QUERY, countInside, countOutside));
+
+        int countSearchTweak = countResults(responsesSearchTweak);
+        assertEquals(
+            "Query time specification of 's.ho=false' should give the same "
+            + "result as configuration time specification of the same",
+            countOutside, countSearchTweak);
+    }
+
+    private int countResults(ResponseCollection responses) {
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                return (int)((DocumentResponse)response).getHitCount();
+            }
+        }
+        throw new IllegalArgumentException(
+            "No documentResponse in ResponseCollection");
     }
 
     public void testAdjustingSearcher() throws IOException {
