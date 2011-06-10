@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
+import com.sun.corba.se.spi.orbutil.threadpool.ThreadPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
@@ -27,6 +28,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
@@ -138,6 +140,13 @@ public class SummonResponseBuilder {
                     responses.add(facetResult);
                 }
             }
+            if ("recommendationLists".equals(currentTag) && collectdocIDs) {
+                RecommendationResponse recommendation =
+                    extractRecommendations(xml);
+                if (recommendation != null) {
+                    responses.add(recommendation);
+                }
+            }
             if ("documents".equals(currentTag)) {
                 records = extractRecords(xml);
             }
@@ -150,6 +159,50 @@ public class SummonResponseBuilder {
         }
         responses.add(documentResponse);
         return documentResponse.getHitCount();
+    }
+
+    private RecommendationResponse extractRecommendations(XMLStreamReader xml)
+                                                     throws XMLStreamException {
+        final RecommendationResponse response = new RecommendationResponse();
+        iterateElements(xml, "recommendationLists", "recommendationList",
+            new XMLCallback() {
+                @Override
+                public void execute(XMLStreamReader xml) throws XMLStreamException {
+                    extractRecommendationList(xml, response);
+                }
+            });
+        if (response.isEmpty()) {
+            return null;
+        }
+        return response;
+    }
+
+    private void extractRecommendationList(
+        XMLStreamReader xml, RecommendationResponse response)
+                                                     throws XMLStreamException {
+        String type = getAttribute(xml, "type", null);
+        if (type == null) {
+            throw new IllegalArgumentException(
+                "Type required for recommendationList");
+        }
+        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
+        final RecommendationResponse.RecommendationList recList =
+            response.newList(type);
+        iterateElements(xml, "recommendationList", "recommendation",
+            new XMLCallback() {
+                @Override
+                public void execute(XMLStreamReader xml)
+                                                     throws XMLStreamException {
+                    String title = getAttribute(xml, "title", null);
+                    if (title == null) {
+                        throw new IllegalArgumentException(
+                            "Title required for recommendationList");
+                    }
+                    String description = getAttribute(xml, "description", "");
+                    String link = getAttribute(xml, "link", "");
+                    recList.addResponse(title, description, link);
+                }
+            });
     }
 
     /**

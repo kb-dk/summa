@@ -369,7 +369,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         String sResponse = summonSearch(
             query, summonSearchParams, collectdocIDs ? facets : null,
             startIndex, maxRecords, resolveLinks);
-        System.out.println(sResponse);
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");

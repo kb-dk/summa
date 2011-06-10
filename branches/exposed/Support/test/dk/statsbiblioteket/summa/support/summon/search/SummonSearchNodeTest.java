@@ -93,12 +93,36 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        System.out.println(responses.toXML());
+        //System.out.println(responses.toXML());
         assertTrue("The result should contain at least one record",
                    responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
 
+    }
+
+    public void testRecommendations() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "cancer");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        summon.search(request, responses);
+        System.out.println(responses.toXML());
+        assertTrue("The result should contain at least one recommendation",
+                   responses.toXML().contains("<recommendation "));
+
+/*        responses.clear();
+        request.put(DocumentKeys.SEARCH_QUERY, "noobddd");
+        summon.search(request, responses);
+        System.out.println(responses.toXML());
+  */
     }
 
     public void testCustomParams() throws RemoteException {
@@ -149,6 +173,65 @@ public class SummonSearchNodeTest extends TestCase {
             "Query time specification of 's.ho=false' should give the same "
             + "result as configuration time specification of the same",
             countOutside, countSearchTweak);
+    }
+
+    public void testCounts() throws RemoteException {
+  //      final String QUERY = "reactive arthritis yersinia lassen";
+        final String QUERY = "author:(Helweg Larsen) abuse";
+
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        Request request = new Request();
+        request.addJSON(
+            "{search.document.query:\"" + QUERY + "\", "
+            + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
+        String r1 = request.toString(true);
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(request, responses);
+        int count15 = countResults(responses);
+
+        request.clear();
+        request.addJSON(
+            "{search.document.query:\"" + QUERY + "\", "
+            + "summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
+        String r2 = request.toString(true);
+        responses.clear();
+        summon.search(request, responses);
+        int count20 = countResults(responses);
+/*
+        request.clear();
+        request.put(DocumentKeys.SEARCH_QUERY, QUERY);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+                    new ArrayList<String>(Arrays.asList("false")));
+        request.put(DocumentKeys.SEARCH_MAX_RECORDS, 15);
+        String rOld15 = request.toString(true);
+        responses.clear();
+        summon.search(request, responses);
+        int countOld15 = countResults(responses);
+
+        request.clear();
+        request.put(DocumentKeys.SEARCH_QUERY, QUERY);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+                    new ArrayList<String>(Arrays.asList("false")));
+        request.put(DocumentKeys.SEARCH_MAX_RECORDS, 20);
+        String rOld20 = request.toString(true);
+        responses.clear();
+        summon.search(request, responses);
+        int countOld20 = countResults(responses);
+  */
+        System.out.println("Request 15:  " + r1 + ": " + count15);
+        System.out.println("Request 20:  " + r2 + ": " + count20);
+//        System.out.println("Request O15: " + rOld15 + ": " + countOld15);
+//        System.out.println("Request O20: " + rOld20 + ": " + countOld20);
+        assertEquals("The number of hits should not be affected by page size",
+                     count15, count20);
     }
 
     private int countResults(ResponseCollection responses) {
