@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import de.schlichtherle.truezip.file.TFileInputStream;
+import de.schlichtherle.truezip.fs.FsSyncException;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -198,6 +199,7 @@ public class ArchiveReader implements ObjectFilter {
          * This method is safe to call multiple times.
          */
         public synchronized void rename() {
+            log.trace("rename() called");
             if (isRenamed || !allOK || !isSafeToRename()) {
                 return;
             }
@@ -206,8 +208,9 @@ public class ArchiveReader implements ObjectFilter {
                 return;
             }
             log.debug(String.format(
-                "Renaming '%s' with completed postfix '%s'",
-                root.getAbsolutePath(), postfix));
+                "%s: Renaming '%s' with completed postfix '%s'",
+                this.getClass().getSimpleName(), root.getAbsolutePath(),
+                postfix));
             // We use File instead of TFile for rename to avoid folder creation
             File newFile = new File(root.getPath() + postfix);
             if (newFile.exists()) {
@@ -217,13 +220,23 @@ public class ArchiveReader implements ObjectFilter {
                     log.warn("Deletion of '" + newFile + "' was unsuccessful");
                 }
             }
+            try {
+                if (root == root.getTopLevelArchive()) {
+                    TFile.umount(root);
+                }
+            } catch (FsSyncException e) {
+                log.warn("Explicit umount of TFile("
+                         + root.getAbsolutePath() + ") failed. This "
+                         + "might leave non-renamed files");
+            }
             if (!new File(root.getPath()).renameTo(newFile)) {
                 log.warn(String.format(
                     "Unable to rename '%s' to '%s'", root, newFile));
             } else {
                 isRenamed = true;
                 if (root.exists()) {
-                    log.warn("Although the renaming of '" + root + "' to '"
+                    log.warn(this.getClass().getSimpleName() +
+                             ": Although the renaming of '" + root + "' to '"
                              + newFile + "' was reported successfully, a file "
                              + "with the old name is still present");
                 }
@@ -316,6 +329,7 @@ public class ArchiveReader implements ObjectFilter {
             InputStream closingStream = new CloseCallbackStream(stream) {
                 @Override
                 public void callback() {
+                    log.trace("Closing file '" + root + "'");
                     open = false;
                     finished = true;
                     cleanup();
@@ -507,11 +521,16 @@ public class ArchiveReader implements ObjectFilter {
          */
         @Override
         public synchronized void cleanup() {
+            log.trace("FileContainer: cleanUp() called");
             if (subs == null) {
                 return; // Not expanded yet
             }
             cleanup(subs);
             cleanup(open);
+            if (log.isTraceEnabled()) {
+                log.trace("Filecontainer: cleanUp() left " + subs.size()
+                          + " pending subs and " + open.size() + " open subs");
+            }
             if (!isSafeToRemove()) {
                 return;
             }
