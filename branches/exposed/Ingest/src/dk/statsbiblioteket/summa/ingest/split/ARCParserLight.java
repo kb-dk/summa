@@ -49,7 +49,7 @@ public class ARCParserLight extends ThreadedStreamParser {
     }
 
     @Override
-    protected void protectedRun() throws Exception {
+    protected void protectedRun(Payload source) throws Exception {
         log.trace("Entering protectedRun()");
         long startTime = System.nanoTime();
         long localPayloads = 0;
@@ -57,7 +57,7 @@ public class ARCParserLight extends ThreadedStreamParser {
         while (running) {
             
         }
-        extractARCHeader(sourcePayload);
+        extractARCHeader(source);
         // Extract ARC header, create initial Payload (optionally?)
         // while (!EOF) { create ARCRecordStream, wait for close }
 
@@ -71,7 +71,7 @@ public class ARCParserLight extends ThreadedStreamParser {
         runtimeNS += spendTime;
     }
 
-    private void extractARCHeader(Payload sourcePayload) {
+    private void extractARCHeader(Payload source) {
         // TODO: Implement this
     }
 }

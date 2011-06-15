@@ -224,7 +224,7 @@ public class SBMARCParser extends MARCParser {
                         "Sanity check failed: Collected child id '%s' for MARC"
                         + " record %s in %s but received endDataField-event for"
                         + " tag '%s'. The expected tag is '%s'",
-                        lastChildID, id, sourcePayload, tag, CHILD_FIELD));
+                        lastChildID, id, source, tag, CHILD_FIELD));
             } else {
                 children.add(new Child(lastChildID, lastChildSort));
             }
@@ -349,7 +349,7 @@ public class SBMARCParser extends MARCParser {
     protected Record makeRecord(String xml) {       
         if (id == null) {
             log.warn("makerecord called but no ID was extracted from MARC "
-                     + "record from " + sourcePayload);
+                     + "record from " + source);
             return null;
         }
         Record record;
@@ -424,7 +424,7 @@ public class SBMARCParser extends MARCParser {
         log.debug(String.format(
                 "Received unsupported subfield code '%s' in field %s "
                 + "for record '%s' in %s. Ignoring subfield",
-                subFieldCode, dataFieldTag, id, sourcePayload));
+                subFieldCode, dataFieldTag, id, source));
     }
 
     @Override

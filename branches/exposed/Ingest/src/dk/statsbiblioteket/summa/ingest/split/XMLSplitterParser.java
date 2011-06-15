@@ -63,7 +63,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
     }
 
     @Override
-    protected void protectedRun() throws Exception {
+    protected void protectedRun(Payload source) throws Exception {
         thisRunQueued = 0;
         SAXParser parser;
         try {
@@ -90,11 +90,12 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
         log.trace("Ready to parse");
         handler.resetForNextRecord();
         lastRecordStart = System.nanoTime();
-        parser.parse(sourcePayload.getStream(), handler);
-        log.debug("Finished parsing " + sourcePayload + " with " + thisRunQueued
+        parser.parse(source.getStream(), handler);
+        log.debug("Finished parsing " + source + " with " + thisRunQueued
                   + " records produced");
     }
 
+    @Override
     public boolean isTerminated() {
         return !running;
     }
@@ -109,6 +110,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
      * full.
      * @param record the Record to insert.
      */
+    @Override
     public void queueRecord(Record record) {
         final double oneMiliSecond = 1000000.0;
         thisRunQueued++;

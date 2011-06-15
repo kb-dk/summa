@@ -126,11 +126,11 @@ public class ARCParser extends ThreadedStreamParser {
 
     private long runCount = 0;
     @Override
-    protected void protectedRun() throws Exception {
+    protected void protectedRun(Payload source) throws Exception {
 
 // 1839 records, 57 sec
         log.trace("Starting protected run " + ++runCount + " for "
-                  + sourcePayload);
+                  + source);
         /*
         The file hack is truly horrible, but the ARCReaderFactory will always
         expect streams to be GZIPped and we need to experiment with uncompressed
@@ -138,22 +138,22 @@ public class ARCParser extends ThreadedStreamParser {
         that Ubuntu uses and the heritrix ARCParser.
         // TODO: Locate and eliminate the GZIP incompatability problem
          */
-        String origin = sourcePayload.getData(Payload.ORIGIN) == null ? "N/A" :
-                        sourcePayload.getData(Payload.ORIGIN).toString();
+        String origin = source.getData(Payload.ORIGIN) == null ? "N/A" :
+                        source.getData(Payload.ORIGIN).toString();
         ArchiveReader archiveReader =
             useFileHack ?
             ARCReaderFactory.get(new File(origin), false, 0) :
-            marf.getWithFallback(origin, sourcePayload.getStream());
+            marf.getWithFallback(origin, source.getStream());
 
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
         int internalCount = 0;
         if (!archiveRecords.hasNext()) {
             String message = "No record present in ARC";
-            log.debug(message + " for " + sourcePayload);
+            log.debug(message + " for " + source);
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("ARCParser", message, Logging.LogLevel.DEBUG,
-                               sourcePayload);
+                               source);
         }
         while (archiveRecords.hasNext() && running) {
             log.trace("Extracting record " + ++internalCount);
@@ -177,28 +177,33 @@ public class ARCParser extends ThreadedStreamParser {
             if (!arStream.isClosed()) {
                 //noinspection DuplicateStringLiteralInspection
                 log.warn("Timeout while waiting for close of record from ARC "
-                         + "from " + sourcePayload);
+                         + "from " + source);
                 //noinspection DuplicateStringLiteralInspection
                 Logging.logProcess(
                         "ARCParser",
                         "Stopped parsing as the handler of the last generated "
                         + "Payload did not close the Stream",
-                        Logging.LogLevel.DEBUG, sourcePayload);
+                        Logging.LogLevel.DEBUG, source);
                 break;
             }
         }
-        log.debug("Closing streams from " + sourcePayload);
+        log.debug("Closing streams from " + source);
         archiveReader.close();
-        sourcePayload.close();
+        source.close();
         if (!running) {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(
                     "ARCParser",
                     "Stopped parsing  due to the running-flag being false",
-                    Logging.LogLevel.DEBUG, sourcePayload);
+                    Logging.LogLevel.DEBUG, source);
         }
         log.debug("Ending protected run " + runCount + " with " + internalCount
                   + " extracted records. running=" + running);
+    }
+
+    @Override
+    protected boolean autoClose() {
+        return false;
     }
 
     // Leaves the stream at the beginning of the real content

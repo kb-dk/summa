@@ -77,10 +77,10 @@ public class ZIPParser extends ThreadedStreamParser {
     }
 
     @Override
-    protected void protectedRun() throws Exception {
-        log.debug("Opening ZIP-Stream from " + sourcePayload);
+    protected void protectedRun(Payload source) throws Exception {
+        log.debug("Opening ZIP-Stream from " + source);
         ZipInputStream zip = new ZipInputStream(
-                new BufferedInputStream(sourcePayload.getStream()));
+                new BufferedInputStream(source.getStream()));
         ZipEntry entry;
         int matching = 0;
         while ((entry = zip.getNextEntry()) != null && running) {
@@ -102,7 +102,7 @@ public class ZIPParser extends ThreadedStreamParser {
             Payload payload = new Payload(payloadIn);
             payload.getData().put(
                     Payload.ORIGIN,
-                    sourcePayload.getData(Payload.ORIGIN) + "!"
+                    source.getData(Payload.ORIGIN) + "!"
                     + entry.getName());
             addToQueue(payload);
 
@@ -119,12 +119,12 @@ public class ZIPParser extends ThreadedStreamParser {
                 payloadPipe.close();
             }
         }
-        log.debug("Ending processing of " + sourcePayload + " with running="
+        log.debug("Ending processing of " + source + " with running="
                   + running);
         zip.close();
         // TODO: Check if Payload should be closed here
         log.debug(String.format("Processed %d ZIP entries from %s",
-                                matching, sourcePayload));
+                                matching, source));
     }
 
     /**

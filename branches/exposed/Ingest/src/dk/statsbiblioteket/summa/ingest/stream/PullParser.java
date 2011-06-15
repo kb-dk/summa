@@ -47,11 +47,11 @@ public class PullParser extends ThreadedStreamParser {
     }
 
     @Override
-    protected void protectedRun() throws Exception {
+    protected void protectedRun(Payload source) throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(
-                sourcePayload.getStream(), charset));
+                source.getStream(), charset));
         Logging.logProcess("PullParser", "Processing source",
-                           Logging.LogLevel.TRACE, sourcePayload);
+                           Logging.LogLevel.TRACE, source);
         while (in.ready()) {
             String line = in.readLine();
             if (line == null || "".equals(line)) {
@@ -75,6 +75,6 @@ public class PullParser extends ThreadedStreamParser {
             }
             addToQueue(payload);
         }
-        log.debug("Finished processing " + sourcePayload);
+        log.debug("Finished processing " + source);
     }
 }

@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * Reading from the queue is done from outside the Thread.
  * </p><p>
  * Implementators of this abstract class only needs to override the
- * {@link #protectedRun()} method. They should check {@link #running}
+ * {@link #protectedRun(Payload)} method. They should check {@link #running}
  * frequently and stop processing if it is false.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -89,7 +89,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     /**
      * The source Payload that is to be processed.
      */
-    protected Payload sourcePayload;
+    private Payload sourcePayload;
 
     /**
      * If true, processing should proceed normally. If false, processing should
@@ -119,6 +119,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
                   + queueTimeout + " ms");
     }
 
+    @Override
     public void open(Payload streamPayload) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("open(" + streamPayload + ") called");
@@ -145,11 +146,14 @@ public abstract class ThreadedStreamParser implements StreamParser {
         /* Set up a thread reporting errors back to us */
         //noinspection DuplicateStringLiteralInspection
         runningThread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 log.trace("run() entered");
                 try {
-                    protectedRun();
-                    sourcePayload.close();
+                    protectedRun(sourcePayload);
+                    if (autoClose()) {
+                        sourcePayload.close();
+                    }
                 } catch (Exception e) {
                     log.warn(String.format(
                             "Exception caught from protectedRun of %s with "
@@ -178,6 +182,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         runningThread.setUncaughtExceptionHandler(
                 new Thread.UncaughtExceptionHandler() {
                     ThreadedStreamParser owner = dummyThis;
+                    @Override
                     public void uncaughtException(Thread t, Throwable e) {
                         owner.setError(e);
                         running = false;
@@ -197,6 +202,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         return lastError;
     }
 
+    @Override
     @SuppressWarnings({"ObjectEquality"})
     public synchronized boolean hasNext() {
         //noinspection DuplicateStringLiteralInspection
@@ -250,6 +256,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         }
     }
 
+    @Override
     public synchronized Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
@@ -331,10 +338,12 @@ public abstract class ThreadedStreamParser implements StreamParser {
         // Override if any post-processing is to be done
     }
 
+    @Override
     public void remove() {
         log.warn("Remove not supported by ThreadedStreamParser");
     }
 
+    @Override
     public void close() {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close() called");
@@ -343,6 +352,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         stop();
     }
 
+    @Override
     public void stop() {
         log.debug("stop() called on " + this);
         running = false;
@@ -357,21 +367,32 @@ public abstract class ThreadedStreamParser implements StreamParser {
     }
 
     /**
-     * When protectedRun is entered, it is guaranteed that 
-     * {@link #sourcePayload} contains a Payload with a Stream. It is the
-     * responsibility of the implementation to generate Records from the Stream
-     * and add them to {@link #queue}. The implementation must check
-     * {@link #running} before adding to the queue. If running is false, no
-     * Records must be added and the processing must be terminated.
+     * When protectedRun is entered, it is guaranteed that source contains a
+     * Payload with a Stream. It is the responsibility of the implementation to
+     * generate Records from the Stream and add them to {@link #queue}.
+     * The implementation must check {@link #running} before adding to the
+     * queue. If running is false, no Records must be added and the processing
+     * must be terminated.
+     * </p><p>
+     * If {@link #autoClose()} is overridden to return false, it is the
+     * responsibility of the implementation to close source when all
+     * processing has finished. If autoClose() returns true, the source is
+     * closed automatically.
      * </p><p>
      * It is perfectly valid for implementations to throw an Exception. This
      * is handled gracefully by logging an appropriate error and skipping
-     * to the next available Stream.
+     * to the next available Stream. If an exception is thrown, the stream
+     * will be closed automatically.
+     * @param source should be used to generate new Payloads from.
      * @throws Exception if the sourcePayload could not be parsed properly.
      * @see #addToQueue(dk.statsbiblioteket.summa.common.Record)
      * @see #addToQueue(dk.statsbiblioteket.summa.common.filter.Payload)
      */
-    protected abstract void protectedRun() throws Exception;
+    protected abstract void protectedRun(Payload source) throws Exception;
+
+    protected boolean autoClose() {
+        return true;
+    }
 
     @Override
     public String toString() {

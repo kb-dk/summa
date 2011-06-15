@@ -79,8 +79,8 @@ public class ThreadedStreamParserTest extends TestCase {
         }
 
         @Override
-        public void protectedRun() {
-            InputStream in = sourcePayload.getStream();
+        public void protectedRun(Payload source) {
+            InputStream in = source.getStream();
 
             try {
                 int codePoint;
