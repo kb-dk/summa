@@ -4,14 +4,17 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.ingest.stream.*;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCReaderFactory;
+import sun.rmi.runtime.Log;
 
 import java.io.*;
+import java.io.FileReader;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -23,6 +26,14 @@ public class ARCParserTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        if (!SAMPLE.exists()) {
+            throw new RuntimeException("The sample file " + SAMPLE
+                                       + " must exist for this test to run");
+        }
+        if (!ZIP.exists()) {
+            throw new RuntimeException("The sample ZIP file " + ZIP
+                                       + " must exist for this test to run");
+        }
     }
 
     @Override
@@ -34,8 +45,44 @@ public class ARCParserTest extends TestCase {
         return new TestSuite(ARCParserTest.class);
     }
 
-/**    public static final File SAMPLE = new File(
+    public static final File SAMPLE = new File(
+
         "/home/te/tmp/11-1-20100811072018-00000-summa-service.arc");
+    public static final File ZIP = new File(
+        SAMPLE.getAbsolutePath().substring(0,
+            SAMPLE.getAbsolutePath().length()-4) + ".zip");
+
+    public void testPacked() {
+        Configuration rConf = Configuration.newMemoryBased();
+        rConf.set(dk.statsbiblioteket.summa.ingest.stream.FileReader.
+                      CONF_ROOT_FOLDER, ZIP.getAbsolutePath());
+        rConf.set(dk.statsbiblioteket.summa.ingest.stream.FileReader.
+                      CONF_RECURSIVE, true);
+        rConf.set(dk.statsbiblioteket.summa.ingest.stream.FileReader.
+                      CONF_FILE_PATTERN, ".*\\.arc");
+        rConf.set(dk.statsbiblioteket.summa.ingest.stream.FileReader.
+                      CONF_COMPLETED_POSTFIX, "");
+        dk.statsbiblioteket.summa.ingest.stream.ArchiveReader reader =
+            new dk.statsbiblioteket.summa.ingest.stream.ArchiveReader(rConf);
+        assertTrue("The ArchiveReader should have a Payload for source '"
+                   + ZIP.getAbsolutePath() + "'", reader.hasNext());
+
+
+        ARCParser parser = new ARCParser(Configuration.newMemoryBased(
+            ThreadedStreamParser.CONF_QUEUE_BYTESIZE, 99999,
+            ThreadedStreamParser.CONF_QUEUE_SIZE, 99999
+        ));
+
+        parser.open(reader.next());
+        int counter = 0;
+        while (parser.hasNext()) {
+            parser.next().close();
+            counter++;
+        }
+        System.out.println("Received " + counter + " Payloads");
+    }
+
+
 
     public void testUncompressedStreaming() throws IOException {
         InputStream is = new FileInputStream(SAMPLE);
@@ -129,5 +176,5 @@ public class ARCParserTest extends TestCase {
         payload.getData().put(Payload.ORIGIN, SAMPLE.toString());
         return new PayloadFeederHelper(Arrays.asList(payload));
     }
- */
+
 }

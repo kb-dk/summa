@@ -328,10 +328,11 @@ public class ArchiveReader implements ObjectFilter {
                 throw new RuntimeException(
                     "Unable to open stream for '" + root + "'", e);
             }
-            InputStream closingStream = new CloseCallbackStream(stream) {
+            // TODO: test implications of disabling auto close
+            InputStream closingStream = new CloseCallbackStream(stream, false) {
                 @Override
                 public void callback() {
-                    log.trace("Closing file '" + root + "'");
+                    log.trace("Closing stream from '" + root + "'");
                     open = false;
                     finished = true;
                     cleanup();

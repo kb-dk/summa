@@ -171,8 +171,13 @@ public class ARCParser extends ThreadedStreamParser {
                 log.debug("Reached EOF, indicating empty HTTP-content, for "
                           + payload);
             }
+            if (log.isTraceEnabled()) {
+                log.trace("Adding " + payload + " to output queue");
+            }
             addToQueue(payload);
-
+            if (log.isTraceEnabled()) {
+                log.trace("Waiting for stream close for " + payload);
+            }
             arStream.waitForClose();
             if (!arStream.isClosed()) {
                 //noinspection DuplicateStringLiteralInspection
@@ -185,6 +190,10 @@ public class ARCParser extends ThreadedStreamParser {
                         + "Payload did not close the Stream",
                         Logging.LogLevel.DEBUG, source);
                 break;
+            }
+            ar.close(); // Just to be sure
+            if (log.isTraceEnabled()) {
+                log.trace("Finished processing ARC-content " + payload);
             }
         }
         log.debug("Closing streams from " + source);
