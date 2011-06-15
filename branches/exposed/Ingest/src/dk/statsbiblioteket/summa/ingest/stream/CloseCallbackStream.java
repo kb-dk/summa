@@ -38,9 +38,21 @@ public abstract class CloseCallbackStream extends FilterInputStream {
     private static Log log = LogFactory.getLog(CloseCallbackStream.class);
 
     private boolean closed = false;
+    private final boolean autoClose;
 
     public CloseCallbackStream(InputStream in) {
         super(in);
+        autoClose = true;
+    }
+
+    /**
+     * @param in        the stream to wrap.
+     * @param autoClose if true. the inner stream is automatically closed when
+     *                  it is depleted.
+     */
+    public CloseCallbackStream(InputStream in, boolean autoClose) {
+        super(in);
+        this.autoClose = autoClose;
     }
 
     /**
@@ -62,7 +74,7 @@ public abstract class CloseCallbackStream extends FilterInputStream {
     @Override
     public int read() throws IOException {
         int result = super.read();
-        if (result == -1) {
+        if (autoClose && result == -1) {
             close();
         }
         return result;
@@ -71,7 +83,7 @@ public abstract class CloseCallbackStream extends FilterInputStream {
     @Override
     public int read(byte b[]) throws IOException {
         int result = super.read(b);
-        if (result == -1) {
+        if (autoClose && result == -1) {
             close();
         }
         return result;
@@ -80,7 +92,7 @@ public abstract class CloseCallbackStream extends FilterInputStream {
     @Override
     public int read(byte b[], int off, int len) throws IOException {
         int result = super.read(b, off, len);
-        if (result == -1) {
+        if (autoClose && result == -1) {
             close();
         }
         return result;
@@ -88,13 +100,13 @@ public abstract class CloseCallbackStream extends FilterInputStream {
 
     @Override
     public boolean markSupported() {
-        // The Stream is auto-closing, so we cannot support marking
-        return false;
+        // If the Stream is auto-closing, we cannot support marking
+        return !autoClose && in.markSupported();
     }
 
     @Override
     public String toString() {
-        return "CloseCallbackStream(" + in + ")";
+        return "CloseCallbackStream(" + in + ", autoClose=" + autoClose + ")";
     }
 
     public boolean isClosed() {
