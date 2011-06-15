@@ -65,6 +65,8 @@ public class ArchiveReader implements ObjectFilter {
             FileReader.CONF_FILE_PATTERN, FileReader.DEFAULT_FILE_PATTERN));
         String postfix = conf.getString(FileReader.CONF_COMPLETED_POSTFIX,
                                  FileReader.DEFAULT_COMPLETED_POSTFIX);
+        String realPostfix = "".equals(postfix) ? null : postfix;
+
         String rootString = conf.getString(FileReader.CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
             throw new Configurable.ConfigurationException(String.format(
@@ -84,12 +86,12 @@ public class ArchiveReader implements ObjectFilter {
         } else if (root.isFile()) {
             log.debug(String.format(
                 "Root '%s' is a single regular file", root));
-            provider = new SingleFile(null, root, false, postfix);
+            provider = new SingleFile(null, root, false, realPostfix);
         } else {
             log.debug(String.format(
                 "Root '%s' is a folder or an archive", root));
             provider = new FileContainer(
-                null, root, false, postfix, filePattern, reverseSort);
+                null, root, false, realPostfix, filePattern, reverseSort);
         }
 
         log.info("ArchiveReader created. Root: '" + root
