@@ -73,11 +73,22 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>-->
-    <logger name="dk.statsbiblioteket.summa.ingest.stream.ArchiveReader">
-        <level value="warn" />
+    <!--
+    <logger name="dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser">
+        <level value="trace" />
         <appender-ref ref="CONSOLE"/>
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.ingest.split.ARCParser">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.ingest.stream.ArchiveReader">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+        -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="info" />
