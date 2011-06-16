@@ -84,7 +84,7 @@ public class ResponseMergerTest extends TestCase {
             ResponseMerger.CONF_FORCE_TOPX, 4,
             ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
             new Request(), generateResponses(), Arrays.asList(
-            "B1", "C1", "C2", "B2", "C3", "A1", "A2", "A3", "B3"
+            "C1", "C2", "B1", "B2", "C3", "A1", "A2", "A3", "B3"
         ));
     }
 
@@ -98,7 +98,7 @@ public class ResponseMergerTest extends TestCase {
             ResponseMerger.CONF_FORCE_TOPX, 7,
             ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
             new Request(), generateResponses(), Arrays.asList(
-            "B1", "C1", "C2", "C3", "B2", "A1", "A2", "A3", "B3"
+            "C1", "C2", "C3", "B1", "A1", "B2", "A2", "A3", "B3"
         ));
         // IfNone
         assertEquals(Configuration.newMemoryBased(
@@ -118,7 +118,7 @@ public class ResponseMergerTest extends TestCase {
             ResponseMerger.CONF_FORCE_TOPX, 6,
             ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
             new Request(), generateResponses(), Arrays.asList(
-            "C1", "C2", "B1", "C3", "A1", "B2", "A2", "A3", "B3"
+            "C1", "B1", "C2", "B2", "C3", "A1", "A2", "A3", "B3"
         ));
     }
 
@@ -173,7 +173,7 @@ public class ResponseMergerTest extends TestCase {
                 ResponseMerger.POST.ifnone.toString(),
                 ResponseMerger.SEARCH_FORCE_RULES, "searcherB(2)"
             ), generateResponses(), Arrays.asList(
-            "C1", "C2", "B1", "C3", "A1", "B2", "A2", "A3", "B3"
+            "C1", "B1", "C2", "B2", "C3", "A1", "A2", "A3", "B3"
         ));
     }
 
@@ -187,7 +187,7 @@ public class ResponseMergerTest extends TestCase {
             new Request(
                 ResponseMerger.SEARCH_FORCE_TOPX, 6
             ), generateResponses(), Arrays.asList(
-            "C1", "C2", "B1", "C3", "A1", "B2", "A2", "A3", "B3"
+            "C1", "B1", "C2", "B2", "C3", "A1", "A2", "A3", "B3"
         ));
     }
 
