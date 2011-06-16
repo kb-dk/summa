@@ -30,16 +30,14 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.search.TermQuery;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Rewrites queries textually based on term statistics for given targets.
@@ -107,20 +105,6 @@ public class TermStatQueryRewriter implements Configurable {
      */
     public static final double ROUND_DELTA = 0.001;
 
-    /*
-     * foo
-     * foo^2
-     * foo^2.3
-     * bar:zoo
-     * bar:zoo^4
-     * bar:zoo^4.5
-     */
-    static final Pattern SAFE = Pattern.compile(
-        "(?:([a-zA-Z0-9._\\-]+):)?"
-        + "([\\p{L}.,+\\-_0-9\\-]+)"
-        + "(?:\\^([0-9]+(\\.[0-9]+)?))?");
-    static final Pattern IS_SAFE = Pattern.compile("[\\p{L}._0-9\\-\\^,\\s]+");
-
     private boolean enabled = DEFAULT_TERMSTATS_ENABLED;
     private final List<Target> targets;
     private final boolean lowercase;
@@ -184,18 +168,6 @@ public class TermStatQueryRewriter implements Configurable {
             return null;
         }
 
-        if (!IS_SAFE.matcher(query).matches()) {
-            log.debug("The query '" + query + "' is not considered safe for"
-                      + " rewriting. skipping rewrite");
-            return null;
-        }
-
-        Matcher matcher = SAFE.matcher(query);
-        if (!matcher.find()) {
-            log.debug("Query '" + query + "' not matched. No rewriting");
-            return null;
-        }
-
         Map<String, String> result =
             new HashMap<String, String>(targets.size());
         for (Target target: targets) {
@@ -245,19 +217,7 @@ public class TermStatQueryRewriter implements Configurable {
             return;
         }
 
-        if (!IS_SAFE.matcher(query).matches()) {
-            log.debug("The query '" + query + "' is not considered safe for"
-                      + " rewriting. skipping rewrite");
-            return;
-        }
-
-        Matcher matcher = SAFE.matcher(query);
-        if (!matcher.find()) {
-            log.debug("Query '" + query + "' not matched. No rewriting");
-            return;
-        }
-        
-        boolean doLowercase = 
+        boolean doLowercase =
             request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
         doLowercase = request.getBoolean(
             target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
@@ -274,106 +234,50 @@ public class TermStatQueryRewriter implements Configurable {
                   + rewritten + "' in " + rewriteTime + " ms");
     }
 
-    private String rewrite(Request request, Target target, String query, 
-                           boolean doLowercase) {
-        Matcher matcher = SAFE.matcher(query);
-        StringWriter sw = new StringWriter(query.length() * 2);
-        // TODO: Handle non-matching terms
-        boolean first = true;
-        while (matcher.find()) {
-            if (!first) {
-                sw.append(" ");
+    private String rewrite(final Request request, final Target target, String query,
+                           final boolean doLowercase) {
+
+        TermStatRequestRewriter termStatRequestRewriter = new TermStatRequestRewriter(new TermStatRequestRewriter.Event() {
+
+            @Override
+            public void onTermQuery(TermQuery query) {
+                double docFreq = 0;
+                double numDocs = 0;
+
+                String term = query.getTerm().text();
+                if (doLowercase) {
+                    term = term.toLowerCase();
+                }
+
+                for (Target t : targets) {
+                    docFreq += t.getDF(request, term) * t.getWeight(request);
+                    numDocs += t.getDocCount();
+                }
+                if (log.isTraceEnabled()) {
+                    log.trace(String.format(
+                            "rewrite: target='%s', term='%s', df=%f, docCount=%f",
+                            target.getID(), term, docFreq, numDocs));
+                }
+
+                double idealIDFSqr = Math.pow(Math.log(
+                        numDocs / (docFreq + 1)
+                ) + 1.0, 2);
+                double targetIDFSqr = Math.pow(Math.log(
+                        target.getDocCount() / (double) (target.getDF(request, term) + 1)
+                ) + 1.0, 2);
+                double boostFactor = idealIDFSqr / targetIDFSqr;
+                float finalBoost = (float) Math.min(
+                        Float.MAX_VALUE, query.getBoost() * boostFactor);
+
+
+                if (finalBoost < 1.0d - ROUND_DELTA || finalBoost > 1.0d + ROUND_DELTA) {
+                    query.setBoost(finalBoost);
+                }
             }
-            first = false;
-            sw.append(rewrite(
-                request, target,
-                matcher.group(1), matcher.group(2),
-                matcher.group(3) == null ?
-                1.0d : Double.parseDouble(matcher.group(3)),
-                doLowercase));
-        }
-        String result = sw.toString();
-//        log.debug("rewrite for " + target.getID() + ": '"
-//                  + query + "' -> '" + result + "'");
-        return result;
+        });
+
+        return termStatRequestRewriter.rewrite(query);
     }
-
-/*    private Map<String, String> identityMap(String query) {
-        Map<String, String> result =
-            new HashMap<String, String>(targets.size());
-        for (Target target: targets) {
-            result.put(target.getID(), query);
-        }
-        return result;
-    }*/
-
-    private CharSequence rewrite(
-        Request request, Target target,
-        final String field, final String originalTerm, final double boost,
-        final boolean doLowercase) {
-        if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                "rewrite(..., field='%s', term='%s', boost=%f) called",
-                field, originalTerm, boost));
-        }
-
-        if (field == null && (
-            "AND".equals(originalTerm) || "OR".equals(originalTerm)
-            || "NOT".equals(originalTerm)
-            || "-".equals(originalTerm) || "+".equals(originalTerm))) {
-            log.trace("Conditional '" + originalTerm + "' detected");
-            return originalTerm;
-        }
-
-        // TODO: Locale for lowercase
-        String term = originalTerm == null ? null :
-                      (doLowercase ? originalTerm.toLowerCase() : originalTerm);
-        double docFreq = 0;
-        double numDocs = 0;
-        for (Target t: targets) {
-            docFreq += t.getDF(request, term) * t.getWeight(request);
-            numDocs += t.getDocCount();
-        }
-        if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                "rewrite: target='%s', term='%s', df=%f, docCount=%f",
-                target.getID(), term, docFreq, numDocs));
-        }
-
-        double idealIDFSqr = Math.pow(Math.log(
-            numDocs/(docFreq+1)
-        ) + 1.0, 2);
-        double targetIDFSqr = Math.pow(Math.log(
-            target.getDocCount()/(double)(target.getDF(request, term)+1)
-        ) + 1.0, 2);
-        double boostFactor = idealIDFSqr / targetIDFSqr;
-        float finalBoost = (float)Math.min(
-            Float.MAX_VALUE, boost * boostFactor);
-
-/*        System.out.println(String.format(
-            "rewrite target=%s, field='%s', term='%s', boost=%f, "
-            + "idealIDFSqr=%f, targetIDFSqr=%f, boostFactor=%f, finalBoost=%f",
-            target.getID(), field, term, boost, idealIDFSqr, targetIDFSqr,
-            boostFactor, finalBoost));
-  */
-
-        if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                "rewrite target=%s, field='%s', term='%s', boost=%f, "
-                + "idealIDFSqr=%f, targetIDFSqr=%f, boostFactor=%f, "
-                + "finalBoost=%f",
-                target.getID(), field, term, boost, idealIDFSqr, targetIDFSqr,
-                boostFactor, finalBoost));
-        }
-
-        if (finalBoost >= 1.0d - ROUND_DELTA
-            && finalBoost <= 1.0d + ROUND_DELTA) {
-            return (field == null ? "" : field + ":") + term;
-        } else {
-            return (field == null ? "" : field + ":") + term + "^" + finalBoost;
-        }
-    }
-
 
     /**
      * The target encapsulates a TermStat component to deliver document

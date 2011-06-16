@@ -29,6 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,7 +102,7 @@ public class TermStatQueryRewriterTest extends TestCase {
             "birds of prey",
             "localhost 2010 hello",
             "localhost OR hello",
-            "localhost AND -hello"
+            "localhost -hello"
         };
         for (String test: TESTS) {
             Request request = new Request();
@@ -235,35 +236,6 @@ public class TermStatQueryRewriterTest extends TestCase {
         tsB.close();
     }
 
-    public void testPattern() {
-        String[] MATCHING = new String[]{
-            "foo", "foo^2", "foo^2.3", "bar:zoo", "bar:zoo^4", "bar:zoo^4.5"
-        };
-        for (String test: MATCHING) {
-            Matcher matcher = TermStatQueryRewriter.SAFE.matcher(test);
-            assertTrue("The text '" + test + "' should match regexp '"
-                       + TermStatQueryRewriter.SAFE.pattern() + "'",
-                       matcher.matches());
-            System.out.println(String.format(
-                "Matching '%s' to field=='%s', term=='%s', boost=='%s'",
-                test, matcher.group(1), matcher.group(2), matcher.group(3)));
-        }
-    }
-
-    public void testPatternWeight() {
-        String[] MATCHING = new String[]{
-            "foo^2", "foo^2.3", "bar:zoo^4", "bar:zoo^4.5"
-        };
-        for (String test: MATCHING) {
-            Matcher matcher = TermStatQueryRewriter.SAFE.matcher(test);
-            assertTrue("The text '" + test + "' should match regexp '"
-                       + TermStatQueryRewriter.SAFE.pattern() + "'",
-                       matcher.matches());
-            assertNotNull("The weight for '" + test + "' should not be null",
-                          matcher.group(3));
-        }
-    }
-
     public void testNullRewrite() {
         String[] MATCHING = new String[]{
             "foo", "foo^2", "foo^2.3", "bar:zoo", "bar:zoo^4", "bar:zoo^4.5"
@@ -284,19 +256,5 @@ public class TermStatQueryRewriterTest extends TestCase {
             "foo", "foo^2", "foo^2.3", "bar:zoo", "bar:zoo^4", "bar:zoo^4.5"
         };
 
-        for (String query: MATCHING) {
-            Matcher matcher = TermStatQueryRewriter.SAFE.matcher(query);
-            matcher.find();
-
-            System.out.println("\nTokenizing " + query);
-            while (true) {
-                for (int i = 0 ; i < matcher.groupCount() ; i++) {
-                    System.out.println("Group " + i + ": " + matcher.group(i));
-                }
-                if (!matcher.find()) {
-                    break;
-                }
-            }
-        }
     }
 }
