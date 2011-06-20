@@ -29,11 +29,13 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -230,8 +232,8 @@ public class InteractionAdjuster implements Configurable {
             log.trace("The adjuster is disabled. Exiting rewrite");
             return adjusted;
         }
-        rewriteDocumentQueryFields(request);
-        rewriteFacetQueryFields(request);
+        rewriteDocumentQueryFields(adjusted);
+        rewriteFacetQueryFields(adjusted);
         return adjusted;
     }
 
@@ -258,16 +260,23 @@ public class InteractionAdjuster implements Configurable {
 
     private void rewriteFacetQueryFields(Request request) {
         log.trace("rewriteFacetQueryFields called");
-        Map<String, String> facetFields = resolveMap(
+        Map<String, String> facetMap = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
-        if (facetFields == null) {
+        if (facetMap == null) {
             return;
         }
         log.trace("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
-            request.put(FacetKeys.SEARCH_FACET_FACETS, replaceFields(
-                request.getString(FacetKeys.SEARCH_FACET_FACETS),
-                facetFields));
+            String[] facets =
+                request.getString(FacetKeys.SEARCH_FACET_FACETS).split(" *, *");
+            for (int i = 0 ; i < facets.length ; i++) {
+                if (facetMap.containsKey(facets[i])) {
+                    facets[i] = facetMap.get(facets[i]);
+                }
+            }
+
+            request.put(FacetKeys.SEARCH_FACET_FACETS,
+                        Strings.join(facets, ", "));
         }
     }
 
@@ -289,7 +298,7 @@ public class InteractionAdjuster implements Configurable {
         String query, Map<String, String> documentFields) {
         for (Map.Entry<String, String> entry: documentFields.entrySet()) {
             // TODO: Optimize by using the replace-framework
-            query = query.replace(entry.getKey() + ":", entry.getValue());
+            query = query.replace(entry.getKey() + ":", entry.getValue() + ":");
         }
         return query;
     }
