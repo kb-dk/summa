@@ -186,8 +186,16 @@
             merged = "*";
         }
         facetCall = -System.currentTimeMillis();
-        String xml_facet_result = (String)services.execute(
+
+        String xml_facet_result;
+        if (json != null) {
+            xml_facet_result = (String)services.execute("directjson", json);
+        } else {
+            xml_facet_result = (String)services.execute(
                 "summasimplefacet", merged);
+        }
+
+
         facetCall += System.currentTimeMillis();
 
         if (xml_facet_result == null) {
