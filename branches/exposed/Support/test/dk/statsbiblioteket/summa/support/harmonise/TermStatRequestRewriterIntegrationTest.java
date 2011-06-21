@@ -13,6 +13,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import java.io.BufferedReader;
@@ -28,15 +30,16 @@ import java.rmi.RemoteException;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
 public class TermStatRequestRewriterIntegrationTest extends TestCase {
-    private static Log log = LogFactory.getLog(TermStatRequestRewriterIntegrationTest.class);
+    private static Log log = LogFactory.getLog(
+        TermStatRequestRewriterIntegrationTest.class);
 
-    private static final File SECRET =
-            new File(System.getProperty("user.home") + "/summon-credentials.dat");
+    private static final File SECRET = new File(
+        System.getProperty("user.home") + "/summon-credentials.dat");
     private String id;
     private String key;
 
     private SummonSearchNode summon;
-    private TermStatRequestRewriter requestRewriter;
+    private QueryRewriter requestRewriter;
 
     public static Test suite() {
         return new TestSuite(TermStatRequestRewriterIntegrationTest.class);
@@ -47,9 +50,9 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         super.setUp();
         if (!SECRET.exists()) {
             throw new IllegalStateException(
-                    "The file '" + SECRET.getAbsolutePath() + "' must exist and "
-                            + "contain two lines, the first being access ID, the second"
-                            + "being access key for the Summon API");
+                "The file '" + SECRET.getAbsolutePath() + "' must exist and "
+                + "contain two lines, the first being access ID, the second"
+                + "being access key for the Summon API");
         }
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(SECRET), "utf-8"));
@@ -64,9 +67,10 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         );
 
         summon = new SummonSearchNode(conf);
-        requestRewriter = new TermStatRequestRewriter(new TermStatRequestRewriter.Event() {
+        requestRewriter = new QueryRewriter(new QueryRewriter.Event() {
             @Override
-            public void onTermQuery(TermQuery query) {
+            public Query onTermQuery(TermQuery query) {
+                return query;
             }
         });
     }
@@ -77,11 +81,12 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         requestRewriter = null;
     }
 
-    public void testRewrite1() throws RemoteException {
+    public void testRewrite1() throws RemoteException, ParseException {
         checkQuery("foo OR (bar AND baz)");
     }
 
-    private void checkQuery(String query) throws RemoteException {
+    private void checkQuery(String query)
+                                        throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
 
         compareHits(search(query), search(rewritten));
@@ -112,31 +117,31 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         return responses;
     }
 
-    public void testRewrite2() throws RemoteException {
+    public void testRewrite2() throws RemoteException, ParseException {
         checkQuery("foo AND (bar AND baz)");
     }
 
-    public void testRewrite3() throws RemoteException {
+    public void testRewrite3() throws RemoteException, ParseException {
         checkQuery("foo AND bar AND baz");
     }
 
-    public void testRewrite4() throws RemoteException {
+    public void testRewrite4() throws RemoteException, ParseException {
         checkQuery("foo AND bar AND baz OR spam AND eggs OR ham");
     }
 
-    public void testRewrite5() throws RemoteException {
+    public void testRewrite5() throws RemoteException, ParseException {
         checkQuery("foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)");
     }
 
-    public void testRewrite6() throws RemoteException {
+    public void testRewrite6() throws RemoteException, ParseException {
         checkQuery("foo AND bar AND baz OR spam");
     }
 
-    public void testRewrite7() throws RemoteException {
+    public void testRewrite7() throws RemoteException, ParseException {
         checkQuery("foo OR bar AND baz");
     }
 
-    public void testRewrite8() throws RemoteException {
+    public void testRewrite8() throws RemoteException, ParseException {
         checkQuery("foo AND bar OR baz");
     }
 }

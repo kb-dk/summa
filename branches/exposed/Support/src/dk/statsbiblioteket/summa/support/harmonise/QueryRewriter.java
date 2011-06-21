@@ -33,26 +33,38 @@ import org.apache.lucene.util.Version;
 
 import java.io.Reader;
 
+/**
+ * Lucene query rewriter with callback on TermQuery.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hsm")
-public class TermStatRequestRewriter {
+        author = "te, hsm")
+public class QueryRewriter {
 
     /**
-     * A simple callback interface that fires when the rewriter encounters a TermQuery.
+     * A simple callback interface that fires when the rewriter encounters
+     * a TermQuery.
      */
     public interface Event {
-        void onTermQuery(TermQuery query);
+        /**
+         * Optionally change the given TermQuery or construct a new Query in
+         * its place.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        Query onTermQuery(TermQuery query);
     }
 
     private Event event;
     private QueryParser queryParser;
 
     /**
-     * Constructs a new TermStatRequestRewriter
+     * Constructs a new QueryRewriter.
      * @param event the event to be fired on all Term queries
      */
-    public TermStatRequestRewriter(Event event) {
+    public QueryRewriter(Event event) {
         this.event = event;
 
         queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
@@ -67,25 +79,26 @@ public class TermStatRequestRewriter {
 
     /**
      *
-     * Rewrites the query from one textual representation to another textual representation.
-     * Any difference in the sematics of the given and resulting query is due to the modification of the specific term queries.
-     * In other words, if the term queries are not modified, the resulting query string is semantically equivalent to the given query string with
-     * respect to the standard Lucene query parser.
+     * Rewrites the query from one textual representation to another textual
+     * representation. Any difference in the semantics of the given and
+     * resulting query is due to the modification of the specific term queries.
+     * In other words, if the term queries are not modified, the resulting query
+     * tring is semantically equivalent to the given query string with  respect
+     * to the standard Lucene query parser.
      * </p>
-     * Note that the Lucene query parser handles boolean operators in a rather exotic way. For details, see
+     * Note that the Lucene query parser handles boolean operators in a rather
+     * exotic way. For details, see
      * http://wiki.apache.org/lucene-java/BooleanQuerySyntax
      * https://issues.apache.org/jira/browse/LUCENE-1823
      * https://issues.apache.org/jira/browse/LUCENE-167
-     * @param query the unmodified query
-     * @return the rewritten query
+     * @param query the unmodified query.
+     * @return the rewritten query.
+     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     * not be parsed by the Lucene query parser.
      */
-    public String rewrite(String query) {
-        try {
-            Query q = queryParser.parse(query);
-            return convertQueryToString(walkQuery(q));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public String rewrite(String query) throws ParseException {
+        Query q = queryParser.parse(query);
+        return convertQueryToString(walkQuery(q));
     }
 
     private Query walkQuery(Query query) {
@@ -93,15 +106,15 @@ public class TermStatRequestRewriter {
             BooleanQuery booleanQuery = (BooleanQuery) query;
             BooleanQuery result = new BooleanQuery();
             for (BooleanClause clause : booleanQuery.getClauses()) {
-                BooleanClause clauseResult = new BooleanClause(walkQuery(clause.getQuery()), clause.getOccur());
+                BooleanClause clauseResult = new BooleanClause(
+                    walkQuery(clause.getQuery()), clause.getOccur());
                 result.add(clauseResult);
             }
             return result;
         }
         if (query instanceof TermQuery) {
             TermQuery termQuery = (TermQuery) query;
-            event.onTermQuery(termQuery);
-            return termQuery;
+            return event.onTermQuery(termQuery);
         }
         return query;
     }
@@ -124,13 +137,16 @@ public class TermStatRequestRewriter {
                         }
                         break;
                     case MUST:
-                        inner += "+" + convertQueryToString(currentClause.getQuery()) + " ";
+                        inner += "+" + convertQueryToString(
+                            currentClause.getQuery()) + " ";
                         break;
                     case MUST_NOT:
-                        inner += "-" + convertQueryToString(currentClause.getQuery()) + " ";
+                        inner += "-" + convertQueryToString(
+                            currentClause.getQuery()) + " ";
                         break;
                     default:
-                        throw new RuntimeException("Unknown occur: " + currentClause.getOccur());
+                        throw new RuntimeException(
+                            "Unknown occur: " + currentClause.getOccur());
                 }
             }
             result += "(" + inner.trim() + ")";

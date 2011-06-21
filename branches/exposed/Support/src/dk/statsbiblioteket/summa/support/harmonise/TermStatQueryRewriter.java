@@ -30,6 +30,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import java.io.File;
@@ -175,8 +177,14 @@ public class TermStatQueryRewriter implements Configurable {
                 request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
             doLowercase = request.getBoolean(
                 target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
-            result.put(target.getID(),
-                       rewrite(request, target, query, doLowercase));
+            try {
+                result.put(target.getID(),
+                           rewrite(request, target, query, doLowercase));
+            } catch (ParseException e) {
+                log.info("ParseException while rewriting query '" + query
+                         + "' for target " + target + ": " + e.getMessage());
+                return null;
+            }
         }
         rewriteTime += System.currentTimeMillis();
         log.debug("Finished rewriting '" + query + "' to " + targets.size()
@@ -234,49 +242,56 @@ public class TermStatQueryRewriter implements Configurable {
                   + rewritten + "' in " + rewriteTime + " ms");
     }
 
-    private String rewrite(final Request request, final Target target, String query,
-                           final boolean doLowercase) {
+    private String rewrite(
+        final Request request, final Target target, String query,
+        final boolean doLowercase) throws ParseException {
 
-        TermStatRequestRewriter termStatRequestRewriter = new TermStatRequestRewriter(new TermStatRequestRewriter.Event() {
+        QueryRewriter queryRewriter =
+            new QueryRewriter(new QueryRewriter.Event() {
 
-            @Override
-            public void onTermQuery(TermQuery query) {
-                double docFreq = 0;
-                double numDocs = 0;
+                @Override
+                public Query onTermQuery(TermQuery query) {
+                    double docFreq = 0;
+                    double numDocs = 0;
 
-                String term = query.getTerm().text();
-                if (doLowercase) {
-                    term = term.toLowerCase();
-                }
+                    String term = query.getTerm().text();
+                    if (doLowercase) {
+                        term = term.toLowerCase();
+                    }
 
-                for (Target t : targets) {
-                    docFreq += t.getDF(request, term) * t.getWeight(request);
-                    numDocs += t.getDocCount();
-                }
-                if (log.isTraceEnabled()) {
-                    log.trace(String.format(
-                            "rewrite: target='%s', term='%s', df=%f, docCount=%f",
+                    for (Target t : targets) {
+                        docFreq += t.getDF(request, term) *
+                                   t.getWeight(request);
+                        numDocs += t.getDocCount();
+                    }
+                    if (log.isTraceEnabled()) {
+                        log.trace(String.format(
+                            "rewrite: target='%s', term='%s', df=%f, "
+                            + "docCount=%f",
                             target.getID(), term, docFreq, numDocs));
-                }
+                    }
 
-                double idealIDFSqr = Math.pow(Math.log(
+                    double idealIDFSqr = Math.pow(Math.log(
                         numDocs / (docFreq + 1)
-                ) + 1.0, 2);
-                double targetIDFSqr = Math.pow(Math.log(
-                        target.getDocCount() / (double) (target.getDF(request, term) + 1)
-                ) + 1.0, 2);
-                double boostFactor = idealIDFSqr / targetIDFSqr;
-                float finalBoost = (float) Math.min(
+                    ) + 1.0, 2);
+                    double targetIDFSqr = Math.pow(Math.log(
+                        target.getDocCount() /
+                        (double) (target.getDF(request, term) + 1)
+                    ) + 1.0, 2);
+                    double boostFactor = idealIDFSqr / targetIDFSqr;
+                    float finalBoost = (float) Math.min(
                         Float.MAX_VALUE, query.getBoost() * boostFactor);
 
 
-                if (finalBoost < 1.0d - ROUND_DELTA || finalBoost > 1.0d + ROUND_DELTA) {
-                    query.setBoost(finalBoost);
+                    if (finalBoost < 1.0d - ROUND_DELTA ||
+                        finalBoost > 1.0d + ROUND_DELTA) {
+                        query.setBoost(finalBoost);
+                    }
+                    return query;
                 }
-            }
-        });
+            });
 
-        return termStatRequestRewriter.rewrite(query);
+        return queryRewriter.rewrite(query);
     }
 
     /**

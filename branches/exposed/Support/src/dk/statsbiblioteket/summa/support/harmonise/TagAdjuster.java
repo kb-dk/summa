@@ -53,9 +53,9 @@ public class TagAdjuster implements Configurable {
      * the colon is the number of source tagnames and the number to the
      * right is the number of destination tag names:<br/>
      * {@code 1:1} Direct rename of the tag.<br/>
-     * {@code 1:n} n new tags are created, each the tag count from the source.
-     *             The source tag is removed.<br/>
-     * {@code n:1} 1 new tag are created where the tag count is the sum of the
+     * {@code 1:n} n new tags are created, each with the tag count from the
+     *             source. The source tag is removed.<br/>
+     * {@code n:1} 1 new tag is created where the tag count is the sum of the
      *             tag count for the sources.<br/>
      * {@code n:n} n new tag are created where the tag count for each is the sum 
      *             of the tag count for the sources.<br/>
@@ -75,13 +75,33 @@ public class TagAdjuster implements Configurable {
      */
     public static final String CONF_TAG_MAP = "tagadjuster.tags";
 
+    /**
+     * How to merge the counts for the tags when multiple source tags are mapped
+     * to one destination tag (and by implication n:n).
+     */
+    public static enum MERGE_MODE {min, max, sum}
+
+    /**
+     * The way to merge counts for tags when more than one source tag maps to a
+     * destination tag.
+     * </p><p>
+     * Optional. Default is max. Valid values are min, max and sum.
+     */
+    public static final String CONF_MERGE_MODE = "tagadjuster.merge.mode";
+    public static final MERGE_MODE DEFAULT_MERGE_MODE = MERGE_MODE.max;
+
     private final String facetName;
+    private final MERGE_MODE mergeMode;
     private final Map<String, String[]> map;
+    private final Map<String, String[]> reverseMap;
 
     public TagAdjuster(Configuration conf) {
         facetName = conf.getString(CONF_FACET_NAME);
+        mergeMode = MERGE_MODE.valueOf(conf.getString(
+            CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
         String[] rules = conf.getString(CONF_TAG_MAP).split(" *, *");
         map = new HashMap<String, String[]>((int)(rules.length * 1.5));
+        reverseMap = new HashMap<String, String[]>((int)(rules.length * 1.5));
         for (String rule: rules) {
             String[] parts = rule.split(" *- *");
             if (parts.length != 2) {
@@ -91,7 +111,26 @@ public class TagAdjuster implements Configurable {
             }
             String[] sources = parts[0].split(" *; *");
             String[] destinations = parts[1].split(" *; *");
-            for (String source: sources) {
+            multiplePut(map, sources, destinations);
+            multiplePut(reverseMap, destinations, sources);
+        }
+        log.info("Created TagAdjuster '" + facetName + "' with " + map.size()
+                 + " source->destination rules and " + reverseMap.size()
+                 + " destination->source rules");
+    }
+
+    private void multiplePut(
+        Map<String, String[]> map, String[] sources, String[] destinations) {
+        for (String source: sources) {
+            if (map.containsKey(source)) {
+                final String[] values =
+                    new String[map.get(source).length + destinations.length];
+                System.arraycopy(map.get(source), 0, values,
+                                 0, map.get(source).length);
+                System.arraycopy(destinations, 0, values,
+                                 map.get(source).length, destinations.length);
+                map.put(source, values);
+            } else {
                 map.put(source, destinations);
             }
         }
@@ -102,6 +141,12 @@ public class TagAdjuster implements Configurable {
     }
 
     // TODO: Fix super ugly FacetResultExternal-requirement
+
+    /**
+     * Adjusts the given facet result using the mapping stated in the
+     * configuration.
+     * @param facetResult a Summa facet result.
+     */
     public void adjust(FacetResultExternal facetResult) {
         if (!facetResult.getMap().containsKey(facetName)) {
             return;
@@ -120,10 +165,10 @@ public class TagAdjuster implements Configurable {
         for (FlexiblePair<String, Integer> pair: oldTags) {
             if (map.containsKey(pair.getKey())) {
                 for (String tagName: map.get(pair.getKey())) {
-                    additivePut(newTags, tagName, pair.getValue());
+                    mergePut(newTags, tagName, pair.getValue());
                 }
             } else {
-                additivePut(newTags, pair.getKey(), pair.getValue());
+                mergePut(newTags, pair.getKey(), pair.getValue());
             }
         }
         List<FlexiblePair<String, Integer>> newListTags =
@@ -135,10 +180,41 @@ public class TagAdjuster implements Configurable {
         facetResult.getMap().put(facetName, newListTags);
     }
 
-    private void additivePut(
+    /**
+     * Performs reverse lookup of the source tags pointing to the given
+     * destination tag. Typically used for re-writing queries.
+     * If the name is unknown, it is returned directly.
+     * @param tagName a destination tag name.
+     * @return source tag names pointing to the given name.
+     */
+    public String[] getReverse(String tagName) {
+        if (log.isTraceEnabled()) {
+            log.trace("getReverse(" + tagName + ") returning " +
+                      (reverseMap.containsKey(tagName) ?
+                       reverseMap.get(tagName) : tagName));
+        }
+        return reverseMap.containsKey(tagName) ?
+               reverseMap.get(tagName) :
+               new String[]{tagName};
+    }
+
+    private void mergePut(
         Map<String, Integer> tags, String key, Integer value) {
         if (tags.containsKey(key)) {
-            tags.put(key, value + tags.get(key));
+            switch (mergeMode) {
+                case min:
+                    tags.put(key, Math.min(value, tags.get(key)));
+                    break;
+                case max:
+                    tags.put(key, Math.max(value, tags.get(key)));
+                    break;
+                case sum:
+                    tags.put(key, value + tags.get(key));
+                    break;
+                default: throw new UnsupportedOperationException(
+                    "Merge mode '" + mergeMode + "' is unknown, unsuspected "
+                    + "and unsupported");
+            }
         } else {
             tags.put(key, value);
         }

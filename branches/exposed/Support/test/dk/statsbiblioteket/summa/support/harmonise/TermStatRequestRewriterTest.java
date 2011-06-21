@@ -4,6 +4,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -15,13 +17,14 @@ public class TermStatRequestRewriterTest extends TestCase {
         return new TestSuite(TermStatRequestRewriterTest.class);
     }
 
-    private TermStatRequestRewriter request;
+    private QueryRewriter request;
 
     @Override
     public void setUp() {
-        request = new TermStatRequestRewriter(new TermStatRequestRewriter.Event() {
+        request = new QueryRewriter(new QueryRewriter.Event() {
             @Override
-            public void onTermQuery(TermQuery query) {
+            public Query onTermQuery(TermQuery query) {
+                return query;
             }
         });
     }
@@ -31,35 +34,58 @@ public class TermStatRequestRewriterTest extends TestCase {
         request = null;
     }
 
-    public void testParenthesized1() {
-        assertEquals("(foo OR (+bar +baz))", request.rewrite("foo OR (bar AND baz)"));
+    public void testParenthesized1() throws ParseException {
+        assertEquals(
+            "(foo OR (+bar +baz))", request.rewrite(
+            "foo OR (bar AND baz)"));
     }
 
-    public void testParenthesized3() {
-        assertEquals("(+foo +(+bar +baz))", request.rewrite("foo AND (bar AND baz)"));
+    public void testParenthesized3() throws ParseException {
+        assertEquals(
+            "(+foo +(+bar +baz))", request.rewrite(
+            "foo AND (bar AND baz)"));
     }
 
-    public void testParenthesized4() {
-        assertEquals("(+foo +bar +baz)", request.rewrite("foo AND bar AND baz"));
+    public void testParenthesized4() throws ParseException {
+        assertEquals(
+            "(+foo +bar +baz)", request.rewrite(
+            "foo AND bar AND baz"));
     }
 
-    public void testParenthesized5() {
-        assertEquals("(+foo +bar baz OR +spam eggs OR ham)", request.rewrite("foo AND bar AND baz OR spam AND eggs OR ham"));
+    public void testParenthesized5() throws ParseException {
+        assertEquals(
+            "(+foo +bar baz OR +spam eggs OR ham)", request.rewrite(
+            "foo AND bar AND baz OR spam AND eggs OR ham"));
     }
 
-    public void testParenthesized6() {
-        assertEquals("(+foo +bar baz OR +(-spam) +(eggs OR -ham))", request.rewrite("foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)"));
+    public void testParenthesized6() throws ParseException {
+        assertEquals(
+            "(+foo +bar baz OR +(-spam) +(eggs OR -ham))", request.rewrite(
+            "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)"));
     }
 
-    public void testBooleanToFlagged1() {
-        assertEquals("(+foo +bar baz OR spam)", request.rewrite("foo AND bar AND baz OR spam"));
+    public void testBooleanToFlagged1() throws ParseException {
+        assertEquals(
+            "(+foo +bar baz OR spam)", request.rewrite(
+            "foo AND bar AND baz OR spam"));
     }
 
-    public void testBooleanToFlagged2() {
-        assertEquals("(foo OR +bar +baz)", request.rewrite("foo OR bar AND baz"));
+    public void testBooleanToFlagged2() throws ParseException {
+        assertEquals(
+            "(foo OR +bar +baz)", request.rewrite(
+            "foo OR bar AND baz"));
     }
 
-     public void testBooleanToFlagged3() {
-        assertEquals("(+foo bar OR baz)", request.rewrite("foo AND bar OR baz"));
+     public void testBooleanToFlagged3() throws ParseException {
+        assertEquals(
+            "(+foo bar OR baz)", request.rewrite(
+            "foo AND bar OR baz"));
     }
+
+    public void testPhrase() throws ParseException {
+        assertEquals(
+            "(\"foo bar\" OR \"zoo AND baz\")", request.rewrite(
+            "\"foo bar\" OR \"zoo AND baz\""));
+    }
+
 }

@@ -33,13 +33,15 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 
 import java.io.Serializable;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Acts as a transformer of requests and responses. Queries can be rewritten
@@ -154,7 +156,7 @@ public class InteractionAdjuster implements Configurable {
     private double baseAddition = 0.0;
     private Map<String, String> defaultDocumentFields = null;
     private Map<String, String> defaultFacetFields = null;
-    private List<TagAdjuster> tagAdjusters = null;
+    private HashMap<String, TagAdjuster> tagAdjusters = null;
     private boolean enabled = DEFAULT_ADJUST_ENABLED;
 
     public InteractionAdjuster(Configuration conf)
@@ -182,9 +184,10 @@ public class InteractionAdjuster implements Configurable {
                     + CONF_ADJUST_FACET_TAGS + " but the current Configuration "
                     + "does not support them", e);
             }
-            tagAdjusters = new ArrayList<TagAdjuster>(taConfs.size());
+            tagAdjusters = new HashMap<String, TagAdjuster>(taConfs.size());
             for (Configuration tagConf: taConfs) {
-                tagAdjusters.add(new TagAdjuster(tagConf));
+                TagAdjuster tagAdjuster = new TagAdjuster(tagConf);
+                tagAdjusters.put(tagAdjuster.getFacetName(), tagAdjuster);
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
@@ -222,6 +225,9 @@ public class InteractionAdjuster implements Configurable {
      * Creates a copy of the provided request and rewrites arguments according
      * to settings and request-time arguments, then returns the adjusted
      * request.
+     * </p><p>
+     * Note: The rewriter logs exceptions and returns the unmodified request in
+     *       case of errors.
      * @param request the unadjusted request.
      * @return an adjusted request.
      */
@@ -232,37 +238,111 @@ public class InteractionAdjuster implements Configurable {
             log.trace("The adjuster is disabled. Exiting rewrite");
             return adjusted;
         }
-        rewriteDocumentQueryFields(adjusted);
-        rewriteFacetQueryFields(adjusted);
+        rewriteFacetFields(adjusted);
+        try {
+            rewriteQuery(adjusted);
+        } catch (ParseException e) {
+            log.info("ParseException while rewriting request", e);
+        }
         return adjusted;
     }
 
-    private void rewriteDocumentQueryFields(Request request) {
-        log.trace("rewriteDocumentQueryFields called");
-        Map<String, String> documentFields = resolveMap(
+    /**
+     * Rewrites search filter and query according to the given rules for
+     * document field, facet field and facet tag re-writing.
+     * @param request a search request with a filter and/or a query.
+     * @throws org.apache.lucene.queryParser.ParseException if the filter or
+     *         the query could not be parsed.
+     */
+    @SuppressWarnings({"unchecked"})
+    private void rewriteQuery(Request request) throws ParseException {
+        log.trace("rewriteQuery called");
+        final Map<String, String> documentFieldMap = resolveMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
-        if (documentFields == null) {
-            log.trace("No document fields for rewriteDocumentQueryFields");
+        final Map<String, String> facetFieldMap = resolveMap(
+            request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
+
+        if (documentFieldMap == null && facetFieldMap == null &&
+            tagAdjusters == null) {
+            log.trace("No document fields, facet fields or tag adjusters for "
+                      + "rewriteQuery");
             return;
         }
-        log.trace("rewriting fields in document filter and query");
+
+        log.trace("Rewriting fields and content in document filter and query");
         if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
-            request.put(DocumentKeys.SEARCH_FILTER, replaceFields(
+            request.put(DocumentKeys.SEARCH_FILTER, rewriteQuery(
                 request.getString(DocumentKeys.SEARCH_FILTER),
-                documentFields));
+                documentFieldMap, facetFieldMap));
         }
         if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
-            request.put(DocumentKeys.SEARCH_QUERY, replaceFields(
+            request.put(DocumentKeys.SEARCH_QUERY, rewriteQuery(
                 request.getString(DocumentKeys.SEARCH_QUERY),
-                documentFields));
+                documentFieldMap, facetFieldMap));
         }
     }
 
-    private void rewriteFacetQueryFields(Request request) {
-        log.trace("rewriteFacetQueryFields called");
-        Map<String, String> facetMap = resolveMap(
+    private String rewriteQuery(
+        final String query, final Map<String, String>... maps)
+                                                         throws ParseException {
+        return new QueryRewriter(
+            new QueryRewriter.Event() {
+                @Override
+                public Query onTermQuery(TermQuery query) {
+                    final String oField = query.getTerm().field();
+                    final String oText = query.getTerm().text();
+                    String field = oField;
+                    String text = oText;
+                    // Fields
+                    for (Map<String, String> map: maps) {
+                        if (map != null && map.containsKey(field)) {
+                            field = map.get(field);
+                            break;
+                        }
+                    }
+                    // Tags
+                    if (tagAdjusters != null
+                        && tagAdjusters.containsKey(oField)) {
+                        String[] alternatives =
+                            tagAdjusters.get(oField).getReverse(text);
+                        if (alternatives != null) {
+                            if (alternatives.length == 1) {
+                                text = alternatives[0];
+                            } else {
+                                return createMultiTerm(
+                                    field, query.getBoost(), alternatives);
+                            }
+                        }
+                    }
+                    if (field.equals(oField) && text.equals(oText)) {
+                        return query; // No change
+                    }
+                    TermQuery newQuery = new TermQuery(new Term(field, text));
+                    newQuery.setBoost(query.getBoost());
+                    if (log.isTraceEnabled()) {
+                        log.trace("rewriteQuery(query) changed " + query
+                                  + " to " + newQuery);
+                    }
+                    return newQuery;
+                }
+            }).rewrite(query);
+    }
+
+    private Query createMultiTerm(String field, float boost, String[] texts) {
+        BooleanQuery bq = new BooleanQuery();
+        for (String text: texts) {
+            TermQuery tq = new TermQuery(new Term(field, text));
+            tq.setBoost(boost); // TODO: Verify this should not be on clause
+            bq.add(new BooleanClause(tq, BooleanClause.Occur.SHOULD));
+        }
+        return bq;
+    }
+
+    private void rewriteFacetFields(Request request) {
+        log.trace("rewriteFacetFields called");
+        Map<String, String> facetFieldMap = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
-        if (facetMap == null) {
+        if (facetFieldMap == null) {
             return;
         }
         log.trace("Adjusting fields in facet request");
@@ -270,11 +350,10 @@ public class InteractionAdjuster implements Configurable {
             String[] facets =
                 request.getString(FacetKeys.SEARCH_FACET_FACETS).split(" *, *");
             for (int i = 0 ; i < facets.length ; i++) {
-                if (facetMap.containsKey(facets[i])) {
-                    facets[i] = facetMap.get(facets[i]);
+                if (facetFieldMap.containsKey(facets[i])) {
+                    facets[i] = facetFieldMap.get(facets[i]);
                 }
             }
-
             request.put(FacetKeys.SEARCH_FACET_FACETS,
                         Strings.join(facets, ", "));
         }
@@ -293,16 +372,6 @@ public class InteractionAdjuster implements Configurable {
         return map;
     }
     
-    // TODO: Make a proper parser that handles quotes
-    private Serializable replaceFields(
-        String query, Map<String, String> documentFields) {
-        for (Map.Entry<String, String> entry: documentFields.entrySet()) {
-            // TODO: Optimize by using the replace-framework
-            query = query.replace(entry.getKey() + ":", entry.getValue() + ":");
-        }
-        return query;
-    }
-
     private Request clone(Request request) {
         Request cloned = new Request();
         for (Map.Entry<String, Serializable> entry: request.entrySet()) {
@@ -376,8 +445,8 @@ public class InteractionAdjuster implements Configurable {
         }
         replaceFacetFields(request, facetResponse);
         if (tagAdjusters != null) {
-            for (TagAdjuster tagAdjuster: tagAdjusters) {
-                tagAdjuster.adjust(facetResponse);
+            for (Map.Entry<String, TagAdjuster> e: tagAdjusters.entrySet()) {
+                e.getValue().adjust(facetResponse);
             }
         }
     }
