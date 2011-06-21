@@ -113,6 +113,8 @@ public class InteractionAdjusterTest extends TestCase {
                         "English - eng, "
                         + "MyLang - one;two, "
                         + "Moo;Doo - single, "
+                        + "Space man - always;wanted, "
+                        + "Source A;Source B - Dest A;Dest B, "
                         + "Boom - boo, "
                         + "Boom - hoo, "
                         + "Bim;Bam - bi;ba");
@@ -132,9 +134,13 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster, "English", "English");
         assertAdjustment(adjuster, "eng", "eng");
         assertAdjustment(adjuster, "ContentType:eng", "lma_long:eng");
+        assertAdjustment(adjuster, "ContentType:gryf", "lma_long:gryf");
     }
 
-    // "llang:(foo OR bar)"?
+    // TODO: "llang:(foo OR bar)"
+    // TODO: "foo bar"
+
+
     public void testQueryTagRewrite_1to1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster, "Language:English", "llang:eng");
@@ -149,12 +155,31 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster, "Language:MyLang", "llang:\"two\"");
         assertAdjustment(adjuster, "Language:Boom", "llang:boo");
         assertAdjustment(adjuster, "Language:Boom", "llang:hoo");
+        assertAdjustment(adjuster, "Language:\"Space man\"", "llang:always");
+    }
+
+    public void testQueryTagRewrite_phrase() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster,
+                         "Language:\"empty space\"", "llang:\"empty space\"");
+        assertAdjustment(adjuster,
+                         "Language:\"Space man\"", "llang:always");
+        assertAdjustment(adjuster,
+                         "(Language:\"Source A\" OR Language:\"Source B\")",
+                         "llang:\"Dest A\"");
     }
 
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
                          "(Language:Moo OR Language:Doo)", "llang:\"single\"");
+    }
+
+    public void testQueryTagRewrite_multiple() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster,
+                         "(+(Language:Moo OR Language:Doo) +Language:Boom)",
+                         "llang:\"single\" llang:boo");
     }
 
     public void testQueryTagRewrite_nton() {
@@ -167,10 +192,16 @@ public class InteractionAdjusterTest extends TestCase {
 
     private void assertAdjustment(
         InteractionAdjuster adjuster, String expected, String query) {
-        Request request = new Request(DocumentKeys.SEARCH_QUERY, query);
+        Request request = new Request(
+            DocumentKeys.SEARCH_FILTER, query,
+            DocumentKeys.SEARCH_QUERY, query
+        );
         Request rewritten = adjuster.rewrite(request);
         assertEquals("The query should be rewritten correctly",
                      expected,
                      rewritten.get(DocumentKeys.SEARCH_QUERY));
+        assertEquals("The filter should be rewritten correctly",
+                     expected,
+                     rewritten.get(DocumentKeys.SEARCH_FILTER));
     }
 }

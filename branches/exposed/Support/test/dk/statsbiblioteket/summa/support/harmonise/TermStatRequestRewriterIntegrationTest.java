@@ -69,7 +69,7 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         summon = new SummonSearchNode(conf);
         requestRewriter = new QueryRewriter(new QueryRewriter.Event() {
             @Override
-            public Query onTermQuery(TermQuery query) {
+            public Query onQuery(TermQuery query) {
                 return query;
             }
         });

@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -35,12 +36,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.*;
 
 /**
@@ -287,55 +286,105 @@ public class InteractionAdjuster implements Configurable {
                                                          throws ParseException {
         return new QueryRewriter(
             new QueryRewriter.Event() {
+
+                // For phrases we only replace the field (if any)
                 @Override
-                public Query onTermQuery(TermQuery query) {
-                    final String oField = query.getTerm().field();
-                    final String oText = query.getTerm().text();
-                    String field = oField;
-                    String text = oText;
-                    // Fields
-                    for (Map<String, String> map: maps) {
-                        if (map != null && map.containsKey(field)) {
-                            field = map.get(field);
-                            break;
+                public Query onQuery(PhraseQuery query) {
+                    if ("".equals(query.getTerms()[0].field())) {
+                        return query;
+                    }
+                    boolean first = true;
+                    String field = "";
+                    StringWriter sw = new StringWriter();
+                    for (Term term: query.getTerms()) {
+                        if (first) {
+                            first = false;
+                            field = term.field();
+                        } else {
+                            sw.append(" ");
                         }
+                        sw.append(term.text());
                     }
-                    // Tags
-                    if (tagAdjusters != null
-                        && tagAdjusters.containsKey(oField)) {
-                        String[] alternatives =
-                            tagAdjusters.get(oField).getReverse(text);
-                        if (alternatives != null) {
-                            if (alternatives.length == 1) {
-                                text = alternatives[0];
-                            } else {
-                                return createMultiTerm(
-                                    field, query.getBoost(), alternatives);
-                            }
-                        }
+                    List<Pair<String, String>> terms = makeTerms(
+                        field, sw.toString(), maps);
+                    Query result = makeQuery(terms, query.getBoost());
+                    if (result instanceof PhraseQuery) {
+                        ((PhraseQuery)result).setSlop(query.getSlop());
                     }
-                    if (field.equals(oField) && text.equals(oText)) {
-                        return query; // No change
+                    return result;
+                }
+
+                @Override
+                public Query onQuery(TermQuery query) {
+                    if ("".equals(query.getTerm().field())) {
+                        return query;
                     }
-                    TermQuery newQuery = new TermQuery(new Term(field, text));
-                    newQuery.setBoost(query.getBoost());
+                    List<Pair<String, String>> terms = makeTerms(
+                        query.getTerm().field(), query.getTerm().text(), maps);
+                    Query result = makeQuery(terms, query.getBoost());
                     if (log.isTraceEnabled()) {
                         log.trace("rewriteQuery(query) changed " + query
-                                  + " to " + newQuery);
+                                  + " to " + result);
                     }
-                    return newQuery;
+                    return result;
                 }
             }).rewrite(query);
     }
 
-    private Query createMultiTerm(String field, float boost, String[] texts) {
-        BooleanQuery bq = new BooleanQuery();
-        for (String text: texts) {
-            TermQuery tq = new TermQuery(new Term(field, text));
-            tq.setBoost(boost); // TODO: Verify this should not be on clause
-            bq.add(new BooleanClause(tq, BooleanClause.Occur.SHOULD));
+    private Query makeQuery(List<Pair<String, String>> terms, float boost) {
+        if (terms.size() == 1) {
+            Query q = createPhraseOrTermQuery(
+                terms.get(0).getKey(), terms.get(0).getValue());
+            q.setBoost(boost);
+            return q;
         }
+        BooleanQuery bq = new BooleanQuery();
+        for (Pair<String, String> term: terms) {
+            Query q = createPhraseOrTermQuery(term.getKey(), term.getValue());
+            bq.add(new BooleanClause(q, BooleanClause.Occur.SHOULD));
+        }
+        bq.setBoost(boost); // TODO: Verify this should not be on clause
         return bq;
+    }
+
+    private List<Pair<String, String>> makeTerms(
+        final String field, final String text,
+        final Map<String, String>... maps) {
+        String newField = field;
+        for (Map<String, String> map: maps) {
+            if (map != null && map.containsKey(field)) {
+                newField = map.get(field);
+                break;
+            }
+        }
+        List<Pair<String, String>> result =
+            new ArrayList<Pair<String, String>>();
+        if (tagAdjusters != null
+            && tagAdjusters.containsKey(field)) {
+            String[] alternatives =
+                tagAdjusters.get(field).getReverse(text);
+            if (alternatives != null) {
+                for (String alternative: alternatives) {
+                    result.add(new Pair<String, String>(newField, alternative));
+                }
+            }
+        }
+        return result;
+    }
+
+    private Query createPhraseOrTermQuery(String field, String text) {
+        Query newQuery;
+        if (text.contains(" ")) {
+            PhraseQuery phraseQuery = new PhraseQuery();
+            String[] tokens = text.split(" +");
+            for (String term: tokens) {
+                phraseQuery.add(new Term(field, term));
+            }
+            newQuery = phraseQuery;
+        } else {
+            newQuery = new TermQuery(new Term(field, text));
+        }
+        return newQuery;
     }
 
     private void rewriteFacetFields(Request request) {

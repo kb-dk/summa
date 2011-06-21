@@ -23,7 +23,7 @@ public class TermStatRequestRewriterTest extends TestCase {
     public void setUp() {
         request = new QueryRewriter(new QueryRewriter.Event() {
             @Override
-            public Query onTermQuery(TermQuery query) {
+            public Query onQuery(TermQuery query) {
                 return query;
             }
         });

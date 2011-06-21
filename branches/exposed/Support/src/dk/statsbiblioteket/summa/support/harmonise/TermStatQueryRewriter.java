@@ -250,7 +250,7 @@ public class TermStatQueryRewriter implements Configurable {
             new QueryRewriter(new QueryRewriter.Event() {
 
                 @Override
-                public Query onTermQuery(TermQuery query) {
+                public Query onQuery(TermQuery query) {
                     double docFreq = 0;
                     double numDocs = 0;
 

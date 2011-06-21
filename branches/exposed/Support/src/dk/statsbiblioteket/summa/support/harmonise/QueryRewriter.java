@@ -25,10 +25,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 
 import java.io.Reader;
@@ -42,19 +39,44 @@ import java.io.Reader;
 public class QueryRewriter {
 
     /**
-     * A simple callback interface that fires when the rewriter encounters
-     * a TermQuery.
+     * A simple callback that fires when the rewriter encounters Queries.
      */
-    public interface Event {
+    public static class Event {
         /**
-         * Optionally change the given TermQuery or construct a new Query in
+         * Optionally change the given Query or construct a new Query in
          * its place.
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
          * modified) or a new Query, which will be inserted into the Query tree
          * at the originating position.
          */
-        Query onTermQuery(TermQuery query);
+        public Query onQuery(TermQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in
+         * its place.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        public Query onQuery(PhraseQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in
+         * its place. This is the fallback method.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        public Query onQuery(Query query) {
+            return query;
+        }
     }
 
     private Event event;
@@ -111,10 +133,10 @@ public class QueryRewriter {
                 result.add(clauseResult);
             }
             return result;
-        }
-        if (query instanceof TermQuery) {
-            TermQuery termQuery = (TermQuery) query;
-            return event.onTermQuery(termQuery);
+        } else if (query instanceof TermQuery) {
+            return event.onQuery((TermQuery)query);
+        } else if (query instanceof PhraseQuery) {
+            return event.onQuery((PhraseQuery)query);
         }
         return query;
     }

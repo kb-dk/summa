@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
+import dk.statsbiblioteket.summa.common.util.ManyToManyMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -92,48 +93,16 @@ public class TagAdjuster implements Configurable {
 
     private final String facetName;
     private final MERGE_MODE mergeMode;
-    private final Map<String, String[]> map;
-    private final Map<String, String[]> reverseMap;
+    private final ManyToManyMap map;
 
     public TagAdjuster(Configuration conf) {
         facetName = conf.getString(CONF_FACET_NAME);
         mergeMode = MERGE_MODE.valueOf(conf.getString(
             CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
-        String[] rules = conf.getString(CONF_TAG_MAP).split(" *, *");
-        map = new HashMap<String, String[]>((int)(rules.length * 1.5));
-        reverseMap = new HashMap<String, String[]>((int)(rules.length * 1.5));
-        for (String rule: rules) {
-            String[] parts = rule.split(" *- *");
-            if (parts.length != 2) {
-                throw new ConfigurationException(
-                    "Expected two parts by splitting '" + rule
-                    + "' with delimiter '-' but got " + parts.length);
-            }
-            String[] sources = parts[0].split(" *; *");
-            String[] destinations = parts[1].split(" *; *");
-            multiplePut(map, sources, destinations);
-            multiplePut(reverseMap, destinations, sources);
-        }
+        map = new ManyToManyMap(conf.getString(CONF_TAG_MAP));
         log.info("Created TagAdjuster '" + facetName + "' with " + map.size()
-                 + " source->destination rules and " + reverseMap.size()
+                 + " source->destination rules and " + map.size()
                  + " destination->source rules");
-    }
-
-    private void multiplePut(
-        Map<String, String[]> map, String[] sources, String[] destinations) {
-        for (String source: sources) {
-            if (map.containsKey(source)) {
-                final String[] values =
-                    new String[map.get(source).length + destinations.length];
-                System.arraycopy(map.get(source), 0, values,
-                                 0, map.get(source).length);
-                System.arraycopy(destinations, 0, values,
-                                 map.get(source).length, destinations.length);
-                map.put(source, values);
-            } else {
-                map.put(source, destinations);
-            }
-        }
     }
 
     public String getFacetName() {
@@ -190,11 +159,11 @@ public class TagAdjuster implements Configurable {
     public String[] getReverse(String tagName) {
         if (log.isTraceEnabled()) {
             log.trace("getReverse(" + tagName + ") returning " +
-                      (reverseMap.containsKey(tagName) ?
-                       reverseMap.get(tagName) : tagName));
+                      (map.reverseContainsKey(tagName) ?
+                       map.reverseGet(tagName) : tagName));
         }
-        return reverseMap.containsKey(tagName) ?
-               reverseMap.get(tagName) :
+        return map.reverseContainsKey(tagName) ?
+               map.reverseGet(tagName) :
                new String[]{tagName};
     }
 
