@@ -434,6 +434,7 @@ public class SummonResponseBuilder {
         return shortformat.toString();
     }
 
+    private boolean xmlFieldsWarningFired = false;
     /**
      * Extracts a Summon document field and converts it to
      * {@link }DocumentResponse#Field}.
@@ -464,17 +465,15 @@ public class SummonResponseBuilder {
                  */
                 findTagStart(xml, "datetime");
                 String date = null;
-                try {
-                    date = getAttribute(xml, "text", "????");
-                    return new DocumentResponse.Field(name, date.substring(0, 4), false);
-                } catch (StringIndexOutOfBoundsException e) {
-                    log.warn("Expected attribute 'text' for tag 'datetime' to "
-                             + "contain a year, but got '" + date + "'");
-                }
+                    date = getAttribute(xml, "year", "????");
+                return new DocumentResponse.Field(name, date, false);
             }
 
-            log.debug(
-                "XML fields are not supported yet. Skipping '" + name + "'");
+            if (!xmlFieldsWarningFired) {
+                log.warn("XML fields are not supported yet. Skipping '"
+                         + name + "'");
+                xmlFieldsWarningFired = true;
+            }
             return null;
         }
         final StringBuffer value = new StringBuffer(50);
