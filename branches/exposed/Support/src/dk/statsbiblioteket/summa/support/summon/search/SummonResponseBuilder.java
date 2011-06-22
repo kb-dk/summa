@@ -413,9 +413,7 @@ public class SummonResponseBuilder {
             append(" : ").
             append(XMLUtil.encode(extracted.getString("Subtitle", ""))).
             append("</dc:title>\n");
-        shortformat.append("        <dc:creator>").
-            append(XMLUtil.encode(extracted.getString("Author", ""))).
-            append("</dc:creator>\n");
+        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
         shortformat.append("        <dc:type xml:lang=\"da\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
@@ -432,6 +430,18 @@ public class SummonResponseBuilder {
         shortformat.append("    </rdf:RDF>\n");
         shortformat.append("  </shortrecord>\n");
         return shortformat.toString();
+    }
+
+    private void addMultiple(ConvenientMap extracted, StringBuffer shortformat,
+                             String indent, String tag, String field) {
+        String[] elements = extracted.getString(field, "").split("\n");
+        for (String element: elements) {
+            if (!"".equals(element)) {
+                shortformat.append(String.format(
+                    "%s<%s>%s</%s>\n",
+                    indent, tag, XMLUtil.encode(element), tag));
+            }
+        }
     }
 
     private boolean xmlFieldsWarningFired = false;
