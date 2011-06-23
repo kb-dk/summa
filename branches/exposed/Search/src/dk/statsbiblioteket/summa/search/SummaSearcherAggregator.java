@@ -75,8 +75,17 @@ public class SummaSearcherAggregator implements SummaSearcher {
             "search.aggregator.threads";
     public static final int DEFAULT_SEARCHER_THREADS_FACTOR = 3;
 
+    /**
+     * A list of active searchers, referenced by their designation.
+     * </p><p>
+     * Optional. Default is all the searchers in {@link #CONF_SEARCHERS}.
+     */
+    public static final String CONF_ACTIVE = "search.aggregator.active";
+    public static final String SEARCH_ACTIVE = CONF_ACTIVE;
+
     private List<Pair<String, SearchClient>> searchers;
     private ExecutorService executor;
+    private final List<String> defaultSearchers;
 
     public SummaSearcherAggregator(Configuration conf) {
         preConstruction(conf);
@@ -95,15 +104,18 @@ public class SummaSearcherAggregator implements SummaSearcher {
                   + searcherConfs.size() + " remote SummaSearchers");
         searchers = new ArrayList<Pair<String, SearchClient>>(
                 searcherConfs.size());
+        List<String> created = new ArrayList<String>(searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
             SearchClient searcher = createClient(searcherConf);
             String searcherName = searcherConf.getString(
                     CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
+            created.add(searcherName);
             searchers.add(new Pair<String, SearchClient>(
                     searcherName, searcher));
             log.debug("Connected to " + searcherName + " at "
                       + searcher.getVendorId());
         }
+        this.defaultSearchers = conf.getStrings(CONF_ACTIVE, created);
         int threadCount = searchers.size() * DEFAULT_SEARCHER_THREADS_FACTOR;
         if (conf.valueExists(CONF_SEARCHER_THREADS)) {
             threadCount = conf.getInt(CONF_SEARCHER_THREADS);
@@ -173,14 +185,21 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
         }
 
+        List<String> selected = request.getStrings(
+            SEARCH_ACTIVE, defaultSearchers);
         List<Pair<String, Future<ResponseCollection>>> searchFutures =
                 new ArrayList<Pair<String, Future<ResponseCollection>>>(
-                        searchers.size());
+                        selected.size());
         for (Pair<String, SearchClient> searcher: searchers) {
-            searchFutures.add(new Pair<String, Future<ResponseCollection>>(
+            if (selected.contains(searcher.getKey())) {
+                searchFutures.add(new Pair<String, Future<ResponseCollection>>(
                     searcher.getKey(),
                     executor.submit(new SearcherCallable(
-                    searcher.getKey(), searcher.getValue(), request))));
+                        searcher.getKey(), searcher.getValue(), request))));
+            } else {
+                log.trace("search(...) skipping searcher " + searcher.getKey()
+                          + " as it is not asked for");
+            }
         }
         log.trace("All searchers started, collecting and waiting");
 
