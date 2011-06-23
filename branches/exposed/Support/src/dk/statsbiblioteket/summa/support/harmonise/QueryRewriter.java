@@ -68,6 +68,42 @@ public class QueryRewriter {
 
         /**
          * Optionally change the given Query or construct a new Query in
+         * its place.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        public Query onQuery(TermRangeQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in
+         * its place.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        public Query onQuery(PrefixQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in
+         * its place.
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally
+         * modified) or a new Query, which will be inserted into the Query tree
+         * at the originating position.
+         */
+        public Query onQuery(FuzzyQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in
          * its place. This is the fallback method.
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
@@ -137,8 +173,14 @@ public class QueryRewriter {
             return event.onQuery((TermQuery)query);
         } else if (query instanceof PhraseQuery) {
             return event.onQuery((PhraseQuery)query);
+        } else if (query instanceof TermRangeQuery) {
+            return event.onQuery((TermRangeQuery)query);
+        } else if (query instanceof PrefixQuery) {
+            return event.onQuery((PrefixQuery)query);
+        } else if (query instanceof FuzzyQuery) {
+            return event.onQuery((FuzzyQuery)query);
         }
-        return query;
+        return event.onQuery(query);
     }
 
     private String convertQueryToString(Query query) {

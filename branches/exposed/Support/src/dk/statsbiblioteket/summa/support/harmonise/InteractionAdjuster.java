@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.ManyToManyMap;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
@@ -37,6 +38,8 @@ import org.apache.commons.logging.Log;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.*;
+import org.apache.lucene.util.BytesRef;
+import sun.reflect.generics.tree.ReturnType;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -153,24 +156,24 @@ public class InteractionAdjuster implements Configurable {
     private final String prefix;
     private double baseFactor = 1.0;
     private double baseAddition = 0.0;
-    private Map<String, String> defaultDocumentFields = null;
-    private Map<String, String> defaultFacetFields = null;
+    private ManyToManyMap defaultDocumentFields = null;
+    private ManyToManyMap defaultFacetFields = null;
     private HashMap<String, TagAdjuster> tagAdjusters = null;
-    private boolean enabled = DEFAULT_ADJUST_ENABLED;
+    private final boolean enabled;
 
     public InteractionAdjuster(Configuration conf)
                                                  throws ConfigurationException {
         id = conf.getString(CONF_IDENTIFIER);
-        enabled = conf.getBoolean(CONF_ADJUST_ENABLED, enabled);
+        enabled = conf.getBoolean(CONF_ADJUST_ENABLED, DEFAULT_ADJUST_ENABLED);
         prefix = id + ".";
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
-            defaultDocumentFields = parseSingleMapRules(
+            defaultDocumentFields = new ManyToManyMap(
                 conf.getString(CONF_ADJUST_DOCUMENT_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
-            defaultFacetFields = parseSingleMapRules(
+            defaultFacetFields = new ManyToManyMap(
                 conf.getString(CONF_ADJUST_FACET_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_TAGS)) {
@@ -199,25 +202,6 @@ public class InteractionAdjuster implements Configurable {
             conf.getString(CONF_ADJUST_DOCUMENT_FIELDS, ""),
             conf.getString(CONF_ADJUST_FACET_FIELDS, ""),
             tagAdjusters == null ? 0 : tagAdjusters.size()));
-    }
-
-    // a - b, c - d, e - f
-    private Map<String, String> parseSingleMapRules(String str) {
-        String[] rules = str.split(" *, *");
-        if (rules.length == 0 || (rules.length == 1 && "".equals(rules[0]))) {
-            return null;
-        }
-        Map<String, String> map = new HashMap<String, String>(rules.length);
-        for (String rule: rules) {
-            String[] parts = rule.split(" *- *");
-            if (parts.length != 2) {
-                throw new IllegalArgumentException(
-                    "Unable to split '" + rule + "' from '" + str
-                    + "' in exactly 2 parts using the delimiter '-'");
-            }
-            map.put(parts[0].trim(), parts[1].trim());
-        }
-        return map;
     }
 
     /**
@@ -256,9 +240,9 @@ public class InteractionAdjuster implements Configurable {
     @SuppressWarnings({"unchecked"})
     private void rewriteQuery(Request request) throws ParseException {
         log.trace("rewriteQuery called");
-        final Map<String, String> documentFieldMap = resolveMap(
+        final ManyToManyMap documentFieldMap = resolveMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
-        final Map<String, String> facetFieldMap = resolveMap(
+        final ManyToManyMap facetFieldMap = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
 
         if (documentFieldMap == null && facetFieldMap == null &&
@@ -282,7 +266,7 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private String rewriteQuery(
-        final String query, final Map<String, String>... maps)
+        final String query, final ManyToManyMap... maps)
                                                          throws ParseException {
         return new QueryRewriter(
             new QueryRewriter.Event() {
@@ -328,7 +312,107 @@ public class InteractionAdjuster implements Configurable {
                     }
                     return result;
                 }
+
+                @Override
+                public Query onQuery(final TermRangeQuery query) {
+                    return handleFieldExpansionQuery(
+                        query, query.getField(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                return new TermRangeQuery(
+                                    field, query.getLowerTerm(),
+                                    query.getUpperTerm(), query.includesLower(),
+                                    query.includesUpper(), query.getCollator());
+                            }
+                        }, maps);
+                }
+
+                @Override
+                public Query onQuery(final PrefixQuery query) {
+                    return handleFieldExpansionQuery(
+                        query, query.getField(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                return new PrefixQuery(
+                                    new Term(field,new BytesRef(
+                                        query.getPrefix().bytes())));
+                            }
+                        }, maps);
+                }
+
+                @Override
+                public Query onQuery(final FuzzyQuery query) {
+                    return handleFieldExpansionQuery(
+                        query, query.getField(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                return new FuzzyQuery(
+                                    new Term(field,new BytesRef(
+                                        query.getTerm().bytes())),
+                                    query.getMinSimilarity(),
+                                    query.getPrefixLength());
+                            }
+                        }, maps);
+                }
+
+                @Override
+                public Query onQuery(Query query) {
+                    System.out.println("Ignoring query of type "
+                              + query.getClass().getSimpleName());
+                    return query;
+                }
             }).rewrite(query);
+    }
+
+    private interface FieldExpansionCallback {
+        Query createQuery(String field);
+    }
+    // Returns original Query (if no expansion), created Query (if 1 expansion)
+    // or BooleanQuery (is 2+ expansions)
+    // Also sets boost
+    private Query handleFieldExpansionQuery(
+        final Query originalQuery, final String field,
+        FieldExpansionCallback callback, ManyToManyMap... maps) {
+        Set<String> newFields = getAlternativeFields(field, maps);
+        if (newFields == null) {
+            return originalQuery;
+        }
+        if (newFields.size() == 1) {
+            Query result = callback.createQuery(newFields.iterator().next());
+            result.setBoost(originalQuery.getBoost());
+            return result;
+        }
+        BooleanQuery bq = new BooleanQuery();
+        for (String newField: newFields) {
+            Query q = callback.createQuery(newField);
+            bq.add(new BooleanClause(q, BooleanClause.Occur.SHOULD));
+        }
+        bq.setBoost(originalQuery.getBoost());
+        return bq;
+    }
+
+    // Returns null on empty field or no alternatives
+    private Set<String> getAlternativeFields(
+        String field, ManyToManyMap... maps) {
+        if ("".equals(field)) {
+            return null;
+        }
+        Set<String> newFields = null;
+        for (ManyToManyMap map: maps) {
+            if (map == null) {
+                continue;
+            }
+            if (map.containsKey(field)) {
+                if (newFields == null) {
+                    newFields = new HashSet<String>();
+                }
+                Collections.addAll(newFields, map.get(field));
+            }
+        }
+        if (newFields == null) {
+            return null;
+        }
+        return newFields;
     }
 
     private Query makeQuery(List<Pair<String, String>> terms, float boost) {
@@ -349,24 +433,32 @@ public class InteractionAdjuster implements Configurable {
 
     private List<Pair<String, String>> makeTerms(
         final String field, final String text,
-        final Map<String, String>... maps) {
-        String newField = field;
-        for (Map<String, String> map: maps) {
+        final ManyToManyMap... maps) {
+        String[] newFields = null;
+        for (ManyToManyMap map: maps) {
             if (map != null && map.containsKey(field)) {
-                newField = map.get(field);
+                newFields = map.get(field);
                 break;
             }
         }
+        if (newFields == null) {
+            newFields = new String[]{field};
+        }
+
         List<Pair<String, String>> result =
             new ArrayList<Pair<String, String>>();
+        String[] newTexts = null;
         if (tagAdjusters != null
             && tagAdjusters.containsKey(field)) {
-            String[] alternatives =
-                tagAdjusters.get(field).getReverse(text);
-            if (alternatives != null) {
-                for (String alternative: alternatives) {
-                    result.add(new Pair<String, String>(newField, alternative));
-                }
+            newTexts = tagAdjusters.get(field).getReverse(text);
+        }
+        if (newTexts == null) {
+            newTexts = new String[]{text}; // No transformation
+        }
+        for (String newField: newFields) {
+            for (String alternative: newTexts) {
+                result.add(
+                    new Pair<String, String>(newField, alternative));
             }
         }
         return result;
@@ -389,34 +481,38 @@ public class InteractionAdjuster implements Configurable {
 
     private void rewriteFacetFields(Request request) {
         log.trace("rewriteFacetFields called");
-        Map<String, String> facetFieldMap = resolveMap(
+        ManyToManyMap facetFieldMap = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (facetFieldMap == null) {
             return;
         }
         log.trace("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
-            String[] facets =
-                request.getString(FacetKeys.SEARCH_FACET_FACETS).split(" *, *");
-            for (int i = 0 ; i < facets.length ; i++) {
-                if (facetFieldMap.containsKey(facets[i])) {
-                    facets[i] = facetFieldMap.get(facets[i]);
+            List<String> facets = Arrays.asList(request.getString(
+                FacetKeys.SEARCH_FACET_FACETS).split(" *, *"));
+            List<String> adjusted = new ArrayList<String>(facets.size() * 2);
+            for (String facet: facets) {
+                if (facetFieldMap.containsKey(facet)) {
+                    String[] alts = facetFieldMap.get(facet);
+                    Collections.addAll(adjusted, alts);
+                } else {
+                    adjusted.add(facet);
                 }
             }
             request.put(FacetKeys.SEARCH_FACET_FACETS,
-                        Strings.join(facets, ", "));
+                        Strings.join(adjusted, ", "));
         }
     }
 
-    private Map<String, String> resolveMap(
-        Request request, Map<String, String> defaultMap, String key) {
+    private ManyToManyMap resolveMap(
+        Request request, ManyToManyMap defaultMap, String key) {
         log.trace("resolveMap called");
-        Map<String, String> map = defaultMap;
+        ManyToManyMap map = defaultMap;
         if (request.containsKey(key)) {
-            map = parseSingleMapRules(request.getString(key));
+            map = new ManyToManyMap(request.getString(key));
         }
         if (request.containsKey(prefix + key)) {
-            map = parseSingleMapRules(request.getString(prefix + key));
+            map = new ManyToManyMap(request.getString(prefix + key));
         }
         return map;
     }
@@ -500,54 +596,76 @@ public class InteractionAdjuster implements Configurable {
         }
     }
 
+    private boolean warnedOnIncompleteFacetMap = false;
     private void replaceFacetFields(
         Request request, FacetResultExternal facetResponse) {
         log.trace("adjustFacetFields called");
-        Map<String, String> reverse = resolveReversedMap(
+        ManyToManyMap facetMap = resolveMap(
             request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
-        if (reverse == null) {
+        if (facetMap == null) {
             return;
         }
-        facetResponse.renameFacetsAndFields(reverse);
+        Map<String, String> reversedSimplified =
+            new HashMap<String, String>(facetMap.size());
+        for (Map.Entry<String, String[]> entry: facetMap.entrySet()) {
+            for (String dest: entry.getValue()) {
+                if (reversedSimplified.containsKey(entry.getValue())
+                    && !warnedOnIncompleteFacetMap) {
+                    warnedOnIncompleteFacetMap = true;
+                    log.warn(String.format(
+                        "Encountered reverse mapping from destination '%s' to "
+                        + "source '%s' with an existing source '%s'. Multiple "
+                        + "sources is not yet supported",
+                        dest, entry.getKey(),
+                        reversedSimplified.containsKey(entry.getValue())));
+                }
+                reversedSimplified.put(dest, entry.getKey());
+            }
+        }
+        facetResponse.renameFacetsAndFields(reversedSimplified);
     }
 
     private void replaceDocumentFields(
         Request request, DocumentResponse documentResponse) {
         log.trace("replaceDocumentFields called");
-        Map<String, String> reverse = resolveReversedMap(
+        ManyToManyMap docFieldMap = resolveMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
-        if (reverse == null) {
+        if (docFieldMap == null) {
             return;
         }
 
-        log.trace("Replacing document fields (" + reverse.size()
+        log.trace("Replacing document fields (" + docFieldMap.size()
                   + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
+            List<DocumentResponse.Field> newFields =
+                new ArrayList<DocumentResponse.Field>(
+                    record.getFields().size()*2);
             for (DocumentResponse.Field field: record.getFields()) {
-                if (reverse.containsKey(field.getName())) {
+                if (docFieldMap.reverseContainsKey(field.getName())) {
                     if (log.isTraceEnabled()) {
                         log.trace("Changing field name '" + field.getName()
-                                  + "' to '" + reverse.get(field.getName())
+                                  + "' to '"+ Strings.join(
+                            docFieldMap.reverseGet(field.getName()), ", ")
                                   + " for " + record.getId());
                     }
-                    field.setName(reverse.get(field.getName()));
+                    String[] alts = docFieldMap.reverseGet(field.getName());
+                    if (alts.length == 1) { // 1:1
+                        field.setName(alts[0]);
+                        newFields.add(field);
+                    } else { // 1:n
+                        for (String alt: alts) {
+                            newFields.add(new DocumentResponse.Field(
+                                alt, field.getContent(),
+                                field.isEscapeContent()));
+                        }
+                    }
+                } else { // No mapping
+                    newFields.add(field);
                 }
             }
+            record.getFields().clear();
+            record.getFields().addAll(newFields);
         }
-    }
-
-    private Map<String, String> resolveReversedMap(
-        Request request, Map<String, String> defaultFields, String key) {
-        Map<String, String> fields = resolveMap(
-            request, defaultFields, key);
-        if (fields == null) {
-            return null;
-        }
-        Map<String, String> reverse = new HashMap<String, String>(fields.size());
-        for (Map.Entry<String, String> entry: fields.entrySet()) {
-            reverse.put(entry.getValue(), entry.getKey());
-        }
-        return reverse;
     }
 
     /**
