@@ -305,11 +305,9 @@ public class SummonSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(
         Request request, ResponseCollection responses) throws RemoteException {
-
-
-        String rawQuery =   request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter =  request.getString(DocumentKeys.SEARCH_FILTER, null);
-        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
+        String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
+        String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
+        String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
         boolean reverseSort = request.getBoolean(
             DocumentKeys.SEARCH_REVERSE, false);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
@@ -396,6 +394,11 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + searchTime + " ms (" + searchTime + " ms for remote search "
                   + "call, " + buildResponseTime + " ms for converting to "
                   + "Summa response)");
+    }
+
+    private String getEmptyIsNull(Request request, String key) {
+        String response = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        return "".equals(response) ? null : response;
     }
 
     private boolean warmupCalled = false;
