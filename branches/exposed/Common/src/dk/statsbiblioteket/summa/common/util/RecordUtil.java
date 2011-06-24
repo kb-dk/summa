@@ -69,10 +69,14 @@ public class RecordUtil {
     private static XMLInputFactory xmlInputFactory =
             XMLInputFactory.newInstance();
     static {
-        xmlInputFactory.setProperty(XMLInputFactory.IS_COALESCING,
-                                    Boolean.TRUE);
-        xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE,
-                                    Boolean.TRUE);
+        xmlInputFactory.setProperty(
+            XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        xmlInputFactory.setProperty(
+            XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
+        // This important! If we don't do this and parse w3c-xhtml, it will
+        // continue to timeout for nearly every invocation
+        xmlInputFactory.setProperty(
+            XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -115,7 +119,7 @@ public class RecordUtil {
      * @return the Record as UTF-8 XML, without header.
      * @throws IOException if an error occured during
      *         XML creation op input record.
-     * @see #fromXML.
+     * @see #fromXML(String).
      */
     public static String toXML(Record record) throws IOException {
         return toXML(record, DEFAULT_ESCAPE_CONTENT);
@@ -150,6 +154,7 @@ public class RecordUtil {
     public static String toXML(Record record, boolean escapeContent) throws
                                                      IOException {
         log.trace("Creating XML for Record '" + record.getId() + "'");
+        long totalTime = -System.currentTimeMillis();
         StringWriter sw = new StringWriter(5000);
         try {
             XMLStreamWriter xmlOut = xmlOutputFactory.createXMLStreamWriter(sw);
@@ -161,7 +166,9 @@ public class RecordUtil {
             log.warn(error);
             throw new IOException(error, e);
         }
-        log.debug("Created an XML representation of '" + record.getId() + "'");
+        totalTime += System.currentTimeMillis();
+        log.debug("Created an XML representation of '" + record.getId()
+                  + "' in " + totalTime + " ms");
         return sw.toString();
     }
 
@@ -188,12 +195,11 @@ public class RecordUtil {
 
     // http://www.w3.org/TR/xmlschema-2/#dateTime
     // 2002-10-10T17:00:00.000
-    private static SimpleDateFormat schemaTimestampFormatter =
+    private static final SimpleDateFormat schemaTimestampFormatter =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
 
     /**
      * Take a record an transform it into XMl.
-     * Note: synchronized due to {@link #schemaTimestampFormatter}
      *
      * @param out the output XML stream.
      * @param level Level of indention.
@@ -208,7 +214,7 @@ public class RecordUtil {
             comment = "We traverse the tree and ignore already dumped records, "
                      + "but the order is just pulled from thin air")
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private synchronized static void toXML(
+    private static void toXML(
             XMLStreamWriter out, int level, Set<Record> processed,
             Record record, boolean escapeContent) throws XMLStreamException {
         if (processed.contains(record)) {
@@ -231,10 +237,12 @@ public class RecordUtil {
         out.writeAttribute(BASE, record.getBase());
         out.writeAttribute(DELETED, Boolean.toString(record.isDeleted()));
         out.writeAttribute(INDEXABLE, Boolean.toString(record.isIndexable()));
-        out.writeAttribute(CTIME, schemaTimestampFormatter.format(
+        synchronized (schemaTimestampFormatter) {
+            out.writeAttribute(CTIME, schemaTimestampFormatter.format(
                 new Date(record.getCreationTime())));
-        out.writeAttribute(MTIME, schemaTimestampFormatter.format(
+            out.writeAttribute(MTIME, schemaTimestampFormatter.format(
                 new Date(record.getModificationTime())));
+        }
         out.writeCharacters("\n");
 
         out.writeStartElement(CONTENT);
@@ -300,7 +308,7 @@ public class RecordUtil {
         XMLStreamReader content = xmlInputFactory.createXMLStreamReader(
                 new StringReader(record.getContentAsUTF8()));
         int eventType = content.getEventType();
-        if (eventType != XMLEvent.START_DOCUMENT) {
+        if (eventType != XMLEvent.START_DOCUMENT || !content.hasNext()) {
             String snippet = record.getContent() == null
                              ? "[no content in record]"
                              : record.getContentAsUTF8();

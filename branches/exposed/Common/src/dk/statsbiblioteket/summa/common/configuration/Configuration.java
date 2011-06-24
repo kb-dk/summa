@@ -611,7 +611,7 @@ public class Configuration implements Serializable,
         ArrayList<String> result = new ArrayList<String>(unescaped.length);
         for (String s : unescaped) {
             String escaped = s.replaceAll("&comma;", ",").
-                                                replaceAll("&amp;", "&").trim();
+                replaceAll("&amp;", "&").trim();
             escaped = Environment.escapeSystemProperties(escaped);
             result.add(escaped);
         }

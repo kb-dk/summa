@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -28,6 +29,9 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermRangeQuery;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -318,13 +322,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         boolean collectdocIDs = request.getBoolean(
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
-        if ("".equals(rawQuery)) {
-            rawQuery = null;
-        }
-        if ("".equals(filter)) {
-            filter = null;
-        }
-        
         if (rawQuery == null && filter == null) {
             log.debug("No filter or query, returning immediately");
             return;
@@ -360,6 +357,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSummonParam(summonSearchParams, entry);
         }
+        query = convertRangeQueries(query, summonSearchParams);
 
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
@@ -396,8 +394,41 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + "Summa response)");
     }
 
+    /**
+     * It seems that the Summon query parser does not support ranges. Instead
+     * it expects ranges to be stated in 's.rf' as 'field,minvalue:maxvalue'.
+     * This method parses the query, extracts & removes the range query parts
+     * and adds them to the Summon search parameters.
+     * @param query as entered by the user.
+     * @param summonSearchParams range-queries are added to this.
+     * @return the query minus range queries.
+     */
+    public static String convertRangeQueries(
+        final String query,
+        final Map<String, List<String>> summonSearchParams) {
+        final String RF = "s.rf";
+        try {
+            return new QueryRewriter(new QueryRewriter.Event() {
+                @Override
+                public Query onQuery(TermRangeQuery query) {
+                    List<String> sq = summonSearchParams.get(RF);
+                    if (sq == null) {
+                        sq = new ArrayList<String>();
+                        summonSearchParams.put(RF, sq);
+                    }
+                    sq.add(query.getField() + "," + query.getLowerTerm() + ":"
+                           + query.getUpperTerm());
+                    return null;
+                }
+            }).rewrite(query);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(
+                "Error parsing '" + query + "'", e);
+        }
+    }
+
     private String getEmptyIsNull(Request request, String key) {
-        String response = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String response = request.getString(key, null);
         return "".equals(response) ? null : response;
     }
 
@@ -495,7 +526,9 @@ public class SummonSearchNode extends SearchNodeImpl {
 
         querymap.put("s.dym", Arrays.asList("true"));
         querymap.put("s.ho",  Arrays.asList("true"));
-        querymap.put("s.q",   Arrays.asList(query));
+        if (query != null) { // We allow no query
+            querymap.put("s.q",   Arrays.asList(query));
+        }
         querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
 

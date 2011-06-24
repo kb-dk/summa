@@ -206,6 +206,10 @@ public class DocumentResponse implements Response, DocumentKeys {
         public String getContent() {
             return content;
         }
+
+        public boolean isEscapeContent() {
+            return escapeContent;
+        }
     }
 
     private static void appendIfDefined(StringWriter sw,

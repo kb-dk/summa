@@ -74,6 +74,8 @@ public class SummonResponseBuilder {
     private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
+        // No resolving of external DTDs
+        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
     }
 
     private String recordBase = DEFAULT_RECORDBASE;

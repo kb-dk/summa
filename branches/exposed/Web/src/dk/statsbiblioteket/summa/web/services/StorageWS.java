@@ -216,7 +216,9 @@ public class StorageWS {
      */
     private String realGetRecords(List<String> ids) {
         StringWriter sw = new StringWriter(5000);
-        long startTime, time = 0;
+        long totalTime = 0;
+        long time = 0;
+        long xmlTime = 0;
         String retXML;
         XMLStreamWriter writer;
 
@@ -224,11 +226,12 @@ public class StorageWS {
 
         try {
             QueryOptions queryOptions = null;
-            startTime = System.currentTimeMillis();
-            List<Record> records = getStorageClient().getRecords(ids,
-                                                                  queryOptions);
-            time = System.currentTimeMillis() - startTime;
+            totalTime = System.currentTimeMillis();
+            List<Record> records = getStorageClient().getRecords(
+                ids, queryOptions);
+            time = System.currentTimeMillis() - totalTime;
 
+            xmlTime = -System.currentTimeMillis();
             writer = xmlOutputFactory.createXMLStreamWriter(sw);
             writer.writeStartDocument();
             writer.setDefaultNamespace(RECORDS_NAMESPACE);
@@ -242,16 +245,22 @@ public class StorageWS {
             writer.writeEndDocument();
             writer.flush();
             retXML = sw.toString();
+            xmlTime += System.currentTimeMillis();
         } catch(IOException e) {
             log.error("Error getting #" + ids.size() + " records from "
-                    + "storage. Error was: " + e, e);
+                    + "storage. Total processing time was "
+                    + (System.currentTimeMillis() - totalTime)
+                    + "ms. Error was: " + e, e);
             retXML = null;
         } catch(XMLStreamException e) {
             log.error("Error converting records to XML");
             retXML = null;
         }
 
-        log.debug(String.format("Finished realGetRecords() in %dms", time));
+        totalTime = System.currentTimeMillis() -totalTime;
+        log.debug(String.format(
+            "Finished realGetRecords() in %dms (query: %d, xmlify: %dms)",
+            totalTime, time, xmlTime));
 
         return retXML;
     }
@@ -267,8 +276,8 @@ public class StorageWS {
      * @return A String with the contents of the record or null if unable to
      * retrieve record.
      */
-    private String realGetRecord(String id, boolean expand,
-                                                          boolean legacyMerge) {
+    private String realGetRecord(
+        String id, boolean expand, boolean legacyMerge) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "realGetRecord('%s', expand=%b, legacyMerge=%b)",

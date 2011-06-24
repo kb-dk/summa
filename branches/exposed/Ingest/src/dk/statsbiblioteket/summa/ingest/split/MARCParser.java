@@ -133,6 +133,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
         // There should be no CData in the MARC XML
 //        inputFactory.setProperty("report-cdata-event", Boolean.TRUE);
         inputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        // No resolving of external DTDs
+        inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         base = conf.getString(CONF_BASE, null);
         if (base == null) {
             throw new ConfigurationException(String.format(

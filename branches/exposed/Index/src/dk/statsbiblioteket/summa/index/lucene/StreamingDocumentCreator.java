@@ -94,6 +94,8 @@ public class StreamingDocumentCreator
         //                         Boolean.TRUE);
         inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE,
                                  Boolean.TRUE);
+        // No resolving of external DTDs
+        inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
 
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         log.info("StreamingDocumentCreator '" + getName() + "' created");

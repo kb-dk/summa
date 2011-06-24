@@ -46,6 +46,64 @@ public class ManyToManyMap extends HashMap<String, String[]> {
     }
 
     /**
+     * @return a wrapper that presents a reversed view of this map. Changes to
+     * the returned map is reflected in this.
+     */
+    public HashMap<String, String[]> reverse() {
+        return new HashMap<String, String[]>() {
+            @Override
+            public int size() {
+                return ManyToManyMap.this.reverseSize();
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return ManyToManyMap.this.isEmpty();
+            }
+
+            @Override
+            public String[] get(Object key) {
+                return ManyToManyMap.this.reverseGet(key);
+            }
+
+            @Override
+            public boolean containsKey(Object key) {
+                return ManyToManyMap.this.reverseContainsKey(key);
+            }
+
+            @Override
+            public String[] put(String key, String[] value) {
+                String[] keys = new String[]{key};
+                String[] returned = null;
+                for (String v: value) {
+                    returned = ManyToManyMap.this.put(v, keys);
+                }
+                return returned;
+            }
+
+            @Override
+            public String[] remove(Object key) {
+                throw new UnsupportedOperationException("remove not allowed");
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends String[]> m) {
+                for (Map.Entry<? extends String, ? extends String[]> e:
+                    m.entrySet()) {
+                    put(e.getKey(), e.getValue());
+                }
+            }
+
+            @Override
+            public void clear() {
+                ManyToManyMap.this.clear();
+            }
+
+            // TODO: Make the rest of the operations work of throw exceptions
+        };
+    }
+
+    /**
      * Adds the given rules to the existing ones. Rules are delimited
      * with comma, source-destination with " - " and values with semicolon.
      * </p><p>

@@ -40,6 +40,7 @@ public class QueryRewriter {
 
     /**
      * A simple callback that fires when the rewriter encounters Queries.
+     * Returning null is allowed.
      */
     public static class Event {
         /**
@@ -150,25 +151,32 @@ public class QueryRewriter {
      * https://issues.apache.org/jira/browse/LUCENE-1823
      * https://issues.apache.org/jira/browse/LUCENE-167
      * @param query the unmodified query.
-     * @return the rewritten query.
+     * @return the rewritten query. Note that this might be null if the Query
+     *         is collapsed to nothing.
      * @throws org.apache.lucene.queryParser.ParseException if the query could
      * not be parsed by the Lucene query parser.
      */
     public String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
-        return convertQueryToString(walkQuery(q));
+        Query walked = walkQuery(q);
+        return walked == null ? null : convertQueryToString(walked);
     }
 
     private Query walkQuery(Query query) {
         if (query instanceof BooleanQuery) {
             BooleanQuery booleanQuery = (BooleanQuery) query;
             BooleanQuery result = new BooleanQuery();
+            boolean foundSome = false;
             for (BooleanClause clause : booleanQuery.getClauses()) {
-                BooleanClause clauseResult = new BooleanClause(
-                    walkQuery(clause.getQuery()), clause.getOccur());
-                result.add(clauseResult);
+                Query walked = walkQuery(clause.getQuery());
+                if (walked != null) {
+                    BooleanClause clauseResult = new BooleanClause(
+                        walked, clause.getOccur());
+                    result.add(clauseResult);
+                    foundSome = true;
+                }
             }
-            return result;
+            return foundSome ? result : null;
         } else if (query instanceof TermQuery) {
             return event.onQuery((TermQuery)query);
         } else if (query instanceof PhraseQuery) {

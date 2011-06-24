@@ -14,6 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
+import dk.statsbiblioteket.util.Profiler;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
@@ -23,19 +26,15 @@ import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
+import java.io.*;
 import java.util.Arrays;
 import java.net.URL;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class RecordUtilTest extends TestCase {
     private static Log log = LogFactory.getLog(RecordUtilTest.class);
+    private MarcMultiVolumeMerger merger;
 
     public RecordUtilTest(String name) {
         super(name);
@@ -212,6 +211,60 @@ public class RecordUtilTest extends TestCase {
         assertNotNull(out.toString());
         //System.out.println(out.toString());
     }
-    
+
+    public static final String RECORDS_NAMESPACE =
+                                "http://statsbiblioteket.dk/summa/2009/Records";
+    public static final String RECORDS = "Records";
+    public static final String QUERYTIME = "querytime";
+
+
+    public void testProcessingSpeedNonMerging()
+                                        throws XMLStreamException, IOException {
+        testProcessingSpeed(false);
+    }
+    public void testProcessingSpeedMerging()
+                                        throws XMLStreamException, IOException {
+        testProcessingSpeed(true);
+    }
+    public void testProcessingSpeed(boolean merge)
+                                        throws IOException, XMLStreamException {
+        File TST = new File("/home/te/tmp/evil.xml");
+        int RUNS = 10;
+
+        if (!TST.exists()) {
+            fail("Missing sample XML at " + TST + "'");
+        }
+        String xml = Resolver.getUTF8Content(TST.getAbsolutePath());
+        Record record = new Record("foo", "bar", xml.getBytes("utf-8"));
+        MarcMultiVolumeMerger merger = getMerger();
+        dk.statsbiblioteket.util.Profiler profiler = new Profiler(RUNS);
+        for (int run = 0 ; run < RUNS ; run++) {
+            StringWriter sw = new StringWriter(5000);
+            XMLStreamWriter writer;
+            writer = xmlOutputFactory.createXMLStreamWriter(sw);
+            writer.writeStartDocument();
+            writer.setDefaultNamespace(RECORDS_NAMESPACE);
+            writer.writeStartElement(RECORDS);
+            writer.writeDefaultNamespace(RECORDS_NAMESPACE);
+            writer.writeAttribute(QUERYTIME, String.valueOf(97));
+            if (merge) {
+                merger.getLegacyMergedXML(record);
+            } else {
+                RecordUtil.toXML(writer, 1, record, true);
+            }
+            writer.writeEndElement();
+            writer.writeEndDocument();
+            writer.flush();
+            sw.toString();
+            profiler.beat();
+        }
+        System.out.println(
+            "Processed '" + TST + "' with " + profiler.getBps(false)
+            + " records/sec");
+    }
+
+    public MarcMultiVolumeMerger getMerger() {
+        return new MarcMultiVolumeMerger(Configuration.newMemoryBased());
+    }
 }
 

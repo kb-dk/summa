@@ -127,6 +127,8 @@ public class ThreadedStreamParserTest extends TestCase {
     public void testDoubleDefaultNamespace() throws Exception {
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         inputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        // No resolving of external DTDs
+        inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         XMLStreamReader reader = inputFactory.createXMLStreamReader(
                 Resolver.getURL("data/double_default_oai.xml").openStream(),
                 "utf-8");

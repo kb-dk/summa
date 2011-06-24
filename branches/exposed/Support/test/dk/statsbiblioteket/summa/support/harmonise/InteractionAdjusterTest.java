@@ -11,6 +11,7 @@ import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import org.apache.lucene.queryParser.ParseException;
 
 import java.io.IOException;
 import java.util.Arrays;
