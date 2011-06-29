@@ -16,8 +16,10 @@ package dk.statsbiblioteket.summa.support.summon.search.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.derby.iapi.types.XML;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -124,7 +126,8 @@ public class RecommendationResponse implements Response {
             sw.append("    ").append(String.format(
                 "<recommendation title=\"%s\" description=\"%s\" "
                 + "link=\"%s\"/>\n",
-                title, description, link));
+                XMLUtil.encode(title), XMLUtil.encode(description),
+                XMLUtil.encode(link)));
         }
     }
 }

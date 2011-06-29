@@ -142,7 +142,7 @@ public class SummonResponseBuilder {
                     responses.add(facetResult);
                 }
             }
-            if ("recommendationLists".equals(currentTag) && collectdocIDs) {
+            if ("recommendationLists".equals(currentTag)) {
                 RecommendationResponse recommendation =
                     extractRecommendations(xml);
                 if (recommendation != null) {
