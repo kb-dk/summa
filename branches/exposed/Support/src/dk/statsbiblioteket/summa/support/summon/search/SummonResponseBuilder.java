@@ -402,7 +402,7 @@ public class SummonResponseBuilder {
     }
 
     private String createShortformat(ConvenientMap extracted) {
-        // TODO: Incorporate this properly instead of String-hacking
+      // TODO: Incorporate this properly instead of String-hacking
         final StringBuffer shortformat = new StringBuffer(500);
         shortformat.append("  <shortrecord>\n");
         shortformat.append("    <rdf:RDF xmlns:dc=\"http://purl.org/dc/element"
@@ -411,10 +411,12 @@ public class SummonResponseBuilder {
         shortformat.append("      <rdf:Description>\n");
 
         shortformat.append("        <dc:title>").
-            append(XMLUtil.encode(extracted.getString("Title", ""))).
-            append(" : ").
-            append(XMLUtil.encode(extracted.getString("Subtitle", ""))).
-            append("</dc:title>\n");
+            append(XMLUtil.encode(extracted.getString("Title", "")));
+        String subTitle = extracted.getString("Subtitle", "");
+        if (!"".equals(subTitle)) {
+            shortformat.append(" : ").append(XMLUtil.encode(subTitle));
+        }
+        shortformat.append("</dc:title>\n");
         addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
         shortformat.append("        <dc:type xml:lang=\"da\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
