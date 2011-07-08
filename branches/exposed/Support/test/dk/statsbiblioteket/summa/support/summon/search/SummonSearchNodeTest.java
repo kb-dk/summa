@@ -110,7 +110,11 @@ public class SummonSearchNodeTest extends TestCase {
         SummonSearchNode summon = new SummonSearchNode(conf);
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
-        request.put(DocumentKeys.SEARCH_QUERY, "cancer");
+        request.put(DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
+//        request.put(DocumentKeys.SEARCH_QUERY, "+(PublicationTitle:jama OR PublicationTitle:jama) +(ContentType:Article OR ContentType:\"Book Chapter\" OR ContentType:\"Book Review\" OR ContentType:\"Journal Article\" OR ContentType:\"Magazine Article\" OR ContentType:Newsletter OR ContentType:\"Newspaper Article\" OR ContentType:\"Publication Article\" OR ContentType:\"Trade Publication Article\")");
+      /*
+ \+\(PublicationTitle:jama\ OR\ PublicationTitle:jama\)\ \+\(ContentType:Article\ OR\ ContentType:\"Book\ Chapter\"\ OR\ ContentType:\"Book\ Review\"\ OR\ ContentType:\"Journal\ Article\"\ OR\ ContentType:\"Magazine\ Article\"\ OR\ ContentType:Newsletter\ OR\ ContentType:\"Newspaper\ Article\"\ OR\ ContentType:\"Publication\ Article\"\ OR\ ContentType:\"Trade\ Publication\ Article\"\)
+      */
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         summon.search(request, responses);
         System.out.println(responses.toXML());
@@ -182,8 +186,8 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> ranges = params.get("s.rf");
         assertEquals("The right number of ranges should be extracted",
                      2, ranges.size());
-        assertEquals("Range #1 should be correct", "bar,10,20", ranges.get(0));
-        assertEquals("Range #2 should be correct", "baz,87,goa", ranges.get(1));
+        assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
+        assertEquals("Range #2 should be correct", "baz,87:goa", ranges.get(1));
         assertEquals("The resulting query should be stripped of ranges",
                      "(+foo)", stripped);
     }
@@ -196,7 +200,7 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> ranges = params.get("s.rf");
         assertEquals("The right number of ranges should be extracted",
                      1, ranges.size());
-        assertEquals("Range #1 should be correct", "bar,10,20", ranges.get(0));
+        assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertNull("The resulting query should be null", stripped);
     }
 

@@ -330,8 +330,16 @@ public class SummonSearchNode extends SearchNodeImpl {
             log.warn("fullSearch: Sort key '" + sortKey + "' is ignored");
         }
 
+        // s.fq
+
         String query;
-        if (filter == null) {
+        if ("*".equals(rawQuery)) {
+            query = "*:*";
+        } else {
+            query = rawQuery;
+        }
+
+/*        if (filter == null) {
             query = rawQuery;
         } else if (rawQuery == null) {
             query = filter;
@@ -341,7 +349,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             } else {
                 query = "(" + filter + ") AND (" + rawQuery + ")";
             }
-        }
+        }*/
 
         String facetsDef =  request.getString(
             FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
@@ -357,13 +365,25 @@ public class SummonSearchNode extends SearchNodeImpl {
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSummonParam(summonSearchParams, entry);
         }
-        query = convertRangeQueries(query, summonSearchParams);
+
+        if (query != null) {
+            query = convertRangeQueries(query, summonSearchParams);
+        }
+        if ("".equals(query)) {
+            query = null;
+        }
+        if (filter != null) {
+            filter = convertRangeQueries(filter, summonSearchParams);
+        }
+        if ("".equals(filter)) {
+            filter = null;
+        }
 
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
         String sResponse = summonSearch(
-            query, summonSearchParams, collectdocIDs ? facets : null,
+            filter, query, summonSearchParams, collectdocIDs ? facets : null,
             startIndex, maxRecords, resolveLinks);
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
@@ -476,7 +496,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * remote search call.
      */
     public String summonSearch(
-        String query, Map<String, List<String>> summonParams,
+        String filter, String query, Map<String, List<String>> summonParams,
         SummonFacetRequest facets, int startIndex,
         int maxRecords, boolean resolveLinks) throws RemoteException {
         long methodStart = System.currentTimeMillis();
@@ -486,7 +506,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
                   + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> querymap =
-            buildSummonQuery(query, facets, startpage, perpage);
+            buildSummonQuery(filter, query, facets, startpage, perpage);
         if (summonParams != null) {
             querymap.putAll(summonParams);
         }
@@ -521,13 +541,17 @@ public class SummonSearchNode extends SearchNodeImpl {
     }
 
     private Map<String, List<String>> buildSummonQuery(
-        String query, SummonFacetRequest facets, int startpage, int perpage) {
+        String filter, String query, SummonFacetRequest facets,
+        int startpage, int perpage) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
         querymap.put("s.dym", Arrays.asList("true"));
         querymap.put("s.ho",  Arrays.asList("true"));
         if (query != null) { // We allow no query
             querymap.put("s.q",   Arrays.asList(query));
+        }
+        if (filter != null) { // We allow no filter
+            querymap.put("s.fq",   Arrays.asList(filter));
         }
         querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
@@ -778,7 +802,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch("ID:" + id, null, null, 1, 1, false);
+        String temp = summonSearch(null, "ID:" + id, null, null, 1, 1, false);
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -837,7 +861,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch("ID:" + id, null, null, 1, 1, false);
+        String temp = summonSearch(null, "ID:" + id, null, null, 1, 1, false);
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
