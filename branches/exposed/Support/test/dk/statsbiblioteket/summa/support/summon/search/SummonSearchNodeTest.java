@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -126,6 +127,81 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         System.out.println(responses.toXML());
   */
+    }
+
+    public void testFilterVsQuery() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        long qHitCount = getHits(
+            summon, DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
+        long fHitCount = getHits(
+            summon, DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama");
+
+        assertTrue("The filter hit count " + fHitCount + " should differ from "
+                   + "query hit count " + qHitCount + " by less than 100",
+                   Math.abs(fHitCount - qHitCount) < 100);
+    }
+
+    public void testFilterVsQuery2() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        long qHitCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+            DocumentKeys.SEARCH_FILTER, "old");
+        long fHitCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+            DocumentKeys.SEARCH_QUERY, "old");
+
+        assertTrue("The filter(old) hit count " + fHitCount + " should differ"
+                   + " from query(old) hit count " + qHitCount
+                   + " by more than 100 as filter query apparently does not "
+                   + "query parse with default fields",
+                   Math.abs(fHitCount - qHitCount) > 100);
+    }
+
+    public void testFilterVsQuery3() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        long qCombinedHitCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY,
+            "PublicationTitle:jama AND Language:English");
+        long qHitCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+            DocumentKeys.SEARCH_FILTER, "(Language:English)");
+        long fHitCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+            DocumentKeys.SEARCH_QUERY, "Language:English");
+
+        assertTrue("The filter(old) hit count " + fHitCount + " should differ"
+                   + " from query(old) hit count " + qHitCount
+                   + " by less than 100. Combined hit count for query is "
+                   + qCombinedHitCount,
+                   Math.abs(fHitCount - qHitCount) < 100);
+    }
+
+    private long getHits(SearchNode searcher, String... arguments)
+                                                        throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(arguments), responses);
+        return Long.parseLong(responses.toXML().replaceAll(
+            "(?s).*hitCount=\"([0-9]*)\".*", "$1"));
     }
 
     public void testCustomParams() throws RemoteException {
