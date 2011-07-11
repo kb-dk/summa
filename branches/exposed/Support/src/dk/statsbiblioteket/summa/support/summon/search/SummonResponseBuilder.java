@@ -102,7 +102,7 @@ public class SummonResponseBuilder {
                 "Unable to construct a reader from input", e);
         }
 
-        String query = request.getString(DocumentKeys.SEARCH_QUERY);
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
 

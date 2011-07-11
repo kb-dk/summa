@@ -530,7 +530,6 @@ public class SummonSearchNode extends SearchNodeImpl {
                 "Unable to perform remote call to "  + host + restCall
                 + " with argument '" + queryString, e);
         }
-
         String retval = prefixIDs(result, idPrefix);
         if (resolveLinks) {
             retval = linkResolve(retval);
