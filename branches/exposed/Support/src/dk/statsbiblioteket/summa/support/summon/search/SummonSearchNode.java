@@ -149,6 +149,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         + "Genre, " // Direct
         + "IsScholarly, " // Direct
         + "Language, " // Map
+        + "IsFullText, "
         //"Library,and,1,5",
         //"PackageID,and,1,5",
         //"SourceID,and,1,5",

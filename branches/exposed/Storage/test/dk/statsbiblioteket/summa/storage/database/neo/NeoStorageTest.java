@@ -14,6 +14,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,15 +144,27 @@ public class NeoStorageTest extends TestCase {
         testScale(100000, 5, 100, STORAGE.h2);
     }
 
+    public void testReopen() throws IOException {
+        if (TMP.exists()) {
+            Files.delete(TMP);
+        }
+        //noinspection ResultOfMethodCallIgnored
+        TMP.mkdirs();
+        Storage ns = createIndex(100, 5, 100, STORAGE.neo, 100);
+        ns.close();
+        ns = createIndex(100, 5, 100, STORAGE.neo, 100);
+        ns.close();
+    }
+
     /*
      * With default mem (~1,2GB) - too little
      * Index: 8,8GB
      * Ingest in 1 hour, 35 minutes, 28 seconds, 859 ms with 174 records/sec
      */
-    public void disabledtestScale1MKc5b100() throws IOException {
-        testScale(1000000, 5, 100, STORAGE.neo);
-        System.out.println("");
-        testScale(1000000, 5, 100, STORAGE.h2);
+    public void testScale1MKc3b100() throws IOException {
+        testScale(1000000, 3, 1000, STORAGE.neo);
+/*        System.out.println("");
+        testScale(1000000, 3, 100, STORAGE.h2);*/
     }
 
     /*
@@ -177,12 +190,33 @@ public class NeoStorageTest extends TestCase {
         throws IOException {
         long feedback = records / 10;
         long startTime = System.currentTimeMillis();
-        System.out.println(
-            "Testing " + storage + " storage with " + records + " records with "
-            + children + " children using commit size " + buffersize);
+        Storage ns =
+            createIndex(records, children, buffersize, storage, feedback);
+
+        for (int i = 0 ; i < 1000 ; i++) {
+            System.gc();
+            performExtraction(records, children, feedback, startTime, ns);
+        }
+
+        ns.close();
+    }
+
+    private Storage createIndex(
+        int records, int children, int buffersize, STORAGE storage,
+        long feedback) throws IOException {
+        String lastID = "foo" + (records - 1);
         Profiler ingest = new Profiler(records);
         ingest.setBpsSpan(1000);
         Storage ns = getStorage(storage);
+        if (ns.getRecord(lastID, null) != null) {
+            System.out.println(
+                "Storage contains " + lastID + ". We assume it is "
+                + "populated and do not perform further ingest");
+            return ns;
+        }
+        System.out.println(
+            "Creating " + storage + " storage with " + records + " records "
+            + "with " + children + " children using commit size " + buffersize);
         List<Record> buffer = new ArrayList<Record>(buffersize);
         for (int i = 0 ; i < records ; i++) {
             if (i != 0 && i % feedback == 0) {
@@ -217,12 +251,21 @@ public class NeoStorageTest extends TestCase {
         System.out.println(
             "Finished ingest in " + ingest.getSpendTime()
             + " with " + (int)ingest.getBps(false) + " records/sec");
+        if (ns.getRecord(lastID, null) == null) {
+            throw new IllegalStateException(
+                "Unable to extract " + lastID+ " from newly populated storage");
+        }
+        return ns;
+    }
 
+    private void performExtraction(
+        int records, int children, long feedback, long startTime, Storage ns)
+                                                            throws IOException {
         System.out.println(
             "Extracting "+ records + " records and verifying content");
         Profiler extract = new Profiler(records);
         long key = ns.getRecordsModifiedAfter(
-            startTime-1, "bar", new QueryOptions(null, null, 999, 0));
+            0, "bar", new QueryOptions(null, null, 999, 0));
         int count = 0;
         while (true) {
             try {
@@ -247,13 +290,11 @@ public class NeoStorageTest extends TestCase {
             count++;
         }
         assertEquals("The number of extracted records should match ingested",
-                     count, records);
+                     records, count);
         extract.pause();
         System.out.println(
             "Finished extraction in " + extract.getSpendTime()
             + " with " + (int)extract.getBps(false) + " records/sec");
-
-        ns.close();
     }
 
     private Storage getStorage(STORAGE storage) throws IOException {
