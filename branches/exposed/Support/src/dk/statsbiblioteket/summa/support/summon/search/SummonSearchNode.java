@@ -29,7 +29,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermRangeQuery;
 import org.w3c.dom.Document;
@@ -385,7 +385,7 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + facets + "'");
         String sResponse = summonSearch(
             filter, query, summonSearchParams, collectdocIDs ? facets : null,
-            startIndex, maxRecords, resolveLinks);
+            startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");
@@ -437,8 +437,9 @@ public class SummonSearchNode extends SearchNodeImpl {
                         sq = new ArrayList<String>();
                         summonSearchParams.put(RF, sq);
                     }
-                    sq.add(query.getField() + "," + query.getLowerTerm() + ":"
-                           + query.getUpperTerm());
+                    sq.add(query.getField() + ","
+                           + query.getLowerTerm().utf8ToString() + ":"
+                           + query.getUpperTerm().utf8ToString());
                     return null;
                 }
             }).rewrite(query);
@@ -482,6 +483,8 @@ public class SummonSearchNode extends SearchNodeImpl {
 
     /**
      * Perform a search in Summon.
+     *
+     * @param filter    a Solr-style filter (same syntax as query).
      * @param query     a Solr-style query.
      * @param summonParams optional extended params for Summon. If not null,
      *                  these will be added to the Summon request.
@@ -492,6 +495,9 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param maxRecords number of items per page.
      * @param resolveLinks whether or not to call the link resolver to resolve
      *                  openurls to actual links.
+     * @param sortKey the field to sort on. If null, default ranking sort is
+     *                used.
+     * @param reverseSort if true, sort order is reversed.
      * @return XML with the search result as per Summon API.
      * @throws java.rmi.RemoteException if there were an error performing the
      * remote search call.
@@ -499,15 +505,16 @@ public class SummonSearchNode extends SearchNodeImpl {
     public String summonSearch(
         String filter, String query, Map<String, List<String>> summonParams,
         SummonFacetRequest facets, int startIndex,
-        int maxRecords, boolean resolveLinks) throws RemoteException {
+        int maxRecords, boolean resolveLinks, String sortKey,
+        boolean reverseSort) throws RemoteException {
         long methodStart = System.currentTimeMillis();
         int startpage = startIndex / maxRecords;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
                   + startIndex + ", " + maxRecords + ")");
-        Map<String, List<String>> querymap =
-            buildSummonQuery(filter, query, facets, startpage, perpage);
+        Map<String, List<String>> querymap = buildSummonQuery(
+               filter, query, facets, startpage, perpage, sortKey, reverseSort);
         if (summonParams != null) {
             querymap.putAll(summonParams);
         }
@@ -542,19 +549,25 @@ public class SummonSearchNode extends SearchNodeImpl {
 
     private Map<String, List<String>> buildSummonQuery(
         String filter, String query, SummonFacetRequest facets,
-        int startpage, int perpage) {
+        int startpage, int perpage, String sortKey, boolean reverseSort) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
         querymap.put("s.dym", Arrays.asList("true"));
         querymap.put("s.ho",  Arrays.asList("true"));
-        if (query != null) { // We allow no query
+        if (query != null) { // We allow missing query
             querymap.put("s.q",   Arrays.asList(query));
         }
-        if (filter != null) { // We allow no filter
+        if (filter != null) { // We allow missing filter
             querymap.put("s.fq",   Arrays.asList(filter));
         }
         querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
+
+        // TODO: Add support for sorting on multiple fields
+        if (sortKey != null) {
+            querymap.put("s.sort", Arrays.asList(
+                         sortKey + ":" + (reverseSort ? "desc" : "asc")));
+        }
 
         if (facets != null) {
             querymap.put("s.ff", facets.getFacetQueries());
@@ -802,7 +815,8 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch(null, "ID:" + id, null, null, 1, 1, false);
+        String temp = summonSearch(
+            null, "ID:" + id, null, null, 1, 1, false, null, false);
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -861,7 +875,8 @@ public class SummonSearchNode extends SearchNodeImpl {
             id = id.substring(idPrefix.length());
         }
 
-        String temp = summonSearch(null, "ID:" + id, null, null, 1, 1, false);
+        String temp = summonSearch(
+            null, "ID:" + id, null, null, 1, 1, false, null, false);
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
