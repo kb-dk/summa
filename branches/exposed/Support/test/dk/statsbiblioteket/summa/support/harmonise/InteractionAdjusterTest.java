@@ -49,6 +49,17 @@ public class InteractionAdjusterTest extends TestCase {
                          FacetKeys.SEARCH_FACET_FACETS), ", "));
     }
 
+    public void testSortQueryRewrite() {
+        InteractionAdjuster adjuster = createAdjuster();
+        Request request = new Request(
+            DocumentKeys.SEARCH_SORTKEY, "sort_year_asc"
+        );
+        Request rewritten = adjuster.rewrite(request);
+        assertEquals("The rewritten sort field should be as expected",
+                     "PublicationDate",
+                     rewritten.getString(DocumentKeys.SEARCH_SORTKEY));
+    }
+
     // ContentType -> lma_long
     public void testFacetFieldResultRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
@@ -101,7 +112,8 @@ public class InteractionAdjusterTest extends TestCase {
             "recordID - ID, author_normalised - Author, "
             + "lma_long - ContentType, llang - Language, "
             + "fa;fb - FieldA;FieldB, "
-            + "lsubject - SubjectTerms"
+            + "lsubject - SubjectTerms, "
+            + "sort_year_asc;sort_year_desc - PublicationDate"
         );
         List<Configuration> tags;
         try {

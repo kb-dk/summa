@@ -29,7 +29,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermRangeQuery;
 import org.w3c.dom.Document;
@@ -327,9 +327,6 @@ public class SummonSearchNode extends SearchNodeImpl {
             log.debug("No filter or query, returning immediately");
             return;
         }
-        if (!DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
-            log.warn("fullSearch: Sort key '" + sortKey + "' is ignored");
-        }
 
         // s.fq
 
@@ -438,8 +435,8 @@ public class SummonSearchNode extends SearchNodeImpl {
                         summonSearchParams.put(RF, sq);
                     }
                     sq.add(query.getField() + ","
-                           + query.getLowerTerm().utf8ToString() + ":"
-                           + query.getUpperTerm().utf8ToString());
+                           + query.getLowerTerm() + ":"
+                           + query.getUpperTerm());
                     return null;
                 }
             }).rewrite(query);

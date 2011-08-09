@@ -101,6 +101,30 @@ public class SummonSearchNodeTest extends TestCase {
 
     }
 
+    // TODO: Implement the sort test
+    public void testSortedSearch() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
+            "sort_year_asc - PublicationDate"
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_SORTKEY, "PublicationDate");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        System.out.println(responses.toXML());
+    }
+
     public void testRecommendations() throws RemoteException {
         Configuration conf = Configuration.newMemoryBased(
             SummonSearchNode.CONF_SUMMON_ACCESSID, id,

@@ -39,7 +39,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
-import sun.reflect.generics.tree.ReturnType;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -252,7 +251,8 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
 
-        log.trace("Rewriting fields and content in document filter and query");
+        log.trace("Rewriting fields and content in document filter, query and"
+                  + " sort");
         if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
             request.put(DocumentKeys.SEARCH_FILTER, rewriteQuery(
                 request.getString(DocumentKeys.SEARCH_FILTER),
@@ -262,6 +262,21 @@ public class InteractionAdjuster implements Configurable {
             request.put(DocumentKeys.SEARCH_QUERY, rewriteQuery(
                 request.getString(DocumentKeys.SEARCH_QUERY),
                 documentFieldMap, facetFieldMap));
+        }
+        if (documentFieldMap != null
+            && request.containsKey(DocumentKeys.SEARCH_SORTKEY)) {
+            String key = request.getString(DocumentKeys.SEARCH_SORTKEY);
+            String replaced[] = documentFieldMap.get(key);
+            if (replaced != null) {
+                if (replaced.length > 1) {
+                    log.warn("Warning: The sort key '" + key + "' will be "
+                             + "replaced with multiple values "
+                             + Strings.join(replaced, ", "));
+                    request.put(DocumentKeys.SEARCH_SORTKEY,
+                                Strings.join(replaced, ", "));
+                }
+                request.put(DocumentKeys.SEARCH_SORTKEY, replaced[0]);
+            }
         }
     }
 
