@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -100,6 +101,25 @@ public class InteractionAdjusterTest extends TestCase {
                      ((FacetResultExternal)responses.iterator().next()).
                          getMap().entrySet().iterator().next().getValue().
                          get(0).getKey());
+    }
+
+    public void testSortResultRewrite() {
+        InteractionAdjuster adjuster = createAdjuster();
+
+        Request request = new Request(
+            DocumentKeys.SEARCH_SORTKEY, "sort_year_asc"
+        );
+        DocumentResponse docResponse = new DocumentResponse(
+            "filter", "query", 0, 10, "PublicationDate", false,
+            new String[0], 10, 10);
+        ResponseCollection responses = new ResponseCollection();
+        responses.add(docResponse);
+        adjuster.adjust(request, responses);
+
+        assertEquals("The adjusted response should contain rewritten sort",
+                     "sort_year_asc, sort_year_desc",
+                     ((DocumentResponse)responses.iterator().next()).
+                         getSortKey());
     }
 
     private InteractionAdjuster createAdjuster() {

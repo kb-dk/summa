@@ -19,7 +19,6 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
-import com.sun.corba.se.spi.orbutil.threadpool.ThreadPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
@@ -105,6 +104,9 @@ public class SummonResponseBuilder {
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
+        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY);
+        boolean reverse = request.getBoolean(
+            DocumentKeys.SEARCH_REVERSE, false);
 
         if (!findTagStart(xml, "response")) {
             log.warn("Could not locate start tag 'response', exiting");
@@ -150,12 +152,12 @@ public class SummonResponseBuilder {
                 }
             }
             if ("documents".equals(currentTag)) {
-                records = extractRecords(xml);
+                records = extractRecords(xml, sortKey);
             }
         }
         DocumentResponse documentResponse = new DocumentResponse(
-            filter, query, startIndex, maxRecords, null, false, new String[0],
-            searchTime, hitCount);
+            filter, query, startIndex, maxRecords, sortKey, reverse,
+            new String[0], searchTime, hitCount);
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
@@ -304,13 +306,17 @@ public class SummonResponseBuilder {
     /**
      * Extracts all Summon documents and converts them to
      * {@link }DocumentResponse#Record}.
+     *
      * @param xml the stream to extract records from. Must be positioned at
      * ELEMENT_START for "documents".
+     * @param sortKey if not null, the sort key is assigned to the Record if
+     *                it is encountered in the XML.
      * @return an array of record or the empty list if no documents were found.
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
-    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml)
+    private List<DocumentResponse.Record> extractRecords(
+        XMLStreamReader xml, final String sortKey)
         throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records =
@@ -318,7 +324,7 @@ public class SummonResponseBuilder {
         iterateElements(xml, "documents", "document", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                DocumentResponse.Record record = extractRecord(xml);
+                DocumentResponse.Record record = extractRecord(xml, sortKey);
                 if (record != null) {
                     records.add(record);
                 }
@@ -333,14 +339,17 @@ public class SummonResponseBuilder {
      * Extracts a Summon document and converts it to
      * {@link }DocumentResponse#Record}. The compact representation
      * "shortformat" is generated on the fly and added to the list of fields.
+     *
      * @param xml the stream to extract the record from. Must be positioned at
      * ELEMENT_START for "document".
+     * @param sortKey if not null, the sort key is assigned to the Record if
+     *                it is encountered in the XML.
      * @return a record or null if no document could be extracted.
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private DocumentResponse.Record extractRecord(XMLStreamReader xml)
-                                                    throws XMLStreamException {
+    private DocumentResponse.Record extractRecord(
+        XMLStreamReader xml, final String sortKey) throws XMLStreamException {
     // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
@@ -354,6 +363,7 @@ public class SummonResponseBuilder {
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
             "ID", "Score", "Title", "Subtitle", "Author", "ContentType",
             "PublicationDate_xml"));
+        final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
         final List<DocumentResponse.Field> fields =
             new ArrayList<DocumentResponse.Field>(50);
@@ -366,6 +376,9 @@ public class SummonResponseBuilder {
                         extracted.put(field.getName(), field.getContent());
                     }
                     fields.add(field);
+                    if (sortKey != null && sortKey.equals(field.getName())) {
+                        sortValue[0] = field.getContent();
+                    }
                 }
             }
 
@@ -392,9 +405,11 @@ public class SummonResponseBuilder {
             "recordBase", recordBase, false));
         }
 
+        String sortV = sortKey == null || sortValue[0] == null ?
+                       null : sortValue[0];
         DocumentResponse.Record record =
             new DocumentResponse.Record(
-                id, "Summon", extracted.getFloat("Score", 0f), null);
+                id, "Summon", extracted.getFloat("Score", 0f), sortV);
         for (DocumentResponse.Field field: fields) {
             record.addField(field);
         }

@@ -649,6 +649,11 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
 
+        if (documentResponse.getSortKey() != null
+            && docFieldMap.reverseContainsKey(documentResponse.getSortKey())) {
+            documentResponse.setSortKey(Strings.join(
+                docFieldMap.reverseGet(documentResponse.getSortKey()), ", "));
+        }
         log.trace("Replacing document fields (" + docFieldMap.size()
                   + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
