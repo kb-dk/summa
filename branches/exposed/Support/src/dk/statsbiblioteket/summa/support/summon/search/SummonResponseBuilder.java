@@ -104,7 +104,7 @@ public class SummonResponseBuilder {
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
-        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY);
+        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
         boolean reverse = request.getBoolean(
             DocumentKeys.SEARCH_REVERSE, false);
 

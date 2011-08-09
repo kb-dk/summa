@@ -274,8 +274,9 @@ public class InteractionAdjuster implements Configurable {
                              + Strings.join(replaced, ", "));
                     request.put(DocumentKeys.SEARCH_SORTKEY,
                                 Strings.join(replaced, ", "));
+                } else {
+                    request.put(DocumentKeys.SEARCH_SORTKEY, replaced[0]);
                 }
-                request.put(DocumentKeys.SEARCH_SORTKEY, replaced[0]);
             }
         }
     }
