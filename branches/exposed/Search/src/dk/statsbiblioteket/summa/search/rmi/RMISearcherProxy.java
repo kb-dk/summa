@@ -27,6 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -65,12 +66,28 @@ public class RMISearcherProxy extends UnicastRemoteObject
     public static final String CONF_SERVICE_NAME = "summa.searcher.rmi.name";
     public static final String DEFAULT_SERVICE_NAME = "summa-searcher";
 
+    /**
+     * If true, all received exception trees are flattened to a single
+     * RemoteException containing the printed stack trace.
+     * </p><p>
+     * Although the best setting is theoretically false, allowing external
+     * clients to handle the exception by drilling down and analyzing, this
+     * requires the caller to have all relevant Exception implementations.
+     * For real world use, true is nearly always the right choice.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FLATTEN_EXCEPTIONS =
+        "rmi.exceptions.flatten";
+    public static final boolean DEFAULT_FLATTEN_EXCEPTIONS = true;
+
     public static final Class<? extends SummaSearcher> DEFAULT_BACKEND =
                                                         SummaSearcherImpl.class;
 
     private SummaSearcher backend;
     private String serviceName;
     private int registryPort;
+    private final boolean flattenExceptions;
 
     /**
      * Create a new searcher proxy. The configuration passed in must specify
@@ -93,7 +110,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
      */
     public RMISearcherProxy (Configuration conf) throws IOException {
         super (getServicePort(conf));
-
+        flattenExceptions = conf.getBoolean(
+            CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
         // FIXME: The below config should really be kept entirely in memory,
@@ -173,7 +191,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "search(%s) for %d:%s",
-                    request, registryPort, serviceName), t);
+                    request, registryPort, serviceName), t, flattenExceptions);
             return null;
         }
     }
@@ -185,7 +203,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "close().unExportRemoteInterface(serviceName='%s', "
-                    + "registryPort=%d)", serviceName, registryPort), t);
+                    + "registryPort=%d)",
+                    serviceName, registryPort), t, flattenExceptions);
         } finally {
             // If an exception was throws above, it was also logged, so we
             // accept that it might be eaten by an exception from the backend
@@ -193,7 +212,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
                 backend.close();
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
-                        "close() for %d:%s", registryPort, serviceName), t);
+                        "close() for %d:%s",
+                        registryPort, serviceName), t, flattenExceptions);
             }
 
             try {
@@ -201,7 +221,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
                         "close().unExportMBean() for %d:%s",
-                        registryPort, serviceName), t);
+                        registryPort, serviceName), t, flattenExceptions);
             }
         }
     }

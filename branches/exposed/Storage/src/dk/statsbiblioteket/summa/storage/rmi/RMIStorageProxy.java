@@ -86,6 +86,22 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Default value for {@link RMIStorageProxy#CONF_SERVICE_NAME}.
      */
     public static final String DEFAULT_SERVICE_NAME = "summa-storage";
+
+    /**
+     * If true, all received exception trees are flattened to a single
+     * RemoteException containing the printed stack trace.
+     * </p><p>
+     * Although the best setting is theoretically false, allowing external
+     * clients to handle the exception by drilling down and analyzing, this
+     * requires the caller to have all relevant Exception implementations.
+     * For real world use, true is nearly always the right choice.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FLATTEN_EXCEPTIONS =
+        "rmi.exceptions.flatten";
+    public static final boolean DEFAULT_FLATTEN_EXCEPTIONS = true;
+
     /** Private logger instance. */
     private static Log log = LogFactory.getLog(RMIStorageProxy.class);
     /** Storage backend. */
@@ -96,6 +112,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
     private int registryPort;
     /** Log expand size. */
     private final int logExpand = 5;
+
+    private final boolean flattenExceptions;
+
     /**
      * Constructs a RMI Storage proxy with a given configuration.
      * @param conf The configuration.
@@ -103,6 +122,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
      */
     public RMIStorageProxy(Configuration conf) throws IOException {
         super(getServicePort(conf));
+        flattenExceptions = conf.getBoolean(
+            CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
 
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
@@ -200,7 +221,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getRecordsModifiedAfter(time=%d, base='%s', options=%s) "
                     + "for %d:%s",
-                    time, base, options, registryPort, serviceName), t);
+                    time, base, options, registryPort, serviceName),
+                                         t, flattenExceptions);
             return -1;
         }
     }
@@ -220,7 +242,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getModificationTime(base='%s') for %d:%s",
-                    base, registryPort, serviceName), t);
+                    base, registryPort, serviceName), t, flattenExceptions);
             return -1;
         }
     }
@@ -265,7 +287,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getRecord(id='%s', queryOptions=%s) for %d:%s",
-                    id, options, registryPort, serviceName), t);
+                    id, options, registryPort, serviceName),
+                                         t, flattenExceptions);
             return null;
         }
     }
@@ -285,7 +308,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "next(iteratorKey=%d) for %d:%s",
-                    iteratorKey, registryPort, serviceName), t);
+                    iteratorKey, registryPort, serviceName),
+                                         t, flattenExceptions);
             return null;
         }
     }
@@ -307,7 +331,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "next(iteratorKey=%d, maxRecords=%d) for %d:%s",
-                    iteratorKey, maxRecords, registryPort, serviceName), t);
+                    iteratorKey, maxRecords, registryPort, serviceName),
+                                         t, flattenExceptions);
             return null;
         }
     }
@@ -328,7 +353,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flush(%s) for %d:%s",
-                    record, registryPort, serviceName), t);
+                    record, registryPort, serviceName), t, flattenExceptions);
         }
     }
 
@@ -361,7 +386,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flushAll(%s) for %d:%s",
                     Logs.expand(records, logExpand), registryPort, serviceName),
-                    t);
+                    t, flattenExceptions);
         }
     }
 
@@ -390,7 +415,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "close().unExportRemoteInterface(serviceName='%s', "
-                    + "registryPort=%d)", serviceName, registryPort), t);
+                    + "registryPort=%d)", serviceName, registryPort),
+                                         t, flattenExceptions);
         } finally {
             // If an exception was throws above, it was also logged, so we
             // accept that it might be eaten by an exception from the backend
@@ -398,7 +424,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
                 backend.close();
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
-                        "close() for %d:%s", registryPort, serviceName), t);
+                        "close() for %d:%s", registryPort, serviceName),
+                                             t, flattenExceptions);
             }
 
             try {
@@ -406,7 +433,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
                         "close().unExportMBean() for %d:%s",
-                        registryPort, serviceName), t);
+                        registryPort, serviceName), t, flattenExceptions);
             }
         }
     }
@@ -426,7 +453,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             backend.clearBase(base);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, call, t);
+            RemoteHelper.exitOnThrowable(log, call, t, flattenExceptions);
         }
     }
 
@@ -462,7 +489,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.batchJob(jobName, base, minMtime, maxMtime, options);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, call, t);
+            RemoteHelper.exitOnThrowable(log, call, t, flattenExceptions);
             return "ERROR: " + t.getMessage();
         }
     }

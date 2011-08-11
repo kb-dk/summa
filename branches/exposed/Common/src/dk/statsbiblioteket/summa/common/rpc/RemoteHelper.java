@@ -19,8 +19,7 @@ import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -366,6 +365,50 @@ public class RemoteHelper {
         if (t instanceof Exception) {
             String message = "Exception during " + call;
             log.warn(message, t);
+            throw new RemoteException(message, t);
+        } else {
+            fatality(log, "Unhandled error during " + call, t);
+        }
+    }
+
+    /**
+     * If <code>t</code> is an <code>Error</code> send fatal error messages to
+     * the log and <code>stderr</code>, schedule a system exit in 5s, and
+     * throw a <code>RemoteException</code>.
+     * <p/>
+     * This method is intended as a Helper for general processing of Throwables.
+     * This gives slightly worse stack traces, as the method handleThrowable
+     * is inserted, but improves code readability tremendously.
+     * </p><p>
+     * This method always throws a RemoteException and shuts down the JVM in
+     * case of Throwables.
+     *
+     * @param log  the log to use.
+     * @param call the method, including parameters, that caused the Throwable.
+     * @param t the Throwable from the execution of the method.
+     * @param flattenException if true the received Throwable is flattened to a
+     *        string before being rethrown.
+     * @throws java.rmi.RemoteException thrown back with expanded info.
+     */
+    public static void exitOnThrowable(Log log, String call, Throwable t,
+                                       boolean flattenException)
+                                                        throws RemoteException {
+        if (t instanceof Exception) {
+            String message = "Exception during " + call;
+            log.warn(message, t);
+            if (flattenException) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream(5000);
+                PrintStream ps = new PrintStream(out);
+                t.printStackTrace(ps);
+                ps.flush();
+                try {
+                    throw new RemoteException(
+                        message + "\n" + out.toString("utf-8"), t);
+                } catch (UnsupportedEncodingException e) {
+                    throw new IllegalArgumentException(
+                        "Unable to perform toString with utf-8", e);
+                }
+            }
             throw new RemoteException(message, t);
         } else {
             fatality(log, "Unhandled error during " + call, t);

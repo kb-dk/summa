@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
+import de.schlichtherle.truezip.io.Streams;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
@@ -24,6 +25,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -34,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -122,7 +126,57 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        System.out.println(responses.toXML());
+        List<String> sortValues = getAttributes(summon, request, "sortValue");
+        String lastValue = null;
+        for (String sortValue: sortValues) {
+            assertTrue("The sort values should be in unicode order but was "
+                       + Strings.join(sortValues, ", "),
+                      lastValue == null || lastValue.compareTo(sortValue) <= 0);
+            lastValue = sortValue;
+        }
+    }
+
+    public void testSortedSearchRelevance() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
+            "sort_year_asc - PublicationDate"
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        List<String> ids = getAttributes(summon, request, "id");
+        assertTrue("There should be some hits", ids.size() > 0);
+    }
+
+    private List<String> getAttributes(
+        SearchNode searcher, Request request, String attributeName)
+                                                        throws RemoteException {
+        final Pattern IDPATTERN = Pattern.compile(
+            " *<record.*" + attributeName + "=\"(.+?)\".*>");
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(request, responses);
+        responses.iterator().next().merge(responses.iterator().next());
+        String[] lines = responses.toXML().split("\n");
+        List<String> result = new ArrayList<String>();
+        for (String line: lines) {
+            Matcher matcher = IDPATTERN.matcher(line);
+            if (matcher.matches()) {
+                result.add(matcher.group(1));
+            }
+        }
+        return result;
     }
 
     public void testRecommendations() throws RemoteException {

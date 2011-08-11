@@ -313,6 +313,9 @@ public class SummonSearchNode extends SearchNodeImpl {
         String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
         String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
+        if (DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
+            sortKey = null; // null equals relevance ranking
+        }
         boolean reverseSort = request.getBoolean(
             DocumentKeys.SEARCH_REVERSE, false);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;

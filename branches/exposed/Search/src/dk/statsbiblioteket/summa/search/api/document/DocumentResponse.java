@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.search.api.document;
 
+import com.ibm.icu.text.Collator;
+import com.ibm.icu.util.ULocale;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -22,10 +24,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * The result of a search, suitable for later merging and sorting.
@@ -69,6 +68,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     public static final String NAME = "DocumentResponse";
 
     private List<Record> records;
+//    private final Collator collator;
 
     public DocumentResponse(String filter, String query,
                         long startIndex, long maxRecords,
@@ -86,7 +86,13 @@ public class DocumentResponse implements Response, DocumentKeys {
         this.searchTime = searchTime;
         this.hitCount = hitCount;
         records = new ArrayList<Record>(50);
+        // TODO: Port proper collator creation from stable
+//        collator = Collator.getInstance(new Locale("da"));
     }
+
+//    public Collator getCollator() {
+//        return collator;
+//    }
 
     /**
      * Contains a representation of each hit from a search.
@@ -274,6 +280,9 @@ public class DocumentResponse implements Response, DocumentKeys {
         if (sortKey == null || SORT_ON_SCORE.equals(sortKey)) {
             Collections.sort(records, scoreComparator);
         } else {
+//            final Collator collator = getCollator();
+            final Collator collator = Collator.getInstance(new Locale("da"));
+
             Comparator<Record> collatorComparator = new Comparator<Record>() {
                 @Override
                 public int compare(Record o1, Record o2) {
@@ -291,10 +300,9 @@ public class DocumentResponse implements Response, DocumentKeys {
                             return NON_DEFINED_FIELDS_ARE_SORTED_LAST ? 1 : -1;
                         }
                     }
-                    // TODO: Port sorting from Stable
-                    throw new IllegalStateException("Collator support not "
-                                                    + "finished");
-//                    return collator.compare(s1, s2);
+//                    throw new IllegalStateException("Collator support not "
+//                                                    + "finished");
+                    return collator.compare(s1, s2) * (reverseSort ? -1 : 1);
                 }
             };
             Collections.sort(records, collatorComparator);
