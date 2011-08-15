@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 
@@ -63,8 +64,8 @@ public class ResponseMerger implements Configurable {
     /**
      * The overall way of merging DocumentResponses.
      * </p><p>
-     * Optional. Default is 'score'. 
-     * @see {@link .MODE} for details.
+     * Optional. Default is 'standard'.
+     * @see {@link MODE} for details.
      */
     public static final String CONF_MODE = "responsemerger.mode";
     public static final MODE DEFAULT_MODE = MODE.score;
@@ -84,6 +85,7 @@ public class ResponseMerger implements Configurable {
     /**
      * Overall merging mode for documents. Note that some of these modes require
      * extra parameters.
+     * standard:    Order provided by the DocumentResponses.<br/>
      * score:       Direct sort by score.<br/>
      * concatenate: Directly concatenate the lists of responses.
      *              The parameters {@link #CONF_ORDER} or {@link #SEARCH_ORDER}
@@ -94,6 +96,10 @@ public class ResponseMerger implements Configurable {
      *              must be specified to use this merger.<br/>
      */
     public static enum MODE {
+        /**
+         * The standard order for the provided DocumentResponses is used.
+         */
+        standard,
         /**
          * Direct sort by score. This is equivalent to the default merger for
          * DocumentResponses.
@@ -314,6 +320,10 @@ public class ResponseMerger implements Configurable {
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         switch (mode) {
+            case standard: {
+                sortByStandard(aw);
+                break;
+            }
             case score: {
                 sortByScore(aw);
                 break;
@@ -361,6 +371,12 @@ public class ResponseMerger implements Configurable {
             }
         }
         aw.setRecords(interleaved);
+    }
+
+    private void sortByStandard(AdjustWrapper aw) {
+        log.trace("Sorting by provided order");
+        throw new NotImplementedException();
+        // TODO: Implement this
     }
 
     private void sortByScore(AdjustWrapper aw) {
