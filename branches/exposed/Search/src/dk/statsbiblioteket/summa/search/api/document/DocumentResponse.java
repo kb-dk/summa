@@ -312,6 +312,41 @@ public class DocumentResponse implements Response, DocumentKeys {
         // TODO: This is only right for sequential searches
         searchTime += docResponse.getSearchTime();
     }
+
+    /**
+     * @return the comparator used for ordering Records belonging to this
+     * response.
+     */
+    public Comparator<Record> getComparator() {
+        if (sortKey == null || SORT_ON_SCORE.equals(sortKey)) {
+           return scoreComparator;
+        }
+        final Collator collator = Collator.getInstance(new Locale("da"));
+
+        return new Comparator<Record>() {
+            @Override
+            public int compare(Record o1, Record o2) {
+                String s1 =
+                    o1.getSortValue() == null ? "" : o1.getSortValue();
+                String s2 =
+                    o2.getSortValue() == null ? "" : o2.getSortValue();
+                if (NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED) {
+                    // Handle empty cases
+                    if ("".equals(s1)) {
+                        return "".equals(s2) ?
+                               scoreComparator.compare(o1, o2) :
+                               NON_DEFINED_FIELDS_ARE_SORTED_LAST ? -1 : 1;
+                    } else if ("".equals(s2)) {
+                        return NON_DEFINED_FIELDS_ARE_SORTED_LAST ? 1 : -1;
+                    }
+                }
+//                    throw new IllegalStateException("Collator support not "
+//                                                    + "finished");
+                return collator.compare(s1, s2) * (reverseSort ? -1 : 1);
+            }
+        };
+    }
+
     private Comparator<Record> scoreComparator = new ScoreComparator();
 
     private static class ScoreComparator implements Comparator<Record>,

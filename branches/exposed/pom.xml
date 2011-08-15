@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.7.0-20110811-l4exp-SNAPSHOT</version>
+    <version>1.7.0-20110815-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>

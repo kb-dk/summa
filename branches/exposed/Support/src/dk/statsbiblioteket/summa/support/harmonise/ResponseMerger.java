@@ -68,7 +68,7 @@ public class ResponseMerger implements Configurable {
      * @see {@link MODE} for details.
      */
     public static final String CONF_MODE = "responsemerger.mode";
-    public static final MODE DEFAULT_MODE = MODE.score;
+    public static final MODE DEFAULT_MODE = MODE.standard;
     public static final String SEARCH_MODE = CONF_MODE;
     
     /**
@@ -103,6 +103,9 @@ public class ResponseMerger implements Configurable {
         /**
          * Direct sort by score. This is equivalent to the default merger for
          * DocumentResponses.
+         * </p><p>
+         * Note: This will normally be the same as standard. Only use score is
+         *       you are absolutely sure that score should be forced.
          */
         score,
         /**
@@ -313,12 +316,12 @@ public class ResponseMerger implements Configurable {
         }
     }
 
-    private void merge(
-        Request request, AdjustWrapper aw) {
+    private void merge(Request request, AdjustWrapper aw) {
         log.trace("merge called");
         MODE mode = MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
+        log.debug("Merging DocumentResponses with mode " + mode);
         switch (mode) {
             case standard: {
                 sortByStandard(aw);
@@ -375,8 +378,21 @@ public class ResponseMerger implements Configurable {
 
     private void sortByStandard(AdjustWrapper aw) {
         log.trace("Sorting by provided order");
-        throw new NotImplementedException();
-        // TODO: Implement this
+        if (aw.getBase() == null) {
+            log.debug("sortByStandard(...): No base in AdjustWrapper. Exiting");
+            return;
+        }
+        final Comparator<DocumentResponse.Record> comparator =
+            aw.getBase().getComparator();
+        Collections.sort(
+            aw.getRecords(),
+            new Comparator<AdjustWrapper.AdjustRecord>() {
+                @Override
+                public int compare(AdjustWrapper.AdjustRecord o1,
+                                   AdjustWrapper.AdjustRecord o2) {
+                    return comparator.compare(o1.getRecord(), o2.getRecord());
+                }
+            });
     }
 
     private void sortByScore(AdjustWrapper aw) {
