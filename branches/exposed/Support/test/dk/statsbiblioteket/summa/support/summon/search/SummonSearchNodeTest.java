@@ -14,11 +14,8 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
