@@ -196,11 +196,17 @@ public class QueryRewriter {
 
         if (query instanceof TermQuery) {
             TermQuery tq = (TermQuery)query;
-            result += tq.getTerm().field() + ":\"" + tq.getTerm().text() + "\"";
+            if (tq.getTerm().field() == null
+                || "".equals(tq.getTerm().field())) {
+                result += query.toString();
+            } else {
+                result += tq.getTerm().field() + ":\""
+                          + tq.getTerm().text() + "\"";
             // It's okay is we send on 1.0 by bad comparison
             //noinspection FloatingPointEquality
-            if (tq.getBoost() != 1.0f) {
-                result += "^" + tq.getBoost();
+                if (tq.getBoost() != 1.0f) {
+                    result += "^" + tq.getBoost();
+                }
             }
         } else if (!(query instanceof BooleanQuery)) {
             result += query.toString();
