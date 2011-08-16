@@ -36,7 +36,6 @@ import dk.statsbiblioteket.summa.support.lucene.SummaIndexReader;
 import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortFactory;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 
@@ -60,10 +59,10 @@ import org.apache.lucene.document.SetBasedFieldSelector;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.mlt.MoreLikeThis;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.*;
 
@@ -303,7 +302,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public LuceneSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        log.info("Constructing LuceneSearchNode ***");
+        log.info("Constructing LuceneSearchNode");
         this.conf = conf;
         int maxBooleanClauses =
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES,
@@ -460,8 +459,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Could not create an IndexSearcher for '%s'",
                     urlLocation), e);
         }
-        log.debug("Open finished for location '" + location
-                  + "'. The searcher maxDoc is " + searcher.maxDoc());
+        try {
+            log.debug("Open finished for location '" + location
+                      + "'. The searcher maxDoc is " + searcher.maxDoc());
+        } catch (IOException e) {
+            throw new RemoteException(String.format(
+                    "Unable to determine searcher.maxDoc for searcher opened at"
+                    + " location '%s'", location), e);
+        }
     }
 
     private IndexReader getIndexreader(URL location) throws IOException {
@@ -700,7 +705,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         } catch (final Exception e) {
             throw new ParseException(
                     String.format("Exception while requesting String for '%s' "
-                                  + "with default value null", 
+                                  + "with default value null",
                                 LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
                 private static final long serialVersionUID = 1L;
                 {
@@ -760,28 +765,22 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                ? null : new QueryWrapperFilter(getParser().parse(filter));
     }
 
-    private Query parseQuery(String query) throws ParseException {
-        return query == null || "".equals(query) || "*".equals(query)
-               ? null : getParser().parse(query);
-    }
-
     private DocumentResponse fullSearch(Request request,
-            Filter luceneFilter, Query luceneQuery, String filter, String query,
-            long startIndex, long maxRecords, String sortKey,
-            boolean reverseSort, String[] fields, String[] fallbacks,
-            boolean doLog) throws RemoteException {
+                Filter luceneFilter, Query luceneQuery, String filter, String query,
+                long startIndex, long maxRecords, String sortKey,
+                boolean reverseSort, String[] fields, String[] fallbacks,
+                boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
         boolean mlt_request = request != null && isMoreLikeThisRequest(request);
-        log.debug("Calling fullSearch log test");
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
 
             TopFieldDocs topDocs = searcher.search(
-                    luceneQuery, luceneFilter,
-                    (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
-                    mlt_request || sortKey == null
-                    || sortKey.equals(DocumentKeys.SORT_ON_SCORE)
-                    ? Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort));
+                luceneQuery, luceneFilter,
+                (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
+                mlt_request || sortKey == null
+                || sortKey.equals(DocumentKeys.SORT_ON_SCORE)
+                ? Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort));
 
             if (log.isTraceEnabled()) {
                 log.trace("Got " + topDocs.totalHits + " hits for query "
@@ -789,51 +788,51 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             }
 
             FieldSelector selector = new SetBasedFieldSelector(
-                    new HashSet<String>(Arrays.asList(fields)),
-                    new HashSet<String>(5));
+                new HashSet<String>(Arrays.asList(fields)),
+                new HashSet<String>(5));
 
 
             if (request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)
-                    && (Arrays.binarySearch(
-                    fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {
+                && (Arrays.binarySearch(
+                fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {
                 log.debug("Turning on explain for '" + query + "'");
                 String[] newFields = new String[fields.length + 1];
                 System.arraycopy(fields, 0, newFields, 0, fields.length);
                 newFields[newFields.length - 1] =
-                        DocumentKeys.EXPLAIN_RESPONSE_FIELD;
+                    DocumentKeys.EXPLAIN_RESPONSE_FIELD;
                 fields = newFields;
             }
 
             DocumentResponse result =
-                    new DocumentResponse(filter, query, startIndex, maxRecords,
+                new DocumentResponse(filter, query, startIndex, maxRecords,
                                      sortKey, reverseSort, fields, 0,
                                      topDocs.totalHits);
             // TODO: What about longs for startIndex and maxRecords?
-            log.debug("Creating Records");
             for (int i = (int)startIndex ;
                  i < topDocs.scoreDocs.length
                  && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0));
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id and the sort value
+
                 String sortValue = null;
-                log.debug("sortKey " +request.getString(DocumentKeys.SEARCH_SORTKEY, null));
                 if (!DocumentKeys.SORT_ON_SCORE.equals(
                     request.getString(DocumentKeys.SEARCH_SORTKEY, null))) {
-                    log.debug("Sorting on score");
                     // There should be a sort key
                     if (!(scoreDoc instanceof FieldDoc)) {
-                        log.warn("Sort on '" + sortKey + "' was requested, so "
-                                 + "the expected ScoreDoc type was FieldDoc. "
-                                 + "However, " + scoreDoc.getClass() + " was "
-                                 + "encountered. No sortValue will be set");
+                        log.warn(
+                            "Sort on '" + sortKey + "' was requested, so "
+                            + "the expected ScoreDoc type was FieldDoc. "
+                            + "However, " + scoreDoc.getClass() + " was "
+                            + "encountered. No sortValue will be set");
                     } else {
                         FieldDoc fieldDoc = (FieldDoc)scoreDoc;
                         if (fieldDoc.fields.length != 1) {
-                            log.warn("Sort on '" + sortKey + "' was requested, "
-                                     + "but the fieldDoc contains "
-                                     + fieldDoc.fields.length + " sortValues. "
-                                     + "Only 1 value is currently supported");
+                            log.warn(
+                                "Sort on '" + sortKey + "' was requested, "
+                                + "but the fieldDoc contains "
+                                + fieldDoc.fields.length + " sortValues. "
+                                + "Only 1 value is currently supported");
                         }
                         StringWriter sortValueSW = new StringWriter();
                         boolean first = true;
@@ -849,23 +848,25 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                             } else if (o instanceof String) {
                                 sortValueSW.append(o.toString());
                             } else {
-                                log.warn("Encountered sortValue was of type "
-                                         + o.getClass() + ", expected String or"
-                                         + " BytesRef. Using value.toString() "
-                                         + "as the sort value");
+                                log.warn(
+                                    "Encountered sortValue was of type "
+                                    + o.getClass() + ", expected String or"
+                                    + " BytesRef. Using value.toString() "
+                                    + "as the sort value");
                                 sortValueSW.append(o.toString());
                             }
                         }
                         sortValue = sortValueSW.toString();
                         log.debug("sortValue: " + sortValue);
                     }
+
                 }
                 DocumentResponse.Record record =
-                        new DocumentResponse.Record(
-                                Integer.toString(scoreDoc.doc), "NA",
-                                scoreDoc.score, sortValue);
+                    new DocumentResponse.Record(
+                        Integer.toString(scoreDoc.doc), "NA",
+                        scoreDoc.score, sortValue);
                 Document doc =
-                     searcher.getIndexReader().document(scoreDoc.doc, selector);
+                    searcher.getIndexReader().document(scoreDoc.doc, selector);
                 if (isMoreLikeThisSelfMatch(request, doc)) {
                     log.trace("Ignoring MoreLikeThis hit on source document");
                     continue;
@@ -875,14 +876,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     String field = fields[fieldIndex];
                     if (field.equals(DocumentKeys.EXPLAIN_RESPONSE_FIELD)) {
                         String explanation =
-                                explain(request, luceneQuery, scoreDoc.doc);
+                            explain(request, luceneQuery, scoreDoc.doc);
                         if (log.isDebugEnabled()) {
                             log.debug("Appending explanation:\n" + explanation);
                         }
                         if (explanation != null) {
                             record.addField(new DocumentResponse.Field(
-                                    DocumentKeys.EXPLAIN_RESPONSE_FIELD,
-                                    explanation, false));
+                                DocumentKeys.EXPLAIN_RESPONSE_FIELD,
+                                explanation, false));
                         }
                         continue;
                     }
@@ -891,13 +892,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                         "".equals(iField.stringValue())) {
                         if (fallbacks != null && fallbacks.length != 0) {
                             record.addField(new DocumentResponse.Field(
-                                    field, fallbacks[fieldIndex],
-                                    !nonescapedFields.contains(field)));
+                                field, fallbacks[fieldIndex],
+                                !nonescapedFields.contains(field)));
                         }
                     } else {
                         record.addField(new DocumentResponse.Field(
-                                field, iField.stringValue(),
-                                !nonescapedFields.contains(field)));
+                            field, iField.stringValue(),
+                            !nonescapedFields.contains(field)));
                     }
                 }
                 result.addRecord(record);
@@ -905,27 +906,27 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("fullSea***rch(..., query '" + query + "', filter '"
-                          + filter + ") returning " + result.size() + "/" 
+                log.debug("fullSearch(..., query '" + query + "', filter '"
+                          + filter + ") returning " + result.size() + "/"
                           + topDocs.totalHits + " hits found in "
                           + (System.currentTimeMillis()-startTime) + " ms");
             }
             return result;
         } catch (CorruptIndexException e) {
             throw new IndexException(String.format(
-                    "CorruptIndexException during search for query '%s'",
-                    query), location, e);
+                "CorruptIndexException during search for query '%s'",
+                query), location, e);
         } catch (RemoteException e) {
             throw new RemoteException(String.format(
-                    "Inner RemoteException during search for query '%s'",
-                    query), e);
+                "Inner RemoteException during search for query '%s'",
+                query), e);
         } catch (IOException e) {
             throw new IndexException(String.format(
-                    "IOException during search for query '%s'", query),
+                "IOException during search for query '%s'", query),
                                      location, e);
         } catch (Throwable t) {
             throw new RemoteException(String.format(
-                    "Exception during search for query '%s'", query), t);
+                "Exception during search for query '%s'", query), t);
         }
     }
 
@@ -1084,23 +1085,25 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
             long count = 0;
             for (IndexReader reader: readers) {
-                Bits live = reader.getLiveDocs();
-                if (live == null) {
-                    count += reader.maxDoc();
-                } else if (live instanceof DocIdBitSet) { // Optimization
-                    count += ((DocIdBitSet)live).getBitSet().cardinality();
-                } else if (live instanceof OpenBitSet) {
-                    count += ((OpenBitSet)live).cardinality();
-                } else if (live instanceof OpenBitSetDISI) {
-                    count += ((OpenBitSetDISI)live).cardinality();
+                count += reader.maxDoc();
+                Bits deleted = reader.getDeletedDocs();
+                if (deleted == null) {
+                    continue;
+                }
+                if (deleted instanceof DocIdBitSet) { // Optimization
+                    count -= ((DocIdBitSet)deleted).getBitSet().cardinality();
+                } else if (deleted instanceof OpenBitSet) {
+                    count -= ((OpenBitSet)deleted).cardinality();
+                } else if (deleted instanceof OpenBitSetDISI) {
+                    count -= ((OpenBitSetDISI)deleted).cardinality();
                 } else {
                     log.debug(
-                        "getHitCount: Got bits of unknown Class " + live.
+                        "getHitCount: Got bits of unknown Class " + deleted.
                             getClass() + ", iterating and counting (slow)");
                     // We'll have to count
-                    for (int i = 0 ; i < live.length() ; i++) {
-                        if (live.get(i)) {
-                            count++;
+                    for (int i = 0 ; i < deleted.length() ; i++) {
+                        if (deleted.get(i)) {
+                            count--;
                         }
                     }
                 }
@@ -1112,16 +1115,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             return count;
         }
 
-        Query q;
+        Filter q;
         try {
-            q = parseQuery(query);
+            q = parseFilter(query);
         } catch (ParseException e) {
             throw new IOException(String.format(
                     "Exception parsing query '%s'", query), e);
         }
-        Query f;
+        Filter f;
         try {
-            f = parseQuery(filter);
+            f = parseFilter(filter);
         } catch (ParseException e) {
             throw new IOException(String.format(
                     "Exception parsing filter '%s'", query), e);
@@ -1132,30 +1135,26 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     query, filter));
         }
 
-        Query amalgam;
+        Filter amalgam;
         if (q == null) {
             amalgam = f;
         } else if (f == null) {
             amalgam = q;
         } else {
-            BooleanQuery b = new BooleanQuery();
-            b.add(new BooleanClause(q, BooleanClause.Occur.MUST));
-            b.add(new BooleanClause(f, BooleanClause.Occur.MUST));
+            BooleanFilter b = new BooleanFilter();
+            b.add(new FilterClause(q, BooleanClause.Occur.MUST));
+            b.add(new FilterClause(f, BooleanClause.Occur.MUST));
             amalgam = b;
         }
-        Filter amalgamFilter = new QueryWrapperFilter(amalgam);
         log.trace("getHitcount(): Created filter, performing hit count");
-        IndexReader.ReaderContext top =
-            searcher.getIndexReader().getTopReaderContext();
-        IndexReader.AtomicReaderContext[] contexts = top.isAtomic ?
-            new IndexReader.AtomicReaderContext[]{
-                (IndexReader.AtomicReaderContext)top} :
-            top.leaves();
+        IndexReader[] readers =
+            searcher.getIndexReader().getSequentialSubReaders() == null ?
+            new IndexReader[]{searcher.getIndexReader()} :
+            searcher.getIndexReader().getSequentialSubReaders();
 
         long count = 0;
-        for (IndexReader.AtomicReaderContext context: contexts) {
-
-            DocIdSet bits = amalgamFilter.getDocIdSet(context);
+        for (IndexReader reader: readers) {
+            DocIdSet bits = amalgam.getDocIdSet(reader);
             if (bits == null) {
                 continue;
             }
@@ -1186,4 +1185,3 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         return count;
     }
 }
-
