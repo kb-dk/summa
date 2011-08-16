@@ -29,8 +29,10 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -368,13 +370,13 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         if (query != null) {
-            query = convertRangeQueries(query, summonSearchParams);
+            query = convertQuery(query, summonSearchParams);
         }
         if ("".equals(query)) {
             query = null;
         }
         if (filter != null) {
-            filter = convertRangeQueries(filter, summonSearchParams);
+            filter = convertQuery(filter, summonSearchParams);
         }
         if ("".equals(filter)) {
             filter = null;
@@ -420,11 +422,15 @@ public class SummonSearchNode extends SearchNodeImpl {
      * it expects ranges to be stated in 's.rf' as 'field,minvalue:maxvalue'.
      * This method parses the query, extracts & removes the range query parts
      * and adds them to the Summon search parameters.
+     * </p><p>
+     * Similarly, term queries with the field 'ID' are special as the text-
+     * section must be modified by stripping leading {@link #idPrefix}.
      * @param query as entered by the user.
      * @param summonSearchParams range-queries are added to this.
      * @return the query minus range queries.
      */
-    public static String convertRangeQueries(
+    // TODO: Fix ID
+    public String convertQuery(
         final String query,
         final Map<String, List<String>> summonSearchParams) {
         final String RF = "s.rf";
@@ -441,6 +447,22 @@ public class SummonSearchNode extends SearchNodeImpl {
                            + query.getLowerTerm() + ":"
                            + query.getUpperTerm());
                     return null;
+                }
+
+                @Override
+                public Query onQuery(TermQuery query) {
+                    if ("ID".equals(query.getTerm().field())) {
+                        String text = query.getTerm().text();
+                        if (idPrefix != null && text != null
+                            && text.startsWith(idPrefix)) {
+                            text = text.substring(idPrefix.length());
+                        }
+                        TermQuery tq = new TermQuery(
+                            new Term(query.getTerm().field(), text));
+                        tq.setBoost(query.getBoost());
+                        return tq;
+                    }
+                    return query;
                 }
             }).rewrite(query);
         } catch (ParseException e) {

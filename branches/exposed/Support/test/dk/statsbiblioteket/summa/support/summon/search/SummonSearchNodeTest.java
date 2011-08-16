@@ -14,8 +14,11 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
-import de.schlichtherle.truezip.io.Streams;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -97,7 +100,7 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        //System.out.println(responses.toXML());
+        System.out.println(responses.toXML());
         assertTrue("The result should contain at least one record",
                    responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag",
@@ -332,10 +335,11 @@ public class SummonSearchNodeTest extends TestCase {
             countOutside, countSearchTweak);
     }
 
-    public void testConvertRangeQueries() {
+    public void testConvertRangeQueries() throws RemoteException {
         final String QUERY = "foo bar:[10 TO 20] OR baz:[87 TO goa]";
         Map<String, List<String>> params = new HashMap<String, List<String>>();
-        String stripped = SummonSearchNode.convertRangeQueries(QUERY, params);
+        String stripped = new SummonSearchNode(
+            getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
         assertEquals("The right number of ranges should be extracted",
@@ -346,16 +350,33 @@ public class SummonSearchNodeTest extends TestCase {
                      "(+foo)", stripped);
     }
 
-    public void testConvertRangeQueriesEmpty() {
+    public void testConvertRangeQueriesEmpty() throws RemoteException {
         final String QUERY = "bar:[10 TO 20]";
         Map<String, List<String>> params = new HashMap<String, List<String>>();
-        String stripped = SummonSearchNode.convertRangeQueries(QUERY, params);
+        String stripped =
+            new SummonSearchNode(
+                getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
         assertEquals("The right number of ranges should be extracted",
                      1, ranges.size());
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertNull("The resulting query should be null", stripped);
+    }
+
+    private Configuration getSummonConfiguration() {
+        return Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, "foo",
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, "bar");
+    }
+
+    public void testFaultyQuoteRemoval() throws RemoteException {
+        final String QUERY = "bar:\"foo:zoo\"";
+        Map<String, List<String>> params = new HashMap<String, List<String>>();
+        String stripped = new SummonSearchNode(
+            getSummonConfiguration()).convertQuery(QUERY, params);
+        assertNull("RangeFilter should not be defined", params.get("s.rf"));
+        assertEquals("The resulting query should unchanged", QUERY, stripped);
     }
 
     // This fails, but as we are really testing Summon here, there is not much
@@ -452,4 +473,34 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Finished searching");
         System.out.println(responses.toXML());
     }
+
+    public void testIDAdjustment() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+            InteractionAdjuster.CONF_IDENTIFIER, "summon",
+            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
+        Configuration inner = conf.createSubConfiguration(
+            AdjustingSearchNode.CONF_INNER_SEARCHNODE);
+        inner.set(SearchNodeFactory.CONF_NODE_CLASS,
+                  SummonSearchNode.class.getCanonicalName());
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, id);
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, key);
+
+        log.debug("Creating adjusting SummonSearchNode");
+        AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        //request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_QUERY, "recursion in string theory");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        List<String> ids = getAttributes(adjusting, request, "id");
+        assertTrue("There should be at least one ID", ids.size() > 0);
+
+        request.clear();
+        request.put(DocumentKeys.SEARCH_QUERY, IndexUtils.RECORD_FIELD + ":\""
+                                               + ids.get(0) + "\"");
+        List<String> researchIDs = getAttributes(adjusting, request, "id");
+        assertTrue("There should be at least one hit for a search for ID '"
+                   + ids.get(0) + "'", researchIDs.size() > 0);
+    }
+    // TODO: "foo:bar zoo"
 }
