@@ -14,7 +14,10 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -451,14 +454,16 @@ public class SummonSearchNode extends SearchNodeImpl {
 
                 @Override
                 public Query onQuery(TermQuery query) {
-                    if ("ID".equals(query.getTerm().field())) {
+                    // ID is first class so no configuration here
+                    if ("ID".equals(query.getTerm().field())
+                        || IndexUtils.RECORD_FIELD.equals(
+                        query.getTerm().field())) {
                         String text = query.getTerm().text();
                         if (idPrefix != null && text != null
                             && text.startsWith(idPrefix)) {
                             text = text.substring(idPrefix.length());
                         }
-                        TermQuery tq = new TermQuery(
-                            new Term(query.getTerm().field(), text));
+                        TermQuery tq = new TermQuery(new Term("ID", text));
                         tq.setBoost(query.getBoost());
                         return tq;
                     }
