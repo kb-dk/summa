@@ -15,6 +15,9 @@
             <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10">
                 <xsl:value-of select="titel"/>
             </Index:field>
+            <Index:field Index:repeat="true" Index:name="multi_title" Index:navn="ht" Index:type="token" Index:boostFactor="10">
+                <xsl:value-of select="titel"/>
+            </Index:field>
         </Index:group>
         <Index:field Index:name="sort_title" Index:navn="sort_titel" Index:sortLocale="da" Index:type="keyword">
             <xsl:value-of select="titel" />

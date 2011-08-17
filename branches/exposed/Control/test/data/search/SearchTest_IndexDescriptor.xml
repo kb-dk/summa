@@ -22,7 +22,9 @@
         <!-- TODO: Consider compression of shortformat -->
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
         <field name="author_person" parent="verbatim" inFreeText="true" multiValued="true" queryBoost="10"/>
-        <field name="main_titel" parent="text" inFreeText="true" multiValued="true" queryBoost="10"/>
+        <field name="main_titel" parent="text" inFreeText="true" queryBoost="10"/>
+        <field name="multi_title" parent="text" inFreeText="true" multiValued="true" queryBoost="2"/>
+        <field name="stilling" parent="text" inFreeText="true" multiValued="true" queryBoost="0.5"/>
         <field name="lsu_oai" parent="keyword" multiValued="false" queryBoost="10"/>
         <field name="no" parent="token" queryBoost="7"/>
         <field name="ma_long" parent="text" multiValued="true"/>
