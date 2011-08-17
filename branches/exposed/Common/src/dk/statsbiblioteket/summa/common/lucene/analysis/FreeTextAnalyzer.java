@@ -15,6 +15,9 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.analysis.TokenStream;
+
+import java.io.Reader;
 
 
 /**
@@ -38,6 +41,12 @@ public class FreeTextAnalyzer extends SummaAnalyzer {
     public FreeTextAnalyzer(){
         super("", true, Rules.RELAXED_REPLACE_RULES, true, true);
     }
+
+//    public TokenStream tokenStream(String fieldName, Reader reader) {
+//        TokenStream stream = super.tokenStream(fieldName, reader);
+//        return stream;
+//    }
+
 
 }
 

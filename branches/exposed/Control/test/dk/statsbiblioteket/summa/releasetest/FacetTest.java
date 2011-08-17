@@ -146,6 +146,32 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testTransliteration() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        log.debug("Storage started");
+        SearchTest.ingest(new File(
+               Resolver.getURL("transliteration/transliterate.xml").getFile()));
+        assertTrue("Háns Jensén data should be ingested",
+                    storage.getRecords(
+                        Arrays.asList("fagref:haje@example.com"), null).size() == 1);
+        updateIndex();
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying searches");
+        SearchTest.verifySearch(searcher, "*", 1);
+        SearchTest.verifySearch(searcher, "Fagekspert", 1);
+        SearchTest.verifySearch(searcher, "Indenfor", 1);
+        SearchTest.verifySearch(searcher, "Häns Erik Jensén", 1);
+        SearchTest.verifySearch(searcher, "Erik", 1);
+        SearchTest.verifySearch(searcher, "kapacitet", 1);
+        SearchTest.verifySearch(searcher, "Häns", 1); // Häns
+        SearchTest.verifySearch(searcher, "Hæns", 1); // From freetext
+        SearchTest.verifySearch(searcher, "areni", 1); // main_titel is text
+        SearchTest.verifySearch(searcher, "árënì", 1); // Direct
+        searcher.close();
+        storage.close();
+    }
+
     public void testSimpleSearch() throws Exception {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
@@ -171,6 +197,40 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
+
+    public void testSortValue() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+        assertTrue("The fagref Hans should exist in storage",
+                   hansRecord != null);
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying existence of Hans Jensen data");
+        SearchTest.verifySearch(searcher, "Hans", 1);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
+        request.put(DocumentKeys.SEARCH_SORTKEY, "author_person");
+
+        String xml = searcher.search(request).toXML();
+        Pattern sortValuePattern =
+            Pattern.compile(".*sortValue=\"(.+?)\".*", Pattern.DOTALL);
+        Matcher matcher = sortValuePattern.matcher(xml);
+        assertTrue("There should be a sortValue in the result\n" + xml,
+                   matcher.matches());
+        assertEquals("The sortValue should be as expected in\n" + xml,
+                     "Hans Jensen", matcher.group(1));
+        searcher.close();
+        storage.close();
+    }
+
+
 
     public void testIndexLookup() throws Exception {
         Storage storage = SearchTest.startStorage();
