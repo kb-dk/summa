@@ -55,7 +55,12 @@ public class FreeTextAnalyzerTest extends TestCase {
             {"foo", "foo"},
             {"areni", "árënì"},
             {"hæns", "häns"},
-            {"føo", "föó"}
+            {"føo", "föó"},
+            {"bog", "bog"},
+            {"sundhed", "sundhed"},
+            {"foo & bar", "foo og bar"},
+            {"foo & bar", "foo und bar"},
+            {"foo & bar", "foo and bar"}
         };
         for (String[] test: TESTS) {
             List<String> expected = Arrays.asList(test[0].split(" "));
