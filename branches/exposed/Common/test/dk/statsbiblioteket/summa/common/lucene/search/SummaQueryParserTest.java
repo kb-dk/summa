@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Profiler;
+import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 import java.util.Random;
@@ -51,6 +52,17 @@ public class SummaQueryParserTest extends TestCase {
               "freetext:foo[1.0]", "freetext:foo");
     }
 
+
+
+    public void testDefaultExpansionWithBoost() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals(
+            "The parsed query should expand to default fields with boost", qp,
+            "(freetext:php[1.0] <title:php[1.0] titel:php[1.0]> "
+            + "id:php[1.0])[2.0]",
+            "php^2");
+    }
+
     public void testGroupExpansion() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should expand default groups", qp,
@@ -60,6 +72,7 @@ public class SummaQueryParserTest extends TestCase {
 
     public void testIndexDescriptorBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
+        // IndexDescriptor sets base author-boost to 1.5
         assertEquals("The parsed query should boost author", qp,
                      "author:foo^1.5[1.5]", "author:foo");
         assertEquals("The author boost should be a multiple of boosts", qp,
@@ -131,8 +144,8 @@ public class SummaQueryParserTest extends TestCase {
 
     public void assertEquals(String message, SummaQueryParser qp,
                              String expected, String query) throws Exception {
-        assertEquals(message, expected,
-                     SummaQueryParser.queryToString(qp.parse(query)));
+        Query parsed = qp.parse(query);
+        assertEquals(message, expected, SummaQueryParser.queryToString(parsed));
     }
 
     private SummaQueryParser getQueryParser() throws IOException {

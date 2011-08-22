@@ -28,9 +28,9 @@ public class Rules {
             + " '.net' > 'dotnet';";
 
     public static final String RELAXED_REPLACE_RULES =
-            "'og' > '&';"
-            + "'and' > '&';"
-            + "'und' > '&';";
+            "' og ' > ' & ';"
+            + "' and ' > ' & ';"
+            + "' und ' > ' & ';";
             // Spansk: + "'y' > '&';"
 
     /**

@@ -391,7 +391,8 @@ public class SummaQueryParser {
                 sw.append(queryToString(clause.getQuery()));
                 first = false;
             }
-            sw.append(")");
+            sw.append(")[");
+            sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof TermQuery) {
             TermQuery termQuery = (TermQuery)query;
             sw.append(termQuery.toString()).append("[");
