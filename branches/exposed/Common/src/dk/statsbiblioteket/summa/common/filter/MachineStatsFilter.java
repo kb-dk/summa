@@ -40,6 +40,7 @@ public class MachineStatsFilter extends ObjectFilterImpl {
 
     public MachineStatsFilter(Configuration conf) {
         super(conf);
+        feedback = false;
         stats = new MachineStats(conf);
     }
 

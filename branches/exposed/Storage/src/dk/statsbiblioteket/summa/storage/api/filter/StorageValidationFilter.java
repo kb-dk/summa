@@ -47,6 +47,7 @@ public class StorageValidationFilter extends ObjectFilterImpl {
      */
     public StorageValidationFilter(Configuration conf) throws IOException {
         super(conf);
+        feedback = false;
         try {
             StorageReaderClient storage = new StorageReaderClient(conf);
             if(storage == null) {
