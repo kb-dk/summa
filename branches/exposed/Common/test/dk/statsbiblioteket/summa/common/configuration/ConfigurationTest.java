@@ -46,6 +46,8 @@ public class ConfigurationTest extends TestCase {
     /** Simple storage XML. */
     private static final String SIMPLEXSTORAGEXML =
         "configurationFiles/simple_xstorage.xml";
+    private static final String STRINGSXML =
+        "configurationFiles/string_list_xstorage.xml";
     /** TMP path. */
     private static final String TMP = "target/tmp";
 
@@ -101,6 +103,35 @@ public class ConfigurationTest extends TestCase {
         assertEquals("getStrings should give expected values", "bar", l.get(1));
         assertEquals("getStrings should give expected values", "baz", l.get(2));
 
+    }
+
+    public void testGetStringsList() throws Exception {
+        Configuration conf = new Configuration(new MemoryStorage());
+        conf.set ("foobar",
+                  new ArrayList<String>(Arrays.asList("foo", "bar", "baz")));
+        List<String> l = conf.getStrings ("foobar");
+        assertEquals("getStrings should return the list", 3, l.size());
+        assertEquals("getStrings should give expected values", "foo", l.get(0));
+        assertEquals("getStrings should give expected values", "bar", l.get(1));
+        assertEquals("getStrings should give expected values", "baz", l.get(2));
+    }
+
+    public void testGetStringsListXStorage() throws Exception {
+        Configuration conf = Configuration.load(STRINGSXML);
+        List<String> l = conf.getStrings ("mykey");
+        assertEquals("getStrings should return the list", 3, l.size());
+        assertEquals("getStrings should give expected values", "foo", l.get(0));
+        assertEquals("getStrings should give expected values", "bar", l.get(1));
+        assertEquals("getStrings should give expected values", "baz", l.get(2));
+    }
+
+    public void testGetStringsListXStorageDefault() throws Exception {
+        Configuration conf = Configuration.load(STRINGSXML);
+        List<String> l = conf.getStrings ("mykey");
+        assertEquals("getStrings should return the list", 3, l.size());
+        assertEquals("getStrings should give expected values", "foo", l.get(0));
+        assertEquals("getStrings should give expected values", "bar", l.get(1));
+        assertEquals("getStrings should give expected values", "baz", l.get(2));
     }
 
     public void testGetString() throws Exception {

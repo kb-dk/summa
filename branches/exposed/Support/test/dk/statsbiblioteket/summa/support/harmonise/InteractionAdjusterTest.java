@@ -15,6 +15,7 @@ import junit.framework.TestCase;
 import org.apache.lucene.queryParser.ParseException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -125,15 +126,20 @@ public class InteractionAdjusterTest extends TestCase {
     private InteractionAdjuster createAdjuster() {
         Configuration conf = Configuration.newMemoryBased(
             InteractionAdjuster.CONF_IDENTIFIER, "tester",
-            InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
+/*            InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
             "author_normalised - Author, lma_long - ContentType, "
-            + "llang - Language, lsubject - SubjectTerms",
+            + "llang - Language, lsubject - SubjectTerms",*/
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
             "recordID - ID, author_normalised - Author, "
             + "lma_long - ContentType, llang - Language, "
             + "fa;fb - FieldA;FieldB, "
             + "lsubject - SubjectTerms, "
             + "sort_year_asc;sort_year_desc - PublicationDate"
+        );
+        conf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
+                 new ArrayList<String>(Arrays.asList(
+            "author_normalised - Author", "lma_long - ContentType",
+            "llang - Language", "lsubject - SubjectTerms"))
         );
         List<Configuration> tags;
         try {
@@ -144,14 +150,15 @@ public class InteractionAdjusterTest extends TestCase {
         }
         tags.get(0).set(TagAdjuster.CONF_FACET_NAME, "llang");
         tags.get(0).set(TagAdjuster.CONF_TAG_MAP,
-                        "English - eng, "
-                        + "MyLang - one;two, "
-                        + "Moo;Doo - single, "
-                        + "Space man - always;wanted, "
-                        + "Source A;Source B - Dest A;Dest B, "
-                        + "Boom - boo, "
-                        + "Boom - hoo, "
-                        + "Bim;Bam - bi;ba");
+                        new ArrayList<String>(Arrays.asList(
+                        "English - eng",
+                        "MyLang - one;two",
+                        "Moo;Doo - single",
+                        "Space man - always;wanted",
+                        "Source A;Source B - Dest A;Dest B",
+                        "Boom - boo",
+                        "Boom - hoo",
+                        "Bim;Bam - bi;ba")));
         tags.get(1).set(TagAdjuster.CONF_FACET_NAME, "lma_long");
         tags.get(1).set(TagAdjuster.CONF_TAG_MAP, "Audio Sound - audio");
         tags.get(2).set(TagAdjuster.CONF_FACET_NAME, "fa");
@@ -161,42 +168,44 @@ public class InteractionAdjusterTest extends TestCase {
 
     public void testQueryFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "(+Language:foo +bar)", "llang:\"foo\" bar");
         assertAdjustment(adjuster,
-                         "(FieldA:ContentA OR FieldB:ContentA)",
+                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");
+        assertAdjustment(adjuster,
+                         "(FieldA:\"ContentA\" OR FieldB:\"ContentA\")",
                          "fa:ca");
     }
 
     public void testQueryTagRewrite_nonAdjusting() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "(+Language:foo +bar)", "llang:\"foo\" bar");
+        assertAdjustment(adjuster,
+                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");
         assertAdjustment(adjuster, "English", "English");
         assertAdjustment(adjuster, "eng", "eng");
-        assertAdjustment(adjuster, "year:2010", "year:2010");
-        assertAdjustment(adjuster, "ContentType:eng", "lma_long:eng");
-        assertAdjustment(adjuster, "ContentType:gryf", "lma_long:gryf");
+        assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
+        assertAdjustment(adjuster, "ContentType:\"eng\"", "lma_long:eng");
+        assertAdjustment(adjuster, "ContentType:\"gryf\"", "lma_long:gryf");
         assertAdjustment(adjuster, "Language:\"eng dan\"", "llang:\"eng dan\"");
     }
 
     public void testQueryTagRewrite_nonAdjustingPair() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "year:2010", "year:2010");
+        assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
     }
 
     public void testQueryTagRewrite_1to1() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:English", "llang:eng");
-        assertAdjustment(adjuster, "Language:English", "llang:\"eng\"");
-        assertAdjustment(adjuster, "Language:MyLang", "llang:\"one\"");
-        assertAdjustment(adjuster, "Language:MyLang", "llang:\"two\"");
+        assertAdjustment(adjuster, "Language:\"English\"", "llang:eng");
+        assertAdjustment(adjuster, "Language:\"English\"", "llang:\"eng\"");
+        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"one\"");
+        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"two\"");
     }
 
     public void testQueryTagRewrite_1ton() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:MyLang", "llang:\"one\"");
-        assertAdjustment(adjuster, "Language:MyLang", "llang:\"two\"");
-        assertAdjustment(adjuster, "Language:Boom", "llang:boo");
-        assertAdjustment(adjuster, "Language:Boom", "llang:hoo");
+        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"one\"");
+        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"two\"");
+        assertAdjustment(adjuster, "Language:\"Boom\"", "llang:boo");
+        assertAdjustment(adjuster, "Language:\"Boom\"", "llang:hoo");
         assertAdjustment(adjuster, "Language:\"Space man\"", "llang:always");
     }
 
@@ -232,29 +241,33 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:foo OR Language:English)",
+                         "(Language:\"foo\" OR Language:\"English\")",
                          "llang:(foo OR eng)");
     }
 
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:Moo OR Language:Doo)", "llang:\"single\"");
+                         "(Language:\"Moo\" OR Language:\"Doo\")",
+                         "llang:\"single\"");
     }
 
     public void testQueryTagRewrite_multiple() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster,
-                         "(+(Language:Moo OR Language:Doo) +Language:Boom)",
-                         "llang:\"single\" llang:boo");
+        assertAdjustment(
+            adjuster,
+            "(+(Language:\"Moo\" OR Language:\"Doo\") +Language:\"Boom\")",
+            "llang:\"single\" llang:boo");
     }
 
     public void testQueryTagRewrite_nton() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:Bim OR Language:Bam)", "llang:\"bi\"");
+                         "(Language:\"Bim\" OR Language:\"Bam\")",
+                         "llang:\"bi\"");
         assertAdjustment(adjuster,
-                         "(Language:Bim OR Language:Bam)", "llang:\"ba\"");
+                         "(Language:\"Bim\" OR Language:\"Bam\")",
+                         "llang:\"ba\"");
     }
 
     private void assertAdjustment(

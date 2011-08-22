@@ -19,8 +19,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Maps multiple Strings to multiple Strings, allowing for reverse lookup.
@@ -40,6 +39,20 @@ public class ManyToManyMap extends HashMap<String, String[]> {
      * @param rules textual representation of mappings.
      */
     public ManyToManyMap(String rules) {
+        super();
+        reverse = new HashMap<String, String[]>();
+        addRules(rules);
+    }
+
+    /**
+     * Constructs a many-to-many map with the given rules. Source-destination
+     * is delimited with " - " and values with semicolon.
+     * </p><p>
+     * Example: "a - b", "c;d - e", "f - g;h", "i;j - k;l"
+     *          demonstrates 1:1, 2:1, 1:2 and 2:2 mapping.
+     * @param rules textual representation of mappings.
+     */
+    public ManyToManyMap(List<String> rules) {
         super();
         reverse = new HashMap<String, String[]>();
         addRules(rules);
@@ -113,7 +126,11 @@ public class ManyToManyMap extends HashMap<String, String[]> {
      */
     private void addRules(String rules) {
         String[] tokens = rules.split(" *, *");
-        for (String rule: tokens) {
+        addRules(Arrays.asList(tokens));
+    }
+
+    private void addRules(List<String> rules) {
+        for (String rule: rules) {
             String[] parts = rule.split(" * -  *"); // We demand spaces
             if (parts.length != 2) {
                 throw new Configurable.ConfigurationException(
@@ -125,8 +142,8 @@ public class ManyToManyMap extends HashMap<String, String[]> {
             putHelper(this, sources, destinations);
             putHelper(reverse, destinations, sources);
         }
-
     }
+
 
     public String[] reverseGet(Object key) {
         //noinspection SuspiciousMethodCalls

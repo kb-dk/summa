@@ -99,7 +99,7 @@ public class TagAdjuster implements Configurable {
         facetName = conf.getString(CONF_FACET_NAME);
         mergeMode = MERGE_MODE.valueOf(conf.getString(
             CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
-        map = new ManyToManyMap(conf.getString(CONF_TAG_MAP));
+        map = new ManyToManyMap(conf.getStrings(CONF_TAG_MAP));
         log.info("Created TagAdjuster '" + facetName + "' with " + map.size()
                  + " source->destination rules and " + map.size()
                  + " destination->source rules");

@@ -169,11 +169,11 @@ public class InteractionAdjuster implements Configurable {
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
             defaultDocumentFields = new ManyToManyMap(
-                conf.getString(CONF_ADJUST_DOCUMENT_FIELDS));
+                conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
             defaultFacetFields = new ManyToManyMap(
-                conf.getString(CONF_ADJUST_FACET_FIELDS));
+                conf.getStrings(CONF_ADJUST_FACET_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> taConfs;
@@ -198,8 +198,10 @@ public class InteractionAdjuster implements Configurable {
             + "adjustingDocumentFields='%s', "
             + "adjustingFacetFields='%s', tagAdjusters=%d",
             id, enabled, baseFactor, baseAddition,
-            conf.getString(CONF_ADJUST_DOCUMENT_FIELDS, ""),
-            conf.getString(CONF_ADJUST_FACET_FIELDS, ""),
+            conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS,
+                            new ArrayList<String>(0)),
+            conf.getStrings(CONF_ADJUST_FACET_FIELDS,
+                            new ArrayList<String>(0)),
             tagAdjusters == null ? 0 : tagAdjusters.size()));
     }
 
@@ -504,8 +506,8 @@ public class InteractionAdjuster implements Configurable {
         }
         log.trace("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
-            List<String> facets = Arrays.asList(request.getString(
-                FacetKeys.SEARCH_FACET_FACETS).split(" *, *"));
+            List<String> facets = request.getStrings(
+                FacetKeys.SEARCH_FACET_FACETS);
             List<String> adjusted = new ArrayList<String>(facets.size() * 2);
             for (String facet: facets) {
                 if (facetFieldMap.containsKey(facet)) {
@@ -525,10 +527,10 @@ public class InteractionAdjuster implements Configurable {
         log.trace("resolveMap called");
         ManyToManyMap map = defaultMap;
         if (request.containsKey(key)) {
-            map = new ManyToManyMap(request.getString(key));
+            map = new ManyToManyMap(request.getStrings(key));
         }
         if (request.containsKey(prefix + key)) {
-            map = new ManyToManyMap(request.getString(prefix + key));
+            map = new ManyToManyMap(request.getStrings(prefix + key));
         }
         return map;
     }
