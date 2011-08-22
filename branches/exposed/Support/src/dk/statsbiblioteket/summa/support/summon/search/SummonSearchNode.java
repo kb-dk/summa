@@ -332,8 +332,8 @@ public class SummonSearchNode extends SearchNodeImpl {
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         if (rawQuery == null && filter == null) {
-            log.debug("No filter or query, returning immediately");
-            return;
+            log.debug("No filter or query, proceeding anyway as other params "
+                      + "might be specified");
         }
 
         // s.fq
