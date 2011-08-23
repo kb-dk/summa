@@ -18,6 +18,9 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.Pair;
@@ -27,13 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.ibm.icu.text.Collator;
+import java.util.*;
 
 /**
  * Base implementation of a facet structure, where the tags are generic.
@@ -134,6 +132,12 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         return sw.toString();
     }
 
+    /**
+     * This method is a fallback and sorts all facets the same way. It is highly
+     * recommended to use
+     * {@link #reduce(dk.statsbiblioteket.summa.facetbrowser.Structure)} if
+     * the original request structure is available.
+     */
     @Override
     public synchronized void reduce(TagSortOrder tagSortOrder) {
         LinkedHashMap<String, List<FlexiblePair<T, Integer>>> newMap =
@@ -156,6 +160,83 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         }
         map = newMap;
         sort(tagSortOrder);
+    }
+
+    /**
+     * Reduces the number of tags in the facets, as per the given request
+     * structure.
+     * @param structure a request structure describing the facet setup.
+     */
+    public synchronized void reduce(Structure structure) {
+        LinkedHashMap<String, List<FlexiblePair<T, Integer>>> newMap =
+                new LinkedHashMap<String,
+                        List<FlexiblePair<T, Integer>>>(map.size());
+        for (Map.Entry<String, List<FlexiblePair<T, Integer>>> facet:
+                map.entrySet()) {
+            String facetName = facet.getKey();
+            List<FlexiblePair<T, Integer>> tags = facet.getValue();
+
+            Integer maxTags = structure.getMaxTags().get(facetName);
+            if (maxTags == null) { // Fallback 1
+                maxTags = this.maxTags.get(facetName);
+            }
+            if (maxTags == null) { // Fallback 2
+                maxTags = DEFAULT_MAXTAGS;
+            }
+            FacetStructure fc = structure.getFacet(facetName);
+            if (fc != null) {
+                if (FacetStructure.SORT_POPULARITY.equals(fc.getSortType())) {
+                    sortPopularity(facet);
+                } else if (FacetStructure.SORT_ALPHA.equals(fc.getSortType())) {
+                    sortAlpha(facet, fc.getLocale());
+                }
+            }
+//                    structure.getFacets().get(entry.getKey()).getMaxTags();
+            if (facet.getValue().size() <= maxTags) {
+                newMap.put(facet.getKey(), facet.getValue());
+            } else {
+                newMap.put(facet.getKey(),
+                           new ArrayList<FlexiblePair<T, Integer>>(
+                                   facet.getValue().subList(0, maxTags)));
+            }
+        }
+        map = newMap;
+    }
+
+    private void sortAlpha(
+        final Map.Entry<String, List<FlexiblePair<T, Integer>>> facet,
+        final String locale) {
+        final Collator collator = locale == null ? null :
+                            CollatorFactory.createCollator(new Locale(locale));
+
+        Collections.sort(facet.getValue(),
+            new Comparator<FlexiblePair<T, Integer>>() {
+                @Override
+                public int compare(FlexiblePair<T, Integer> o1,
+                                   FlexiblePair<T, Integer> o2) {
+                    String key1 = getTagString(facet.getKey(), o1.getKey());
+                    String key2 = getTagString(facet.getKey(), o2.getKey());
+                    return collator == null ? key1.compareTo(key2) :
+                           collator.compare(key1, key2);
+                }
+            });
+    }
+
+    private void sortPopularity(
+        final Map.Entry<String, List<FlexiblePair<T, Integer>>> facet) {
+        Collections.sort(facet.getValue(),
+            new Comparator<FlexiblePair<T, Integer>>() {
+                @Override
+                public int compare(FlexiblePair<T, Integer> o1,
+                                   FlexiblePair<T, Integer> o2) {
+                    // Falling
+                    int val = o2.getValue().compareTo(o1.getValue());
+                    return val != 0 ? val :
+                           getTagString(facet.getKey(), o1.getKey()).
+                               compareTo(getTagString(facet.getKey(),
+                                                      o1.getKey()));
+                }
+            });
     }
 
     /**
@@ -193,7 +274,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
         // other is source and this is destination
         //noinspection unchecked
-        mergeMaxTags((FacetResultImpl<T>)other);
+        mergeMaxTags((FacetResultImpl<T>) other);
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> sEntry:
                 otherMap.entrySet()) {
             List<FlexiblePair<T, Integer>> dList = map.get(sEntry.getKey());
@@ -250,7 +331,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                             }
                         });
                     break;
-                case popularity:                    
+                case popularity:
                     Collections.sort(facet.getValue(),
                         new Comparator<FlexiblePair<T, Integer>>() {
                             @Override
@@ -267,7 +348,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         }
     }
 
-    protected void sortFacets() {
+    public void sortFacets() {
         //final Structure s2 = structure;
         // construct list
         List<Pair<String, List<FlexiblePair<T, Integer>>>> ordered =
@@ -325,7 +406,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      */
     @SuppressWarnings({"UnusedDeclaration"})
     protected String getTagString(String facet, T tag) {
-        log.trace("Default-implementation of getTagString called with Tag " 
+        log.trace("Default-implementation of getTagString called with Tag "
                   + tag);
         return String.valueOf(tag);
     }

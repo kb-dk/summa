@@ -19,6 +19,8 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -37,6 +39,7 @@ import java.util.List;
 public class SummonFacetRequest {
     private static Log log = LogFactory.getLog(SummonFacetRequest.class);
     private String originalRequest;
+    private Structure originalStructure;
     private List<Facet> facets;
 
     /**
@@ -49,35 +52,25 @@ public class SummonFacetRequest {
     public SummonFacetRequest(String facetsDef, int defaultFacetPageSize,
                               String combineMode) {
         originalRequest = facetsDef;
-        String[] facetTokens = facetsDef.split(" *, *");
-        facets = new ArrayList<Facet>(facetTokens.length);
-        for (String facetToken: facetTokens) {
-            // zoo(12 ALPHA)
-            String[] subTokens = facetToken.split(" *\\(", 2);
-            String facetName = subTokens[0];
-            int pageSize = defaultFacetPageSize;
-            if (subTokens.length > 1) {
-                // "  5  ALPHA)  " | "5)" | " ALPHA) | "vgfsd"
-                String noParen = subTokens[1].split("\\)", 2)[0].trim();
-                // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
-                String[] facetArgs = noParen.split(" +", 2);
-                // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
-                if (facetArgs.length > 0) {
-                    pageSize = Integer.parseInt(facetArgs[0]);
-                }
-                if (facetArgs.length > 1
-                    && !"POPULARITY".equals(facetArgs[1])) {
-                    log.warn("The facet request '" + facetToken
-                             + "' specifies sort order '" + facetArgs[1]
-                             + " which is not supported by this node. "
-                             + "Defaulting to populatiry sort");
-                }
+        originalStructure = new Structure(facetsDef, defaultFacetPageSize);
+        facets = new ArrayList<Facet>(originalStructure.getFacetList().size());
+        for (FacetStructure fc: originalStructure.getFacetList()) {
+            if (!FacetStructure.SORT_POPULARITY.equals(fc.getSortType())) {
+                log.warn("The facet request '" + facetsDef + "' defines sort "
+                         + "order that is not '"
+                         + FacetStructure.SORT_POPULARITY + "'. This is not "
+                         + "supported by this faceter");
             }
-            facets.add(new Facet(facetName, combineMode, 1, pageSize));
+            facets.add(new Facet(
+                fc.getFields()[0], combineMode, 1, fc.getWantedTags()));
         }
         log.trace("Constructed facet request from '" + facetsDef + "' with "
                   + "defaultFacetPageSize=" + defaultFacetPageSize
                   + " and combineMode=" + combineMode);
+    }
+
+    public Structure getOriginalStructure() {
+        return originalStructure;
     }
 
     public List<Facet> getFacets() {

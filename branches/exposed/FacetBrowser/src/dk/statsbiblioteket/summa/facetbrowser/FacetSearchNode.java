@@ -336,11 +336,13 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
                         request.getString(FacetKeys.SEARCH_FACET_FACETS) :
                         null;
+        // FIXME: The Structure should be derived from the request
         dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest
             oldFR = new FacetRequest(null, facets, structure);
 
         FacetResultExternal oldResult = new FacetResultExternal(
-            oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields());
+            oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields(),
+            structure);
         for (FacetResponse.Group group: newResponse.getGroups()) {
             String name = group.getRequest().getGroup().getName();
             for (FacetResponse.Tag tag: group.getTags().getTags()) {

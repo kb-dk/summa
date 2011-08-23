@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
@@ -114,6 +115,60 @@ public class FacetStructure implements Serializable {
         setWantedTags(wantedTags);
         setLocale(locale);
         setSortType(sortType == null ? this.sortType : sortType);
+    }
+
+    /**
+     * Constructs a structure from a single facet definition, defined as the
+     * list of facet definitions from {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     * @param facetDef a single facet definition.
+     * @param defaultWantedTags the number of tags if not defined in the
+     *        facetDef.
+     * @param id the facetID.
+     */
+    public FacetStructure(String facetDef, int defaultWantedTags, int id) {
+        wantedTags = defaultWantedTags;
+        this.id = id;
+        // zoo(12 ALPHA)
+        String[] subTokens = facetDef.split(" *\\(", 2);
+        // zoo
+        name = subTokens[0];
+        fields = new String[]{name};
+
+        if (subTokens.length == 1) {
+            // Just zoo
+            return;
+        }
+
+        // "  5  ALPHA)  " | "5)" | " ALPHA) | "vgfsd"
+        String noParen = subTokens[1].split("\\)", 2)[0].trim();
+        // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
+        String[] facetArgs = noParen.split(" +", 2);
+        // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
+        for (String facetArg: facetArgs) {
+            if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
+                sortType = FacetStructure.SORT_POPULARITY;
+            } else if (FacetStructure.SORT_ALPHA.equals(facetArg)) {
+                sortType = FacetStructure.SORT_ALPHA;
+            } else {
+                try {
+                    maxTags = Integer.parseInt(facetArg);
+                } catch (NumberFormatException e) {
+                    log.warn(String.format(
+                        "Argument '%s' in FacetDef '%s'",
+                        facetArg, facetDef));
+                }
+            }
+        }
+    }
+
+    /**
+     * Constructs a structure from a single facet definition, defined as the
+     * list of facet definitions from {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     * @param facetDef a single facet definition.
+     * @param id the facetID.
+     */
+    public FacetStructure(String facetDef, int id) {
+        this(facetDef, DEFAULT_TAGS_WANTED, id);
     }
 
     public FacetStructure(Configuration conf, int id) {

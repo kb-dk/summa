@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -37,16 +38,19 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultExternal extends FacetResultImpl<String> {
-    private static final long serialVersionUID = 7879716841L;
+    private static final long serialVersionUID = 7879716842L; // 20110822
     private HashMap<String, String[]> fields;
+    private Structure structure;
 
     public static final String NAME = "FacetResult";
 
     public FacetResultExternal(HashMap<String, Integer> maxTags,
                                HashMap<String, Integer> facetIDs,
-                               HashMap<String, String[]> fields) {
+                               HashMap<String, String[]> fields,
+                               Structure structure) {
         super(maxTags, facetIDs);
         this.fields = fields;
+        this.structure = structure;
     }
 
     @Override
@@ -96,6 +100,20 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     public void setFields(HashMap<String, String[]> fields) {
         this.fields = fields;
+    }
+
+    /**
+     * Reduces the number of tags in the facets, as per the original request
+     * structure. This is called automatically by {@link #toXML()}.
+     */
+    public void reduce() {
+        reduce(structure);
+    }
+
+    @Override
+    public String toXML() {
+        reduce();
+        return super.toXML();
     }
 
     @Override

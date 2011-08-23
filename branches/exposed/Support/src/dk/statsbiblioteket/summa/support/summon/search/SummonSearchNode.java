@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -220,6 +221,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     private String accessID;
     private String accessKey;
     private String idPrefix = DEFAULT_SUMMON_IDPREFIX;
+    private Structure facetSetup;
     private int defaultPageSize = DEFAULT_SUMMON_DEFAULTPAGESIZE;
     private int defaultFacetPageSize = DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE;
     private String defaultFacets = DEFAULT_SUMMON_FACETS;
@@ -535,7 +537,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         int maxRecords, boolean resolveLinks, String sortKey,
         boolean reverseSort) throws RemoteException {
         long methodStart = System.currentTimeMillis();
-        int startpage = startIndex / maxRecords;
+        int startpage = maxRecords == 0 ? 0 : startIndex / maxRecords;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "

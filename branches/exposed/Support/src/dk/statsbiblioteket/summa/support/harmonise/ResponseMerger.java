@@ -22,6 +22,8 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -218,6 +220,11 @@ public class ResponseMerger implements Configurable {
         private DocumentResponse base = null;
         /* All records from the DocumentResponses, held until externalise */
         private List<AdjustRecord> records = new ArrayList<AdjustRecord>();
+        private final Request request;
+
+        public AdjustWrapper(Request request) {
+            this.request = request;
+        }
 
         /* Merge everything into the ResponseCollection. This class should not
          be used further after this call.
@@ -295,7 +302,7 @@ public class ResponseMerger implements Configurable {
     public ResponseCollection merge(
         Request request,
         List<SummaSearcherAggregator.ResponseHolder> responses) {
-        AdjustWrapper aw = deconstruct(responses);
+        AdjustWrapper aw = deconstruct(request, responses);
         if (aw.getBase() == null) {
             log.debug(
                 "No DocumentResponses present in responses, skipping merge");
@@ -427,8 +434,9 @@ public class ResponseMerger implements Configurable {
     }
 
     private AdjustWrapper deconstruct(
+        Request request,
         List<SummaSearcherAggregator.ResponseHolder> responses) {
-        AdjustWrapper aw = new AdjustWrapper();
+        AdjustWrapper aw = new AdjustWrapper(request);
         List<AdjustWrapper.AdjustRecord> adjustRecords =
             new ArrayList<AdjustWrapper.AdjustRecord>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {

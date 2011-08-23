@@ -122,6 +122,41 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
+     * Overrides the currently defined facets.
+     * @param wantedFacets      as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     * @param defaultWantedTags if no tag count is defined in the wanted facets
+     *                          above, this is used.
+     */
+    public Structure(String wantedFacets, int defaultWantedTags) {
+        log.debug("Parsing '" + wantedFacets + "'");
+        // foo(23), bar, zoo(12 ALPHA)
+        String[] tokens = wantedFacets.split(" *, *");
+        facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
+        int counter = 0;
+        for (String facetToken: tokens) {
+            FacetStructure fc = new FacetStructure(
+                facetToken, defaultWantedTags, counter++);
+            facets.put(fc.getName(), fc);
+        }
+    }
+
+    /**
+     * Overrides the currently defined facets.
+     * @param wantedFacets      as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     */
+    public Structure(String wantedFacets) {
+        log.debug("Parsing '" + wantedFacets + "'");
+        // foo(23), bar, zoo(12 ALPHA)
+        String[] tokens = wantedFacets.split(" *, *");
+        facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
+        int counter = 0;
+        for (String facetToken: tokens) {
+            FacetStructure fc = new FacetStructure(facetToken, counter++);
+            facets.put(fc.getName(), fc);
+        }
+    }
+
+    /**
      * Checks whether the Facet Structure can be derived from the configuration.
      * @param conf is the potential holder of setup-information for Structure.
      * @return true if a Structure can be created based on conf.

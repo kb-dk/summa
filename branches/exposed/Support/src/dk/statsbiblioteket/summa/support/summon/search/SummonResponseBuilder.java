@@ -233,7 +233,9 @@ public class SummonResponseBuilder {
             fields.put(facet.getField(), new String[]{facet.getField()});
         }
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
-            facets.getMaxTags(), facetIDs, fields);
+            facets.getMaxTags(), facetIDs, fields,
+            facets.getOriginalStructure());
+        summaFacetResult.sortFacets();
         iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
