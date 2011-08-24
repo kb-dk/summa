@@ -123,6 +123,50 @@ public class InteractionAdjusterTest extends TestCase {
                          getSortKey());
     }
 
+    public void testDocumentFieldRewrite() {
+        InteractionAdjuster adjuster = createAdjuster();
+
+        {
+            Request request = new Request(
+                DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
+                InteractionAdjuster.SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED, true
+            );
+            ResponseCollection responses = createSampleResponseWithFields();
+            adjuster.adjust(request, responses);
+            assertEquals("The adjusted response should contain rewritten field",
+                         "author_normalised",
+                         ((DocumentResponse)responses.iterator().next()).
+                             getRecords().get(0).getFields().get(0).getName());
+        }
+
+        {
+            Request request = new Request(
+                DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
+                InteractionAdjuster.SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED, false
+            );
+            ResponseCollection responses = createSampleResponseWithFields();
+            adjuster.adjust(request, responses);
+
+            assertEquals("The adjusted response should not rewrite",
+                         "Author",
+                         ((DocumentResponse)responses.iterator().next()).
+                             getRecords().get(0).getFields().get(0).getName());
+        }
+    }
+
+    private ResponseCollection createSampleResponseWithFields() {
+        DocumentResponse docResponse = new DocumentResponse(
+            "filter", "query", 0, 10, "PublicationDate", false,
+            new String[0], 10, 10);
+        DocumentResponse.Record record = new DocumentResponse.Record(
+            "foo", "bar", 1.0f, "dummy");
+        record.addField(new DocumentResponse.Field("Author", "baz", true));
+        docResponse.addRecord(record);
+        ResponseCollection responses = new ResponseCollection();
+        responses.add(docResponse);
+        return responses;
+    }
+
     private InteractionAdjuster createAdjuster() {
         Configuration conf = Configuration.newMemoryBased(
             InteractionAdjuster.CONF_IDENTIFIER, "tester",

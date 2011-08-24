@@ -85,6 +85,18 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_ADJUST_ENABLED = SEARCH_ADJUST_ENABLED;
     public static final boolean DEFAULT_ADJUST_ENABLED = true;
 
+    public static final String SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED =
+        "adjuster.response.fields.enabled";
+    public static final String CONF_ADJUST_RESPONSE_FIELDS_ENABLED =
+        SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED;
+    public static final boolean DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED = true;
+
+    public static final String SEARCH_ADJUST_RESPONSE_FACETS_ENABLED =
+        "adjuster.response.facets.enabled";
+    public static final String CONF_ADJUST_RESPONSE_FACETS_ENABLED =
+        SEARCH_ADJUST_RESPONSE_FACETS_ENABLED;
+    public static final boolean DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED = true;
+
     /**
      * Add a constant to returned scores for documents.
      * Additions are performed after multiplications.
@@ -159,6 +171,8 @@ public class InteractionAdjuster implements Configurable {
     private ManyToManyMap defaultFacetFields = null;
     private HashMap<String, TagAdjuster> tagAdjusters = null;
     private final boolean enabled;
+    private boolean adjustResponseFieldsEnabled;
+    private boolean adjustResponseFacetsEnabled;
 
     public InteractionAdjuster(Configuration conf)
                                                  throws ConfigurationException {
@@ -167,6 +181,12 @@ public class InteractionAdjuster implements Configurable {
         prefix = id + ".";
         baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
         baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
+        adjustResponseFieldsEnabled = conf.getBoolean(
+            CONF_ADJUST_RESPONSE_FIELDS_ENABLED,
+            DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
+        adjustResponseFacetsEnabled = conf.getBoolean(
+            CONF_ADJUST_RESPONSE_FACETS_ENABLED,
+            DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
             defaultDocumentFields = new ManyToManyMap(
                 conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS));
@@ -196,13 +216,15 @@ public class InteractionAdjuster implements Configurable {
             "Constructed search adjuster with id='%s', enabled=%b, "
             + "baseFactor=%f, baseAddition=%f, "
             + "adjustingDocumentFields='%s', "
-            + "adjustingFacetFields='%s', tagAdjusters=%d",
+            + "adjustingFacetFields='%s', tagAdjusters=%d, "
+            + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
             id, enabled, baseFactor, baseAddition,
             conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS,
                             new ArrayList<String>(0)),
             conf.getStrings(CONF_ADJUST_FACET_FIELDS,
                             new ArrayList<String>(0)),
-            tagAdjusters == null ? 0 : tagAdjusters.size()));
+            tagAdjusters == null ? 0 : tagAdjusters.size(),
+            adjustResponseFieldsEnabled, adjustResponseFacetsEnabled));
     }
 
     /**
@@ -543,6 +565,8 @@ public class InteractionAdjuster implements Configurable {
         return cloned;
     }
 
+    /* ********************************************************************* */
+
     /**
      * Modifies the responses according to the given settings.
      * @param request   the rewritten request that resulted in the responses.
@@ -555,7 +579,10 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
         adjustDocuments(request, responses);
-        adjustFacets(request, responses);
+        if (request.getBoolean(SEARCH_ADJUST_RESPONSE_FACETS_ENABLED,
+                               adjustResponseFacetsEnabled)) {
+            adjustFacets(request, responses);
+        }
     }
 
     private void adjustDocuments(
@@ -656,6 +683,10 @@ public class InteractionAdjuster implements Configurable {
             && docFieldMap.reverseContainsKey(documentResponse.getSortKey())) {
             documentResponse.setSortKey(Strings.join(
                 docFieldMap.reverseGet(documentResponse.getSortKey()), ", "));
+        }
+        if (!request.getBoolean(SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED,
+                               adjustResponseFieldsEnabled)) {
+            return;
         }
         log.trace("Replacing document fields (" + docFieldMap.size()
                   + " replacements)");
