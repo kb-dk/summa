@@ -383,6 +383,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                     }
                 }
             });
+        map.clear();
+        for (Pair<String, List<FlexiblePair<T, Integer>>> entry: ordered) {
+            map.put(entry.getKey(), entry.getValue());
+        }
     }
 
     /**

@@ -235,14 +235,13 @@ public class SummonResponseBuilder {
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields,
             facets.getOriginalStructure());
-        summaFacetResult.sortFacets();
         iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 extractFacet(xml, summaFacetResult);
             }
-
         });
+        summaFacetResult.sortFacets();
         return summaFacetResult;
     }
 

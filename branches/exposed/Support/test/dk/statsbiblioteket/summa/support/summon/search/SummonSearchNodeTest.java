@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -103,6 +104,52 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
 
+    }
+
+    public void testFacetOrder() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        List<String> facets = getFacetNames(responses);
+        List<String> expected = new ArrayList<String>(Arrays.asList(
+            SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
+        for (int i = expected.size()-1 ; i >= 0 ; i--) {
+            if (!facets.contains(expected.get(i))) {
+                expected.remove(i);
+            }
+        }
+        assertEquals("The order of the facets should be correct",
+                     Strings.join(expected, ", "), Strings.join(facets, ", "));
+
+//        System.out.println(responses.toXML());
+//        System.out.println(Strings.join(facets, ", "));
+    }
+
+    private List<String> getFacetNames(ResponseCollection responses) {
+        List<String> result = new ArrayList<String>();
+        String[] lines = responses.toXML().split("\n");
+        Pattern FACET = Pattern.compile(".*<facet name=\"(.+)\">");
+        for (String line : lines) {
+            Matcher matcher = FACET.matcher(line);
+            if (matcher.matches()) {
+                result.add(matcher.group(1));
+            }
+        }
+        return result;
     }
 
     // TODO: Implement the sort test
