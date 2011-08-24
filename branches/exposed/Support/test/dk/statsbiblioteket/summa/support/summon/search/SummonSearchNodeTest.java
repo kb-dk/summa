@@ -139,6 +139,29 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(Strings.join(facets, ", "));
     }
 
+    public void testSpecificFacets() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+            SummonSearchNode.CONF_SUMMON_FACETS, "SubjectTerms"
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        List<String> facets = getFacetNames(responses);
+        assertEquals("The number of facets should be correct", 1,facets.size());
+        assertEquals("The returned facet should be correct",
+                     "SubjectTerms", Strings.join(facets, ", "));
+    }
+
     private List<String> getFacetNames(ResponseCollection responses) {
         List<String> result = new ArrayList<String>();
         String[] lines = responses.toXML().split("\n");
