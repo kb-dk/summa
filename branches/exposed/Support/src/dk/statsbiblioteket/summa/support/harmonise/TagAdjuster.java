@@ -42,7 +42,8 @@ public class TagAdjuster implements Configurable {
     private static Log log = LogFactory.getLog(TagAdjuster.class);
 
     /**
-     * The name of the facet to adjust tags for.
+     * The name of the facets to adjust tags for. Specify with a list of facet
+     * names delimited by comma or a plain String list.
      * </p><p>
      * Mandatory.
      */
@@ -91,22 +92,22 @@ public class TagAdjuster implements Configurable {
     public static final String CONF_MERGE_MODE = "tagadjuster.merge.mode";
     public static final MERGE_MODE DEFAULT_MERGE_MODE = MERGE_MODE.max;
 
-    private final String facetName;
+    private final List<String> facetNames;
     private final MERGE_MODE mergeMode;
     private final ManyToManyMap map;
 
     public TagAdjuster(Configuration conf) {
-        facetName = conf.getString(CONF_FACET_NAME);
+        facetNames = conf.getStrings(CONF_FACET_NAME);
         mergeMode = MERGE_MODE.valueOf(conf.getString(
             CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
         map = new ManyToManyMap(conf.getStrings(CONF_TAG_MAP));
-        log.info("Created TagAdjuster '" + facetName + "' with " + map.size()
+        log.info("Created TagAdjuster '" + facetNames + "' with " + map.size()
                  + " source->destination rules and " + map.size()
                  + " destination->source rules");
     }
 
-    public String getFacetName() {
-        return facetName;
+    public List<String> getFacetNames() {
+        return facetNames;
     }
 
     // TODO: Fix super ugly FacetResultExternal-requirement
@@ -117,36 +118,35 @@ public class TagAdjuster implements Configurable {
      * @param facetResult a Summa facet result.
      */
     public void adjust(FacetResultExternal facetResult) {
-        if (!facetResult.getMap().containsKey(facetName)) {
-            return;
-        }
-        List<FlexiblePair<String, Integer>> oldTags =
-            facetResult.getMap().get(facetName);
-        if (oldTags.size() == 0) {
-            return;
-        }
-        // A bit of a hack as we are not guaranteed that the orders are the same
-        FlexiblePair.SortType sortType = oldTags.get(0).getSortType();
-        log.trace("Transforming " + oldTags.size() + " tags for facet "
-                  + facetName);
-        LinkedHashMap<String, Integer> newTags =
-            new LinkedHashMap<String, Integer>((int) (oldTags.size() * 1.5));
-        for (FlexiblePair<String, Integer> pair: oldTags) {
-            if (map.containsKey(pair.getKey())) {
-                for (String tagName: map.get(pair.getKey())) {
-                    mergePut(newTags, tagName, pair.getValue());
-                }
-            } else {
-                mergePut(newTags, pair.getKey(), pair.getValue());
+        for (String facetName: facetNames) {
+            List<FlexiblePair<String, Integer>> oldTags =
+                facetResult.getMap().get(facetName);
+            if (oldTags == null || oldTags.size() == 0) {
+                continue;
             }
+            // A bit of a hack as we are not guaranteed that the orders are the same
+            FlexiblePair.SortType sortType = oldTags.get(0).getSortType();
+            log.trace("Transforming " + oldTags.size() + " tags for facet "
+                      + facetName);
+            LinkedHashMap<String, Integer> newTags =
+                new LinkedHashMap<String, Integer>((int) (oldTags.size() * 1.5));
+            for (FlexiblePair<String, Integer> pair: oldTags) {
+                if (map.containsKey(pair.getKey())) {
+                    for (String tagName: map.get(pair.getKey())) {
+                        mergePut(newTags, tagName, pair.getValue());
+                    }
+                } else {
+                    mergePut(newTags, pair.getKey(), pair.getValue());
+                }
+            }
+            List<FlexiblePair<String, Integer>> newListTags =
+                new ArrayList<FlexiblePair<String, Integer>>(newTags.size());
+            for (Map.Entry<String, Integer> tag: newTags.entrySet()) {
+                newListTags.add(new FlexiblePair<String, Integer>(
+                    tag.getKey(), tag.getValue(), sortType));
+            }
+            facetResult.getMap().put(facetName, newListTags);
         }
-        List<FlexiblePair<String, Integer>> newListTags =
-            new ArrayList<FlexiblePair<String, Integer>>(newTags.size());
-        for (Map.Entry<String, Integer> tag: newTags.entrySet()) {
-            newListTags.add(new FlexiblePair<String, Integer>(
-                tag.getKey(), tag.getValue(), sortType));
-        }
-        facetResult.getMap().put(facetName, newListTags);
     }
 
     /**

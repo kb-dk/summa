@@ -208,7 +208,9 @@ public class InteractionAdjuster implements Configurable {
             tagAdjusters = new HashMap<String, TagAdjuster>(taConfs.size());
             for (Configuration tagConf: taConfs) {
                 TagAdjuster tagAdjuster = new TagAdjuster(tagConf);
-                tagAdjusters.put(tagAdjuster.getFacetName(), tagAdjuster);
+                for (String facetName: tagAdjuster.getFacetNames()) {
+                    tagAdjusters.put(facetName, tagAdjuster);
+                }
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
@@ -485,8 +487,7 @@ public class InteractionAdjuster implements Configurable {
             newFields = new String[]{field};
         }
 
-        List<Pair<String, String>> result =
-            new ArrayList<Pair<String, String>>();
+        // We base this on old field, as it is the normalised field
         String[] newTexts = null;
         if (tagAdjusters != null
             && tagAdjusters.containsKey(field)) {
@@ -495,12 +496,15 @@ public class InteractionAdjuster implements Configurable {
         if (newTexts == null) {
             newTexts = new String[]{text}; // No transformation
         }
+
+        List<Pair<String, String>> result =
+            new ArrayList<Pair<String, String>>();
         for (String newField: newFields) {
-            for (String alternative: newTexts) {
-                result.add(
-                    new Pair<String, String>(newField, alternative));
+            for (String newText: newTexts) {
+                result.add(new Pair<String, String>(newField, newText));
             }
         }
+
         return result;
     }
 

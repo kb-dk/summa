@@ -175,7 +175,8 @@ public class InteractionAdjusterTest extends TestCase {
             + "llang - Language, lsubject - SubjectTerms",*/
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
             "recordID - ID, author_normalised - Author, "
-            + "lma_long - ContentType, llang - Language, "
+            + "lma_long - ContentType, "
+            + "llang;lang - Language, "
             + "fa;fb - FieldA;FieldB, "
             + "lsubject - SubjectTerms, "
             + "sort_year_asc;sort_year_desc - PublicationDate"
@@ -183,7 +184,7 @@ public class InteractionAdjusterTest extends TestCase {
         conf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
                  new ArrayList<String>(Arrays.asList(
             "author_normalised - Author", "lma_long - ContentType",
-            "llang - Language", "lsubject - SubjectTerms"))
+            "llang;lang - Language", "lsubject - SubjectTerms"))
         );
         List<Configuration> tags;
         try {
@@ -192,7 +193,7 @@ public class InteractionAdjusterTest extends TestCase {
         } catch (IOException e) {
             throw new RuntimeException("Configuration creation failed", e);
         }
-        tags.get(0).set(TagAdjuster.CONF_FACET_NAME, "llang");
+        tags.get(0).set(TagAdjuster.CONF_FACET_NAME, "llang, lang");
         tags.get(0).set(TagAdjuster.CONF_TAG_MAP,
                         new ArrayList<String>(Arrays.asList(
                         "English - eng",
@@ -242,6 +243,16 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster, "Language:\"English\"", "llang:\"eng\"");
         assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"one\"");
         assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"two\"");
+    }
+
+    public void testQueryTagAndFieldRewrite() {
+        InteractionAdjuster adjuster = createAdjuster();
+        // Tag
+        assertAdjustment(adjuster, "Language:\"English\"", "llang:eng");
+        // Field
+        assertAdjustment(adjuster, "Language:\"English\"", "lang:English");
+        // Field + Tag
+        assertAdjustment(adjuster, "Language:\"English\"", "lang:eng");
     }
 
     public void testQueryTagRewrite_1ton() {
