@@ -1,0 +1,2 @@
+mvn clean
+mvn -DskipTests -Dmaven.javadoc.skip=true package
