@@ -80,8 +80,9 @@ public class BuildPerformance {
         IndexWriterConfig writerConfig =
                new IndexWriterConfig(Version.LUCENE_30, 
                                      new StandardAnalyzer(Version.LUCENE_30));
-        writerConfig.setMaxFieldLength(
-                                    IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        // FIXME: Set unlimited field length
+//        writerConfig.setMaxFieldLength(
+//                                    IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         writerConfig.setRAMBufferSizeMB(1000);
         IndexWriter writer = new IndexWriter(new NIOFSDirectory(indexLocation),

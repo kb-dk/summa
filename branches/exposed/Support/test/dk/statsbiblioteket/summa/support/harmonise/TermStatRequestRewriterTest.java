@@ -4,7 +4,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -86,6 +86,15 @@ public class TermStatRequestRewriterTest extends TestCase {
         assertEquals(
             "(\"foo bar\" OR \"zoo AND baz\")", request.rewrite(
             "\"foo bar\" OR \"zoo AND baz\""));
+    }
+
+    public void testColon() throws ParseException {
+        assertEquals(
+            "foo:\"bar:zoo\"", request.rewrite(
+            "foo:\"bar:zoo\""));
+        assertEquals(
+            "foo:\"bar:zoo:baz\"", request.rewrite(
+            "foo:\"bar:zoo:baz\""));
     }
 
 }

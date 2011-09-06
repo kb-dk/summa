@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.filter;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -62,6 +63,13 @@ public class Payload {
      * data. The map can be accessed by {@link #getData}.
      */
     private ConvenientMap data;
+
+    /**
+     * Object data for the Payload. Similar to {@link #data} except for the
+     * content being non-serializable.
+     */
+    private Map<String, Object> objects;
+
     /**
      * EOF should be returned by read() when the filter is depleted.
      */
@@ -114,16 +122,41 @@ public class Payload {
         }
         return data;
     }
+
+    /**
+     * Similar to {@link #getData()}.
+     * @return the object data for this Payload.
+     */
+    public Map<String, Object> getObjectData() {
+        if (objects == null) {
+            objects = new HashMap<String, Object>();
+        }
+        return objects;
+    }
     /**
      * Request a data-value for the given key. This method is more efficient
      * than requesting the full map with {@link #getData()}, as it never creates
-     * a new map.
+     * a new map. This method falls back to getObjectData if no value is present
+     * in data.
      * @param key the key for the value.
      * @return the value for the key, or null if the key is not in the map.
      */
     public Object getData(String key) {
         try {
-            return data == null ? null : data.get(key);
+            return data == null ? getObjectData(key) : data.get(key);
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Non-serializable equivalent of {@link #getData(String)}.
+     * @param key the key for the value.
+     * @return the value for the key, or null if the key is not in the map.
+     */
+    protected Object getObjectData(String key) {
+        try {
+            return objects == null ? null : objects.get(key);
         } catch (NullPointerException e) {
             return null;
         }

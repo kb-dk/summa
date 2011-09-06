@@ -36,7 +36,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
 
@@ -259,7 +259,7 @@ public class InteractionAdjuster implements Configurable {
      * Rewrites search filter and query according to the given rules for
      * document field, facet field and facet tag re-writing.
      * @param request a search request with a filter and/or a query.
-     * @throws org.apache.lucene.queryParser.ParseException if the filter or
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the filter or
      *         the query could not be parsed.
      */
     @SuppressWarnings({"unchecked"})
@@ -364,7 +364,7 @@ public class InteractionAdjuster implements Configurable {
                                 return new TermRangeQuery(
                                     field, query.getLowerTerm(),
                                     query.getUpperTerm(), query.includesLower(),
-                                    query.includesUpper(), query.getCollator());
+                                    query.includesUpper());
                             }
                         }, maps);
                 }

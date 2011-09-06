@@ -315,13 +315,13 @@ public class TermStatClient implements Configurable {
 
     private long getDocCount(IndexReader ir) {
         if (ir.getSequentialSubReaders() == null) {
-            Bits deletedDocs = ir.getDeletedDocs();
-            if (deletedDocs == null) {
+            Bits liveDocs = ir.getLiveDocs();
+            if (liveDocs == null) {
                 return ir.maxDoc();
             }
             long count = ir.maxDoc();
-            for (int i = 0 ; i < deletedDocs.length() ; i++) {
-                if (deletedDocs.get(i)) {
+            for (int i = 0 ; i < liveDocs.length() ; i++) {
+                if (!liveDocs.get(i)) {
                     count--;
                 }
             }

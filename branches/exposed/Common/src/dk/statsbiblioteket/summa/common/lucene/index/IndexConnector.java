@@ -26,6 +26,7 @@ import org.apache.lucene.index.ParallelReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
@@ -193,8 +194,9 @@ public class IndexConnector {
             case ramIndex:
                 log.info("Loading the index at location '" + linksS
                          + "' into RAM...");
+                // TODO: Verify that IOContext.DEFAULT is correct
                 RAMDirectory ramDir = new RAMDirectory(
-                                          new NIOFSDirectory(new File(linksS)));
+                    new NIOFSDirectory(new File(linksS)), IOContext.DEFAULT);
                 log.info("The index at location '" + linksS + " was loaded into"
                          + " RAM. Constructing RAM-based reader");
                 return IndexReader.open(ramDir);

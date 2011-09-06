@@ -491,7 +491,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
             }
             Record record = new Record(recordDef.getKey(), "foo", new byte[0]);
             Payload payload = new Payload(record);
-            payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+            payload.getObjectData().put(Payload.LUCENE_DOCUMENT, document);
             IndexUtils.assignBasicProperties(payload);
             payloads.add(payload);
         }

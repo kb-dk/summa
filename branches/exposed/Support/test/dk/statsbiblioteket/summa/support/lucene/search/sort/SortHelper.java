@@ -11,8 +11,9 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
@@ -69,9 +70,9 @@ public class SortHelper {
     public static File createIndex(String[] terms) throws IOException {
         File root = new File(System.getProperty("java.io.tmpdir"));
         Directory dir = new NIOFSDirectory(root);
-        IndexWriter writer = new IndexWriter(
-                dir, new StandardAnalyzer(Version.LUCENE_30), true,
-                new IndexWriter.MaxFieldLength(10000));
+        IndexWriterConfig config = new IndexWriterConfig(
+            Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
+        IndexWriter writer = new IndexWriter(dir, config);
         int counter = 0;
         int feedback = Math.max(1, Math.min(100, terms.length / 100));
         for (String term: terms) {
@@ -169,7 +170,7 @@ public class SortHelper {
      * @param sortFactory generates the sorter that is to be used.
      * @return the amount of used heap after searching.
      * @throws java.io.IOException if the search could not be performed.
-     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the query could
      *         not be parsed.
      */
     public static long performSortedSearch(
@@ -204,7 +205,7 @@ public class SortHelper {
      * @param sortFactory generates the sorter that is to be used.
      * @return the number of milliseconds that the last search tool.
      * @throws java.io.IOException if the search could not be performed.
-     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the query could
      *         not be parsed.
      */
     public static long timeSortedSearch(

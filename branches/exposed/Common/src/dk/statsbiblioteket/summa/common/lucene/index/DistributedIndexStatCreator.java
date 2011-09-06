@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.lucene.index;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.IndexOutput;
 
 import java.util.ArrayList;
@@ -84,7 +85,8 @@ public class DistributedIndexStatCreator {
      */
     public synchronized void writeStats() throws IOException {
         for (IndexReader r : indexex){
-            IndexOutput o = r.directory().createOutput(DISTRIBUTED_STATS_FILE);
+            IndexOutput o = r.directory().createOutput(
+                DISTRIBUTED_STATS_FILE, IOContext.DEFAULT);
             o.writeVInt(numdocs);
 /*            TermEnum te = r.terms();
             while(te.next()){

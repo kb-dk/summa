@@ -27,6 +27,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
 import org.h2.jdbcx.JdbcDataSource;
 
 import java.io.File;
@@ -161,7 +162,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         analyzerClass = Configuration.getClass(
                 CONF_SANITIZER, Analyzer.class, DEFAULT_SANITIZER, conf);
         try {
-            sanitizer = analyzerClass.newInstance();
+            // All analyzers now takes version
+            sanitizer = analyzerClass.getConstructor(Version.class).
+                newInstance(Version.LUCENE_40);
         } catch (Exception e) {
             throw new ConfigurationException(
                     "Unable to instantiate query sanitizer", e);

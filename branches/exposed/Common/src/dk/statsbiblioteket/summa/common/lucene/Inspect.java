@@ -299,7 +299,7 @@ public class Inspect {
         BytesRef ref;
         DocsEnum docs = null;
         while ((ref = terms.next()) != null) {
-            docs = terms.docs(ir.getDeletedDocs(), docs);
+            docs = terms.docs(ir.getLiveDocs(), docs);
             while (docs.nextDoc() != DocsEnum.NO_MORE_DOCS) {
                 if (docs.docID() == docID) {
                     sw.append(ref.utf8ToString()).append(" ");
@@ -411,7 +411,7 @@ public class Inspect {
 
         TermsEnum terms = ir.terms(fieldName).iterator();
         BytesRef ref = new BytesRef(termName);
-        if (terms.seek(ref) == TermsEnum.SeekStatus.NOT_FOUND) {
+        if (!terms.seekExact(ref, false)) {
             System.out.println(" - No TermDocs for field " + fieldName);
             return;
         }
@@ -420,7 +420,7 @@ public class Inspect {
                            + " docs for " + fieldName + ": " + termName);
         int counter = 0;
         DocsEnum docs = null;
-        docs = terms.docs(ir.getDeletedDocs(), docs);
+        docs = terms.docs(ir.getLiveDocs(), docs);
         do {
             System.out.println("  - Document " + docs.read());
             counter++;

@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -142,7 +142,7 @@ public class DisjunctionQueryParser extends QueryParser {
                                                          throws ParseException {
         Query query;
         try {
-            query = super.getFieldQuery(field, queryText);
+            query = super.getFieldQuery(field, queryText, slop);
         } catch(NullPointerException e) {
             ParseException pe = new ParseException(
                 "Got NullPointerException while calling getFieldQuery('"
@@ -188,12 +188,12 @@ public class DisjunctionQueryParser extends QueryParser {
         return getBooleanQuery(clauses, true);
     }
 
-    @Override
+/*    @Override
     protected Query getFieldQuery(String field, String queryText) throws
                                                                 ParseException {
         return getFieldQuery(field, queryText, 0);
     }
-
+  */
 
     @Override
     protected Query getFuzzyQuery(String field, final String termStr,
@@ -224,6 +224,28 @@ public class DisjunctionQueryParser extends QueryParser {
                                      final float minSimilarity) throws
                                                                 ParseException {
         return super.getFuzzyQuery(field, termStr, minSimilarity);
+    }
+
+    @Override
+    protected Query getFieldQuery(
+        final String field, final String queryText, final boolean quoted)
+                                                         throws ParseException {
+        return getExpanded(field, new InnerQueryMaker() {
+            @Override
+            public Query getRecursiveQuery(String fieldOrGroup) throws
+                                                                ParseException {
+                return getFieldQuery(fieldOrGroup, queryText, quoted);
+            }
+            @Override
+            public Query getFinalQuery(String field) throws ParseException {
+                return getSuperFieldQuery(field, queryText, quoted);
+            }
+        });
+    }
+
+    private Query getSuperFieldQuery(
+        String field, String queryText, boolean quoted) throws ParseException {
+        return super.getFieldQuery(field, queryText, quoted);
     }
 
     @Override

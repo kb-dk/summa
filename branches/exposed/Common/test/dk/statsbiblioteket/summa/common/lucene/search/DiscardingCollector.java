@@ -38,11 +38,16 @@ public class DiscardingCollector extends Collector {
     }
 
     @Override
+    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+        /*
+    @Override
     public void setNextReader(IndexReader indexReader, int i)
             throws IOException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
-
+          */
     @Override
     public boolean acceptsDocsOutOfOrder() {
         return false;  //To change body of implemented methods use File | Settings | File Templates.

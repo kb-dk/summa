@@ -116,8 +116,7 @@ public class SlimCollector extends Collector {
     }
 
     @Override
-    public void setNextReader(IndexReader indexReader, int i)
-            throws IOException {
+    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

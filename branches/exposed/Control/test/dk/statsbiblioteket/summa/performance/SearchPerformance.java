@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.index.IndexReader;
@@ -193,7 +194,8 @@ public class SearchPerformance {
         if (PARAM_DIR_RAM.equals(dirType)) {
             log.debug("Creating RAMDirectory(" + location + ")");
             try {
-                RAMDirectory dir = new RAMDirectory(new NIOFSDirectory(location));
+                RAMDirectory dir = new RAMDirectory(
+                    new NIOFSDirectory(location), new IOContext());
                 return new IndexSearcher(IndexReader.open(dir, readOnly));
             } catch (IOException e) {
                 throw new IOException("Unable to load index into RAM from '"

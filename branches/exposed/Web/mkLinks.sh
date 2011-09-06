@@ -42,7 +42,7 @@ ln -s ../../../../../../../build.properties .
 cd ../
 ln -s ../../../../../config/storage/configuration.xml .
 ln -s ../../../../../config/storage/log4j.xml .
-ln -s ../../../../../config/storage/services.xml .
+#ln -s ../../../../../config/storage/services.xml .
 
 cd ../../../../
 

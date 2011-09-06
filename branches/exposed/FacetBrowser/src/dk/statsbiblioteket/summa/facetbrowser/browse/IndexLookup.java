@@ -27,7 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
@@ -228,18 +228,21 @@ public class IndexLookup {
             ExposedComparators.localeToBytesRef(locale);
         List<ExposedRequest.Field> fields =
             new ArrayList<ExposedRequest.Field>();
+        // TODO: Add reverse to request and here
         fields.add(new ExposedRequest.Field(
-            request.getField(), comparator, comparatorID));
+            request.getField(), comparator, false, comparatorID));
         List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
+        // TODO: Add reverse to request and here
         ExposedRequest.Group eGroup = new ExposedRequest.Group(
-            request.getField(), fields, comparator, comparatorID);
+            request.getField(), fields, comparator, false, comparatorID);
         org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER facetOrder;
         facetOrder = locale == null ?
                      org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.index :
                      org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.locale;
 
+        // TODO: Add reverse to request and here
         FacetRequestGroup facetGroup = new FacetRequestGroup(
-            eGroup, facetOrder, locale == null ? null : comparatorID,
+            eGroup, facetOrder, false, locale == null ? null : comparatorID,
             request.getDelta(), request.getLength(), request.getMinCount(),
             request.getTerm());
         groups.add(facetGroup);

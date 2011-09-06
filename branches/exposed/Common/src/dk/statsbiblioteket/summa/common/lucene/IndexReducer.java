@@ -116,8 +116,9 @@ public class IndexReducer {
         IndexWriterConfig writerConfig =
                 new IndexWriterConfig(Version.LUCENE_30,
                                       new SimpleAnalyzer(Version.LUCENE_30));
-        writerConfig.setMaxFieldLength(
-                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        // FIXME: Set max field length to unlimited
+//        writerConfig.setMaxFieldLength(
+//                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         IndexWriter iw = new IndexWriter(new NIOFSDirectory(location),
                                          writerConfig); 

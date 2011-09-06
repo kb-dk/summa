@@ -22,6 +22,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.management.monitor.Monitor;
 import java.io.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -95,15 +96,15 @@ public class ZIPParser extends ThreadedStreamParser {
             /* Prepare a stream that we'll fill asynchronously while the
              * payload consumer reads from it */
             matching++;
-            MonitoredPipedInputStream payloadIn =
-                                            new MonitoredPipedInputStream();
+            final MonitoredPipedInputStream payloadIn =
+                new MonitoredPipedInputStream();
             PipedOutputStream payloadPipe = new PipedOutputStream();
             payloadPipe.connect(payloadIn);
             Payload payload = new Payload(payloadIn);
             payload.getData().put(
-                    Payload.ORIGIN,
-                    source.getData(Payload.ORIGIN) + "!"
-                    + entry.getName());
+                Payload.ORIGIN,
+                source.getData(Payload.ORIGIN) + "!"
+                + entry.getName());
             addToQueue(payload);
 
             /* Pipe the stream we gave to the payload */

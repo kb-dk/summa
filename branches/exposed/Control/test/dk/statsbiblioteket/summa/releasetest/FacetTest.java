@@ -68,7 +68,7 @@ public class FacetTest extends NoExitTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-//        cleanup();
+        cleanup();
     }
 
     private void cleanup() throws Exception {
@@ -139,10 +139,11 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = SearchTest.startStorage();
         log.debug("Storage started");
         SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
+            Resolver.getURL("data/search/input/part1").getFile()));
         assertTrue("Hans Jensen data should be ingested",
-                    storage.getRecords(
-                        Arrays.asList("fagref:hj@example.com"), null).size() == 1);
+                   storage.getRecords(
+                       Arrays.asList("fagref:hj@example.com"), null).size()
+                   == 1);
         storage.close();
     }
 
@@ -175,7 +176,7 @@ public class FacetTest extends NoExitTestCase {
     public void testSimpleSearch() throws Exception {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
+            Resolver.getURL("data/search/input/part1").getFile()));
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
         assertTrue("The fagref Hans should exist in storage",
                    hansRecord != null);
@@ -495,6 +496,46 @@ public class FacetTest extends NoExitTestCase {
 
         searcher.close();
         storage.close();
+    }
+
+    public void testFacetSearchExisting() throws Exception {
+        File INDEX = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/");
+//        File DESCRIPTOR = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/"
+//                                   + "20110830-142012/IndexDescriptor.xml");
+        File SEARCHER = new File(
+            "/home/te/tmp/sumfresh/sites/sb/config/searcher_sb.xml");
+//        ExposedSettings.debug = true;
+        log.debug("Getting configuration for searcher");
+
+//        URL descriptorLocation = DESCRIPTOR.toURI().toURL();
+
+        Configuration searcherConf = Configuration.load(
+            SEARCHER.getAbsolutePath());
+//        searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+//                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+//                     descriptorLocation.getFile());
+        searcherConf.set(
+            IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX.toString());
+//        searcherConf.set(SummaSearcherImpl.CONF_STATIC_ROOT, INDEX.toString());
+
+
+        log.debug("Creating Searcher");
+        SummaSearcherImpl searcher = new SummaSearcherImpl(searcherConf);
+        log.debug("Triggering index open");
+        searcher.checkIndex();
+        log.debug("Searcher created");
+        searcher.checkIndex();
+        ResponseCollection responses =
+            searcher.search(SearchTest.simpleRequest("freetext:bog"));
+        log.debug("Sample output after initial ingest: " + responses.toXML());
+        Pattern problem = Pattern.compile(
+            "(?s).+<tag name=\"grd kre\" addedobjects=\"([0-9]+)\">.+");
+        Matcher matcher = problem.matcher(responses.toXML());
+        assertTrue("The name 'grd kre' should be present",
+                   matcher.matches());
+        assertTrue("The count for 'grd kre' should be 1 but was "
+                   + matcher.group(1), "1".equals(matcher.group(1)));
+        searcher.close();
     }
 
     public void testFacetSearchDelete() throws Exception {

@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 
 import dk.statsbiblioteket.util.Files;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.*;
 import org.apache.lucene.util.*;
 
@@ -214,8 +215,12 @@ public class TermStatClientTest extends TestCase {
     private void generateIndex(int docCount, File location) throws Exception {
         IndexWriter writer = new IndexWriter(
                 new NIOFSDirectory(location),
+                new IndexWriterConfig(Version.LUCENE_30,
+                                      new StandardAnalyzer(Version.LUCENE_30)));
+/*        IndexWriter writer = new IndexWriter(
+                new NIOFSDirectory(location),
                 new StandardAnalyzer(Version.LUCENE_30),
-                true, new IndexWriter.MaxFieldLength(10000));
+                true, new IndexWriter.MaxFieldLength(10000));*/
         for (int i = 0 ; i < docCount ; i++) {
             Document doc = new Document();
             doc.add(new Field("fixed", "fixedcontent",

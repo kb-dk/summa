@@ -69,9 +69,10 @@ public class SummaAnalyzerTest extends TestCase {
      */
     @SuppressWarnings("deprecation")
     static TokenStream getStream(String text) {
-        return new LowerCaseFilter(
+        return new LowerCaseFilter(org.apache.lucene.util.Version.LUCENE_30,
                 new WhitespaceTokenizer(
-                        new StringReader(text)));
+                    org.apache.lucene.util.Version.LUCENE_30,
+                    new StringReader(text)));
     }
 
     /**

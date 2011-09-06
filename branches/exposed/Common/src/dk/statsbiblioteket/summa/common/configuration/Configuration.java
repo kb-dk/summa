@@ -1110,22 +1110,22 @@ public class Configuration implements Serializable,
                               "Error creating new instance, illegal access", e);
         } catch (InvocationTargetException e) {
             throw new Configurable.ConfigurationException(
-                            "Error creating new instnace, invocation error", e);
+                            "Error creating new instance, invocation error", e);
         } catch (InstantiationException e) {
             throw new Configurable.ConfigurationException(
                          "Error creating new instance, instantiation error", e);
         }
     }
 
-    private static <T> T createNonConfigurable(Class<T> configurable) {
+    public static <T> T createNonConfigurable(Class<T> plainClass) {
         Security.checkSecurityManager();
 
         try {
-            return configurable.getConstructor().newInstance();
+            return plainClass.getConstructor().newInstance();
         } catch (NoSuchMethodException e) {
             throw new IllegalArgumentException(String.format(
-                    "No empty constructor in  %s",
-                    configurable.getSimpleName()), e);
+                "No empty constructor in  %s",
+                plainClass.getSimpleName()), e);
         } catch (IllegalAccessException e) {
             throw new Configurable.ConfigurationException(
                               "Error creating new instance, illegal access", e);

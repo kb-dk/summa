@@ -76,6 +76,20 @@ public class UnpackFilterTest extends TestCase {
         ZIPParserTest.assertContent(getUnpackChain(source), expected);
     }
 
+    public void testEOF() throws IOException {
+        ObjectFilter provider = getUnpackChain(
+            "/home/te/tmp/fase3/sb+aleph+1307342370.536.4455+full.zip");
+        long counter = 0;
+        while (provider.hasNext()) {
+            provider.next().close();
+            counter++;
+            if (counter % 1000 == 0) {
+                System.out.print("*");
+            }
+        }
+        System.out.println("\nCounted " + counter + " Payloads");
+    }
+
     public ObjectFilter getUnpackChain(String source) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         UnpackFilter unpacker = new UnpackFilter(conf);

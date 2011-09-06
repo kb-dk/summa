@@ -23,8 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 
@@ -153,7 +153,7 @@ public class QueryRewriter {
      * @param query the unmodified query.
      * @return the rewritten query. Note that this might be null if the Query
      *         is collapsed to nothing.
-     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the query could
      * not be parsed by the Lucene query parser.
      */
     public String rewrite(String query) throws ParseException {

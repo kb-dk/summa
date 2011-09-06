@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import com.sun.org.apache.xalan.internal.Version;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
@@ -53,9 +54,10 @@ public class SummaKeywordAnalyzerTest extends TestCase {
     }
 
     static TokenStream getStream(String text) {
-        return new LowerCaseFilter(
+        return new LowerCaseFilter(org.apache.lucene.util.Version.LUCENE_30,
                 new WhitespaceTokenizer(
-                        new StringReader(text)));
+                    org.apache.lucene.util.Version.LUCENE_30,
+                    new StringReader(text)));
     }
 
     public void testFoo() throws Exception {

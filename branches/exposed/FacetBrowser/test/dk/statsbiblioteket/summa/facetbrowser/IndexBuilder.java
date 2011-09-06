@@ -27,6 +27,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
 
@@ -143,11 +144,12 @@ public class IndexBuilder {
         // Delete the old
         deleteDir(new File(INDEX_LOCATION));
 
+        IndexWriterConfig iwConfig = new IndexWriterConfig(
+            Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
+        // TODO: Use compound file
+        // FIXME: Add field length
         IndexWriter writer = new IndexWriter(
-                                new NIOFSDirectory(new File(INDEX_LOCATION)),
-                                new StandardAnalyzer(Version.LUCENE_30),
-                                true, IndexWriter.MaxFieldLength.UNLIMITED);
-        writer.setUseCompoundFile(false);
+            new NIOFSDirectory(new File(INDEX_LOCATION)), iwConfig);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(REPLICATIONCOUNT);
         for (int i = 0 ; i < REPLICATIONCOUNT ; i++) {

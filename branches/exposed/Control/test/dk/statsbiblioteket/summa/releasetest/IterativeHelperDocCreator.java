@@ -65,7 +65,7 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
                                 Field.Store.YES, Field.Index.NOT_ANALYZED));
         luceneDoc.add(new Field("duplicate", "Static",
                                 Field.Store.YES, Field.Index.NOT_ANALYZED));
-        payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
+        payload.getObjectData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         processedIDs.add(id);
         return true;
     }

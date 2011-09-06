@@ -115,7 +115,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             profiler.beat();
         }
         manipulator.close();
-        LuceneTestHelper.verifyContent(
+        LuceneTestHelper.verifyContentNoOrder(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
@@ -130,7 +130,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             profiler.beat();
         }
         manipulator.close();
-        LuceneTestHelper.verifyContent(
+        LuceneTestHelper.verifyContentNoOrder(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
@@ -240,7 +240,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             record.setDeleted(true);
         }
         Payload payload = new Payload(record);
-        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+        payload.getObjectData().put(Payload.LUCENE_DOCUMENT, document);
         return payload;
     }
 

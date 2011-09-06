@@ -42,7 +42,7 @@ rm build.properties
 cd ../
 rm configuration.xml 
 rm log4j.xml 
-rm services.xml 
+#rm services.xml 
 
 cd ../../../../
 

@@ -98,12 +98,39 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        System.out.println(responses.toXML());
+        //System.out.println(responses.toXML());
         assertTrue("The result should contain at least one record",
                    responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
+    }
 
+    public void testColonSearch() throws RemoteException {
+        final String OK = "FETCH-proquest_dll_14482952011";
+        final String PROBLEM = "FETCH-doaj_primary_oai:doaj-articles:"
+                               + "932b6445ce452a2b2a544189863c472e1";
+        performSearch("ID:\"" + OK + "\"");
+        performSearch("ID:\"" + PROBLEM + "\"");
+    }
+
+    private void performSearch(String query) throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, query);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+//        System.out.println(responses.toXML());
+        assertTrue("The result should contain at least one record",
+                   responses.toXML().contains("<record score"));
     }
 
     public void testFacetOrder() throws RemoteException {
@@ -570,4 +597,5 @@ public class SummonSearchNodeTest extends TestCase {
                    + ids.get(0) + "'", researchIDs.size() > 0);
     }
     // TODO: "foo:bar zoo"
+
 }

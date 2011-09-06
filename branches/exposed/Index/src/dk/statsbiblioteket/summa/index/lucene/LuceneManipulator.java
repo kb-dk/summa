@@ -244,13 +244,13 @@ public class LuceneManipulator implements IndexManipulator {
             IndexWriterConfig writerConfig =
                         new IndexWriterConfig(Version.LUCENE_40,
                                      new StandardAnalyzer(Version.LUCENE_40));
-            writerConfig.setMaxFieldLength(
-                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+            // FIXME: Add max field length
+//            writerConfig.setMaxFieldLength(
+//                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
             if (bufferSizePayloads != -1) {
                 writerConfig.setMaxBufferedDocs(bufferSizePayloads);
             }
             writerConfig.setRAMBufferSizeMB(buffersizeMB);
-
             // Old style merging to preserve order of documents
             writerConfig.setMergeScheduler(new SerialMergeScheduler());
             log.debug(String.format(

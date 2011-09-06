@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# After package_full has been executed, this script
+# takes summix from Samples/Summix/target and uploads
+# it to SourceForge, effectively creating a release.
+
+# exit on any errors
+set -e 
+
+if [ "." == ".$1" ]
+then
+    echo "Usage: upload <sourceforge_user_name>"
+    exit
+fi
+USER=$1
+
+cd Samples/Summix/target
+VERSION=`ls *SNAPSHOT.zip | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
+
+FOLDER=$VERSION-l4exp-SNAPSHOT
+if [ ! -d $FOLDER ]
+then
+    mkdir $FOLDER
+fi
+
+cp summix-*-SNAPSHOT.zip $FOLDER
+
+echo "Deploying folder $FOLDER with content `ls $FOLDER` for user $USER"
+scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/
+
+
+#scp Samples/Summix/target/summix-*.zip  toke-sb,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/1.8.0-20110830-l4exp-SNAPSHOT/

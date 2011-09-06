@@ -417,7 +417,7 @@ public class IterativeTest extends NoExitTestCase {
         List<String> foundIDs = new ArrayList<String>(ir.maxDoc());
         int deletedCount = 0;
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
-            if (ir.getDeletedDocs().get(i)) {
+            if (!ir.getLiveDocs().get(i)) {
                 deletedCount++;
                 log.trace("assertIndexEquals: Found deleted at pos " + i);
             } else {

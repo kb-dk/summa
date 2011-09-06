@@ -41,7 +41,7 @@ import org.apache.lucene.document.Document;
 
 /**
  * Stream-based converter from SummaDocumentXML to Lucene Documents.
- * The generated Document is added to the Payload's data under the key
+ * The generated Document is added to the Payload's objectData under the key
  * {@link Payload#LUCENE_DOCUMENT}.
  * </p><p>
  * see SummaDocumentSample.xml.
@@ -120,7 +120,7 @@ public class StreamingDocumentCreator
             throw new PayloadException(
                 "Unable to create Lucene document", payload);
         }
-        payload.getData().put(Payload.LUCENE_DOCUMENT, state);
+        payload.getObjectData().put(Payload.LUCENE_DOCUMENT, state);
         Logging.logProcess(
             "StreamingDocumentCreator",
             "Added Lucene document as meta " + Payload.LUCENE_DOCUMENT,

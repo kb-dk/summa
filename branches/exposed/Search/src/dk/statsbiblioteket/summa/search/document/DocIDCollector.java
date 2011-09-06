@@ -47,7 +47,7 @@ public class DocIDCollector extends Collector {
     private OpenBitSet bits = new OpenBitSet(100000);
     private int docCount = 0;
     private int docBase = 0;
-    private Bits deleted = null;
+    private Bits live = null;
 
     /**
      * Constructs a collector and adds it to the given queue.
@@ -80,7 +80,7 @@ public class DocIDCollector extends Collector {
 
     @Override
     public void collect(int doc) {
-        if (deleted != null && deleted.get(doc)) {
+        if (live != null && !live.get(doc)) {
             return; // document is deleted
         }
         bits.set(docBase + doc);
@@ -88,12 +88,18 @@ public class DocIDCollector extends Collector {
     }
 
     @Override
+    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
+        this.docBase = atomicReaderContext.docBase;
+        live = atomicReaderContext.reader.getLiveDocs();
+    }
+/*
+    @Override
     public void setNextReader(IndexReader indexReader, int i)
             throws IOException {
         this.docBase = i;
         deleted = indexReader.getDeletedDocs();
     }
-
+  */
     @Override
     public boolean acceptsDocsOutOfOrder() {
         return false;

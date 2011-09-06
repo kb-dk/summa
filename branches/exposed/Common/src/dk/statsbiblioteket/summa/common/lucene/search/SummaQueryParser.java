@@ -21,9 +21,9 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParserConstants;
-import org.apache.lucene.queryParser.Token;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParserConstants;
+import org.apache.lucene.queryparser.classic.Token;
 import org.apache.lucene.search.*;
 
 import java.io.StringWriter;
@@ -395,7 +395,8 @@ public class SummaQueryParser {
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof TermQuery) {
             TermQuery termQuery = (TermQuery)query;
-            sw.append(termQuery.toString()).append("[");
+            sw.append(termQuery.getTerm().field()).append(":");
+            sw.append(termQuery.getTerm().text()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof TermRangeQuery) {
             sw.append(query.toString()).append("[");

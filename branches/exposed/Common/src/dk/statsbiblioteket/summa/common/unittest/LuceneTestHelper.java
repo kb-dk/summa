@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.common.unittest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -38,6 +40,32 @@ public class LuceneTestHelper extends TestCase {
     public static void verifyContent(File location,
                                      String[] ids) throws IOException {
         List<String> actualIDs = getIDs(location);
+        assertEquals("There should be the same number of ids",
+                     ids.length, actualIDs.size());
+        for (int i = 0 ; i < ids.length; i++) {
+            assertEquals("The id '" + ids[i]
+                         + "' should be present in the index",
+                         ids[i], actualIDs.get(i));
+        }
+        assertEquals(String.format(
+                "The number of checked ids in %s should match", location),
+                     ids.length, actualIDs.size());
+    }
+    /**
+
+     * Verifies that the given ids and only the given ids are present in the
+     * index.
+     * @param location     the location of a Lucene index.
+     * @param ids          the ids to verify existence for.
+     * @throws IOException if the index could not be accessed.
+     */
+    public static void verifyContentNoOrder(
+        File location, String[] ids) throws IOException {
+        List<String> actualIDs = getIDs(location);
+        Arrays.sort(ids);
+        Collections.sort(actualIDs);
+        assertEquals("There should be the same number of ids",
+                     ids.length, actualIDs.size());
         for (int i = 0 ; i < ids.length; i++) {
             assertEquals("The id '" + ids[i]
                          + "' should be present in the index",
@@ -57,8 +85,8 @@ public class LuceneTestHelper extends TestCase {
                                     reader.getSequentialSubReaders();
             for (IndexReader sub: readers) {
                 for (int i = 0 ; i < sub.maxDoc() ; i++) {
-                    if (sub.getDeletedDocs() == null ||
-                        !sub.getDeletedDocs().get(i)) {
+                    if (sub.getLiveDocs() == null ||
+                        sub.getLiveDocs().get(i)) {
                         ids.add(sub.document(i).getValues(
                             IndexUtils.RECORD_FIELD)[0]);
                     }

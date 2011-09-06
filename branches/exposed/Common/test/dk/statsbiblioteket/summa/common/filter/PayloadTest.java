@@ -79,11 +79,11 @@ public class PayloadTest extends TestCase {
                                Integer.toString(random.nextInt(1000)),
                                Field.Store.YES, Field.Index.NOT_ANALYZED));
         Payload payload = new Payload(record);
-        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
-        Document insertedDocument =
-                (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
+//        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+//        Document insertedDocument =
+//                (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
         assertEquals("The id in the document should be empty", 0,
-                   insertedDocument.getValues(IndexUtils.RECORD_FIELD).length);
+                   document.getValues(IndexUtils.RECORD_FIELD).length);
         payload.setID("baz");
 /*        insertedDocument =
                 (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);

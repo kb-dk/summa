@@ -115,19 +115,19 @@ public class SortPool {
         if (naturalOrder) {
             log.warn("Returning sort in natural order. This effectively ignores"
                      + " all localization on sort");
-            return new Sort(new SortField(field, SortField.STRING, reverse));
+            return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
         if (!sortFactories.containsKey(field)) {
             log.debug("No explicit sort specified for field '" + field
                       + "'. Returning standard sort");
-            return new Sort(new SortField(field, SortField.STRING, reverse));
+            return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
         try {
             return sortFactories.get(field).getSort(reverse);
         } catch (Exception e) {
             log.warn("Could not get sorter for '" + field
                      + "', Defaulting to standard sort, without caching", e);
-            return new Sort(new SortField(field, SortField.STRING, reverse));
+            return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
     }
 

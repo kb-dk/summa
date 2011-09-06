@@ -334,8 +334,9 @@ public class IndexSpeed {
                                  new StandardAnalyzer(Version.LUCENE_30), true,
                                  IndexWriter.MaxFieldLength.UNLIMITED); */
         writerConfig.setRAMBufferSizeMB(ramBuffer);
-        writerConfig.setMaxFieldLength(
-                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        // FIXME: Set unlimited field length
+//        writerConfig.setMaxFieldLength(
+//                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
                                   writerConfig);
 /*        if (flush) {
@@ -375,8 +376,9 @@ public class IndexSpeed {
         writerConfig =
                new IndexWriterConfig(Version.LUCENE_30,
                                      new StandardAnalyzer(Version.LUCENE_30));
-        writerConfig.setMaxFieldLength(
-                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
+        // FIXME: Set unlimited field length
+//        writerConfig.setMaxFieldLength(
+//                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
                                  writerConfig);

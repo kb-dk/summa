@@ -35,7 +35,7 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
@@ -432,12 +432,13 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 new ArrayList<ExposedRequest.Field>();
             for (String fieldName: structure.getFields()) {
                 fields.add(new ExposedRequest.Field(
-                    fieldName, comparator, comparatorID));
+                    fieldName, comparator, false, comparatorID));
             }
+            // TODO: Add reverse to request and here
             ExposedRequest.Group group = new ExposedRequest.Group(
-                structure.getName(), fields, comparator, comparatorID);
+                structure.getName(), fields, comparator, false, comparatorID);
             FacetRequestGroup facetGroup = new FacetRequestGroup(
-                group, facetOrder, structure.getLocale(), 0,
+                group, facetOrder, false, structure.getLocale(), 0,
                 structure.getWantedTags(), 1, null);
             groups.add(facetGroup);
         }

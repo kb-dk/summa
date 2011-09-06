@@ -225,7 +225,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             throw new PayloadException(
                     "IOException while closing stream", e, payload);
         }
-        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+        payload.getObjectData().put(Payload.LUCENE_DOCUMENT, document);
 
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding " + meta.size() + " meta data to document");

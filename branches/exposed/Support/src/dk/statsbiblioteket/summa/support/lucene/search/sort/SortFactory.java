@@ -135,8 +135,8 @@ public class SortFactory {
      * @return A default sorter.
      */
     private Sort makeDefaultSorters(boolean reverse) {
-        normalSort = new Sort(new SortField(field, Locale.getDefault(), false));
-        reverseSort = new Sort(new SortField(field, Locale.getDefault(), true));
+        normalSort = new Sort(new SortField(field, SortField.Type.STRING, false));
+        reverseSort = new Sort(new SortField(field, SortField.Type.STRING, true));
         return reverse ? reverseSort : normalSort;
     }
 
@@ -148,7 +148,10 @@ public class SortFactory {
      */
     private SortField getSortField(boolean reverse) {
         if (comparator == COMPARATOR.lucene) {
-            return new SortField(field, new Locale(sortLanguage), reverse);
+            throw new UnsupportedOperationException(
+                "Lucene trunk does not support search time locale based "
+                + "sorting");
+            //return new SortField(field, new Locale(sortLanguage), reverse);
         }
         return new SortField(field, getComparator(), reverse);
     }

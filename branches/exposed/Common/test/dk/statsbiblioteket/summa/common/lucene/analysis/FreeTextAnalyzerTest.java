@@ -40,13 +40,13 @@ public class FreeTextAnalyzerTest extends TestCase {
         return new TestSuite(FreeTextAnalyzerTest.class);
     }
 
-    public void testBasicTokenization() throws IOException {
+    /*public void testBasicTokenization() throws IOException {
         String INPUT = "foo bar";
         List<String> EXPECTED = Arrays.asList("foo", "bar");
         Analyzer fa = new WhitespaceAnalyzer();
         TokenStream stream = fa.tokenStream("dummy", new StringReader(INPUT));
         assertTerms(EXPECTED, stream);
-    }
+    } */
 
     public void testFreeText() throws IOException {
         String[][] TESTS = new String[][]{

@@ -90,7 +90,8 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         
         assertTrue("The chain must have an element", creator.hasNext());
         Payload gurli = creator.next();
-        Document gurliDoc = (Document)gurli.getData(Payload.LUCENE_DOCUMENT);
+        Document gurliDoc =
+            (Document)gurli.getData(Payload.LUCENE_DOCUMENT);
         assertNotNull("The Gurli Payload should have a Document",
                       gurliDoc);
         assertNotNull("The Gurli Document should contain the Field "

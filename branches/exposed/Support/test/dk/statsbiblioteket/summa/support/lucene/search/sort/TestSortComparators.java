@@ -42,10 +42,12 @@ public class TestSortComparators extends TestCase {
     private static Log log = LogFactory.getLog(TestSortComparators.class);
 
     static SortHelper.SortFactory getLuceneFactory(final String field) {
+        log.warn("Due to deprecation of search time locale based sorting, the "
+                 + "Lucene sort factory returns unicode order sort");
         return new SortHelper.SortFactory() {
             @Override
             Sort getSort(IndexReader reader) throws IOException {
-                return new Sort(new SortField(field, new Locale("da")));
+                return new Sort(new SortField(field, SortField.Type.STRING));
             }
         };
     }

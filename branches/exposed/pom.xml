@@ -1,15 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.sbforge</groupId>
-        <artifactId>SBForge-parent</artifactId>
-        <version>1.0</version>
-    </parent>
+
+  <parent>
+    <groupId>org.sbforge</groupId>
+    <artifactId>sbforge-parent</artifactId>
+    <version>8</version>
+  </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.7.1-20110826-l4exp-SNAPSHOT</version>
+    <version>1.8.0-20110901-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -152,31 +153,36 @@
                 <artifactId>fastutil</artifactId>
                 <version>5.0.4</version>
             </dependency>
+              <dependency>
+                  <groupId>dk.statsbiblioteket.lucene.2369</groupId>
+                  <artifactId>lucene-core</artifactId>
+                  <version>4.0-20110830-SNAPSHOT</version>
+              </dependency>
             <dependency>
-                <groupId>dk.statsbiblioteket.lucene</groupId>
-                <artifactId>lucene-core</artifactId>  
-                <version>4.0-dev-20101123</version>
-            </dependency>
-            <dependency>
-                <groupId>dk.statsbiblioteket.lucene</groupId>
+                <groupId>dk.statsbiblioteket.lucene.2369</groupId>
                 <artifactId>lucene-exposed</artifactId>
-                <version>4.0-dev-20110201b</version>
+                <version>4.0-20110830-SNAPSHOT</version>
 <!--                <version>4.0-dev-20101123</version>-->
             </dependency>
             <dependency>
-                <groupId>dk.statsbiblioteket.lucene</groupId>
+                <groupId>dk.statsbiblioteket.lucene.2369</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.0-dev-20101123</version>
+                <version>4.0-20110830-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>dk.statsbiblioteket.lucene</groupId>
+                <groupId>dk.statsbiblioteket.lucene.2369</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>4.0-20110830-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>dk.statsbiblioteket.lucene.2369</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.0-dev-20101123</version>
+                <version>4.0-20110830-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>dk.statsbiblioteket.lucene</groupId>
+                <groupId>dk.statsbiblioteket.lucene.2369</groupId>
                 <artifactId>lucene-didyoumean</artifactId>
-                <version>4.0-dev-20101123</version>
+                <version>4.0-20110830-SNAPSHOT</version>
 <!--                <version>3.0.1</version>-->
             </dependency>
             <dependency>

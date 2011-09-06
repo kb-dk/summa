@@ -72,7 +72,8 @@ public class IndexUtils {
             log.warn(String.format(message + ": " + payload));
             return;
         }
-        Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+        Document document =
+            (Document)payload.getData(Payload.LUCENE_DOCUMENT);
 
         String id = payload.getId();
         assignSingleField(document, payload, RECORD_FIELD, id);

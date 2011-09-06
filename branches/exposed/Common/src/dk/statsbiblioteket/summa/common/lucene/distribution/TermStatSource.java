@@ -255,7 +255,7 @@ public class TermStatSource implements Closeable {
                 // Extracting stats
                 long tf = 0;
                 long df = 0;
-                docsEnum = termsEnum.docs(ir.getDeletedDocs(), docsEnum);
+                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum);
                 DocsEnum.BulkReadResult bulk = docsEnum.getBulkResult();
                 int read;
                 while ((read = docsEnum.read()) != 0) {

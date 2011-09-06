@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.7.1-20110826-l4exp-SNAPSHOT</version>
+        <version>1.8.0-20110901-l4exp-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -83,23 +83,23 @@
             <artifactId>marc4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-queries</artifactId>
         </dependency>
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-exposed</artifactId>
         </dependency>
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-didyoumean</artifactId>
         </dependency>
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene</groupId>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-analyzers-common</artifactId>
         </dependency>
         <dependency>

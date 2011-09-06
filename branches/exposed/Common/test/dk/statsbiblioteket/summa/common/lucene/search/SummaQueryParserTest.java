@@ -74,18 +74,18 @@ public class SummaQueryParserTest extends TestCase {
         SummaQueryParser qp = getQueryParser();
         // IndexDescriptor sets base author-boost to 1.5
         assertEquals("The parsed query should boost author", qp,
-                     "author:foo^1.5[1.5]", "author:foo");
+                     "author:foo[1.5]", "author:foo");
         assertEquals("The author boost should be a multiple of boosts", qp,
-                     "author:foo^3.0[3.0]", "author:foo boost(author^2)");
+                     "author:foo[3.0]", "author:foo boost(author^2)");
     }
 
     public void testGroupBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should boost groups", qp,
-      "(freetext:foo[1.0] <title:foo^3.0[3.0] titel:foo^3.0[3.0]> id:foo[1.0])",
+      "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])",
                "foo boost(ti^3)");
         assertEquals("The parsed query should boost explicit field", qp,
-                     "id:foo^3.0[3.0]",
+                     "id:foo[3.0]",
                      "id:foo boost(id^3)");
     }
 
