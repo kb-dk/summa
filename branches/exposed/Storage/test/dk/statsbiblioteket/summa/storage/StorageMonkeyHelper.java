@@ -41,7 +41,7 @@ import java.io.StringWriter;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, hbk")
-public class StorageMonkeyHelper extends TestCase {
+public class StorageMonkeyHelper  {
     private static Log log = LogFactory.getLog(StorageMonkeyHelper.class);
 
 //    private List<Integer> existingIDs = new ArrayList<Integer>(10000);
@@ -67,10 +67,6 @@ public class StorageMonkeyHelper extends TestCase {
 
     public StorageMonkeyHelper() {
         // for test purpose
-    }
-
-    public void testDummy() {
-        assertTrue(true);
     }
 
     /**
