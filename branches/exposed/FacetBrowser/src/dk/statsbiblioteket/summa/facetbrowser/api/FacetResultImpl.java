@@ -51,6 +51,15 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     private static final int DEFAULT_MAXTAGS = 100;
 
     /**
+     * If false, tags containing the empty String will not be part of the
+     * generated XML. Note that this might result in a reduction of the
+     * number of returned tags by 1.
+     * </p><p>
+     * Default: false.
+     */
+    public boolean emptyTagsValid = false;
+
+    /**
      * Pseudo-code: Map<FacetName, FlexiblePair<Tag, TagCount>>.
      * We use a linked map so that the order of the Facets will be
      * significant.
@@ -77,6 +86,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @return an XML representation of the facet browser structure.
      */
     @Override
+    // TODO: Switch to XMLOutputStream
     public synchronized String toXML() {
         log.trace("Entering toXML");
         StringWriter sw = new StringWriter(10000);
@@ -99,10 +109,17 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 }
 //                        structure.getFacets().get(facet.getKey()).getMaxTags();
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
+                    String tagString = getTagString(
+                        facet.getKey(), tag.getKey());
+                    if (!emptyTagsValid && "".equals(tagString)) {
+                        log.trace("Skipping empty tag from " + facet.getKey()
+                                  + " with tag count " + tag.getValue());
+
+                        continue;
+                    }
                     if (tagCount++ < maxTags) {
                         sw.write("    <tag name=\"");
-                        sw.write(XMLUtil.encode(getTagString(
-                                facet.getKey(), tag.getKey())));
+                        sw.write(XMLUtil.encode(tagString));
         /*                if (!Element.NOSCORE.equals(tag.getScore())) {
                             sw.write("\" score=\"");
                             sw.write(Float.toString(tag.getScore()));
@@ -192,6 +209,19 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 }
             }
 //                    structure.getFacets().get(entry.getKey()).getMaxTags();
+            if (!emptyTagsValid) {
+                List<FlexiblePair<T, Integer>> tagList = facet.getValue();
+                for (int i = 0 ; i < tagList.size() ; i++) {
+                    if ("".equals(getTagString(
+                        facetName, tagList.get(i).getKey()))) {
+                        log.trace("Removing empty tag from " + facetName
+                                  + " with tag count "
+                                  + tagList.get(i).getValue());
+                        tagList.remove(i);
+                        break;
+                    }
+                }
+            }
             if (facet.getValue().size() <= maxTags) {
                 newMap.put(facet.getKey(), facet.getValue());
             } else {
@@ -581,6 +611,14 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 replacements, entry.getKey()), entry.getValue());
         }
         return adjusted;
+    }
+
+    public boolean isEmptyTagsValid() {
+        return emptyTagsValid;
+    }
+
+    public void setEmptyTagsValid(boolean emptyTagsValid) {
+        this.emptyTagsValid = emptyTagsValid;
     }
 }
 
