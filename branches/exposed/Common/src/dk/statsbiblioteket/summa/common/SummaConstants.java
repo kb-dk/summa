@@ -17,46 +17,46 @@ package dk.statsbiblioteket.summa.common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
-import java.util.ResourceBundle;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-
 /**
- * Loads the current MAVEN_REVISION_NUMBER from property file. The property-file is updated by maven
+ * Loads the current MAVEN_REVISION_NUMBER from property file. The property-file
+ * is updated by maven
  * 
  * @author Thomas Egense <mailto:teg@statsbiblioteket.dk>
  */
+@SuppressWarnings({"FieldCanBeLocal"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "teg")
 public class SummaConstants {
 
-	private static String VERSION="pom.version";
-	
-	private static String propertyFileName="common.properties";
+	private static String VERSION = "pom.version";
+	private static String propertyFileName = "common.properties";
 	
     public static String getVersion() {
-    
-        URL url =  ClassLoader.getSystemResource(propertyFileName);
+        URL url = ClassLoader.getSystemResource(propertyFileName);
     	if (url == null){
-    	    return "Unknown version number. ("+propertyFileName+" not found on classpath)";
+    	    return "Unknown version number. (" + propertyFileName
+                   + " not found on classpath)";
     	}
     	
     	Properties p = new Properties();
-    	try{
+    	try {
     	    p.load(new FileInputStream(new File(url.getFile())));
     	}
-    	catch(IOException e){    		
-    		return "Unknown version number. ("+propertyFileName+"  found, but reading gave IOException)";
+    	catch (IOException e){
+    		return "Unknown version number. (" + propertyFileName
+                   + ") found, but reading gave IOException)";
     	}
     	
-    	String version=p.getProperty(VERSION);
-    	if(version == null){
-    		return "Unknown version number. ('version' property not found in "+propertyFileName+ ")";
+    	String version = p.getProperty(VERSION);
+    	if (version == null) {
+    		return "Unknown version number. 'version' property not found in "
+                   + "(" + propertyFileName + ")";
     	}
     	    	
     	return version;    	    	    	    	
