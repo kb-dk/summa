@@ -218,7 +218,7 @@
         }
 
         try {
-            long RUNS = 10;
+            long RUNS = 1;
             long totalPing = -System.currentTimeMillis();
             long maxPing = 0;
             long minPing = 999999;
