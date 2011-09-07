@@ -23,8 +23,10 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -103,6 +105,23 @@ public class SummonSearchNodeTest extends TestCase {
                    responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
+    }
+
+    public void testMoreLikeThis() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo");
+        assertTrue("A search for 'foo' should give hits", standard > 0);
+
+        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo",
+                           LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
+        assertEquals(
+            "A search with a MoreLikeThis ID should not give hits", 0, mlt);
+
     }
 
     public void testColonSearch() throws RemoteException {
@@ -373,10 +392,15 @@ public class SummonSearchNodeTest extends TestCase {
 
     private long getHits(SearchNode searcher, String... arguments)
                                                         throws RemoteException {
+        String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
-        return Long.parseLong(responses.toXML().replaceAll(
-            "(?s).*hitCount=\"([0-9]*)\".*", "$1"));
+        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
+            matches()) {
+            return 0;
+        }
+        String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
+        return "".equals(hitsS) ? 0L : Long.parseLong(hitsS);
     }
 
     public void testCustomParams() throws RemoteException {

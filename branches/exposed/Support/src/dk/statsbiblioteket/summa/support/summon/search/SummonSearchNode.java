@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -315,6 +316,12 @@ public class SummonSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(
         Request request, ResponseCollection responses) throws RemoteException {
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+            log.trace("MoreLikeThis search is not supported by Summon, "
+                      + "returning immediately");
+            return;
+        }
+
         String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
         String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
