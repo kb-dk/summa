@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.SummaConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -143,6 +144,7 @@ public class Environment {
                      + "'java.runtime.version'. Please check that the JVM does"
                      + " not have bug #6707044 (see http://bugs.sun.com/bugdat"
                      + "abase/view_bug.do?bug_id=6707044) for details");
+            log.debug("Summa version: " + SummaConstants.getVersion());
             return version;
         }
         // version should be like "1.6.0_10-b33"
@@ -161,7 +163,9 @@ public class Environment {
                     + "indexes. The current Java runtime version is "
                     + version);
         }
-        log.debug("Java runtime version is " + version + ". All OK");
+        log.debug(String.format(
+            "Java runtime version is %s, Summa version is %s. All OK",
+            version, SummaConstants.getVersion()));
         return version;
     }
     private static Pattern VERSION_PATTERN = Pattern.compile(
