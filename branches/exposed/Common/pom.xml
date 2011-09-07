@@ -63,6 +63,12 @@
             <resource>
                 <directory>data/</directory>
             </resource>
+      
+            <resource>
+                <directory>data</directory>
+                <filtering>true</filtering>
+            </resource>
+      
         </resources>
         <!-- Tests -->
         <testSourceDirectory>test/</testSourceDirectory>
