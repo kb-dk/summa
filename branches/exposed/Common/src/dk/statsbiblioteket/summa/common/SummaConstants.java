@@ -14,13 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.Properties;
 
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Loads the current MAVEN_REVISION_NUMBER from property file. The property-file
@@ -33,30 +34,40 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "teg")
 public class SummaConstants {
+    private static Log log = LogFactory.getLog(SummaConstants.class);
 
 	private static String VERSION = "pom.version";
 	private static String propertyFileName = "common.properties";
 	
     public static String getVersion() {
-        URL url = ClassLoader.getSystemResource(propertyFileName);
-    	if (url == null){
-    	    return "Unknown version number. (" + propertyFileName
-                   + " not found on classpath)";
-    	}
-    	
+        //URL url = ClassLoader.getSystemResource(propertyFileName);
+        String properties;
+        try {
+            properties = Resolver.getUTF8Content(propertyFileName);
+        } catch (IOException e) {
+            String message = "Unknown version number. (" + propertyFileName
+                             + " not found on classpath)";
+            log.warn(message, e);
+    	    return message;
+        }
+
     	Properties p = new Properties();
     	try {
-    	    p.load(new FileInputStream(new File(url.getFile())));
+            p.load(new StringReader(properties));
     	}
-    	catch (IOException e){
-    		return "Unknown version number. (" + propertyFileName
-                   + ") found, but reading gave IOException)";
+    	catch (IOException e) {
+            String message =  "Unknown version number. (" + propertyFileName
+                              + ") found, but reading gave IOException";
+            log.warn(message, e);
+            return message;
     	}
-    	
+
     	String version = p.getProperty(VERSION);
     	if (version == null) {
-    		return "Unknown version number. 'version' property not found in "
-                   + "(" + propertyFileName + ")";
+    		String message = "Unknown version number. 'version' property not "
+                             + "found in " + "(" + propertyFileName + ")";
+            log.warn(message);
+            return message;
     	}
     	    	
     	return version;    	    	    	    	
