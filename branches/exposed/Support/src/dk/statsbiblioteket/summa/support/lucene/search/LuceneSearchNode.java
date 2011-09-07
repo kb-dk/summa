@@ -63,10 +63,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedCache;
 import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.util.Bits;
-import org.apache.lucene.util.DocIdBitSet;
-import org.apache.lucene.util.OpenBitSet;
-import org.apache.lucene.util.OpenBitSetDISI;
+import org.apache.lucene.util.*;
 
 /**
  * Lucene-specific search node.
@@ -808,6 +805,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     new DocumentResponse(filter, query, startIndex, maxRecords,
                                      sortKey, reverseSort, fields, 0,
                                      topDocs.totalHits);
+            boolean sortWarned = false;
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;
                  i < topDocs.scoreDocs.length
@@ -825,6 +823,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     log.trace("Ignoring MoreLikeThis hit on source document");
                     continue;
                 }
+                sortWarned = assignSortValue(
+                    sortKey, topDocs, sortWarned, i, scoreDoc, record);
+
                 for (int fieldIndex = 0; fieldIndex < fields.length;
                      fieldIndex++) {
                     String field = fields[fieldIndex];
@@ -882,6 +883,64 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             throw new RemoteException(String.format(
                     "Exception during search for query '%s'", query), t);
         }
+    }
+
+    private boolean assignSortValue(
+        String sortKey, TopFieldDocs topDocs, boolean sortWarned, int index,
+        ScoreDoc scoreDoc, DocumentResponse.Record record) {
+        if (sortKey == null || "".equals(sortKey)
+            || sortKey.equals(DocumentKeys.SORT_ON_SCORE)) {
+            return sortWarned;
+        }
+        if (topDocs.fields == null || topDocs.fields.length <= index) {
+            if (!sortWarned) {
+                log.warn("Attempted to extract sortValue from "
+                         + "TopDocs but sort fields were not "
+                         + "present");
+                sortWarned = true;
+            }
+            return sortWarned;
+        }
+        if (!(scoreDoc instanceof FieldDoc)) {
+            if (!sortWarned) {
+                log.warn("Expected FieldDoc but got " + scoreDoc.getClass());
+                sortWarned = true;
+            }
+            return sortWarned;
+        }
+        FieldDoc fieldDoc = (FieldDoc)scoreDoc;
+        if (fieldDoc.fields == null || fieldDoc.fields.length == 0) {
+            if (!sortWarned) {
+                log.warn("Attempted to extract sortValue from "
+                         + "TopDocs but sort values were not "
+                         + "present");
+                sortWarned = true;
+            }
+            return sortWarned;
+        }
+        if (fieldDoc.fields[0] == null) {
+            return sortWarned;
+        } else if (fieldDoc.fields[0] instanceof BytesRef) {
+                record.setSortValue(
+                    ((BytesRef)fieldDoc.fields[0]).utf8ToString());
+        } else if (fieldDoc.fields[0] instanceof String) {
+            record.setSortValue((String)fieldDoc.fields[0]);
+        } else {
+            if (!sortWarned) {
+                try {
+                    log.warn(
+                        "Expected BytesRef or String as sort value"
+                        + " but got " + fieldDoc.fields[0].getClass());
+                } catch (NullPointerException e) {
+                    log.error("Got NPE where all checks should have been made "
+                              + "for Field Doc '" + fieldDoc + "' with fields '"
+                              + fieldDoc == null ? "N/A" : fieldDoc.fields, e);
+                }
+                sortWarned = true;
+            }
+            record.setSortValue(fieldDoc.fields[0].toString());
+        }
+        return sortWarned;
     }
 
     private String explain(Request request, Query query, int docID) {

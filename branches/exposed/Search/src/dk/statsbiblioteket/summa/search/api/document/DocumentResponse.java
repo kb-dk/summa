@@ -169,6 +169,10 @@ public class DocumentResponse implements Response, DocumentKeys {
             return sortValue;
         }
 
+        public void setSortValue(String sortValue) {
+            this.sortValue = sortValue;
+        }
+
         public List<Field> getFields() {
             return fields;
         }
