@@ -255,16 +255,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     /** Default value for {@link #CONF_SORT_BUFFER}. */
     public static final int DEFAULT_SORT_BUFFER = SortFactory.DEFAULT_BUFFER;
 
-    /**
-     * If true, fields with sortLocales are warmed upon index opening. Warming a sorter takes
-     * time (~3-4 minutes for 10 million documents) if there is a sort localea String-field
-     * with many unique terms
-     */
-    public static final String CONF_WARMUP_SORTERS =
-            "summa.support.lucene.warmup.warmsorters";
-    /** Default value for {@link #CONF_WARMUP_SORTERS}. */
-    public static final boolean DEFAULT_WARMUP_SORTERS = false;
-
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SortPool sortPool; // Toed to the descriptor

@@ -310,7 +310,7 @@ public class SummonSearchNodeTest extends TestCase {
       */
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         summon.search(request, responses);
-        System.out.println(responses.toXML());
+//        System.out.println(responses.toXML());
         assertTrue("The result should contain at least one recommendation",
                    responses.toXML().contains("<recommendation "));
 
@@ -497,6 +497,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     // This fails, but as we are really testing Summon here, there is not much
     // we can do about it
+    @SuppressWarnings({"UnusedDeclaration"})
     public void disabledtestCounts() throws RemoteException {
   //      final String QUERY = "reactive arthritis yersinia lassen";
         final String QUERY = "author:(Helweg Larsen) abuse";
@@ -510,7 +511,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.addJSON(
             "{search.document.query:\"" + QUERY + "\", "
             + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
-        String r1 = request.toString(true);
+//        String r1 = request.toString(true);
 
         SummonSearchNode summon = new SummonSearchNode(conf);
         ResponseCollection responses = new ResponseCollection();
@@ -521,7 +522,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.addJSON(
             "{search.document.query:\"" + QUERY + "\", "
             + "summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
-        String r2 = request.toString(true);
+  //      String r2 = request.toString(true);
         responses.clear();
         summon.search(request, responses);
         int count20 = countResults(responses);
@@ -548,8 +549,8 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         int countOld20 = countResults(responses);
   */
-        System.out.println("Request 15:  " + r1 + ": " + count15);
-        System.out.println("Request 20:  " + r2 + ": " + count20);
+//        System.out.println("Request 15:  " + r1 + ": " + count15);
+//        System.out.println("Request 20:  " + r2 + ": " + count20);
 //        System.out.println("Request O15: " + rOld15 + ": " + countOld15);
 //        System.out.println("Request O20: " + rOld20 + ": " + countOld20);
         assertEquals("The number of hits should not be affected by page size",
@@ -587,7 +588,8 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         adjusting.search(request, responses);
         log.debug("Finished searching");
-        System.out.println(responses.toXML());
+        // TODO: Add proper test
+//        System.out.println(responses.toXML());
     }
 
     public void testIDAdjustment() throws IOException {
@@ -603,7 +605,6 @@ public class SummonSearchNodeTest extends TestCase {
 
         log.debug("Creating adjusting SummonSearchNode");
         AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
-        ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         //request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_QUERY, "recursion in string theory");

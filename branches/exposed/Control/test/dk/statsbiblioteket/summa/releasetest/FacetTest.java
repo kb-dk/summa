@@ -62,7 +62,8 @@ public class FacetTest extends NoExitTestCase {
     public void setUp () throws Exception {
         super.setUp();
         cleanup();
-        SearchTest.INDEX_ROOT.mkdirs();
+        assertTrue("The " + SearchTest.INDEX_ROOT + " should be created",
+                   SearchTest.INDEX_ROOT.mkdirs());
     }
 
     @Override
@@ -140,10 +141,9 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Storage started");
         SearchTest.ingest(new File(
             Resolver.getURL("data/search/input/part1").getFile()));
-        assertTrue("Hans Jensen data should be ingested",
-                   storage.getRecords(
-                       Arrays.asList("fagref:hj@example.com"), null).size()
-                   == 1);
+        assertEquals("Hans Jensen data should be ingested",
+                     1, storage.getRecords(
+                         Arrays.asList("fagref:hj@example.com"), null).size());
         storage.close();
     }
 
@@ -152,9 +152,9 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Storage started");
         SearchTest.ingest(new File(
                Resolver.getURL("transliteration/transliterate.xml").getFile()));
-        assertTrue("Háns Jensén data should be ingested",
-                    storage.getRecords(
-                        Arrays.asList("fagref:haje@example.com"), null).size() == 1);
+        assertEquals("Háns Jensén data should be ingested",
+                     1, storage.getRecords(
+            Arrays.asList("fagref:haje@example.com"), null).size());
         updateIndex();
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -178,8 +178,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
             Resolver.getURL("data/search/input/part1").getFile()));
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
-        assertTrue("The fagref Hans should exist in storage",
-                   hansRecord != null);
+        assertNotNull("The fagref Hans should exist in storage", hansRecord);
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
 
@@ -204,8 +203,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
-        assertTrue("The fagref Hans should exist in storage",
-                   hansRecord != null);
+        assertNotNull("The fagref Hans should exist in storage", hansRecord);
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
 
@@ -238,8 +236,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
-        assertTrue("The fagref Hans should exist in storage",
-                   hansRecord != null);
+        assertNotNull("The fagref Hans should exist in storage", hansRecord);
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
         SearchTest.ingest(new File(
@@ -328,7 +325,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
         Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
-        assertTrue(gurliRecord != null);
+        assertNotNull("There should be a Gurli Record", gurliRecord);
         assertEquals("The Records-count should be correct after first ingest",
                      2, countRecords(storage, "fagref"));
 
@@ -412,9 +409,9 @@ public class FacetTest extends NoExitTestCase {
                      3, countRecords(storage, "fagref"));
 
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
-        assertTrue(hansRecord != null);
+        assertNotNull("There should be a Hans Record", hansRecord);
         Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
-        assertTrue(gurliRecord != null);
+        assertNotNull("There should be a gurli Record", gurliRecord);
 
         updateIndex();
         Thread.sleep(5000); // Why do we need to do this?
@@ -533,8 +530,8 @@ public class FacetTest extends NoExitTestCase {
         Matcher matcher = problem.matcher(responses.toXML());
         assertTrue("The name 'grd kre' should be present",
                    matcher.matches());
-        assertTrue("The count for 'grd kre' should be 1 but was "
-                   + matcher.group(1), "1".equals(matcher.group(1)));
+        assertEquals("The count for 'grd kre' should be 1 but was "
+                     + matcher.group(1), "1", matcher.group(1));
         searcher.close();
     }
 
@@ -635,8 +632,9 @@ public class FacetTest extends NoExitTestCase {
             request.put(DocumentKeys.SEARCH_MAX_RECORDS, 0);
             request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
             Response response = searcher.search(request).iterator().next();
-            assertTrue("There should be zero hits for non-existing search term",
-                       SearchTest.getHits(response) == 0);
+            assertEquals(
+                "There should be zero hits for non-existing search term",
+                0, SearchTest.getHits(response));
         }
 
         {

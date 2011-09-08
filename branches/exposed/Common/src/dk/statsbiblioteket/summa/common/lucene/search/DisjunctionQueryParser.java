@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
@@ -48,11 +47,14 @@ import org.apache.lucene.util.Version;
 public class DisjunctionQueryParser extends QueryParser {
     private static Log log = LogFactory.getLog(DisjunctionQueryParser.class);
 
+    @SuppressWarnings({"FieldCanBeLocal"})
     private static float tieBreakerMultiplier = 0.0f;
     private LuceneIndexDescriptor descriptor;
 
     // TODO: Make this a property
+    @SuppressWarnings({"FieldCanBeLocal"})
     private boolean disjunctGroups = true;
+    @SuppressWarnings({"FieldCanBeLocal"})
     private boolean disjunctDefaults = false;
 
     public DisjunctionQueryParser(LuceneIndexDescriptor descriptor) {
@@ -69,10 +71,12 @@ public class DisjunctionQueryParser extends QueryParser {
                                   final int slop)
                                                          throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
+            @Override
             public Query getRecursiveQuery(String fieldOrGroup) throws
                                                                 ParseException {
                 return getFieldQuery(fieldOrGroup, queryText, slop);
             }
+            @Override
             public Query getFinalQuery(String field) throws ParseException {
                 return getFinalFieldQuery(field, queryText, slop);
             }
@@ -115,7 +119,7 @@ public class DisjunctionQueryParser extends QueryParser {
             }
             List<Query> queries =
                     new ArrayList<Query>(group.getFields().size());
-            for (IndexField groupField: group.getFields()) {
+            for (LuceneIndexField groupField: group.getFields()) {
                 Query q = inner.getFinalQuery(groupField.getName());
                 if (q != null) {
                     queries.add(q);
@@ -123,7 +127,7 @@ public class DisjunctionQueryParser extends QueryParser {
             }
             return makeMulti(queries, disjunctGroups);
         }
-        IndexField resolvedField = descriptor.getField(field);
+        LuceneIndexField resolvedField = descriptor.getField(field);
         if (resolvedField == null) {
             // TODO: The field is unknown in the descriptor but might be indexed
             return inner.getFinalQuery(field);
@@ -283,10 +287,12 @@ public class DisjunctionQueryParser extends QueryParser {
     protected Query getWildcardQuery(String field, final String termStr) throws
                                                                 ParseException {
         return getExpanded(field, new InnerQueryMaker() {
+            @Override
             public Query getRecursiveQuery(String fieldOrGroup) throws
                                                                 ParseException {
                 return getWildcardQuery(fieldOrGroup, termStr);
             }
+            @Override
             public Query getFinalQuery(String field) throws ParseException {
                 return getSuperWildcardQuery(field, termStr);
             }
@@ -347,7 +353,3 @@ public class DisjunctionQueryParser extends QueryParser {
     }
 
 }
-
-
-
-

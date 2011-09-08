@@ -20,7 +20,8 @@ public class TermStatRequestRewriterTest extends TestCase {
     private QueryRewriter request;
 
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         request = new QueryRewriter(new QueryRewriter.Event() {
             @Override
             public Query onQuery(TermQuery query) {
