@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import com.sun.org.apache.xalan.internal.Version;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
