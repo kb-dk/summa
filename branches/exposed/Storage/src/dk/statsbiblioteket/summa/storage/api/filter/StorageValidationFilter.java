@@ -50,9 +50,7 @@ public class StorageValidationFilter extends ObjectFilterImpl {
         feedback = false;
         try {
             StorageReaderClient storage = new StorageReaderClient(conf);
-            if(storage == null) {
-                throw new IOException("Storage reader client is null");
-            }
+     
             long time = storage.getModificationTime(null);
             log.debug("Storage returns from getModifcationTime(null) value: "
                       + time);
