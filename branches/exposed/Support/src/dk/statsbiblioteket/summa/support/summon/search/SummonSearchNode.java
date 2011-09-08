@@ -84,6 +84,7 @@ import java.util.regex.Pattern;
         author = "te")
 public class SummonSearchNode extends SearchNodeImpl {
     private static Log log = LogFactory.getLog(SummonSearchNode.class);
+    private static Log summonlog = LogFactory.getLog("summon_performance");
 
     /**
      * The entry point for calls to Summon. This is unlikely to change.
@@ -588,8 +589,10 @@ public class SummonSearchNode extends SearchNodeImpl {
             long serviceStart = System.currentTimeMillis();
             result = getData("http://" + host, restCall + "?" +
                     queryString, date, idstring, null);
-            log.trace("Call to Summon done in "
-                      + (System.currentTimeMillis() - serviceStart) + "ms");
+
+            summonlog.debug("Call to Summon done in "
+                      + (System.currentTimeMillis() - serviceStart) + "ms: "
+                      + queryString);
         } catch (Exception e) {
             throw new RemoteException(
                 "Unable to perform remote call to "  + host + restCall
