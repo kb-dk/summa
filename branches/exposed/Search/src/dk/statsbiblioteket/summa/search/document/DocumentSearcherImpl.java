@@ -90,7 +90,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                     "The property %s must be >0. It was %s. Resetting to "
                     + "default %s",
                     CONF_MAX_RECORDS, maxRecords,
-                    DEFAULT_MAX_NUMBER_OF_RECORDS == Long.MAX_VALUE ?
+                    maxRecords == Long.MAX_VALUE ?
                     "Long.MAX_VALUE" :
                     DEFAULT_MAX_NUMBER_OF_RECORDS));
             maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
