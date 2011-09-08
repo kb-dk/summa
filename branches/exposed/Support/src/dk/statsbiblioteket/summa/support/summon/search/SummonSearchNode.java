@@ -316,6 +316,29 @@ public class SummonSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(
         Request request, ResponseCollection responses) throws RemoteException {
+        try {
+            barrierSearch(request, responses);
+        } catch (StackOverflowError e) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream(100);
+            PrintStream printer = new PrintStream(out);
+            e.printStackTrace(printer);
+            printer.flush();
+            String error;
+            try {
+                error = out.toString("utf-8");
+            } catch (UnsupportedEncodingException e1) {
+                throw new RemoteException(
+                    "Unable to convert stacktrace to utf-8 for failed request: "
+                    + request.toString(true));
+            }
+            log.error("Caught StackOverflow during handling of Summon request"
+                      + request.toString(true) + ":\n"
+                      + (error.length() > 1000
+                         ? error.substring(0, 1000) : error));
+        }
+    }
+    private void barrierSearch(
+        Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             log.trace("MoreLikeThis search is not supported by Summon, "
                       + "returning immediately");
