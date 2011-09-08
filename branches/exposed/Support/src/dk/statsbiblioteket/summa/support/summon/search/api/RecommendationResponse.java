@@ -19,7 +19,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.derby.iapi.types.XML;
 
 import java.io.Serializable;
 import java.io.StringWriter;

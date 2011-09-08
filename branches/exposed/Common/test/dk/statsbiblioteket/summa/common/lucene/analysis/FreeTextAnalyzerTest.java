@@ -4,18 +4,12 @@ import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttributeImpl;
-import org.apache.lucene.util.Attribute;
 import org.apache.lucene.util.AttributeImpl;
 
-import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.lang.reflect.Array;
-import java.text.AttributedCharacterIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;

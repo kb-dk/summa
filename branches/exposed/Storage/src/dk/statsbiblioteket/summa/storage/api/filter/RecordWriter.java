@@ -34,7 +34,6 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.hssf.record.formula.functions.False;
 
 /**
  * Connects to a Storage and ingests received Records into the storage.

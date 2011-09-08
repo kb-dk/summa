@@ -29,7 +29,6 @@ import org.apache.lucene.search.SortField;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Random;
 
 /**

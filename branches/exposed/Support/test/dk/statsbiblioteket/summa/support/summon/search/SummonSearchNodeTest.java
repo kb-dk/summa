@@ -26,7 +26,6 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
-import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -36,7 +35,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;

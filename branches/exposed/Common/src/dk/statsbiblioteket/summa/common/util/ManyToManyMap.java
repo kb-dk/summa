@@ -16,8 +16,6 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 import java.util.*;
 

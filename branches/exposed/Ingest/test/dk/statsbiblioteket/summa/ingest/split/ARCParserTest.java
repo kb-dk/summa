@@ -4,17 +4,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.ingest.stream.*;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCReaderFactory;
-import sun.rmi.runtime.Log;
 
 import java.io.*;
-import java.io.FileReader;
 import java.util.Arrays;
 import java.util.Iterator;
 

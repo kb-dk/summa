@@ -15,9 +15,6 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.analysis.TokenStream;
-
-import java.io.Reader;
 
 
 /**

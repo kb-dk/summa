@@ -14,7 +14,6 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.search.api.document;
 
 import com.ibm.icu.text.Collator;
-import com.ibm.icu.util.ULocale;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;

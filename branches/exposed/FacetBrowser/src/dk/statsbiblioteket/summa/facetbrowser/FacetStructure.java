@@ -20,7 +20,6 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
-import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;

@@ -18,7 +18,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.*;
-import junit.framework.*;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 

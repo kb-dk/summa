@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common;
 
 import java.io.*;
-import java.net.URL;
 import java.util.Properties;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;

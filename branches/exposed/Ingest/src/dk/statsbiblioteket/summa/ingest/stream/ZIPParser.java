@@ -22,7 +22,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.management.monitor.Monitor;
 import java.io.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;

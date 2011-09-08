@@ -29,7 +29,6 @@ import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
 import java.rmi.RemoteException;
-import java.util.BitSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

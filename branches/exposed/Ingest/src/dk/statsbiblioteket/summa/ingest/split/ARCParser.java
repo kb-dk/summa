@@ -33,7 +33,6 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
-import java.security.cert.TrustAnchor;
 import java.util.Iterator;
 import java.io.*;
 
