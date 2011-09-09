@@ -86,6 +86,7 @@ public class SummonResponseBuilder {
         }
     }
 
+    private boolean rangeWarned = false;
     public long buildResponses(
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
@@ -133,13 +134,18 @@ public class SummonResponseBuilder {
                     xml, "queryString", summonQueryString);
                 continue;
             }
-            if ("rangeFacetFields".equals(currentTag) && collectdocIDs) {
-                log.warn("Currently there is no support for returning range" 
-                         + " facets");
-                // TODO: Implement this
+            if ("rangeFacetFields".equals(currentTag) && collectdocIDs
+                && !rangeWarned) {
+                log.warn("buildResponses(...) encountered facet range from "
+                         + "summon. Currently there is no support for this. "
+                         + "Further encounters of range facets will not be "
+                         + "logged");
+                rangeWarned = true;
+                // TODO: Implement range facets from Summon
             }
             if ("facetFields".equals(currentTag) && collectdocIDs) {
-                FacetResult facetResult = extractFacetResult(xml, facets);
+                FacetResult<String> facetResult =
+                    extractFacetResult(xml, facets);
                 if (facetResult != null) {
                     responses.add(facetResult);
                 }
@@ -154,6 +160,11 @@ public class SummonResponseBuilder {
             if ("documents".equals(currentTag)) {
                 records = extractRecords(xml, sortKey);
             }
+        }
+        if (records == null) {
+            log.warn("No records extracted from request " + request + ". "
+                     + "Returning 0 hits");
+            return 0;
         }
         DocumentResponse documentResponse = new DocumentResponse(
             filter, query, startIndex, maxRecords, sortKey, reverse,
@@ -218,7 +229,7 @@ public class SummonResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private FacetResult extractFacetResult(
+    private FacetResult<String> extractFacetResult(
         XMLStreamReader xml, SummonFacetRequest facets)
                                                      throws XMLStreamException {
         HashMap<String, Integer> facetIDs =
@@ -494,8 +505,7 @@ public class SummonResponseBuilder {
                   </field>
                  */
                 findTagStart(xml, "datetime");
-                String date = null;
-                    date = getAttribute(xml, "year", "????");
+                String date = getAttribute(xml, "year", "????");
                 return new DocumentResponse.Field(name, date, false);
             }
 
