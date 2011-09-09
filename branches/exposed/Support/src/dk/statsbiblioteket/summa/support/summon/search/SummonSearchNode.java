@@ -42,6 +42,7 @@ import org.w3c.dom.Node;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.swing.*;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -320,24 +321,33 @@ public class SummonSearchNode extends SearchNodeImpl {
         try {
             barrierSearch(request, responses);
         } catch (StackOverflowError e) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(100);
-            PrintStream printer = new PrintStream(out);
-            e.printStackTrace(printer);
-            printer.flush();
-            String error;
-            try {
-                error = out.toString("utf-8");
-            } catch (UnsupportedEncodingException e1) {
-                throw new RemoteException(
-                    "Unable to convert stacktrace to utf-8 for failed request: "
-                    + request.toString(true));
-            }
-            log.error("Caught StackOverflow during handling of Summon request"
-                      + request.toString(true) + ":\n"
-                      + (error.length() > 1000
-                         ? error.substring(0, 1000) : error));
+            String message = String.format(
+                "Caught StackOverflow at outer level during handling of"
+                + "Summon request %s:\n%s",
+                request.toString(true), reduceStackTrace(request, e));
+            log.error(message, e);
+            throw new RemoteException(
+                "SummonSearchNode.managedSearch: " + message);
         }
     }
+
+    private String reduceStackTrace(Request request, StackOverflowError e)
+                                                        throws RemoteException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(100);
+        PrintStream printer = new PrintStream(out);
+        e.printStackTrace(printer);
+        printer.flush();
+        String error;
+        try {
+            error = out.toString("utf-8");
+        } catch (UnsupportedEncodingException e1) {
+            throw new RemoteException(
+                "Unable to convert stacktrace to utf-8 for failed request: "
+                + request.toString(true));
+        }
+        return error.length() > 1000 ? error.substring(0, 1000) : error;
+    }
+
     private void barrierSearch(
         Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
@@ -419,9 +429,21 @@ public class SummonSearchNode extends SearchNodeImpl {
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
-        String sResponse = summonSearch(
-            filter, query, summonSearchParams, collectdocIDs ? facets : null,
-            startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
+        String sResponse;
+        try {
+            sResponse = summonSearch(
+                filter, query, summonSearchParams,
+                collectdocIDs ? facets : null,
+                startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
+        } catch (StackOverflowError e) {
+            String message = String.format(
+                "Caught StackOverflow while performing summon request %s:\n%s",
+                request.toString(true), reduceStackTrace(request, e));
+            log.error(message, e);
+            throw new RemoteException(
+                "SummonSearchNode.barrierSearch: " + message);
+
+        }
         if (sResponse == null || "".equals(sResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");
@@ -440,6 +462,18 @@ public class SummonSearchNode extends SearchNodeImpl {
                 log.debug(message + ". Full XML follows:\n" + sResponse);
             }
             throw new RemoteException(message, e);
+        } catch (StackOverflowError e) {
+            String message = String.format(
+                "Caught StackOverflow while building response for summon "
+                + "request %s\nReduced stack trace:\n%s\nReduced raw summon "
+                + "response:\n%s",
+                request.toString(true), reduceStackTrace(request, e),
+                sResponse.length() > 2000 ?
+                sResponse.substring(0, 2000) : sResponse);
+            log.error(message, e);
+            throw new RemoteException(
+                "SummonSearchNode.barrierSearch: " + message);
+
         }
         buildResponseTime += System.currentTimeMillis();
 
@@ -478,8 +512,8 @@ public class SummonSearchNode extends SearchNodeImpl {
                         summonSearchParams.put(RF, sq);
                     }
                     sq.add(query.getField() + ","
-                           + query.getLowerTerm() + ":"
-                           + query.getUpperTerm());
+                           + query.getLowerTerm().utf8ToString() + ":"
+                           + query.getUpperTerm().utf8ToString());
                     return null;
                 }
 
@@ -591,8 +625,9 @@ public class SummonSearchNode extends SearchNodeImpl {
                     queryString, date, idstring, null);
 
             summonlog.debug("Call to Summon done in "
-                      + (System.currentTimeMillis() - serviceStart) + "ms: "
-                      + queryString);
+                            + (System.currentTimeMillis() - serviceStart)
+                            + "ms: "
+                            + queryString);
         } catch (Exception e) {
             throw new RemoteException(
                 "Unable to perform remote call to "  + host + restCall
