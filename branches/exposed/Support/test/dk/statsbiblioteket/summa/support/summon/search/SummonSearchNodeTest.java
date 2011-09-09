@@ -219,7 +219,6 @@ public class SummonSearchNodeTest extends TestCase {
         return result;
     }
 
-    // TODO: Implement the sort test
     public void testSortedSearch() throws RemoteException {
         Configuration conf = Configuration.newMemoryBased(
             SummonSearchNode.CONF_SUMMON_ACCESSID, id,
@@ -234,8 +233,9 @@ public class SummonSearchNodeTest extends TestCase {
 //        summon.open(""); // Fake open for setting permits
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
-        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_QUERY, "sb");
         request.put(DocumentKeys.SEARCH_SORTKEY, "PublicationDate");
+//        request.put(DocumentKeys.SEARCH_REVERSE, true);
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         summon.search(request, responses);
@@ -248,6 +248,8 @@ public class SummonSearchNodeTest extends TestCase {
                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
             lastValue = sortValue;
         }
+        log.debug("Test passed with sort values\n"
+                  + Strings.join(sortValues, "\n"));
     }
 
     public void testSortedSearchRelevance() throws RemoteException {
