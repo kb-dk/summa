@@ -331,23 +331,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
     }
 
-    private String reduceStackTrace(Request request, StackOverflowError e)
-                                                        throws RemoteException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(100);
-        PrintStream printer = new PrintStream(out);
-        e.printStackTrace(printer);
-        printer.flush();
-        String error;
-        try {
-            error = out.toString("utf-8");
-        } catch (UnsupportedEncodingException e1) {
-            throw new RemoteException(
-                "Unable to convert stacktrace to utf-8 for failed request: "
-                + request.toString(true));
-        }
-        return error.length() > 1000 ? error.substring(0, 1000) : error;
-    }
-
     private void barrierSearch(
         Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
