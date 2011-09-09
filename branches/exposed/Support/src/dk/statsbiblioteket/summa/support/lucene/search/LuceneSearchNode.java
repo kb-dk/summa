@@ -600,9 +600,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
         log.trace("Assigning searcher and query parser to responses.transient");
-        responses.getTransient().put(INDEX_SEARCHER, searcher);
-        responses.getTransient().put(QUERY_PARSER, parser);
-        super.managedSearch(request, responses);
+        try {
+            responses.getTransient().put(INDEX_SEARCHER, searcher);
+            responses.getTransient().put(QUERY_PARSER, parser);
+            super.managedSearch(request, responses);
+        } catch (StackOverflowError e) {
+            String message = String.format(
+                "Caught StackOverflow at outer level during handling of"
+                + "lucene request %s:\n%s",
+                request.toString(true), reduceStackTrace(request, e));
+            log.error(message, e);
+            throw new RemoteException(
+                "LuceneSearchNode.managedSearch: " + message);
+        }
     }
 
     @Override
