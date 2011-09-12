@@ -812,7 +812,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                  && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0));
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
-                // TODO: Get a service id and the sort value
+                // TODO: Get a service id
                 DocumentResponse.Record record =
                         new DocumentResponse.Record(
                                 Integer.toString(scoreDoc.doc), "NA",
