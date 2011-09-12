@@ -23,9 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.concurrent.TimeUnit;
@@ -394,6 +392,26 @@ public abstract class SearchNodeImpl implements SearchNode {
         if (slots.getOverallPermits() != 0) { // Race-condition here?
             slots.setOverallPermits(concurrentSearches);
         }
+    }
+
+    /*
+    Helper method for logging
+     */
+    protected String reduceStackTrace(Request request, Throwable t)
+                                                        throws RemoteException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(100);
+        PrintStream printer = new PrintStream(out);
+        t.printStackTrace(printer);
+        printer.flush();
+        String message;
+        try {
+            message = out.toString("utf-8");
+        } catch (UnsupportedEncodingException e1) {
+            throw new RemoteException(
+                "Unable to convert stacktrace to utf-8 from " + t.getMessage()
+                + " for failed request: " + request.toString(true));
+        }
+        return message.length() > 1000 ? message.substring(0, 1000) : message;
     }
 }
 

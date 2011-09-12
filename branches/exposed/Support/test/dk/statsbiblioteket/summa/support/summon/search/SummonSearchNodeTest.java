@@ -246,10 +246,45 @@ public class SummonSearchNodeTest extends TestCase {
             assertTrue("The sort values should be in unicode order but was "
                        + Strings.join(sortValues, ", "),
                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
+//            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
         }
         log.debug("Test passed with sort values\n"
                   + Strings.join(sortValues, "\n"));
+    }
+
+    public void testSortedDate() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
+            "sort_year_asc - PublicationDate"
+            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "dolphin whale");
+        request.put(DocumentKeys.SEARCH_SORTKEY, "PublicationDate");
+//        request.put(DocumentKeys.SEARCH_REVERSE, true);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        List<String> fields = getField(
+            summon, request, "PublicationDate_xml_iso");
+        log.debug("Finished searching");
+        String lastValue = null;
+        for (String sortValue: fields) {
+            assertTrue("The field values should be in unicode order but was "
+                       + Strings.join(fields, ", "),
+                      lastValue == null || lastValue.compareTo(sortValue) <= 0);
+//            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
+            lastValue = sortValue;
+        }
+        log.debug("Test passed with field values\n"
+                  + Strings.join(fields, "\n"));
     }
 
     public void testSortedSearchRelevance() throws RemoteException {
@@ -291,6 +326,24 @@ public class SummonSearchNodeTest extends TestCase {
             if (matcher.matches()) {
                 result.add(matcher.group(1));
             }
+        }
+        return result;
+    }
+
+    private List<String> getField(
+        SearchNode searcher, Request request, String fieldName)
+                                                        throws RemoteException {
+        final Pattern IDPATTERN = Pattern.compile(
+            "<field name=\"" + fieldName + "\">(.+?)</field>",
+            Pattern.DOTALL);
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(request, responses);
+        responses.iterator().next().merge(responses.iterator().next());
+        String xml = responses.toXML();
+        Matcher matcher = IDPATTERN.matcher(xml);
+        List<String> result = new ArrayList<String>();
+        while (matcher.find()) {
+            result.add(Strings.join(matcher.group(1).split("\n"), ", "));
         }
         return result;
     }

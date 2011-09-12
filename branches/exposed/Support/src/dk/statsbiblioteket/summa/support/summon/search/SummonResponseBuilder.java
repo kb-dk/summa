@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
@@ -28,16 +29,19 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 
+import javax.naming.ldap.SortResponseControl;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -53,7 +57,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummonResponseBuilder {
+public class SummonResponseBuilder implements Configurable {
     private static Log log = LogFactory.getLog(SummonResponseBuilder.class);
 
     /**
@@ -70,6 +74,28 @@ public class SummonResponseBuilder {
         "summonresponsebuilder.recordbase";
     public static final String DEFAULT_RECORDBASE = "summon";
 
+    /**
+     * A 1:1 map of field names to redirect. If sorting of field A is requested,
+     * specifying "A - B" means that the content of field B will be used as the
+     * sort value instead of the content from field A.
+     * </p><p>
+     * The format is a list of rules (comma-separation works) with each rule
+     * defines as "A - B", where A is the sort field and B is the field to
+     * extract sort values from.
+     * </p><p>
+     * Optional. Default is "PublicationDate - PublicationDate_xml_iso".
+     * </p><p>
+     * Note: The default mapping is chosen because summon provides date-sorting
+     * with sort-option "PublicationDate", but the field "PublicationDate" is
+     * multi valued and not normalised. The field PublicationDate_xml_iso is
+     * an extracted ISO-date from that authoritative XML in the single value
+     * field PublicationDate_xml.
+     */
+    public static final String CONF_SORT_FIELD_REDIRECT =
+        "summonresponsebuilder.sort.field.redirect";
+    public static final String DEFAULT_SORT_FIELD_REDIRECT =
+        "PublicationDate - PublicationDate_xml_iso";
+
     private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -78,12 +104,29 @@ public class SummonResponseBuilder {
     }
 
     private String recordBase = DEFAULT_RECORDBASE;
+    private final Map<String, String> sortRedirect;
 
     public SummonResponseBuilder(Configuration conf) {
         recordBase = conf.getString(CONF_RECORDBASE, recordBase);
         if ("".equals(recordBase)) {
             recordBase = null;
         }
+        List<String> rules = conf.getStrings(
+            CONF_SORT_FIELD_REDIRECT,
+            new ArrayList<String>(Arrays.asList(DEFAULT_SORT_FIELD_REDIRECT)));
+        sortRedirect = new HashMap<String, String>(rules.size());
+        for (String rule: rules) {
+            String[] tokens = rule.split(" *- *");
+            if (tokens.length != 2) {
+                throw new ConfigurationException(
+                    "Error parsing sort field redirect rule '" + rule + "'. "
+                    + "Expected a rule with the format 'source - destination'");
+            }
+            sortRedirect.put(tokens[0], tokens[1]);
+        }
+        log.info("Created SummonResponseBuilder with base '"
+                 + recordBase + "' and sort field redirect rules '"
+                 + Strings.join(rules, ", ") + "'");
     }
 
     private boolean rangeWarned = false;
@@ -91,6 +134,7 @@ public class SummonResponseBuilder {
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
         String summonResponse) throws XMLStreamException {
+
         boolean collectdocIDs = request.getBoolean(
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
@@ -361,7 +405,7 @@ public class SummonResponseBuilder {
      * accessing the xml stream.
      */
     private DocumentResponse.Record extractRecord(
-        XMLStreamReader xml, final String sortKey) throws XMLStreamException {
+        XMLStreamReader xml, String sortKey) throws XMLStreamException {
     // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
@@ -375,10 +419,14 @@ public class SummonResponseBuilder {
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
             "ID", "Score", "Title", "Subtitle", "Author", "ContentType",
             "PublicationDate_xml"));
+        // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
         final List<DocumentResponse.Field> fields =
             new ArrayList<DocumentResponse.Field>(50);
+        final String sortField = sortRedirect.containsKey(sortKey) ?
+                                 sortRedirect.get(sortKey) : sortKey;
+
         iterateElements(xml, "document", "field", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
@@ -386,9 +434,23 @@ public class SummonResponseBuilder {
                 if (field!= null) {
                     if (wanted.contains(field.getName())) {
                         extracted.put(field.getName(), field.getContent());
+                        if ("PublicationDate_xml".equals(field.getName())) {
+                            // The iso-thing is a big kludge. If we move the
+                            // sort code outside of this loop, it would be
+                            // cleaner.
+                            extracted.put(
+                                "PublicationDate_xml_iso", field.getContent());
+                            fields.add(new DocumentResponse.Field(
+                                "PublicationDate_xml_iso", field.getContent(),
+                                false));
+                            if (sortField != null &&
+                                sortField.equals("PublicationDate_xml_iso")) {
+                                sortValue[0] = field.getContent();
+                            }
+                        }
                     }
                     fields.add(field);
-                    if (sortKey != null && sortKey.equals(field.getName())) {
+                    if (sortField != null && sortField.equals(field.getName())) {
                         sortValue[0] = field.getContent();
                     }
                 }
@@ -505,8 +567,17 @@ public class SummonResponseBuilder {
                   </field>
                  */
                 findTagStart(xml, "datetime");
-                String date = getAttribute(xml, "year", "????");
-                return new DocumentResponse.Field(name, date, false);
+                String year = getAttribute(xml, "year", null);
+                if (year == null) {
+                    return null;
+                }
+                String month = getAttribute(xml, "month", null);
+                String day = getAttribute(xml, "day", null);
+                return new DocumentResponse.Field(
+                    name, year
+                          + (month == null ? "" : month
+                                                  + (day == null ? "" : day)),
+                    false);
             }
 
             if (!xmlFieldsWarningFired) {
@@ -554,6 +625,13 @@ public class SummonResponseBuilder {
         }
     }
 
+    /**
+     *
+     * @param xml stream positioned at a start tag.
+     * @param attributeName the wanted attribute
+     * @param defaultValue the value to return if the attributes is not present.
+     * @return the attribute content og the default value.
+     */
     private String getAttribute(
         XMLStreamReader xml, String attributeName, String defaultValue) {
         for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
