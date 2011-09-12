@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
@@ -38,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -143,7 +145,7 @@ public class FacetTest extends NoExitTestCase {
             Resolver.getURL("data/search/input/part1").getFile()));
         assertEquals("Hans Jensen data should be ingested",
                      1, storage.getRecords(
-                         Arrays.asList("fagref:hj@example.com"), null).size());
+            Arrays.asList("fagref:hj@example.com"), null).size());
         storage.close();
     }
 
@@ -229,6 +231,49 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testSortValues() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+            Resolver.getURL("data/search/input/part2").getFile()));
+        assertNotNull("The fagref Hans should exist in storage",
+                      storage.getRecord("fagref:hj@example.com", null));
+        assertNotNull("The fagref Gurli should exist in storage",
+                      storage.getRecord("fagref:gm@example.com", null));
+
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying existence of data");
+        SearchTest.verifySearch(searcher, "*", 3);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "*");
+        request.put(DocumentKeys.SEARCH_SORTKEY, "author_person");
+
+        List<String> sortValues = extractSortValues(searcher, request);
+        final List<String> EXPECTED =
+            Arrays.asList("Jens Hansen", "Gurli Margrethe");
+        ExtraAsserts.assertEquals(
+            "The returned sort values should be as expected",
+            EXPECTED, sortValues);
+        searcher.close();
+        storage.close();
+    }
+
+    private List<String> extractSortValues(
+        SummaSearcherImpl searcher, Request request) throws RemoteException {
+        final Pattern SORT_VALUE =
+            Pattern.compile(".*sortValue=\"(.+?)\".*", Pattern.DOTALL);
+        final List<String> result = new ArrayList<String>();
+        String xml = searcher.search(request).toXML();
+        Matcher matcher = SORT_VALUE.matcher(xml);
+        while (matcher.find()) {
+            result.add(matcher.group(1));
+        }
+        return result;
+    }
 
 
     public void testIndexLookup() throws Exception {
