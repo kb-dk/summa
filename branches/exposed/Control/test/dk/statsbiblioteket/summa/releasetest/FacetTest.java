@@ -254,7 +254,7 @@ public class FacetTest extends NoExitTestCase {
 
         List<String> sortValues = extractSortValues(searcher, request);
         final List<String> EXPECTED =
-            Arrays.asList("Jens Hansen", "Gurli Margrethe");
+            Arrays.asList("Gurli Margrethe", "Hans Jensen", "Jens Hansen");
         ExtraAsserts.assertEquals(
             "The returned sort values should be as expected",
             EXPECTED, sortValues);
@@ -265,7 +265,7 @@ public class FacetTest extends NoExitTestCase {
     private List<String> extractSortValues(
         SummaSearcherImpl searcher, Request request) throws RemoteException {
         final Pattern SORT_VALUE =
-            Pattern.compile(".*sortValue=\"(.+?)\".*", Pattern.DOTALL);
+            Pattern.compile("sortValue=\"(.+?)\"", Pattern.DOTALL);
         final List<String> result = new ArrayList<String>();
         String xml = searcher.search(request).toXML();
         Matcher matcher = SORT_VALUE.matcher(xml);

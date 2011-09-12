@@ -892,7 +892,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             || sortKey.equals(DocumentKeys.SORT_ON_SCORE)) {
             return sortWarned;
         }
-        if (topDocs.fields == null || topDocs.fields.length <= index) {
+        if (topDocs.fields == null) {
             if (!sortWarned) {
                 log.warn("Attempted to extract sortValue from "
                          + "TopDocs but sort fields were not "
