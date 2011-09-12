@@ -97,7 +97,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             String message, Collection expected, Collection actual) {
         if (expected.size() != actual.size()) {
             fail(message + ". Expected size " + expected.size()
-                 + " but got " + actual.size());
+                 + " but got " + actual.size() + "\nValues: "
+                 + Strings.join(actual, ", "));
         }
         Iterator expectedI = expected.iterator();
         Iterator actualI = actual.iterator();
