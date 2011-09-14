@@ -526,8 +526,7 @@ public class SummonResponseBuilder implements Configurable {
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
         String date = extracted.getString("PublicationDate_xml", "????");
-        date = shortDate || date.length() <= 4 ?
-               date : date.substring(0, 4);
+        date = shortDate && date.length() > 4 ? date.substring(0, 4) : date;
         shortformat.append("        <dc:date>").
             append(date).append("</dc:date>\n");
 
