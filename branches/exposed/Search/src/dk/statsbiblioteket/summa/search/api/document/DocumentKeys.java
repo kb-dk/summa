@@ -44,6 +44,26 @@ public interface DocumentKeys {
     public static final String SEARCH_FILTER = "search.document.filter";
 
     /**
+     * If true, the {@link #SEARCH_FILTER} contains only negative clauses.
+     * Lucene does not support pure negative queries so this would normally
+     * result in an error. By setting this argument to true, the searcher is
+     * free to do tricks to make it work anyway. Tricks might involve inserting
+     * an all-matching clause in front of the filter or append the filter to
+     * the query. Note that rewriting the query alters the order of the returned
+     * result, which might still be preferable to not returning any results at
+     * all.
+     * </p><p>
+     * Ideally the searcher should detect pure negative queries automatically.
+     * However this is not trivial due to nested query clauses so implementation
+     * has been deferred.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String SEARCH_FILTER_PURE_NEGATIVE =
+        "search.document.filter.purenegative";
+
+
+    /**
      * Integer ("10"). Optional.
      * </p><p>
      * Used for paging. States the first hit to return from the whole set of
@@ -74,8 +94,7 @@ public interface DocumentKeys {
      * </p><p>
      * If true, sorting is performed in reverse.
      */
-    public static final String SEARCH_REVERSE =
-                                                  "search.document.reversesort";
+    public static final String SEARCH_REVERSE = "search.document.reversesort";
 
     /**
      * Comma-separated Strings ("foo, bar, zoo"). Optional.

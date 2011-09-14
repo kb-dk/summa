@@ -15,13 +15,13 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.object.SanitiseUnicodeFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.beans.FeatureDescriptor;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
@@ -231,17 +230,35 @@ public class SummonSearchNodeTest extends TestCase {
                      "SubjectTerms", Strings.join(facets, ", "));
     }
 
-    private List<String> getFacetNames(ResponseCollection responses) {
-        List<String> result = new ArrayList<String>();
-        String[] lines = responses.toXML().split("\n");
-        Pattern FACET = Pattern.compile(".*<facet name=\"(.+)\">");
-        for (String line : lines) {
-            Matcher matcher = FACET.matcher(line);
-            if (matcher.matches()) {
-                result.add(matcher.group(1));
-            }
-        }
-        return result;
+    public void testNegativeFacets() throws RemoteException {
+        final String QUERY = "foo fighters NOT limits NOT (boo OR bam)";
+        final String FACET = "SubjectTerms:\"united states\"";
+        SummonSearchNode summon = new SummonSearchNode(
+            Configuration.newMemoryBased(
+                SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+                SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+            ));
+        assertHits("There should be at least one hit for positive faceting",
+                   summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET);
+        assertHits("There should be at least one hit for paranthesized positive"
+                   + " faceting", summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, "(" + FACET + ")");
+        assertHits("There should be at least one hit for filter with pure "
+                   + "negative faceting", summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
+                   DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
+        summon.close();
+    }
+
+    private void assertHits(
+        String message, SearchNode searcher, String... queries)
+                                                        throws RemoteException {
+        long hits = getHits(searcher, queries);
+        assertTrue(message + ". Hits == " + hits, hits > 0);
     }
 
     public void testSortedSearch() throws RemoteException {
@@ -362,6 +379,19 @@ public class SummonSearchNodeTest extends TestCase {
         final Pattern IDPATTERN = Pattern.compile(
             "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
         return getPattern(searcher, request, IDPATTERN);
+    }
+
+    private List<String> getFacetNames(ResponseCollection responses) {
+        Pattern FACET = Pattern.compile(".*<facet name=\"(.+?)\">");
+        List<String> result = new ArrayList<String>();
+        String[] lines = responses.toXML().split("\n");
+        for (String line : lines) {
+            Matcher matcher = FACET.matcher(line);
+            if (matcher.matches()) {
+                result.add(matcher.group(1));
+            }
+        }
+        return result;
     }
 
     private List<String> getPattern(

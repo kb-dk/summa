@@ -59,6 +59,10 @@
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
                     </entry>
                     <entry>
+                        <key>summa.support.lucene.filter.matchall</key>
+                        <value class="string">fa*</value>
+                    </entry>
+                    <entry>
                         <key>summa.search.collectdocids</key>
                         <value class="string">true</value>
                     </entry>

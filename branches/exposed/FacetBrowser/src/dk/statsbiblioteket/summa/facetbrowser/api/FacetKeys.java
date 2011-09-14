@@ -44,7 +44,6 @@ public interface FacetKeys {
      */
     public static final String SEARCH_FACET_FACETS = "search.facet.facets";
 
-
     /**
      * A request for a faceting structure as defined by FacetRequest.xsd in
      * LUCENE-2369 (aka exposed). The return format is FacetResponse.xsd.

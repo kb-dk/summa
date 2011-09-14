@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
@@ -258,6 +259,51 @@ public class FacetTest extends NoExitTestCase {
         ExtraAsserts.assertEquals(
             "The returned sort values should be as expected",
             EXPECTED, sortValues);
+        searcher.close();
+        storage.close();
+    }
+
+    public void testNegativeFaceting() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying existence of Hans Jensen data");
+        SearchTest.verifySearch(searcher, "Hans", 1);
+
+        {
+            Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, "*",
+                DocumentKeys.SEARCH_FILTER, "hans");
+            assertEquals("Regular query + filter", 1,
+                         ((DocumentResponse)searcher.search(request).iterator().
+                             next()).getHitCount());
+        }
+
+        {
+            Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, "*",
+                DocumentKeys.SEARCH_FILTER, "NOT hans");
+            assertEquals("Regular query + negative filter without flag", 0,
+                         ((DocumentResponse)searcher.search(request).
+                             iterator().next()).getHitCount());
+        }
+
+        {
+            Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, "*",
+                DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
+                DocumentKeys.SEARCH_FILTER, "NOT hans");
+            assertEquals("Regular query + negative filter with flag", 2,
+                         ((DocumentResponse)searcher.search(request).
+                             iterator().next()).getHitCount());
+        }
+
         searcher.close();
         storage.close();
     }
@@ -539,7 +585,7 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
-
+/*
     public void testFacetSearchExisting() throws Exception {
         File INDEX = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/");
 //        File DESCRIPTOR = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/"
@@ -579,7 +625,7 @@ public class FacetTest extends NoExitTestCase {
                      + matcher.group(1), "1", matcher.group(1));
         searcher.close();
     }
-
+  */
     public void testFacetSearchDelete() throws Exception {
         final String HANS = "fagref:hj@example.com";
 

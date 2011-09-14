@@ -255,6 +255,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     /** Default value for {@link #CONF_SORT_BUFFER}. */
     public static final int DEFAULT_SORT_BUFFER = SortFactory.DEFAULT_BUFFER;
 
+    /**
+     * When {@link DocumentKeys#SEARCH_FILTER_PURE_NEGATIVE} is true, the
+     * filter is rewritten with the given matchall-query to
+     * "(matchall) original_filter".
+     */
+    public static final String CONF_FILTER_MATCHALL =
+        "summa.support.lucene.filter.matchall";
+    public static final String DEFAULT_FILTER_MATCHALL = "recordBase:sb*";
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SortPool sortPool; // Toed to the descriptor
@@ -266,6 +275,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private static final long WARMUP_MAX_HITS = 50;
     private static final int COLLECTOR_REQUEST_TIMEOUT = 20 * 1000;
     private boolean explain = DEFAULT_EXPLAIN;
+    private String filterMatchAll = DEFAULT_FILTER_MATCHALL;
 
     private boolean mlt_enabled = DEFAULT_MORELIKETHIS_ENABLED;
     private Integer mlt_minTermFreq =   null;
@@ -318,6 +328,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         sortComparator = SortFactory.COMPARATOR.parse(conf.getString(
                 CONF_SORT_COMPARATOR, DEFAULT_SORT_COMPARATOR));
         sortBuffer = conf.getInt(CONF_SORT_BUFFER, DEFAULT_SORT_BUFFER);
+        filterMatchAll = conf.getString(CONF_FILTER_MATCHALL, filterMatchAll);
 
         // MoreLikeThis
         setupMoreLikeThis(conf);
@@ -648,7 +659,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 fields = getResultFields();
                 fallbacks = getFallbackValues();
             }
-            luceneFilter = parseFilter(filter);
+            luceneFilter = parseFilter(filter, request.getBoolean(
+                DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
             luceneQuery = parseQuery(request, query);
         } catch (ParseException e) {
             throw new IndexException(String.format(
@@ -753,7 +765,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
     }
 
-    private Filter parseFilter(String filter) throws ParseException {
+    private Filter parseFilter(String rawFilter, boolean pureNegative)
+                                                         throws ParseException {
+        String filter =  pureNegative && filterMatchAll != null
+                         && !"".equals(filterMatchAll) && rawFilter != null
+                         && !"".equals(rawFilter) ?
+                         "(" + filterMatchAll + ") " + rawFilter :
+                         rawFilter;
         return filter == null || "".equals(filter) || "*".equals(filter)
                ? null : new QueryWrapperFilter(getParser().parse(filter));
     }
@@ -1006,7 +1024,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         Query luceneQuery;
         try {
             //noinspection AssignmentToNull
-            luceneFilter = parseFilter(filter);
+            luceneFilter = parseFilter(filter, request.getBoolean(
+                DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
         } catch (ParseException e) {
             throw new RemoteException(String.format(
                     "Unable to parse filter '%s'", query), e);

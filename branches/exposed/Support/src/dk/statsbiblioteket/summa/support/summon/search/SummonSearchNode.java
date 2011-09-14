@@ -42,7 +42,6 @@ import org.w3c.dom.Node;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.swing.*;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -635,6 +634,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         if (query != null) { // We allow missing query
             querymap.put("s.q",   Arrays.asList(query));
         }
+        // Note: summon supports pure negative filters so we do not use
+        // DocumentKeys.SEARCH_FILTER_PURENEGATIVE for anything
         if (filter != null) { // We allow missing filter
             querymap.put("s.fq",   Arrays.asList(filter));
         }

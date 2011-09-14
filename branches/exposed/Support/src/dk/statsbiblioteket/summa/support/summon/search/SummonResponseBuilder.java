@@ -36,12 +36,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 
-import javax.naming.ldap.SortResponseControl;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
