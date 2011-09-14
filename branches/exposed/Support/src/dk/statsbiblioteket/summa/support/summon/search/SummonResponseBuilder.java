@@ -96,6 +96,16 @@ public class SummonResponseBuilder implements Configurable {
     public static final String DEFAULT_SORT_FIELD_REDIRECT =
         "PublicationDate - PublicationDate_xml_iso";
 
+    /**
+     * If true, only the year is usen when generating shortformat. If false,
+     * month and day is included iso-style, if they are available.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_SHORT_DATE =
+        "summonresponsebuilder.shortformat.shortdate";
+    public static final boolean DEFAULT_SHORT_DATE = true;
+
     private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -105,9 +115,11 @@ public class SummonResponseBuilder implements Configurable {
 
     private String recordBase = DEFAULT_RECORDBASE;
     private final Map<String, String> sortRedirect;
+    private final boolean shortDate;
 
     public SummonResponseBuilder(Configuration conf) {
         recordBase = conf.getString(CONF_RECORDBASE, recordBase);
+        shortDate = conf.getBoolean(CONF_SHORT_DATE, DEFAULT_SHORT_DATE);
         if ("".equals(recordBase)) {
             recordBase = null;
         }
@@ -513,9 +525,11 @@ public class SummonResponseBuilder implements Configurable {
         shortformat.append("        <dc:type xml:lang=\"en\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
+        String date = extracted.getString("PublicationDate_xml", "????");
+        date = shortDate || date.length() <= 4 ?
+               date : date.substring(0, 4);
         shortformat.append("        <dc:date>").
-            append(extracted.getString("PublicationDate_xml", "????")).
-            append("</dc:date>\n");
+            append(date).append("</dc:date>\n");
 
 
         shortformat.append("        <dc:format></dc:format>\n");

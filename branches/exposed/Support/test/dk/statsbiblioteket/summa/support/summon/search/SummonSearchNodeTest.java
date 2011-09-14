@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.object.SanitiseUnicodeFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
@@ -34,6 +35,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.beans.FeatureDescriptor;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
@@ -103,6 +105,29 @@ public class SummonSearchNodeTest extends TestCase {
                    responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag",
                    responses.toXML().contains("<tag name"));
+    }
+
+    public void testShortFormat() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            SummonResponseBuilder.CONF_SHORT_DATE, false
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        final Pattern DATEPATTERN = Pattern.compile(
+            "<dc:date>(.+?)</dc:date>", Pattern.DOTALL);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        List<String> dates= getPattern(summon, request, DATEPATTERN);
+        for (String date: dates) {
+            assertTrue("the returned dates should be of length 4 or leff, got '"
+                       + date + "'", date.length() <= 4);
+        }
+//        System.out.println("Got dates:\n" + Strings.join(dates, ", "));
     }
 
     public void testMoreLikeThis() throws RemoteException {
@@ -315,8 +340,9 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode searcher, Request request, String attributeName)
                                                         throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile(
-            " *<record.*" + attributeName + "=\"(.+?)\".*>");
-        ResponseCollection responses = new ResponseCollection();
+            "<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
+        return getPattern(searcher, request, IDPATTERN);
+/*        ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         responses.iterator().next().merge(responses.iterator().next());
         String[] lines = responses.toXML().split("\n");
@@ -327,20 +353,25 @@ public class SummonSearchNodeTest extends TestCase {
                 result.add(matcher.group(1));
             }
         }
-        return result;
+        return result;*/
     }
 
     private List<String> getField(
         SearchNode searcher, Request request, String fieldName)
                                                         throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile(
-            "<field name=\"" + fieldName + "\">(.+?)</field>",
-            Pattern.DOTALL);
+            "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
+        return getPattern(searcher, request, IDPATTERN);
+    }
+
+    private List<String> getPattern(
+        SearchNode searcher, Request request, Pattern pattern)
+                                                        throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         responses.iterator().next().merge(responses.iterator().next());
         String xml = responses.toXML();
-        Matcher matcher = IDPATTERN.matcher(xml);
+        Matcher matcher = pattern.matcher(xml);
         List<String> result = new ArrayList<String>();
         while (matcher.find()) {
             result.add(Strings.join(matcher.group(1).split("\n"), ", "));
