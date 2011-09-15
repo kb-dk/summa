@@ -220,8 +220,9 @@ public class SummonResponseBuilder implements Configurable {
                      + "Returning 0 hits");
             return 0;
         }
+        // Start index reduced by 1 to match general contract of starting at 0.
         DocumentResponse documentResponse = new DocumentResponse(
-            filter, query, startIndex, maxRecords, sortKey, reverse,
+            filter, query, startIndex-1, maxRecords, sortKey, reverse,
             new String[0], searchTime, hitCount);
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
