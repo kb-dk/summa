@@ -66,8 +66,9 @@ public class SummaQueryParserTest extends TestCase {
     public void testGroupExpansion() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should expand default groups", qp,
-              "(freetext:foo[1.0] <title:foo[1.0] titel:foo[1.0]> id:foo[1.0])",
-               "foo");
+                     "(freetext:foo[1.0] <title:foo[1.0] titel:foo[1.0]> "
+                     + "id:foo[1.0])[1.0]",
+                     "foo");
     }
 
     public void testIndexDescriptorBoost() throws Exception {
@@ -82,7 +83,7 @@ public class SummaQueryParserTest extends TestCase {
     public void testGroupBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should boost groups", qp,
-      "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])",
+      "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
                "foo boost(ti^3)");
         assertEquals("The parsed query should boost explicit field", qp,
                      "id:foo[3.0]",
@@ -92,8 +93,9 @@ public class SummaQueryParserTest extends TestCase {
     public void testWildcards() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("Wildcards on default fields should work", qp,
-  "(freetext:hello*[1.0] <title:hello*[1.0] titel:hello*[1.0]> id:hello*[1.0])",
-  "Hello*");
+                     "(freetext:hello*[1.0] <title:hello*[1.0] "
+                     + "titel:hello*[1.0]> id:hello*[1.0])[1.0]",
+                     "Hello*");
         assertEquals("Wildcards on a specific field should work", qp,
                      "foo:bar*[1.0]", "foo:bar*");
     }
@@ -104,7 +106,7 @@ public class SummaQueryParserTest extends TestCase {
                      "foo:[a TO c][1.0]", "foo:[a TO c]");
         assertEquals("Range query on default fields should work", qp,
                      "(freetext:[a TO c][1.0] <title:[a TO c][1.0] "
-                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])",
+                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])[1.0]",
                      "[a TO c]");
     }
 
@@ -112,7 +114,7 @@ public class SummaQueryParserTest extends TestCase {
         SummaQueryParser qp = getQueryParser();
         assertEquals("Boosting on range queries should have no effect", qp,
                      "(freetext:[a TO c]^2.0[2.0] <title:[a TO c][1.0] "
-                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])",
+                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])[1.0]",
                      "[a TO c] boost(freetext^2)");
     }
 
