@@ -63,7 +63,7 @@ public class AggregatingStorageTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        conf = new Configuration(new XStorage());
+        conf = new Configuration(new XStorage(false));
         conf.set(Storage.CONF_CLASS, AggregatingStorage.class);
 
         storageConfs =

@@ -60,9 +60,19 @@ public class XStorage implements ConfigurationStorage {
      *
      * @throws IOException If error occur while fetching next available
      * configuration file.
+     * @deprecated use {@link XStorage(boolean)} instead.
      */
     public XStorage() throws IOException {
         this(nextAvailableConfigurationFile());
+    }
+
+    /**
+     * @param createNew if true, an XConfiguration-file is created on File.
+     *                  if false, the XStorage is in-memory only.
+     * @throws IOException if the creation failed.
+     */
+    public XStorage(boolean createNew) throws IOException {
+        this (createNew ? nextAvailableConfigurationFile() : null);
     }
 
     /**
@@ -93,6 +103,10 @@ public class XStorage implements ConfigurationStorage {
     public XStorage(File configurationFile) throws IOException {
         storageFile = configurationFile;
         xprops = new XProperties();
+        if (storageFile == null) {
+            log.trace("Using in-memory XStorage");
+            return;
+        }
         if (!configurationFile.exists()) {
             log.warn("Property file '" + configurationFile + "' does not exist."
                      + " Creating new file");

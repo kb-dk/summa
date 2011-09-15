@@ -54,7 +54,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
      * @throws Exception If error occur.
      */
     public XStorageTest() throws Exception {
-        super(new XStorage());
+        super(new XStorage(false));
     }
 
     @Override
@@ -133,7 +133,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
      */
     public final void testDumpSubList() {
         try {
-            XStorage xs = new XStorage();
+            XStorage xs = new XStorage(false);
             Configuration configuration = new Configuration(xs);
             List<Configuration> subConfs =
                     configuration.createSubConfigurations("foo", 1);
@@ -151,7 +151,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     public final void testnextAvailableConfigurationFile() {
         XStorage xs = null;
         try {
-            xs = new XStorage();
+            xs = new XStorage(false);
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception expected here");

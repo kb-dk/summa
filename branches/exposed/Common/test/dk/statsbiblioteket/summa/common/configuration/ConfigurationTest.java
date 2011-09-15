@@ -333,7 +333,7 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testSubConfigurations() throws Exception {
-        Configuration conf = new Configuration(new XStorage());
+        Configuration conf = new Configuration(new XStorage(false));
         List<Configuration> subs = conf.createSubConfigurations("foo", 3);
         assertEquals("The length of the created list should be correct",
                      3, subs.size());

@@ -116,7 +116,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
         // FIXME: The below config should really be kept entirely in memory,
         //        but we can't use a memorybased config because of bug:
         //        https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
-        Configuration backendConf = new Configuration (new XStorage ());
+        Configuration backendConf = new Configuration (new XStorage(false));
         backendConf.importConfiguration (conf);
         if (conf.valueExists (CONF_BACKEND)) {
             backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
