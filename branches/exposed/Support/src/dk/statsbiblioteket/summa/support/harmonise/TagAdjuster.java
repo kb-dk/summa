@@ -118,6 +118,7 @@ public class TagAdjuster implements Configurable {
      * @param facetResult a Summa facet result.
      */
     public void adjust(FacetResultExternal facetResult) {
+        long startTime = System.currentTimeMillis();
         for (String facetName: facetNames) {
             List<FlexiblePair<String, Integer>> oldTags =
                 facetResult.getMap().get(facetName);
@@ -147,6 +148,8 @@ public class TagAdjuster implements Configurable {
             }
             facetResult.getMap().put(facetName, newListTags);
         }
+        facetResult.addTiming("tagadjuster.adjust",
+                              System.currentTimeMillis() - startTime);
     }
 
     /**

@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.TimerImpl;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
@@ -144,7 +145,7 @@ public class SummonResponseBuilder implements Configurable {
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
         String summonResponse) throws XMLStreamException {
-
+        long startTime = System.currentTimeMillis();
         boolean collectdocIDs = request.getBoolean(
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
@@ -180,6 +181,7 @@ public class SummonResponseBuilder implements Configurable {
         List<DocumentResponse.Record> records = null;
         // Seek to queries, facets or documents
         String currentTag;
+        long recordTime = 0;
         while ((currentTag = jumpToNextTagStart(xml)) != null) {
             if ("query".equals(currentTag)) {
                 maxRecords = Integer.parseInt(getAttribute(
@@ -212,7 +214,9 @@ public class SummonResponseBuilder implements Configurable {
                 }
             }
             if ("documents".equals(currentTag)) {
+                recordTime = -System.currentTimeMillis();
                 records = extractRecords(xml, sortKey);
+                recordTime += System.currentTimeMillis();
             }
         }
         if (records == null) {
@@ -227,12 +231,17 @@ public class SummonResponseBuilder implements Configurable {
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
+        documentResponse.addTiming("summon.buildresponses.documents",
+                                   System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
+        responses.addTiming("summon.buildresponses.total",
+                            System.currentTimeMillis() - startTime);
         return documentResponse.getHitCount();
     }
 
     private RecommendationResponse extractRecommendations(XMLStreamReader xml)
                                                      throws XMLStreamException {
+        long startTime = System.currentTimeMillis();
         final RecommendationResponse response = new RecommendationResponse();
         iterateElements(xml, "recommendationLists", "recommendationList",
             new XMLCallback() {
@@ -244,6 +253,8 @@ public class SummonResponseBuilder implements Configurable {
         if (response.isEmpty()) {
             return null;
         }
+        response.addTiming("summon.buildresponses.recommendations",
+                           System.currentTimeMillis() - startTime);
         return response;
     }
 
@@ -287,6 +298,7 @@ public class SummonResponseBuilder implements Configurable {
     private FacetResult<String> extractFacetResult(
         XMLStreamReader xml, SummonFacetRequest facets)
                                                      throws XMLStreamException {
+        long startTime = System.currentTimeMillis();
         HashMap<String, Integer> facetIDs =
             new HashMap<String, Integer>(facets.getFacets().size());
         // 1 facet = 1 field in Summon-world
@@ -308,6 +320,8 @@ public class SummonResponseBuilder implements Configurable {
             }
         });
         summaFacetResult.sortFacets();
+        summaFacetResult.addTiming("summon.buildresponses.facets",
+                                   System.currentTimeMillis() - startTime);
         return summaFacetResult;
     }
 

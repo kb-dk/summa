@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -32,8 +33,8 @@ import java.util.Comparator;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SuggestResponse implements Response {
-    private static final long serialVersionUID = 48L;
+public class SuggestResponse extends ResponseImpl {
+    private static final long serialVersionUID = 49L;
     public static final String NAMESPACE =
             "http://statsbiblioteket.dk/summa/2009/QueryResponse";
     public static final String VERSION = "1.0";
@@ -84,6 +85,7 @@ public class SuggestResponse implements Response {
      */
     public void merge(Response otherResponse) throws ClassCastException {
         SuggestResponse other = (SuggestResponse) otherResponse;
+        super.merge(other);
         otherLoop:
         for (SuggestTripel otherTripel : other.getSuggestions()) {
             for (SuggestTripel thisTripel : getSuggestions()) {

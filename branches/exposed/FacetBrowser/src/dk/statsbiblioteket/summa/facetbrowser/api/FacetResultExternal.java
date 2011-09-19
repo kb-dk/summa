@@ -38,7 +38,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultExternal extends FacetResultImpl<String> {
-    private static final long serialVersionUID = 7879716842L; // 20110822
+    private static final long serialVersionUID = 7879716843L; // 20110822
     private HashMap<String, String[]> fields;
     private Structure structure;
 
@@ -54,7 +54,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
     }
 
     @Override
-    public FacetResult externalize() {
+    public FacetResultExternal externalize() {
         return this;
     }
 

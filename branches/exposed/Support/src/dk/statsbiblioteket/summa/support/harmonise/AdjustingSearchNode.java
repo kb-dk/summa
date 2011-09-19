@@ -88,9 +88,12 @@ public class AdjustingSearchNode implements SearchNode {
         throws RemoteException {
         log.debug(
             "Rewriting request, performing search and adjusting responses");
+        long startTime = System.currentTimeMillis();
         Request adjusted = adjuster.rewrite(request);
         inner.search(adjusted, responses);
         adjuster.adjust(adjusted, responses);
+        responses.addTiming("adjustingsearchnode.total",
+                            System.currentTimeMillis() - startTime);
     }
 
     @Override

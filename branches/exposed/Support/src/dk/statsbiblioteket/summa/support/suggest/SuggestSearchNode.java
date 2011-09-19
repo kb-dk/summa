@@ -299,10 +299,13 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
         log.trace("Performing Suggest search on prefix '" + prefix
                   + " with maxResults=" + maxResults);
-        responses.add(storage.getSuggestion(prefix, maxResults));
+        SuggestResponse response = storage.getSuggestion(prefix, maxResults);
+        double time = (System.nanoTime() - startTime) / 1000000D;
         log.debug("Completed Suggest for prefix '" + prefix
                   + "' with maxResults=" + maxResults + " in "
-                  + (System.nanoTime() - startTime) / 1000000D + "ms");
+                  + time + "ms");
+        response.addTiming("suggest.search", Math.round(time));
+        responses.add(response);
     }
 
     /**

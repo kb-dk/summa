@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.derby.impl.sql.catalog.SYSSCHEMASRowFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
@@ -611,6 +612,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
         log.trace("Assigning searcher and query parser to responses.transient");
+        long startTime = System.currentTimeMillis();
         try {
             responses.getTransient().put(INDEX_SEARCHER, searcher);
             responses.getTransient().put(QUERY_PARSER, parser);
@@ -624,6 +626,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             throw new RemoteException(
                 "LuceneSearchNode.managedSearch: " + message);
         }
+        responses.addTiming("lucene.search.total",
+                            System.currentTimeMillis() - startTime);
     }
 
     @Override
@@ -641,6 +645,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                         boolean reverseSort, String[] fields,
                                         String[] fallbacks, boolean doLog)
                                                         throws RemoteException {
+        long queryTime = -System.currentTimeMillis();
         sanityCheck(startIndex, maxRecords);
         if (sortKey == null) {
             sortKey = getSortKey();
@@ -673,10 +678,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     filter, query, startIndex, maxRecords, sortKey,
                     reverseSort, fallbacks, 0, 0);
         }
+        queryTime += System.currentTimeMillis();
         log.trace("Calling private fullSearch with parsed query");
-        return fullSearch(request, luceneFilter, luceneQuery, filter, query,
-                          startIndex, maxRecords, sortKey, reverseSort,
-                          fields, fallbacks, doLog);
+        DocumentResponse response = fullSearch(
+            request, luceneFilter, luceneQuery, filter, query,
+            startIndex, maxRecords, sortKey, reverseSort,
+            fields, fallbacks, doLog);
+        response.addTiming("lucene.queryparse", queryTime);
+        return response;
     }
 
     private Query MATCH_ALL = new MatchAllDocsQuery();
@@ -787,17 +796,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             boolean reverseSort, String[] fields, String[] fallbacks,
             boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
+        long rawSearch = -1;
         boolean mlt_request = request != null && isMoreLikeThisRequest(request);
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
-
+            rawSearch = -System.currentTimeMillis();
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
                     mlt_request || sortKey == null
                     || sortKey.equals(DocumentKeys.SORT_ON_SCORE)
                     ? Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort));
-
+            rawSearch += System.currentTimeMillis();
             if (log.isTraceEnabled()) {
                 log.trace("Got " + topDocs.totalHits + " hits for query "
                           + SummaQueryParser.queryToString(luceneQuery));
@@ -876,6 +886,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 }
                 result.addRecord(record);
             }
+            result.addTiming("lucene.search.raw", rawSearch);
+            result.addTiming("lucene.search.full",
+                             System.currentTimeMillis()-startTime);
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
                 //noinspection DuplicateStringLiteralInspection

@@ -207,11 +207,15 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
             log.trace("Requested 0 records in search and no faceting. "
                       + "Performing fast hit counting");
             try {
-                responses.add(new DocumentResponse(
+                long hitstart = System.currentTimeMillis();
+                DocumentResponse response = new DocumentResponse(
                         filter, query, startIndex, records, sortKey,
                         reverse, resultFields,
                         System.currentTimeMillis() - startTime,
-                        getHitCount(request, query, filter)));
+                        getHitCount(request, query, filter));
+                response.addTiming("lucene.hitcount",
+                                   System.currentTimeMillis() - hitstart);
+                responses.add(response);
             } catch (Exception e) {
                 throw new RemoteException(String.format(
                         "Unable to perform fast hit counting for query "
@@ -249,11 +253,15 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                         request, query, filter);
                 responses.getTransient().put(DOCIDS, collector);
                 if (records == 0) {
-                    responses.add(new DocumentResponse(
+                    long docTime = System.currentTimeMillis();
+                    DocumentResponse docResponse = new DocumentResponse(
                             filter, query, startIndex, records, sortKey,
                             reverse, resultFields,
                             System.currentTimeMillis() - startTime,
-                            collector.getBits().cardinality()));
+                            collector.getBits().cardinality());
+                    docResponse.addTiming("lucene.collectDocIDSearch",
+                                          System.currentTimeMillis() - docTime);
+                    responses.add(docResponse);
                 }
             } catch (IOException e) {
                 throw new RemoteException(String.format(
@@ -261,6 +269,8 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                         query, filter), e);
             }
         }
+        responses.addTiming(
+            "lucene.total", System.currentTimeMillis() - startTime);
     }
 
     /**

@@ -38,8 +38,9 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         comment="Better class description needed  ")
-public class ResponseCollection implements Collection<Response>, Serializable {
-    private static final long serialVersionUID = 13841868524L;
+public class ResponseCollection extends TimerImpl
+    implements Collection<Response>, Serializable {
+    private static final long serialVersionUID = 13841868525L;
     private static Log log = LogFactory.getLog(Response.class);
 
     private Map<String, Response> responses = new HashMap<String, Response>(5);
@@ -65,7 +66,8 @@ public class ResponseCollection implements Collection<Response>, Serializable {
     public synchronized String toXML() {
         StringWriter sw = new StringWriter(5000);
         sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-        sw.append("<responsecollection>\n");
+        sw.append(String.format("<responsecollection %s=\"%s\">\n",
+                                ResponseImpl.TIMING, getTiming()));
         // TODO: We really want to thate the namespace!
 //        sw.append("<responsecollection xmlns:\"http://statsbiblioteket.dk/summa/2009/SearchResponse\">\n");
         for (Map.Entry<String, Response> entry: responses.entrySet()) {
@@ -78,6 +80,38 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return sw.toString();
     }
 
+    @Override
+    public String getTiming() {
+        StringBuffer timing = new StringBuffer(500);
+        timing.append(super.getTiming()); // Collection-level timing
+        if (responses != null && responses.size() > 0) {
+            for (Map.Entry<String, Response> entry: responses.entrySet()) {
+                collectTiming(timing, entry.getValue());
+            }
+        }
+
+        if (tran != null && tran.entrySet().size() > 0) {
+            for (Map.Entry<String, Object> entry: tran.entrySet()) {
+                collectTiming(timing, entry.getValue());
+            }
+        }
+        return timing.toString();
+    }
+
+    private void collectTiming(StringBuffer timing, Object response) {
+        if (!(response instanceof ResponseImpl)) {
+            return;
+        }
+        ResponseImpl ri = (ResponseImpl)response;
+        if ("".equals(ri.getTiming())) {
+            return;
+        }
+        if (timing.length() != 0) {
+            timing.append("|");
+        }
+        timing.append(ri.getTiming());
+    }
+
     /**
      * @return a map used for transient data. Useful for storing intermediate
      *         values between SearchNodes.
@@ -88,14 +122,17 @@ public class ResponseCollection implements Collection<Response>, Serializable {
 
     /* Collection interface */
 
+    @Override
     public synchronized int size() {
         return responses.size();
     }
 
+    @Override
     public synchronized boolean isEmpty() {
         return responses.isEmpty();
     }
 
+    @Override
     public synchronized boolean contains(Object o) {
         //noinspection SuspiciousMethodCalls
         return !(o == null || !(o instanceof Response))
@@ -106,6 +143,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
      * The iterator moves over a shallow copy, so remove() has no effect.
      * @return an iterator for the contained Responses.
      */
+    @Override
     public synchronized Iterator<Response> iterator() {
         return toList().iterator();
     }
@@ -121,15 +159,18 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return responses;
     }
 
+    @Override
     public synchronized Object[] toArray() {
         return toList().toArray();
     }
 
+    @Override
     public synchronized <T> T[] toArray(T[] a) {
         //noinspection SuspiciousToArrayCall
         return toList().toArray(a);
     }
 
+    @Override
     public synchronized boolean add(Response response) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + response + "' to collection");
@@ -146,6 +187,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return true;
     }
 
+    @Override
     public synchronized boolean remove(Object o) {
         if (o == null || !(o instanceof Response)) {
             return false;
@@ -154,6 +196,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return responses.remove(name) != null;
     }
 
+    @Override
     public synchronized boolean containsAll(Collection<?> c) {
         for (Object o: c) {
             if (contains(o)) {
@@ -163,6 +206,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return true;
     }
 
+    @Override
     public synchronized boolean addAll(Collection<? extends Response> c) {
         boolean changed = false;
         for (Response r: c) {
@@ -171,6 +215,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return changed;
     }
 
+    @Override
     public synchronized boolean removeAll(Collection<?> c) {
         boolean changed = false;
         for (Object o: c) {
@@ -179,6 +224,7 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return changed;
     }
 
+    @Override
     public synchronized boolean retainAll(Collection<?> c) {
         // A bit too much hacking gere
         int startLength = responses.size();
@@ -189,11 +235,8 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         return startLength != this.responses.size();
     }
 
+    @Override
     public synchronized void clear() {
         responses.clear();
     }
 }
-
-
-
-

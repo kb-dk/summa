@@ -27,7 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         reviewers = {"hbk"})
-public interface Response extends Serializable {
+public interface Response extends Serializable, Timer {
     /**
      * @return the name of the response. Responses instantiated from the same
      *         class are required to return the same name, so that name
@@ -61,7 +61,3 @@ public interface Response extends Serializable {
      */
     public String toXML();
 }
-
-
-
-

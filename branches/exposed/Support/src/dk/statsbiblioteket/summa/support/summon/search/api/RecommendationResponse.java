@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.summon.search.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +34,7 @@ import java.util.ArrayList;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class RecommendationResponse implements Response {
+public class RecommendationResponse extends ResponseImpl {
     private static Log log = LogFactory.getLog(RecommendationResponse.class);
 
     private ArrayList<RecommendationList> recommendationLists =
@@ -65,12 +66,14 @@ public class RecommendationResponse implements Response {
 
     @Override
     public void merge(Response other) throws ClassCastException {
+
         if (!(other instanceof RecommendationResponse)) {
             log.trace("merge(...) expected a RecommendationResponse but got a "
                       + other.getClass());
             return;
         }
         log.trace("Merging RecommendationResponses");
+        super.merge(other);
         recommendationLists.addAll(
             ((RecommendationResponse)other).recommendationLists);
     }

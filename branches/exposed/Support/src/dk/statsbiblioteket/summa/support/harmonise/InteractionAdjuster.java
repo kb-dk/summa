@@ -578,15 +578,22 @@ public class InteractionAdjuster implements Configurable {
      */
     public void adjust(Request request, ResponseCollection responses) {
         log.trace("adjust called");
+        long startTime = System.currentTimeMillis();
         if (!request.getBoolean(SEARCH_ADJUST_ENABLED, enabled)) {
             log.trace("The adjuster is disabled. Exiting adjust");
             return;
         }
         adjustDocuments(request, responses);
+        responses.addTiming("interactionadjuster.adjust.documents",
+                            System.currentTimeMillis() - startTime);
         if (request.getBoolean(SEARCH_ADJUST_RESPONSE_FACETS_ENABLED,
                                adjustResponseFacetsEnabled)) {
             adjustFacets(request, responses);
+            responses.addTiming("interactionadjuster.adjust.facets",
+                                System.currentTimeMillis() - startTime);
         }
+        responses.addTiming("interactionadjuster.adjust.total",
+                            System.currentTimeMillis() - startTime);
     }
 
     private void adjustDocuments(

@@ -69,6 +69,7 @@ public class AdjustingSearchClient extends SearchClient {
         log.trace(
             "Rewriting request for " + id + ", performing search and adjusting "
             + "responses");
+        long rewriteTime = -System.currentTimeMillis();
         Request adjusted = adjuster.rewrite(request); // Creates new request
         if (rewriter != null) {
             log.trace("Calling term stat based query rewriter with id "
@@ -77,14 +78,21 @@ public class AdjustingSearchClient extends SearchClient {
         }
         final String finalQuery =
             adjusted.getString(DocumentKeys.SEARCH_QUERY, null);
+        rewriteTime += System.currentTimeMillis();
         log.trace("Calling super.search");
         ResponseCollection responses = super.search(adjusted);
+        responses.setPrefix("adjuster_" + id + ".");
         log.trace("Adjusting response");
+        long adjustTime = -System.currentTimeMillis();
         adjuster.adjust(adjusted, responses);
+        adjustTime += System.currentTimeMillis();
         searchTime += System.currentTimeMillis();
         log.debug("Adjusted search for " + id + " with original query '"
                   + originalQuery + "' and adjusted query '" + finalQuery
                   + " in " + searchTime + " ms");
+        responses.addTiming("request.rewrite", rewriteTime);
+        responses.addTiming("response.adjust", adjustTime);
+        responses.addTiming("total", searchTime);
         return responses;
     }
 

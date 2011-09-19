@@ -399,7 +399,7 @@ import org.apache.lucene.store.RAMDirectory;
 
         if (request.containsKey(DidYouMeanKeys.SEARCH_QUERY)) {
             String query = request.getString(DidYouMeanKeys.SEARCH_QUERY);
-            long time = System.currentTimeMillis();
+            long rawTime = System.currentTimeMillis();
             SuggestionPriorityQueue spq = null;
             // if creating index then don't ask phraseSuggester
             if (!creatingIndex) {
@@ -407,10 +407,10 @@ import org.apache.lucene.store.RAMDirectory;
             } else {
                 log.debug("Creating/opening index.");
             }
-            time = System.currentTimeMillis() - time;
+            rawTime = System.currentTimeMillis() - rawTime;
 
-            DidYouMeanResponse response = new DidYouMeanResponse(query, time);
-            responses.add(response);
+            DidYouMeanResponse response =
+                new DidYouMeanResponse(query, rawTime);
             if (spq != null && spq.size() > 0) {
                 log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
                         + "' results.");

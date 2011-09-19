@@ -32,6 +32,13 @@
                 </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="maxResults" type="xsd:int" use="optional"/>
+            <xsd:attribute name="timing" type="xsd:string"   use="required">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        Timing is a |-separated list of key:ms with timing information.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
         </xsd:complexType>
     </xsd:element>
 

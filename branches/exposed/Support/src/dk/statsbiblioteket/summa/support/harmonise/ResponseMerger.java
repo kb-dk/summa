@@ -299,6 +299,7 @@ public class ResponseMerger implements Configurable {
     public ResponseCollection merge(
         Request request,
         List<SummaSearcherAggregator.ResponseHolder> responses) {
+        long startTime = System.currentTimeMillis();
         AdjustWrapper aw = deconstruct(request, responses);
         if (aw.getBase() == null) {
             log.debug(
@@ -308,7 +309,10 @@ public class ResponseMerger implements Configurable {
         merge(request, aw);
         postProcess(request, aw);
         trim(request, aw);
-        return aw.externalize();
+        ResponseCollection result = aw.externalize();
+        result.addTiming("responsemerger.externalize",
+                         System.currentTimeMillis() - startTime);
+        return result;
     }
 
     private void trim(Request request, AdjustWrapper aw) {
@@ -322,6 +326,7 @@ public class ResponseMerger implements Configurable {
 
     private void merge(Request request, AdjustWrapper aw) {
         log.trace("merge called");
+        long startTime = System.currentTimeMillis();
         MODE mode = MODE.valueOf(
             request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
@@ -346,6 +351,8 @@ public class ResponseMerger implements Configurable {
             default: throw new UnsupportedOperationException(
                 "Merge mode " + mode + " not supported yet");
         }
+        aw.getMerged().addTiming("responsemerger.merge",
+                                 System.currentTimeMillis() - startTime);
     }
 
     private void interleave(AdjustWrapper aw, List<String> order) {
@@ -457,7 +464,7 @@ public class ResponseMerger implements Configurable {
                         aw.getBase().getSearchTime() + dr.getSearchTime() :
                         Math.max(aw.getBase().getSearchTime(),
                                  dr.getSearchTime()));
-
+                    aw.getMerged().addTiming(dr.getTiming());
                 }
             }
         }
@@ -466,6 +473,7 @@ public class ResponseMerger implements Configurable {
     }
 
     private void postProcess(Request request, AdjustWrapper aw) {
+        long startTime = System.currentTimeMillis();
         POST post = POST.valueOf(
             request.getString(SEARCH_POST, defaultPost.toString()));
         if (post == POST.none) {
@@ -487,6 +495,8 @@ public class ResponseMerger implements Configurable {
             default: throw new UnsupportedOperationException(
                 "Post merge processing does not yet support '" + post + "'");
         }
+        aw.getMerged().addTiming("responsemerger.post",
+                                 System.currentTimeMillis() - startTime);
     }
 
     private void postProcessIfNone(

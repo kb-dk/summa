@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -35,8 +36,8 @@ import java.util.LinkedList;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hbk")
-public class DidYouMeanResponse implements Response {
-    private static final long serialVersionUID = 465846351L;
+public class DidYouMeanResponse extends ResponseImpl {
+    private static final long serialVersionUID = 465846352L;
     /**
      * Did-You-Mean response name.
      */
@@ -106,11 +107,12 @@ public class DidYouMeanResponse implements Response {
     /**
      * Did-You-Mean response constructor.
      * @param query the query.
-     * @param time the time used for doing Did-You-Mean look up.
+     * @param time the time in ms used for doing Did-You-Mean look up.
      */
     public DidYouMeanResponse(String query, long time) {
         this(query);
         this.time = time;
+        addTiming("didyoumean", time);
     }
 
 
@@ -130,6 +132,10 @@ public class DidYouMeanResponse implements Response {
      */
     @Override
     public void merge(Response other) throws ClassCastException {
+        if (!(other instanceof DidYouMeanResponse)) {
+            return;
+        }
+        super.merge(other);
         DidYouMeanResponse otherResponse = (DidYouMeanResponse) other;
         for(ResultTuple tuple: otherResponse.getResultTuples()) {
             resultTuples.add(tuple);
@@ -165,6 +171,7 @@ public class DidYouMeanResponse implements Response {
             writer.writeDefaultNamespace(NAMESPACE);
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
+            writer.writeAttribute(TIMING, getTiming());
             if(time != -1) {
                 writer.writeAttribute(TIME_TAG, String.valueOf(time));
             }

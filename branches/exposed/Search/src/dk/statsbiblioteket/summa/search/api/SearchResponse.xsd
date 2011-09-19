@@ -26,6 +26,7 @@
                 The only required attribute is 'name' that is fixed for each
                 response-type. See the schemas for the individual responses
                 for their names.
+                Timing is a |-separated list of key:ms with timing information.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:choice>
@@ -33,6 +34,7 @@
         </xsd:choice>
 
         <xsd:attribute name="name" type="xsd:string"   use="required"/>
+        <xsd:attribute name="timing" type="xsd:string"   use="required"/>
     </xsd:complexType>
 
 </xsd:schema>

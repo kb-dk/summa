@@ -19,10 +19,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.*;
 import dk.statsbiblioteket.summa.support.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -798,7 +795,7 @@ public class SearchWS {
                 + "<ms>%d</ms>\n"
                 + "</pingresponse>\n",
                 returnMessage, pingTime);
-            res.add(new Response() {
+            res.add(new ResponseImpl() {
                 @Override
                 public String getName() {
                     return "PingResponse";
@@ -806,6 +803,7 @@ public class SearchWS {
                 // TODO: Implement ping merge
                 @Override
                 public void merge(Response other) throws ClassCastException {
+                    super.merge(other);
                     log.warn("No ping merge right now");
                 }
                 @Override

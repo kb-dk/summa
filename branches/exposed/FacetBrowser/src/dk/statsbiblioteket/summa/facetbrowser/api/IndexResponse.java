@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,8 +39,8 @@ import java.util.Comparator;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexResponse implements Response {
-    private static final long serialVersionUID = 798434168189L;
+public class IndexResponse extends ResponseImpl {
+    private static final long serialVersionUID = 798434168190L;
     private static Log log = LogFactory.getLog(IndexResponse.class);
 
     public static final String INDEX_RESPONSE_NAMESPACE =
@@ -113,6 +114,7 @@ public class IndexResponse implements Response {
                     "Expected index response of class '%s' but got '%s'",
                     getClass().toString(), other.getClass().toString()));
         }
+        super.merge(other);
         IndexResponse indexResponse = (IndexResponse)other;
         outer:
         for (Pair<String, Integer> oPair: indexResponse.getIndex()) {
@@ -241,6 +243,8 @@ public class IndexResponse implements Response {
             xmlOut.writeAttribute("origo", Integer.toString(getOrigo()));
             xmlOut.writeAttribute(
                 "mincount", Integer.toString(request.getMinCount()));
+            xmlOut.writeAttribute(
+                TIMING, getTiming());
             xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("index");

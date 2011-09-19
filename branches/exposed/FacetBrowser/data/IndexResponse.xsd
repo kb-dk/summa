@@ -23,6 +23,7 @@
                         terms in the returned index response.
                 origo:  The position in the list of terms that best matches the
                         term used for lookup.
+                Timing: A |-separated list of key:ms with timing information.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexType>
@@ -35,6 +36,7 @@
             <xsd:attribute name="delta" type="xsd:int" use="required"/>
             <xsd:attribute name="length" type="xsd:int" use="required"/>
             <xsd:attribute name="origo" type="xsd:int" use="required"/>
+            <xsd:attribute name="timing" type="xsd:string"   use="required"/>
         </xsd:complexType>
     </xsd:element>
 

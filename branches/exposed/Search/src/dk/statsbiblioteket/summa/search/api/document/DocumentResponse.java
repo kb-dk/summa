@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.search.api.document;
 
 import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -32,8 +33,8 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DocumentResponse implements Response, DocumentKeys {
-    private static final long serialVersionUID = 268187L;
+public class DocumentResponse extends ResponseImpl implements DocumentKeys {
+    private static final long serialVersionUID = 268188L;
     private static Log log = LogFactory.getLog(DocumentResponse.class);
 
     /**
@@ -266,6 +267,7 @@ public class DocumentResponse implements Response, DocumentKeys {
                     "Expected response of class '%s' but got '%s'",
                     getClass().toString(), other.getClass().toString()));
         }
+        super.merge(other);
         DocumentResponse docResponse = (DocumentResponse)other;
         // TODO: Check for differences in basic attributes and warn if needed
         //Collator collator = null;
@@ -382,6 +384,8 @@ public class DocumentResponse implements Response, DocumentKeys {
         }
         sw.append(" searchTime=\"");
         sw.append(Long.toString(searchTime)).append("\"");
+        sw.append(" " + TIMING + "=\"");
+        sw.append(XMLUtil.encode(getTiming())).append("\"");
         sw.append(" hitCount=\"");
         sw.append(Long.toString(hitCount)).append("\">\n");
         for (Record record: records) {

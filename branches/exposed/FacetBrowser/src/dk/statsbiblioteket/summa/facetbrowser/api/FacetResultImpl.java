@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -42,10 +43,10 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class FacetResultImpl<T extends Comparable<T>>
-        implements FacetResult<T> {
+    extends ResponseImpl implements FacetResult<T> {
     private static final transient Log log =
             LogFactory.getLog(FacetResultImpl.class);
-    private static final long serialVersionUID = 7879716848L;
+    private static final long serialVersionUID = 7879716849L;
 
     private int DEFAULTFACETCAPACITY = 20;
     private static final int DEFAULT_MAXTAGS = 100;
@@ -281,10 +282,12 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     @SuppressWarnings({"unchecked"})
     public void merge(Response otherResponse) throws ClassCastException {
         if (!(otherResponse instanceof FacetResult)) {
+            //noinspection ProhibitedExceptionThrown
             throw new ClassCastException(String.format(
                     "Expected a FacetResult, but go '%s'",
                     otherResponse.getClass().getName()));
         }
+        super.merge(otherResponse);
         FacetResult other = (FacetResult)otherResponse;
         if (other == null) {
             log.warn("Attempted to merge with null");

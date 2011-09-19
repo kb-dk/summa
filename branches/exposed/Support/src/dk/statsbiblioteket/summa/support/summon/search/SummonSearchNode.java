@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -330,6 +331,7 @@ public class SummonSearchNode extends SearchNodeImpl {
 
     private void barrierSearch(
         Request request, ResponseCollection responses) throws RemoteException {
+        long startTime = System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             log.trace("MoreLikeThis search is not supported by Summon, "
                       + "returning immediately");
@@ -407,10 +409,12 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + facets + "'");
         String sResponse;
         try {
-            sResponse = summonSearch(
+            Pair<String, String> sums = summonSearch(
                 filter, query, summonSearchParams,
                 collectdocIDs ? facets : null,
                 startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
+            sResponse = sums.getKey();
+            responses.addTiming(sums.getValue());
         } catch (StackOverflowError e) {
             String message = String.format(
                 "Caught StackOverflow while performing summon request %s:\n%s",
@@ -459,6 +463,9 @@ public class SummonSearchNode extends SearchNodeImpl {
                   + searchTime + " ms (" + searchTime + " ms for remote search "
                   + "call, " + buildResponseTime + " ms for converting to "
                   + "Summa response)");
+        responses.addTiming("summon.search.buildresponses", buildResponseTime);
+        responses.addTiming("summon.search.total",
+                            (System.currentTimeMillis() - startTime));
     }
 
     /**
@@ -566,16 +573,17 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param sortKey the field to sort on. If null, default ranking sort is
      *                used.
      * @param reverseSort if true, sort order is reversed.
-     * @return XML with the search result as per Summon API.
+     * @return XML with the search result as per Summon API followed by timing
+     *         information.
      * @throws java.rmi.RemoteException if there were an error performing the
      * remote search call.
      */
-    public String summonSearch(
+    private Pair<String, String> summonSearch(
         String filter, String query, Map<String, List<String>> summonParams,
         SummonFacetRequest facets, int startIndex,
         int maxRecords, boolean resolveLinks, String sortKey,
         boolean reverseSort) throws RemoteException {
-        long methodStart = System.currentTimeMillis();
+        long buildQuery = -System.currentTimeMillis();
         int startpage = maxRecords == 0 ? 0 : (startIndex / maxRecords) + 1;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
@@ -592,30 +600,36 @@ public class SummonSearchNode extends SearchNodeImpl {
             "application/xml", summonDateFormat.format(date), host, restCall,
             querymap);
         String queryString = computeSortedQueryString(querymap, true);
-        log.trace("Parameter preparation to Summon done in "
-                  + (System.currentTimeMillis() - methodStart) + "ms");
+        buildQuery += System.currentTimeMillis();
+        log.trace("Parameter preparation done in " + buildQuery + "ms");
         String result;
+        long rawCall = -1;
         try {
-            long serviceStart = System.currentTimeMillis();
+            rawCall = -System.currentTimeMillis();
             result = getData("http://" + host, restCall + "?" +
                     queryString, date, idstring, null);
-
-            summonlog.debug("Call to Summon done in "
-                            + (System.currentTimeMillis() - serviceStart)
-                            + "ms: "
-                            + queryString);
+            rawCall += System.currentTimeMillis();
+            summonlog.debug(
+                "Call to Summon done in " + rawCall + "ms: " + queryString);
         } catch (Exception e) {
             throw new RemoteException(
                 "Unable to perform remote call to "  + host + restCall
                 + " with argument '" + queryString, e);
         }
+        long prefixIDs = -System.currentTimeMillis();
         String retval = prefixIDs(result, idPrefix);
+        prefixIDs += System.currentTimeMillis();
+        long linkResolve = -System.currentTimeMillis();
         if (resolveLinks) {
             retval = linkResolve(retval);
         }
+        linkResolve += System.currentTimeMillis();
         log.trace("simpleSearch done in "
-                  + (System.currentTimeMillis() - methodStart) + "ms");
-        return retval;
+                  + (System.currentTimeMillis() - buildQuery) + "ms");
+        return new Pair<String, String>(
+            retval, "summon.buildquery:" + buildQuery + "|summon.rawcall:"
+                    + rawCall + "|summon.prefixIDs:" + prefixIDs
+                    + "|summon.linkresolve:" + linkResolve);
     }
 
     private Map<String, List<String>> buildSummonQuery(
@@ -890,7 +904,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false);
+            null, "ID:" + id, null, null, 1, 1, false, null, false).getKey();
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -952,7 +966,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false);
+            null, "ID:" + id, null, null, 1, 1, false, null, false).getKey();
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
