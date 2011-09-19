@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -30,6 +31,7 @@ import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.derby.impl.sql.catalog.SYSSCHEMASRowFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.facade.DirectoryIndexFacade;
@@ -257,6 +259,7 @@ import org.apache.lucene.store.RAMDirectory;
      */
     @Override
     protected void managedOpen(String location) throws RemoteException {
+        long startTime = System.currentTimeMillis();
         location = location.concat(File.separator + "lucene"  + File.separator);
         log.debug("Opening Lucene index at '" + location + "'");
 
@@ -306,7 +309,7 @@ import org.apache.lucene.store.RAMDirectory;
 
         // Setup TokenSuggester
         try {
-            log.debug("Building NgramTokenSuggester index");
+            log.info("Building NgramTokenSuggester index");
             tokenSuggester = new NgramTokenSuggester(ngramIndexFactory);
             aprioriIndex = aprioriIndexFactory.indexReaderFactory();
             tokenSuggester.indexDictionary(
@@ -327,6 +330,8 @@ import org.apache.lucene.store.RAMDirectory;
             throw new RemoteException(
                     "IOException while creating phraseSuggester", e);
         }
+        log.info("Finished DidYouMean open in "
+                 + (System.currentTimeMillis() - startTime) + "ms");
         creatingIndex = false;
     }
 

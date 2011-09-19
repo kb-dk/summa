@@ -582,7 +582,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         int maxRecords, boolean resolveLinks, String sortKey,
         boolean reverseSort) throws RemoteException {
         long methodStart = System.currentTimeMillis();
-        int startpage = maxRecords == 0 ? 0 : startIndex / maxRecords;
+        int startpage = maxRecords == 0 ? 0 : (startIndex / maxRecords) + 1;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "

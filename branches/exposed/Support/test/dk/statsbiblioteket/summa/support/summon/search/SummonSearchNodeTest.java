@@ -353,6 +353,39 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("There should be some hits", ids.size() > 0);
     }
 
+    public void testPaging() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(conf);
+//        summon.open(""); // Fake open for setting permits
+        List<String> ids0 = getAttributes(
+            summon, new Request(
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_MAX_RECORDS, 20,
+            DocumentKeys.SEARCH_START_INDEX, 0),
+            "id");
+        List<String> ids1 = getAttributes(
+            summon, new Request(
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_MAX_RECORDS, 20,
+            DocumentKeys.SEARCH_START_INDEX, 20),
+            "id");
+
+        assertNotEquals("The hits should differ from page 0 and 1",
+                        Strings.join(ids0, ", "), Strings.join(ids1, ", "));
+    }
+
+    private void assertNotEquals(
+        String message, String expected, String actual) {
+        assertFalse(
+            message + ".\nExpected: " + expected + "\nActual:   " + actual,
+            expected.equals(actual));
+    }
+
     private List<String> getAttributes(
         SearchNode searcher, Request request, String attributeName)
                                                         throws RemoteException {
