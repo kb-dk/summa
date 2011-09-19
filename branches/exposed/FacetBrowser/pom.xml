@@ -15,6 +15,9 @@
         <!-- Source -->
         <sourceDirectory>src/</sourceDirectory>
         <resources>
+          <resource>
+                <directory>src/</directory>
+            </resource>
             <resource>
                 <directory>config/</directory>
             </resource>

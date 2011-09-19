@@ -22,12 +22,9 @@
             <resource>
                 <directory>config/</directory>
             </resource>
-            <!-- We have some resource down in code directory -->
+            <!-- We have some resource down in code directory.  Exlude .java files can be added -->
             <resource>
-                <directory>src</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
+                <directory>src</directory>                
             </resource>
         </resources>
         <!-- Tests -->

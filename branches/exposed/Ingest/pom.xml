@@ -21,6 +21,9 @@
             <resource>
                 <directory>config/</directory>
             </resource>
+            <resource>
+                <directory>src/</directory>
+            </resource>
         </resources>
         <!-- Tests -->
         <testSourceDirectory>test/</testSourceDirectory>
