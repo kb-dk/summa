@@ -106,7 +106,6 @@ public class ARCParser extends ThreadedStreamParser {
         public ArchiveReader getWithFallback(String id, InputStream stream) {
             RepositionableInputStream ris =
                 (RepositionableInputStream)asRepositionable(stream);
-            ArchiveReader archiveReader;
             try {
                 return ARCReaderFactory.get(id, ris, true);
             } catch (IOException e) {
