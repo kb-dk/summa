@@ -20,7 +20,6 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -31,7 +30,6 @@ import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.derby.impl.sql.catalog.SYSSCHEMASRowFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.facade.DirectoryIndexFacade;

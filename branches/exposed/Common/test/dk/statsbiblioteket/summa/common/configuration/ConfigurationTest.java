@@ -150,7 +150,7 @@ public class ConfigurationTest extends TestCase {
     public void testToString () throws Exception {
         Configuration conf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
-        System.out.println(conf.toString());
+        assertNotNull(conf.toString());
     }
 
     public void testSimpleEquals() throws Exception {
@@ -158,7 +158,7 @@ public class ConfigurationTest extends TestCase {
                 CONFIGURATIONXML));
         Configuration c2 = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
-        assertTrue("Empty configurations should equal", c1.equals(c2));
+        assertEquals("Empty configurations should equal", c1, c2);
     }
 
     public void testGetInt() throws Exception {
@@ -252,9 +252,9 @@ public class ConfigurationTest extends TestCase {
         Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
-        assertTrue("Loading via getSystemConfiguration and directly should "
+        assertEquals("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
-                     conf.equals(originalConf));
+                     conf, originalConf);
 
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
@@ -263,7 +263,7 @@ public class ConfigurationTest extends TestCase {
         RemoteStorageTest remote = new RemoteStorageTest();
         remote.setUp();
         String serviceUrl = remote.getDirectStorage().getServiceUrl();
-        System.out.println("Service URL is: " + serviceUrl);
+//        System.out.println("Service URL is: " + serviceUrl);
 
         System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY,
                            serviceUrl);
@@ -272,9 +272,9 @@ public class ConfigurationTest extends TestCase {
         Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
-        assertTrue("Loading via getSystemConfiguration and directly should "
+        assertEquals("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
-                     testConf.equals(originalConf));
+                     testConf, originalConf);
 
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
@@ -297,6 +297,7 @@ public class ConfigurationTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         int count = 0;
 
+        //noinspection UnusedDeclaration
         for (Map.Entry<String, Serializable> entry : conf) {
             count++;
         }
@@ -315,6 +316,7 @@ public class ConfigurationTest extends TestCase {
                 "hello.nothing", new String[]{"baz"}
         );
 
+        //noinspection UnusedDeclaration
         for (Map.Entry<String, Serializable> entry : conf) {
             count++;
         }
@@ -352,7 +354,7 @@ public class ConfigurationTest extends TestCase {
 
     public void testLoadXConfigurationFromFile() throws Exception {
         File tmp = new File(TMP, "tmpstorage.xml");
-        System.out.println(tmp.getAbsolutePath());
+//        System.out.println(tmp.getAbsolutePath());
         Files.copy(Resolver.getFile(
                 SIMPLEXSTORAGEXML), tmp, true);
 
@@ -362,7 +364,7 @@ public class ConfigurationTest extends TestCase {
         assertTrue("The underlying Storage should support sub storages",
                    conf.supportsSubConfiguration());
         if (!tmp.delete()) {
-            System.err.println("Error deleting '" + tmp.getName() + "'");
+            fail("Error deleting '" + tmp.getName() + "'");
         }
     }
 
@@ -380,6 +382,7 @@ public class ConfigurationTest extends TestCase {
                       Configuration.getSystemConfiguration("summa.snafu", true);
 
         int count = 0;
+        //noinspection UnusedDeclaration
         for (Object o : conf) {
             count++;
         }
@@ -425,10 +428,10 @@ public class ConfigurationTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           val);
 
-        Arrays.asList(
+/*        Arrays.asList(
                 new Configuration.Pair<String, Integer>("a", 1),
                 new Configuration.Pair<String, Integer>("b", 2)
-        );
+        );*/
         // TODO check expected
         List<Configuration.Pair<String, Integer>> result =
                                              conf.getIntValues("foo.bar", 3);
@@ -470,9 +473,9 @@ public class ConfigurationTest extends TestCase {
         System.clearProperty("boolprop");
         System.clearProperty("longprop");
 
-        assertEquals(27, intprop);
-        assertEquals(true, boolprop);
-        assertEquals(270, longprop);
+        assertEquals("intprop", 27, intprop);
+        assertTrue("boolprop", boolprop);
+        assertEquals("longprop", 270, longprop);
     }
 
     public void testExpandedSysPropArray() throws Exception {

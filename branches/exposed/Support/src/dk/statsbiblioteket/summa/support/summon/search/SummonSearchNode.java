@@ -16,7 +16,6 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -221,7 +220,6 @@ public class SummonSearchNode extends SearchNodeImpl {
     private String accessID;
     private String accessKey;
     private String idPrefix = DEFAULT_SUMMON_IDPREFIX;
-    private Structure facetSetup;
     private int defaultPageSize = DEFAULT_SUMMON_DEFAULTPAGESIZE;
     private int defaultFacetPageSize = DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE;
     private String defaultFacets = DEFAULT_SUMMON_FACETS;
@@ -362,11 +360,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         // s.fq
 
         String query;
-        if ("*".equals(rawQuery)) {
-            query = "*:*";
-        } else {
-            query = rawQuery;
-        }
+        query = "*".equals(rawQuery) ? "*:*" : rawQuery;
 
 /*        if (filter == null) {
             query = rawQuery;
@@ -600,7 +594,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         String queryString = computeSortedQueryString(querymap, true);
         log.trace("Parameter preparation to Summon done in "
                   + (System.currentTimeMillis() - methodStart) + "ms");
-        String result = "";
+        String result;
         try {
             long serviceStart = System.currentTimeMillis();
             result = getData("http://" + host, restCall + "?" +
@@ -796,11 +790,11 @@ public class SummonSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Calculate a base64 sha-1 digest for the input
-     * @param key The key to use while calculating the digest
-     * @param idString The String to digest
-     * @return A String containing a base64 encoded sha-1 digest
-     * @throws java.security.SignatureException
+     * Calculate a base64 sha-1 digest for the input.
+     * @param key The key to use while calculating the digest.
+     * @param idString The String to digest.
+     * @return A String containing a base64 encoded sha-1 digest.
+     * @throws java.security.SignatureException in case of Signature problems.
      */
     private static String buildDigest(String key, String idString) throws SignatureException {
         try {
@@ -823,7 +817,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     }
     DateFormat summonDateFormat =
         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-    /**
+    /*
      * Gets the data from the remote Summon server
      * @param target
      * @param content
@@ -885,6 +879,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Given an id returns the corresponding Summon record in a format similar to Summa's shortformat
      * @param id Summon id
      * @return A String containing XML in shortformat
+     * @throws java.rmi.RemoteException if Summon could not be contacted-
      */
     public String getShortRecord(String id) throws RemoteException {
         // TODO: include id in shortrecord tag to help out sendListEmail.jsp and ExportToExternalFormat.java
@@ -935,6 +930,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Gets a record from Summon
      * @param id Summon id
      * @return A String containing a Summon record in XML
+     * @throws java.rmi.RemoteException
      */
     public String getRecord(String id) throws RemoteException {
         return getRecord(id, false);
@@ -945,6 +941,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param id Summon id
      * @param resolveLinks Whether or not to resolve links through the link resolver
      * @return A String containing a Summon record in XML
+     * @throws java.rmi.RemoteException
      */
     public String getRecord(String id, boolean resolveLinks)
                                                         throws RemoteException {
@@ -985,7 +982,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         // <field name="ID">
         // <value>
 
-        StringBuffer retval = new StringBuffer();
+        StringBuilder retval = new StringBuilder();
 
         Pattern pattern = Pattern.compile("<field name=\"ID\">\\s*<value>([^>]+)</value>");
         Matcher matcher = pattern.matcher(content);

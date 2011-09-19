@@ -163,7 +163,6 @@ public interface DocumentKeys {
      * be stored, indexable and identical to
      * {@link dk.statsbiblioteket.summa.common.Record#getBase()}}.
      */
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String RECORD_BASE = "recordBase";
 }
 

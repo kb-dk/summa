@@ -151,6 +151,7 @@ public class XStorage implements ConfigurationStorage {
      * @return Serializable object, which is the value of the given key, from
      * the configuration.
      */
+    @SuppressWarnings({"ProhibitedExceptionThrown"})
     @Override
     public Serializable get(String key) {
         try {
@@ -173,6 +174,7 @@ public class XStorage implements ConfigurationStorage {
      * the configuration.
      * @throws IOException If error occur while serializing objects.
      */
+    @SuppressWarnings({"ProhibitedExceptionThrown"})
     @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() throws
                                                                    IOException {

@@ -21,7 +21,6 @@ import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
@@ -307,7 +306,6 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
 //        summon.open(""); // Fake open for setting permits
-        ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "dolphin whale");
         request.put(DocumentKeys.SEARCH_SORTKEY, "PublicationDate");
