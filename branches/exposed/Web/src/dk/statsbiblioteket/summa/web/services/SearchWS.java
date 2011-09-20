@@ -190,7 +190,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(DidYouMeanKeys.SEARCH_QUERY, query);
@@ -219,7 +219,8 @@ public class SearchWS {
 
         log.debug("didYouMean('" + query + "', " + maxSuggestions
                   + ") finished in " + (System.currentTimeMillis() - startTime)
-                  + "ms");
+                  + "ms with timing "
+                  + (res == null ? "N/A" : res.getTiming()));
         return retXML;
     }
 
@@ -237,7 +238,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(SuggestKeys.SEARCH_PREFIX, prefix);
@@ -266,7 +267,8 @@ public class SearchWS {
 
         log.debug("getSuggestion('" + prefix + "', " + maxSuggestions
                   + ") finished in " + (System.currentTimeMillis() - startTime)
-                  + "ms");
+                  + "ms with timing "
+                  + (res == null ? "N/A" : res.getTiming()));
         return retXML;
     }
  
@@ -303,7 +305,7 @@ public class SearchWS {
                   + maxSuggestions + ")");
         long startTime = System.currentTimeMillis();
         String retXML;
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(SuggestKeys.SEARCH_RECENT, ageSeconds);
@@ -390,7 +392,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"");
@@ -423,7 +425,7 @@ public class SearchWS {
 
         log.trace("getField('" + id + "', '" + fieldName
                   + "') finished in " + (System.currentTimeMillis() - startTime)
-                  + "ms");
+                  + "ms with timing "+ res.getTiming());
         return retXML;
     }
 
@@ -456,7 +458,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(IndexKeys.SEARCH_INDEX_FIELD, field);
@@ -473,8 +475,11 @@ public class SearchWS {
             retXML = getErrorXML(IndexResponse.NAME, mes, e);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace(call + " finished in "
-                  + (System.currentTimeMillis() - startTime + "ms"));
+        if (log.isTraceEnabled()) {
+            log.trace(call + " finished in "
+                      + (System.currentTimeMillis() - startTime)
+                         + "ms with timing " + res.getTiming());
+        }
         return retXML;
     }
 
@@ -507,7 +512,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         if (query != null) {
@@ -528,8 +533,11 @@ public class SearchWS {
             retXML = getErrorXML(IndexResponse.NAME, mes, e);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace(call + " finished in "
-                  + (System.currentTimeMillis() - startTime + "ms"));
+        if (log.isTraceEnabled()) {
+            log.trace(call + " finished in "
+                      + (System.currentTimeMillis() - startTime)
+                      + "ms with timing "+ res.getTiming());
+        }
         return retXML;
     }
 
@@ -547,7 +555,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, id);
@@ -568,7 +576,7 @@ public class SearchWS {
 
         log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords
                   + ") finished in " + (System.currentTimeMillis() - startTime)
-                  + "ms");
+                  + "ms with timing " + res.getTiming());
         return retXML;
     }
 
@@ -613,7 +621,7 @@ public class SearchWS {
     public String directJSON(String json) {
         long startTime = System.currentTimeMillis();
         String retXML;
-        ResponseCollection res;
+        ResponseCollection res = null;
         Request req = new Request();
         req.addJSON(json);
         try {
@@ -628,8 +636,8 @@ public class SearchWS {
         }
 
         log.debug(String.format(
-                "directJSON(" + json + ") finished in %s ms",
-                json, System.currentTimeMillis() - startTime));
+                "directJSON(" + json + ") finished in %s ms with timing %s",
+                json, System.currentTimeMillis() - startTime, res.getTiming()));
         return retXML;
     }
 
@@ -703,7 +711,7 @@ public class SearchWS {
         long startTime = System.currentTimeMillis();
 
         String retXML;
-        ResponseCollection res;
+        ResponseCollection res = null;
         Request req = new Request();
         // Handle processing options
         log.trace("Extracting options (aka explain)");
@@ -767,9 +775,10 @@ public class SearchWS {
         }
 
         log.debug(String.format(
-                "simpleSearchSorted(" + PARAMS + ") finished in %s ms",
+                "simpleSearchSorted(" + PARAMS + ") finished in %s ms with "
+                + "timing %s",
                 filter, query, numberOfRecords, startIndex, sortKey, reverse,
-                System.currentTimeMillis() - startTime));
+                System.currentTimeMillis() - startTime, res.getTiming()));
         return retXML;
     }
 
@@ -899,7 +908,7 @@ public class SearchWS {
             log.warn(message);
             return getErrorXML("exposedFacet", message, null);
         }
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         String retXML;
         Request req = new Request();
@@ -939,7 +948,7 @@ public class SearchWS {
         }
         facetTime += System.currentTimeMillis();
         log.debug("exposedFacet(..., " + format + ") finished in "
-                  + facetTime + "ms");
+                  + facetTime + "ms with timing "+ res.getTiming());
         return retXML;
 
     }
@@ -977,7 +986,7 @@ public class SearchWS {
         query = cleanQuery(query);
         String retXML;
 
-        ResponseCollection res;
+        ResponseCollection res = null;
 
         Request req = new Request();
         req.put(DocumentKeys.SEARCH_QUERY, query);
@@ -1023,7 +1032,7 @@ public class SearchWS {
 
         log.debug("advancedFacet('" + query + "', '" + facetKeys
                 + "') finished in " + (System.currentTimeMillis() - startTime)
-                + "ms");
+                + "ms with timing " + res.getTiming());
         return retXML;
     }
 
