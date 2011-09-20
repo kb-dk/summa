@@ -92,14 +92,14 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         log.trace("Entering toXML");
         StringWriter sw = new StringWriter(10000);
 
-        sw.write("<facetmodel>\n");
+        sw.write("<facetmodel timing=\"");
+        sw.write(XMLUtil.encode(getTiming()));
+        sw.write("\">\n");
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> facet:
                 map.entrySet()) {
             if (facet.getValue().size() > 0) {
                 sw.write("  <facet name=\"");
                 sw.write(XMLUtil.encode(facet.getKey()));
-                sw.write("\" " + TIMING + "=\"");
-                sw.write(XMLUtil.encode(getTiming()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
