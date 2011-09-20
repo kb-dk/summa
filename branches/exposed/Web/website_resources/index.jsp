@@ -25,6 +25,8 @@
     boolean doDidYouMean = false;
     String pingResult = "No ping result";
     boolean reverseSort = false;
+    String searchTiming = "";
+    String facetTiming = "";
 
     long searchCall = 0;
     long searchXSLT = 0;
@@ -124,10 +126,12 @@
             search_html = "Error executing query";
         } else {
             String usersearch = request.getParameter("usersearch");
+            Document search_dom = DOM.stringToDOM(xml_search_result);
+            searchTiming = DOM.selectString(search_dom,
+                        "/responsecollection/@timing", "N/A");
             if (usersearch != null && "true".equals(usersearch)) {
                 // this search comes from the form, ie. it is submitted by a user
                 // so we extract the hitCount and submit it to the Suggestions index
-                Document search_dom = DOM.stringToDOM(xml_search_result);
                 String hitCountStr = DOM.selectString(search_dom,
                         "/responsecollection/response/documentresult/@hitCount", "0");
                 long hitCount;
@@ -201,6 +205,9 @@
         if (xml_facet_result == null) {
             facet_html = "Error faceting query";
         } else {
+            Document facet_dom = DOM.stringToDOM(xml_facet_result);
+            facetTiming = DOM.selectString(facet_dom,
+                        "/responsecollection/@timing", "N/A");
             facetXSLT = -System.currentTimeMillis();
             URL facet_xslt = new File(
                     basepath + "xslt/facet_overview.xsl").toURI().toURL();
@@ -333,6 +340,27 @@
 <div class="clusterRight">
     <%= facet_html %>
 </div>
+
+        <h3 style="clear: left">Detailed timing from sub system (full stack incl. website: <%= totalTime %> ms)</h3>
+<h4>Search</h4>
+<ul>
+<% for (String element: searchTiming.split("[|]")) { 
+     String[] tokens = element.split(":");
+     long ms = Long.parseLong(tokens[1]);
+%>
+     <li><%= tokens[0] + ": " + (ms > 1000 ? "<strong>" + ms + "</strong>" : Long.toString(ms)) %> ms</li>          
+<% } %>
+</ul>
+
+<h4>Facet</h4>
+<ul>
+<% for (String element: facetTiming.split("[|]")) { 
+     String[] tokens = element.split(":");
+     long ms = Long.parseLong(tokens[1]);
+%>
+     <li><%= tokens[0] + ": " + (ms > 1000 ? "<strong>" + ms + "</strong>" : Long.toString(ms)) %> ms</li>          
+<% } %>
+</ul>
 
 </body>
 </html>
