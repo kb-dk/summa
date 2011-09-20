@@ -325,12 +325,14 @@ public class StreamingDocumentCreator
                           e);
             }
 
-
             // TODO: Verify how we handle embedded HTML
             String content = reader.getElementText();
             if (content != null) {
                 // TODO: Perform a more complete trim (newline et al)
                 content = content.trim();
+                if ("".equals(content)) {
+                    continue; // We do not want to store empty content
+                }
                 LuceneIndexField indexField =
                         addFieldToDocument(descriptor, luceneDoc,
                                            fieldName, content, boost);
