@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -138,6 +139,8 @@ public class IndexLookup {
                                                   throws IllegalStateException {
         log.trace("lookup called");
         long lookupTime = -System.currentTimeMillis();
+        long collectTime = 0;
+        long extractTime = 0;
         org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest =
             createFacetRequest(request);
 
@@ -156,11 +159,15 @@ public class IndexLookup {
         if (queryKey.equals(tagCollector.getQuery())) {
             log.debug("Reusing already filled collector for " + queryKey);
         } else {
+            collectTime = -System.currentTimeMillis();
             collect(tagCollector, fRequest, request.getQuery());
+            collectTime += System.currentTimeMillis();
         }
         FacetResponse fResponse;
         try {
+            extractTime = -System.currentTimeMillis();
             fResponse = tagCollector.extractResult(fRequest);
+            extractTime += System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(
                 "Unable to extract response from TagCollector", e);
@@ -173,6 +180,9 @@ public class IndexLookup {
         lookupTime += System.currentTimeMillis();
         log.debug("Finished IndexLookup for " + request + " in " + lookupTime
                   + " ms");
+        iResponse.addTiming("lookup.collectids", collectTime);
+        iResponse.addTiming("lookup.extractfacets", extractTime);
+        iResponse.addTiming("lookup.total", lookupTime);
         return iResponse;
     }
 

@@ -230,6 +230,7 @@ public class FacetTest extends NoExitTestCase {
                      "Hans Jensen", matcher.group(1));
         searcher.close();
         storage.close();
+        System.out.println(xml);
     }
 
     public void testSortValues() throws Exception {
@@ -290,7 +291,7 @@ public class FacetTest extends NoExitTestCase {
                 DocumentKeys.SEARCH_QUERY, "*",
                 DocumentKeys.SEARCH_FILTER, "NOT hans");
             assertEquals("Regular query + negative filter without flag", 0,
-                         ((DocumentResponse)searcher.search(request).
+                         ((DocumentResponse) searcher.search(request).
                              iterator().next()).getHitCount());
         }
 

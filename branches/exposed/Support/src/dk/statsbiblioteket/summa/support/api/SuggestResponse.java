@@ -142,6 +142,7 @@ public class SuggestResponse extends ResponseImpl {
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
             writer.writeAttribute(MAXRESULTS_TAG, Integer.toString(maxResults));
+            writer.writeAttribute(TIMING, getTiming());
             writer.writeCharacters("\n");
 
             writer.writeCharacters("    ");

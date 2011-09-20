@@ -284,17 +284,26 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
         TagCollector tagCollector = collectorPool.acquire(query);
 
+        long collectTime = System.currentTimeMillis();
         collect(tagCollector, facetRequest, query, collectedIDs);
+        collectTime += System.currentTimeMillis();
         FacetResponse facetResponse;
+        long extractTime = 0;
         try {
+            extractTime = -System.currentTimeMillis();
             facetResponse = tagCollector.extractResult(facetRequest);
+            extractTime += System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(
                 "Unable to extract response from TagCollector", e);
         }
         collectorPool.release(query, tagCollector);
 
-        responses.add(newResponseToOldResult(facetResponse, request));
+        Response fr = newResponseToOldResult(facetResponse, request);
+        fr.addTiming("facet.collectids.cached", collectTime);
+        fr.addTiming("facet.extractfacets", extractTime);
+        fr.addTiming("facet.total", System.currentTimeMillis() - startTime);
+        responses.add(fr);
         if (log.isDebugEnabled()) {
             if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.debug("Finished facet call for query '"

@@ -227,9 +227,29 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
         }
         ResponseCollection merged = merge(request, responses);
+        for (Pair<String, Future<ResponseCollection>> searchFuture:
+                searchFutures) {
+            try {
+                ResponseCollection rc = searchFuture.getValue().get();
+                if (!"".equals(rc.getTiming())) {
+                    merged.addTiming(rc.getTiming());
+                }
+            } catch (InterruptedException e) {
+                throw new IOException(
+                        "Interrupted while accessing ResponseCollection "
+                        + searchFuture.getKey(), e);
+            } catch (ExecutionException e) {
+                throw new IOException(
+                        "ExecutionException while accessing ResponseCollection "
+                        + searchFuture.getKey(), e);
+            }
+
+        }
         postProcessPaging(merged, startIndex, maxRecords);
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
+        merged.addTiming("aggregator.searchandmergeall",
+                         (System.nanoTime() - startTime) / 1000000);
         return merged;
     }
 

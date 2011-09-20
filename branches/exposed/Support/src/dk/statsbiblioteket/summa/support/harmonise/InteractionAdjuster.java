@@ -684,6 +684,7 @@ public class InteractionAdjuster implements Configurable {
     private void replaceDocumentFields(
         Request request, DocumentResponse documentResponse) {
         log.trace("replaceDocumentFields called");
+        long startTime = System.currentTimeMillis();
         ManyToManyMap docFieldMap = resolveMap(
             request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         if (docFieldMap == null) {
@@ -731,6 +732,8 @@ public class InteractionAdjuster implements Configurable {
             record.getFields().clear();
             record.getFields().addAll(newFields);
         }
+        documentResponse.addTiming("interactionadjuster.replacedocumentfields",
+                                   System.currentTimeMillis() - startTime);
     }
 
     /**

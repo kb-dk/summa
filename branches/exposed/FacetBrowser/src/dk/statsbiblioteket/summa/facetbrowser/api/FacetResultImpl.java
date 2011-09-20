@@ -98,6 +98,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
             if (facet.getValue().size() > 0) {
                 sw.write("  <facet name=\"");
                 sw.write(XMLUtil.encode(facet.getKey()));
+                sw.write("\" " + TIMING + "=\"");
+                sw.write(XMLUtil.encode(getTiming()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
@@ -287,8 +289,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                     "Expected a FacetResult, but go '%s'",
                     otherResponse.getClass().getName()));
         }
-        super.merge(otherResponse);
         FacetResult other = (FacetResult)otherResponse;
+        super.merge(other);
         if (other == null) {
             log.warn("Attempted to merge with null");
         }

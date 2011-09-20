@@ -40,11 +40,20 @@ import org.apache.commons.logging.LogFactory;
         comment="Better class description needed  ")
 public class ResponseCollection extends TimerImpl
     implements Collection<Response>, Serializable {
-    private static final long serialVersionUID = 13841868525L;
-    private static Log log = LogFactory.getLog(Response.class);
+    private static final long serialVersionUID = 13841868526L;
+    private static Log log = LogFactory.getLog(ResponseCollection.class);
 
     private Map<String, Response> responses = new HashMap<String, Response>(5);
     private transient Map<String, Object> tran = new HashMap<String, Object>(5);
+
+/*    public ResponseCollection() {
+        StringWriter sw = new StringWriter();
+        for (StackTraceElement ste: Thread.currentThread().getStackTrace()) {
+            sw.append(ste.getClassName()).append(ste.getMethodName()).append("\n");
+        }
+        log.debug("Constructing ResponseCollection: " + sw.toString());
+        addTiming("construction", 0);
+    }*/
 
     /**
      * All contained Responses are iterated and {@link Response#toXML} is called
@@ -90,7 +99,7 @@ public class ResponseCollection extends TimerImpl
             }
         }
 
-        if (tran != null && tran.entrySet().size() > 0) {
+        if (tran != null && tran.size() > 0) {
             for (Map.Entry<String, Object> entry: tran.entrySet()) {
                 collectTiming(timing, entry.getValue());
             }
@@ -177,6 +186,7 @@ public class ResponseCollection extends TimerImpl
         Response oldResponse = responses.get(response.getName());
         if (oldResponse == null) {
             responses.put(response.getName(), response);
+//            log.info("Put responses with timing total: " + getTiming());
             return true;
         }
         //noinspection ObjectEquality

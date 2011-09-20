@@ -18,13 +18,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.io.Serializable;
+
 /**
  * Convenience class for keeping track of timing information.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class TimerImpl implements Timer {
+public class TimerImpl implements Timer, Serializable {
     private String prefix;
     private StringBuffer timing = null;
 

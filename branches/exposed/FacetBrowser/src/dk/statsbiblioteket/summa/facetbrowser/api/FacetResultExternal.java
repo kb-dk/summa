@@ -118,10 +118,10 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     @Override
     public void merge(Response otherResponse) throws ClassCastException {
-        super.merge(otherResponse);
         if (!(otherResponse instanceof FacetResultExternal)) {
             return;
         }
+        super.merge(otherResponse);
         for (Map.Entry<String, String[]> otherField:
                 ((FacetResultExternal)otherResponse).getFields().entrySet()) {
             if (!fields.containsKey(otherField.getKey())) {

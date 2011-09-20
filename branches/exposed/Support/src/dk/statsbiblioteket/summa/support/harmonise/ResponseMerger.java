@@ -444,6 +444,9 @@ public class ResponseMerger implements Configurable {
         List<AdjustWrapper.AdjustRecord> adjustRecords =
             new ArrayList<AdjustWrapper.AdjustRecord>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {
+            if (!"".equals(response.getResponses().getTiming())) {
+                aw.getMerged().addTiming(response.getResponses().getTiming());
+            }
             for (Response r: response.getResponses()) {
                 if (!(r instanceof DocumentResponse)) {
                     aw.getMerged().add(r);
