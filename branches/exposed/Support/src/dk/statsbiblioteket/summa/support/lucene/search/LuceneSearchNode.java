@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.derby.impl.sql.catalog.SYSSCHEMASRowFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
@@ -833,6 +832,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     new DocumentResponse(filter, query, startIndex, maxRecords,
                                      sortKey, reverseSort, fields, 0,
                                      topDocs.totalHits);
+            result.setPrefix("");
             boolean sortWarned = false;
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;

@@ -796,6 +796,63 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testTiming() throws Exception {
+        Configuration conf = getSearcherConfiguration();
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        searcher.checkIndex();
+        storage.close();
+
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "fagekspert",
+            DocumentKeys.SEARCH_SORTKEY, "sort_title",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, "true");
+        final Pattern TIMING = Pattern.compile(
+            " timing=\"(.+?)\"", Pattern.DOTALL);
+
+        String timing = getPattern(searcher, request, TIMING).get(0);
+        String[] timings = timing.split("[|]");
+        assertTrue("There should be some timing information",
+                   timings.length > 0);
+        Arrays.sort(timings);
+        String last = null;
+        for (String t: timings) {
+            if (last != null) {
+                assertFalse("The timing '" + t + "' should differ from the "
+                            + "previous timing", last.equals(t));
+            }
+            last = t;
+            log.debug(t);
+        }
+        searcher.close();
+    }
+
+    private List<String> getAttributes(
+        SummaSearcher searcher, Request request, String attributeName)
+        throws IOException {
+        final Pattern IDPATTERN = Pattern.compile(
+            "<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
+        return getPattern(searcher, request, IDPATTERN);
+    }
+    private List<String> getPattern(
+        SummaSearcher searcher, Request request, Pattern pattern)
+        throws IOException {
+        ResponseCollection responses = searcher.search(request);
+        String xml = responses.toXML();
+        Matcher matcher = pattern.matcher(xml);
+        List<String> result = new ArrayList<String>();
+        while (matcher.find()) {
+            result.add(Strings.join(matcher.group(1).split("\n"), ", "));
+        }
+        return result;
+    }
+
+
     private Pattern idPattern =
             Pattern.compile("fagref\\:[a-z]+\\@example\\.com");
     private List<String> getIDs(String xml) {

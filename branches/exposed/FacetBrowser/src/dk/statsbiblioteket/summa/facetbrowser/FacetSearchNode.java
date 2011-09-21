@@ -86,7 +86,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
      */
     public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 1;
     public static final int BROWSER_THREAD_QUEUE_TIMEOUT = 20 * 1000;
-    private static final long BROWSER_THREAD_MARK_TIMEOUT = 30 * 1000;
+    //private static final long BROWSER_THREAD_MARK_TIMEOUT = 30 * 1000;
 
     public static final String CONF_COLLECTOR_POOLS =
         "exposed.collectorpoolfactory.collectorpools";
@@ -288,7 +288,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         collect(tagCollector, facetRequest, query, collectedIDs);
         collectTime += System.currentTimeMillis();
         FacetResponse facetResponse;
-        long extractTime = 0;
+        long extractTime;
         try {
             extractTime = -System.currentTimeMillis();
             facetResponse = tagCollector.extractResult(facetRequest);
@@ -310,16 +310,15 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                           + request.get(DocumentKeys.SEARCH_QUERY) + "' in "
                           + (System.currentTimeMillis() - startTime));
             } else {
-                String docCount = collectedIDs == null ? "N/A" :
-                                  Integer.toString(collectedIDs.getDocCount());
                 log.debug("Finished facet call for unknown query with "
-                          + docCount + " hits in "
+                          + collectedIDs.getDocCount() + " hits in "
                           + (System.currentTimeMillis() - startTime));
             }
         }
 
     }
 
+    // TODO: Implement exposed direct call
     private void handleExposedDirect(
         Request request, ResponseCollection responses) throws RemoteException {
         if (!request.containsKey(FacetKeys.SEARCH_FACET_XMLREQUEST)) {
@@ -352,6 +351,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         FacetResultExternal oldResult = new FacetResultExternal(
             oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields(),
             structure);
+        oldResult.setPrefix("");
         for (FacetResponse.Group group: newResponse.getGroups()) {
             String name = group.getRequest().getGroup().getName();
             for (FacetResponse.Tag tag: group.getTags().getTags()) {

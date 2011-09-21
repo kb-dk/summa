@@ -270,7 +270,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
             }
         }
         responses.addTiming(
-            "lucene.total", System.currentTimeMillis() - startTime);
+            "documentsearcher.total", System.currentTimeMillis() - startTime);
     }
 
     /**
