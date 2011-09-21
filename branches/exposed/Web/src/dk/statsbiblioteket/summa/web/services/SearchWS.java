@@ -636,7 +636,7 @@ public class SearchWS {
         }
 
         log.debug(String.format(
-                "directJSON(" + json + ") finished in %s ms with timing %s",
+                "directJSON(%s) finished in %s ms with timing %s",
                 json, System.currentTimeMillis() - startTime, res.getTiming()));
         return retXML;
     }
