@@ -231,8 +231,8 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 searchFutures) {
             try {
                 ResponseCollection rc = searchFuture.getValue().get();
-                if (!"".equals(rc.getTiming())) {
-                    merged.addTiming(rc.getTiming());
+                if (!"".equals(rc.getTopLevelTiming())) {
+                    merged.addTiming(rc.getTopLevelTiming());
                 }
             } catch (InterruptedException e) {
                 throw new IOException(

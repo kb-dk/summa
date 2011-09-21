@@ -346,7 +346,7 @@
 <ul>
 <% for (String element: searchTiming.split("[|]")) { 
      String[] tokens = element.split(":");
-     long ms = Long.parseLong(tokens[1]);
+     long ms = tokens.length == 2 ? Long.parseLong(tokens[1]) : -2;
 %>
      <li><%= tokens[0] + ": " + (ms > 1000 ? "<strong>" + ms + "</strong>" : Long.toString(ms)) %> ms</li>          
 <% } %>
@@ -356,7 +356,7 @@
 <ul>
 <% for (String element: facetTiming.split("[|]")) { 
      String[] tokens = element.split(":");
-     long ms = Long.parseLong(tokens[1]);
+     long ms = tokens.length == 2 ? Long.parseLong(tokens[1]) : -2;
 %>
      <li><%= tokens[0] + ": " + (ms > 1000 ? "<strong>" + ms + "</strong>" : Long.toString(ms)) %> ms</li>          
 <% } %>

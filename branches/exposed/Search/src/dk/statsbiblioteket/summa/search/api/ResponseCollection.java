@@ -107,6 +107,14 @@ public class ResponseCollection extends TimerImpl
         return timing.toString();
     }
 
+    /**
+     * @return only the timing information explicitly set for the collection,
+     *         not for the individual responses.
+     */
+    public String getTopLevelTiming() {
+        return super.getTiming();
+    }
+
     private void collectTiming(StringBuffer timing, Object response) {
         if (!(response instanceof ResponseImpl)) {
             return;
