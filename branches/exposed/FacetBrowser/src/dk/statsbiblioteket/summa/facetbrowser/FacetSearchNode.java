@@ -284,7 +284,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
         TagCollector tagCollector = collectorPool.acquire(query);
 
-        long collectTime = System.currentTimeMillis();
+        long collectTime = -System.currentTimeMillis();
         collect(tagCollector, facetRequest, query, collectedIDs);
         collectTime += System.currentTimeMillis();
         FacetResponse facetResponse;
