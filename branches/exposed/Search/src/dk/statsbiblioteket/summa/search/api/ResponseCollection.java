@@ -107,6 +107,11 @@ public class ResponseCollection extends TimerImpl
         return timing.toString();
     }
 
+    @Override
+    public void addTiming(String timing) {
+        super.addTiming(timing);    // TODO: Implement this
+    }
+
     /**
      * @return only the timing information explicitly set for the collection,
      *         not for the individual responses.

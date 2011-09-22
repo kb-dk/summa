@@ -144,7 +144,7 @@ public class SummonResponseBuilder implements Configurable {
     public long buildResponses(
         Request request, SummonFacetRequest facets,
         ResponseCollection responses,
-        String summonResponse) throws XMLStreamException {
+        String summonResponse, String summonTiming) throws XMLStreamException {
         long startTime = System.currentTimeMillis();
         boolean collectdocIDs = request.getBoolean(
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
@@ -231,6 +231,7 @@ public class SummonResponseBuilder implements Configurable {
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
+        documentResponse.addTiming(summonTiming);
         documentResponse.addTiming("summon.buildresponses.documents",
                                    System.currentTimeMillis() - startTime);
         responses.add(documentResponse);

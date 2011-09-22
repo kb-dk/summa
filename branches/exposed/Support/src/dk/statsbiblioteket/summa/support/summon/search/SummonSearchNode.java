@@ -407,14 +407,15 @@ public class SummonSearchNode extends SearchNodeImpl {
         long searchTime = -System.currentTimeMillis();
         log.trace("Performing search for '" + query + "' with facets '"
                   + facets + "'");
-        String sResponse;
+        String summonResponse;
+        String summonTiming;
         try {
             Pair<String, String> sums = summonSearch(
                 filter, query, summonSearchParams,
                 collectdocIDs ? facets : null,
                 startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
-            sResponse = sums.getKey();
-            responses.addTiming(sums.getValue());
+            summonResponse = sums.getKey();
+            summonTiming = sums.getValue();
         } catch (StackOverflowError e) {
             String message = String.format(
                 "Caught StackOverflow while performing summon request %s:\n%s",
@@ -424,7 +425,7 @@ public class SummonSearchNode extends SearchNodeImpl {
                 "SummonSearchNode.barrierSearch: " + message);
 
         }
-        if (sResponse == null || "".equals(sResponse)) {
+        if (summonResponse == null || "".equals(summonResponse)) {
             throw new RemoteException(
                 "Summon search for '" + query + " yielded empty result");
         }
@@ -434,12 +435,12 @@ public class SummonSearchNode extends SearchNodeImpl {
         long hitCount;
         try {
             hitCount = responseBuilder.buildResponses(
-                request, facets, responses, sResponse);
+                request, facets, responses, summonResponse, summonTiming);
         } catch (XMLStreamException e) {
             String message = "Unable to transform Summon XML response to Summa "
                              + "response for '" + request + "'";
             if (log.isDebugEnabled()) {
-                log.debug(message + ". Full XML follows:\n" + sResponse);
+                log.debug(message + ". Full XML follows:\n" + summonResponse);
             }
             throw new RemoteException(message, e);
         } catch (StackOverflowError e) {
@@ -448,8 +449,8 @@ public class SummonSearchNode extends SearchNodeImpl {
                 + "request %s\nReduced stack trace:\n%s\nReduced raw summon "
                 + "response:\n%s",
                 request.toString(true), reduceStackTrace(request, e),
-                sResponse.length() > 2000 ?
-                sResponse.substring(0, 2000) : sResponse);
+                summonResponse.length() > 2000 ?
+                summonResponse.substring(0, 2000) : summonResponse);
             log.error(message, e);
             throw new RemoteException(
                 "SummonSearchNode.barrierSearch: " + message);

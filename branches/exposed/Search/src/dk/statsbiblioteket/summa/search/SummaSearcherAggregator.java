@@ -156,6 +156,9 @@ public class SummaSearcherAggregator implements SummaSearcher {
         ResponseCollection merged = new ResponseCollection();
         for (ResponseHolder holder: responses) {
             merged.addAll(holder.getResponses());
+            if (!"".equals(holder.getResponses().getTopLevelTiming())) {
+                merged.addTiming(holder.getResponses().getTopLevelTiming());
+            }
         }
         return merged;
     }
