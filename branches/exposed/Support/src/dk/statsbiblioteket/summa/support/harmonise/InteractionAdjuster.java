@@ -169,7 +169,7 @@ public class InteractionAdjuster implements Configurable {
     private double baseAddition = 0.0;
     private ManyToManyMap defaultDocumentFields = null;
     private ManyToManyMap defaultFacetFields = null;
-    private HashMap<String, TagAdjuster> tagAdjusters = null;
+    private List<TagAdjuster> tagAdjusters = null;
     private final boolean enabled;
     private boolean adjustResponseFieldsEnabled;
     private boolean adjustResponseFacetsEnabled;
@@ -205,12 +205,11 @@ public class InteractionAdjuster implements Configurable {
                     + CONF_ADJUST_FACET_TAGS + " but the current Configuration "
                     + "does not support them", e);
             }
-            tagAdjusters = new HashMap<String, TagAdjuster>(taConfs.size());
+            tagAdjusters = new ArrayList<TagAdjuster>(taConfs.size());
             for (Configuration tagConf: taConfs) {
                 TagAdjuster tagAdjuster = new TagAdjuster(tagConf);
-                for (String facetName: tagAdjuster.getFacetNames()) {
-                    tagAdjusters.put(facetName, tagAdjuster);
-                }
+                tagAdjuster.setID(id);
+                tagAdjusters.add(tagAdjuster);
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
@@ -399,7 +398,7 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(Query query) {
-                    System.out.println("Ignoring query of type "
+                    log.trace("Ignoring query of type "
                               + query.getClass().getSimpleName());
                     return query;
                 }
@@ -489,9 +488,12 @@ public class InteractionAdjuster implements Configurable {
 
         // We base this on old field, as it is the normalised field
         String[] newTexts = null;
-        if (tagAdjusters != null
-            && tagAdjusters.containsKey(field)) {
-            newTexts = tagAdjusters.get(field).getReverse(text);
+        if (tagAdjusters != null) {
+            for (TagAdjuster tagAdjuster: tagAdjusters) {
+                if (tagAdjuster.getFacetNames().contains(field)) {
+                    newTexts = tagAdjuster.getReverse(text);
+                }
+            }
         }
         if (newTexts == null) {
             newTexts = new String[]{text}; // No transformation
@@ -645,11 +647,14 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
         replaceFacetFields(request, facetResponse);
+        long startAdjust = System.currentTimeMillis();
         if (tagAdjusters != null) {
-            for (Map.Entry<String, TagAdjuster> e: tagAdjusters.entrySet()) {
-                e.getValue().adjust(facetResponse);
+            for (TagAdjuster tagAdjuster: tagAdjusters) {
+                tagAdjuster.adjust(facetResponse);
             }
         }
+        facetResponse.addTiming("tagadjuster.adjusts.total",
+                                System.currentTimeMillis() - startAdjust);
     }
 
     private boolean warnedOnIncompleteFacetMap = false;

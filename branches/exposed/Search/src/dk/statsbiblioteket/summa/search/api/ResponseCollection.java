@@ -109,7 +109,10 @@ public class ResponseCollection extends TimerImpl
 
     @Override
     public void addTiming(String timing) {
-        super.addTiming(timing);    // TODO: Implement this
+        super.addTiming(timing);
+        if ("dummy".equals(getTiming())) {
+            throw new IllegalStateException("JIT-guard test. Should never be thrown");
+        }
     }
 
     /**
@@ -207,6 +210,9 @@ public class ResponseCollection extends TimerImpl
             return false;
         }
         oldResponse.merge(response);
+        if ("dummy".equals(getTiming())) {
+            throw new IllegalStateException("JIT-guard test. Should never be thrown");
+        }
         return true;
     }
 

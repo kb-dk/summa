@@ -228,14 +228,15 @@ public class SummonResponseBuilder implements Configurable {
         DocumentResponse documentResponse = new DocumentResponse(
             filter, query, startIndex-1, maxRecords, sortKey, reverse,
             new String[0], searchTime, hitCount);
+        documentResponse.setPrefix("summon");
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
         documentResponse.addTiming(summonTiming);
-        documentResponse.addTiming("summon.buildresponses.documents",
+        documentResponse.addTiming("buildresponses.documents",
                                    System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
-        responses.addTiming("summon.buildresponses.total",
+        responses.addTiming("buildresponses.total",
                             System.currentTimeMillis() - startTime);
         return documentResponse.getHitCount();
     }
@@ -254,7 +255,7 @@ public class SummonResponseBuilder implements Configurable {
         if (response.isEmpty()) {
             return null;
         }
-        response.addTiming("summon.buildresponses.recommendations",
+        response.addTiming("buildresponses.recommendations",
                            System.currentTimeMillis() - startTime);
         return response;
     }
@@ -314,6 +315,7 @@ public class SummonResponseBuilder implements Configurable {
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields,
             facets.getOriginalStructure());
+        summaFacetResult.setPrefix("summon.");
         iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
@@ -321,7 +323,7 @@ public class SummonResponseBuilder implements Configurable {
             }
         });
         summaFacetResult.sortFacets();
-        summaFacetResult.addTiming("summon.buildresponses.facets",
+        summaFacetResult.addTiming("buildresponses.facets",
                                    System.currentTimeMillis() - startTime);
         return summaFacetResult;
     }

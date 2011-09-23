@@ -288,12 +288,16 @@ public class StorageWS {
 
         String retXML;
         QueryOptions q = null;
+        String timing;
 
         try {
             if (expand) {
                 q = new QueryOptions(null, null, -1, -1);
             }
+            long getTime = System.currentTimeMillis();
             Record record = getStorageClient().getRecord(id, q);
+            timing = "storage.getrecord.raw:"
+                     + (System.currentTimeMillis() - getTime);
 
             if (record == null) {
                 retXML = null;
@@ -307,7 +311,7 @@ public class StorageWS {
                         releaseMerger(merger);
                     }
                 } else {
-                    retXML = RecordUtil.toXML(record, escapeContent);
+                    retXML = RecordUtil.toXML(record, escapeContent, timing);
                 }
                 xmlTime = System.currentTimeMillis() - xmlTime;
             }

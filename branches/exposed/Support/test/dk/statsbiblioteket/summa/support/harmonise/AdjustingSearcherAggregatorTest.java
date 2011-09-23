@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.Timer;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -16,8 +17,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -116,6 +115,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         ResponseCollection responses = aggregator.search(request);
+//        System.out.println(responses.getTiming());
         assertUniqueTiming("Aggregated search", responses);
         //System.out.println(timings);
     }
@@ -135,24 +135,30 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
 
     private void assertUniqueTiming(
         String message, ResponseCollection responses) {
-        String xml = responses.toXML();
+        String duplicate = checkDuplicates(responses);
+        if (duplicate == null) {
+            return;
+        }
+        fail(message + ". The timing '" + duplicate + "' should not"
+             + " be duplicated in "
+             + responses.getTiming().replaceAll("[|]", "\n"));
+    }
 
-        Pattern TIMING = Pattern.compile(".*timing=\"(.+?)\".*", Pattern.DOTALL);
-        Matcher matcher = TIMING.matcher(xml);
-        assertTrue(message + ". There should be timing information in the "
-                   + "result",
-                   matcher.matches());
-        String[] timings = matcher.group(1).split("[|]");
+    /**
+     * @param timer a timer to check for duplicates.
+     * @return null if not duplicates, else one instance of the duplicates.
+     */
+    private String checkDuplicates(Timer timer) {
+        String[] timings = timer.getTiming().split("[|]");
         Arrays.sort(timings);
         String last = null;
         for (String timing: timings) {
-            if (last != null) {
-                assertFalse(message + ". The timing '" + timing + "' should not"
-                            + " be duplicated",
-                            last.equals(timing));
+            if (last != null && last.equals(timing)) {
+                return timing;
             }
             last = timing;
         }
+        return null;
     }
 
     private AdjustingSearcherAggregator getAggregator() throws IOException {

@@ -153,13 +153,19 @@ public class RecordUtil {
      */
     public static String toXML(Record record, boolean escapeContent) throws
                                                      IOException {
+        return toXML(record, escapeContent, null);
+    }
+    public static String toXML(
+        Record record, boolean escapeContent, String timing)
+        throws IOException {
         log.trace("Creating XML for Record '" + record.getId() + "'");
         long totalTime = -System.currentTimeMillis();
         StringWriter sw = new StringWriter(5000);
         try {
             XMLStreamWriter xmlOut = xmlOutputFactory.createXMLStreamWriter(sw);
             xmlOut.setDefaultNamespace(RECORD_NAMESPACE);
-            toXML(xmlOut, 0, new HashSet<Record>(10), record, escapeContent);
+            toXML(xmlOut, 0, new HashSet<Record>(10), record, escapeContent,
+                  timing);
         } catch (XMLStreamException e) {
             String error =
                   "Uable to convert record to XML due to XML Stream Exception ";
@@ -217,6 +223,13 @@ public class RecordUtil {
     private static void toXML(
             XMLStreamWriter out, int level, Set<Record> processed,
             Record record, boolean escapeContent) throws XMLStreamException {
+        toXML(out, level, processed, record, escapeContent, null);
+    }
+
+    private static void toXML(XMLStreamWriter out, int level,
+                              Set<Record> processed, Record record,
+                              boolean escapeContent, String timing)
+                                                     throws XMLStreamException {
         if (processed.contains(record)) {
             return;
         }
@@ -232,6 +245,9 @@ public class RecordUtil {
         out.writeStartElement(RECORD);
         if (level == 0) {
             out.writeNamespace("", RECORD_NAMESPACE);
+            if (timing != null && !"".equals(timing)) {
+                out.writeAttribute("timing", timing);
+            }
         }
         out.writeAttribute(ID, record.getId());
         out.writeAttribute(BASE, record.getBase());
@@ -276,7 +292,7 @@ public class RecordUtil {
             out.writeCharacters("\n");
             out.writeEndElement();
         }
-             
+
         if (record.hasMeta()) {
             out.writeCharacters("\n");
             out.writeStartElement(META);
@@ -1106,4 +1122,5 @@ public class RecordUtil {
         }
         return sw.toString();
     }
+
 }

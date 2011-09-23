@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 import java.io.Serializable;
 
@@ -27,6 +25,7 @@ import java.io.Serializable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class TimerImpl implements Timer, Serializable {
+    private static final long serialVersionUID = -8618416726829272962L;
     private String prefix;
     private StringBuffer timing = null;
 
@@ -86,4 +85,5 @@ public class TimerImpl implements Timer, Serializable {
     public String getPrefix() {
         return prefix;
     }
+
 }

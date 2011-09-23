@@ -97,6 +97,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         "summa.ingest.marcmultivolume.mergerecords";
 
     private URL xsltLocation;
+    @SuppressWarnings({"FieldCanBeLocal"})
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
     private final PayloadMatcher keep;
 
@@ -151,7 +152,6 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     }
 
     /**
-     *
      * @param record the Record whose content to transform to legacy merged
      *               format.
      * @return the content of the Record and its children, represented as
@@ -342,5 +342,6 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         }
         return line;
     }
+
 }
 

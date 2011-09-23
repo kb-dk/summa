@@ -75,6 +75,7 @@ public class InteractionAdjusterTest extends TestCase {
         fields.put("ContentType", new String[]{"ContentType"});
         FacetResultExternal summaFacetResult = new FacetResultExternal(
             new HashMap<String, Integer>(), facetIDs, fields, null);
+        summaFacetResult.setPrefix("interactionadjustertest");
         //noinspection unchecked
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
             new FlexiblePair<String, Integer>(

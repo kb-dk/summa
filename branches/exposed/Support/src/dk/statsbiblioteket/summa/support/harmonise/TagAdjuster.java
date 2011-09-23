@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import java.util.*;
 
 /**
- *
+ * Adjusts tags in facets according to provided rules.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -95,6 +95,8 @@ public class TagAdjuster implements Configurable {
     private final List<String> facetNames;
     private final MERGE_MODE mergeMode;
     private final ManyToManyMap map;
+    private String id; // An id used for timing feedback
+
 
     public TagAdjuster(Configuration conf) {
         facetNames = conf.getStrings(CONF_FACET_NAME);
@@ -118,8 +120,9 @@ public class TagAdjuster implements Configurable {
      * @param facetResult a Summa facet result.
      */
     public void adjust(FacetResultExternal facetResult) {
-        long startTime = System.currentTimeMillis();
+ //       long startTime = System.currentTimeMillis();
         for (String facetName: facetNames) {
+            long singleTime = System.currentTimeMillis();
             List<FlexiblePair<String, Integer>> oldTags =
                 facetResult.getMap().get(facetName);
             if (oldTags == null || oldTags.size() == 0) {
@@ -147,9 +150,17 @@ public class TagAdjuster implements Configurable {
                     tag.getKey(), tag.getValue(), sortType));
             }
             facetResult.getMap().put(facetName, newListTags);
+            facetResult.addTiming(
+                getPrefix() + "tagadjuster." + facetName + ".adjust",
+                System.currentTimeMillis() - singleTime);
         }
-        facetResult.addTiming("tagadjuster.adjust",
-                              System.currentTimeMillis() - startTime);
+/*        facetResult.addTiming(
+            getPrefix() + "tagadjuster.adjust.all." + Strings.join(facetNames, "-"),
+            System.currentTimeMillis() - startTime);*/
+    }
+
+    private String getPrefix() {
+        return id == null ? "" : id + ".";
     }
 
     /**
@@ -190,5 +201,13 @@ public class TagAdjuster implements Configurable {
         } else {
             tags.put(key, value);
         }
+    }
+
+    public void setID(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
     }
 }

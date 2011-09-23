@@ -230,24 +230,6 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
         }
         ResponseCollection merged = merge(request, responses);
-        for (Pair<String, Future<ResponseCollection>> searchFuture:
-                searchFutures) {
-            try {
-                ResponseCollection rc = searchFuture.getValue().get();
-                if (!"".equals(rc.getTopLevelTiming())) {
-                    merged.addTiming(rc.getTopLevelTiming());
-                }
-            } catch (InterruptedException e) {
-                throw new IOException(
-                        "Interrupted while accessing ResponseCollection "
-                        + searchFuture.getKey(), e);
-            } catch (ExecutionException e) {
-                throw new IOException(
-                        "ExecutionException while accessing ResponseCollection "
-                        + searchFuture.getKey(), e);
-            }
-
-        }
         postProcessPaging(merged, startIndex, maxRecords);
         log.debug("Finished search in " + (System.nanoTime() - startTime)
                   + " ns");
@@ -331,7 +313,8 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
         @Override
         public ResponseCollection call() throws Exception {
-            return client.search(request);
+            ResponseCollection result = client.search(request);
+            return result;
         }
 
         public String getDesignation() {
