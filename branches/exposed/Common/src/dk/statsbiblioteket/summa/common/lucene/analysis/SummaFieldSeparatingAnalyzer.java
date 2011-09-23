@@ -58,12 +58,12 @@ public class SummaFieldSeparatingAnalyzer extends Analyzer {
     }
 
     @Override
-    public TokenStream tokenStream(String fieldName, Reader reader){ 
+    public final TokenStream tokenStream(String fieldName, Reader reader){ 
         return _underlyingAnalyzer.tokenStream(fieldName, reader);
     }
 
     @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
                                                             throws IOException {
         return _underlyingAnalyzer.reusableTokenStream(fieldName, reader);
     }

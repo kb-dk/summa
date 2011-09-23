@@ -68,7 +68,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     public final void tearDown() throws Exception {
         super.tearDown();
         String storageFile = ((XStorage) super.storage).getFilename();
-        if (new File(storageFile).exists()) {
+        if (storageFile != null && new File(storageFile).exists()) {
             Files.delete(storageFile);
         }
     }
@@ -151,7 +151,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     public final void testnextAvailableConfigurationFile() {
         XStorage xs = null;
         try {
-            xs = new XStorage(false);
+            xs = new XStorage(true);
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception expected here");

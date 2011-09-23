@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.*;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.util.LinkedList;
 
@@ -115,7 +116,7 @@ public class SummaAnalyzer extends Analyzer {
      * @param reader - containin the text
      * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
      */
-    public TokenStream tokenStream(String fieldName, Reader reader) {
+    public final TokenStream tokenStream(String fieldName, Reader reader) {
 
         TokenStreamContext ctx = prepareReusableTokenStream(fieldName,
                 reader);
@@ -145,6 +146,12 @@ public class SummaAnalyzer extends Analyzer {
 
     // TODO: Make reusableTokenStream work again
 
+    
+    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
+    		throws IOException {
+    	return super.reusableTokenStream(fieldName, reader);
+    }
+    
 /*    @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader)
             throws IOException {

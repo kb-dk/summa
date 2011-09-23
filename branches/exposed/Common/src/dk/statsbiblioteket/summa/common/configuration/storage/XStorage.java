@@ -128,7 +128,7 @@ public class XStorage implements ConfigurationStorage {
      * @return Absolute file path.
      */
     public String getFilename() {
-        return storageFile.getAbsolutePath();
+        return storageFile == null ? null : storageFile.getAbsolutePath();
     }
 
     /**

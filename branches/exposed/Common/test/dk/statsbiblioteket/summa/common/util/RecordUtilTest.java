@@ -218,15 +218,17 @@ public class RecordUtilTest extends TestCase {
     public static final String QUERYTIME = "querytime";
 
 
-    public void testProcessingSpeedNonMerging()
+    
+    //TODO TOKE(TE)
+    public void xtestProcessingSpeedNonMerging()
                                         throws XMLStreamException, IOException {
-        testProcessingSpeed(false);
+        xtestProcessingSpeed(false);
     }
-    public void testProcessingSpeedMerging()
+    public void xtestProcessingSpeedMerging()
                                         throws XMLStreamException, IOException {
-        testProcessingSpeed(true);
+        xtestProcessingSpeed(true);
     }
-    public void testProcessingSpeed(boolean merge)
+    public void xtestProcessingSpeed(boolean merge)
                                         throws IOException, XMLStreamException {
         File TST = new File("/home/te/tmp/evil.xml");
         int RUNS = 10;

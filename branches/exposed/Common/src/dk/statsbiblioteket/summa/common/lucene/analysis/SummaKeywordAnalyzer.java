@@ -73,7 +73,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
      * @return a KeywordAnalyzer tokenStream
      */
     @Override
-    public TokenStream tokenStream(String fieldName, Reader reader) {
+    public final TokenStream tokenStream(String fieldName, Reader reader) {
         StringBuffer buf = new StringBuffer();
         TokenStream ts =
                      new SummaStandardAnalyzer().tokenStream(fieldName, reader);
@@ -100,7 +100,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
 
     // Version of this.tokenSteam() that does not allocate any new objects
     @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
                                                             throws IOException {
         // FIXME: This implementation is basically a big hack
 

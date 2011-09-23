@@ -66,7 +66,7 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
      * @return a tokenStream with one token containin only lowercase letters.
      */
     @Override
-    public TokenStream tokenStream(String fieldName, Reader reader){
+    public final TokenStream tokenStream(String fieldName, Reader reader){
         char c;
         int i;
         StringBuffer b = new StringBuffer(200);
@@ -87,7 +87,7 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
 
     // Version of this.tokenSteam() that does not allocate any new objects
     @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
                                                             throws IOException {
         // FIXME: This implementation is basically a big hack
 
