@@ -145,7 +145,8 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         js = new JStorage();
         JStorage sub = js.createSubStorage("foo");
         sub.put("bar" , 27);
-        assertEquals("var config = {\n  'foo' : {\n    'bar' : 27.0\n  }\n}",
+               
+        assertEquals("var config = {\n  'foo' : {\n    'bar' : 27\n  }\n}",
                      js.toString());
 
         // Storage with a list of two sub storages
@@ -158,7 +159,7 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         "var config = {\n" +
         "  'foo' : [\n" +
         "    {\n" +
-        "      'bar' : 27.0\n" +
+        "      'bar' : 27\n" +
         "    }, {\n" +
         "      'bar' : false\n" +
         "    }\n" +
@@ -175,9 +176,9 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         JStorage js = new JStorage();
 
         js.put("foo", 27);
-        assertTrue("27 should turn into a Double, but was: "
+        assertTrue("27 should turn into a Integer, but was: "
                    + js.get("foo").getClass().getName(),
-                   js.get("foo") instanceof Double);
+                   js.get("foo") instanceof Integer);
 
         js.put("bar", true);
         assertTrue("true should turn into a Boolean, but was: "
@@ -200,11 +201,10 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         JStorage orig = new JStorage();
 
         try {
-            // Test empty storage
+        	// Test empty storage
             assertBootstrap(orig);
-
             orig = new JStorage();
-            orig.put("foo", 27);
+            orig.put("foo", 27);                        
             assertBootstrap(orig);
 
             orig = new JStorage();
@@ -243,8 +243,8 @@ public class JStorageTest extends ConfigurationStorageTestCase {
 
     public static void assertBootstrap(JStorage test) {
         JStorage clone = new JStorage(new StringReader(test.toString()));
-
-        assertEquals(test.toString(), clone.toString());
+        
+        assertEquals(test.toString(), clone.toString());               
         assertEquals(test, clone);
     }
 

@@ -14,11 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,6 +34,11 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 /**
  *
  */
@@ -48,8 +48,8 @@ import javax.script.ScriptException;
 public class JStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 59786486L;
     private ScriptEngineManager engineManager;
-    private ScriptEngine engine;
     private String config;
+    private ScriptEngine engine;
 
     /**
      * Creates a JStorage instance, with a given script from a file. This
@@ -245,7 +245,9 @@ public class JStorage implements ConfigurationStorage {
      */
     @Override
     public void put(String key, Serializable value) {
-        eval(config+"['"+key+"'] = "+ parseObject(value));
+      
+    	
+    	eval(config+"['"+key+"'] = "+ parseObject(value));
     }
 
     /**
@@ -274,8 +276,13 @@ public class JStorage implements ConfigurationStorage {
                 "val                                                 \n";
 
         try {
-            return (Serializable)
-                      eval(query.replace("KEY", key).replace("CONFIG", config));
+            
+        	Serializable s=  (Serializable) eval(query.replace("KEY", key).replace("CONFIG", config));
+        	if (s instanceof Double){
+        		return convertToInteger(s);
+        	}        
+        	return s;
+        
         } finally {
             engine.put("__ext_storage", null);
         }
@@ -314,10 +321,12 @@ public class JStorage implements ConfigurationStorage {
               "      else                                                 \n" +
               "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
               "  }                                                        \n" +
-              "  else if (typeof(val) == 'number' || typeof(val) == 'boolean')\n" +
+              "  else if (typeof(val) == 'number')                        \n" +
               "      __ext_map.put(key, val)                              \n" +
+              "  else if (typeof(val) == 'boolean')                       \n" +
+              "      __ext_map.put(key, val)                              \n" +                            
               "  else                                                     \n" +
-              "      __ext_map.put(key, val.toString())                   \n" +
+              "      __ext_map.put(key, val)                              \n" +
               "}                                                          \n").
               replace("CONFIG", config));
         } finally {
@@ -614,27 +623,38 @@ public class JStorage implements ConfigurationStorage {
             Map.Entry<String,Serializable> entry = iter.next();
             Serializable val = entry.getValue();
             String key = entry.getKey();
-
-            if (val instanceof String) {
-                buf.append(prefix)
+            
+         if (val instanceof Double || val instanceof Integer){            		            		
+            val = ((Double) val).intValue();
+        	buf.append(prefix)
+               .append("'").append(key).append("'")
+               .append(" : ")
+               .append(indent(prefix, val.toString()));
+         }           
+         else if (val instanceof String) {
+                 buf.append(prefix)
                     .append("'").append(key).append("'")
                     .append(" : \"")
                     .append(indent(prefix, val.toString()))
                     .append("\"");
-            } else if (val instanceof Double || val instanceof Boolean) {
-                buf.append(prefix)
+        
+          }
+          else if (val instanceof Boolean) {                 
+                 buf.append(prefix)
                     .append("'").append(key).append("'")
                     .append(" : ")
                     .append(indent(prefix, val.toString()));
-            } else if (val instanceof JStorage) {
-                buf.append(prefix)
+          }            
+          else if (val instanceof JStorage) {
+                 buf.append(prefix)
                     .append("'").append(key).append("'")
                     .append(" : ")
                     .append("{\n");
                     ((JStorage)val).serialize(prefix + "  ", buf)
                     .append(prefix)
                     .append("}");
-            } else if (val instanceof List) {
+          }
+          else if (val instanceof List) {
                 List list = (List) val;
 
                 buf.append(prefix)
@@ -710,17 +730,35 @@ public class JStorage implements ConfigurationStorage {
         if (size() != other.size()) {
             return false;
         }
-
         Iterator<Map.Entry<String,Serializable>> iter = iterator();
         while (iter.hasNext()) {
             Map.Entry<String,Serializable> entry = iter.next();
-            if (!entry.getValue().equals(other.get(entry.getKey()))) {
-                return false;
+            Serializable s1=entry.getValue();
+            Serializable s2=other.get(entry.getKey());
+             if (s1 instanceof Double || s2 instanceof Double ){
+            	//Current problem with doubles/integers. Only support integers in configuration                     
+                return (convertToInteger(s1).intValue() == (convertToInteger(s2)).intValue());                      		 	            	               	             	             	
+             }
+            
+            if (!s1.equals(s2)) {                   	       
+            	return false;
             }
         }    
         return true;
     }
 
+    //S must be Double or Integer
+    private Integer convertToInteger(Serializable s){
+    	if (s instanceof Double){
+    		return  ((Double) s).intValue();
+    	}
+    	else{
+    		return (Integer) s;
+    	}
+    	
+    }
+    
+    
     /**
      * Create hashCode depended on {@code this} state and the key-value pairs in
      * this storage.
