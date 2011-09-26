@@ -44,6 +44,8 @@ public class ARCParserTest extends TestCase {
 
     public static final File SAMPLE = new File(
 
+    		
+    	//TODO Toke(TE) udtænker en snedig plan så loven overholdes og test-data er tilgængelig	
         "/home/te/tmp/11-1-20100811072018-00000-summa-service.arc");
     public static final File ZIP = new File(
         SAMPLE.getAbsolutePath().substring(0,
