@@ -349,6 +349,12 @@ public class SummonSearchNode extends SearchNodeImpl {
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
         int maxRecords = request.getInt(
             DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
+        if (maxRecords == 1) {
+            log.debug(
+                "Rewriting summon perpage==1 to perpage==2 due to summon bug");
+            maxRecords = 2;
+        }
+
         boolean resolveLinks = request.getBoolean(
             SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
         boolean collectdocIDs = request.getBoolean(

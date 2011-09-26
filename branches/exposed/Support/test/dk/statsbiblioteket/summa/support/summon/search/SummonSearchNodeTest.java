@@ -1,5 +1,4 @@
-/*
- *  Licensed under the Apache License, Version 2.0 (the "License");
+/**  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
@@ -28,12 +27,16 @@ import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
+import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
@@ -109,7 +112,7 @@ public class SummonSearchNodeTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased(
             SummonSearchNode.CONF_SUMMON_ACCESSID, id,
             SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            SummonResponseBuilder.CONF_SHORT_DATE, false
+            SummonResponseBuilder.CONF_SHORT_DATE, true
         );
 
         log.debug("Creating SummonSearchNode");
@@ -119,14 +122,79 @@ public class SummonSearchNodeTest extends TestCase {
             "<dc:date>(.+?)</dc:date>", Pattern.DOTALL);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_RESULT_FIELDS, "shortformat");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         List<String> dates= getPattern(summon, request, DATEPATTERN);
+        assertTrue("There should be at least 1 extracted date",
+                   dates.size() > 0);
         for (String date: dates) {
-            assertTrue("the returned dates should be of length 4 or leff, got '"
+            assertTrue("the returned dates should be of length 4 or less, got '"
                        + date + "'", date.length() <= 4);
         }
 //        System.out.println("Got dates:\n" + Strings.join(dates, ", "));
     }
+
+    public void testIDSearch() throws IOException, TransformerException {
+        String ID = "summon_FETCH-gale_primary_2105957371";
+
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+            SummonResponseBuilder.CONF_SHORT_DATE, true
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = new SummonSearchNode(conf);
+        Request req = new Request(
+            DocumentKeys.SEARCH_QUERY, "recordID:\"" + ID + "\"",
+            DocumentKeys.SEARCH_MAX_RECORDS, 1,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        List<String> ids = getAttributes(summon, req, "id");
+        assertTrue("There should be at least 1 result", ids.size() >= 1);
+    }
+
+    public void testGetField() throws IOException, TransformerException {
+        String ID = "summon_FETCH-gale_primary_2105957371";
+
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
+//            InteractionAdjuster.CONF_ADJUST_RESPONSE_FIELDS_ENABLED, true,
+            SummonResponseBuilder.CONF_SHORT_DATE, true
+        );
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = new SummonSearchNode(conf);
+        String fieldName = "shortformat";
+        String field = getField(summon, ID, fieldName);
+        assertTrue("The field '" + fieldName + "' from ID '" + ID
+                   + "' should have content",
+                   field != null && !"".equals(field));
+//        System.out.println("'" + field + "'");
+    }
+
+    /* This is equivalent to SearchWS#getField */
+    private String getField(
+        SearchNode searcher, String id, String fieldName)
+                                      throws IOException, TransformerException {
+        String retXML;
+
+        Request req = new Request();
+        req.put(DocumentKeys.SEARCH_QUERY, "ID:\"" + id + "\"");
+        req.put(DocumentKeys.SEARCH_MAX_RECORDS, 1);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        ResponseCollection res = new ResponseCollection();
+        searcher.search(req, res);
+//        System.out.println(res.toXML());
+        Document dom = DOM.stringToDOM(res.toXML());
+        Node subDom = DOM.selectNode(
+            dom, "/responsecollection/response/documentresult/record/"
+                 + "field[@name='" + fieldName + "']");
+        retXML = DOM.domToString(subDom);
+        return retXML;
+    }
+
 
     public void testMoreLikeThis() throws RemoteException {
         Configuration conf = Configuration.newMemoryBased(
