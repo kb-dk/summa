@@ -1,0 +1,7 @@
+echo -n "MD5 sum: "
+md5sum Samples/Summix/target/*.zip
+
+scp Samples/Summix/target/*.zip summatst@rhea:/scratch01/summatst/cowboy/display/sites/sb/summix-storage/
+scp Samples/Summix/target/*.zip summatst@rhea:/scratch01/summatst/cowboy/display/sites/hub/summix-storage/
+scp Samples/Summix/target/*.zip summatst@rhea:/scratch01/summatst/cowboy/display/sites/summon/summix-storage/
+scp Samples/Summix/target/*.zip summadev@rhea:/home/summadev/summarise_test/sites/sb/summix-storage
