@@ -91,6 +91,8 @@ public class UnpackFilterTest extends TestCase {
     }
 
     public ObjectFilter getUnpackChain(String source) throws IOException {
+        assertNotNull("The resource '" + source + "' should be resolvable",
+                      Resolver.getURL(source));
         Configuration conf = Configuration.newMemoryBased();
         UnpackFilter unpacker = new UnpackFilter(conf);
 
