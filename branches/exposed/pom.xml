@@ -28,7 +28,6 @@
         <module>Index</module>
         <module>FacetBrowser</module>
         <module>Support</module>
-        <module>Control</module>
         <module>Workflow</module>
         <module>Web</module>
         <module>Samples/Summix/</module>
