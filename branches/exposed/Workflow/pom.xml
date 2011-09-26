@@ -78,11 +78,5 @@
             <classifier>api</classifier>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-control</artifactId>
-            <classifier>api</classifier>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 </project>

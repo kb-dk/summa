@@ -170,17 +170,6 @@
             <version>${project.version}</version>
             <classifier>api</classifier>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-control</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-control</artifactId>
-            <version>${project.version}</version>
-            <classifier>api</classifier>
-        </dependency>
         <!-- Local WARS -->
         <!--
         <dependency>
