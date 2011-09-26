@@ -349,11 +349,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
         int maxRecords = request.getInt(
             DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
-        if (maxRecords == 1) {
-            log.debug(
-                "Rewriting summon perpage==1 to perpage==2 due to summon bug");
-            maxRecords = 2;
-        }
 
         boolean resolveLinks = request.getBoolean(
             SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
@@ -591,7 +586,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         int maxRecords, boolean resolveLinks, String sortKey,
         boolean reverseSort) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
-        int startpage = maxRecords == 0 ? 0 : (startIndex / maxRecords) + 1;
+        int startpage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
@@ -610,7 +605,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
         String result;
-        long rawCall = -1;
+        long rawCall;
         try {
             rawCall = -System.currentTimeMillis();
             result = getData("http://" + host, restCall + "?" +
