@@ -1,1 +1,0 @@
-The setup-files and the data in this folder are used by AutoDiscoverTest.

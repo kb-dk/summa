@@ -1,2 +1,0 @@
-This folder contains 3 test-files for the target "fagref". The files are
-mirrored from the Index-module, which should be considered authoritative.
