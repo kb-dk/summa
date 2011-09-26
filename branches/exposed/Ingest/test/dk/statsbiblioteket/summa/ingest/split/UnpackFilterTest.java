@@ -120,12 +120,9 @@ public class UnpackFilterTest extends TestCase {
             "data/zip/sb:aleph:1293268834.954.18412:full.zip");
     }*/
 
-    public void testContentAlephSub() throws IOException {
+    // TODO: Generate a zip64 test-file and test iteration
+    public void xtestContentAlephSub() throws IOException {
         assertSimpleIteration("data/zip/full_part.zip");
-    }
-
-    public void testContentAlephSubRepack() throws IOException {
-        assertSimpleIteration("data/zip/full_part_repack.zip");
     }
 
     public void assertSimpleIteration(String source) throws IOException {
