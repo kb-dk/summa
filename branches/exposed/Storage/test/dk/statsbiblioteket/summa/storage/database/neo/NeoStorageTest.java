@@ -23,6 +23,11 @@ import java.util.NoSuchElementException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+
+
+
+//NOTICE MANY TESTS ARE DISABLED.THEY ARE STRESSTEST, NOT UNITTESTS.
+
 public class NeoStorageTest extends TestCase {
     private enum STORAGE { h2, neo }
 
@@ -113,31 +118,31 @@ public class NeoStorageTest extends TestCase {
         testScale(10, 1, 1, STORAGE.h2);
     }
 
-    public void testScale1Kc2() throws IOException {
+    public void xtestScale1Kc2() throws IOException {
         testScale(1000, 2, 100, STORAGE.neo);
         System.out.println("");
         testScale(1000, 2, 100, STORAGE.h2);
     }
 
-    public void disabledtestScale1Kc5() throws IOException {
+    public void xdisabledtestScale1Kc5() throws IOException {
         testScale(1000, 5, 100, STORAGE.neo);
         System.out.println("");
         testScale(1000, 5, 100, STORAGE.h2);
     }
 
-    public void disabledtestScale10Kc2() throws IOException {
+    public void xdisabledtestScale10Kc2() throws IOException {
         testScale(10000, 2, 10, STORAGE.neo);
         System.out.println("");
         testScale(10000, 2, 10, STORAGE.h2);
     }
 
-    public void disabledtestScale10Kc5() throws IOException {
+    public void xdisabledtestScale10Kc5() throws IOException {
         testScale(10000, 5, 100, STORAGE.neo);
         System.out.println("");
         testScale(10000, 5, 100, STORAGE.h2);
     }
 
-    public void disabledtestScale100Kc5b100() throws IOException {
+    public void xdisabledtestScale100Kc5b100() throws IOException {
         testScale(100000, 5, 100, STORAGE.neo);
         System.out.println("");
         testScale(100000, 5, 100, STORAGE.h2);
@@ -160,7 +165,7 @@ public class NeoStorageTest extends TestCase {
      * Index: 8,8GB
      * Ingest in 1 hour, 35 minutes, 28 seconds, 859 ms with 174 records/sec
      */
-    public void testScale1MKc3b100() throws IOException {
+    public void xtestScale1MKc3b100() throws IOException {
         testScale(1000000, 3, 1000, STORAGE.neo);
 /*        System.out.println("");
         testScale(1000000, 3, 100, STORAGE.h2);*/
@@ -172,13 +177,13 @@ public class NeoStorageTest extends TestCase {
      * Ingest in 13 minutes, 11 seconds, 17 ms with 1264 records/sec
      *
      */
-    public void disabledtestScale1MKc0b100() throws IOException {
+    public void xdisabledtestScale1MKc0b100() throws IOException {
         testScale(1000000, 0, 100, STORAGE.neo);
         System.out.println("");
         testScale(1000000, 0, 100, STORAGE.h2);
     }
 
-    public void disabledtestScale10Mc3b1000() throws IOException {
+    public void xdisabledtestScale10Mc3b1000() throws IOException {
         testScale(10000000, 3, 1000, STORAGE.neo);
         System.out.println("");
         testScale(10000000, 3, 1000, STORAGE.h2);
@@ -192,7 +197,7 @@ public class NeoStorageTest extends TestCase {
         Storage ns =
             createIndex(records, children, buffersize, storage, feedback);
 
-        for (int i = 0 ; i < 1000 ; i++) {
+        for (int i = 0 ; i < 100 ; i++) { //Rettet fra 1000 til 100
             System.gc();
             performExtraction(records, children, feedback, startTime, ns);
         }
