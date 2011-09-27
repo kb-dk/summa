@@ -269,6 +269,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
+                    <enableAssertions>false</enableAssertions>
                     <trimStackTrace>false</trimStackTrace>
                     <forkMode>always</forkMode>
                     <argLine>-Xms256m -Xmx768m</argLine>
