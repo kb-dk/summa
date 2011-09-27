@@ -196,11 +196,7 @@
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika</artifactId>
                 <version>0.3</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>ooxml-schemas</artifactId>
-                        <groupId>org.apache.poi</groupId>
-                    </exclusion>
+                <exclusions>                    
                     <exclusion>
                         <artifactId>pdfbox</artifactId>
                         <groupId>org.apache.pdfbox</groupId>
