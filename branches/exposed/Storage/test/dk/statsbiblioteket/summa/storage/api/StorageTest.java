@@ -668,7 +668,10 @@ public class StorageTest extends StorageTestBase {
                      + " ingested", r1, r2);
         long mtime1 = r1.getModificationTime();
 
-        storage.flush(new Record(testId2, testBase1, testContent1));
+        
+        Thread.sleep(10);// So records r1 and r2 will not have same modificationtime
+        
+        storage.flush(new Record(testId2, testBase2, testContent2));
         long mtime2 = storage.getRecords(Arrays.asList(testId2), null).get(0).
                 getModificationTime();
         assertTrue("Record 1 mtime should be before record 2 mtime",
@@ -686,7 +689,7 @@ public class StorageTest extends StorageTestBase {
                   + record.getModificationTime() + ". Time diff: "
                   + (record.getModificationTime() - mtime1));
         if (records.hasNext()) {
-            fail("Record is singular - no more records should be returned. "
+        	fail("Record is singular - no more records should be returned. "
                  + "Got record " + records.next());
         }
     }
