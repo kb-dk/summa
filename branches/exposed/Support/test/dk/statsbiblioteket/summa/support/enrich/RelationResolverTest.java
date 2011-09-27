@@ -398,7 +398,7 @@ public class RelationResolverTest extends TestCase {
     for Toke Eskildsen at Statsbiblioteket after a specific setup.
     // TODO: Create a proper test with a test-searcher
      */
-    public void testSearcherConnection() throws IOException {
+    public void xtestSearcherConnection() throws IOException {
         final String EXPECTED = "sb_2257916";
         Record enricherR = new Record("enricher1", "foo", new byte[0]);
         enricherR.getMeta().put("isbn10", "8759308656");
