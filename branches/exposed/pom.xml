@@ -30,6 +30,7 @@
         <module>Support</module>
         <module>Web</module>
         <module>Samples/Summix/</module>
+        <module>Samples/Integration/</module>
    <!-- <module>Samples/Assembly/</module>   Module only creates .jar containing all .jars from modules. It it not used currently.-->
     </modules>
 
