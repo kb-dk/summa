@@ -228,7 +228,8 @@ public class SummonResponseBuilder implements Configurable {
         DocumentResponse documentResponse = new DocumentResponse(
             filter, query, startIndex-1, maxRecords, sortKey, reverse,
             new String[0], searchTime, hitCount);
-        documentResponse.setPrefix("summon");
+        documentResponse.setPrefix("summon.");
+        documentResponse.addTiming("reportedtime", searchTime);
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
@@ -236,7 +237,7 @@ public class SummonResponseBuilder implements Configurable {
         documentResponse.addTiming("buildresponses.documents",
                                    System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
-        responses.addTiming("buildresponses.total",
+        responses.addTiming("summon.buildresponses.total",
                             System.currentTimeMillis() - startTime);
         return documentResponse.getHitCount();
     }

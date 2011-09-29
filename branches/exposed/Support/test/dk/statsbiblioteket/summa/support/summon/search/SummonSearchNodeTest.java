@@ -536,6 +536,38 @@ public class SummonSearchNodeTest extends TestCase {
   */
     }
 
+    public void testReportedTiming() throws RemoteException {
+        Configuration conf = Configuration.newMemoryBased(
+            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
+            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
+        );
+
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        summon.search(request, responses);
+        Integer rawTime = getTiming(responses, "summon.rawcall");
+        assertNotNull("There should be raw time", rawTime);
+        Integer reportedTime = getTiming(responses, "summon.reportedtime");
+        assertNotNull("There should be reported time", reportedTime);
+        assertTrue("The reported time (" + reportedTime + ") should be lower "
+                   + "than the raw time (" + rawTime + ")",
+                   reportedTime <= rawTime);
+        log.debug("Timing raw=" + rawTime + ", reported=" + reportedTime);
+    }
+
+    private Integer getTiming(ResponseCollection responses, String key) {
+        String[] timings = responses.getTiming().split("[|]");
+        for (String timing: timings) {
+            String[] tokens = timing.split(":");
+            if (tokens.length == 2 && key.equals(tokens[0])) {
+                    return Integer.parseInt(tokens[1]);
+            }
+        }
+        return null;
+    }
+
     public void testFilterVsQuery() throws RemoteException {
         Configuration conf = Configuration.newMemoryBased(
             SummonSearchNode.CONF_SUMMON_ACCESSID, id,

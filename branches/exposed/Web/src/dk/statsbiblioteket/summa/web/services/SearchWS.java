@@ -768,7 +768,10 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         log.trace("Produced search request, calling search");
         try {
+            long callStart = System.currentTimeMillis();
             res = getSearchClient().search(req);
+            res.addTiming("searchws.outercall",
+                          (System.currentTimeMillis() - callStart));
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
