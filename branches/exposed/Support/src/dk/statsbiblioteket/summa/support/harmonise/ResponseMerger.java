@@ -310,7 +310,7 @@ public class ResponseMerger implements Configurable {
         postProcess(request, aw);
         trim(request, aw);
         ResponseCollection result = aw.externalize();
-        result.addTiming("responsemerger.externalize",
+        result.addTiming("responsemerger.total",
                          System.currentTimeMillis() - startTime);
         return result;
     }
