@@ -313,7 +313,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
         @Override
         public ResponseCollection call() throws Exception {
+            long searchStart = System.currentTimeMillis();
             ResponseCollection result = client.search(request);
+            result.addTiming("aggregator.searchcall." + designation,
+                             System.currentTimeMillis() - searchStart);
             return result;
         }
 
