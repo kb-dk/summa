@@ -91,7 +91,7 @@ public class XStorage implements ConfigurationStorage {
     // FIXME: Very ad-hoc
     private XStorage(XProperties properties) throws IOException {
         xprops = properties;
-        storageFile = nextAvailableConfigurationFile();
+        storageFile = null; //nextAvailableConfigurationFile();
     }
 
     /**
