@@ -43,7 +43,7 @@
         </fileSet>
         <!-- Summix data -->
         <fileSet>
-            <directory>${basedir}/../../Control/test/data/oai</directory>
+            <directory>${basedir}/../../Integration/test/resources/oai</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/data/oai</outputDirectory>
             <includes>
