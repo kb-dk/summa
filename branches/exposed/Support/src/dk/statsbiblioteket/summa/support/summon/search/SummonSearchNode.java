@@ -414,7 +414,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             Pair<String, String> sums = summonSearch(
                 filter, query, summonSearchParams,
                 collectdocIDs ? facets : null,
-                startIndex, maxRecords, resolveLinks, sortKey, reverseSort);
+                startIndex, maxRecords, resolveLinks, sortKey, reverseSort,responses);
             summonResponse = sums.getKey();
             summonTiming = sums.getValue();
         } catch (StackOverflowError e) {
@@ -584,7 +584,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         String filter, String query, Map<String, List<String>> summonParams,
         SummonFacetRequest facets, int startIndex,
         int maxRecords, boolean resolveLinks, String sortKey,
-        boolean reverseSort) throws RemoteException {
+        boolean reverseSort,ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
         int startpage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
@@ -605,14 +605,10 @@ public class SummonSearchNode extends SearchNodeImpl {
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
         String result;
-        long rawCall;
+
         try {
-            rawCall = -System.currentTimeMillis();
             result = getData("http://" + host, restCall + "?" +
-                    queryString, date, idstring, null);
-            rawCall += System.currentTimeMillis();
-            summonlog.debug(
-                "Call to Summon done in " + rawCall + "ms: " + queryString);
+                    queryString, date, idstring, null,responses);
         } catch (Exception e) {
             throw new RemoteException(
                 "Unable to perform remote call to "  + host + restCall
@@ -629,8 +625,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         log.trace("simpleSearch done in "
                   + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(
-            retval, "summon.buildquery:" + buildQuery + "|summon.rawcall:"
-                    + rawCall + "|summon.prefixIDs:" + prefixIDs
+            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs
                     + "|summon.linkresolve:" + linkResolve);
     }
 
@@ -730,7 +725,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         try {
             long serviceStart = System.currentTimeMillis();
             result = getData("http://api.summon.serialssolutions.com", "/search?" +
-                    queries, date, idstring, null);
+                    queries, date, idstring, null,new ResponseCollection());
             log.trace("Call to Summon done in " + (System.currentTimeMillis() - serviceStart) + "ms");
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -845,7 +840,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      */
     private String getData(
         String target, String content, Date date, String idstring,
-        String sessionId) throws Exception {
+        String sessionId, ResponseCollection responses) throws Exception {
         StringBuilder retval = new StringBuilder();
 
         if (log.isDebugEnabled()) {
@@ -865,20 +860,28 @@ public class SummonSearchNode extends SearchNodeImpl {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
         conn.setConnectTimeout(1000);
+    	long summonConnect = -System.currentTimeMillis();
         conn.connect();
-
+        summonConnect += System.currentTimeMillis();
+        
         Long readStart = System.currentTimeMillis();
         BufferedReader in;
         try {
-            in = new BufferedReader(new InputStreamReader(
+        	long rawCall = -System.currentTimeMillis();             
+        	in = new BufferedReader(new InputStreamReader(
                 conn.getInputStream(), "UTF-8"));
             String str;
+        
             while ((str = in.readLine()) != null) {
                 retval.append(str);
             }
             log.trace("Reading from Summon done in "
                       + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
+            rawCall += System.currentTimeMillis();
+            responses.addTiming("summon.connect", summonConnect);
+            responses.addTiming("summon.rawcall", rawCall); 
+            
         } catch (IOException e) {
             log.warn(String.format(
                 "getData(target=%s, content=%s, date=%s, idstring=%s, "
@@ -906,7 +909,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false).getKey();
+            null, "ID:" + id, null, null, 1, 1, false, null, false, new ResponseCollection()).getKey();
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -968,7 +971,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false).getKey();
+            null, "ID:" + id, null, null, 1, 1, false, null, false,new ResponseCollection()).getKey();
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
