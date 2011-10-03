@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.control.api.rmi;
+package dk.statsbiblioteket.dk.summa.control.rmi;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;

@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.control.client.shell;
+package dk.statsbiblioteket.dk.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.shell.Script;

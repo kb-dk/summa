@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.control.client;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.rmi.ClientRMIConnection;
+import dk.statsbiblioteket.dk.summa.control.rmi.ClientRMIConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

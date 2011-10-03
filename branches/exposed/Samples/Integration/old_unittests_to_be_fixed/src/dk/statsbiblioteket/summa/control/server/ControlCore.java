@@ -29,7 +29,7 @@ import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.StatusMonitor;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.FeedbackFactory;
-import dk.statsbiblioteket.summa.control.api.rmi.ControlRMIConnection;
+import dk.statsbiblioteket.dk.summa.control.rmi.ControlRMIConnection;
 import dk.statsbiblioteket.summa.control.bundle.Bundle;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.bundle.BundleUtils;

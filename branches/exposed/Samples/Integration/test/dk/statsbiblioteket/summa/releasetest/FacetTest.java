@@ -77,6 +77,11 @@ public class FacetTest extends NoExitTestCase {
 
     private void cleanup() throws Exception {
         IngestTest.deleteOldStorages();
+        if (SearchTest.INDEX_ROOT == null) {
+            throw new RuntimeException(
+                "SearchTest.INDEX_ROOT is null, which should not be possible as"
+                + " the property 'java.io.tmpdir' should always exist");
+        }
         if (SearchTest.INDEX_ROOT.exists()) {
             Files.delete(SearchTest.INDEX_ROOT);
         }

@@ -26,11 +26,10 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
-import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
@@ -210,10 +209,14 @@ public class IngestTest extends NoExitTestCase {
         conf.set(DatabaseStorage.CONF_LOCATION,
                  getStorageLocation().toString());
         conf.set(DatabaseStorage.CONF_FORCENEW, true);
-        conf.set(Service.CONF_SERVICE_PORT, 27003);
+        conf.set(DatabaseStorage.CONF_FORCENEW, true);
+        conf.set(Storage.CONF_CLASS,
+                 "dk.statsbiblioteket.summa.storage.database.h2.H2Storage");
+
+/*        conf.set(Service.CONF_SERVICE_PORT, 27003);
         conf.set(Service.CONF_REGISTRY_PORT, 27000);  // Why is this not done?
         conf.set(Service.CONF_SERVICE_ID, "TestStorage");
-        System.setProperty(Service.CONF_SERVICE_ID, "TestStorage");
+        System.setProperty(Service.CONF_SERVICE_ID, "TestStorage");*/
         return conf;
     }
     private Configuration getWriterConfiguration() {
@@ -310,7 +313,7 @@ public class IngestTest extends NoExitTestCase {
     // with proper use of FilterChain
     public void testFullIngestWorkflow() throws Exception {
         File dataLocation = new File(Resolver.getURL(
-                "data/5records").getFile());
+                "5records").getFile());
 
         assertTrue("The test-data should be present at " + dataLocation,
                    dataLocation.exists());
@@ -322,7 +325,7 @@ public class IngestTest extends NoExitTestCase {
         Storage storage = StorageFactory.createStorage(storageConf);
 
         File filterConfFile = new File(Resolver.getURL(
-                "data/5records/filter_setup.xml").getFile());
+                "5records/filter_setup.xml").getFile());
         assertTrue("The filter conf. '" + filterConfFile + "' should exist",
                    filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());

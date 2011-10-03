@@ -90,7 +90,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public static File root = new File(Resolver.getURL(
-            "data/search/SearchTest_IngestConfiguration.xml").
+            "search/SearchTest_IngestConfiguration.xml").
             getFile()).getParentFile();
     public static String BASE = "fagref";
 
@@ -115,7 +115,7 @@ public class SearchTest extends NoExitTestCase {
     public static void ingest(File folder) throws Exception {
 
         Configuration conf = Configuration.load(
-                "data/search/SearchTest_IngestConfiguration.xml");
+                "search/SearchTest_IngestConfiguration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
 //                getSubConfiguration("Reader").
@@ -133,7 +133,7 @@ public class SearchTest extends NoExitTestCase {
             new PayloadFeederHelper(Arrays.asList(payload));
 
         Configuration conf = Configuration.load(
-                "data/search/SearchTest_IngestConfiguration.xml");
+                "search/SearchTest_IngestConfiguration.xml");
         Configuration writerConf =
             conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
@@ -176,14 +176,14 @@ public class SearchTest extends NoExitTestCase {
 
     public void testIngest() throws Exception {
         Storage storage = startStorage();
-        ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
+        ingest(new File(Resolver.getURL("search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
-        ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
+        ingest(new File(Resolver.getURL("search/input/part2").getFile()));
         verifyStorage(storage, "fagref:jh@example.com");
         storage.close();
     }
 
-    public static File INDEX_ROOT =
+    public final static File INDEX_ROOT =
             new File(System.getProperty("java.io.tmpdir"), "testindex");
 
     private SummaSearcher createSearchService() throws Exception {
@@ -196,12 +196,12 @@ public class SearchTest extends NoExitTestCase {
 
     private Configuration getSearcherConfiguration() throws Exception {
         URL descriptorLocation = Resolver.getURL(
-                "data/search/SearchTest_IndexDescriptor.xml");
+                "search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
         Configuration searcherConf = Configuration.load(
-                "data/search/SearchTest_SearchConfiguration.xml");
+                "search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -268,7 +268,7 @@ public class SearchTest extends NoExitTestCase {
   */
     public static void updateIndex() throws Exception {
         Configuration indexConf = Configuration.load(
-                "data/search/SearchTest_IndexConfiguration.xml");
+                "search/SearchTest_IndexConfiguration.xml");
         IndexTest.updateIndex(indexConf);
     }
 
@@ -355,7 +355,7 @@ public class SearchTest extends NoExitTestCase {
         } catch (Exception e) {
             // Expected
         }
-        ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
+        ingest(new File(Resolver.getURL("search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 1 doc");
@@ -371,7 +371,7 @@ public class SearchTest extends NoExitTestCase {
             fail("Failed search 1 for Gurli: " + e.getMessage());
         }
         log.debug("Adding new material");
-        ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
+        ingest(new File(Resolver.getURL("search/input/part2").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 3 docs");
