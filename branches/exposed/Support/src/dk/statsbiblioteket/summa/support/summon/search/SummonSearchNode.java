@@ -860,11 +860,11 @@ public class SummonSearchNode extends SearchNodeImpl {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
         conn.setConnectTimeout(1000);
+        Long readStart = System.currentTimeMillis();
     	long summonConnect = -System.currentTimeMillis();
         conn.connect();
         summonConnect += System.currentTimeMillis();
         
-        Long readStart = System.currentTimeMillis();
         BufferedReader in;
         try {
         	long rawCall = -System.currentTimeMillis();             
