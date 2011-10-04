@@ -54,7 +54,7 @@ import java.util.*;
  * Other results are merged with the default merger.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 // TODO: slope (measuring steep drops in scores)
 public class ResponseMerger implements Configurable {

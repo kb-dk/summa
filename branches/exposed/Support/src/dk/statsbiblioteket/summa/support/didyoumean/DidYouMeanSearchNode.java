@@ -54,9 +54,9 @@ import org.apache.lucene.store.RAMDirectory;
  * @since Feb 9, 2010
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
-        public class DidYouMeanSearchNode extends SearchNodeImpl {
+public class DidYouMeanSearchNode extends SearchNodeImpl {
     /**
      * Enum type for Lucene directory.
      */
@@ -197,8 +197,8 @@ import org.apache.lucene.store.RAMDirectory;
                               DEFAULT_DIDYOMEAN_CLOSE_ON_NON_EXISTING_INDEX);
 
         // Get AprioriField.
-        aprioriField = config.getString(CONF_DIDYOUMEAN_APRIORI_FIELD,
-                                        DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
+        aprioriField = config.getString(
+            CONF_DIDYOUMEAN_APRIORI_FIELD, DEFAULT_DIDYOUMEAN_APRIORI_FIELD);
 
         // Get Analyzer class.
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
@@ -207,13 +207,13 @@ import org.apache.lucene.store.RAMDirectory;
         analyzer = Configuration.create(analyzerClass, config);
 
         // Get directory class.
-        String directoryType = config.getString(CONF_DIDYOUMEAN_DIRECTORY,
-                                                DEFAULT_DIDYOUMEAN_DIRECTORY);
+        String directoryType = config.getString(
+            CONF_DIDYOUMEAN_DIRECTORY, DEFAULT_DIDYOUMEAN_DIRECTORY);
         DIRECTORYTYPE type = DIRECTORYTYPE.valueOf(directoryType);
 
         // determining the placement for the Did-You-Mean index.
-        String placement = config.getString(CONF_DIDYOUMEAN_LOCATION,
-                                            DEFAULT_DIDYOUMEAN_LOCATION);
+        String placement = config.getString(
+            CONF_DIDYOUMEAN_LOCATION, DEFAULT_DIDYOUMEAN_LOCATION);
         didyoumeanIndex = Resolver.getPersistentFile(new File(placement));
 
         switch(type) {
@@ -411,6 +411,9 @@ import org.apache.lucene.store.RAMDirectory;
 
             DidYouMeanResponse response =
                 new DidYouMeanResponse(query, rawTime);
+            response.setPrefix("didyoumean.");
+            response.addTiming("raw", rawTime);
+            responses.add(response);
             if (spq != null && spq.size() > 0) {
                 log.debug("Did-you-mean '" + query + "' returned '" + spq.size()
                         + "' results.");

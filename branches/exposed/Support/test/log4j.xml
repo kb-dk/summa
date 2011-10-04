@@ -81,9 +81,9 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.support">
-         <level value="FATAL" />
-         <appender-ref ref="FILE" />
+    <logger name="dk.statsbiblioteket.summa.support.didyoumean">
+         <level value="DEBUG" />
+         <appender-ref ref="CONSOLE" />
      </logger>
 
     <logger name="dk.statsbiblioteket.summa.support.summon.search">

@@ -34,7 +34,7 @@ import java.util.LinkedList;
  * @since Feb 9, 2010
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "hbk")
 public class DidYouMeanResponse extends ResponseImpl {
     private static final long serialVersionUID = 465846352L;
