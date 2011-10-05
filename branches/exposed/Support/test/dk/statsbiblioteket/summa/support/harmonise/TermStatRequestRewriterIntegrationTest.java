@@ -88,7 +88,6 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     private void checkQuery(String query)
                                         throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
-
         compareHits(search(query), search(rewritten));
     }
 

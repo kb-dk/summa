@@ -182,10 +182,12 @@ public class InteractionAdjusterTest extends TestCase {
             + "sort_year_asc;sort_year_desc - PublicationDate"
         );
         conf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
-                 new ArrayList<String>(Arrays.asList(
-            "author_normalised - Author", "lma_long - ContentType",
-            "llang;lang - Language", "lsubject - SubjectTerms"))
-        );
+                 new String[]{
+                     "author_normalised - Author",
+                     "lma_long - ContentType",
+                     "llang;lang - Language",
+                     "lsubject - SubjectTerms"
+                 });
         List<Configuration> tags;
         try {
             tags = conf.createSubConfigurations(
@@ -195,7 +197,7 @@ public class InteractionAdjusterTest extends TestCase {
         }
         tags.get(0).set(TagAdjuster.CONF_FACET_NAME, "llang, lang");
         tags.get(0).set(TagAdjuster.CONF_TAG_MAP,
-                        new ArrayList<String>(Arrays.asList(
+                        new String[]{
                         "English - eng",
                         "MyLang - one;two",
                         "Moo;Doo - single",
@@ -203,9 +205,23 @@ public class InteractionAdjusterTest extends TestCase {
                         "Source A;Source B - Dest A;Dest B",
                         "Boom - boo",
                         "Boom - hoo",
-                        "Bim;Bam - bi;ba")));
+                        "Bim;Bam - bi;ba"
+                        });
+
         tags.get(1).set(TagAdjuster.CONF_FACET_NAME, "lma_long");
-        tags.get(1).set(TagAdjuster.CONF_TAG_MAP, "Audio Sound - audio");
+        tags.get(1).set(TagAdjuster.CONF_TAG_MAP,
+                        new String[]{ // Alternative syntax
+                            "Audio Sound - audio",
+                            "Article - artikel",
+                            "Book Chapter - artikel;artikelibog",
+                            "Book Review - artikel",
+                            "Magazine Article - artikel;magart",
+                            "Newsletter - artikel",
+                            "Newspaper Article - artikel;avisart",
+                            "Publication Article - artikel",
+                            "Trade Publication Article - artikel",
+                        });
+
         tags.get(2).set(TagAdjuster.CONF_FACET_NAME, "fa");
         tags.get(2).set(TagAdjuster.CONF_TAG_MAP, "ContentA - ca");
         return new InteractionAdjuster(conf);
@@ -216,9 +232,27 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster,
                          "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");
         assertAdjustment(adjuster,
-                         "(FieldA:\"ContentA\" OR FieldB:\"ContentA\")",
+                         "(FieldB:\"ContentA\" OR FieldA:\"ContentA\")",
                          "fa:ca");
     }
+
+    public void testQueryFieldMultiple() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster,
+                         "(ContentType:\"Newspaper Article\" OR "
+                         + "ContentType:\"Magazine Article\" OR "
+                         + "ContentType:\"Newsletter\" OR "
+                         + "ContentType:\"Book Review\" OR "
+                         + "ContentType:\"Trade Publication Article\" OR "
+                         + "ContentType:\"Publication Article\" OR "
+                         + "ContentType:\"Book Chapter\" OR "
+                         + "ContentType:\"Article\")",
+                         "lma_long:\"artikel\"");
+        assertAdjustment(adjuster,
+                         "(-ContentType:\"Book Chapter\")",
+                         "-lma_long:\"artikelibog\"");
+    }
+
 
     public void testQueryTagRewrite_nonAdjusting() {
         InteractionAdjuster adjuster = createAdjuster();
@@ -271,7 +305,7 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster,
                          "Language:\"Space man\"", "llang:always");
         assertAdjustment(adjuster,
-                         "(Language:\"Source A\" OR Language:\"Source B\")",
+                         "(Language:\"Source B\" OR Language:\"Source A\")",
                          "llang:\"Dest A\"");
     }
 
@@ -303,7 +337,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:\"Moo\" OR Language:\"Doo\")",
+                         "(Language:\"Doo\" OR Language:\"Moo\")",
                          "llang:\"single\"");
     }
 
@@ -311,7 +345,7 @@ public class InteractionAdjusterTest extends TestCase {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(
             adjuster,
-            "(+(Language:\"Moo\" OR Language:\"Doo\") +Language:\"Boom\")",
+            "(+(Language:\"Doo\" OR Language:\"Moo\") +Language:\"Boom\")",
             "llang:\"single\" llang:boo");
     }
 

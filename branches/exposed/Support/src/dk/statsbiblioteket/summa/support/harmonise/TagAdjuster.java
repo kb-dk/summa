@@ -22,7 +22,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
-import dk.statsbiblioteket.summa.common.util.ManyToManyMap;
+import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -94,7 +94,7 @@ public class TagAdjuster implements Configurable {
 
     private final List<String> facetNames;
     private final MERGE_MODE mergeMode;
-    private final ManyToManyMap map;
+    private final ManyToManyMapper map;
     private String id; // An id used for timing feedback
 
 
@@ -102,9 +102,10 @@ public class TagAdjuster implements Configurable {
         facetNames = conf.getStrings(CONF_FACET_NAME);
         mergeMode = MERGE_MODE.valueOf(conf.getString(
             CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
-        map = new ManyToManyMap(conf.getStrings(CONF_TAG_MAP));
-        log.info("Created TagAdjuster '" + facetNames + "' with " + map.size()
-                 + " source->destination rules and " + map.size()
+        map = new ManyToManyMapper(conf.getStrings(CONF_TAG_MAP));
+        log.info("Created TagAdjuster '" + facetNames + "' with "
+                 + map.getForward().size()
+                 + " source->destination rules and " + map.getForward().size()
                  + " destination->source rules");
     }
 
@@ -135,8 +136,8 @@ public class TagAdjuster implements Configurable {
             LinkedHashMap<String, Integer> newTags =
                 new LinkedHashMap<String, Integer>((int) (oldTags.size() * 1.5));
             for (FlexiblePair<String, Integer> pair: oldTags) {
-                if (map.containsKey(pair.getKey())) {
-                    for (String tagName: map.get(pair.getKey())) {
+                if (map.getForward().containsKey(pair.getKey())) {
+                    for (String tagName: map.getForward().get(pair.getKey())) {
                         mergePut(newTags, tagName, pair.getValue());
                     }
                 } else {
@@ -151,7 +152,7 @@ public class TagAdjuster implements Configurable {
             }
             facetResult.getMap().put(facetName, newListTags);
             facetResult.addTiming(
-                getPrefix() + "tagadjuster." + facetName + ".adjust",
+                "tagadjuster." + facetName + ".adjust",
                 System.currentTimeMillis() - singleTime);
         }
 /*        facetResult.addTiming(
@@ -170,15 +171,16 @@ public class TagAdjuster implements Configurable {
      * @param tagName a destination tag name.
      * @return source tag names pointing to the given name.
      */
-    public String[] getReverse(String tagName) {
+    public Set<String> getReverse(String tagName) {
         if (log.isTraceEnabled()) {
             log.trace("getReverse(" + tagName + ") returning " +
-                      (map.reverseContainsKey(tagName) ?
-                       map.reverseGet(tagName) : tagName));
+                      (map.getReverse().containsKey(tagName) ?
+                       map.getReverse().get(tagName) : tagName));
         }
-        return map.reverseContainsKey(tagName) ?
-               map.reverseGet(tagName) :
-               new String[]{tagName};
+        if (map.getReverse().containsKey(tagName)) {
+            return map.getReverse().get(tagName);
+        }
+        return new HashSet<String>(Arrays.asList(tagName));
     }
 
     private void mergePut(
