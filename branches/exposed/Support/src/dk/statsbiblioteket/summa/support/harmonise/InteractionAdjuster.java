@@ -265,6 +265,7 @@ public class InteractionAdjuster implements Configurable {
      */
     public Request rewrite(Request request) {
         log.trace("rewrite called");
+        log.debug("**************"+request.toString());
         Request adjusted = clone(request);
         if (!adjusted.getBoolean(SEARCH_ADJUST_ENABLED, enabled)) {
             log.trace("The adjuster is disabled. Exiting rewrite");
