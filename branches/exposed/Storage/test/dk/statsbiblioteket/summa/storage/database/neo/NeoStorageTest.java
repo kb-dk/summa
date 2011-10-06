@@ -49,6 +49,9 @@ public class NeoStorageTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+        if (TMP.exists()) {
+            Files.delete(TMP);
+        }
     }
 
     public static Test suite() {
