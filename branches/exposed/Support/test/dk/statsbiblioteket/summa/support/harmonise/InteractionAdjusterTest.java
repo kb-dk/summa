@@ -188,6 +188,15 @@ public class InteractionAdjusterTest extends TestCase {
                      "llang;lang - Language",
                      "lsubject - SubjectTerms"
                  });
+       
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS,
+        	    new String[]{
+     		        "ma",
+     		        "unsupported_field"
+                });
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY,"year:999999");
+                
+        
         List<Configuration> tags;
         try {
             tags = conf.createSubConfigurations(
@@ -230,12 +239,21 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");
+                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");      
         assertAdjustment(adjuster,
-                         "(FieldB:\"ContentA\" OR FieldA:\"ContentA\")",
-                         "fa:ca");
+                "(FieldB:\"ContentA\" OR FieldA:\"ContentA\")",
+                "fa:ca");
     }
 
+    
+    public void testQueryUnsupportedField() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster,
+                         "(+foo +year:\"999999\")", "foo ma:bar");     
+    }
+
+    
+    
     public void testQueryFieldMultiple() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,

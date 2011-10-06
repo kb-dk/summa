@@ -132,6 +132,20 @@ public class InteractionAdjuster implements Configurable {
     public static final String
         SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
+    
+    /**
+     * Fields that are rewritten to a term that match nothing at summon
+     */
+    public static final String
+       CONF_ADJUST_UNSUPPORTED_FIELDS = "adjuster.document.unsupported.fields";
+        
+    /**
+     * Query that match nothing at summon (ie. year:991234)
+     */
+    public static final String
+      CONF_ADJUST_UNSUPPORTED_QUERY= "adjuster.document.unsupported.query";
+           
+    
     /**
      * Maps from field names to field names, one way when rewriting queries,
      * the other way when adjusting the returned result. This involves only
@@ -150,7 +164,7 @@ public class InteractionAdjuster implements Configurable {
         "adjuster.facet.fields";
     public static final String 
         SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
-
+    
     /**
      * Maps, extends and contracts tag names for returned facet results.
      * </p><p>
@@ -170,6 +184,8 @@ public class InteractionAdjuster implements Configurable {
     private ManyToManyMapper defaultDocumentFields = null;
     private ManyToManyMapper defaultFacetFields = null;
     private List<TagAdjuster> tagAdjusters = null;
+    private Set<String> unsupportedFields = new HashSet<String>();
+    private Query unsupportedQuery = null;
     private final boolean enabled;
     private boolean adjustResponseFieldsEnabled;
     private boolean adjustResponseFacetsEnabled;
@@ -194,7 +210,7 @@ public class InteractionAdjuster implements Configurable {
         if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
             defaultFacetFields = new ManyToManyMapper(
                 conf.getStrings(CONF_ADJUST_FACET_FIELDS));
-        }
+        }              
         if (conf.valueExists(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> taConfs;
             try {
@@ -213,6 +229,15 @@ public class InteractionAdjuster implements Configurable {
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
+        
+        if (conf.valueExists(CONF_ADJUST_UNSUPPORTED_FIELDS)){
+          unsupportedFields = new HashSet<String>(conf.getStrings(CONF_ADJUST_UNSUPPORTED_FIELDS));
+          String unsupportedQueryString = conf.getString(CONF_ADJUST_UNSUPPORTED_QUERY);
+          
+          String[] split = unsupportedQueryString.split(":");
+          unsupportedQuery = new TermQuery(new Term(split[0],split[1]));
+        }
+                               
         log.debug(String.format(
             "Constructed search adjuster with id='%s', enabled=%b, "
             + "baseFactor=%f, baseAddition=%f, "
@@ -317,7 +342,11 @@ public class InteractionAdjuster implements Configurable {
                 // For phrases we only replace the field (if any)
                 @Override
                 public Query onQuery(PhraseQuery query) {
-                    if ("".equals(query.getTerms()[0].field())) {
+                	String baseField = query.getTerms()[0].field();
+                	if (unsupportedFields.contains(baseField)) {
+                		return unsupportedQuery;
+                	}
+                    if ("".equals(baseField)) {
                         return query;
                     }
                     boolean first = true;
@@ -346,6 +375,11 @@ public class InteractionAdjuster implements Configurable {
                     if ("".equals(query.getTerm().field())) {
                         return query;
                     }
+                    String baseField = query.getTerm().field();
+                	if (unsupportedFields.contains(baseField)) {
+                		return unsupportedQuery;
+                	}                    
+                    
                     List<Pair<String, String>> terms = makeTerms(
                         query.getTerm().field(), query.getTerm().text(), maps);
                     Query result = makeQuery(terms, query.getBoost());
@@ -358,7 +392,13 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(final TermRangeQuery query) {
-                    return handleFieldExpansionQuery(
+                	String baseField = query.getField();
+                 	if (unsupportedFields.contains(baseField)) {
+                 		return unsupportedQuery;
+                 	}     
+                	
+                	
+                	return handleFieldExpansionQuery(
                         query, query.getField(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
@@ -372,7 +412,12 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(final PrefixQuery query) {
-                    return handleFieldExpansionQuery(
+                	String baseField = query.getField();
+                 	if (unsupportedFields.contains(baseField)) {
+                 		return unsupportedQuery;
+                 	}     
+                	
+                	return handleFieldExpansionQuery(
                         query, query.getField(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
@@ -385,7 +430,12 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(final FuzzyQuery query) {
-                    return handleFieldExpansionQuery(
+                	String baseField = query.getField();
+                 	if (unsupportedFields.contains(baseField)) {
+                 		return unsupportedQuery;
+                 	}     
+
+                	return handleFieldExpansionQuery(
                         query, query.getField(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
