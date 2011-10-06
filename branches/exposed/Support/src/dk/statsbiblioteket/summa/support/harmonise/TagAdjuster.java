@@ -87,10 +87,10 @@ public class TagAdjuster implements Configurable {
      * The way to merge counts for tags when more than one source tag maps to a
      * destination tag.
      * </p><p>
-     * Optional. Default is max. Valid values are min, max and sum.
+     * Optional. Default is sum. Valid values are min, max and sum.
      */
     public static final String CONF_MERGE_MODE = "tagadjuster.merge.mode";
-    public static final MERGE_MODE DEFAULT_MERGE_MODE = MERGE_MODE.max;
+    public static final MERGE_MODE DEFAULT_MERGE_MODE = MERGE_MODE.sum;
 
     private final List<String> facetNames;
     private final MERGE_MODE mergeMode;

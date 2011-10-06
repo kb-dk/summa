@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -14,7 +15,6 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -73,8 +73,9 @@ public class InteractionAdjusterTest extends TestCase {
         facetIDs.put("ContentType", 0);
         HashMap<String, String[]> fields = new HashMap<String, String[]>();
         fields.put("ContentType", new String[]{"ContentType"});
+        Structure structure = new Structure("ContentType", 10);
         FacetResultExternal summaFacetResult = new FacetResultExternal(
-            new HashMap<String, Integer>(), facetIDs, fields, null);
+            new HashMap<String, Integer>(), facetIDs, fields, structure);
         summaFacetResult.setPrefix("interactionadjustertest");
         //noinspection unchecked
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
@@ -85,20 +86,74 @@ public class InteractionAdjusterTest extends TestCase {
 
         adjuster.adjust(request, responses);
 
+        assertFacetResultRewrite(responses, "lma_long", "audio");
+    }
+
+    public void testFacetFieldMultiTarget() {
+        InteractionAdjuster adjuster = createAdjuster();
+
+        Request request = new Request(
+            FacetKeys.SEARCH_FACET_FACETS, "lma_long"
+        );
+
+        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>();
+        facetIDs.put("ContentType", 0);
+        HashMap<String, String[]> fields = new HashMap<String, String[]>();
+        fields.put("ContentType", new String[]{"ContentType"});
+        Structure structure = new Structure("ContentType", 10);
+        FacetResultExternal summaFacetResult = new FacetResultExternal(
+            new HashMap<String, Integer>(), facetIDs, fields, structure);
+        summaFacetResult.setPrefix("interactionadjustertest");
+        //noinspection unchecked
+        summaFacetResult.getMap().put("ContentType", Arrays.asList(
+            new FlexiblePair<String, Integer>(
+                "Newspaper Article", 2,
+                FlexiblePair.SortType.PRIMARY_ASCENDING),
+            new FlexiblePair<String, Integer>(
+                "Journal Article", 5,
+                FlexiblePair.SortType.PRIMARY_ASCENDING)
+        ));
+        ResponseCollection responses = new ResponseCollection();
+        responses.add(summaFacetResult);
+
+        adjuster.adjust(request, responses);
+        assertTagCount(responses, "lma_long", "avisart", 2);
+        assertTagCount(responses, "lma_long", "tssart", 5);
+        assertTagCount(responses, "lma_long", "artikel", 7);
+   }
+
+    private void assertTagCount(ResponseCollection responses, String facet,
+                                String tag, int count) {
+        FacetResultExternal fr =
+            (FacetResultExternal)responses.iterator().next();
+        List<FlexiblePair<String, Integer>> tags = fr.getMap().get(facet);
+        for (FlexiblePair<String, Integer> currentTag: tags) {
+            if (tag.equals(currentTag.getKey())) {
+                assertEquals("The count for tag '" + tag + "' should match",
+                             Integer.valueOf(count), currentTag.getValue());
+                return;
+            }
+        }
+        fail("The tag '" + tag + "' with count " + count + " could not be "
+             + "located in facet '" + facet + "'");
+    }
+
+    private void assertFacetResultRewrite(
+        ResponseCollection responses, String field, String term) {
         assertEquals("The adjusted response should contain rewritten facet "
                      + "query field for material type",
-                     "lma_long",
+                     field,
                      ((FacetResultExternal)responses.iterator().next()).
                          getFields().entrySet().iterator().next().
                          getValue()[0]);
         assertEquals("The adjusted response should contain rewritten field for"
                      + " material type",
-                     "lma_long",
+                     field,
                      ((FacetResultExternal)responses.iterator().next()).
                          getMap().entrySet().iterator().next().getKey());
         assertEquals("The adjusted response should contain rewritten tag for"
                      + " material type",
-                     "audio",
+                     term,
                      ((FacetResultExternal)responses.iterator().next()).
                          getMap().entrySet().iterator().next().getValue().
                          get(0).getKey());
@@ -223,6 +278,7 @@ public class InteractionAdjusterTest extends TestCase {
                             "Audio Sound - audio",
                             "Article - artikel",
                             "Book Chapter - artikel;artikelibog",
+                            "Journal Article - artikel;tssart",
                             "Book Review - artikel",
                             "Magazine Article - artikel;magart",
                             "Newsletter - artikel",
@@ -263,6 +319,7 @@ public class InteractionAdjusterTest extends TestCase {
                          + "ContentType:\"Book Review\" OR "
                          + "ContentType:\"Trade Publication Article\" OR "
                          + "ContentType:\"Publication Article\" OR "
+                         + "ContentType:\"Journal Article\" OR "
                          + "ContentType:\"Book Chapter\" OR "
                          + "ContentType:\"Article\")",
                          "lma_long:\"artikel\"");
@@ -377,6 +434,14 @@ public class InteractionAdjusterTest extends TestCase {
                          "llang:\"ba\"");
     }
 
+    /**
+     * Tests whether the adjuster correctly rewrites a query going from the
+     * outer caller to the searcher requiring special syntax or fields.
+     * @param adjuster responsible for performing query adjustment.
+     * @param expected the expected result
+     * @param query will be rewritten using the adjuster and the result compared
+     *        to expected.
+     */
     private void assertAdjustment(
         InteractionAdjuster adjuster, String expected, String query) {
         Request request = new Request(
