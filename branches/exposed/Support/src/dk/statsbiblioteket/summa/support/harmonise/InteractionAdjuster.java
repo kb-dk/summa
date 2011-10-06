@@ -265,9 +265,10 @@ public class InteractionAdjuster implements Configurable {
      */
     public Request rewrite(Request request) {
         log.trace("rewrite called");
-
+        String incomming=null;
+        
         if (log.isDebugEnabled()) {
-            log.debug("Query Request:" + request.toString());
+        incomming=request.toString();        	
         }
         
         Request adjusted = clone(request);
@@ -281,7 +282,13 @@ public class InteractionAdjuster implements Configurable {
         } catch (ParseException e) {
             log.info("ParseException while rewriting request", e);
         }
+       
+        if (log.isDebugEnabled()) {
+          log.debug("Query Request:" + incomming + " Query rewritten:"+adjusted);
+          
+        }
         return adjusted;
+        
     }
 
     /**
