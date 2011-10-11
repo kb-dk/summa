@@ -66,7 +66,7 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private void cleanup() throws Exception {
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         if (SearchTest.INDEX_ROOT.exists()) {
             Files.delete(SearchTest.INDEX_ROOT);
         }
@@ -115,27 +115,30 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void testUpdateBlankIndex() throws Exception {
-        Storage storage = SearchTest.startStorage();
+        final String STORAGE = "updateblank_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
         updateIndex();
         storage.close();
     }
 
     public void testIngest() throws Exception {
-        Storage storage = SearchTest.startStorage();
+        final String STORAGE = "testingest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
-        assertTrue("Hans Jensen data should be ingested",
-                   storage.getRecords(
-                           Arrays.asList("fagref:hj@example.com"), null).size() == 1);
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part1").getFile());
+        assertEquals("Hans Jensen data should be ingested",
+                     1, storage.getRecords(
+            Arrays.asList("fagref:hj@example.com"), null).size());
         storage.close();
     }
 
     public void testSimpleSearch() throws Exception {
-        Storage storage = SearchTest.startStorage();
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
+        final String STORAGE = "testsimplesearch_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part1").getFile());
         updateIndex();
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
@@ -192,13 +195,14 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void testChangingFacets() throws Exception {
+        final String STORAGE = "changingfacets_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        Storage storage = SearchTest.startStorage();
         log.debug("Ingesting data");
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part2").getFile()));
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part2").getFile());
 
         log.debug("Creating initial index");
         Configuration indexFullConf = Configuration.load(
@@ -246,10 +250,11 @@ public class DescriptorTest extends NoExitTestCase {
     public void testFacetSearch(Configuration indexConf,
                                 Configuration searchConf,
                                 String checkFacet) throws Exception {
+        final String STORAGE = "facetsearch_storage";
         log.debug("Creating Searcher");
         SummaSearcherImpl searcher = new SummaSearcherImpl(searchConf);
         log.debug("Searcher created");
-        Storage storage = SearchTest.startStorage();
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
         index(indexConf);
         log.debug("Update 1 performed");
@@ -262,11 +267,11 @@ public class DescriptorTest extends NoExitTestCase {
         } catch (RemoteException e) {
             // Expected
         }
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
-        assertTrue("Hans Jensen data should be ingested",
-                   storage.getRecords(Arrays.asList(
-                           "fagref:hj@example.com"), null).size() == 1);
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part1").getFile());
+        assertEquals("Hans Jensen data should be ingested",
+                     1, storage.getRecords(Arrays.asList(
+            "fagref:hj@example.com"), null).size());
         log.debug("Ingest 1 performed");
         index(indexConf);
         log.debug("Update 2 performed");
@@ -278,8 +283,8 @@ public class DescriptorTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
         log.debug("Adding new material");
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part2").getFile()));
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part2").getFile());
         index(indexConf);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
@@ -298,7 +303,8 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void testFacetBuild() throws Exception {
-        Storage storage = SearchTest.startStorage();
+        final String STORAGE = "facetbuild_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         updateIndex();
         storage.close();
     }

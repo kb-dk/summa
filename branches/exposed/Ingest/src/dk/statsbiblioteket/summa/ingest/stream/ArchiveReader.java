@@ -20,7 +20,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -39,9 +38,8 @@ import de.schlichtherle.truezip.file.TFile;
  * files as streams. This is a plug-in replacement for FileReader and the
  * recommended way of feeding file content into Summa.
  * </p><p>
- * All options from {@link FileReader} are supported. Note that the renaming of
- * files only take place outside of archives. The archives themselves are never
- * changed.
+ * Note that the renaming of files only take place outside of archives.
+ * The archives themselves are never changed.
  * </p><p>
  * Currently the TrueZIP package from http://truezip.java.net/ is used. This
  * package supports multiple parallel streams for ZIP and similar archives.
@@ -49,29 +47,28 @@ import de.schlichtherle.truezip.file.TFile;
  * See http://java.net/projects/truezip for details.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
-public class ArchiveReader implements ObjectFilter {
+public class ArchiveReader extends FileSystemReader {
     private static Log log = LogFactory.getLog(ArchiveReader.class);
 
     protected FileProvider provider;
 
     public ArchiveReader(Configuration conf) {
-        boolean recursive = conf.getBoolean(
-            FileReader.CONF_RECURSIVE, FileReader.DEFAULT_RECURSIVE);
+        boolean recursive = conf.getBoolean(CONF_RECURSIVE, DEFAULT_RECURSIVE);
         boolean reverseSort = conf.getBoolean(
-            FileReader.CONF_REVERSE_SORT, FileReader.DEFAULT_REVERSE_SORT);
+            CONF_REVERSE_SORT, DEFAULT_REVERSE_SORT);
         Pattern filePattern = Pattern.compile(conf.getString(
-            FileReader.CONF_FILE_PATTERN, FileReader.DEFAULT_FILE_PATTERN));
-        String postfix = conf.getString(FileReader.CONF_COMPLETED_POSTFIX,
-                                 FileReader.DEFAULT_COMPLETED_POSTFIX);
+            CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
+        String postfix = conf.getString(
+            CONF_COMPLETED_POSTFIX, DEFAULT_COMPLETED_POSTFIX);
         String realPostfix = "".equals(postfix) ? null : postfix;
 
-        String rootString = conf.getString(FileReader.CONF_ROOT_FOLDER);
+        String rootString = conf.getString(CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
             throw new Configurable.ConfigurationException(String.format(
                 "No root. This must be specified with %s",
-                FileReader.CONF_ROOT_FOLDER));
+                CONF_ROOT_FOLDER));
         }
         log.trace("Got root-property '" + rootString + "'");
         TFile root = new TFile(rootString).getAbsoluteFile();
@@ -134,11 +131,6 @@ public class ArchiveReader implements ObjectFilter {
     public Payload next() {
         log.trace("next() called");
         return provider.next();
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("No remove allowed");
     }
 
     private static final List<FileProvider> EMPTY =

@@ -57,21 +57,22 @@ import org.apache.lucene.store.*;
 public class IterativeTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(IterativeTest.class);
 
+    private final String STORAGE = "iterative_storage";
     private Storage storage;
     public static final String BASE = "bar";
+
 
     @Override
     public void setUp () throws Exception {
         super.setUp();
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         if (IndexTest.INDEX_ROOT.exists()) {
             Files.delete(IndexTest.INDEX_ROOT);
         }
         IndexTest.INDEX_ROOT.mkdirs();
         IterativeHelperDocCreator.processedIDs.clear();
 
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        storage = StorageFactory.createStorage(storageConf);
+        storage = ReleaseHelper.startStorage(STORAGE);
     }
 
     @Override

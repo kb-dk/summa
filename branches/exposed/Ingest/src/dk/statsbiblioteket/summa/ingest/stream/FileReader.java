@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -55,57 +54,16 @@ import org.apache.commons.logging.LogFactory;
  * {@link #CONF_REVERSE_SORT} is true.
  * </p><p>
  * Warning: The FileReader does not check for cyclic folders structures.
+ * </p><p>
+ * @deprecated {@link ArchiveReader} has the same functionality as FileReader
+ * and furthermore supports packed content (ZIP, tar, gz...).
  */
 // TODO Make the FileReader handle cyclic folder structures
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FileReader implements ObjectFilter {
+public class FileReader extends FileSystemReader {
     private static Log log = LogFactory.getLog(FileReader.class);
-
-    /**
-     * The root folder to scan from.
-     * </p><p>
-     * This property must be specified.
-     */
-    public static final String CONF_ROOT_FOLDER =
-            "summa.ingest.filereader.rootfolder";
-    /**
-     * Whether to perform a recursive scan or not (valid values: true, false).
-     * </p><p>
-     * This property is optional. Default is "true".
-     */
-    public static final String CONF_RECURSIVE =
-            "summa.ingest.filereader.recursive";
-    public static final boolean DEFAULT_RECURSIVE = true;
-
-    /**
-     * The file pattern to match.
-     * </p><p>
-     * This property is optional. Default is ".*\.xml".
-     */
-    public static final String CONF_FILE_PATTERN =
-            "summa.ingest.filereader.filepattern";
-    public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
-    /**
-     * The postfix for the file when it has been fully processed.
-     * Setting this to null or the empty String means that no renaming is done.
-     * </p><p>
-     * This property is optional. Default is ".completed".
-     */
-    public static final String CONF_COMPLETED_POSTFIX =
-            "summa.ingest.filereader.completedpostfix";
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String DEFAULT_COMPLETED_POSTFIX = ".completed";
-
-    /**
-     * If true, scans are performed in reverse unicode order.
-     * </p><p>
-     * This property is optional. Default is false.
-     */
-    public static final String CONF_REVERSE_SORT =
-            "summa.ingest.filereader.sort.reverse";
-    public static final boolean DEFAULT_REVERSE_SORT = false;
 
     protected File root;
     private boolean recursive;
@@ -419,14 +377,6 @@ public class FileReader implements ObjectFilter {
     public synchronized boolean hasNext() {
         updateToDo();
         return todo.size() > 0;
-    }
-
-    /**
-     * Not implemented. So doesn't do anything.
-     */
-    @Override
-    public void remove() {
-        log.warn("Remove not implemented for " + getClass().getName());
     }
 
     /**

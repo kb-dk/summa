@@ -35,6 +35,8 @@ import java.util.zip.ZipInputStream;
  *       will block until the previous stream has been closed.
  * // TODO: Consider adding a timeout or similar to guard against streams not
  *          being closed.
+ * Note: The filter {@link ArchiveReader} supports reading compressed content
+ *       directly from the file system and is preferable the source is files.
  */
 @QAInfo(level = QAInfo.Level.PEDANTIC,
         state = QAInfo.State.QA_NEEDED,

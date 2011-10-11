@@ -86,7 +86,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
             throw new ConfigurationException(String.format(
                     "The property '%s' was not present and no service id was"
                     + " specified in system properties '%s'. id could not be"
-                    + " determined", Service.CONF_SERVICE_ID, Service.CONF_SERVICE_ID));
+                    + " determined",
+                    Service.CONF_SERVICE_ID, Service.CONF_SERVICE_ID));
         }
 
         Security.checkSecurityManager();

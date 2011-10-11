@@ -15,11 +15,10 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -28,19 +27,12 @@ import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.ingest.stream.FileReader;
+import dk.statsbiblioteket.summa.ingest.stream.ArchiveReader;
 import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -103,8 +95,6 @@ public class IngestTest extends NoExitTestCase {
 
     private final static int NUM_RECORDS = 5;
 
-    private static int storageCounter = 0;
-
     @Override
     public void setUp () throws Exception {
         super.setUp();
@@ -118,12 +108,13 @@ public class IngestTest extends NoExitTestCase {
         Files.saveString(NO_RECORDS, new File(sourceRoot, "none.xml"));
         Files.saveString(INVALID_RECORDS, new File(sourceRoot, "invalid.xml"));
         Files.saveString("Dummy content", new File(sourceRoot, "dummy.dummy"));
-        deleteOldStorages();
+        ReleaseHelper.cleanup();
     }
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
         Files.delete(sourceRoot);
+        ReleaseHelper.cleanup();
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -131,30 +122,9 @@ public class IngestTest extends NoExitTestCase {
             new File(new File(System.getProperty("java.io.tmpdir")),
                      "IngestTest");
 
-    public static void deleteOldStorages() throws Exception {
-        for (int i = 0 ; i < 40 ; i++) { // Up to the number of distinct tests
-            File attempDelete =
-                    new File(System.getProperty("java.io.tmpdir"),
-                             "storage" + i);
-            if (attempDelete.exists()) {
-                try {
-                    Files.delete(attempDelete);
-                    log.debug("Deleted '" + attempDelete + "'");
-                } catch (IOException e) {
-                    log.warn("Could not delete '" + attempDelete + "'");
-                }
-            }
-        }
-    }
-
-    public static File getStorageLocation() {
-        return new File(System.getProperty("java.io.tmpdir"),
-                        "storage" + storageCounter++);
-    }
-
     public void testBasicLoad() throws Exception {
-        Configuration conf = getReaderConfiguration();
-        FileReader reader = new FileReader(conf);
+        ArchiveReader reader = new ArchiveReader(
+            ReleaseHelper.getArchiveReaderConfiguration(sourceRoot.toString()));
         for (int i = 0 ; i < 4 ; i++) {
             assertTrue("Reader should have next for file #" + (i+1),
                        reader.hasNext());
@@ -167,10 +137,10 @@ public class IngestTest extends NoExitTestCase {
 
     private static final String TESTBASE = "testbase";
     public void testRecordExtraction() throws Exception {
-        Configuration readerConf = getReaderConfiguration();
+        ArchiveReader reader = new ArchiveReader(
+            ReleaseHelper.getArchiveReaderConfiguration(sourceRoot.toString()));
         Configuration splitterConf = getSplitterConfiguration();
 
-        FileReader reader = new FileReader(readerConf);
         XMLSplitterFilter splitter = new XMLSplitterFilter(splitterConf);
         splitter.setSource(reader);
         for (int i = 0 ; i < NUM_RECORDS ; i++) {
@@ -181,52 +151,39 @@ public class IngestTest extends NoExitTestCase {
         }
         assertFalse("Splitter should only have " + NUM_RECORDS + " payloads",
                    splitter.hasNext());
+        splitter.close(true);
     }
 
     public static Configuration getSplitterConfiguration() {
-        Configuration splitterConf = Configuration.newMemoryBased();
-        splitterConf.set(XMLSplitterFilter.CONF_BASE, TESTBASE);
-        splitterConf.set(XMLSplitterFilter.CONF_COLLAPSE_PREFIX, "true");
-        splitterConf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "record#id");
-        splitterConf.set(XMLSplitterFilter.CONF_ID_PREFIX, "myprefix");
-        splitterConf.set(XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, "true");
-        splitterConf.set(XMLSplitterFilter.CONF_RECORD_ELEMENT, "record");
-        splitterConf.set(XMLSplitterFilter.CONF_REQUIRE_VALID, "false");
-        return splitterConf;
+        return Configuration.newMemoryBased(
+            XMLSplitterFilter.CONF_BASE, TESTBASE,
+            XMLSplitterFilter.CONF_COLLAPSE_PREFIX, "true",
+            XMLSplitterFilter.CONF_ID_ELEMENT, "record#id",
+            XMLSplitterFilter.CONF_ID_PREFIX, "myprefix",
+            XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, "true",
+            XMLSplitterFilter.CONF_RECORD_ELEMENT, "record",
+            XMLSplitterFilter.CONF_REQUIRE_VALID, "false");
     }
-    public static Configuration getReaderConfiguration() {
+
+    /*
+     * @return a configuration for a FileReader that looks for data in
+     * {@link #sourceRoot}.
+     * @deprecated in favor of {@link ReleaseHelper#getArchiveReaderConfiguration(String)}.
+     */
+/*    public static Configuration getReaderConfiguration() {
         Configuration readerConf = Configuration.newMemoryBased();
         readerConf.set(FileReader.CONF_ROOT_FOLDER, sourceRoot.toString());
         readerConf.set(FileReader.CONF_RECURSIVE, true);
         readerConf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
         readerConf.set(FileReader.CONF_COMPLETED_POSTFIX, ".processed");
         return readerConf;
-    }
-    public static final String STORAGE_ADDRESS =
-            "//localhost:28000/summa-storage";
-    public static Configuration getStorageConfiguration() {
-        Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseStorage.CONF_LOCATION,
-                 getStorageLocation().toString());
-        conf.set(DatabaseStorage.CONF_FORCENEW, true);
-        conf.set(DatabaseStorage.CONF_FORCENEW, true);
-        conf.set(Storage.CONF_CLASS,
-                 "dk.statsbiblioteket.summa.storage.database.h2.H2Storage");
+    }*/
 
-/*        conf.set(Service.CONF_SERVICE_PORT, 27003);
-        conf.set(Service.CONF_REGISTRY_PORT, 27000);  // Why is this not done?
-        conf.set(Service.CONF_SERVICE_ID, "TestStorage");
-        System.setProperty(Service.CONF_SERVICE_ID, "TestStorage");*/
-        return conf;
-    }
-    private Configuration getWriterConfiguration() {
-        Configuration writerConf = Configuration.newMemoryBased();
-        writerConf.set(ConnectionConsumer.CONF_RPC_TARGET, STORAGE_ADDRESS);
-        return writerConf;
-    }
+    //public static final String STORAGE_ADDRESS =
+//            "//localhost:28000/summa-storage";
 
     public void testStorage() throws Exception {
-        Configuration storageConf = getStorageConfiguration();
+        Configuration storageConf = ReleaseHelper.getStorageConfiguration("foo");
         assertTrue("Storage conf should have location", storageConf.valueExists(
                 DatabaseStorage.CONF_LOCATION));
         Storage storage = StorageFactory.createStorage(storageConf);
@@ -246,96 +203,84 @@ public class IngestTest extends NoExitTestCase {
         assertFalse("After extraction of a Record, "
                     + "the iterator should be empty",
                    iterator.hasNext());
+        storage.close();
+    }
+
+    public void testStorageClients() throws Exception {
+        String STORAGE_NAME = "remote";
+        Storage storage = StorageFactory.createStorage(
+            ReleaseHelper.getStorageConfiguration(STORAGE_NAME));
+
+        StorageReaderClient reader = new StorageReaderClient(
+            ReleaseHelper.getStorageClientConfiguration(STORAGE_NAME));
+
+        long iterKey = reader.getRecordsModifiedAfter(0, TESTBASE, null);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
+        assertFalse("The Storage should be empty", iterator.hasNext());
+
+        StorageWriterClient writer = new StorageWriterClient(
+            ReleaseHelper.getStorageClientConfiguration(STORAGE_NAME));
+        Record record = new Record("foo", TESTBASE, new byte[0]);
+        writer.flush(record);
+
+        iterKey = reader.getRecordsModifiedAfter(0, TESTBASE, null);
+        iterator = new StorageIterator(storage, iterKey);
+        assertTrue("The Storage should contain something", iterator.hasNext());
+        assertEquals("The first record should have id as expected",
+                     "foo", iterator.next().getId());
+        assertFalse("After extraction of a Record, "
+                    + "the iterator should be empty",
+                   iterator.hasNext());
     }
 
     // See StorageServiceTest for RecordWriter unit test
 
     public void testIngestWorkflow() throws Exception {
-        // TODO: Implement this. Remember to use a proper filter chain
-        Configuration readerConf = getReaderConfiguration();
-        Configuration splitterConf = getSplitterConfiguration();
-        Configuration writerConf = getWriterConfiguration();
-        Configuration storageConf = getStorageConfiguration();
+        final String STORAGE_NAME = "ingestflow";
 
-        // Create a storage instance
-        Storage storage = StorageFactory.createStorage(storageConf);
+        // Plain ingest
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
+        int ingested = ReleaseHelper.ingest(
+            STORAGE_NAME, sourceRoot.toString(), TESTBASE,
+            "myprefix", "record", "record#id");
+        assertEquals("The expected number of Records should be ingested",
+                     NUM_RECORDS, ingested);
 
-        // Set up filter chain
-        FileReader reader = new FileReader(readerConf);
-        XMLSplitterFilter splitter = new XMLSplitterFilter(splitterConf);
-        splitter.setSource(reader);
-        RecordWriter writer = new RecordWriter(writerConf);
-        writer.setSource(splitter);
-
-        assertTrue("The writer should have at least one record available",
-                   writer.hasNext());
-        for (int i = 0 ; i < NUM_RECORDS ; i++) {
-            assertTrue("Writer should have next for record #" + (i+1),
-                       writer.hasNext());
-            Payload payload = writer.next();
-            assertNotNull("The next should give a payload", payload);
-        }
-        assertFalse("Writer should only have " + NUM_RECORDS + " payloads",
-                   writer.hasNext());
-        log.debug("Play nice and close with success");
-        writer.close(true);
-
-        // Connect to the Storage remotely
-        ConnectionFactory<Storage> cf = new StorageConnectionFactory(storageConf);
-        ConnectionManager<Storage> cm = new ConnectionManager<Storage>(cf);
-
-        // Do this for each connection
-        ConnectionContext<Storage> ctx = cm.get(STORAGE_ADDRESS);
-        assertNotNull("The ConnectionManager should return an Storage"
-                      + " ConnectionContext", ctx);
-        ctx.getConnection();
-
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
-        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
-        assertTrue("The iterator should have at least one element",
-                   iterator.hasNext());
-        for (int i = 0 ; i < NUM_RECORDS ; i++) {
-            assertTrue("Storage should have next for record #" + (i+1),
-                       iterator.hasNext());
-            Record record = iterator.next();
-            assertNotNull("The next should give a record", record);
-        }
-        assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
-                    iterator.hasNext());
-
-        log.debug("Releasing remoteStorage connection context");
-        cm.release(ctx);
+        // Explicit check for existence in Storage
+        List<Record> records = ReleaseHelper.getRecords(STORAGE_NAME);
+        assertEquals(
+            "There should be the expected number of records in Storage",
+            NUM_RECORDS, records.size());
 
         storage.close();
         log.debug("Finished testRemote unit test");
     }
 
-    // with proper use of FilterChain
-    public void testFullIngestWorkflow() throws Exception {
-        File dataLocation = new File(Resolver.getURL(
-                "5records").getFile());
 
+    // with proper use of FilterChain
+    public void testFilterServiceWorkflow() throws Exception {
+        final String STORAGE_NAME = "serviceflow_storage";
+
+        File dataLocation = new File(Resolver.getURL(
+                "resources/5records").getFile());
         assertTrue("The test-data should be present at " + dataLocation,
                    dataLocation.exists());
 
         int TIMEOUT = 10000;
 
-        // Storage
-        Configuration storageConf = getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         File filterConfFile = new File(Resolver.getURL(
-                "5records/filter_setup.xml").getFile());
+                "resources/5records/filter_setup.xml").getFile());
         assertTrue("The filter conf. '" + filterConfFile + "' should exist",
                    filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
         filterConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
-                set(FileReader.CONF_ROOT_FOLDER, dataLocation.getPath());
-        assertNotNull("Configuration should contain "
-                      + FilterControl.CONF_CHAINS,
-                      filterConf.getSubConfigurations(
-                              FilterControl.CONF_CHAINS));
+                set(ArchiveReader.CONF_ROOT_FOLDER, dataLocation.getPath());
+        assertNotNull(
+            "Configuration should contain " + FilterControl.CONF_CHAINS,
+            filterConf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
@@ -346,8 +291,8 @@ public class IngestTest extends NoExitTestCase {
             log.debug("Sleeping a bit");
             Thread.sleep(100);
         }
-        assertTrue("The ingester should have stopped by now",
-                   ingester.getStatus().getCode().equals(Status.CODE.stopped));
+        assertEquals("The ingester should have stopped by now",
+                     Status.CODE.stopped, ingester.getStatus().getCode());
 
         long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
@@ -365,7 +310,3 @@ public class IngestTest extends NoExitTestCase {
         storage.close();
     }
 }
-
-
-
-

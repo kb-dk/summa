@@ -60,7 +60,7 @@ public class IndexTest extends NoExitTestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         if (INDEX_ROOT.exists()) {
             Files.delete(INDEX_ROOT);
         }
@@ -206,8 +206,8 @@ public class IndexTest extends NoExitTestCase {
      */
     public static Storage fillStorage() throws Exception {
         // Storage
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
+        final String STORAGE = "fill_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         return fillStorage(storage);
     }
     public static Storage fillStorage(Storage storage) throws Exception {

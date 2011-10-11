@@ -5,6 +5,10 @@
             <value class="int">27072</value>
         </entry>
         <entry>
+            <key>summa.control.service.id</key>
+            <value class="String">ingester</value>
+        </entry>
+        <entry>
             <key>filter.name</key>
             <value class="string">Simple file-based ingest</value>
         </entry>
@@ -32,7 +36,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.filter.sequence.filterclass</key>
-                                    <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.stream.ArchiveReader</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.filereader.rootfolder</key>
@@ -102,7 +106,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.rpc.vendor</key>
-                                    <value class="string">//localhost:28000/summa-storage</value>
+                                    <value class="string">//localhost:28000/serviceflow_storage</value>
                                 </entry>
                             </xproperties>
 

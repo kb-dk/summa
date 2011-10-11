@@ -25,8 +25,6 @@ import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.Security;
-import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
@@ -35,20 +33,17 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,7 +68,9 @@ public class SearchTest extends NoExitTestCase {
         super.setUp();
         Security.checkSecurityManager();
         cleanup();
-        INDEX_ROOT.mkdirs();
+        if (!INDEX_ROOT.mkdirs()) {
+            throw new IOException("Unable to create folder " + INDEX_ROOT);
+        }
     }
 
     @Override
@@ -83,10 +80,11 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private void cleanup() throws Exception {
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         if (INDEX_ROOT.exists()) {
             Files.delete(INDEX_ROOT);
         }
+        ReleaseHelper.cleanup();
     }
 
     public static File root = new File(Resolver.getURL(
@@ -94,26 +92,9 @@ public class SearchTest extends NoExitTestCase {
             getFile()).getParentFile();
     public static String BASE = "fagref";
 
-    public static Storage startStorage() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-
-        String path = storageConf.getString(DatabaseStorage.CONF_LOCATION);
-        if(new File(path).exists()) {
-            System.out.println("deleted '" + path + "' database.");
-            new File(path).delete();
-        }
-
-        storageConf.set(DatabaseStorage.CONF_CREATENEW, true);
-        storageConf.set(DatabaseStorage.CONF_FORCENEW, true);
-        Storage storage = StorageFactory.createStorage(storageConf);
-
-        return storage;
-    }
-        
     /* ingest the data in the given folder to Storage, assuming that Storage
      * is running. */
-    public static void ingest(File folder) throws Exception {
-
+/*    public static void ingest(String storage, File folder) throws Exception {
         Configuration conf = Configuration.load(
                 "search/SearchTest_IngestConfiguration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
@@ -125,7 +106,7 @@ public class SearchTest extends NoExitTestCase {
         ingester.start();
         IndexTest.waitForService(ingester);
         ingester.stop();
-    }
+    }*/
 
     public static void update(Record record) throws Exception {
         Payload payload = new Payload(record);
@@ -145,42 +126,25 @@ public class SearchTest extends NoExitTestCase {
         writer.close(true);
     }
 
-    /* Connects to Storage, iterates all records and verifies that the given
-       id exists. Returns the last found Record with the given ID.
-     */
-    public static Record verifyStorage(Storage storage, String id) throws
-                                                                     Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, BASE, null);
-        Iterator<Record> recordIterator = new StorageIterator(storage, iterKey);
-
-        Record result = null;
-        assertTrue("The iterator should have at least one element",
-                   recordIterator.hasNext());
-        while (recordIterator.hasNext()) {
-            Record outer = recordIterator.next();
-            if (outer.getId().equals(id)) {
-                result = outer;
-                while (recordIterator.hasNext()) {
-                    Record record = recordIterator.next();
-                    if (record.getId().equals(id)) {
-                        fail("More than ine Record with id '" + id + " was "
-                             + "present in the Storage");
-                    }
-                }
-                return result;
-            }
-        }
-        fail("A Record with id '" + id + "' should be present in the storage");
-        return result; // Just to avoid compiler warnings
+    public void testIngest() throws Exception {
+        final String STORAGE = "search_ingest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        ingestFagref(STORAGE, "search/input/part1");
+        verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
+        ingestFagref(STORAGE, "search/input/part2");
+        verifyStorage(STORAGE, "jh", "fagref:jh@example.com");
+        storage.close();
     }
 
-    public void testIngest() throws Exception {
-        Storage storage = startStorage();
-        ingest(new File(Resolver.getURL("search/input/part1").getFile()));
-        verifyStorage(storage, "fagref:hj@example.com");
-        ingest(new File(Resolver.getURL("search/input/part2").getFile()));
-        verifyStorage(storage, "fagref:jh@example.com");
-        storage.close();
+    private static void verifyStorage(
+        String storage, String feedback, String recordID) throws IOException {
+        assertNotNull("A Record for " + feedback + " should be present",
+                      ReleaseHelper.getRecord(storage, recordID));
+    }
+
+    public static void ingestFagref(String storage, String source) {
+        ReleaseHelper.ingest(
+            storage, source, "fagref", "fagref:", "fagref", "email");
     }
 
     public final static File INDEX_ROOT =
@@ -336,6 +300,8 @@ public class SearchTest extends NoExitTestCase {
     // TODO: The test fails sometimes, probably a race-condition. Fix it!
     public static void testFullSearcher(SummaSearcher searcher) throws
                                                                 Exception {
+        final String STORAGE = "search_full_storage";
+
         log.debug("testFullSearcher started. Performing search");
         try {
             searcher.search(simpleRequest("hans"));
@@ -344,7 +310,7 @@ public class SearchTest extends NoExitTestCase {
         } catch (RemoteException e) {
             // Expected
         }
-        Storage storage = startStorage();
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
         updateIndex();
         log.debug("updateIndex called");
@@ -355,8 +321,8 @@ public class SearchTest extends NoExitTestCase {
         } catch (Exception e) {
             // Expected
         }
-        ingest(new File(Resolver.getURL("search/input/part1").getFile()));
-        verifyStorage(storage, "fagref:hj@example.com");
+        ingestFagref(STORAGE, Resolver.getURL("search/input/part1").getFile());
+        verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 1 doc");
         Thread.sleep(5000); // Wait for searcher to discover new content
@@ -371,8 +337,8 @@ public class SearchTest extends NoExitTestCase {
             fail("Failed search 1 for Gurli: " + e.getMessage());
         }
         log.debug("Adding new material");
-        ingest(new File(Resolver.getURL("search/input/part2").getFile()));
-        verifyStorage(storage, "fagref:hj@example.com");
+        ingestFagref(STORAGE, Resolver.getURL("search/input/part2").getFile());
+        verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 3 docs");
         Thread.sleep(5000); // Wait for searcher to discover new content

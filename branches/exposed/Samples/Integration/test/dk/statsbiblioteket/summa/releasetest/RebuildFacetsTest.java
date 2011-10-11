@@ -50,25 +50,25 @@ public class RebuildFacetsTest extends NoExitTestCase {
     }
 
     private void cleanup() throws Exception {
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         if (SearchTest.INDEX_ROOT.exists()) {
             Files.delete(SearchTest.INDEX_ROOT);
         }
     }
 
     public void testFacetSearch() throws Exception {
+        final String STORAGE = "facetbuild_storage";
         log.debug("Getting configuration for searcher");
         Configuration conf = FacetTest.getSearcherConfiguration();
         log.debug("Creating Searcher");
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         log.debug("Searcher created");
-        Storage storage = SearchTest.startStorage();
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Ingesting");
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
-        SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part2").getFile()));
-        FacetTest.updateIndex();
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
+            "data/search/input/part2").getFile());
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
         log.debug("Verify index");

@@ -22,7 +22,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.util.Profiler;
@@ -46,7 +45,7 @@ public class StorageTest extends NoExitTestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
     }
 
     @Override
@@ -66,9 +65,10 @@ public class StorageTest extends NoExitTestCase {
   */  
 
     public void testSimpleStorage() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
+        final String STORAGE_NAME = "simple_storage";
+
         log.debug("Creating Storage");
-        Storage storage = StorageFactory.createStorage(storageConf);
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         Record record = new Record("Dummy", "foo", new byte[0]);
         log.debug("Adding Record to Storage");
@@ -77,7 +77,7 @@ public class StorageTest extends NoExitTestCase {
         assertNotNull("Storage should provide the Record",
                       storage.getRecord("Dummy", null));
 
-        RecordReader reader = getStorageReader("foo", false);
+        RecordReader reader = getStorageReader(STORAGE_NAME, "foo", false);
 
         log.debug("Querying Storage");
         assertTrue("There should be at least one record in the Storage",
@@ -86,8 +86,8 @@ public class StorageTest extends NoExitTestCase {
     }
 
     public void testSimpleRelatives() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
+        final String STORAGE_NAME = "relatives_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         List<Record> input = getSampleData();
 
@@ -98,7 +98,7 @@ public class StorageTest extends NoExitTestCase {
         assertNotNull("Storage should provide the Record 'Middle'",
                       storage.getRecord("Middle", null));
 
-        RecordReader reader = getStorageReader("foo", false);
+        RecordReader reader = getStorageReader(STORAGE_NAME, "foo", false);
 
         log.debug("Querying Storage with a reader");
         assertTrue("There should be at least one record in the Storage",
@@ -119,8 +119,8 @@ public class StorageTest extends NoExitTestCase {
     }
 
     public void testImplicitRelatives() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
+        final String STORAGE_NAME = "implicit_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         List<Record> input = getSampleData();
         input.remove(1); // Middle
@@ -128,7 +128,7 @@ public class StorageTest extends NoExitTestCase {
 
         storage.flushAll(input);
 
-        RecordReader reader = getStorageReader("foo", false);
+        RecordReader reader = getStorageReader(STORAGE_NAME, "foo", false);
 
         List<Record> all = suck(reader);
 
@@ -225,26 +225,25 @@ public class StorageTest extends NoExitTestCase {
         records.add(new Record("StillNoRelatives", "foo", new byte[0]));
         return records;
     }
-    private RecordReader getStorageReader(String base, boolean alive)
-                                                            throws IOException {
-        MemoryStorage ms = new MemoryStorage();
-        ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);
-        ms.put(StorageWatcher.CONF_POLL_INTERVAL, 500);
-        ms.put(ConnectionConsumer.CONF_RPC_TARGET,
-               "//localhost:28000/summa-storage");
-        ms.put(RecordReader.CONF_STAY_ALIVE, alive);
-        ms.put(RecordReader.CONF_BASE, base);
-        ms.put(RecordReader.CONF_EXPAND_PARENTS, true);
-        ms.put(RecordReader.CONF_EXPAND_CHILDREN, true);
-        Configuration conf = new Configuration(ms);
-        return new RecordReader(conf);
+    private RecordReader getStorageReader(
+        String storage, String base, boolean alive) throws IOException {
+        return new RecordReader(Configuration.newMemoryBased(
+            RecordReader.CONF_START_FROM_SCRATCH, true,
+            StorageWatcher.CONF_POLL_INTERVAL, 500,
+            ConnectionConsumer.CONF_RPC_TARGET,
+            "//localhost:28000/" + storage,
+            RecordReader.CONF_STAY_ALIVE, alive,
+            RecordReader.CONF_BASE, base,
+            RecordReader.CONF_EXPAND_PARENTS, true,
+            RecordReader.CONF_EXPAND_CHILDREN, true
+        ));
     }
 
     public void testStorageWatcher() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
+        final String STORAGE_NAME = "watcher_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
-        RecordReader reader = getStorageReader("fagref", true);
+        RecordReader reader = getStorageReader(STORAGE_NAME, "fagref", true);
         IndexTest.fillStorage(storage);
         assertTrue("The reader should have something", reader.hasNext());
         reader.pump();
@@ -296,7 +295,7 @@ public class StorageTest extends NoExitTestCase {
                 records, recordSize,
                 profiler.getSpendTime(), profiler.getBps(false)));
         storage.close();
-        IngestTest.deleteOldStorages();
+        ReleaseHelper.cleanup();
         log.info("Finished scale-test");
     }
 
