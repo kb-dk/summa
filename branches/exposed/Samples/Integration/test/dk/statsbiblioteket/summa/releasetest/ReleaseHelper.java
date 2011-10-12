@@ -29,7 +29,6 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import sun.plugin2.ipc.unix.UnixIPCFactory;
 
 import java.io.File;
 import java.io.IOException;

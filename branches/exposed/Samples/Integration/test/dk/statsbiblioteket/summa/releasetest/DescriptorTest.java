@@ -126,8 +126,7 @@ public class DescriptorTest extends NoExitTestCase {
         final String STORAGE = "testingest_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         assertEquals("Hans Jensen data should be ingested",
                      1, storage.getRecords(
             Arrays.asList("fagref:hj@example.com"), null).size());
@@ -137,8 +136,7 @@ public class DescriptorTest extends NoExitTestCase {
     public void testSimpleSearch() throws Exception {
         final String STORAGE = "testsimplesearch_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         updateIndex();
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
@@ -199,10 +197,8 @@ public class DescriptorTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
         log.debug("Ingesting data");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
 
         log.debug("Creating initial index");
         Configuration indexFullConf = Configuration.load(
@@ -267,8 +263,7 @@ public class DescriptorTest extends NoExitTestCase {
         } catch (RemoteException e) {
             // Expected
         }
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         assertEquals("Hans Jensen data should be ingested",
                      1, storage.getRecords(Arrays.asList(
             "fagref:hj@example.com"), null).size());
@@ -283,8 +278,7 @@ public class DescriptorTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
         log.debug("Adding new material");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         index(indexConf);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure

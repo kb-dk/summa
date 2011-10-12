@@ -210,22 +210,30 @@ public class IndexTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         return fillStorage(storage);
     }
+
+    public void testGetResource() {
+        URL dataLocation = Resolver.getURL(
+            "resources/fagref/fagref_testdata.txt");
+        assertNotNull("The test data resource (.txt) should not be null",
+                      dataLocation);
+    }
+
+
+    // TODO: Use property substitution instead of replace
     public static Storage fillStorage(Storage storage) throws Exception {
         // Ingest
-        URL dataLocation =
-                Thread.currentThread().getContextClassLoader().getResource(
-                        "data/fagref/fagref_testdata.txt");
+        URL dataLocation = Resolver.getURL(
+            "resources/fagref/fagref_testdata.txt");
         assertNotNull("The data location should not be null", dataLocation);
         File ingestRoot = new File(dataLocation.getFile()).getParentFile();
-        String filterConfString =
-                Streams.getUTF8Resource("data/fagref/fagref_filter_setup.xml");
-        filterConfString =
-                filterConfString.replace("/tmp/summatest/data/fagref",
-                                         ingestRoot.toString());
+        String filterConfString = Streams.getUTF8Resource(
+                    "resources/fagref/fagref_filter_setup.xml");
+        filterConfString = filterConfString.replace(
+                    "/tmp/summatest/data/fagref", ingestRoot.toString());
         assertFalse("Replace should work",
                     filterConfString.contains("/tmp/summatest/data/fagref"));
-        File filterConfFile = new File(System.getProperty("java.io.tmpdir"),
-                                                          "filterConf.xml");
+        File filterConfFile = new File(System.getProperty(
+            "java.io.tmpdir"), "filterConf.xml");
         Files.saveString(filterConfString, filterConfFile);
 
         assertTrue("The filter conf. should exist", filterConfFile.exists());

@@ -153,8 +153,7 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         try {
             log.debug("Storage started");
-            SearchTest.ingestFagref(
-                STORAGE, Resolver.getURL("data/search/input/part1").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
             assertEquals("Hans Jensen data should be ingested",
                          1, storage.getRecords(
                 Arrays.asList("fagref:hj@example.com"), null).size());
@@ -194,8 +193,7 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "simple_search_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        SearchTest.ingestFagref(
-            STORAGE, Resolver.getURL("data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
         assertNotNull("The fagref Hans should exist in storage", hansRecord);
         assertEquals("The Records-count should be correct after first ingest",
@@ -221,8 +219,7 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "sort_value_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         try {
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part1").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
             Record hansRecord = storage.getRecord(
                 "fagref:hj@example.com", null);
             assertNotNull("The fagref Hans should exist in storage",
@@ -262,10 +259,8 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
         try {
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part1").getFile());
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part2").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
 
             assertNotNull("The fagref Hans should exist in storage",
                           storage.getRecord("fagref:hj@example.com", null));
@@ -299,10 +294,8 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
         try {
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part1").getFile());
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part2").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
             updateIndex();
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher =
@@ -364,14 +357,12 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "index_lookup_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
         assertNotNull("The fagref Hans should exist in storage", hansRecord);
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
 
         updateIndex();
         log.debug("Index updated. Creating searcher");
@@ -455,8 +446,7 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "2doc1hit_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
         assertNotNull("There should be a Gurli Record", gurliRecord);
         assertEquals("The Records-count should be correct after first ingest",
@@ -484,8 +474,7 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "2doc1hit_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         try {
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part1plus2").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_1plus2);
             assertEquals(
                 "The Records-count should be correct after first ingest",
                 3, countRecords(storage, "fagref"));
@@ -513,8 +502,7 @@ public class FacetTest extends NoExitTestCase {
     public void testTagCounting() throws Exception {
         final String STORAGE = "tagcounting_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/partClone").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_clone);
 
         assertEquals("The Records-count should be correct after first ingest",
                      5, countRecords(storage, "fagref"));
@@ -542,12 +530,10 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "dualingest_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         assertEquals("The Records-count should be correct after second ingest",
                      3, countRecords(storage, "fagref"));
 
@@ -609,8 +595,7 @@ public class FacetTest extends NoExitTestCase {
         } catch (RemoteException e) {
             // Expected
         }*/
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         log.debug("Ingest 1 performed");
         updateIndex();
         log.debug("Update 2 performed");
@@ -622,8 +607,7 @@ public class FacetTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
         log.debug("Adding new material");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         updateIndex();
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
@@ -694,10 +678,8 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
         updateIndex();
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         log.debug("Ingest 1+2 performed");
         updateIndex();
         log.debug("Waiting for the searcher to discover the new index");
@@ -747,10 +729,8 @@ public class FacetTest extends NoExitTestCase {
 
         Configuration conf = getSearcherConfiguration();
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         updateIndex();
         updateIndex();
         searcher.checkIndex();
@@ -806,10 +786,8 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         Configuration conf = getSearcherConfiguration();
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         updateIndex();
         searcher.checkIndex();
         SearchTest.verifySearch(searcher, "Gurli", 1); // Just checking
@@ -830,10 +808,8 @@ public class FacetTest extends NoExitTestCase {
         try {
             Configuration conf = getSearcherConfiguration();
             SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part1").getFile());
-            SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-                "data/search/input/part2").getFile());
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
             updateIndex();
             searcher.checkIndex();
 
@@ -864,10 +840,8 @@ public class FacetTest extends NoExitTestCase {
 
         Configuration conf = getSearcherConfiguration();
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         updateIndex();
         searcher.checkIndex();
         storage.close();

@@ -63,6 +63,15 @@ import java.util.regex.Pattern;
 public class SearchTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(SearchTest.class);
 
+    public final static String fagref_hj =
+        Resolver.getFile("resources/search/input/part1").getAbsolutePath();
+    public final static String fagref_jh =
+        Resolver.getFile("resources/search/input/part2").getAbsolutePath();
+    public final static String fagref_1plus2 =
+        Resolver.getFile("resources/search/input/part1plus2").getAbsolutePath();
+    public final static String fagref_clone =
+        Resolver.getFile("resources/search/input/partClone").getAbsolutePath();
+
     @Override
     public void setUp () throws Exception {
         super.setUp();
@@ -88,9 +97,14 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public static File root = new File(Resolver.getURL(
-            "search/SearchTest_IngestConfiguration.xml").
+            "resources/search/SearchTest_IngestConfiguration.xml").
             getFile()).getParentFile();
     public static String BASE = "fagref";
+
+    public void testResourceCopying() {
+        assertTrue("Source '" + fagref_hj + "' should exist",
+                   Resolver.getFile(fagref_hj).exists());
+    }
 
     /* ingest the data in the given folder to Storage, assuming that Storage
      * is running. */
@@ -129,9 +143,9 @@ public class SearchTest extends NoExitTestCase {
     public void testIngest() throws Exception {
         final String STORAGE = "search_ingest_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
-        ingestFagref(STORAGE, "search/input/part1");
+        ingestFagref(STORAGE, fagref_hj);
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
-        ingestFagref(STORAGE, "search/input/part2");
+        ingestFagref(STORAGE, fagref_jh);
         verifyStorage(STORAGE, "jh", "fagref:jh@example.com");
         storage.close();
     }
@@ -160,12 +174,12 @@ public class SearchTest extends NoExitTestCase {
 
     private Configuration getSearcherConfiguration() throws Exception {
         URL descriptorLocation = Resolver.getURL(
-                "search/SearchTest_IndexDescriptor.xml");
+                "resources/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
         Configuration searcherConf = Configuration.load(
-                "search/SearchTest_SearchConfiguration.xml");
+                "resources/search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -321,7 +335,7 @@ public class SearchTest extends NoExitTestCase {
         } catch (Exception e) {
             // Expected
         }
-        ingestFagref(STORAGE, Resolver.getURL("search/input/part1").getFile());
+        ingestFagref(STORAGE, Resolver.getURL(fagref_hj).getFile());
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 1 doc");
@@ -337,7 +351,7 @@ public class SearchTest extends NoExitTestCase {
             fail("Failed search 1 for Gurli: " + e.getMessage());
         }
         log.debug("Adding new material");
-        ingestFagref(STORAGE, Resolver.getURL("search/input/part2").getFile());
+        ingestFagref(STORAGE, fagref_jh);
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 3 docs");

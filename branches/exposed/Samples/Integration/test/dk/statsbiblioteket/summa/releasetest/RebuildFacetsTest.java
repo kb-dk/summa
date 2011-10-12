@@ -65,10 +65,8 @@ public class RebuildFacetsTest extends NoExitTestCase {
         log.debug("Searcher created");
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Ingesting");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part1").getFile());
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "data/search/input/part2").getFile());
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
         log.debug("Verify index");
