@@ -157,6 +157,12 @@ public class ReleaseHelper {
         log.debug("Finished ingesting " + count + " records from " + source);
 
         writer.close(true);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(
+                "Interrupted while waiting to ensure flush", e);
+        }
         return count;
     }
 

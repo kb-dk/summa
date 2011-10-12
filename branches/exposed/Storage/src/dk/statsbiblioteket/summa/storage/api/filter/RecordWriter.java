@@ -390,6 +390,7 @@ public class RecordWriter extends ObjectFilterImpl {
                       + "closing batcher before calling close on source");
             try {
                 batcher.stop();
+
             } catch (Exception e) {
                 log.warn("Exception while closing down batcher", e);
             }

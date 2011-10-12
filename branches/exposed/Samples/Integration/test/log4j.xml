@@ -62,12 +62,12 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa">
+<!--    <logger name="dk.statsbiblioteket.summa">
         <level value="FATAL" />
         <appender-ref ref="FILE" />
-    </logger>
+    </logger>-->
 
-    <logger name="dk.statsbiblioteket.summa.releasetest.FacetTest">
+<!--    <logger name="dk.statsbiblioteket.summa.releasetest.FacetTest">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
@@ -85,7 +85,7 @@
     <logger name="dk.statsbiblioteket.summa.common.filter.FilterPump#SingleChain">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
     <!--
     <logger name="dk.statsbiblioteket.summa.common.filter">
         <level value="debug" />
@@ -204,10 +204,10 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="dk.statsbiblioteket.summa.support.lucene.search">
+<!--    <logger name="dk.statsbiblioteket.summa.support.lucene.search">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
     <!--<logger name="process">
         <level value="info" />
         <appender-ref ref="CONSOLE" />
@@ -237,7 +237,7 @@
     -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
-        <level value="WARN" />
+        <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </root>
 

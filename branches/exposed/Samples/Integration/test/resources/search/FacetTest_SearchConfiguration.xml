@@ -46,7 +46,7 @@
             <value class="xproperties">
                 <entry>
                     <key>summa.common.indexdescriptor.absolutelocation</key>
-                    <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                    <value class="string">${fagref_descriptor}</value>
                 </entry>
             </value>
         </entry>

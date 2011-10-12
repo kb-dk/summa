@@ -92,8 +92,8 @@ public class FacetTest extends NoExitTestCase {
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
-        Configuration searcherConf = Configuration.load(
-                "resources/search/FacetTest_SearchConfiguration.xml");
+        Configuration searcherConf = IndexTest.loadFagrefProperties(
+            "no_storage", "resources/search/FacetTest_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -166,7 +166,7 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
         SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "transliteration/transliterate.xml").getFile());
+            "resources/transliteration/transliterate.xml").getFile());
         assertEquals("Háns Jensén data should be ingested",
                      1, storage.getRecords(
             Arrays.asList("fagref:haje@example.com"), null).size());

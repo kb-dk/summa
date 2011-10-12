@@ -133,7 +133,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.index.indexrootlocation</key>
-                                    <value class="string">/tmp/summatest/testindex</value>
+                                    <value class="string">${index_location}</value>
                                 </entry>
                                 <entry>
                                     <key>summa.index.consolidatetimeout</key>

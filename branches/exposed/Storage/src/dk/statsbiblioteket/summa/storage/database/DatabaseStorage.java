@@ -1741,6 +1741,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException If error occur while flushing.
      */
     @Override
+    // TODO: Race conditions in FacetTest indicates that flush is guaranteed to have written everything before returning
     public synchronized void flushAll(List<Record> recs, QueryOptions options)
                                                             throws IOException {
         Connection conn = getTransactionalConnection();
