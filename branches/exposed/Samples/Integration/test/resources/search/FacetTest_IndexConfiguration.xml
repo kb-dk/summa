@@ -56,7 +56,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.rpc.vendor</key>
-                                    <value class="string">//localhost:28000/summa-storage</value>
+                                    <value class="string">${index_storage}</value>
                                 </entry>
                             </xproperties>
 
@@ -71,7 +71,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">/tmp/summatest/data/search/fagref_xslt/fagref_index.xsl</value>
+                                    <value class="string">${fagref_xslt}</value>
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.ignorexmlnamespaces</key>
@@ -112,7 +112,7 @@
                                     <value class="xproperties">
                                         <entry>
                                             <key>summa.common.indexdescriptor.absolutelocation</key>
-                                            <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                                            <value class="string">${fagref_descriptor}</value>
                                         </entry>
                                     </value>
                                 </entry>
@@ -152,7 +152,7 @@
                                     <value class="xproperties">
                                         <entry>
                                             <key>summa.common.indexdescriptor.absolutelocation</key>
-                                            <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                                            <value class="string">${fagref_descriptor}</value>
                                         </entry>
                                     </value>
                                 </entry>
