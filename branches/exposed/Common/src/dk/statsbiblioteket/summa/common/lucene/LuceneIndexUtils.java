@@ -76,30 +76,25 @@ public class LuceneIndexUtils {
      * @throws Configurable.ConfigurationException if there was an error with
      *                                             the configuration.
      */
-    public static LuceneIndexDescriptor getDescriptor(Configuration conf) throws
-                                           Configurable.ConfigurationException {
+    public static LuceneIndexDescriptor getDescriptor(Configuration conf) throws Configurable.ConfigurationException {
         Configuration descConf = null;
         try {
-            descConf =
-                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
+            descConf = conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
             log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR
                       + "' from properties. Configuration don't support "
                       + "sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR
-                      + "' from properties", e);
+            log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR + "' from properties", e);
         } catch (UnsupportedOperationException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("The configuration does not support sub-storages. "
-                      + "Attempting to use the storage directly");
+            log.debug("The configuration does not support sub-storages. Attempting to use the storage directly");
             descConf = conf;
         }
         LuceneIndexDescriptor descriptor;
         if (descConf == null) {
-            log.warn("No '" + IndexDescriptor.CONF_DESCRIPTOR
-                     + "' specified in properties. "
+            log.warn("No '" + IndexDescriptor.CONF_DESCRIPTOR + "' specified in properties. "
                      + "Using default LuceneIndexDescriptor");
             descriptor = new LuceneIndexDescriptor();
         } else {
@@ -108,8 +103,7 @@ public class LuceneIndexUtils {
                 descriptor = new LuceneIndexDescriptor(descConf);
             } catch (IOException e) {
                 throw new Configurable.ConfigurationException(
-                        "Exception creating LuceneIndexDescriptor based "
-                        + "on properties", e);
+                        "Exception creating LuceneIndexDescriptor based on properties", e);
             }
         }
         return descriptor;
@@ -156,14 +150,14 @@ public class LuceneIndexUtils {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {
-            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
+            Iterator<Query> iterator = ((DisjunctionMaxQuery)query).iterator();
             sw.append("<");
             boolean first = true;
             while (iterator.hasNext()) {
                 if (!first) {
                     sw.append(" ");
                 }
-                sw.append(queryToString((Query)iterator.next()));
+                sw.append(queryToString(iterator.next()));
                 first = false;
             }
             sw.append(">");
@@ -175,7 +169,4 @@ public class LuceneIndexUtils {
         return sw.toString();
     }
 }
-
-
-
 
