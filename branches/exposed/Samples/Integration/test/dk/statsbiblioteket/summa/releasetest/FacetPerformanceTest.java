@@ -119,8 +119,7 @@ public class FacetPerformanceTest extends NoExitTestCase {
     }
 
     public void testSmallIndex() throws Exception {
-        FilterService indexService =
-            new FilterService(getIndexConfiguration(10));
+        FilterService indexService = new FilterService(getIndexConfiguration(10));
         indexService.start();
         waitForService(indexService, Integer.MAX_VALUE);
         indexService.stop();

@@ -44,7 +44,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.template.location</key>
-                                    <value class="string">data/facetperformance/fagref_template.xml</value>
+                                    <value class="string">resources/facetperformance/fagref_template.xml</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.idtemplate</key>
@@ -94,7 +94,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">/tmp/summatest/data/search/fagref_xslt/fagref_index.xsl</value>
+                                    <value class="string">${fagref_xslt}</value>
                                 </entry>
                             </xproperties>
 
@@ -112,7 +112,7 @@
                                     <value class="xproperties">
                                         <entry>
                                             <key>summa.common.indexdescriptor.absolutelocation</key>
-                                            <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                                            <value class="string">${fagref_descriptor}</value>
                                         </entry>
                                     </value>
                                 </entry>
@@ -166,7 +166,7 @@
                                     <value class="xproperties">
                                         <entry>
                                             <key>summa.common.indexdescriptor.absolutelocation</key>
-                                            <value class="string">resources/${site.id}_IndexDescriptor.xml</value>
+                                            <value class="string">${fagref_descriptor}</value>
                                         </entry>
                                     </value>
                                 </entry>

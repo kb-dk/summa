@@ -162,24 +162,30 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void testUpdateCopySearch() throws Exception {
+        final String STORAGE = "updatecopy_storage";
         Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
-        testFacetSearch(conf, getCopySearcherConfiguration(), "author");
+        testFacetSearch(STORAGE, conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testUpdateStaticSearch() throws Exception {
+        final String STORAGE = "updatestatic_storage";
         Configuration conf = Configuration.load(
                 "resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
-        testFacetSearch(conf, getStaticSearcherConfiguration(), "author");
+        testFacetSearch(STORAGE, conf, getStaticSearcherConfiguration(), "author");
     }
 
     public void testFullStaticSearch() throws Exception {
-        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
-        testFacetSearch(conf, getCopySearcherConfiguration(), "author");
+        final String STORAGE = "fullstatic_storage";
+        Configuration conf = IndexTest.loadFagrefProperties(
+            STORAGE, "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        testFacetSearch(STORAGE, conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testFullCopySearch() throws Exception {
-        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
-        testFacetSearch(conf, getStaticSearcherConfiguration(), "author");
+        final String STORAGE = "fullcopy_storage";
+        Configuration conf = IndexTest.loadFagrefProperties(
+            STORAGE, "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        testFacetSearch(STORAGE, conf, getStaticSearcherConfiguration(), "author");
     }
 
     public void testChangingFacets() throws Exception {
@@ -191,8 +197,8 @@ public class DescriptorTest extends NoExitTestCase {
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
 
         log.debug("Creating initial index");
-        Configuration indexFullConf = Configuration.load(
-            "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        Configuration indexFullConf = IndexTest.loadFagrefProperties(
+            STORAGE, "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         URL basicDescriptor = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptor.xml");
         index(indexFullConf, basicDescriptor);
 
@@ -230,12 +236,12 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
 
-    public void testFacetSearch(Configuration indexConf, Configuration searchConf, String checkFacet) throws Exception {
-        final String STORAGE = "facetsearch_storage";
+    public void testFacetSearch(String storageID, Configuration indexConf, Configuration searchConf, String checkFacet)
+        throws Exception {
         log.debug("Creating Searcher");
         SummaSearcherImpl searcher = new SummaSearcherImpl(searchConf);
         log.debug("Searcher created");
-        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        Storage storage = ReleaseHelper.startStorage(storageID);
         log.debug("Storage started");
         index(indexConf);
         log.debug("Update 1 performed");
@@ -248,7 +254,7 @@ public class DescriptorTest extends NoExitTestCase {
         } catch (RemoteException e) {
             // Expected
         }
-        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(storageID, SearchTest.fagref_hj);
         assertEquals("Hans Jensen data should be ingested",
                      1, storage.getRecords(Arrays.asList("fagref:hj@example.com"), null).size());
         log.debug("Ingest 1 performed");
@@ -261,7 +267,7 @@ public class DescriptorTest extends NoExitTestCase {
         log.debug("Sample output after initial ingest: "
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
         log.debug("Adding new material");
-        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
+        SearchTest.ingestFagref(storageID, SearchTest.fagref_jh_gm);
         index(indexConf);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
