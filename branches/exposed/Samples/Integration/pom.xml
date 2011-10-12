@@ -75,18 +75,16 @@
         </dependency>
     </dependencies>
 
-
     <!-- TODO doc/ to documentation -->
     <!-- TODO what about config/ -->
-    
     <build>
-
         <testResources>
             <testResource>
                 <targetPath>resources</targetPath>
                 <directory>${basedir}/test/resources</directory>
+                <!--<directory>${basedir}/test/resources</directory>-->
                 <includes>
-                    <include>**.xml</include>
+                    <include>**/*</include>
                 </includes>
             </testResource>
         </testResources>
