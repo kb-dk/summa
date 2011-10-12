@@ -71,7 +71,7 @@ public class CollatorTest extends TestCase {
 
         Collator standard = CollatorFactory.createCollator(DA);
         assertTrue("Standard Collator should ignore space at tertiary",
-                   standard.compare("ab", "a c") < 0);
+                   standard.compare("ab", "a c") > 0); //'a c' is before 'ab' - spaces first. 
 //        assertTrue("Standard Collator should prioritize space at quaternary",
 //                   standard.compare("a d", "ad") < 0);
     }
