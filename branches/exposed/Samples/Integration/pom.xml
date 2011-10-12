@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20111007-l4exp-SNAPSHOT</version>
+        <version>1.8.0-20111012-l4exp-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-integration</artifactId>
@@ -75,10 +75,22 @@
         </dependency>
     </dependencies>
 
+
     <!-- TODO doc/ to documentation -->
     <!-- TODO what about config/ -->
     
     <build>
+
+        <testResources>
+            <testResource>
+                <targetPath>resources</targetPath>
+                <directory>${basedir}/test/resources</directory>
+                <includes>
+                    <include>**.xml</include>
+                </includes>
+            </testResource>
+        </testResources>
+
         <!-- Source -->
         <sourceDirectory>src/</sourceDirectory>
        
