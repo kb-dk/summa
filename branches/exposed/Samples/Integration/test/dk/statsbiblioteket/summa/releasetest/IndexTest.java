@@ -254,7 +254,7 @@ public class IndexTest extends NoExitTestCase {
 
     public static Configuration loadFagrefProperties(String storage, String location) {
         setFagrefProperties(storage);
-        return ReleaseHelper.loadStorageConfiguration(storage, location);
+        return ReleaseHelper.loadGeneralConfiguration(storage, location);
     }
 
     private static void setFagrefProperties(String storageID) {
@@ -271,7 +271,6 @@ public class IndexTest extends NoExitTestCase {
         System.setProperty("fagref_descriptor", descriptorLocation.getFile());
 
         // TODO: Consider cleanup of the index folder on tearDown
-        System.setProperty("index_location", "/tmp/testindex");
     }
 
     public static void updateIndex(Configuration conf) throws Exception {

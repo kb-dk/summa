@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -129,7 +128,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         Profiler storageProfiler = new Profiler();
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.info("Finished starting Storage in " + storageProfiler.getSpendTime());
-        Configuration conf = ReleaseHelper.loadStorageConfiguration(
+        Configuration conf = ReleaseHelper.loadGeneralConfiguration(
             STORAGE, "resources/generator/generator_configuration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).

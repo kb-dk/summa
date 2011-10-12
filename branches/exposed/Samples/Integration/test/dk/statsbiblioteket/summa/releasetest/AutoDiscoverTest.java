@@ -21,21 +21,15 @@ import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
@@ -94,17 +88,15 @@ public class AutoDiscoverTest extends TestCase {
         super.tearDown();
     }
 
-    File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
-    String STORAGE_CONF_LOCATION = "resources/auto/setup/StorageConfiguration.xml";
-    String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
-    String INDEX_ROOT = new File(TEST_DIR, "index").toString();
-    File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("resources/auto/data"));
+    private File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
+    private String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
+    private File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("resources/auto/data"));
 
-    List<String> TEST_FILES = Arrays.asList(
+    private List<String> TEST_FILES = Arrays.asList(
             "gurli.margrethe.xml", "hans.jensen.xml", "jens.hansen.xml");
-    String FAGREF_XSLT = Resolver.urlToFile(Resolver.getURL(
+    private String FAGREF_XSLT = Resolver.urlToFile(Resolver.getURL(
             "resources/search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
-    String INDEX_DESCRIPTOR =
+    private String INDEX_DESCRIPTOR =
             Resolver.getURL("resources/auto/setup/IndexDescriptor.xml").getFile();
 
     private void putFiles() throws Exception {
@@ -124,51 +116,24 @@ public class AutoDiscoverTest extends TestCase {
 
     /* Creators for the different parts of the workflow. */
 
-    private StorageService createStorage() throws Exception {
-        Configuration conf =
-                Configuration.load("resources/auto/setup/StorageConfiguration.xml");
-        conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
-        StorageService storage = new StorageService(conf);
-        storage.start();
-        return storage;
-    }
-    private ReadableStorage getStorageReader() throws Exception {
-        Configuration conf = Configuration.newMemoryBased();
-        conf.set(ConnectionConsumer.CONF_RPC_TARGET,
-                 "//localhost:28000/summa-storage");
-        conf.set(GenericConnectionFactory.CONF_GRACE_TIME, 1);
-        conf.set(GenericConnectionFactory.CONF_RETRIES, 1);
-        return new StorageReaderClient(conf);
-    }
     public void testStorage() throws Exception {
-        assertNotNull("The Storage configuration should exist",
-                      Resolver.getUTF8Content(STORAGE_CONF_LOCATION));
-        StorageService storage = createStorage();
-        assertEquals("The Storage should be running",
-                     Status.CODE.running, storage.getStatus().getCode());
-        ReadableStorage reader = getStorageReader();
+        final String STORAGE = "basictest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+
+        StorageReaderClient reader = new StorageReaderClient(ReleaseHelper.getStorageClientConfiguration(STORAGE));
         try {
             reader.getModificationTime(null);
         } catch (Exception e) {
             log.fatal("Unable to communicate with Storage", e);
             fail("It should be possible to communicate with the Storage");
         }
-
-        try {
-            storage.getStorage().getModificationTime(null);
-        } catch (Exception e) {
-            log.fatal("Unable to communicate with Storage", e);
-            fail("It should be possible to communicate with the Storage");
-        }
-        storage.stop();
-        Thread.sleep(1000);
-        assertEquals("The Storage should be stopped",
-                     Status.CODE.stopped, storage.getStatus().getCode());
+        reader.releaseConnection();
+        storage.close();
     }
 
-    private FilterService createIngestChain() throws Exception {
-        Configuration conf =
-                Configuration.load("resources/auto/setup/IngestConfiguration.xml");
+    private FilterService createIngestChain(String storage) throws Exception {
+        Configuration conf = ReleaseHelper.loadGeneralConfiguration(
+            storage, "resources/auto/setup/IngestConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
@@ -176,29 +141,23 @@ public class AutoDiscoverTest extends TestCase {
 /*        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("FileWatcher").
                 set(FileReader.CONF_ROOT_FOLDER, INGEST_FOLDER);*/
-        FilterService ingest = new FilterService(conf);
-        ingest.start();
-        return ingest;
+        return new FilterService(conf);
     }
     public void testIngest() throws Exception {
-        StorageService storage = createStorage();
-        Service ingest = createIngestChain();
+        final String STORAGE = "ingest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        Service ingest = createIngestChain(STORAGE);
         ingest.start();
         putFiles();
         Thread.sleep(2000);
-        checkRecords(storage);
+        checkRecords(STORAGE);
         ingest.stop();
-        storage.stop();
+        storage.close();
     }
 
-    private Service createIndexer() throws Exception {
-        Configuration conf =
-                Configuration.load("resources/auto/setup/IndexConfiguration.xml");
-        conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
-        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
-//                getSubConfiguration("FagrefTransformer").
-                set(XMLTransformer.CONF_XSLT, FAGREF_XSLT);
+    private Service createIndexer(String storage) throws Exception {
+        Configuration conf = IndexTest.loadFagrefProperties(storage, "resources/auto/setup/IndexConfiguration.xml");
+        // Special IndexDescriptor (do we really need it or can we just use fagref descriptor?)
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
 //                getSubConfiguration("DocumentCreator").
@@ -211,59 +170,50 @@ public class AutoDiscoverTest extends TestCase {
 //                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
-        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
-//                getSubConfiguration("IndexUpdate").
-                set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, INDEX_ROOT);
-        FilterService index = new FilterService(conf);
-        index.start();
-        return index;
+        return new FilterService(conf);
     }
     public void testIndexer() throws Exception {
-        StorageService storage = createStorage();
-        Service ingest = createIngestChain();
-
+        final String STORAGE = "index_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        Service ingest = createIngestChain(STORAGE);
         ingest.start();
 
-        Service index = createIndexer();
+        Service index = createIndexer(STORAGE);
         index.start();
 
         putFiles();
 
-        boolean foundRecs = waitForRecords(storage.getStorage(), 5000,
-                       "fagref:gm@example.com", "fagref:hj@example.com",
-                       "fagref:jh@example.com");
+        boolean foundRecs = waitForRecords(
+            STORAGE, 5000, "fagref:gm@example.com", "fagref:hj@example.com", "fagref:jh@example.com");
 
-        assertTrue("The fagref records did not appear in storage withing "
-                   + "allowed timeframe", foundRecs);
+        assertTrue("The fagref records did not appear in storage withing allowed timeframe", foundRecs);
 
+        String INDEX_ROOT = ReleaseHelper.INDEX_ROOT;
         assertTrue("The index root must exist", new File(INDEX_ROOT).exists());
         File luceneDir = new File(new File(INDEX_ROOT).listFiles()[0],
                                   "lucene");
 
         // The records are in storage now, give the indexer 2s to react. This
         // should be sufficient since the default poll time is 500ms
-        boolean foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 4000);
+        int foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 4000);
 
-        assertTrue("The lucene index should eventually contain "
-                   + TEST_FILES.size() + " records", foundDocs);
+        assertEquals("The lucene index should eventually contain " + TEST_FILES.size() + " records",
+                     TEST_FILES.size(), foundDocs);
 
-        File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], 
-                                 "facet");
-        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT
-                   + ") should be > 0 bytes ",
+        File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], "facet");
+        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT + ") should be > 0 bytes ",
                    facetDir.listFiles()[0].length() > 0);
 
         ingest.stop();
         index.stop();
-        storage.stop();
+        Thread.sleep(1000); // Give them a moment to avoid exceptions
+        storage.close();
         log.info("Test succes!");
     }
 
-    private void checkRecords(StorageService storage) throws IOException {
-        StorageIterator records = new StorageIterator(
-                storage.getStorage(),
-                storage.getStorage().getRecordsModifiedAfter(0, "fagref", null));
+    private void checkRecords(String storage) throws IOException {
+        StorageReaderClient reader = new StorageReaderClient(ReleaseHelper.getStorageClientConfiguration(storage));
+        StorageIterator records = new StorageIterator(reader, reader.getRecordsModifiedAfter(0, "fagref", null));
         int count = 0;
         while (records.hasNext()) {
             records.next();
@@ -278,14 +228,13 @@ public class AutoDiscoverTest extends TestCase {
      * Returns true if the records are found withing the allowed time,
      * false otherwise
      */
-    private boolean waitForRecords(Storage storage, long timeout, String... ids)
-                                                            throws Exception {
+    private boolean waitForRecords(String storageID, long timeout, String... ids) throws Exception {
+        StorageReaderClient storage = new StorageReaderClient(ReleaseHelper.getStorageClientConfiguration(storageID));
         boolean foundRecords = false;
         long startTime = System.currentTimeMillis();
         List<String> idList = Arrays.asList(ids);
 
-        while (!foundRecords
-               && (System.currentTimeMillis() - startTime < timeout)) {
+        while (!foundRecords && (System.currentTimeMillis() - startTime < timeout)) {
             log.info("Waiting for records: " + Strings.join(ids, ", "));
             Thread.sleep(100);
 
@@ -311,50 +260,54 @@ public class AutoDiscoverTest extends TestCase {
         } else {
             log.warn("Did NOT find records: " + Strings.join(ids, ", "));
         }
-
+        storage.releaseConnection();
         return foundRecords;
     }
 
-    public boolean waitForDocCount (File index, int docCount, long timeout)
+    public int waitForDocCount (File index, int docCount, long timeout)
                                                                throws Exception{
         boolean foundDocs = false;
         long startTime = System.currentTimeMillis();
+        int maxCount = 0;
 
-        while (!foundDocs
-               && (System.currentTimeMillis() - startTime < timeout)) {
-            log.info("Waiting for " + docCount +" documents in: " + index);
+        while (!foundDocs && (System.currentTimeMillis() - startTime < timeout)) {
+            log.debug("Waiting for " + docCount + " documents in: " + index);
 
-            Thread.sleep(100);
+            Thread.sleep(200);
 
+            if (!index.exists()) {
+                log.debug("No index yet in '" + index + "'");
+            }
             try {
                 IndexReader luceneIndex = IndexReader.open(new NIOFSDirectory(index));
-                if (luceneIndex.maxDoc() == docCount) {
+                maxCount = luceneIndex.maxDoc();
+                if (maxCount == docCount) {
                     foundDocs = true;
                 } else {
-                    log.debug("Index not ready, found " + luceneIndex.maxDoc()
-                              + " documents");
+                    log.debug("Index not ready, found " + luceneIndex.maxDoc() + " documents");
                 }
                 luceneIndex.close();
             } catch (Exception e) {
-                // Ignore and rerun loop, the index might not even exist yet!
+                log.debug("Skipping Exception encountered while waiting for index", e);
             }
         }
 
         if (foundDocs) {
-            log.info("Got expected doc count, " + docCount + ", from: "
-                     + index);
+            log.info("Got expected doc count, " + docCount + ", from: " + index);
         } else {
-            log.warn("Did NOT get expected docu count from: " + index);
+            if (index.exists()) {
+                log.warn("Did NOT get expected docu count from: " + index + " with " + index.listFiles().length
+                         + " files");
+            } else {
+                log.warn("Did NOT get expected docu count as there are no index at " + index);
+            }
         }
 
-        return foundDocs;
+        return maxCount;
     }
 
     private SearchService createSearcher() throws Exception {
-        Configuration conf =
-                Configuration.load("resources/auto/setup/SearchConfiguration.xml");
-        conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
-        conf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX_ROOT);
+        Configuration conf = IndexTest.loadFagrefProperties("not_used", "resources/auto/setup/SearchConfiguration.xml");
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
@@ -367,13 +320,14 @@ public class AutoDiscoverTest extends TestCase {
         return new SearchClient(conf);
     }
     public void testSearch() throws Exception {
-        StorageService storage = createStorage();
+        final String STORAGE = "index_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
         SearchService searchService = createSearcher();
         searchService.start();
         SearchClient searchClient = getSearchClient();
-        Service ingest = createIngestChain();
+        Service ingest = createIngestChain(STORAGE);
         ingest.start();
-        Service index = createIndexer();
+        Service index = createIndexer(STORAGE);
         index.start();
         putFiles();
         Thread.sleep(5000);
@@ -389,7 +343,7 @@ public class AutoDiscoverTest extends TestCase {
         searchService.stop();
         ingest.stop();
         index.stop();
-        storage.stop();
+        storage.close();
     }
 }
 

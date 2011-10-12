@@ -1,6 +1,9 @@
 <xproperties>
     <xproperties>
 
+        <!-- This seems to be unused as AutoDiscoverTest changes do code setup -->
+
+
         <!-- The RMI communications port -->
         <entry>
             <key>summa.control.service.port</key>

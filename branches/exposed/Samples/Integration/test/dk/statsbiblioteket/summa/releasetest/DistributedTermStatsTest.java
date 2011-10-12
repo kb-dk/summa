@@ -78,12 +78,12 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final File INDEX_ROOT = new File(
-            System.getProperty("java.io.tmpdir"), "testdist");
-    public static final File DESCRIPTOR = Resolver.getFile(
-            "resources/distribution/index_descriptor.xml");
+    public static final File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"), "testdist");
+    public static final File DESCRIPTOR = Resolver.getFile("resources/distribution/index_descriptor.xml");
 
     public void testDistributedTermStats() throws Exception {
+        assertTrue("There should be an index descriptor " + DESCRIPTOR,
+                   DESCRIPTOR.exists());
         List<File> indexLocations = createThreeIndexes();
         File mergedLocation = extractStats(
                 extendFiles(indexLocations, "lucene"));

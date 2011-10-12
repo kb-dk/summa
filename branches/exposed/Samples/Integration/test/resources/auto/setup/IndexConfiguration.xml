@@ -49,7 +49,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.rpc.vendor</key>
-                                    <value class="string">//localhost:28000/summa-storage</value>
+                                    <value class="string">${index_storage}</value>
                                 </entry>
                                 <entry>
                                     <key>summa.storage.recordreader.startfromscratch</key>
@@ -88,7 +88,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">[fagrefxslt]</value>
+                                    <value class="string">${fagref_xslt}</value>
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.ignorexmlnamespaces</key>
@@ -150,7 +150,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.index.indexrootlocation</key>
-                                    <value class="string">[indexroot]</value>
+                                    <value class="string">${index_location}</value>
                                 </entry>
                                 <entry>
                                     <!-- Commit for every document received -->

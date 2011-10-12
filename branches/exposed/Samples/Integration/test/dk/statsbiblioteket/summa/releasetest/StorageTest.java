@@ -37,7 +37,7 @@ import java.util.Random;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class StorageTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(StorageTest.class);
@@ -348,7 +348,3 @@ public class StorageTest extends NoExitTestCase {
     }
 
 }
-
-
-
-

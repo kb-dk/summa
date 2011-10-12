@@ -46,6 +46,7 @@ public class ReleaseHelper {
     private static Log log = LogFactory.getLog(ReleaseHelper.class);
 
     public static final String STORAGE_RMI_PREFIX = "//localhost:28000/";
+    public static final String INDEX_ROOT = System.getProperty("java.io.tmpdir") + File.separator + "testindex";
 
     static int storageCounter = 0;
     public static final File storageRoot =
@@ -235,7 +236,8 @@ public class ReleaseHelper {
         return new File(storageRoot, "storage" + storageCounter++);
     }
 
-    public static Configuration loadStorageConfiguration(String storage, String location) {
+    public static Configuration loadGeneralConfiguration(String storage, String location) {
+        System.setProperty("index_location", INDEX_ROOT);
         System.setProperty("index_storage", ReleaseHelper.STORAGE_RMI_PREFIX + storage);
         return Configuration.load(location);
     }

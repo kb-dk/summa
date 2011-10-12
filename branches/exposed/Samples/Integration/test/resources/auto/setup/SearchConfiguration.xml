@@ -17,7 +17,7 @@
         </entry>
         <entry>
             <key>summa.indexwatcher.indexroot</key>
-            <value class="string">[indexroot]</value>
+            <value class="string">${index_location}</value>
         </entry>
         <entry>
             <key>summa.indexwatcher.minretention</key>
@@ -50,7 +50,7 @@
                         <value class="xproperties">
                             <entry>
                                 <key>summa.common.indexdescriptor.absolutelocation</key>
-                                <value class="string">[indexdescriptor]</value>
+                                <value class="string">${index_location}</value>
                             </entry>
                         </value>
                     </entry>

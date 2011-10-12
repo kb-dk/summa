@@ -6,6 +6,10 @@
             <key>summa.control.service.port</key>
             <value class="int">27071</value>
         </entry>
+        <entry>
+            <key>summa.control.client.id</key>
+            <value class="string">autoingest</value>
+        </entry>
 
         <!-- The class implementing the Service interface -->
         <entry>
@@ -122,7 +126,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.rpc.vendor</key>
-                                    <value class="string">//localhost:28000/summa-storage</value>
+                                    <value class="string">${index_storage}</value>
                                 </entry>
                             </xproperties>
 

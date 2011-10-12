@@ -44,8 +44,7 @@ public class SearchService extends ServiceBase {
      * The search service will fall back to this class if the configuration does
      * not specify {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#CONF_CLASS}
      */
-    public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
-                                                        RMISearcherProxy.class;
+    public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS = RMISearcherProxy.class;
 
     private Configuration conf;
     private SummaSearcher searcher;
@@ -53,45 +52,33 @@ public class SearchService extends ServiceBase {
     public SearchService(Configuration conf) throws IOException {
         super(conf);
 
-        setStatus(Status.CODE.not_instantiated,
-                  "Setting up",
-                  Logging.LogLevel.DEBUG);
-
+        setStatus(Status.CODE.not_instantiated, "Setting up", Logging.LogLevel.DEBUG);
         this.conf = conf;
         exportRemoteInterfaces();
-
-        setStatus(Status.CODE.constructed,
-                  "Remote interfaces up",
-                  Logging.LogLevel.DEBUG);
+        setStatus(Status.CODE.constructed, "Remote interfaces up", Logging.LogLevel.DEBUG);
     }
 
+    @Override
     public synchronized void start() throws RemoteException {
         if (searcher != null) {
-            throw new InvalidServiceStateException(getClientId(), getId(),
-                                                   "start", "Already running");
+            throw new InvalidServiceStateException(getClientId(), getId(), "start", "Already running");
         }
 
         setStatusRunning("Creating Searcher");
-
         if (!conf.valueExists (SummaSearcher.CONF_CLASS)) {
-            conf.set (SummaSearcher.CONF_CLASS,
-                      RMISearcherProxy.class.getName());
+            conf.set (SummaSearcher.CONF_CLASS, RMISearcherProxy.class.getName());
         }
 
         try {
             searcher = SummaSearcherFactory.createSearcher (conf);
         } catch (IllegalArgumentException e) {
-            String message = String.format(
-                    "The SummaSearcher-class '%s' was not a Configurable: %s",
-                    conf.getString (SummaSearcher.CONF_CLASS),
-                    e.getMessage ());
+            String message = String.format("The SummaSearcher-class '%s' was not a Configurable: %s",
+                                           conf.getString (SummaSearcher.CONF_CLASS), e.getMessage ());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         } catch (Exception e) {
-            String message = String.format(
-                    "Exception creating instance of SummaSearcher class '%s': %s",
-                    conf.getString (SummaSearcher.CONF_CLASS),
-                    e.getMessage());
+            String message = String.format("Exception creating instance of SummaSearcher class '%s': %s",
+                                           conf.getString (SummaSearcher.CONF_CLASS), e.getMessage());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         }
@@ -99,25 +86,19 @@ public class SearchService extends ServiceBase {
         setStatusIdle();
     }
 
+    @Override
     public synchronized void stop() throws RemoteException {
         if (searcher == null) {
-            throw new InvalidServiceStateException(getClientId(), getId(),
-                                                   "start", "Not running");
+            throw new InvalidServiceStateException(getClientId(), getId(), "start", "Not running");
         }
         //noinspection OverlyBroadCatchBlock
         try {
             searcher.close();
             searcher = null;
-            setStatus(Status.CODE.stopped, "Searcher closed successfully",
-                      Logging.LogLevel.DEBUG);
+            setStatus(Status.CODE.stopped, "Searcher closed successfully", Logging.LogLevel.DEBUG);
         } catch (Exception e) {
-            setStatus(Status.CODE.crashed,
-                      "Searcher closed with error: " + e.getMessage (),
-                      Logging.LogLevel.WARN, e);
-            throw new RemoteException(
-                              String.format("Unable to close searcher '%s': %s",
-                                            searcher,
-                                            e.getMessage ()), e);
+            setStatus(Status.CODE.crashed, "Searcher closed with error: " + e.getMessage (), Logging.LogLevel.WARN, e);
+            throw new RemoteException(String.format("Unable to close searcher '%s': %s", searcher, e.getMessage ()), e);
         } finally {
             //noinspection AssignmentToNull
             searcher = null;
