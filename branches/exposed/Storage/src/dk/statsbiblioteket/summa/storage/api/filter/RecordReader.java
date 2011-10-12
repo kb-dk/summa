@@ -238,7 +238,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
 
     /** The storage watcher used to check for changes. */
-    private StorageWatcher storageWatcher;
+    private final StorageWatcher storageWatcher;
     /** True if end of file is reached. */
     private boolean eofReached = false;
     /** Number of read records. */
@@ -291,31 +291,20 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
         progressFile = Resolver.getPersistentFile(progressFile);
 
-        usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE,
-                                         DEFAULT_USE_PERSISTENCE);
-        startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH,
-                                           DEFAULT_START_FROM_SCRATCH);
-        expandChildren = conf.getBoolean(CONF_EXPAND_CHILDREN,
-                                           DEFAULT_EXPAND_CHILDREN);
-        maxExpansionDepth = conf.getInt(
-            CONF_EXPANSION_DEPTH, maxExpansionDepth);
-        expandParents = conf.getBoolean(CONF_EXPAND_PARENTS,
-                                           DEFAULT_EXPAND_PARENTS);
-        maxExpansionHeight = conf.getInt(
-            CONF_EXPANSION_HEIGHT, maxExpansionHeight);
-        maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS,
-                                     DEFAULT_MAX_READ_RECORDS);
-        maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
-                                     DEFAULT_MAX_READ_SECONDS);
+        usePersistence =   conf.getBoolean(CONF_USE_PERSISTENCE,    DEFAULT_USE_PERSISTENCE);
+        startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH, DEFAULT_START_FROM_SCRATCH);
+        expandChildren =   conf.getBoolean(CONF_EXPAND_CHILDREN,    DEFAULT_EXPAND_CHILDREN);
+        maxExpansionDepth =    conf.getInt(CONF_EXPANSION_DEPTH,    maxExpansionDepth);
+        expandParents =    conf.getBoolean(CONF_EXPAND_PARENTS,     DEFAULT_EXPAND_PARENTS);
+        maxExpansionHeight =   conf.getInt(CONF_EXPANSION_HEIGHT,   maxExpansionHeight);
+        maxReadRecords =       conf.getInt(CONF_MAX_READ_RECORDS,   DEFAULT_MAX_READ_RECORDS);
+        maxReadSeconds =       conf.getInt(CONF_MAX_READ_SECONDS,   DEFAULT_MAX_READ_SECONDS);
 
         if (usePersistence) {
             log.debug("Enabling progress tracker");
-            progressTracker =
-                  new ProgressTracker(progressFile,
-                                      conf.getLong(CONF_PROGRESS_BATCH_SIZE,
-                                                   DEFAULT_PROGRESS_BATCH_SIZE),
-                                      conf.getLong(CONF_PROGRESS_GRACETIME,
-                                                   DEFAULT_PROGRESS_GRACETIME));
+            progressTracker = new ProgressTracker(
+                progressFile, conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
+                conf.getLong(CONF_PROGRESS_GRACETIME, DEFAULT_PROGRESS_GRACETIME));
         } else {
             log.info("Progress tracking disabled");
             progressTracker = null;
@@ -327,8 +316,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             storageWatcher.start();
             log.trace("Enabled storage watching for base " + base);
         } else {
-            log.trace("No storage watching enabled as " + CONF_STAY_ALIVE
-                      + " was false");
+            log.trace("No storage watching enabled as " + CONF_STAY_ALIVE + " was false");
+            storageWatcher = null;
         }
 
         lastRecordTimestamp = getStartTime();
@@ -377,8 +366,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
         if (recordIterator == null) {
             log.debug(String.format(
-                    "Creating initial record iterator for Records modified "
-                    + "after " + ProgressTracker.ISO_TIME,
+                    "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
                     lastRecordTimestamp));
 
             // Detect if we need special query options and perform the query as
@@ -395,8 +383,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                      null);
 
             }
-            iterKey = storage.getRecordsModifiedAfter(
-                                               lastRecordTimestamp, base, opts);
+            iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
@@ -413,13 +400,18 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             log.debug(String.format(
                     "Updating record iterator for Records modified after "
                     + ProgressTracker.ISO_TIME, lastRecordTimestamp));
-            long iterKey = storage.getRecordsModifiedAfter(
-                    lastRecordTimestamp, base, null);
+            long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
 
-            return false;
+            if (!recordIterator.hasNext()) {
+                log.debug("Received update notification from StorageWatcher, but no new Records is available from the "
+                          + "record iterator");
+                recordIterator = null;
+                return false;
+            }
+            return true;
         }
     }
 
@@ -451,8 +443,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             log.trace("hasNext: Calling checkIterator()");
             checkIterator();
         } catch (IOException e) {
-            log.warn("hasNext: An exception occured while checking for a new "
-                     + "iterator. Returning false", e);
+            log.warn("hasNext: An exception occured while checking for a new iterator. Returning false", e);
             return false;
         }
 
@@ -460,18 +451,15 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
         while (!recordIterator.hasNext()) {
-            log.trace("hasNext: RecordIterater does not have next. Waiting and "
-                      + "checking");
+            log.trace("hasNext: RecordIterater does not have next. Waiting and checking");
             try {
                 waitForStorageChange();
                 checkIterator();
-                if (storageWatcher == null || recordIterator == null
-                    || !recordIterator.hasNext()) {
+                if (storageWatcher == null || recordIterator == null || !recordIterator.hasNext()) {
                     break;
                 }
             } catch (IOException e) {
-                log.warn("hasNext: An exception occured while checking for a"
-                         + " new iterator. Returning false");
+                log.warn("hasNext: An exception occured while checking for a new iterator. Returning false");
                 return false;
             }
         }
@@ -489,14 +477,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 return;
             }
             if (storageWatcher == null) { // We don't wait here
-                log.trace("waitForStorageChange: No storageWatcher, no records:" 
-                          + " Mark EOF");
+                log.trace("waitForStorageChange: No storageWatcher, no records: Mark EOF");
                 markEof();
                 return;
             }
         } catch (IOException e) {
-            log.error("Error prepraring iterator for wait-phase: "
-                      + e.getMessage(), e);
+            log.error("IOException prepraring iterator for wait-phase", e);
             markEof();
         }
 
