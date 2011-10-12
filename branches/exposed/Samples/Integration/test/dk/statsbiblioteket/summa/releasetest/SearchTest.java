@@ -244,9 +244,9 @@ public class SearchTest extends NoExitTestCase {
         }
 
   */
-    public static void updateIndex() throws Exception {
-        Configuration indexConf = Configuration.load(
-                "search/SearchTest_IndexConfiguration.xml");
+    public static void updateIndex(String storageID) throws Exception {
+        Configuration indexConf = IndexTest.loadFagrefProperties(
+            storageID, "resources/search/SearchTest_IndexConfiguration.xml");
         IndexTest.updateIndex(indexConf);
     }
 
@@ -326,7 +326,7 @@ public class SearchTest extends NoExitTestCase {
         }
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("updateIndex called");
 //        Thread.sleep(3000); // Wait for searcher to discover new content
         try {
@@ -337,7 +337,7 @@ public class SearchTest extends NoExitTestCase {
         }
         ingestFagref(STORAGE, Resolver.getURL(fagref_hj).getFile());
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Finished updating of index. It should now contain 1 doc");
         Thread.sleep(5000); // Wait for searcher to discover new content
         try {
@@ -353,7 +353,7 @@ public class SearchTest extends NoExitTestCase {
         log.debug("Adding new material");
         ingestFagref(STORAGE, fagref_jh);
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Finished updating of index. It should now contain 3 docs");
         Thread.sleep(5000); // Wait for searcher to discover new content
         try {

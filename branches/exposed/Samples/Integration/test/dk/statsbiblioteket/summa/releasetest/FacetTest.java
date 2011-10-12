@@ -89,12 +89,12 @@ public class FacetTest extends NoExitTestCase {
 
     public static Configuration getSearcherConfiguration() throws Exception {
         URL descriptorLocation = Resolver.getURL(
-                "data/search/SearchTest_IndexDescriptor.xml");
+                "resources/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
         Configuration searcherConf = Configuration.load(
-                "data/search/FacetTest_SearchConfiguration.xml");
+                "resources/search/FacetTest_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -142,7 +142,7 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         try {
             log.debug("Storage started");
-            updateIndex();
+            updateIndex(STORAGE);
         } finally {
             storage.close();
         }
@@ -171,7 +171,7 @@ public class FacetTest extends NoExitTestCase {
         assertEquals("Háns Jensén data should be ingested",
                      1, storage.getRecords(
             Arrays.asList("fagref:haje@example.com"), null).size());
-        updateIndex();
+        updateIndex(STORAGE);
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
         log.debug("Searcher created. Verifying searches");
@@ -199,7 +199,7 @@ public class FacetTest extends NoExitTestCase {
         assertEquals("The Records-count should be correct after first ingest",
                      1, countRecords(storage, "fagref"));
 
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -228,7 +228,7 @@ public class FacetTest extends NoExitTestCase {
                 "The Records-count should be correct after first ingest",
                 1, countRecords(storage, "fagref"));
 
-            updateIndex();
+            updateIndex(STORAGE);
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -267,7 +267,7 @@ public class FacetTest extends NoExitTestCase {
             assertNotNull("The fagref Gurli should exist in storage",
                           storage.getRecord("fagref:gm@example.com", null));
 
-            updateIndex();
+            updateIndex(STORAGE);
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -296,7 +296,7 @@ public class FacetTest extends NoExitTestCase {
         try {
             SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
             SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-            updateIndex();
+            updateIndex(STORAGE);
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -364,7 +364,7 @@ public class FacetTest extends NoExitTestCase {
                      1, countRecords(storage, "fagref"));
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
 
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -452,7 +452,7 @@ public class FacetTest extends NoExitTestCase {
         assertEquals("The Records-count should be correct after first ingest",
                      2, countRecords(storage, "fagref"));
 
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -479,7 +479,7 @@ public class FacetTest extends NoExitTestCase {
                 "The Records-count should be correct after first ingest",
                 3, countRecords(storage, "fagref"));
 
-            updateIndex();
+            updateIndex(STORAGE);
             Thread.sleep(5000); // Why do we need to do this?
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher =
@@ -507,7 +507,7 @@ public class FacetTest extends NoExitTestCase {
         assertEquals("The Records-count should be correct after first ingest",
                      5, countRecords(storage, "fagref"));
 
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
@@ -542,7 +542,7 @@ public class FacetTest extends NoExitTestCase {
         Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
         assertNotNull("There should be a gurli Record", gurliRecord);
 
-        updateIndex();
+        updateIndex(STORAGE);
         Thread.sleep(5000); // Why do we need to do this?
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
@@ -581,7 +581,7 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Searcher created");
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Update 1 performed");
         searcher.checkIndex();
         // An empty index should return 0 hits
@@ -597,7 +597,7 @@ public class FacetTest extends NoExitTestCase {
         }*/
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         log.debug("Ingest 1 performed");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Update 2 performed");
         searcher.checkIndex();
         log.debug("Checkindex after Update 2 performed, verifying...");
@@ -608,7 +608,7 @@ public class FacetTest extends NoExitTestCase {
                 toXML());
         log.debug("Adding new material");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
         log.debug("Verify final index");
@@ -677,11 +677,11 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Searcher created");
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        updateIndex();
+        updateIndex(STORAGE);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
         log.debug("Ingest 1+2 performed");
-        updateIndex();
+        updateIndex(STORAGE);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
         log.debug("Verify index with 3 fagref Records");
@@ -707,7 +707,7 @@ public class FacetTest extends NoExitTestCase {
                     originalModTime == deleteModTime);
         log.debug("Extracted deleted hans record " + hans.toString(true));
         log.debug("Updating index after update of " + HANS);
-        updateIndex();
+        updateIndex(STORAGE);
         searcher.checkIndex(); // Make double sure
 
         log.debug("Verifying index after update of Hans Jensen");
@@ -731,8 +731,8 @@ public class FacetTest extends NoExitTestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-        updateIndex();
-        updateIndex();
+        updateIndex(STORAGE);
+        updateIndex(STORAGE);
         searcher.checkIndex();
         SearchTest.verifySearch(searcher, "Gurli", 1);
         SearchTest.verifySearch(searcher, "Hans", 1);
@@ -788,7 +788,7 @@ public class FacetTest extends NoExitTestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-        updateIndex();
+        updateIndex(STORAGE);
         searcher.checkIndex();
         SearchTest.verifySearch(searcher, "Gurli", 1); // Just checking
 
@@ -810,7 +810,7 @@ public class FacetTest extends NoExitTestCase {
             SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
             SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
             SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-            updateIndex();
+            updateIndex(STORAGE);
             searcher.checkIndex();
 
             Request request = new Request();
@@ -842,7 +842,7 @@ public class FacetTest extends NoExitTestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
-        updateIndex();
+        updateIndex(STORAGE);
         searcher.checkIndex();
         storage.close();
 
@@ -906,15 +906,15 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "facetbuild_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         try {
-            updateIndex();
+            updateIndex(STORAGE);
         } finally {
             storage.close();
         }
     }
 
-    public static void updateIndex() throws Exception {
-        Configuration indexConf = Configuration.load(
-                "data/search/FacetTest_IndexConfiguration.xml");
+    public static void updateIndex(String storageID) throws Exception {
+        Configuration indexConf = IndexTest.loadFagrefProperties(
+            storageID, "resources/search/FacetTest_IndexConfiguration.xml");
         IndexTest.updateIndex(indexConf);
     }
 }

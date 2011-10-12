@@ -113,6 +113,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         return new RecordGenerator(conf);
     }
 
+    // TODO FIXME: Do not use OAITest for this
     public void testIngest() throws Exception {
         final int RECORDS = 1000;
         // Quick test on pc286 (desktop 7200 RPM hard disk)
@@ -160,8 +161,8 @@ public class FagrefGeneratorTest extends NoExitTestCase {
 
         };
         indexProfiler.setExpectedTotal(RECORDS);
-        Configuration indexConf = Configuration.load(
-                "data/search/FacetTest_IndexConfiguration.xml");
+        Configuration indexConf = IndexTest.loadFagrefProperties(
+            "summa-storage", "data/search/FacetTest_IndexConfiguration.xml");
         Configuration facetConf =
                 indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).

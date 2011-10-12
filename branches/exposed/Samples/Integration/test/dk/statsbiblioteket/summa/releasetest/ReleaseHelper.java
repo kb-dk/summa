@@ -44,6 +44,9 @@ import java.util.List;
         author = "te")
 public class ReleaseHelper {
     private static Log log = LogFactory.getLog(ReleaseHelper.class);
+
+    public static final String STORAGE_RMI_PREFIX = "//localhost:28000/";
+
     static int storageCounter = 0;
     public static final File storageRoot =
             new File(new File(System.getProperty("java.io.tmpdir")),
@@ -103,7 +106,7 @@ public class ReleaseHelper {
      */
     public static Configuration getStorageClientConfiguration(String name) {
         return Configuration.newMemoryBased(
-            ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/" + name
+            ConnectionConsumer.CONF_RPC_TARGET, STORAGE_RMI_PREFIX + name
         );
     }
 
@@ -199,7 +202,7 @@ public class ReleaseHelper {
      * @throws java.io.IOException if the Storage could not ne started.
      */
     public static Storage startStorage(String name) throws IOException {
-        log.debug("Starting Storage at //localhost:28000/" + name);
+        log.debug("Starting Storage at " + STORAGE_RMI_PREFIX + name);
         return StorageFactory.createStorage(getStorageConfiguration(name));
     }
 

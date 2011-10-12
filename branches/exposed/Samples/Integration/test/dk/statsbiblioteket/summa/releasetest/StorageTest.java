@@ -54,7 +54,7 @@ public class StorageTest extends NoExitTestCase {
     }
 
 /*    public void testReopen() throws Exception {
-        Storage storage = IndexTest.fillStorage();
+        Storage storage = IndexTest.createSampleStorage();
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
         assertEquals("There should be something in the first storage", 1, )
@@ -244,7 +244,7 @@ public class StorageTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         RecordReader reader = getStorageReader(STORAGE_NAME, "fagref", true);
-        IndexTest.fillStorage(storage);
+        IndexTest.fillStorage(STORAGE_NAME);
         assertTrue("The reader should have something", reader.hasNext());
         reader.pump();
         assertTrue("The reader should still have something", reader.hasNext());
@@ -271,8 +271,9 @@ public class StorageTest extends NoExitTestCase {
      */
     public void testStorageScale(int batches, int records, int recordSize)
             throws Exception {
+        final String STORAGE_ID = "scale_storage";
         Random random = new Random(87);
-        Storage storage = IndexTest.fillStorage();
+        Storage storage = IndexTest.createSampleStorage(STORAGE_ID);
         Profiler profiler = new Profiler(records);
         List<Record> recordList = new ArrayList<Record>(records);
         for (int batch = 0 ; batch < batches ; batch++) {
@@ -300,7 +301,8 @@ public class StorageTest extends NoExitTestCase {
     }
 
     public void testRecordReader() throws Exception {
-        Storage storage = IndexTest.fillStorage();
+        final String STORAGE_ID = "recordreader_storage";
+        Storage storage = IndexTest.createSampleStorage(STORAGE_ID);
 
         MemoryStorage ms = new MemoryStorage();
         ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);

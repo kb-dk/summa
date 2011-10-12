@@ -99,7 +99,7 @@ public class RebuildFacetsTest extends NoExitTestCase {
 //        searcher.close();
 
         log.debug("Repairing facets and verifying that repairing works");
-        FacetTest.updateIndex();
+        FacetTest.updateIndex(STORAGE);
         searcher = new SummaSearcherImpl(conf);
         FacetTest.verifyFacetResult(searcher, "Gurli");
 

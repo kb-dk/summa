@@ -21,16 +21,12 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -40,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.Iterator;
 import java.util.List;
 
 /*
@@ -76,15 +71,18 @@ public class IndexTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
-        fillStorage().close();
+        final String STORAGE_ID = "intesttest_storage";
+        createSampleStorage(STORAGE_ID).close();
     }
 
     public void testNonIterativeIndexing() throws Exception {
-        Storage storage = fillStorage();
+        final String STORAGE_ID = "noniterative_storage";
+        setFagrefProperties(STORAGE_ID);
+        Storage storage = createSampleStorage(STORAGE_ID);
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
-        Configuration indexConf = Configuration.load(
-                "data/search/IndexTest_IndexConfiguration.xml");
+        Configuration indexConf = loadFagrefProperties(
+            STORAGE_ID, "resources/search/IndexTest_IndexConfiguration.xml");
         updateIndex(indexConf);
         assertEquals("After update one the number of indexes should be correct",
                      1, countIndexes());
@@ -95,11 +93,13 @@ public class IndexTest extends NoExitTestCase {
     }
 
     public void testIterativeIndexing() throws Exception {
-        Storage storage = fillStorage();
+        final String STORAGE_ID = "iterative_storage";
+        setFagrefProperties(STORAGE_ID);
+        Storage storage = createSampleStorage(STORAGE_ID);
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
-        Configuration indexConf = Configuration.load(
-                "data/search/IndexTest_IndexConfiguration.xml");
+        Configuration indexConf = loadFagrefProperties(
+            STORAGE_ID, "resources/search/IndexTest_IndexConfiguration.xml");
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
 //                getSubConfiguration("IndexUpdate").
@@ -129,51 +129,26 @@ public class IndexTest extends NoExitTestCase {
      * @throws Exception if the workflow failed.
      */
     public void testWorkflow() throws Exception {
-        Storage storage = fillStorage();
-
+        final String STORAGE_ID = "workflow_storage";
+        Storage storage = createSampleStorage(STORAGE_ID);
 
         // Index chain setup
         URL xsltLocation =
                 Thread.currentThread().getContextClassLoader().getResource(
-                        "data/fagref/fagref_index.xsl");
+                        "resources/fagref/fagref_index.xsl");
         assertNotNull("The original xslt location should not be null",
                       xsltLocation);
         String descriptorLocation =
                 "file://"
                 + Thread.currentThread().getContextClassLoader().getResource(
-                        "data/fagref/fagref_IndexDescriptor.xml").getFile();
-        System.out.println(descriptorLocation);
+                        "resources/fagref/fagref_IndexDescriptor.xml").getFile();
+//        System.out.println(descriptorLocation);
+        Configuration indexConf = loadFagrefProperties(
+            STORAGE_ID, "resources/fagref/fagref_index_setup.xml");
 
-        String filterConfString =
-                Streams.getUTF8Resource("data/fagref/fagref_index_setup.xml");
-        // TODO: Update this test to handle the new style with SummaDocument
-        filterConfString = filterConfString.replace(
-                "/tmp/summatest/data/fagref/fagref_index.xsl",
-                xsltLocation.toString());
-        filterConfString =
-                filterConfString.replace(">/tmp/summatest/data/fagref<",
-                                         ">" + INDEX_ROOT.toString() + "<");
-        filterConfString =
-                filterConfString.replace("/tmp/summatest/data/fagref/"
-                                         + "fagref_IndexDescriptor.xml",
-                                         descriptorLocation);
-        // Yes, two replaces
-        filterConfString = filterConfString.replace(
-                "/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml",
-                descriptorLocation);
-
-        assertFalse("Replace should work", filterConfString.contains(
-                "/tmp/summatest/data/fagref/fagref_index.xsl"));
-        File indexConfFile = new File(
-                System.getProperty("java.io.tmpdir"), "indexConf.xml");
-        Files.saveString(filterConfString, indexConfFile);
-
-        assertTrue("The index conf. should exist", indexConfFile.exists());
-        Configuration indexConf = Configuration.load(indexConfFile.getPath());
-        assertNotNull("Configuration should contain "
-                      + FilterControl.CONF_CHAINS,
-                      indexConf.getSubConfigurations(
-                              FilterControl.CONF_CHAINS));
+        assertNotNull(
+            "Configuration should contain " + FilterControl.CONF_CHAINS,
+            indexConf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterService indexService = new FilterService(indexConf);
         indexService.start();
@@ -195,20 +170,17 @@ public class IndexTest extends NoExitTestCase {
         storage.close();
     }
 
-    public void testFillStorage() throws Exception {
-        fillStorage().close();
-    }
-
     /**
      * Create a Storage and fill it with test-data, ready for indexing.
+     * @param storageName the RMI-exposed name for the Storage.
      * @return the StorageService containing the filled Storage.
      * @throws Exception if the fill failed.
      */
-    public static Storage fillStorage() throws Exception {
-        // Storage
-        final String STORAGE = "fill_storage";
-        Storage storage = ReleaseHelper.startStorage(STORAGE);
-        return fillStorage(storage);
+    public static Storage createSampleStorage(String storageName)
+        throws Exception {
+        Storage storage = ReleaseHelper.startStorage(storageName);
+        fillStorage(storageName);
+        return storage;
     }
 
     public void testGetResource() {
@@ -220,12 +192,14 @@ public class IndexTest extends NoExitTestCase {
 
 
     // TODO: Use property substitution instead of replace
-    public static Storage fillStorage(Storage storage) throws Exception {
+    public static void fillStorage(String storage) throws Exception {
         // Ingest
         URL dataLocation = Resolver.getURL(
             "resources/fagref/fagref_testdata.txt");
         assertNotNull("The data location should not be null", dataLocation);
         File ingestRoot = new File(dataLocation.getFile()).getParentFile();
+        System.setProperty("fagref_filter_storage",
+                           ReleaseHelper.STORAGE_RMI_PREFIX + storage);
         String filterConfString = Streams.getUTF8Resource(
                     "resources/fagref/fagref_filter_setup.xml");
         filterConfString = filterConfString.replace(
@@ -237,38 +211,25 @@ public class IndexTest extends NoExitTestCase {
         Files.saveString(filterConfString, filterConfFile);
 
         assertTrue("The filter conf. should exist", filterConfFile.exists());
-        Configuration filterConf = Configuration.load(filterConfFile.getPath());
-        assertNotNull("Configuration should contain "
-                      + FilterControl.CONF_CHAINS,
-                      filterConf.getSubConfigurations(
-                              FilterControl.CONF_CHAINS));
+        Configuration filterConf = loadFagrefProperties(
+            storage, filterConfFile.getPath());
+        assertNotNull(
+            "Configuration should contain " + FilterControl.CONF_CHAINS,
+            filterConf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
         waitForService(ingester);
 
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
-        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
-        assertTrue("The iterator should have at least one element",
-                   iterator.hasNext());
-        for (int i = 0 ; i < NUM_RECORDS ; i++) {
-            assertTrue("Storage should have next for record #" + (i+1),
-                       iterator.hasNext());
-            Record record = iterator.next();
-            assertNotNull("The next should give a record", record);
-        }
-        assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
-                    iterator.hasNext());
+        int recordCount = ReleaseHelper.getRecords(storage).size();
+        assertEquals("The number of Records in Storage should be as expected",
+                     NUM_RECORDS, recordCount);
 
-        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
-        iterator = new StorageIterator(storage, iterKey);
-        Record gurli = iterator.next();
+        Record gurli = ReleaseHelper.getRecords(storage).get(0);
         String fileContent =
-                Resolver.getUTF8Content("data/fagref/gurli.margrethe.xml");
+                Resolver.getUTF8Content("resources/fagref/gurli.margrethe.xml");
         assertEquals("The stored content should match the file-content",
                      fileContent.trim(), gurli.getContentAsUTF8().trim());
-
-        return storage;
     }
 
     public static void waitForService(FilterService service)
@@ -286,21 +247,40 @@ public class IndexTest extends NoExitTestCase {
             log.trace("Sleeping a bit");
             Thread.sleep(100);
         }
-        assertTrue("The service '" + service + "' should have stopped by now",
-                   service.getStatus().getCode().equals(Status.CODE.stopped));
+        assertEquals("The service '" + service + "' should have stopped by now",
+                     service.getStatus().getCode(), Status.CODE.stopped);
         log.debug("Finished waiting for service");
     }
 
-    public static void updateIndex(Configuration conf) throws Exception {
+    public static Configuration loadFagrefProperties(
+        String storage, String location) {
+        setFagrefProperties(storage);
+        return Configuration.load(location);
+    }
+
+    private static void setFagrefProperties(String storageID) {
+        System.setProperty(
+            "index_storage", ReleaseHelper.STORAGE_RMI_PREFIX + storageID);
+
         URL xsltLocation = Resolver.getURL(
-                "data/search/fagref_xslt/fagref_index.xsl");
+                "resources/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
                       xsltLocation);
+        System.setProperty("fagref_xslt", xsltLocation.getFile());
+
         URL descriptorLocation = Resolver.getURL(
-                "data/search/SearchTest_IndexDescriptor.xml");
+                "resources/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
+        System.setProperty("fagref_descriptor", descriptorLocation.getFile());
 
+        // TODO: Consider cleanup of the index folder on tearDown
+        System.setProperty("index_location", "/tmp/testindex");
+    }
+
+    public static void updateIndex(Configuration conf) throws Exception {
+
+        /*
         Configuration chain = conf.getSubConfigurations(
                 FilterControl.CONF_CHAINS).get(0);
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
@@ -323,6 +303,8 @@ public class IndexTest extends NoExitTestCase {
         getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
+          */
+
         FilterService indexService = new FilterService(conf);
         indexService.start();
         waitForService(indexService, Integer.MAX_VALUE);

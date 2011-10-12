@@ -640,14 +640,16 @@ public class IndexControllerImpl extends StateThread implements
     @Override
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
-        log.info("consolidate started");
+        log.debug("Consolidate called");
         if (updatesSinceLastConsolidate == 0 && !forceConsolidateOnClose) {
             log.trace("No updates since last Consolidate");
             lastConsolidate = System.currentTimeMillis();
             lastCommit = System.currentTimeMillis(); // Consolidate includes commit
             return;
         }
-        log.debug("Performing consolidate");
+        log.info(
+            "Starting consolidate (force == " + forceConsolidateOnClose
+            + ", updates == " + updatesSinceLastConsolidate + ")");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.consolidate();
         }
