@@ -32,7 +32,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -198,7 +197,7 @@ public class DescriptorTest extends NoExitTestCase {
 
         log.debug("Ingesting data");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
-        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
 
         log.debug("Creating initial index");
         Configuration indexFullConf = Configuration.load(
@@ -278,7 +277,7 @@ public class DescriptorTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
         log.debug("Adding new material");
-        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
         index(indexConf);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure

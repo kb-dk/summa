@@ -49,8 +49,7 @@ public class ReleaseHelper {
 
     static int storageCounter = 0;
     public static final File storageRoot =
-            new File(new File(System.getProperty("java.io.tmpdir")),
-                     "test_storages");
+            new File(new File(System.getProperty("java.io.tmpdir")), "test_storages");
 
     public static File getStorageLocation(String name) {
         return new File(IngestTest.sourceRoot, "storage_" + name);
@@ -65,7 +64,8 @@ public class ReleaseHelper {
     public static Configuration getArchiveReaderConfiguration(String source) {
         return Configuration.newMemoryBased(
             ArchiveReader.CONF_ROOT_FOLDER, source,
-            ArchiveReader.CONF_RECURSIVE, true
+            ArchiveReader.CONF_RECURSIVE, true,
+            ArchiveReader.CONF_COMPLETED_POSTFIX, ""
         );
     }
 
@@ -125,8 +125,8 @@ public class ReleaseHelper {
      * @param idTag      the tag containing the id of the Record in the XML.
      * @return the number of ingested records.
      */
-    public static int ingest(String storage, String source, String recordBase,
-                             String idPrefix, String recordTag, String idTag) {
+    public static int ingest(String storage, String source, String recordBase, String idPrefix,
+                             String recordTag, String idTag) {
         return ingest(storage, source, new XMLSplitterFilter(
             Configuration.newMemoryBased(
                 XMLSplitterFilter.CONF_BASE, recordBase,
@@ -142,26 +142,35 @@ public class ReleaseHelper {
     public static int ingest(
         String storage, String source, ObjectFilter processor) {
         log.debug("Ingesting from " + source);
-        Filter reader = new ArchiveReader(
-            getArchiveReaderConfiguration(source));
+        Filter reader = new ArchiveReader(getArchiveReaderConfiguration(source));
         processor.setSource(reader);
-        StorageWriterClient writableStorage =
-            new StorageWriterClient(getStorageClientConfiguration(storage));
+        StorageWriterClient writableStorage = new StorageWriterClient(getStorageClientConfiguration(storage));
         RecordWriter writer = new RecordWriter(writableStorage, 10, 10000);
         writer.setSource(processor);
         int count = 0;
+        Record last = null;
         while (writer.hasNext()) {
-            writer.next();
+            last = writer.next().getRecord();
+            log.debug("Pushed " + last.getId() + " to " + storage);
             count++;
         }
         log.debug("Finished ingesting " + count + " records from " + source);
-
         writer.close(true);
+
+        if (last == null) {
+            return count;
+        }
+
+        // We want to guarantee flush
+        StorageReaderClient readableStorage = new StorageReaderClient(getStorageClientConfiguration(storage));
         try {
-            Thread.sleep(100);
+            while (readableStorage.getRecord(last.getId(), null) == null) {
+                Thread.sleep(100);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to request '" + last.getId() + "' from storage at " + storage);
         } catch (InterruptedException e) {
-            throw new RuntimeException(
-                "Interrupted while waiting to ensure flush", e);
+            throw new RuntimeException("Interrupted while waiting to ensure flush", e);
         }
         return count;
     }
@@ -174,8 +183,7 @@ public class ReleaseHelper {
      * @throws java.io.IOException if the Storage could not be contacted.
      */
     public static List<Record> getRecords(String storage) throws IOException {
-        StorageReaderClient remote = new StorageReaderClient(
-            getStorageClientConfiguration(storage));
+        StorageReaderClient remote = new StorageReaderClient(getStorageClientConfiguration(storage));
         try {
             long iterKey = remote.getRecordsModifiedAfter(0, null, null);
             Iterator<Record> iterator = new StorageIterator(remote, iterKey);
@@ -189,10 +197,8 @@ public class ReleaseHelper {
         }
     }
 
-    public static Record getRecord(
-                           String storage, String recordId) throws IOException {
-        StorageReaderClient remote = new StorageReaderClient(
-            getStorageClientConfiguration(storage));
+    public static Record getRecord(String storage, String recordId) throws IOException {
+        StorageReaderClient remote = new StorageReaderClient(getStorageClientConfiguration(storage));
         try {
             return remote.getRecord(recordId, null);
         } finally {

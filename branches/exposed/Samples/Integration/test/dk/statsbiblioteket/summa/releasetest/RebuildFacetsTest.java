@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -66,7 +65,7 @@ public class RebuildFacetsTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Ingesting");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
-        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
         log.debug("Verify index");

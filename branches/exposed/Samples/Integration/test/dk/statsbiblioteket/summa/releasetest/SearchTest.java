@@ -65,7 +65,7 @@ public class SearchTest extends NoExitTestCase {
 
     public final static String fagref_hj =
         Resolver.getFile("resources/search/input/part1").getAbsolutePath();
-    public final static String fagref_jh =
+    public final static String fagref_jh_gm =
         Resolver.getFile("resources/search/input/part2").getAbsolutePath();
     public final static String fagref_1plus2 =
         Resolver.getFile("resources/search/input/part1plus2").getAbsolutePath();
@@ -145,7 +145,7 @@ public class SearchTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         ingestFagref(STORAGE, fagref_hj);
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
-        ingestFagref(STORAGE, fagref_jh);
+        ingestFagref(STORAGE, fagref_jh_gm);
         verifyStorage(STORAGE, "jh", "fagref:jh@example.com");
         storage.close();
     }
@@ -351,7 +351,7 @@ public class SearchTest extends NoExitTestCase {
             fail("Failed search 1 for Gurli: " + e.getMessage());
         }
         log.debug("Adding new material");
-        ingestFagref(STORAGE, fagref_jh);
+        ingestFagref(STORAGE, fagref_jh_gm);
         verifyStorage(STORAGE, "hj", "fagref:hj@example.com");
         updateIndex(STORAGE);
         log.debug("Finished updating of index. It should now contain 3 docs");
