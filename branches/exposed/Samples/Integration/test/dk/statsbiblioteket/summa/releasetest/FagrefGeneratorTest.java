@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.releasetest;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Files;
@@ -115,6 +116,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
 
     // TODO FIXME: Do not use OAITest for this
     public void testIngest() throws Exception {
+        final String STORAGE = "fagrefgen_ingest";
         final int RECORDS = 1000;
         // Quick test on pc286 (desktop 7200 RPM hard disk)
         //   5000: 141/s
@@ -125,11 +127,10 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         // 100000:  32/s
 
         Profiler storageProfiler = new Profiler();
-        StorageService storage = OAITest.getStorageService();
-        log.info("Finished starting Storage in "
-                 + storageProfiler.getSpendTime());
-        Configuration conf = Configuration.load(
-                "resources/generator/generator_configuration.xml");
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        log.info("Finished starting Storage in " + storageProfiler.getSpendTime());
+        Configuration conf = ReleaseHelper.loadStorageConfiguration(
+            STORAGE, "resources/generator/generator_configuration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
                 set(RecordGenerator.CONF_RECORDS, RECORDS);
@@ -152,17 +153,14 @@ public class FagrefGeneratorTest extends NoExitTestCase {
                 StringWriter sw = new StringWriter(500);
                 sw.append("Beats: ").append(Long.toString(getBeats()));
                 sw.append(", time: ").append(getSpendTime());
-                sw.append(", average: ").
-                        append(Double.toString(getBps(false)));
-                sw.append(" beats/second, ETA: ").
-                        append(getETAAsString(false));
+                sw.append(", average: ").append(Double.toString(getBps(false)));
+                sw.append(" beats/second, ETA: ").append(getETAAsString(false));
                 return sw.toString();
             }
-
         };
         indexProfiler.setExpectedTotal(RECORDS);
         Configuration indexConf = IndexTest.loadFagrefProperties(
-            "summa-storage", "resources/search/FacetTest_IndexConfiguration.xml");
+            STORAGE, "resources/search/FacetTest_IndexConfiguration.xml");
         Configuration facetConf =
                 indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
@@ -174,7 +172,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         log.info("Finished requesting and indexing " + RECORDS + " Records. "
                  + indexProfiler);
 
-        storage.stop();
+        storage.close();
     }
 
     private void extendFacets(Configuration facetConf, String name,

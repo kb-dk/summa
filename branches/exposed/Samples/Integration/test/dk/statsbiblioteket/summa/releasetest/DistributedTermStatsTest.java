@@ -64,7 +64,9 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         if (INDEX_ROOT.exists()) {
             Files.delete(INDEX_ROOT);
         }
-        INDEX_ROOT.mkdirs();
+        if (!INDEX_ROOT.mkdirs()) {
+            throw new IllegalStateException("Unable to create " + INDEX_ROOT);
+        }
     }
 
     @Override

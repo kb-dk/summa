@@ -304,12 +304,10 @@ public class StorageTest extends NoExitTestCase {
         final String STORAGE_ID = "recordreader_storage";
         Storage storage = IndexTest.createSampleStorage(STORAGE_ID);
 
-        MemoryStorage ms = new MemoryStorage();
-        ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);
-        ms.put(ConnectionConsumer.CONF_RPC_TARGET,
-               "//localhost:28000/summa-storage");
-        ms.put(RecordReader.CONF_BASE, "fagref");
-        Configuration conf = new Configuration(ms);
+        Configuration conf = Configuration.newMemoryBased(
+            RecordReader.CONF_START_FROM_SCRATCH, true,
+            ConnectionConsumer.CONF_RPC_TARGET, ReleaseHelper.STORAGE_RMI_PREFIX + STORAGE_ID,
+            RecordReader.CONF_BASE, "fagref");
 
         RecordReader reader = new RecordReader(conf);
         reader.clearProgressFile();
@@ -336,7 +334,7 @@ public class StorageTest extends NoExitTestCase {
                      pumps, newPumps);
         reader.close(true);
 
-        ms.put(RecordReader.CONF_START_FROM_SCRATCH, false);
+        conf.set(RecordReader.CONF_START_FROM_SCRATCH, false);
         reader = new RecordReader(conf);
         int thirdPumps = 0;
         while (reader.hasNext()) {

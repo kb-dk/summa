@@ -163,14 +163,15 @@ public class DescriptorTest extends NoExitTestCase {
 
     public void testUpdateCopySearch() throws Exception {
         final String STORAGE = "updatecopy_storage";
-        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+        Configuration conf = IndexTest.loadFagrefProperties(
+            STORAGE, "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testUpdateStaticSearch() throws Exception {
         final String STORAGE = "updatestatic_storage";
-        Configuration conf = Configuration.load(
-                "resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+        Configuration conf = IndexTest.loadFagrefProperties(
+            STORAGE, "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getStaticSearcherConfiguration(), "author");
     }
 
@@ -203,8 +204,7 @@ public class DescriptorTest extends NoExitTestCase {
         index(indexFullConf, basicDescriptor);
 
         log.debug("Testing initial index, copy searcher");
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getCopySearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getCopySearcherConfiguration());
         searcher.checkIndex();
         verifyFacetResult(searcher, "author", "Hans");
 
@@ -218,8 +218,9 @@ public class DescriptorTest extends NoExitTestCase {
                 oldLocation.equals(searcher.getIndexLocation()));
         verifyFacetResult(searcher, "author", "Hans");
 
-        log.debug("Creating new index with new facets");
-        indexFullConf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        //log.debug("Creating new index with new facets");
+        //indexFullConf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+
         oldLocation = searcher.getIndexLocation();
         URL extraDescriptor = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptorExtra.xml");
         index(indexFullConf, extraDescriptor);

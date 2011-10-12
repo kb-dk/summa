@@ -252,16 +252,12 @@ public class IndexTest extends NoExitTestCase {
         log.debug("Finished waiting for service");
     }
 
-    public static Configuration loadFagrefProperties(
-        String storage, String location) {
+    public static Configuration loadFagrefProperties(String storage, String location) {
         setFagrefProperties(storage);
-        return Configuration.load(location);
+        return ReleaseHelper.loadStorageConfiguration(storage, location);
     }
 
     private static void setFagrefProperties(String storageID) {
-        System.setProperty(
-            "index_storage", ReleaseHelper.STORAGE_RMI_PREFIX + storageID);
-
         URL xsltLocation = Resolver.getURL(
                 "resources/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",

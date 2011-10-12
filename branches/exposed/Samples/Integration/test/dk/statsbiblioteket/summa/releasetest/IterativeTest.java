@@ -96,13 +96,13 @@ public class IterativeTest extends NoExitTestCase {
     Plain read of a Records from Storage and verification of EOF after that.
      */
     public void testSimpleRead() throws Exception {
-        RecordReader reader = getRecordReader();
+        RecordReader reader = getRecordReader(STORAGE);
         assertFalse("The reader should have nothing for an empty storage",
                     reader.hasNext());
         reader.close(true);
 
         storage.flush(new Record("foo", BASE, new byte[0]));
-        reader = getRecordReader();
+        reader = getRecordReader(STORAGE);
         assertTrue("The reader should have something for a non-empty storage",
                    reader.hasNext());
         reader.next();
@@ -528,13 +528,12 @@ public class IterativeTest extends NoExitTestCase {
         return counter;
     }
 
-    public RecordReader getRecordReader() throws IOException {
-        MemoryStorage ms = new MemoryStorage();
-        ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);
-        ms.put(ConnectionConsumer.CONF_RPC_TARGET,
-               "//localhost:28000/summa-storage");
-        ms.put(RecordReader.CONF_BASE, BASE);
-        return new RecordReader(new Configuration(ms));
+    public RecordReader getRecordReader(String storage) throws IOException {
+        return new RecordReader(Configuration.newMemoryBased(
+            RecordReader.CONF_START_FROM_SCRATCH, true,
+            ConnectionConsumer.CONF_RPC_TARGET, ReleaseHelper.STORAGE_RMI_PREFIX + storage,
+            RecordReader.CONF_BASE, BASE
+        ));
     }
 
 }

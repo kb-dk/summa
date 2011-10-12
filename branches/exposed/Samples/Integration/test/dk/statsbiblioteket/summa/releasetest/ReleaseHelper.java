@@ -234,4 +234,9 @@ public class ReleaseHelper {
     public static File getNewStorageLocation() {
         return new File(storageRoot, "storage" + storageCounter++);
     }
+
+    public static Configuration loadStorageConfiguration(String storage, String location) {
+        System.setProperty("index_storage", ReleaseHelper.STORAGE_RMI_PREFIX + storage);
+        return Configuration.load(location);
+    }
 }
