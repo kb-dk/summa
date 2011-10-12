@@ -67,7 +67,7 @@ public class RecordReaderTest extends TestCase {
         super.tearDown();
         // Clean up and prepare a fresh directory
         //db.mkdirs();
-        //Files.delete(db);
+        Files.delete(db);
     }
 
     public static Test suite() {
@@ -141,7 +141,7 @@ public class RecordReaderTest extends TestCase {
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
         Record orig = new Record("test1", "base", "Hello".getBytes());
         sto.flush(orig);
-        System.exit(1);
+        //System.exit(1);
         waitForHasNext(r, timeout);
 
         Payload p = r.next();
