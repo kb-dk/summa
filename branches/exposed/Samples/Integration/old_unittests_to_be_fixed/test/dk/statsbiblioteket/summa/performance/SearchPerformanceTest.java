@@ -43,7 +43,7 @@ public class SearchPerformanceTest extends TestCase {
 
     public void testBasic() throws Exception {
         Configuration conf =
-                Configuration.load("data/performance/performance.xml");
+                Configuration.load("resources/performance/performance.xml");
         new SearchPerformance(conf);
     }
 }

@@ -56,7 +56,7 @@ public class StorageTest extends NoExitTestCase {
 /*    public void testReopen() throws Exception {
         Storage storage = IndexTest.createSampleStorage();
         SearchTest.ingest(new File(
-                Resolver.getURL("data/search/input/part1").getFile()));
+                Resolver.getURL("resources/search/input/part1").getFile()));
         assertEquals("There should be something in the first storage", 1, )
         Configuration storageConf = IngestTest.getStorageConfiguration();
         storageConf.set(DatabaseStorage.PROP_FORCENEW, false);

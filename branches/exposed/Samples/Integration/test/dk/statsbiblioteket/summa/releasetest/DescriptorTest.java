@@ -55,7 +55,9 @@ public class DescriptorTest extends NoExitTestCase {
     public void setUp () throws Exception {
         super.setUp();
         cleanup();
-        SearchTest.INDEX_ROOT.mkdirs();
+        if (!SearchTest.INDEX_ROOT.mkdirs()) {
+            log.error("Unable to construct " + SearchTest.INDEX_ROOT);
+        }
     }
                                             
     @Override
@@ -72,13 +74,12 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private Configuration getStaticSearcherConfiguration() throws Exception {
-        URL descriptorLocation = Resolver.getURL(
-                "data/descriptor/DescriptorTest_IndexDescriptor.xml");
+        URL descriptorLocation = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
         Configuration searcherConf = Configuration.load(
-                "data/descriptor/StaticDescriptor_SearchConfiguration.xml");
+            "resources/descriptor/StaticDescriptor_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -90,18 +91,15 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private Configuration getCopySearcherConfiguration() throws IOException {
-        Configuration searcherConf = Configuration.load(
-                "data/descriptor/CopyDescriptor_SearchConfiguration.xml");
+        Configuration searcherConf = Configuration.load("resources/descriptor/CopyDescriptor_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
-        searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT,
-                         SearchTest.INDEX_ROOT.toString());
+        searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, SearchTest.INDEX_ROOT.toString());
         return searcherConf;
     }
 
     public void testCreateCopySearcher() throws Exception {
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getCopySearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getCopySearcherConfiguration());
         log.debug("Searcher created: " + searcher);
         searcher.close();
     }
@@ -127,8 +125,7 @@ public class DescriptorTest extends NoExitTestCase {
         log.debug("Storage started");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         assertEquals("Hans Jensen data should be ingested",
-                     1, storage.getRecords(
-            Arrays.asList("fagref:hj@example.com"), null).size());
+                     1, storage.getRecords(Arrays.asList("fagref:hj@example.com"), null).size());
         storage.close();
     }
 
@@ -138,12 +135,10 @@ public class DescriptorTest extends NoExitTestCase {
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         updateIndex();
         log.debug("Index updated. Creating searcher");
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getCopySearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getCopySearcherConfiguration());
         log.debug("Searcher created. Verifying existence of Hans Jensen data");
         SearchTest.verifySearch(searcher, "Hans", 1);
-        log.debug("Sample output from search: "
-                  + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
+        log.debug("Sample output from search: " + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Second test-search performed with success");
         verifyFacetResult(searcher, "Hans");
@@ -152,8 +147,7 @@ public class DescriptorTest extends NoExitTestCase {
         storage.close();
     }
 
-    private void verifyFacetResult(SummaSearcher searcher,
-                                   String query) throws IOException {
+    private void verifyFacetResult(SummaSearcher searcher, String query) throws IOException {
         verifyFacetResult(searcher, "author", query);
     }
 
@@ -161,33 +155,30 @@ public class DescriptorTest extends NoExitTestCase {
                                    String facet, String query) throws IOException {
         String res = searcher.search(SearchTest.simpleRequest(query)).toXML();
         if (!res.contains("<facet name=\"" + facet + "\">")) {
-            fail("Search for '" + query + "' with facet '" + facet
-                 + "' did not produce any facets. Result was:\n" + res);
+            fail(String.format("Search for '%s' with facet '%s' did not produce any facets. Result was:\n%s",
+                               query, facet, res));
         }
         log.debug("Search for '" + query + "' gave:\n" + res);
     }
 
     public void testUpdateCopySearch() throws Exception {
-        Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
         testFacetSearch(conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testUpdateStaticSearch() throws Exception {
         Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+                "resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
         testFacetSearch(conf, getStaticSearcherConfiguration(), "author");
     }
 
     public void testFullStaticSearch() throws Exception {
-        Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testFullCopySearch() throws Exception {
-        Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(conf, getStaticSearcherConfiguration(), "author");
     }
 
@@ -201,9 +192,8 @@ public class DescriptorTest extends NoExitTestCase {
 
         log.debug("Creating initial index");
         Configuration indexFullConf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexFullConfiguration.xml");
-        URL basicDescriptor = Resolver.getURL(
-                "data/descriptor/DescriptorTest_IndexDescriptor.xml");
+            "resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        URL basicDescriptor = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptor.xml");
         index(indexFullConf, basicDescriptor);
 
         log.debug("Testing initial index, copy searcher");
@@ -223,17 +213,15 @@ public class DescriptorTest extends NoExitTestCase {
         verifyFacetResult(searcher, "author", "Hans");
 
         log.debug("Creating new index with new facets");
-        indexFullConf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        indexFullConf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         oldLocation = searcher.getIndexLocation();
-        URL extraDescriptor = Resolver.getURL(
-                "data/descriptor/DescriptorTest_IndexDescriptorExtra.xml");
+        URL extraDescriptor = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptorExtra.xml");
         index(indexFullConf, extraDescriptor);
         log.debug("Verifying that new index contains new facet");
         searcher.checkIndex();
         assertFalse(String.format(
-                "The old index location from basic descriptor '%s' should "
-                + "differ from the new index location", oldLocation),
+                "The old index location from basic descriptor '%s' should differ from the new index location",
+                oldLocation),
                 oldLocation.equals(searcher.getIndexLocation()));
         verifyFacetResult(searcher, "author2", "Hans");
 
@@ -242,9 +230,7 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
 
-    public void testFacetSearch(Configuration indexConf,
-                                Configuration searchConf,
-                                String checkFacet) throws Exception {
+    public void testFacetSearch(Configuration indexConf, Configuration searchConf, String checkFacet) throws Exception {
         final String STORAGE = "facetsearch_storage";
         log.debug("Creating Searcher");
         SummaSearcherImpl searcher = new SummaSearcherImpl(searchConf);
@@ -264,8 +250,7 @@ public class DescriptorTest extends NoExitTestCase {
         }
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
         assertEquals("Hans Jensen data should be ingested",
-                     1, storage.getRecords(Arrays.asList(
-            "fagref:hj@example.com"), null).size());
+                     1, storage.getRecords(Arrays.asList("fagref:hj@example.com"), null).size());
         log.debug("Ingest 1 performed");
         index(indexConf);
         log.debug("Update 2 performed");
@@ -274,8 +259,7 @@ public class DescriptorTest extends NoExitTestCase {
         SearchTest.verifySearch(searcher, "Hans", 1);
         verifyFacetResult(searcher, checkFacet, "Hans");
         log.debug("Sample output after initial ingest: "
-                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
-                toXML());
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
         log.debug("Adding new material");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
         index(indexConf);
@@ -288,8 +272,7 @@ public class DescriptorTest extends NoExitTestCase {
         verifyFacetResult(searcher, checkFacet, "Gurli");
         verifyFacetResult(searcher, checkFacet, "Hans");
         log.debug("Sample output from large search: "
-                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
-                toXML());
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
 
         searcher.close();
         storage.close();
@@ -303,25 +286,21 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void fullIndex() throws Exception {
-        Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         index(conf);
     }
 
     public void updateIndex() throws Exception {
-        Configuration conf = Configuration.load(
-                "data/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+        Configuration conf = Configuration.load("resources/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
         index(conf);
     }
 
     public void index(Configuration conf) throws Exception {
-        URL descriptorLocation = Resolver.getURL(
-                "data/descriptor/DescriptorTest_IndexDescriptor.xml");
+        URL descriptorLocation = Resolver.getURL("resources/descriptor/DescriptorTest_IndexDescriptor.xml");
         index(conf, descriptorLocation);
     }
 
-    public void index(Configuration indexConf, URL descriptorLocation)
-                                                              throws Exception {
+    public void index(Configuration indexConf, URL descriptorLocation) throws Exception {
         updateIndexConfiguration(indexConf, descriptorLocation);
 
         FilterService indexService = new FilterService(indexConf);
@@ -332,33 +311,27 @@ public class DescriptorTest extends NoExitTestCase {
 
     private void updateIndexConfiguration(
             Configuration conf, URL descriptorLocation) throws Exception {
-        URL xsltLocation = Resolver.getURL(
-                "data/search/fagref_xslt/fagref_index.xsl");
+        URL xsltLocation = Resolver.getURL("resources/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
                       xsltLocation);
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
-        Configuration chain = conf.getSubConfigurations(
-                FilterControl.CONF_CHAINS).get(0);
+        Configuration chain = conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0);
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
 //        chain.getSubConfiguration("FagrefTransformer").
         set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
 
         // Document Creator
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
-                getSubConfiguration(
-                        IndexDescriptor.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    descriptorLocation.getFile());
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation.getFile());
 
         // Index Update
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
-        set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
-            SearchTest.INDEX_ROOT.toString());
+        set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, SearchTest.INDEX_ROOT.toString());
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
         getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    descriptorLocation.getFile());
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation.getFile());
     }
 }

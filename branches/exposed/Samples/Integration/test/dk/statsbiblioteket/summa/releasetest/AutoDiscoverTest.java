@@ -95,17 +95,17 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
-    String STORAGE_CONF_LOCATION = "data/auto/setup/StorageConfiguration.xml";
+    String STORAGE_CONF_LOCATION = "resources/auto/setup/StorageConfiguration.xml";
     String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
     String INDEX_ROOT = new File(TEST_DIR, "index").toString();
-    File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("data/auto/data"));
+    File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("resources/auto/data"));
 
     List<String> TEST_FILES = Arrays.asList(
             "gurli.margrethe.xml", "hans.jensen.xml", "jens.hansen.xml");
     String FAGREF_XSLT = Resolver.urlToFile(Resolver.getURL(
-            "data/search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
+            "resources/search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
     String INDEX_DESCRIPTOR =
-            Resolver.getURL("data/auto/setup/IndexDescriptor.xml").getFile();
+            Resolver.getURL("resources/auto/setup/IndexDescriptor.xml").getFile();
 
     private void putFiles() throws Exception {
         for (String file: TEST_FILES) {
@@ -126,7 +126,7 @@ public class AutoDiscoverTest extends TestCase {
 
     private StorageService createStorage() throws Exception {
         Configuration conf =
-                Configuration.load("data/auto/setup/StorageConfiguration.xml");
+                Configuration.load("resources/auto/setup/StorageConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         StorageService storage = new StorageService(conf);
         storage.start();
@@ -168,7 +168,7 @@ public class AutoDiscoverTest extends TestCase {
 
     private FilterService createIngestChain() throws Exception {
         Configuration conf =
-                Configuration.load("data/auto/setup/IngestConfiguration.xml");
+                Configuration.load("resources/auto/setup/IngestConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
@@ -193,7 +193,7 @@ public class AutoDiscoverTest extends TestCase {
 
     private Service createIndexer() throws Exception {
         Configuration conf =
-                Configuration.load("data/auto/setup/IndexConfiguration.xml");
+                Configuration.load("resources/auto/setup/IndexConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
@@ -352,7 +352,7 @@ public class AutoDiscoverTest extends TestCase {
 
     private SearchService createSearcher() throws Exception {
         Configuration conf =
-                Configuration.load("data/auto/setup/SearchConfiguration.xml");
+                Configuration.load("resources/auto/setup/SearchConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX_ROOT);
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).

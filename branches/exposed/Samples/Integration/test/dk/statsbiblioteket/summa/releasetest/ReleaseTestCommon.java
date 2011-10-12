@@ -86,7 +86,7 @@ public class ReleaseTestCommon {
         if (new File(DATA_ROOT, "data").exists()) {
             Files.delete(new File(DATA_ROOT, "data"));
         }
-        URL source = Resolver.getURL("data/multiple");
+        URL source = Resolver.getURL("resources/multiple");
         if (source == null) {
             throw new FileNotFoundException(
                     "Unable to resolve the folder 'data'");

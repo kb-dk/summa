@@ -79,7 +79,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static final File INDEX_ROOT = new File(
             System.getProperty("java.io.tmpdir"), "testdist");
     public static final File DESCRIPTOR = Resolver.getFile(
-            "data/distribution/index_descriptor.xml");
+            "resources/distribution/index_descriptor.xml");
 
     public void testDistributedTermStats() throws Exception {
         List<File> indexLocations = createThreeIndexes();
@@ -419,7 +419,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         List<SummaSearcher> searchers = new ArrayList<SummaSearcher>(
                 locations.size());
         Configuration conf = Configuration.load(
-                "data/distribution/search_configuration.xml");
+                "resources/distribution/search_configuration.xml");
         if (termStatLocation != null) {
             conf.getSubConfiguration(
                     LuceneSearchNode.CONF_TERMSTAT_CONFIGURATION).set(
@@ -452,7 +452,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
                                                             throws Exception {
         
         Configuration indexConf = Configuration.load(
-                "data/distribution/index_configuration.xml");
+                "resources/distribution/index_configuration.xml");
         indexConf.set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                       destination.getAbsolutePath());
         indexConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).

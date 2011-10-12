@@ -50,7 +50,7 @@ public class SearchPerformance {
             "summa.performance.index.location";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_LOCATION =
-            "data/performance/index";
+            "resources/performance/index";
 
     /**
      * The Lucene Directory to use.

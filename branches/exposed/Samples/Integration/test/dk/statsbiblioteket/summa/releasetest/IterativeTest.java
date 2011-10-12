@@ -384,7 +384,7 @@ public class IterativeTest extends NoExitTestCase {
   */
    /* private FacetMap getFacetMap() throws Exception {
         Configuration conf = Configuration.load(
-                "data/iterative/IterativeTest_FacetSearchConfiguration.xml");
+                "resources/iterative/IterativeTest_FacetSearchConfiguration.xml");
         Structure structure = new Structure(conf);
         assertEquals("There should be the right number of Facets defined",
                      4, structure.getFacetNames().size());
@@ -398,7 +398,7 @@ public class IterativeTest extends NoExitTestCase {
 
     private Browser getBrowser() throws Exception {
         Configuration conf = Configuration.load(
-                "data/iterative/IterativeTest_FacetSearchConfiguration.xml");
+                "resources/iterative/IterativeTest_FacetSearchConfiguration.xml");
         assertEquals("There should be the right number of Facets defined",
                      4, new Structure(conf).getFacetNames().size());
         Browser browser = new FacetSearchNode(conf);
@@ -495,10 +495,10 @@ public class IterativeTest extends NoExitTestCase {
 
     private Configuration getIndexConfiguration() throws IOException {
         String descriptorLocation = Resolver.getURL(
-                "data/iterative/IterativeTest_IndexDescriptor.xml")
+                "resources/iterative/IterativeTest_IndexDescriptor.xml")
                 .getFile();
         String confString = Resolver.getUTF8Content(
-                "data/iterative/IterativeTest_IndexConfiguration.xml");
+                "resources/iterative/IterativeTest_IndexConfiguration.xml");
         log.debug("Replacing [IndexDescriptorLocation] with "
                   + descriptorLocation);
         confString = confString.replaceAll("\\[IndexDescriptorLocation\\]",

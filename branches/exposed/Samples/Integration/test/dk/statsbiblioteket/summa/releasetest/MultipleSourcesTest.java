@@ -333,7 +333,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
     private Configuration getIndexConfiguration() throws Exception {
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "data/multiple/index_configuration.xml").
+                        "resources/multiple/index_configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 

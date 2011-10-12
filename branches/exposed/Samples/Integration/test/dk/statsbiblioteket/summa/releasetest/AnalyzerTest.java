@@ -52,11 +52,11 @@ public class AnalyzerTest extends TestCase {
     private static Log log = LogFactory.getLog(AnalyzerTest.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private File ROOT = new File(System.getProperty("java.io.tmpdir"),
-                                 "lucene-index");
+    private File ROOT = new File(System.getProperty("java.io.tmpdir"), "lucene-index");
 
     @Override
     protected void setUp() throws Exception {
+        super.setUp();
         if (ROOT.exists()) {
             Files.delete(ROOT);
         }
@@ -69,17 +69,14 @@ public class AnalyzerTest extends TestCase {
 
     private void createIndex() throws Exception {
         log.debug("Creating index");
-        Configuration creatorConf = Configuration.load(
-                "data/analyzer/DocumentCreatorConfiguration.xml");
-        StreamingDocumentCreator creator =
-                new StreamingDocumentCreator(creatorConf);
+        Configuration creatorConf = Configuration.load("resources/analyzer/DocumentCreatorConfiguration.xml");
+        StreamingDocumentCreator creator = new StreamingDocumentCreator(creatorConf);
         creator.setSource(new PayloadFeederHelper(getPayloads()));
         List<Payload> processed = extractPayloads(creator);
 
         // We've got Lucene Documents, ready for indexing
 
-        Configuration luceneConf = Configuration.load(
-                "data/analyzer/LuceneConfiguration.xml");
+        Configuration luceneConf = Configuration.load("resources/analyzer/LuceneConfiguration.xml");
         LuceneManipulator lucene = new LuceneManipulator(luceneConf);
         lucene.open(ROOT);
 
@@ -119,8 +116,7 @@ public class AnalyzerTest extends TestCase {
     private void assertNoHits(LuceneSearchNode search, String query) throws
                                                                RemoteException {
         String result = search(search, query);
-        assertFalse("The search for '" + query + "' should give 0 hits. "
-                    + "Result was\n" + result,
+        assertFalse("The search for '" + query + "' should give 0 hits. " + "Result was\n" + result,
                     result.contains("recordID\""));
     }
 
@@ -137,8 +133,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     private LuceneSearchNode getLuceneSearchNode() throws IOException {
-        Configuration searchConf = Configuration.load(
-                "data/analyzer/SearchConfiguration.xml");
+        Configuration searchConf = Configuration.load("resources/analyzer/SearchConfiguration.xml");
         LuceneSearchNode sn = new LuceneSearchNode(searchConf);
         sn.open(ROOT.toString());
         assertTrue("There should be at least one document indexed",
@@ -150,9 +145,8 @@ public class AnalyzerTest extends TestCase {
         String[] DOCS = new String[]{"document1.xml"};
         List<Payload> payloads = new ArrayList<Payload>(DOCS.length);
         for (String doc: DOCS) {
-            String content = Resolver.getUTF8Content("data/analyzer/" + doc);
-            Record record = new Record(
-                    doc, "dummyBase", content.getBytes("utf-8"));
+            String content = Resolver.getUTF8Content("resources/analyzer/" + doc);
+            Record record = new Record(doc, "dummyBase", content.getBytes("utf-8"));
             Payload payload = new Payload(record);
             payloads.add(payload);
         }

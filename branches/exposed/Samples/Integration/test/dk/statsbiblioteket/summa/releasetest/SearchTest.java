@@ -127,8 +127,7 @@ public class SearchTest extends NoExitTestCase {
         PayloadFeederHelper feeder =
             new PayloadFeederHelper(Arrays.asList(payload));
 
-        Configuration conf = Configuration.load(
-                "search/SearchTest_IngestConfiguration.xml");
+        Configuration conf = Configuration.load("search/SearchTest_IngestConfiguration.xml");
         Configuration writerConf =
             conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
@@ -173,13 +172,10 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private Configuration getSearcherConfiguration() throws Exception {
-        URL descriptorLocation = Resolver.getURL(
-                "resources/search/SearchTest_IndexDescriptor.xml");
-        assertNotNull("The descriptor location should not be null",
-                      descriptorLocation);
+        URL descriptorLocation = Resolver.getURL("resources/search/SearchTest_IndexDescriptor.xml");
+        assertNotNull("The descriptor location should not be null", descriptorLocation);
 
-        Configuration searcherConf = Configuration.load(
-                "resources/search/SearchTest_SearchConfiguration.xml");
+        Configuration searcherConf = Configuration.load("resources/search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -194,8 +190,7 @@ public class SearchTest extends NoExitTestCase {
         SummaSearcher searcher = createSearcher();
         try {
             searcher.search(simpleRequest("hans"));
-            fail("A RemoteException should be thrown after timeout as no index " 
-                 + "data are present yet");
+            fail("A RemoteException should be thrown after timeout as no index data are present yet");
         } catch (RemoteException e) {
             // Expected
         }
@@ -261,14 +256,12 @@ public class SearchTest extends NoExitTestCase {
 
     private static Pattern hitPattern =
             Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
-    public static int getHits(SummaSearcher searcher, String query) throws
-                                                                    Exception {
+    public static int getHits(SummaSearcher searcher, String query) throws Exception {
         String result = searcher.search(simpleRequest(query)).toXML();
         log.debug("Result from search for '" + query + "': " + result);
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
-            throw new NullPointerException("Could not locate hitcount in "
-                                           + result);
+            throw new NullPointerException("Could not locate hitcount in " + result);
         }
         return Integer.parseInt(matcher.group(1));
     }
@@ -277,8 +270,7 @@ public class SearchTest extends NoExitTestCase {
         String result = response.toXML();
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
-            throw new NullPointerException(
-                "Could not locate hitcount in " + result);
+            throw new NullPointerException("Could not locate hitcount in " + result);
         }
         return Integer.parseInt(matcher.group(1));
     }
@@ -312,15 +304,13 @@ public class SearchTest extends NoExitTestCase {
      // Exec index w/ update on storage, verify result in searcher
 
     // TODO: The test fails sometimes, probably a race-condition. Fix it!
-    public static void testFullSearcher(SummaSearcher searcher) throws
-                                                                Exception {
+    public static void testFullSearcher(SummaSearcher searcher) throws Exception {
         final String STORAGE = "search_full_storage";
 
         log.debug("testFullSearcher started. Performing search");
         try {
             searcher.search(simpleRequest("hans"));
-            fail("A RemoteException should be thrown after timeout as no index"
-                 + " data are present yet");
+            fail("A RemoteException should be thrown after timeout as no index data are present yet");
         } catch (RemoteException e) {
             // Expected
         }

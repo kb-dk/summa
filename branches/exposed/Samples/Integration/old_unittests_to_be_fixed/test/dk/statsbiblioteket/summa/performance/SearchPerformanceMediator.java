@@ -90,7 +90,7 @@ public class SearchPerformanceMediator {
     public static final String CONF_QUERIES_FILE =
             "summa.performance.queries.file";
     public static final String DEFAULT_QUERIES_FILE =
-            "data/performance/queries.dat";
+            "resources/performance/queries.dat";
 
     /**
      * A list of the fields to extract for each hit.

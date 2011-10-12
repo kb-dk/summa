@@ -610,8 +610,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.verifySearch(searcher, "Hans", 1);
         verifyFacetResult(searcher, "Hans");
         log.debug("Sample output after initial ingest: "
-                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
-                toXML());
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
         log.debug("Adding new material");
         SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
         updateIndex(STORAGE);
@@ -624,8 +623,7 @@ public class FacetTest extends NoExitTestCase {
         verifyFacetResult(searcher, "Gurli");
         verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
         log.debug("Sample output from large search: "
-                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
-                toXML());
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
 
         searcher.close();
         storage.close();
@@ -707,8 +705,8 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.update(hans);
         hans = storage.getRecord(HANS, null);
         long deleteModTime = hans.getModificationTime();
-        assertTrue("The Hans-Record should be marked as deleted but was "
-                   + hans, hans.isDeleted());
+        assertTrue("The Hans-Record should be marked as deleted but was " + hans,
+                   hans.isDeleted());
         assertFalse("The modification time for the Hans Records should differ",
                     originalModTime == deleteModTime);
         log.debug("Extracted deleted hans record " + hans.toString(true));
@@ -721,8 +719,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.verifySearch(searcher, "Hans", 0);
 
         log.debug("Sample output from large search: "
-                  + searcher.search(SearchTest.simpleRequest("fagekspert")).
-                toXML());
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
 
         searcher.close();
         storage.close();
@@ -803,8 +800,7 @@ public class FacetTest extends NoExitTestCase {
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "Gurli");
         request.put(DocumentKeys.SEARCH_EXPLAIN, true);
-        log.debug("Sample output from explain search: "
-                  + searcher.search(request).toXML());
+        log.debug("Sample output from explain search: " + searcher.search(request).toXML());
 
         searcher.close();
         storage.close();
@@ -834,8 +830,8 @@ public class FacetTest extends NoExitTestCase {
             log.debug("IDs from sort_title reverse: " + second);
 
             assertFalse(String.format(
-                "The first IDs '%s' should be in reverse order of the second "
-                + "IDs '%s'", first, second), first.equals(second));
+                "The first IDs '%s' should be in reverse order of the second " + "IDs '%s'", first, second),
+                        first.equals(second));
             searcher.close();
         } finally {
             storage.close();

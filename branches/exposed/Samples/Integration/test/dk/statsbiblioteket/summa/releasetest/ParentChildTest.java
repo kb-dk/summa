@@ -209,7 +209,7 @@ public class ParentChildTest extends NoExitTestCase {
 
     private void performIngest()  throws Exception {
         Configuration ingestConf =Configuration.load(
-                "data/parent-child/horizon_ingest_configuration.xml");
+                "resources/parent-child/horizon_ingest_configuration.xml");
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
 //                getSubConfiguration("Reader").
@@ -268,7 +268,7 @@ public class ParentChildTest extends NoExitTestCase {
 
     public Configuration getIndexConfiguration() throws Exception {
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "data/parent-child/index_configuration.xml").
+                        "resources/parent-child/index_configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
