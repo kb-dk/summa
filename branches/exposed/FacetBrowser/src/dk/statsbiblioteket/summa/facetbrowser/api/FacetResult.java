@@ -37,18 +37,15 @@ public interface FacetResult<T> extends Response {
     public enum TagSortOrder {tag, popularity}
 
     /**
-     * Reduce the representation according to the limitations defined in
-     * the given description. The reduction is also responsible for sorting.
-     * @param tagSortOrder the order in which the tags should be sorted.
-     */
-    public void reduce(TagSortOrder tagSortOrder);
-
-    /**
      * Resolve any JVM-specific dependencies and produce a FacetStructure
      * suitable for network transfer.
      * @return a version of the FacetStructure suitable for external use.
      */
     public FacetResult externalize();
+
+    
+    public enum Reliability {LESS, PRECISE, MORE, IMPRECISE} // Default: PRECISE
+
 }
 
 

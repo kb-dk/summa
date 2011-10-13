@@ -20,10 +20,15 @@ package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import com.ibm.icu.text.Collator;
+
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -164,5 +169,46 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         fields = newFields;
         super.renameFacetsAndFields(map);
     }
+
+    private static class AlphaComparator implements Comparator<Tag<String>>{
+    	private Collator collator = null;
+    	public AlphaComparator(String locale) {
+    		if (locale != null) {
+    			collator = Collator.getInstance(new Locale(locale)); 
+    		}
+    	}
+		@Override
+		public int compare(Tag<String> t1,Tag<String> t2) {
+			if (collator == null) {
+				return t1.getKey().compareTo(t2.getKey());
+			}
+			return collator.compare(t1.getKey(), t2.getKey());
+		}
+    }
+
+    private static class PopularityComparator implements Comparator<Tag<String>>{
+
+		@Override
+		public int compare(
+				Tag<String> t1,
+				Tag<String> t2) {
+			return t1.getCount()-t2.getCount(); 
+		}
+    }
+	@Override
+	protected Comparator<Tag<String>> getTagComparator(String facet) {
+		FacetStructure fc = structure.getFacet(facet);
+		if (fc == null || !FacetStructure.SORT_ALPHA.equals(fc.getSortType())) {
+			return new PopularityComparator();
+		}
+		return new AlphaComparator(fc.getLocale());
+	}
+
+	@Override
+	protected List<String> getFacetNames() {
+		return structure.getFacetNames();
+	}
+    
+    
 }
 

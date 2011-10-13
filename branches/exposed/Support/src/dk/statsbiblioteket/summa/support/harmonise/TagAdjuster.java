@@ -24,6 +24,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -124,31 +126,30 @@ public class TagAdjuster implements Configurable {
  //       long startTime = System.currentTimeMillis();
         for (String facetName: facetNames) {
             long singleTime = System.currentTimeMillis();
-            List<FlexiblePair<String, Integer>> oldTags =
+            List<FacetResultImpl.Tag<String>> oldTags =
                 facetResult.getMap().get(facetName);
             if (oldTags == null || oldTags.size() == 0) {
                 continue;
             }
-            // A bit of a hack as we are not guaranteed that the orders are the same
-            FlexiblePair.SortType sortType = oldTags.get(0).getSortType();
             log.trace("Transforming " + oldTags.size() + " tags for facet "
                       + facetName);
-            LinkedHashMap<String, Integer> newTags =
-                new LinkedHashMap<String, Integer>((int) (oldTags.size() * 1.5));
-            for (FlexiblePair<String, Integer> pair: oldTags) {
-                if (map.getForward().containsKey(pair.getKey())) {
-                    for (String tagName: map.getForward().get(pair.getKey())) {
-                        mergePut(newTags, tagName, pair.getValue());
+            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags =
+                new LinkedHashMap<String, FacetResultImpl.Tag<String>>(
+                		(int) (oldTags.size() * 1.5));
+            for (FacetResultImpl.Tag<String> oldTag: oldTags) {
+                if (map.getForward().containsKey(oldTag.getKey())) {
+                    for (String newName: map.getForward().get(oldTag.getKey())) {
+                        mergePut(newTags, newName, oldTag);
                     }
                 } else {
-                    mergePut(newTags, pair.getKey(), pair.getValue());
+                    mergePut(newTags, oldTag.getKey(), oldTag);
                 }
             }
-            List<FlexiblePair<String, Integer>> newListTags =
-                new ArrayList<FlexiblePair<String, Integer>>(newTags.size());
-            for (Map.Entry<String, Integer> tag: newTags.entrySet()) {
-                newListTags.add(new FlexiblePair<String, Integer>(
-                    tag.getKey(), tag.getValue(), sortType));
+            List<FacetResultImpl.Tag<String>> newListTags =
+                new ArrayList<FacetResultImpl.Tag<String>>(newTags.size());
+            for (Map.Entry<String, FacetResultImpl.Tag<String>> tag: newTags.entrySet()) {
+                newListTags.add(tag.getValue());
+                    
             }
             facetResult.getMap().put(facetName, newListTags);
             facetResult.addTiming(
@@ -183,25 +184,56 @@ public class TagAdjuster implements Configurable {
         return new HashSet<String>(Arrays.asList(tagName));
     }
 
-    private void mergePut(
-        Map<String, Integer> tags, String key, Integer value) {
-        if (tags.containsKey(key)) {
-            switch (mergeMode) {
-                case min:
-                    tags.put(key, Math.min(value, tags.get(key)));
-                    break;
-                case max:
-                    tags.put(key, Math.max(value, tags.get(key)));
-                    break;
-                case sum:
-                    tags.put(key, value + tags.get(key));
-                    break;
-                default: throw new UnsupportedOperationException(
-                    "Merge mode '" + mergeMode + "' is unknown, unsuspected "
-                    + "and unsupported");
+    
+    //TODO. The following method can be improve by using Reliability more instead of just using merge mode.
+    // ie MORE 4 and LESS 2 -> 4 MORE  (no matter of merge mode)
+    private void mergePut(Map<String, FacetResultImpl.Tag<String>> tags, 
+    		String newName, FacetResultImpl.Tag<String> oldTag) {
+        if (!tags.containsKey(newName)) {
+        	FacetResultImpl.Tag<String> newTag = 
+        			new FacetResultImpl.Tag<String>(
+        					newName, oldTag.getCount(), oldTag.getReliability());
+            tags.put(newName, newTag);
+            return;
+        }
+        
+        FacetResultImpl.Tag<String> tag = tags.get(newName);
+        Reliability newR= tag.getReliability();
+        Reliability oldR= oldTag.getReliability();
+                      
+        switch (mergeMode) {
+        case min:
+        	tag.setCount(Math.min(tag.getCount(), oldTag.getCount()));
+            if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
+            	tag.setReliability(Reliability.IMPRECISE);
             }
-        } else {
-            tags.put(key, value);
+            else{
+             tag.setReliability(Reliability.MORE);	            	
+            }                    	
+        	break;
+        case max:
+        	if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
+            	tag.setReliability(Reliability.IMPRECISE);
+            }
+            else{
+             tag.setReliability(Reliability.MORE);	            	
+            }                    	
+        	
+        	tag.setCount(Math.max(tag.getCount(), oldTag.getCount()));
+        	break;
+        case sum:
+        	if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
+            	tag.setReliability(Reliability.IMPRECISE);
+            }
+            else{
+             tag.setReliability(Reliability.LESS);	            	
+            }                    	
+        	        	
+        	tag.setCount(tag.getCount()+ oldTag.getCount());        	
+        	break;
+        default: throw new UnsupportedOperationException(
+        		"Merge mode '" + mergeMode + "' is unknown, unsuspected "
+        				+ "and unsupported");
         }
     }
 

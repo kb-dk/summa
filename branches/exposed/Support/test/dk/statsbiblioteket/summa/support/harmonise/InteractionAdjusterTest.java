@@ -5,6 +5,8 @@ import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -79,8 +81,8 @@ public class InteractionAdjusterTest extends TestCase {
         summaFacetResult.setPrefix("interactionadjustertest");
         //noinspection unchecked
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
-            new FlexiblePair<String, Integer>(
-                "Audio Sound", 87, FlexiblePair.SortType.PRIMARY_ASCENDING)));
+            new FacetResultImpl.Tag<String>("Audio Sound", 87,Reliability.PRECISE)));
+                
         ResponseCollection responses = new ResponseCollection();
         responses.add(summaFacetResult);
 
@@ -105,14 +107,13 @@ public class InteractionAdjusterTest extends TestCase {
             new HashMap<String, Integer>(), facetIDs, fields, structure);
         summaFacetResult.setPrefix("interactionadjustertest");
         //noinspection unchecked
+      
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
-            new FlexiblePair<String, Integer>(
-                "Newspaper Article", 2,
-                FlexiblePair.SortType.PRIMARY_ASCENDING),
-            new FlexiblePair<String, Integer>(
-                "Journal Article", 5,
-                FlexiblePair.SortType.PRIMARY_ASCENDING)
-        ));
+                new FacetResultImpl.Tag<String>("Newspaper Article", 2,Reliability.PRECISE),
+                new FacetResultImpl.Tag<String>("Journal Article", 5,Reliability.PRECISE)        		
+        		));
+
+        
         ResponseCollection responses = new ResponseCollection();
         responses.add(summaFacetResult);
 
@@ -126,11 +127,11 @@ public class InteractionAdjusterTest extends TestCase {
                                 String tag, int count) {
         FacetResultExternal fr =
             (FacetResultExternal)responses.iterator().next();
-        List<FlexiblePair<String, Integer>> tags = fr.getMap().get(facet);
-        for (FlexiblePair<String, Integer> currentTag: tags) {
+        List<FacetResultImpl.Tag<String>> tags = fr.getMap().get(facet);
+        for (FacetResultImpl.Tag<String> currentTag: tags) {
             if (tag.equals(currentTag.getKey())) {
                 assertEquals("The count for tag '" + tag + "' should match",
-                             Integer.valueOf(count), currentTag.getValue());
+                             (int) Integer.valueOf(count), currentTag.getCount());
                 return;
             }
         }

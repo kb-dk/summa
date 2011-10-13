@@ -348,6 +348,7 @@ public class SummonResponseBuilder implements Configurable {
                 String tagName = getAttribute(xml, "value", null);
                 Integer tagCount =
                     Integer.parseInt(getAttribute(xml, "count", "0"));
+                
                 summaFacetResult.addTag(facetName, tagName, tagCount);
             }
         });

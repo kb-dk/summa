@@ -355,7 +355,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         for (FacetResponse.Group group: newResponse.getGroups()) {
             String name = group.getRequest().getGroup().getName();
             for (FacetResponse.Tag tag: group.getTags().getTags()) {
-                oldResult.assignTag(name, tag.getTerm(), tag.getCount());
+                oldResult.addTag(name, tag.getTerm(), tag.getCount());
             }
         }
         return oldResult;
