@@ -1,24 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 
-<!-- ===================================================================== -->
-<!--                                                                       -->
-<!--  Log4j Configuration                                                  -->
-<!--                                                                       -->
-<!-- ===================================================================== -->
-
-<!-- $Id: log4j.xml,v 1.2 2007/08/28 08:19:30 te Exp $ -->
-
-<!--
-   | For more configuration infromation and examples see the Jakarta Log4j
-   | owebsite: http://jakarta.apache.org/log4j
- -->
-
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
-    <!-- ================================= -->
-    <!--         Send to logfile           -->
-    <!-- ================================= -->
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="trace"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
 
     <!-- A time/date based rolling appender -->
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
@@ -60,9 +50,9 @@
         <appender-ref ref="CONSOLE"/>
     </logger>-->
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser">
-        <level value="trace"/>
-        <appender-ref ref="FILE"/>
+    <logger name="dk.statsbiblioteket">
+        <level value="debug"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
 <!--    <logger name="dk.statsbiblioteket.summa">
@@ -72,10 +62,10 @@
     -->
     <!-- all loggers inherit the root logger - so don't include the root appenders
     in the other loggers (will duplicate log entries in the log file) -->
-    <!--<root>
+    <root>
         <level value="FATAL" />
         <appender-ref ref="FILE" />
-    </root>-->
+    </root>
 
 </log4j:configuration>
 
