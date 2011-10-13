@@ -97,6 +97,13 @@ public class DidYouMeanSearchNodeTest extends TestCase {
         didYouMean.close();
     }
 
+    //Need 1 unit-test or unittest will fail
+    public void testNothing(){
+    	assertTrue(true);
+    	
+    }
+    
+    
     private static class PublicDidYouMean extends DidYouMeanSearchNode {
         public PublicDidYouMean(Configuration config) throws IOException {
             super(config);
