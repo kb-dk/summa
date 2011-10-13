@@ -48,7 +48,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.filereader.rootfolder</key>
-                                    <value class="string">[path to the horizon data]</value>
+                                    <value class="string">${data}</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.filereader.recursive</key>
@@ -98,7 +98,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.rpc.vendor</key>
-                                    <value class="string">//localhost:28000/summa-storage</value>
+                                    <value class="string">${index_storage}</value>
                                 </entry>
                             </xproperties>
                         </value>

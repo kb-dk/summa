@@ -76,7 +76,7 @@ public class OAITest extends NoExitTestCase {
 
     public static StorageService getStorageService() throws IOException {
         Configuration storageConf = Configuration.load(Resolver.getURL(
-                "test-storage-1/config/configuration.xml").getFile());
+                "resources/test-storage-1/config/configuration.xml").getFile());
         storageConf.set(Service.CONF_SERVICE_ID, "StorageService");
         log.info("Starting storage");
         StorageService storage = new StorageService(storageConf);
@@ -212,4 +212,3 @@ public class OAITest extends NoExitTestCase {
         return ingest;
     }
 }
-

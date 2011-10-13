@@ -102,6 +102,22 @@ public class ReleaseHelper {
     }
 
     /**
+     * @param storageID the name of the remote Storage.
+     * @return a ReadableStorage for the Storage exposed at //localhost:28000/storageID.
+     */
+    public static StorageReaderClient getReader(String storageID) {
+        return new StorageReaderClient(getStorageClientConfiguration(storageID));
+    }
+    
+    /**
+     * @param storageID the name of the remote Storage.
+     * @return a ReadableStorage for the Storage exposed at //localhost:28000/storageID.
+     */
+    public static StorageWriterClient getWriter(String storageID) {
+        return new StorageWriterClient(getStorageClientConfiguration(storageID));
+    }
+    
+    /**
      * @param name for the Storage listening at {@code //localhost:28000/name}.
      * @return setup for a StorageWriterClient connecting to the named Storage.
      */

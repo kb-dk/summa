@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import com.sun.xml.internal.bind.v2.schemagen.xmlschema.SchemaTop;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
@@ -70,44 +72,51 @@ public class ParentChildTest extends NoExitTestCase {
     }
 
     public void testFull() throws Exception {
-        Profiler storageProfiler = new Profiler();
-        StorageService storage = OAITest.getStorageService();
-        log.info("Finished starting Storage in "
-                 + storageProfiler.getSpendTime());
+        final String STORAGE = "pc_full_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        performIngest();
-        testMultiExistence(storage);
+        Profiler storageProfiler = new Profiler();
+        log.info("Finished starting Storage in " + storageProfiler.getSpendTime());
+
+        performIngest(STORAGE);
+        testMultiExistence(STORAGE);
 
         Profiler indexProfiler = new Profiler();
-        performIndex();
+        performIndex(STORAGE);
         String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
         helpTestSearch();
 
         search.stop();
-        storage.stop();
+        storage.close();
 
         log.info("Finished indexing in " + indexTime);
     }
 
     public void testParentExistence() throws Exception {
-        StorageService storage = OAITest.getStorageService();
-        performIngest();
+        final String STORAGE = "pc_existence_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+
+        performIngest(STORAGE);
+        StorageReaderClient reader = ReleaseHelper.getReader(STORAGE);
         QueryOptions options = new QueryOptions(null, null, -1, 0);
-        Record record =
-                storage.getStorage().getRecord("horizon:parent1", options);
+        Record record = reader.getRecord("horizon:parent1", options);
         assertNotNull("The record should exist", record);
         assertTrue("The record chould have child-IDs",
                    record.getChildIds().size() > 0);
         assertTrue("The record chould have children",
                    record.getChildren().size() > 0);
+        reader.releaseConnection();
+        storage.close();
     }
 
     public void testDump() throws Exception {
-        StorageService storage = OAITest.getStorageService();
-        performIngest();
-        dumpMultiRecord(storage, "horizon:parent1");
+        final String STORAGE = "pc_dump_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        performIngest(STORAGE);
+        dumpMultiRecord(STORAGE, "horizon:parent1");
+        storage.close();
 
     }
 
@@ -117,15 +126,17 @@ public class ParentChildTest extends NoExitTestCase {
         dumpMultiRecord(storage, "horizon_2114623");
     }*/
 
-    private void dumpMultiRecord(StorageService storage, String recordID)
+    private void dumpMultiRecord(String storageID, String recordID)
             throws IOException {
+        StorageReaderClient storage = ReleaseHelper.getReader(storageID);
         QueryOptions options = new QueryOptions(null, null, -1, 0);
-        Record record = storage.getStorage().getRecord(recordID, options);
+        Record record = storage.getRecord(recordID, options);
         if (record == null) {
             System.out.println("Record with id '" + recordID + "' is null");
         }
         System.out.print("Start ");
         printRecord(record, 0);
+        storage.releaseConnection();
     }
 
     private void printRecord(Record record, int level) {
@@ -151,11 +162,9 @@ public class ParentChildTest extends NoExitTestCase {
      * Verifies that the expected records are created and marked properly in
      * Storage. See the readme.txt in data/parent-child/horizondump for details.
      */
-    private void testMultiExistence(StorageService storageService) throws
-                                                                   Exception {
-        Storage storage = storageService.getStorage();
-        StorageIterator iterator = new StorageIterator(
-                storage, storage.getRecordsModifiedAfter(0, "horizon", null));
+    private void testMultiExistence(String storageID) throws Exception {
+        StorageReaderClient storage =  ReleaseHelper.getReader(storageID);
+        StorageIterator iterator = new StorageIterator(storage, storage.getRecordsModifiedAfter(0, "horizon", null));
         int counter = 0;
         while (iterator.hasNext()) {
             counter++;
@@ -163,27 +172,21 @@ public class ParentChildTest extends NoExitTestCase {
         }
         assertEquals("There should be the correct number of records in storage",
                      6, counter);
+        storage.releaseConnection();
     }
 
     private void helpTestSearch() throws IOException {
         log.debug("Testing searching");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
-                        ConnectionConsumer.CONF_RPC_TARGET,
-                        "//localhost:28000/summa-searcher"));
+                        ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/summa-searcher"));
 
         assertcount(searchClient, "basic test", "Kaoskyllingen", 2);
-
-        assertcount(searchClient,
-                    "child1 only parent", "Parental Mitzy Stardust", 1);
-        assertcount(searchClient,
-                    "child2 only parent", "Parental uundgåelige", 1);
-        assertcount(searchClient,
-                    "child2 all", "uundgåelige", 1);
-        assertcount(searchClient,
-                    "child4 only parent", "Parental reign", 1);
-        assertcount(searchClient,
-                    "child4 all", "reign", 1);
+        assertcount(searchClient, "child1 only parent", "Parental Mitzy Stardust", 1);
+        assertcount(searchClient, "child2 only parent", "Parental uundgåelige", 1);
+        assertcount(searchClient, "child2 all", "uundgåelige", 1);
+        assertcount(searchClient, "child4 only parent", "Parental reign", 1);
+        assertcount(searchClient, "child4 all", "reign", 1);
     }
 
     private void assertcount(SearchClient searchClient, String testCase,
@@ -201,27 +204,20 @@ public class ParentChildTest extends NoExitTestCase {
         Request request = new Request();
         request.put(DocumentSearcher.SEARCH_QUERY, query);
         String result = searchClient.search(request).toXML();
-        log.trace(String.format(
-                "Search result for query '%s' was:\n%s",
-                query, result));
+        log.trace(String.format("Search result for query '%s' was:\n%s", query, result));
         return result;
     }
 
-    private void performIngest()  throws Exception {
-        Configuration ingestConf =Configuration.load(
-                "resources/parent-child/horizon_ingest_configuration.xml");
-        ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
-//                getSubConfiguration("Reader").
-                set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT,
-                             "parent-child/horizondump").getAbsolutePath());
+    private void performIngest(String storage)  throws Exception {
+        final String HORIZON_DATA = new File(ReleaseTestCommon.DATA_ROOT, "parent-child/horizondump").getAbsolutePath();
+        System.setProperty("data", HORIZON_DATA);
+        Configuration ingestConf = ReleaseHelper.loadGeneralConfiguration(
+            storage, "resources/parent-child/horizon_ingest_configuration.xml");
         FilterService ingestService = new FilterService(ingestConf);
         try {
             ingestService.start();
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Got exception while ingesting horizon dump", e);
+            throw new RuntimeException("Got exception while ingesting horizon dump", e);
         }
         while (ingestService.getStatus().getCode() == Status.CODE.running) {
             log.trace("Waiting for ingest of horizon ½ a second");
@@ -232,30 +228,31 @@ public class ParentChildTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
+        final String STORAGE = "pc_ingest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+
         String[] IDS = new String[]{"horizon:child1", "horizon:child2",
                 "horizon:child4", "horizon:3319632", "horizon:parent1",
                 "horizon:subchild1"};
 
-        StorageService storage = OAITest.getStorageService();
-        performIngest();
+        performIngest(STORAGE);
 
+        StorageReaderClient reader = ReleaseHelper.getReader(STORAGE);
         for (String id: IDS) {
             assertNotNull("A Record with the id " + id + " should exist",
-                          storage.getStorage().getRecord(id, null));
+                          reader.getRecord(id, null));
         }
         QueryOptions qo = new QueryOptions(null, null, -1, -1);
-        Record parent1 = storage.getStorage().getRecord(
-                "horizon:parent1", qo);
+        Record parent1 = reader.getRecord("horizon:parent1", qo);
         assertNotNull("parent1 should exist", parent1);
         assertTrue(parent1 + " should have children", 
-                   parent1.getChildren() != null
-                   && parent1.getChildren().size() > 0);
-        storage.stop();
+                   parent1.getChildren() != null && parent1.getChildren().size() > 0);
+        storage.close();
     }
 
-    private void performIndex() throws Exception {
+    private void performIndex(String storageID) throws Exception {
         log.info("Starting index");
-        Configuration indexConf = getIndexConfiguration();
+        Configuration indexConf = getIndexConfiguration(storageID);
 
         FilterService index = new FilterService(indexConf);
         index.start();
@@ -266,17 +263,17 @@ public class ParentChildTest extends NoExitTestCase {
         index.stop();
     }
 
-    public Configuration getIndexConfiguration() throws Exception {
-        Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "resources/parent-child/index_configuration.xml").
-                getFile());
+    public Configuration getIndexConfiguration(String storageID) throws Exception {
+
+        Configuration indexConf = ReleaseHelper.loadGeneralConfiguration(
+            storageID, "resources/parent-child/index_configuration.xml");
+
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
         log.trace("Updating index conf with source horizon");
 
         String indexDescriptorLocation = new File(
-                ReleaseTestCommon.DATA_ROOT,
-                "parent-child/index_descriptor.xml").toString();
+            ReleaseTestCommon.DATA_ROOT, "parent-child/index_descriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).

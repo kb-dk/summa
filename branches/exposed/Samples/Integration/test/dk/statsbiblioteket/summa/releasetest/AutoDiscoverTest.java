@@ -120,7 +120,7 @@ public class AutoDiscoverTest extends TestCase {
         final String STORAGE = "basictest_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
 
-        StorageReaderClient reader = new StorageReaderClient(ReleaseHelper.getStorageClientConfiguration(STORAGE));
+        StorageReaderClient reader = ReleaseHelper.getReader(STORAGE);
         try {
             reader.getModificationTime(null);
         } catch (Exception e) {
@@ -212,7 +212,7 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     private void checkRecords(String storage) throws IOException {
-        StorageReaderClient reader = new StorageReaderClient(ReleaseHelper.getStorageClientConfiguration(storage));
+        StorageReaderClient reader = ReleaseHelper.getReader(storage);
         StorageIterator records = new StorageIterator(reader, reader.getRecordsModifiedAfter(0, "fagref", null));
         int count = 0;
         while (records.hasNext()) {

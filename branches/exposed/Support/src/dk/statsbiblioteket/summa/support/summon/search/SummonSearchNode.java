@@ -482,7 +482,6 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param summonSearchParams range-queries are added to this.
      * @return the query minus range queries.
      */
-    // TODO: Fix ID
     public String convertQuery(
         final String query,
         final Map<String, List<String>> summonSearchParams) {
