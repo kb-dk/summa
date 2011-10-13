@@ -410,6 +410,16 @@ public class InteractionAdjusterTest extends TestCase {
                          "llang:(foo OR eng)");
     }
 
+    public void testQueryDividerRewrite_multiValue() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster, "(+foo +- +bar)", "foo - bar");
+    }
+
+    public void testQueryDividerPhraseRewrite_multiValue() {
+        InteractionAdjuster adjuster = createAdjuster();
+        assertAdjustment(adjuster, "\"foo - bar\"", "\"foo - bar\"");
+    }
+
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,

@@ -140,6 +140,10 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         checkQuery("foo OR bar AND baz");
     }
 
+    public void testRewriteDivider() throws RemoteException, ParseException {
+        checkQuery("foo - bar");
+    }
+
     public void testRewrite8() throws RemoteException, ParseException {
         checkQuery("foo AND bar OR baz");
     }

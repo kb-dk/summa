@@ -8,6 +8,8 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
+import java.rmi.RemoteException;
+
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
@@ -88,6 +90,13 @@ public class TermStatRequestRewriterTest extends TestCase {
             "(\"foo bar\" OR \"zoo AND baz\")", request.rewrite(
             "\"foo bar\" OR \"zoo AND baz\""));
     }
+
+    public void testRewriteDivider() throws RemoteException, ParseException {
+        assertEquals("(+foo +- +bar)", request.rewrite( "foo - bar"));
+        assertEquals("\"foo - bar\"", request.rewrite( "\"foo - bar\""));
+        assertEquals("(+foo +- +bar)", request.rewrite( "(+foo +- +bar)"));
+    }
+
 
     public void testColon() throws ParseException {
         assertEquals(
