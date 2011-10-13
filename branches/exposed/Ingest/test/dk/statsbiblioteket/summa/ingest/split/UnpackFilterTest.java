@@ -76,7 +76,9 @@ public class UnpackFilterTest extends TestCase {
         ZIPParserTest.assertContent(getUnpackChain(source), expected);
     }
 
-    public void testEOF() throws IOException {
+    
+    // Requires a zip64 encoded file of size 2GB+.   
+    public void XtestEOF() throws IOException {
         ObjectFilter provider = getUnpackChain(
             "/home/te/tmp/fase3/sb+aleph+1307342370.536.4455+full.zip");
         long counter = 0;
