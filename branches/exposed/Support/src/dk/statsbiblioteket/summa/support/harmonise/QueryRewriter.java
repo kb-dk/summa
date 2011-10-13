@@ -31,7 +31,7 @@ import org.apache.lucene.util.Version;
 import java.io.Reader;
 
 /**
- * Lucene query rewriter with callback on TermQuery.
+ * Lucene query rewriter with callback on various types of queries.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
