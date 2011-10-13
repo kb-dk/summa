@@ -1,1 +1,0 @@
-../../../../../website_resources/showrecord.jsp
