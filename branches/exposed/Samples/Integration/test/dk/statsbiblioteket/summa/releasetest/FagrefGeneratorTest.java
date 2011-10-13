@@ -88,8 +88,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
             profiler.beat();
         }
         System.out.println(String.format(
-                "Generated %d fagref test records in %s with an average speed " 
-                + "of %s records/second",
+                "Generated %d fagref test records in %s with an average speed of %s records/second",
                 RUNS, profiler.getSpendTime(), profiler.getBps()));
     }
 
@@ -108,8 +107,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
                               "Pærer", "Datalogi", "Astrofysik", "Astrologi",
                               "Astronomi", "Tryllebær", "Tegneserier",
                               "Palæontologi", "Drømme", "Kaslafniansk")));
-        conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION,
-                 "resources/generator/fagref_template.xml");
+        conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION, "resources/generator/fagref_template.xml");
         return new RecordGenerator(conf);
     }
 
@@ -160,12 +158,14 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         indexProfiler.setExpectedTotal(RECORDS);
         Configuration indexConf = IndexTest.loadFagrefProperties(
             STORAGE, "resources/search/FacetTest_IndexConfiguration.xml");
-        Configuration facetConf =
+        // Facets are no longer defined as part of indexing
+/*        Configuration facetConf =
                 indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
                 getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
                 get(1);
         extendFacets(facetConf, "subject", Arrays.asList("lsu_oai"));
+        */
         IndexTest.updateIndex(indexConf);
         indexProfiler.setBeats(RECORDS);
         log.info("Finished requesting and indexing " + RECORDS + " Records. "
