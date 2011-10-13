@@ -95,6 +95,21 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         aggregator.close();
     }
 
+    public void testAggregatorDivider() throws IOException, SubConfigurationsNotSupportedException {
+        AdjustingSearcherAggregator aggregator = getAggregator();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo - bar");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        log.debug("Searching");
+        ResponseCollection responses = aggregator.search(request);
+        log.debug("Finished searching");
+//        System.out.println(responses.toXML());
+        assertTrue("The combined result should contain at least one record\n" + responses.toXML(),
+                   responses.toXML().contains("<record score"));
+
+        aggregator.close();
+    }
+
     public void testTimingAggregation() throws IOException,
                                         SubConfigurationsNotSupportedException {
         AdjustingSearcherAggregator aggregator = getAggregator();
@@ -122,8 +137,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
 
     public void testSingleSearchTiming() throws IOException {
         Configuration conf = Configuration.newMemoryBased(
-            AdjustingSearchClient.CONF_RPC_TARGET,
-            "//localhost:55000/sb-searcher",
+            AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:55000/sb-searcher",
             InteractionAdjuster.CONF_IDENTIFIER, "sb");
         AdjustingSearchClient asc = new AdjustingSearchClient(conf);
         Request request = new Request(
@@ -139,8 +153,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         if (duplicate == null) {
             return;
         }
-        fail(message + ". The timing '" + duplicate + "' should not"
-             + " be duplicated in "
+        fail(message + ". The timing '" + duplicate + "' should not be duplicated in "
              + responses.getTiming().replaceAll("[|]", "\n"));
     }
 
@@ -174,27 +187,22 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
         sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
-                   "//localhost:55000/sb-searcher");
+        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:55000/sb-searcher");
         sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
 
         // Summon
         Configuration summonConf = searcherConfs.get(1);
-        summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION,
-                       "summon");
+        summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "summon");
         summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "summon");
         summonConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
-                   "//localhost:55400/summon-searcher");
+        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:55400/summon-searcher");
         summonConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_ADD, -0.5);
         summonConf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
-                       "author_normalised - Author, lma_long - ContentType, "
-                       + "llang - Language, lsubject - SubjectTerms");
+                       "author_normalised - Author, lma_long - ContentType, llang - Language, lsubject - SubjectTerms");
         Configuration llang = summonConf.createSubConfigurations(
             InteractionAdjuster.CONF_ADJUST_FACET_TAGS, 1).get(0);
         llang.set(TagAdjuster.CONF_FACET_NAME, "llang");
-        llang.set(TagAdjuster.CONF_TAG_MAP,
-                 "Spanish - spa");
+        llang.set(TagAdjuster.CONF_TAG_MAP, "Spanish - spa");
         // Unmapped: Genre, IsScholary, TemporalSubjectTerms
 
         log.debug("Creating adjusting aggregator");
@@ -214,8 +222,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
         sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET,
-                   "//localhost:55000/sb-searcher");
+        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:55000/sb-searcher");
         sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
 
         log.debug("Creating adjusting aggregator");
