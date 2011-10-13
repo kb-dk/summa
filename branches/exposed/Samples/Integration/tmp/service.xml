@@ -1,0 +1,19 @@
+<bundle>
+  <instanceId>myInstanceId</instanceId>
+  <bundleId>myBundleId</bundleId>
+  <mainJar>myMainJar</mainJar>
+  <mainClass>myMainClass</mainClass>
+  <autoStart>true</autoStart>
+  <description>myDescription</description>
+  <jvmArg>-Xmx64m</jvmArg>
+  <jvmArg>-Xms32m</jvmArg>
+  <property name="myProp1" value="myProp1Value"/>
+  <property name="myProp2" value="myProp2Value"/>
+  <publicApi>
+    <file>myLib-1.1.jar</file>
+  </publicApi>
+  <fileList>
+    <file>myFile1</file>
+    <file>myFile2</file>
+  </fileList>
+</bundle>

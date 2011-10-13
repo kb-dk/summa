@@ -24,7 +24,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
        <param name="Target" value="System.out"/>
-       <param name="Threshold" value="trace"/>
+       <param name="Threshold" value="error"/>
        <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
        </layout>
@@ -102,7 +102,7 @@
     -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
-        <level value="debug" />
+        <level value="error" />
         <appender-ref ref="CONSOLE" />
     </root>
 
