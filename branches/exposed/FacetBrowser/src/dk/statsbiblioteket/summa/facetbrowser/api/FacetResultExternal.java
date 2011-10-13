@@ -192,7 +192,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 		public int compare(
 				Tag<String> t1,
 				Tag<String> t2) {
-			return t1.getCount()-t2.getCount(); 
+			return t2.getCount()-t1.getCount();  //Highest number first. (descending)
 		}
     }
 	@Override
