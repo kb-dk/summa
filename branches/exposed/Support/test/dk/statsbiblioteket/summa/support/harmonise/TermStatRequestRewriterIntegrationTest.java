@@ -140,11 +140,21 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         checkQuery("foo OR bar AND baz");
     }
 
+    public void testRewrite8() throws RemoteException, ParseException {
+        checkQuery("foo AND bar OR baz");
+    }
+
+    public void testRewriteBZ2416() throws RemoteException, ParseException {
+        checkQuery("Ungdomsuddannelse - Sociale Publikationer");
+    }
+
+    public void testRewriteWithField() throws RemoteException, ParseException {
+        checkQuery("chaos -recordBase:sb*");
+    }
+
     public void testRewriteDivider() throws RemoteException, ParseException {
         checkQuery("foo - bar");
     }
 
-    public void testRewrite8() throws RemoteException, ParseException {
-        checkQuery("foo AND bar OR baz");
-    }
+    
 }
