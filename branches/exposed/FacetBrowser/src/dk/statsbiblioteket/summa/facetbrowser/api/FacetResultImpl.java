@@ -163,7 +163,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                             sw.write(Float.toString(tag.getScore()));
                         }*/
                         sw.write("\"" +
-                        		"addedobjects=\"");
+                        		" addedobjects=\"");
                         sw.write(Integer.toString(tag.getCount()));
                         sw.write("\"");
                         sw.write(" reliability=\"");
