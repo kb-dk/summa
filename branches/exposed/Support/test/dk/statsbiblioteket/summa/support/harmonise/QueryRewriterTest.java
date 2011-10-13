@@ -1,21 +1,16 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
-import dk.statsbiblioteket.summa.common.lucene.index.IndexChangeEvent;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
-/**
- * QueryRewriter Tester.
- *
- * @author <Authors name>
- * @since <pre>10/13/2011</pre>
- * @version 1.0
- */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class QueryRewriterTest extends TestCase {
     public QueryRewriterTest(String name) {
         super(name);
