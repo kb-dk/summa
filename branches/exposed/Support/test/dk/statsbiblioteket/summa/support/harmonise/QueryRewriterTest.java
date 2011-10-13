@@ -45,6 +45,10 @@ public class QueryRewriterTest extends TestCase {
         assertIdentity("foo^1.2", "foo^1.2");
     }
 
+    public void testScoreAdjustmentPlainConcat() throws ParseException {
+        assertIdentity("foo-bar^1.2", "foo-bar^1.2");
+    }
+
     public void testScoreAssignmentAndAdjustmentPlain() throws ParseException {
         final String USER_INPUT = "foo bar";
         String rewritten = assignWeight(USER_INPUT, 1.2f);
