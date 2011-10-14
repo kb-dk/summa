@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.SchemaTop;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
