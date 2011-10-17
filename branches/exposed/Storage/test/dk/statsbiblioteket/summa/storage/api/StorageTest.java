@@ -669,7 +669,7 @@ public class StorageTest extends StorageTestBase {
         long mtime1 = r1.getModificationTime();
 
         
-        Thread.sleep(10);// So records r1 and r2 will not have same modificationtime
+        Thread.sleep(100);// So records r1 and r2 will not have same modificationtime
         
         storage.flush(new Record(testId2, testBase2, testContent2));
         long mtime2 = storage.getRecords(Arrays.asList(testId2), null).get(0).
