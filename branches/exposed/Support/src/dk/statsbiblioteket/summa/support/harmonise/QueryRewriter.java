@@ -46,10 +46,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(TermQuery query) {
             return query;
@@ -58,10 +59,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(PhraseQuery query) {
             return query;
@@ -70,10 +72,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(TermRangeQuery query) {
             return query;
@@ -82,10 +85,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(PrefixQuery query) {
             return query;
@@ -94,10 +98,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(FuzzyQuery query) {
             return query;
@@ -106,10 +111,11 @@ public class QueryRewriter {
         /**
          * Optionally change the given Query or construct a new Query in
          * its place. This is the fallback method.
+         *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally
-         * modified) or a new Query, which will be inserted into the Query tree
-         * at the originating position.
+         *         modified) or a new Query, which will be inserted into the Query tree
+         *         at the originating position.
          */
         public Query onQuery(Query query) {
             return query;
@@ -121,6 +127,7 @@ public class QueryRewriter {
 
     /**
      * Constructs a new QueryRewriter.
+     *
      * @param event the event to be fired on all Term queries
      */
     public QueryRewriter(Event event) {
@@ -137,12 +144,11 @@ public class QueryRewriter {
     }
 
     /**
-     *
      * Rewrites the query from one textual representation to another textual
      * representation. Any difference in the semantics of the given and
      * resulting query is due to the modification of the specific term queries.
      * In other words, if the term queries are not modified, the resulting query
-     * tring is semantically equivalent to the given query string with  respect
+     * tring is semantically equivalent to the given query string with respect
      * to the standard Lucene query parser.
      * </p>
      * Note that the Lucene query parser handles boolean operators in a rather
@@ -150,11 +156,13 @@ public class QueryRewriter {
      * http://wiki.apache.org/lucene-java/BooleanQuerySyntax
      * https://issues.apache.org/jira/browse/LUCENE-1823
      * https://issues.apache.org/jira/browse/LUCENE-167
+     *
      * @param query the unmodified query.
      * @return the rewritten query. Note that this might be null if the Query
      *         is collapsed to nothing.
-     * @throws org.apache.lucene.queryparser.classic.ParseException if the query could
-     * not be parsed by the Lucene query parser.
+     * @throws org.apache.lucene.queryparser.classic.ParseException
+     *          if the query could
+     *          not be parsed by the Lucene query parser.
      */
     public String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
@@ -170,23 +178,22 @@ public class QueryRewriter {
             for (BooleanClause clause : booleanQuery.getClauses()) {
                 Query walked = walkQuery(clause.getQuery());
                 if (walked != null) {
-                    BooleanClause clauseResult = new BooleanClause(
-                        walked, clause.getOccur());
+                    BooleanClause clauseResult = new BooleanClause(walked, clause.getOccur());
                     result.add(clauseResult);
                     foundSome = true;
                 }
             }
             return foundSome ? result : null;
         } else if (query instanceof TermQuery) {
-            return event.onQuery((TermQuery)query);
+            return event.onQuery((TermQuery) query);
         } else if (query instanceof PhraseQuery) {
-            return event.onQuery((PhraseQuery)query);
+            return event.onQuery((PhraseQuery) query);
         } else if (query instanceof TermRangeQuery) {
-            return event.onQuery((TermRangeQuery)query);
+            return event.onQuery((TermRangeQuery) query);
         } else if (query instanceof PrefixQuery) {
-            return event.onQuery((PrefixQuery)query);
+            return event.onQuery((PrefixQuery) query);
         } else if (query instanceof FuzzyQuery) {
-            return event.onQuery((FuzzyQuery)query);
+            return event.onQuery((FuzzyQuery) query);
         }
         return event.onQuery(query);
     }
@@ -195,22 +202,21 @@ public class QueryRewriter {
         String result = "";
 
         if (query instanceof TermQuery) {
-            TermQuery tq = (TermQuery)query;
-            if (tq.getTerm().field() == null
-                || "".equals(tq.getTerm().field())) {
-                result += query.toString();
-            } else {
-                result += tq.getTerm().field() + ":\""
-                          + tq.getTerm().text() + "\"";
-            // It's okay is we send on 1.0 by bad comparison
+            TermQuery tq = (TermQuery) query;
+            // We need to quote a term query because even though certain reserved characters get parsed correctly,
+            // boosting this term is incorrect syntax. Example: "- " is OK. "-^1" is not OK. It must be converted to
+            // "\"- \"^1".
+            result = convertSubqueryToString(tq.getTerm().field(), tq.getTerm().text(), true);
+            // It's okay if we send on 1.0 by bad comparison
             //noinspection FloatingPointEquality
-                if (tq.getBoost() != 1.0f) {
-                    result += "^" + tq.getBoost();
-                }
+            if (tq.getBoost() != 1.0f) {
+                result += "^" + tq.getBoost();
             }
-        } else if (!(query instanceof BooleanQuery)) {
-            result += query.toString();
-        } else {
+        } else if (query instanceof PrefixQuery) {
+            PrefixQuery prefixQuery = (PrefixQuery) query;
+            return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
+        } else if (query instanceof BooleanQuery) {
+            // convert the boolean query to a string recursively
             BooleanQuery booleanQuery = (BooleanQuery) query;
             String inner = "";
             for (int i = 0; i < booleanQuery.getClauses().length; i++) {
@@ -223,21 +229,29 @@ public class QueryRewriter {
                         }
                         break;
                     case MUST:
-                        inner += "+" + convertQueryToString(
-                            currentClause.getQuery()) + " ";
+                        inner += "+" + convertQueryToString(currentClause.getQuery()) + " ";
                         break;
                     case MUST_NOT:
-                        inner += "-" + convertQueryToString(
-                            currentClause.getQuery()) + " ";
+                        inner += "-" + convertQueryToString(currentClause.getQuery()) + " ";
                         break;
                     default:
-                        throw new RuntimeException(
-                            "Unknown occur: " + currentClause.getOccur());
+                        throw new RuntimeException("Unknown occur: " + currentClause.getOccur());
                 }
             }
             result += "(" + inner.trim() + ")";
+        } else {
+            result += query.toString();
         }
 
         return result.trim();
+    }
+
+    private String convertSubqueryToString(String field, String text, boolean quote) {
+        // Lucene removed back slashes
+        String escapedText = text.replaceAll("([^\\\\]) ", "$1\\\\ ");
+        if (quote) {
+            escapedText = "\"" + escapedText + "\"";
+        }
+        return (field == null || field.isEmpty()) ? escapedText : field + ":" + escapedText;
     }
 }

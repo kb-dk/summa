@@ -31,32 +31,31 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testNoAdjustment() throws ParseException {
-        assertIdentity("foo", "foo");
-        assertIdentity("(+foo +- +bar)", "foo - bar");
-        assertIdentity("(+foo +bar)", "foo AND bar");
+        assertIdentity("\"foo\"", "foo");
+        assertIdentity("(+\"foo\" +\"-\" +\"bar\")", "foo - bar");
+        assertIdentity("(+\"foo\" +\"bar\")", "foo AND bar");
     }
 
     public void testScoreAdjustmentPlain() throws ParseException {
-        assertIdentity("foo^1.2", "foo^1.2");
+        assertIdentity("\"foo\"^1.2", "foo^1.2");
     }
 
     public void testScoreAdjustmentPlainConcat() throws ParseException {
-        assertIdentity("foo-bar^1.2", "foo-bar^1.2");
+        assertIdentity("\"foo-bar\"^1.2", "foo-bar^1.2");
     }
 
     public void testScoreAssignmentAndAdjustmentPlain() throws ParseException {
-        final String USER_INPUT = "foo bar";
-        String rewritten = assignWeight(USER_INPUT, 1.2f);
+        String userInput = "foo bar";
+        String rewritten = assignWeight(userInput, 1.2f);
         // So far so good. Now to eat our own dog food
-        assertIdentity("(+foo^1.2 +bar^1.2)", rewritten);
-        // Hint: Maybe quoting of - works, but does that change it into a phrase-query?
+        assertIdentity("(+\"foo\"^1.2 +\"bar\"^1.2)", rewritten);
     }
 
     public void testScoreAssignmentAndAdjustmentDivider() throws ParseException {
-        final String USER_INPUT = "foo - bar";
-        String rewritten = assignWeight(USER_INPUT, 1.2f);
+        String userInput = "foo - bar";
+        String rewritten = assignWeight(userInput, 1.2f);
         // So far so good. Now to eat our own dog food
-        assertIdentity("(+foo^1.2 +-^1.2 +bar^1.2)", rewritten);
+        assertIdentity("(+\"foo\"^1.2 +\"-\"^1.2 +\"bar\"^1.2)", rewritten);
     }
 
     private String assignWeight(String query, final float weight) throws ParseException {
@@ -70,12 +69,33 @@ public class QueryRewriterTest extends TestCase {
         return new QueryRewriter(event).rewrite(query);
     }
 
-    public void testScoreAdjustmentDivider() throws ParseException {
-        assertIdentity("(+foo +-^1.2 +bar)", "foo -^1.2 bar");
+    public void testScoreAdjustmentDividerQuoted() throws ParseException {
+        assertIdentity("(+\"foo\" +\"-\"^1.2 +\"bar\")", "foo \"-\"^1.2 bar");
     }
 
-    public void testScoreAdjustmentDividerQuoted() throws ParseException {
-        assertIdentity("(+foo +-^1.2 +bar)", "foo \"-\"^1.2 bar"); // Shouldn't - be in quotes
+    public void testQuoting() throws ParseException {
+        String query = "- ";
+        assertIdentity("\"-\"^1.2", assignWeight(query, 1.2f));
+    }
+
+    public void testEscapedWhitespace1() throws ParseException {
+        String query = "new:umat\\ 11*";
+        assertIdentity("new:umat\\ 11*", query);
+    }
+
+    public void testEscapedWhitespace2() throws ParseException {
+        String query = "new:umat\\ 11";
+        assertIdentity("(+new:\"umat\" +new:\"11\")", query); // We accept this because one would normally use quotes instead of escaping
+    }
+
+    public void testEscapedWhitespace3() throws ParseException {
+        String query = "new:umat\\ 11?";
+        assertIdentity("new:umat\\ 11?", query);
+    }
+
+    public void testBooleanQueryInBooleanQuery() throws ParseException {
+        String query = "foo AND (bar OR - )";
+        assertIdentity("(+\"foo\" +(\"bar\" OR \"-\"))", query);
     }
 
     private void assertIdentity(String expected, String input) throws ParseException {

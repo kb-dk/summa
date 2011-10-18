@@ -24,17 +24,17 @@ import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 
 /**
- * Tests that the rewriter produces semantically quivalent queries when the term queries are not rewritten
+ * Tests that the rewriter produces semantically equivalent queries when the term queries are not rewritten
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
 public class TermStatRequestRewriterIntegrationTest extends TestCase {
     private static Log log = LogFactory.getLog(
-        TermStatRequestRewriterIntegrationTest.class);
+            TermStatRequestRewriterIntegrationTest.class);
 
     private static final File SECRET = new File(
-        System.getProperty("user.home") + "/summon-credentials.dat");
+            System.getProperty("user.home") + "/summon-credentials.dat");
     private String id;
     private String key;
 
@@ -50,9 +50,9 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
         super.setUp();
         if (!SECRET.exists()) {
             throw new IllegalStateException(
-                "The file '" + SECRET.getAbsolutePath() + "' must exist and "
-                + "contain two lines, the first being access ID, the second"
-                + "being access key for the Summon API");
+                    "The file '" + SECRET.getAbsolutePath() + "' must exist and "
+                            + "contain two lines, the first being access ID, the second"
+                            + "being access key for the Summon API");
         }
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(SECRET), "utf-8"));
@@ -86,7 +86,7 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     }
 
     private void checkQuery(String query)
-                                        throws RemoteException, ParseException {
+            throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
         compareHits(search(query), search(rewritten));
     }
@@ -96,13 +96,13 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     }
 
     private int countResults(ResponseCollection responses) {
-        for (Response response: responses) {
+        for (Response response : responses) {
             if (response instanceof DocumentResponse) {
-                return (int)((DocumentResponse)response).getHitCount();
+                return (int) ((DocumentResponse) response).getHitCount();
             }
         }
         throw new IllegalArgumentException(
-            "No documentResponse in ResponseCollection");
+                "No documentResponse in ResponseCollection");
     }
 
     private ResponseCollection search(String query) throws RemoteException {
@@ -125,11 +125,31 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     }
 
     public void testRewrite4() throws RemoteException, ParseException {
-        checkQuery("foo AND bar AND baz OR spam AND eggs OR ham");
+        //  Summon no longer adheres to Lucene's way of parsing boolean queries.
+        //
+        // Details: http://wiki.apache.org/lucene-java/BooleanQuerySyntax
+        // https://issues.apache.org/jira/browse/LUCENE-1823
+        // https://issues.apache.org/jira/browse/LUCENE-167
+        //
+        // That means query does not return the same number of hits
+        String query = "foo AND bar AND baz OR spam AND eggs OR ham";
+        assertFalse(countResults(search(query)) == countResults(search(requestRewriter.rewrite(query))));
+    }
+
+    public void testRewrite4Alternative() throws RemoteException, ParseException {
+        // This is what Summon actually does (for the moment). AND has higher preference than OR and both are
+        // left associative. This is the common way to handle logical operators.
+        String query = "foo AND bar AND baz OR spam AND eggs OR ham";
+        requestRewriter.rewrite(query);
+        String andBindsHarder = "((foo AND bar) AND baz) OR (spam AND eggs) OR ham";
+
+        compareHits(search(query), search(andBindsHarder));
+        compareHits(search(query), search(requestRewriter.rewrite(andBindsHarder)));
     }
 
     public void testRewrite5() throws RemoteException, ParseException {
-        checkQuery("foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)");
+        String query = "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)";
+        assertFalse(countResults(search(query)) == countResults(search(requestRewriter.rewrite(query))));
     }
 
     public void testRewrite6() throws RemoteException, ParseException {
@@ -137,7 +157,15 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     }
 
     public void testRewrite7() throws RemoteException, ParseException {
-        checkQuery("foo OR bar AND baz");
+        String query = "foo OR bar AND baz";
+        assertFalse(countResults(search(query)) == countResults(search(requestRewriter.rewrite(query))));
+    }
+
+    public void testRewrite7Alternative() throws RemoteException, ParseException {
+        String query = "foo OR bar AND baz";
+        String rewritten = "(foo OR (+bar +baz))";
+
+        compareHits(search(query), search(rewritten));
     }
 
     public void testRewrite8() throws RemoteException, ParseException {
@@ -155,6 +183,4 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     public void testRewriteDivider() throws RemoteException, ParseException {
         checkQuery("foo - bar");
     }
-
-    
 }
