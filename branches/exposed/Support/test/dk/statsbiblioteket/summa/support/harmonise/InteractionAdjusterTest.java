@@ -296,7 +296,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");      
+                         "(+Language:\"foo\" +\"bar\")", "llang:\"foo\" bar");
         assertAdjustment(adjuster,
                 "(FieldB:\"ContentA\" OR FieldA:\"ContentA\")",
                 "fa:ca");
@@ -306,7 +306,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryUnsupportedField() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(+foo +year:\"999999\")", "foo ma:bar");     
+                         "(+\"foo\" +year:\"999999\")", "foo ma:bar");
     }
 
     
@@ -333,9 +333,9 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_nonAdjusting() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(+Language:\"foo\" +bar)", "llang:\"foo\" bar");
-        assertAdjustment(adjuster, "English", "English");
-        assertAdjustment(adjuster, "eng", "eng");
+                         "(+Language:\"foo\" +\"bar\")", "llang:\"foo\" bar");
+        assertAdjustment(adjuster, "\"English\"", "English");
+        assertAdjustment(adjuster, "\"eng\"", "eng");
         assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
         assertAdjustment(adjuster, "ContentType:\"eng\"", "lma_long:eng");
         assertAdjustment(adjuster, "ContentType:\"gryf\"", "lma_long:gryf");
@@ -412,7 +412,7 @@ public class InteractionAdjusterTest extends TestCase {
 
     public void testQueryDividerRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "(+foo +- +bar)", "foo - bar");
+        assertAdjustment(adjuster, "(+\"foo\" +\"-\" +\"bar\")", "foo - bar");
     }
 
     public void testQueryDividerPhraseRewrite_multiValue() {

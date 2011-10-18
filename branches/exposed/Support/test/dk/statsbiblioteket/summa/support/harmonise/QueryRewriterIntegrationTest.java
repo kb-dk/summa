@@ -29,9 +29,9 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
-public class TermStatRequestRewriterIntegrationTest extends TestCase {
+public class QueryRewriterIntegrationTest extends TestCase {
     private static Log log = LogFactory.getLog(
-            TermStatRequestRewriterIntegrationTest.class);
+            QueryRewriterIntegrationTest.class);
 
     private static final File SECRET = new File(
             System.getProperty("user.home") + "/summon-credentials.dat");
@@ -42,7 +42,7 @@ public class TermStatRequestRewriterIntegrationTest extends TestCase {
     private QueryRewriter requestRewriter;
 
     public static Test suite() {
-        return new TestSuite(TermStatRequestRewriterIntegrationTest.class);
+        return new TestSuite(QueryRewriterIntegrationTest.class);
     }
 
     @Override

@@ -710,7 +710,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertEquals("Range #2 should be correct", "baz,87:goa", ranges.get(1));
         assertEquals("The resulting query should be stripped of ranges",
-                     "(+foo)", stripped);
+                     "(+\"foo\")", stripped);
     }
 
     public void testConvertRangeQueriesEmpty() throws RemoteException {

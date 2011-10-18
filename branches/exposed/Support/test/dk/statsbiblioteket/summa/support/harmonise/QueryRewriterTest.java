@@ -29,6 +29,76 @@ public class QueryRewriterTest extends TestCase {
     public static Test suite() {
         return new TestSuite(QueryRewriterTest.class);
     }
+    
+    public void testParenthesized1() throws ParseException {
+        assertIdentity(
+            "(\"foo\" OR (+\"bar\" +\"baz\"))", 
+            "\"foo\" OR (\"bar\" AND \"baz\")");
+    }
+
+    public void testParenthesized3() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" +(+\"bar\" +\"baz\"))", 
+            "\"foo\" AND (\"bar\" AND \"baz\")");
+    }
+
+    public void testParenthesized4() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" +\"bar\" +\"baz\")", 
+            "foo AND bar AND baz");
+    }
+
+    public void testParenthesized5() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" +\"bar\" \"baz\" OR +\"spam\" \"eggs\" OR \"ham\")", 
+            "foo AND bar AND baz OR spam AND eggs OR ham");
+    }
+
+    public void testParenthesized6() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" +\"bar\" \"baz\" OR +(-\"spam\") +(\"eggs\" OR -\"ham\"))", 
+            "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)");
+    }
+
+    public void testBooleanToFlagged1() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" +\"bar\" \"baz\" OR \"spam\")", 
+            "foo AND bar AND baz OR spam");
+    }
+
+    public void testBooleanToFlagged2() throws ParseException {
+        assertIdentity(
+            "(\"foo\" OR +\"bar\" +\"baz\")", 
+            "foo OR bar AND baz");
+    }
+
+     public void testBooleanToFlagged3() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" \"bar\" OR \"baz\")", 
+            "foo AND bar OR baz");
+    }
+
+    public void testPhrase() throws ParseException {
+        assertIdentity(
+            "(\"foo bar\" OR \"zoo AND baz\")", 
+            "\"foo bar\" OR \"zoo AND baz\"");
+    }
+
+    public void testRewriteDivider() throws ParseException {
+        assertIdentity("(+\"foo\" +\"-\" +\"bar\")",  "foo - bar");
+        assertIdentity("\"foo - bar\"",  "\"foo - bar\"");
+        assertIdentity("(+\"foo\" +\"-\" +\"bar\")",  "(+foo +- +bar)");
+    }
+
+
+    public void testColon() throws ParseException {
+        assertIdentity(
+            "foo:\"bar:zoo\"", 
+            "foo:\"bar:zoo\"");
+        assertIdentity(
+            "foo:\"bar:zoo:baz\"", 
+            "foo:\"bar:zoo:baz\"");
+    }
 
     public void testNoAdjustment() throws ParseException {
         assertIdentity("\"foo\"", "foo");
