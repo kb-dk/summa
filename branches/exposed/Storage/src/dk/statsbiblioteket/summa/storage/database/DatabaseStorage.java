@@ -14,25 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
-import dk.statsbiblioteket.summa.storage.BaseStats;
-import dk.statsbiblioteket.summa.storage.BatchJob;
-import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-import dk.statsbiblioteket.summa.storage.database.cursors.Cursor;
-import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
-import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
-import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Zips;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +38,25 @@ import javax.script.ScriptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
+import dk.statsbiblioteket.summa.storage.BaseStats;
+import dk.statsbiblioteket.summa.storage.BatchJob;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
+import dk.statsbiblioteket.summa.storage.database.cursors.Cursor;
+import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
+import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
+import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -374,11 +374,13 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
+    private StatementHandle stmtGetRecordTemp;
     private StatementHandle stmtGetRecord;
     private StatementHandle stmtDeleteRecord;
     private StatementHandle stmtCreateRecord;
     private StatementHandle stmtUpdateRecord;
     private StatementHandle stmtTouchRecord;
+    private StatementHandle stmtGetParentIDQuery;
     private StatementHandle stmtTouchParents;
     private StatementHandle stmtGetChildren;
     private StatementHandle stmtGetParents;
@@ -937,6 +939,22 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetRecord = prepareStatement(getRecordQuery);
         log.debug("getRecord handle: " + stmtGetRecord);
 
+
+        String  getRecordQueryTemp = "SELECT " + allColumns
+                + " FROM " + RECORDS
+                + " WHERE " + RECORDS + "." + ID_COLUMN + "=?";
+                  log.debug("Preparing query getRecordTemp with '" + getRecordQueryTemp + "'");
+        stmtGetRecordTemp = prepareStatement(getRecordQueryTemp);
+             log.debug("getRecord handle: " + stmtGetRecordTemp);
+
+                        	
+         String getParentIDQuery=
+        		  "SELECT  SUMMA_RECORDS.id, SUMMA_RELATIONS.parentID from" +
+                  " SUMMA_RECORDS join SUMMA_RELATIONS on SUMMA_RECORDS.id = SUMMA_RELATIONS.childid" +
+           		  " where SUMMA_RECORDS.id = ?";
+         stmtGetParentIDQuery=prepareStatement(getParentIDQuery);
+          
+        
         /*
          FIXME: We might want a prepared statement to fetch multiple records in
                 one go. However it seems to be inefficient to use prepared
@@ -1365,7 +1383,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.debug("Finished getRecords(" + ids.size()
                           + " ids, ...) in "
                           + (System.currentTimeMillis() - startTime) + "ms");
-            }
+            }       
             return result;
         } finally {
             closeConnection(conn);
@@ -1399,6 +1417,160 @@ public abstract class DatabaseStorage extends StorageBase {
         return result;
     }
 
+    /**
+     * Return the full object tree for the given recordId
+     * This is an optimized method. Takes no QueryOptions.
+     * 
+     * @param ids RecordId
+     * @throws IOException If error occur while fetching records.
+     */
+    public Record getRecordWithFullObjectTree(String recordId) throws IOException{
+
+          Connection conn = getTransactionalConnection();
+          ResultSet resultSet = null;
+          try {
+              conn.setReadOnly(true);
+            
+              
+              System.out.println("finding parent in objectree for recordid:"+recordId);
+              
+              Boolean mayHaveParent = true;          
+              String parentId=recordId; // For each parent found, this value will be overwritten
+
+              while (mayHaveParent){
+          
+            	  PreparedStatement pstmtParentIdOnly = conn.prepareStatement(stmtGetParentIDQuery.getSql());            	  
+            	  pstmtParentIdOnly.setString(1, parentId);
+            	  ResultSet parentRS= pstmtParentIdOnly.executeQuery();
+                  mayHaveParent = parentRS.next();
+                  if (mayHaveParent){            
+                	  parentId=parentRS.getString("parentID"); //Set new Parent                    
+                  }                             	  
+                  parentRS.close();
+              }
+              //Simple loading strategy. Load parent (full). Then load all children(full) in 1 SQL. Do this recurssive.                                             
+              PreparedStatement stmt = conn.prepareStatement(stmtGetRecord.getSql());              
+
+              stmt.setString(1, parentId);//This is the top node in the tree
+              resultSet= stmt.executeQuery();
+                
+                  if (!resultSet.next()) {
+                      log.info("No such record '" + recordId + "'");
+                      return null;
+                  }
+                  
+                                                      
+              Record topParentRecord= constructRecordFromRSNoRelationsSet(resultSet);
+              if (!topParentRecord.isHasRelations()){                        	
+            	  //Sanity check. Can probably be removed after some time if this never happens.
+                	if(!topParentRecord.getId().equals(recordId)){
+                	   throw new RuntimeException("Database inconsistency hasRelations for id"+topParentRecord.getId() +" and "+recordId);
+                	}                	
+                	return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests 
+                }
+                    
+              loadAndSetChildRelations(topParentRecord, conn);       
+                          
+             //Find the recordId in the object tree and return this. Minimal performance overhead here. 
+             //Post-order transversal algorithm                     
+              Record recordNode=findRecordIdPostOrderTransversal(recordId, topParentRecord);                             
+              return  recordNode;
+                          
+          } catch (SQLException e) {
+        	  log.error(String.format("Failed to load record '%s': %s", recordId, e.getMessage()), e);
+              return null;
+          } finally {
+        	  try {
+				resultSet.close();
+			} catch (SQLException e) {
+				   log.error(String.format("Failed to load record '%s': %s",  recordId, e.getMessage()), e);
+               return null;
+			}
+        	  closeConnection(conn);
+          }    	    	    	
+    }
+    
+    //Post-order transversal is most obvious here as this traverses nodes in same order they appear in childrenlist.
+    //Traverses the tree left to right and return the record matching recordId.
+    private Record findRecordIdPostOrderTransversal(String recordId, Record currentRecord){  
+    	if (currentRecord.getId().equals(recordId)){
+    		  return currentRecord; //found it!
+    	  }
+        List<Record> children = currentRecord.getChildren();    	        
+        if (children != null){        	
+          for (Record child: currentRecord.getChildren()){
+        	  Record result=findRecordIdPostOrderTransversal(recordId, child);        	          	  
+              if (result != null)
+            	 return result;
+              }
+    	}
+       return null;
+    	
+    }
+    
+    //This method will call itself recursively
+    private void loadAndSetChildRelations(Record parentRecord, Connection conn) throws SQLException{
+                        
+       	 PreparedStatement pstmtSelectChildren = conn.prepareStatement(stmtGetChildren.getSql());            	  
+       	 pstmtSelectChildren.setString(1, parentRecord.getId());
+       	 ResultSet childrenRS= pstmtSelectChildren.executeQuery();
+         
+       	 List<Record> children=new ArrayList<Record>();
+       	 while (childrenRS.next()){
+           Record child= constructRecordFromRSNoRelationsSet(childrenRS);	             
+           child.setParents(Arrays.asList(parentRecord));
+           children.add(child);
+           loadAndSetChildRelations(child, conn); //This is the recursive call            
+       	 }
+         childrenRS.close();
+       	 if (children.size() >0){ //Keep current API where it is null if none exist instead of empty list
+           parentRecord.setChildren(children);
+       	}
+    }
+
+    /**
+     * Populate a record from a resultset
+     * 
+     * @return if record has relations (these are not set  in this method)
+     */
+    
+    private Record constructRecordFromRSNoRelationsSet(ResultSet resultSet) throws SQLException {
+		String id = resultSet.getString(ID_KEY);
+		String base = resultSet.getString(BASE_KEY);
+		boolean deleted = intToBool(resultSet.getInt(DELETED_FLAG_KEY));
+		boolean indexable = intToBool(resultSet.getInt(INDEXABLE_FLAG_KEY));
+		boolean hasRelations =intToBool(resultSet.getInt(HAS_RELATIONS_FLAG_KEY));
+		byte[] gzippedContent = resultSet.getBytes(GZIPPED_CONTENT_FLAG_KEY);
+		long ctime = resultSet.getLong(CTIME_KEY);
+		long mtime = resultSet.getLong(MTIME_KEY);
+		byte[] meta = resultSet.getBytes(META_KEY);
+		
+		ctime = timestampGenerator.systemTime(ctime);
+		mtime = timestampGenerator.systemTime(mtime);
+
+		/* The result set cursor will now be on the start of the next record */
+
+		/* Create a record with gzipped content. The content will be unzipped
+		 * lazily by the Record class upon access */
+		Record record = new Record(id,
+		                        base,
+		                        deleted,
+		                        indexable,
+		                        gzippedContent,
+		                        ctime,
+		                        mtime,
+		                        null,
+		                        null,
+		                        StringMap.fromFormal(meta),
+		                        true);
+    record.setHasRelations(hasRelations);
+	
+	 return record;
+	}
+
+
+    
+    
     @Override
     public Record getRecord(String id, QueryOptions options)
                                                             throws IOException {
@@ -1416,6 +1588,7 @@ public abstract class DatabaseStorage extends StorageBase {
             Record record =  getRecordWithConnection(id, options, conn);
             log.debug("Finished getRecord(" + id + ", ...) in "
                       + (System.currentTimeMillis() - startTime) + "ms");
+           
             return record;
         } catch (SQLException e) {
             log.error(String.format("Failed to get record '%s': %s",
@@ -1444,7 +1617,6 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         PreparedStatement stmt = conn.prepareStatement(stmtGetRecord.getSql());
-
         Record record = null;
         try {
             stmt.setString(1, id);
@@ -2918,7 +3090,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException If the database could not be created.
      */
     protected void createSchema() throws IOException {
-        log.debug("Creating database schema");
+    	log.debug("Creating database schema");
         try {
             doCreateSchema();
         } catch (Exception e) {
@@ -2934,7 +3106,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If the database could not be created.
      */
     private void doCreateSchema() throws SQLException {
-        Connection conn = null;
+        
+    	Connection conn = null;
         try {
             conn = getDefaultConnection();
 
@@ -3102,6 +3275,19 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt = conn.createStatement();
         stmt.execute(createRelationsCIndexQuery);
         stmt.close();
+ 
+
+        String createRelationsPIndexQuery =
+                "CREATE INDEX IF NOT EXISTS p ON "
+                + RELATIONS + "(" + PARENT_ID_COLUMN +  ")";
+        log.debug("Creating index 'p' on table " + RELATIONS + " with query: '"
+                  + createRelationsPIndexQuery + "'");
+        stmt = conn.createStatement();
+        stmt.execute(createRelationsPIndexQuery);
+        stmt.close();
+
+        
+    
     }
 
     private void doCreateSummaRecordsTable(Connection conn)
@@ -3392,7 +3578,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                 Record.idStringToList(childIds),
                                 StringMap.fromFormal(meta),
                                 true);
-
+        rec.setHasRelations(hasRelations);
+        
         /* Only resolve relations if we have to, that is, if
          * "useRelations && hasRelations". Moreover some codepaths will have
          * queried the relations even though useLazyRelations==true so don't

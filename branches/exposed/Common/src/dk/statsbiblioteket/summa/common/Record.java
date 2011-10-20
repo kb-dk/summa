@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
         author = "hal, te, mke")
 public class Record implements Serializable, Comparable {
     /** The serial Version UID. */
-    public static final long serialVersionUID = 35848318185L;
+    public static final long serialVersionUID = 35848318186L;
     /** Private logger. */
     private static Log log = LogFactory.getLog(Record.class);
     /** Empty content for empty records. */
@@ -124,6 +124,12 @@ public class Record implements Serializable, Comparable {
      * parent-record, this must be null. If a parent-record is present,
      * {@link #indexable} will normally be false.
      */
+    
+    /**
+     * Will be true if parents or children exists for the record.    
+     */
+    private boolean hasRelations = false;
+    
     private LinkedHashSet<String> parentIds;
     /**
      * A list of Record instances representing the parents of this record.
@@ -327,7 +333,16 @@ public class Record implements Serializable, Comparable {
         deleted = isDeleted;
     }
 
-    /**
+            
+    public boolean isHasRelations() {
+		return hasRelations;
+	}
+
+	public void setHasRelations(boolean hasRelations) {
+		this.hasRelations = hasRelations;
+	}
+
+	/**
      * Returns if this record is indexable.
      * @return The indexable state of this record.
      */
