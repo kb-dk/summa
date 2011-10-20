@@ -120,8 +120,8 @@ public class StorageTest extends NoExitTestCase {
         storage.close();
     }
 
-    
-    public void xtestNewGetRecordIdNotFound() throws Exception {
+    /*
+    public void testNewGetRecordIdNotFound() throws Exception {
     	final String STORAGE_NAME = "Hierarchytest_RecordIdNotFound";
     	Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
         
@@ -130,7 +130,7 @@ public class StorageTest extends NoExitTestCase {
             
     }
     
-    public void xtestNewGetRecordHierarchy() throws Exception {
+    public void testNewGetRecordHierarchy() throws Exception {
          // Top node: Lademanns leksikon
     	 // Children: Lademanns leksikon Bind x (x=1 to x= 20)
     	 // Children-Children: Lademanns leksikon Bind x Del y (y=1 to y=3)
@@ -200,7 +200,7 @@ public class StorageTest extends NoExitTestCase {
         assertNull(lademanns11Del2.getChildren());
         assertEquals(lademanns11Del2.getParents().size(),1);                         
     }
-
+*/
 	private void checkLademansHierarchy(Record lademanns) {
 		assertEquals(LADEMANNS_LEKSIKON,lademanns.getId());
 		   assertEquals("foo", lademanns.getBase());
