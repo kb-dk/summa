@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
@@ -41,7 +42,8 @@ import java.util.Random;
         author = "te")
 public class StorageTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(StorageTest.class);
-
+    private static final String LADEMANNS_LEKSIKON ="Lademanns leksikon";
+    
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -118,6 +120,115 @@ public class StorageTest extends NoExitTestCase {
         storage.close();
     }
 
+    
+    public void xtestNewGetRecordIdNotFound() throws Exception {
+    	final String STORAGE_NAME = "Hierarchytest_RecordIdNotFound";
+    	Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
+        
+        Record not_found =storage.getRecordWithFullObjectTree("not_found recordId");
+        assertNull(not_found);
+            
+    }
+    
+    public void xtestNewGetRecordHierarchy() throws Exception {
+         // Top node: Lademanns leksikon
+    	 // Children: Lademanns leksikon Bind x (x=1 to x= 20)
+    	 // Children-Children: Lademanns leksikon Bind x Del y (y=1 to y=3)
+     	 // I alt 1+20+60=81 records 
+    	
+    	final String STORAGE_NAME = "Hierarchytest_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
+        
+        
+        List<Record> records = new ArrayList<Record>(10);
+
+        Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
+        records.add(lademands);
+        ArrayList<Record> childrenList = new ArrayList<Record>();
+        for (int i=1;i<=20;i++){
+        	Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);	
+            bind.setParents(Arrays.asList(lademands));
+        	childrenList.add(bind);
+        
+         ArrayList<Record> childrenListNest1 = new ArrayList<Record>();
+          for (int j=1;j<=3;j++){
+        	 Record bindNest1 =  new Record("Lademanns leksikon Bind "+i+" Del "+j,  "foo", new byte[0]);	
+             bindNest1.setParents(Arrays.asList(bind));
+          	 childrenListNest1.add(bindNest1);          	  
+          }
+            bind.setChildren(childrenListNest1);
+          
+        }
+        lademands.setChildren(childrenList);
+  
+        storage.flushAll(records);
+        long startTime = 0;        
+        
+        long oldMethodTotal=0;
+        long newMethodTotal=0;
+
+
+
+        startTime = System.currentTimeMillis();
+                
+        System.out.println("Fetching record new method");
+        Record lademanns_new = storage.getRecordWithFullObjectTree("Lademanns leksikon");
+        newMethodTotal +=System.currentTimeMillis()-startTime;
+        System.out.println("MetodTime new getRecords:"+(System.currentTimeMillis()-startTime));
+        checkLademansHierarchy(lademanns_new);
+                                
+        
+        startTime = System.currentTimeMillis();
+        System.out.println("Fetching record old method");
+        QueryOptions options = new QueryOptions(null,null,-1,-1);
+        Record lademanns_old= storage.getRecord("Lademanns leksikon",options);      
+        oldMethodTotal +=System.currentTimeMillis()-startTime;
+        System.out.println("MetodTime old getRecords:"+(System.currentTimeMillis()-startTime));       
+        //checkLademansHierarchy(lademanns_old);
+                   
+        System.out.println("total time oldmethod:"+oldMethodTotal);
+        System.out.println("total time newmethod:"+newMethodTotal);
+        
+        //test correct node is returned.
+        Record lademanns11 = storage.getRecordWithFullObjectTree("Lademanns leksikon Bind 11");
+        assertEquals("Lademanns leksikon Bind 11",lademanns11.getId());
+        assertEquals(lademanns11.getChildren().size(),3);
+        assertEquals(lademanns11.getParents().size(),1); 
+        	                           
+        Record lademanns11Del2 = storage.getRecordWithFullObjectTree("Lademanns leksikon Bind 11 Del 2");
+        assertEquals("Lademanns leksikon Bind 11 Del 2",lademanns11Del2.getId());
+        assertNull(lademanns11Del2.getChildren());
+        assertEquals(lademanns11Del2.getParents().size(),1);                         
+    }
+
+	private void checkLademansHierarchy(Record lademanns) {
+		assertEquals(LADEMANNS_LEKSIKON,lademanns.getId());
+		   assertEquals("foo", lademanns.getBase());
+		   assertEquals(null, lademanns.getParents()); //No parents
+		   assertEquals(null, lademanns.getParentIds());
+		   
+		   assertEquals(20, lademanns.getChildren().size()); //20 children
+		   assertEquals(20, lademanns.getChildIds().size());
+		   Record bind1=   lademanns.getChildren().get(0); // Lademanns leksikon -> Lademanns leksikon Bind 1
+		   assertEquals(LADEMANNS_LEKSIKON+" Bind 1",bind1.getId());
+		   assertEquals(3, bind1.getChildren().size()); // 3 child
+		   assertEquals(1, bind1.getParents().size());  // 1 parent
+		   
+		   Record bind1Del3=   bind1.getChildren().get(2); // Lademanns leksikon Bind 1 -> Lademanns leksikon Bind 1 Del 3
+		   assertEquals(LADEMANNS_LEKSIKON+" Bind 1 Del 3",bind1Del3.getId());
+		   assertEquals(null, bind1Del3.getChildren()); // 0 child
+		   assertEquals(1, bind1Del3.getParents().size());  // 1 parent
+		   
+		   //Test parents relations.
+		   //Lademanns leksikon Bind 1 Del 3-> Lademanns leksikon Bind 1 -> Lademanns leksikon
+		   Record lademanns2= bind1Del3.getParents().get(0).getParents().get(0); 
+		   assertTrue(lademanns == lademanns2); //Same object reference. (not using equals)
+		   //Go down another path.
+		   Record lademanns2_Bind10_Del2 = lademanns2.getChildren().get(1).getChildren().get(1); //sort is 1,10,11.. So #2 is 10.
+		   assertEquals(lademanns2_Bind10_Del2.getId(), LADEMANNS_LEKSIKON+" Bind 10 Del 2");
+	}
+    
+    
     public void testImplicitRelatives() throws Exception {
         final String STORAGE_NAME = "implicit_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
