@@ -60,10 +60,10 @@ public class DidYouMeanSearchNodeTest extends TestCase {
     TODO: Create a test index, then create a DidYoumean-index from it
      */
     public static final String DIDYOUMEAN_INDEX =
-        "/home/te/tmp/sumfresh/sites/sb/didyoumean/sb/";
+        "/home/teg/workspace/summarise-trunk/sites/sb/didyoumean/sb/";
     public static final String SUMMA_INDEX =
-        "/home/te/tmp/sumfresh/sites/sb/index/sb/20110929-144250";
-    public void xtestExistingIndex() throws IOException {
+        "/home/teg/workspace/testindex/20111021-083932";
+    public void testExistingIndex() throws IOException {
         if (!new File(DIDYOUMEAN_INDEX).exists()) {
             fail("There must be a pre-generated DidYouMean index at "
                  + DIDYOUMEAN_INDEX);

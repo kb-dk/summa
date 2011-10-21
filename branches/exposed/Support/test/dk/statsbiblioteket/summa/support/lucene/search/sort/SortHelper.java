@@ -49,13 +49,14 @@ public class SortHelper {
      * Deletes created indexes.
      */
     public static void tearDown() {
-        for (File index: indexes) {
+    	for (File index: indexes) {
             try {
                 Files.delete(index);
             } catch (IOException e) {
                 System.err.println("Could not delete '" + index + "'\n");
                 e.printStackTrace();
             }
+         indexes=new ArrayList<File>(10);
         }
     }
 
@@ -68,7 +69,7 @@ public class SortHelper {
      * @throws java.io.IOException if the index could not be created.
      */
     public static File createIndex(String[] terms) throws IOException {
-        File root = new File(System.getProperty("java.io.tmpdir"));
+        File root = new File(System.getProperty("java.io.tmpdir") + "/sortindextest");
         Directory dir = new NIOFSDirectory(root);
         IndexWriterConfig config = new IndexWriterConfig(
             Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
