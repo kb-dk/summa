@@ -120,12 +120,12 @@ public class StorageTest extends NoExitTestCase {
         storage.close();
     }
 
-    /*
+
     public void testNewGetRecordIdNotFound() throws Exception {
     	final String STORAGE_NAME = "Hierarchytest_RecordIdNotFound";
     	Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
         
-        Record not_found =storage.getRecordWithFullObjectTree("not_found recordId");
+        Record not_found =storage.getRecord("not_found recordId",null);
         assertNull(not_found);
             
     }
@@ -172,7 +172,7 @@ public class StorageTest extends NoExitTestCase {
         startTime = System.currentTimeMillis();
                 
         System.out.println("Fetching record new method");
-        Record lademanns_new = storage.getRecordWithFullObjectTree("Lademanns leksikon");
+        Record lademanns_new = storage.getRecord("Lademanns leksikon",null);
         newMethodTotal +=System.currentTimeMillis()-startTime;
         System.out.println("MetodTime new getRecords:"+(System.currentTimeMillis()-startTime));
         checkLademansHierarchy(lademanns_new);
@@ -184,23 +184,23 @@ public class StorageTest extends NoExitTestCase {
         Record lademanns_old= storage.getRecord("Lademanns leksikon",options);      
         oldMethodTotal +=System.currentTimeMillis()-startTime;
         System.out.println("MetodTime old getRecords:"+(System.currentTimeMillis()-startTime));       
-        //checkLademansHierarchy(lademanns_old);
+        //checkLademansHierarchy(lademanns_old); // Not working because of parent-child reference bug
                    
         System.out.println("total time oldmethod:"+oldMethodTotal);
         System.out.println("total time newmethod:"+newMethodTotal);
         
         //test correct node is returned.
-        Record lademanns11 = storage.getRecordWithFullObjectTree("Lademanns leksikon Bind 11");
+        Record lademanns11 = storage.getRecord("Lademanns leksikon Bind 11",null);
         assertEquals("Lademanns leksikon Bind 11",lademanns11.getId());
         assertEquals(lademanns11.getChildren().size(),3);
         assertEquals(lademanns11.getParents().size(),1); 
         	                           
-        Record lademanns11Del2 = storage.getRecordWithFullObjectTree("Lademanns leksikon Bind 11 Del 2");
+        Record lademanns11Del2 = storage.getRecord("Lademanns leksikon Bind 11 Del 2",null);
         assertEquals("Lademanns leksikon Bind 11 Del 2",lademanns11Del2.getId());
         assertNull(lademanns11Del2.getChildren());
         assertEquals(lademanns11Del2.getParents().size(),1);                         
     }
-*/
+
 	private void checkLademansHierarchy(Record lademanns) {
 		assertEquals(LADEMANNS_LEKSIKON,lademanns.getId());
 		   assertEquals("foo", lademanns.getBase());
