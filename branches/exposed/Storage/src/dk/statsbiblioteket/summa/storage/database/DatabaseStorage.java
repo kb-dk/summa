@@ -1464,6 +1464,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 	if(!topParentRecord.getId().equals(recordId)){
                 	   throw new RuntimeException("Database inconsistency hasRelations for id"+topParentRecord.getId() +" and "+recordId);
                 	}                	
+                	  log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
+                              + (System.currentTimeMillis() - startTime) + "ms");
+                	
                 	return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests 
                 }
                     
