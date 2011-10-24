@@ -1420,20 +1420,18 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Return the full object tree for the given recordId
      * This is an optimized method. Takes no QueryOptions.
+     * 10-100 times faster than getRecord(id,options) for larger object trees
      * 
      * @param ids RecordId
      * @throws IOException If error occur while fetching records.
      */
     public Record getRecordWithFullObjectTree(String recordId) throws IOException{
-
+     	long startTime = System.currentTimeMillis();
           Connection conn = getTransactionalConnection();
           ResultSet resultSet = null;
           try {
               conn.setReadOnly(true);
-            
-              
-              System.out.println("finding parent in objectree for recordid:"+recordId);
-              
+                                            
               Boolean mayHaveParent = true;          
               String parentId=recordId; // For each parent found, this value will be overwritten
 
@@ -1474,6 +1472,10 @@ public abstract class DatabaseStorage extends StorageBase {
              //Find the recordId in the object tree and return this. Minimal performance overhead here. 
              //Post-order transversal algorithm                     
               Record recordNode=findRecordIdPostOrderTransversal(recordId, topParentRecord);                             
+       
+              log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
+                      + (System.currentTimeMillis() - startTime) + "ms");
+              
               return  recordNode;
                           
           } catch (SQLException e) {
@@ -1574,7 +1576,17 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public Record getRecord(String id, QueryOptions options)
                                                             throws IOException {
-        long startTime = System.currentTimeMillis();
+          	
+        //Call new optimized DB method to extract complete object tree
+    	if ( options == null){
+            return getRecordWithFullObjectTree(id);	   
+       }
+    	
+    	if ( options.parentHeight() == -1 && options.childDepth() == -1 && (options.meta() == null || options.meta().size() == 0) ){
+              return getRecordWithFullObjectTree(id);	   
+         }
+    	    	    	
+    	long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
 
         try {
@@ -1585,7 +1597,8 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         try {
-            Record record =  getRecordWithConnection(id, options, conn);
+                      	
+        	Record record =  getRecordWithConnection(id, options, conn);
             log.debug("Finished getRecord(" + id + ", ...) in "
                       + (System.currentTimeMillis() - startTime) + "ms");
            
