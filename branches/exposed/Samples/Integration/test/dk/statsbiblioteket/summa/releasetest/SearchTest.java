@@ -126,8 +126,8 @@ public class SearchTest extends NoExitTestCase {
         Payload payload = new Payload(record);
         PayloadFeederHelper feeder =
             new PayloadFeederHelper(Arrays.asList(payload));
-
-        Configuration conf = Configuration.load("search/SearchTest_IngestConfiguration.xml");
+                                                        
+        Configuration conf = Configuration.load("resources/search/SearchTest_IngestConfiguration.xml");
         Configuration writerConf =
             conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
