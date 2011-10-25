@@ -669,6 +669,9 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
     }
   */
+    
+    
+    // does not work atm. See comment below: ***
     public void testFacetSearchDelete() throws Exception {
         final String STORAGE = "facetsearch_delete_storage";
         final String HANS = "fagref:hj@example.com";
@@ -702,7 +705,13 @@ public class FacetTest extends NoExitTestCase {
 
         log.debug("Deleting document");
         hans.setDeleted(true);
+        //***
+        //This update does not work for some reason. Storage-record is not changed
+        // and program does not even enter the storage-code to update/insert records. 
+        //Hard to figure out what happens.
         SearchTest.update(hans);
+
+        
         hans = storage.getRecord(HANS, null);
         long deleteModTime = hans.getModificationTime();
         assertTrue("The Hans-Record should be marked as deleted but was " + hans,
