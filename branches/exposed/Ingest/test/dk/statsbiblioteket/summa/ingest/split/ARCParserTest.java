@@ -9,6 +9,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
+import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCReaderFactory;
 
 import java.io.*;
@@ -42,14 +43,9 @@ public class ARCParserTest extends TestCase {
         return new TestSuite(ARCParserTest.class);
     }
 
-    public static final File SAMPLE = new File(
-
-    		
-    	//TODO Toke(TE) udtænker en snedig plan så loven overholdes og test-data er tilgængelig	
-        "/home/te/tmp/11-1-20100811072018-00000-summa-service.arc");
-    public static final File ZIP = new File(
-        SAMPLE.getAbsolutePath().substring(0,
-            SAMPLE.getAbsolutePath().length()-4) + ".zip");
+    public static final File SAMPLE = new File("test/data/arc/summa_test_arc_file.arc");
+    public static final File ZIP = new File("test/data/arc/summa_test_arc_file.zip");
+    
 
     public void testPacked() {
         Configuration rConf = Configuration.newMemoryBased();
@@ -124,10 +120,9 @@ public class ARCParserTest extends TestCase {
         Iterator<ArchiveRecord> ari = ar.iterator();
         int count = 0;
         while (ari.hasNext()) {
-            ArchiveRecord rec = ari.next();
-//            System.out.println("Got next for record " + count);
-            rec.getHeader();
-//            System.out.println("Got header for record " + count);
+        	ArchiveRecord rec = ari.next();
+            ArchiveRecordHeader header = rec.getHeader();
+            System.out.println(header);
             rec.close();
             count++;
         }
