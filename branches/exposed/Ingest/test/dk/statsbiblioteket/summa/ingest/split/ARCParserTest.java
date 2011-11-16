@@ -122,7 +122,6 @@ public class ARCParserTest extends TestCase {
         while (ari.hasNext()) {
         	ArchiveRecord rec = ari.next();
             ArchiveRecordHeader header = rec.getHeader();
-            System.out.println(header);
             rec.close();
             count++;
         }
