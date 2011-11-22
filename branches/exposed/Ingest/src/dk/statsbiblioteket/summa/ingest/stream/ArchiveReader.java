@@ -235,10 +235,7 @@ public class ArchiveReader extends FileSystemReader {
                              + "with the old name is still present");
                 }
             }
-            if (!newFile.setLastModified(System.currentTimeMillis())) {
-                log.trace(String.format(
-                    "Unable to set last modification time for '%s'", root));
-            }
+            //No longer touch files to update lastmodificationtime
         }
 
         /**

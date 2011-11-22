@@ -89,10 +89,7 @@ public class RenamingFileStream extends CloseCallbackStream {
             try {
                 log.trace("Renaming '" + file + "' to '" + newName + "'");
                 renamed = file.renameTo(newName);
-                if (!file.setLastModified(System.currentTimeMillis())) {
-                    log.trace("Unable to set last modification time for '"
-                              + file + "'");
-                }
+                //No longer touch files to update lastmodificationtime
             } catch(Exception e) {
                 log.error("Could not rename '" + file
                           + "' to '" + newName + "'", e);
