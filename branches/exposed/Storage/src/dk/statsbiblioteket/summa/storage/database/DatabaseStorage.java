@@ -3327,9 +3327,19 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.execute(createRecordsQuery);
         stmt.close();
 
+        //This code can be removed later when index has been removed. TAKES 45 minutes
+        String dropRecordsMBIndexQuery =
+                "DROP INDEX IF EXISTS mb"; //Notice table is not mentioned
+        log.debug("Dropping index 'mb' on table " + RECORDS + " with query: '"
+                  + dropRecordsMBIndexQuery + "'");
+        stmt = conn.createStatement();
+        stmt.execute(dropRecordsMBIndexQuery);
+        stmt.close();
+               
+        
         /* RECORDS INDEXES */
         String createRecordsIdIndexQuery =
-                "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "("
+                "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "(" //TAKES 1.5 hour
                 + ID_COLUMN + ")";
         log.debug("Creating index 'i' on table " + RECORDS + " with query: '"
                   + createRecordsIdIndexQuery + "'");
@@ -3339,18 +3349,29 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Because we use a UniqueTimestampGenerator we can apply the UNIQUE
         // to the 'mtime' column. This is paramount to getting paginated result
-        // sets for getRecordsModifiedAfter. To make selects by mtime and base
-        // faster we use a covering index on (mtime,base)
-        String createRecordsMTimeIndexQuery =
-                "CREATE UNIQUE INDEX IF NOT EXISTS mb ON "
-                               + RECORDS + "(" + MTIME_COLUMN + ","
-                               + BASE_COLUMN + ")";
-        log.debug("Creating index 'mb' on table " + RECORDS + " with query: '"
-                  + createRecordsMTimeIndexQuery + "'");
+        // sets for getRecordsModifiedAfter. And index on (BASE,MTIME) - notice order important!
+        // seems useful and standard for SQL used for FULL INGEST. BUT testing( on H2Database) shows making two indexes gives
+        // same performance and single index on MTime is already needed.
+                        
+        String createRecordsBaseOnlyIndexQuery =
+                "CREATE INDEX IF NOT EXISTS b ON " //Not UNIQUE , takes 1.5 hour
+                               + RECORDS + "(" + BASE_COLUMN + ")";
+        log.debug("Creating index 'b' on table " + RECORDS + " with query: '"
+                  + createRecordsBaseOnlyIndexQuery + "'");
         stmt = conn.createStatement();
-        stmt.execute(createRecordsMTimeIndexQuery);
+        stmt.execute(createRecordsBaseOnlyIndexQuery);
         stmt.close();
 
+        String createRecordsMTimeOnlyIndexQuery =
+                "CREATE UNIQUE INDEX IF NOT EXISTS m ON " // UNIQUE 
+                               + RECORDS + "(" + MTIME_COLUMN + ")";
+        log.debug("Creating index 'm' on table " + RECORDS + " with query: '"
+                  + createRecordsMTimeOnlyIndexQuery + "'");
+        stmt = conn.createStatement();
+        stmt.execute(createRecordsMTimeOnlyIndexQuery);
+        stmt.close();
+                
+        
         // This index is used to speed up record counts segregated by base,
         // deleted- and indexable flags.
         String createRecordsBaseIndexQuery =
