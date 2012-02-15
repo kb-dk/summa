@@ -220,7 +220,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Default value for the {@link #CONF_PAGE_SIZE} property.
      */
-    public static final int DEFAULT_PAGE_SIZE = 500;
+    public static final int DEFAULT_PAGE_SIZE = 5000;
 
     /**
      * The name of the main table in the database in which record metadata
@@ -401,7 +401,8 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtUpdateFullBaseStats;
     /** String for all columns. */
     private String allColumns;
-
+    private String allColumnsButDataAndMeta;
+    
     /** Iterator keys. */
     private Map<Long, Cursor> iterators = new HashMap<Long, Cursor>(10);
 
@@ -872,6 +873,18 @@ public abstract class DatabaseStorage extends StorageBase {
                      + RECORDS + "." + META_COLUMN + ","
                      + allCellsRelationsCols;
 
+      //used for ingest. (recordsModifiedAfter). All fields must still be selected because of scanrecord method is general but no need here.. sigh
+        allColumnsButDataAndMeta = RECORDS + "." + ID_COLUMN + ","  
+        	      + RECORDS + "." + BASE_COLUMN + ","
+                  + RECORDS + "." + DELETED_COLUMN + ","
+                  + RECORDS + "." + INDEXABLE_COLUMN + ","
+                  + RECORDS + "." + HAS_RELATIONS_COLUMN + ", "
+                  + "'' AS "+  DATA_COLUMN + ","
+                  + RECORDS + "." + CTIME_COLUMN + ","
+                  + RECORDS + "." + MTIME_COLUMN + ","
+                  + "'' AS "+  META_COLUMN +" ," 
+                  + allCellsRelationsCols;        
+        
         String relationsClause = RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + PARENT_ID_COLUMN
                                 + " OR " + RECORDS + "." + ID_COLUMN + "="
@@ -881,13 +894,13 @@ public abstract class DatabaseStorage extends StorageBase {
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterQuery;
         if (useLazyRelations) {
-            modifiedAfterQuery = "SELECT " + allColumns
+            modifiedAfterQuery = "SELECT " + allColumnsButDataAndMeta
                                  + " FROM " + RECORDS
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
         } else {
-            modifiedAfterQuery = "SELECT " + allColumns
+            modifiedAfterQuery = "SELECT " + allColumnsButDataAndMeta
                                  + " FROM " + RECORDS
                                  + " LEFT JOIN " + RELATIONS
                                  + " ON " + relationsClause
@@ -907,12 +920,12 @@ public abstract class DatabaseStorage extends StorageBase {
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterAllQuery;
         if (useLazyRelations){
-            modifiedAfterAllQuery = "SELECT " + allColumns
+            modifiedAfterAllQuery = "SELECT " + allColumnsButDataAndMeta
                                     + " FROM " + RECORDS
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
         } else {
-            modifiedAfterAllQuery = "SELECT " + allColumns
+            modifiedAfterAllQuery = "SELECT " + allColumnsButDataAndMeta
                                     + " FROM " + RECORDS
                                     + " LEFT JOIN " + RELATIONS
                                     + " ON " + relationsClause
@@ -1271,6 +1284,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 statement = stmtGetModifiedAfter.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfter);
             }
+      
+        log.debug("getRecordsModifiedAfterCursor statement:"+statement );
+        
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
                                   + statement + ": "
@@ -3363,7 +3379,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.close();
 
         String createRecordsMTimeOnlyIndexQuery =
-                "CREATE UNIQUE INDEX IF NOT EXISTS m ON " // UNIQUE 
+                "CREATE UNIQUE INDEX IF NOT EXISTS m ON " // UNIQUE  takes 1.5 hour
                                + RECORDS + "(" + MTIME_COLUMN + ")";
         log.debug("Creating index 'm' on table " + RECORDS + " with query: '"
                   + createRecordsMTimeOnlyIndexQuery + "'");
