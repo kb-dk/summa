@@ -597,6 +597,16 @@ public class AggregatingStorage extends StorageBase {
         return iterKey;
     }
 
+    
+    
+ 
+    @Override
+    public long getRecordsModifiedAfterLoadData(long time, String base,
+                                      QueryOptions options) throws IOException {
+ 
+    	throw new RuntimeException("Not implemented");
+    }
+
     /**
      * Return last modification time for a given base.
      * @param base The base in storage.

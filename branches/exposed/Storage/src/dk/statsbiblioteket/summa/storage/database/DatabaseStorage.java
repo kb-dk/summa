@@ -220,7 +220,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Default value for the {@link #CONF_PAGE_SIZE} property.
      */
-    public static final int DEFAULT_PAGE_SIZE = 5000;
+    public static final int DEFAULT_PAGE_SIZE = 500;
 
     /**
      * The name of the main table in the database in which record metadata
@@ -374,6 +374,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
+    private StatementHandle stmtGetModifiedAfterNoData;
+    private StatementHandle stmtGetModifiedAfterAllNoData;
     private StatementHandle stmtGetRecordTemp;
     private StatementHandle stmtGetRecord;
     private StatementHandle stmtDeleteRecord;
@@ -828,6 +830,12 @@ public abstract class DatabaseStorage extends StorageBase {
                                          + "when using paging result sets");
     }
 
+    
+    protected String getPagingStatement(String sql,int limit) {
+    	return sql + " LIMIT " + limit;
+    	
+    }
+    
     /**
      * Return the unique time stamp generator used by this instance.
      * @return The unique time stamp generator.
@@ -893,53 +901,93 @@ public abstract class DatabaseStorage extends StorageBase {
         /* modifiedAfter */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterQuery;
+        String modifiedAfterQueryNoData;
         if (useLazyRelations) {
-            modifiedAfterQuery = "SELECT " + allColumnsButDataAndMeta
+            modifiedAfterQuery = "SELECT " + allColumns
                                  + " FROM " + RECORDS
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
+   
+            modifiedAfterQueryNoData = "SELECT " + allColumnsButDataAndMeta
+                    + " FROM " + RECORDS
+                    + " WHERE " + BASE_COLUMN + "=?"
+                    + " AND " + MTIME_COLUMN + ">?"
+                    + " ORDER BY " + MTIME_COLUMN;
+
+        
         } else {
-            modifiedAfterQuery = "SELECT " + allColumnsButDataAndMeta
+            modifiedAfterQuery = "SELECT " + allColumns
                                  + " FROM " + RECORDS
                                  + " LEFT JOIN " + RELATIONS
                                  + " ON " + relationsClause
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
+            
+            modifiedAfterQueryNoData = "SELECT " + allColumnsButDataAndMeta
+                    + " FROM " + RECORDS
+                    + " LEFT JOIN " + RELATIONS
+                    + " ON " + relationsClause
+                    + " WHERE " + BASE_COLUMN + "=?"
+                    + " AND " + MTIME_COLUMN + ">?"
+                    + " ORDER BY " + MTIME_COLUMN;            
+        
         }
         if (usePagingModel) {
             modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
+            modifiedAfterQueryNoData = getPagingStatement(modifiedAfterQueryNoData,5000);
         }
-        log.debug("Preparing query getModifiedAfter with '"
-                  + modifiedAfterQuery + "'");
+        log.debug("Preparing query getModifiedAfter with '"  + modifiedAfterQuery + "'");        
         stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
+        stmtGetModifiedAfterNoData = prepareStatement(modifiedAfterQueryNoData);
+        
         log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
-
+        log.debug("getModifiedAfterNoData handle: " + stmtGetModifiedAfterNoData);
+        
         /* modifiedAfterAll */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterAllQuery;
+        String modifiedAfterAllQueryNoData;
         if (useLazyRelations){
-            modifiedAfterAllQuery = "SELECT " + allColumnsButDataAndMeta
+            modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
+            
+            modifiedAfterAllQueryNoData = "SELECT " + allColumnsButDataAndMeta
+                    + " FROM " + RECORDS
+                    + " WHERE " + MTIME_COLUMN + ">?"
+                    + " ORDER BY " + MTIME_COLUMN;
+        
         } else {
-            modifiedAfterAllQuery = "SELECT " + allColumnsButDataAndMeta
+            modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
                                     + " LEFT JOIN " + RELATIONS
                                     + " ON " + relationsClause
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
+        
+            modifiedAfterAllQueryNoData = "SELECT " + allColumnsButDataAndMeta
+                    + " FROM " + RECORDS
+                    + " LEFT JOIN " + RELATIONS
+                    + " ON " + relationsClause
+                    + " WHERE " + MTIME_COLUMN + ">?"
+                    + " ORDER BY " + MTIME_COLUMN;
+            
         }
         if (usePagingModel) {
             modifiedAfterAllQuery = getPagingStatement(modifiedAfterAllQuery);
+            modifiedAfterAllQueryNoData = getPagingStatement(modifiedAfterAllQueryNoData,5000);
         }
-        log.debug("Preparing query getModifiedAfterAll with '"
-                  + modifiedAfterAllQuery + "'");
-        stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
-        log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
 
+        log.debug("Preparing query getModifiedAfterAll with '"  + modifiedAfterAllQuery + "'");
+        log.debug("Preparing query getModifiedAfterAllNoData with '"  + modifiedAfterAllQueryNoData + "'");
+        stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
+        stmtGetModifiedAfterAllNoData = prepareStatement(modifiedAfterAllQueryNoData);
+        log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
+        log.debug("getModifiedAfterAllNoData handle: " + stmtGetModifiedAfterAllNoData);
+        
         /* getRecord */
         // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
         // Fetching single records using a LEFT JOIN is generally not a problem
@@ -1214,6 +1262,10 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
+     * Data column is NOT loaded
+     * 
+     * LIMIT BY 5000 on resultset
+     * 
      * Get a {@link ResultSetCursor} over all records with an {@code mtime}
      * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
      * timestamp must be in the format as returned by a
@@ -1251,6 +1303,50 @@ public abstract class DatabaseStorage extends StorageBase {
         return registerCursor(iter);
     }
 
+    
+    /**
+     * Same as getRecordsModifiedAfter, but does load data column.
+     * LIMIT BY 500 on resultset
+     * 
+     * 
+     * Get a {@link ResultSetCursor} over all records with an {@code mtime}
+     * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
+     * timestamp must be in the format as returned by a
+     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator},
+     * ie. it is <i>not</i> a normal system time in milliseconds.
+     * <p/>
+     * The returned iteration key, can be used for later iteration over records.
+     *
+     * @param mtime a timestamp as returned by a
+     *                       {@link UniqueTimestampGenerator}.
+     * @param base the base which the retrieved records must belong to.
+     * @param options any {@link QueryOptions} the query should match.
+     * @return a iteration key.
+     * @throws IOException if prepared SQL statement is invalid.
+     */
+    @Override
+    public synchronized long getRecordsModifiedAfterLoadData(
+             long mtime, String base, QueryOptions options) throws IOException {
+
+       log.debug("DatabaseStorage.getRecordsModifiedAfterLoadData(" + mtime
+                                       + ", '" + base + "', " + options + ").");
+        // Convert time to the internal binary format used by DatabaseStorage
+        long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
+
+        Cursor iter = getRecordsModifiedAfterCursorLoadData(mtimeTimestamp,
+                                                    base, options);
+
+        if (iter == null) {
+            return EMPTY_ITERATOR_KEY;
+        }
+
+        if (usePagingModel) {
+            iter = new PagingCursor(this, (ResultSetCursor) iter);
+        }
+        return registerCursor(iter);
+    }
+
+    
     /**
      * Get a {@link ResultSetCursor} over all records with an {@code mtime}
      * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
@@ -1271,18 +1367,21 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public ResultSetCursor getRecordsModifiedAfterCursor(long mtime,
                          String base, QueryOptions options) throws IOException {
-        PreparedStatement stmt;
+       
+
+    	
+    	PreparedStatement stmt;
         String statement = "";
         log.debug("DatabaseStorage.getRecordsModifiedAfterCursor(" + mtime
                                        + ", '" + base + "', " + options + ").");
 
         try {
             if (base == null) {
-                statement = stmtGetModifiedAfterAll.getSql();
-                stmt = getManagedStatement(stmtGetModifiedAfterAll);
+                statement = stmtGetModifiedAfterAllNoData.getSql();
+                stmt = getManagedStatement(stmtGetModifiedAfterAllNoData);
             } else {
-                statement = stmtGetModifiedAfter.getSql();
-                stmt = getManagedStatement(stmtGetModifiedAfter);
+                statement = stmtGetModifiedAfterNoData.getSql();
+                stmt = getManagedStatement(stmtGetModifiedAfterNoData);
             }
       
         log.debug("getRecordsModifiedAfterCursor statement:"+statement );
@@ -1297,6 +1396,58 @@ public abstract class DatabaseStorage extends StorageBase {
         return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
     }
 
+    
+    /**
+     * Same as getRecordsModifiedAfterCursor, except data column is  loaded.
+     *  LIMIT BY 500 on resultset 
+     * 
+     * 
+     * Get a {@link ResultSetCursor} over all records with an {@code mtime}
+     * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
+     * timestamp must be in the format as returned by a
+     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator},
+     * ie. it is <i>not</i> a normal system time in milliseconds.
+     * <p/>
+     * The returned ResultSetCursor <i>must</i> be closed by the caller to
+     * avoid leaking connections and locking up the storage.
+     *
+     * @param mtime a timestamp as returned by a
+     *                       {@link UniqueTimestampGenerator}.
+     * @param base the base which the retrieved records must belong to.
+     * @param options any {@link QueryOptions} the query should match.
+     * @return a {@link ResultSetCursor} that <i>must</i> be closed by the
+     *         caller to avoid leaking connections and locking up the storage.
+     * @throws IOException if prepared SQL statement is invalid.
+     */
+    public ResultSetCursor getRecordsModifiedAfterCursorLoadData(long mtime,
+                         String base, QueryOptions options) throws IOException {
+        PreparedStatement stmt;
+        String statement = "";
+        log.debug("DatabaseStorage.getRecordsModifiedAfterCursorLoadData(" + mtime
+                                       + ", '" + base + "', " + options + ").");
+
+        try {
+            if (base == null) {
+                statement = stmtGetModifiedAfterAll.getSql();
+                stmt = getManagedStatement(stmtGetModifiedAfterAll);
+            } else {
+                statement = stmtGetModifiedAfterNoData.getSql();
+                stmt = getManagedStatement(stmtGetModifiedAfter);
+            }
+      
+        log.debug("getRecordsModifiedAfterCursorLoadData statement:"+statement );
+        
+        } catch (SQLException e) {
+            throw new IOException("Failed to get prepared statement "
+                                  + statement + ": "
+                                  + e.getMessage(), e);
+        }
+        // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
+        // be closed together with that iterator
+        return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
+    }
+
+    
     /**
      * Helper method dispatched by {@link #getRecordsModifiedAfterCursor}
      * <p/>

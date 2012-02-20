@@ -85,6 +85,33 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    
+
+    /**
+     * Return records modified after the given time stamp and from the given
+     * base. These records are filtered by the query options.
+     * @param time The earliest time stamp for which we want records.
+     * @param base The base from which we want records.
+     * @param options The options records should be filtered by.
+     * @return A iterator key.
+     * @throws IOException If error occur when fetching records from storage.
+     */
+    @Override
+    public long getRecordsModifiedAfterLoadData(long time, String base,
+                                      QueryOptions options) throws IOException {
+        ReadableStorage storage = getConnection();
+
+        try {
+            return storage.getRecordsModifiedAfterLoadData(time, base, options);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException("getRecordsModifiedAfterLoadData(" + time + ", "
+                                  + base + ") failed: " + t.getMessage(), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+    
     /**
      * Return the modification time for a specific base in the storage.
      * @param base The base.

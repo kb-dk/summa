@@ -159,7 +159,7 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
 
         try {
-            page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp,
+            page = db.getRecordsModifiedAfterCursorLoadData(lastMtimeTimestamp,
                                                     getBase(),
                                                     getQueryOptions());
             if (log.isTraceEnabled()) {

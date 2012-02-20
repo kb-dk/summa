@@ -220,6 +220,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     /** Default value for {@link #CONF_EXPANSION_HEIGHT}. */
     public static final int DEFAULT_EXPANSION_HEIGHT = 100;
     
+
+    /**
+     * Will load the data column for methodsgetAllRecordsModifiedAfter {@link #CONF_LOAD_DATA_COLUMN}
+     * Ingest method will be much faster if data are not loaded. But for indexing, data are needed of course.     
+     */
+    public static final String CONF_LOAD_DATA_COLUMN =
+        "summa.storage.recordreader.load.data.column";
+    /** Default value for {@link #CONF_LOAD_DATA_COLUMN}. */
+    public static final boolean DEFAULT_LOAD_DATA_COLUMN = false;
+    
+    
     /** The readable storage. */
     @SuppressWarnings({"FieldCanBeLocal"})
     private ReadableStorage storage;
@@ -236,7 +247,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxExpansionHeight = DEFAULT_EXPANSION_HEIGHT;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
-
+    private boolean loadData = DEFAULT_LOAD_DATA_COLUMN;
+    
+    
     /** The storage watcher used to check for changes. */
     private final StorageWatcher storageWatcher;
     /** True if end of file is reached. */
@@ -299,7 +312,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         maxExpansionHeight =   conf.getInt(CONF_EXPANSION_HEIGHT,   maxExpansionHeight);
         maxReadRecords =       conf.getInt(CONF_MAX_READ_RECORDS,   DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds =       conf.getInt(CONF_MAX_READ_SECONDS,   DEFAULT_MAX_READ_SECONDS);
-
+        loadData =     conf.getBoolean(CONF_LOAD_DATA_COLUMN,       DEFAULT_LOAD_DATA_COLUMN);
+        
+        
+        log.info("CONF_LOAD_DATA_COLUMN:"+loadData);
+        
         if (usePersistence) {
             log.debug("Enabling progress tracker");
             progressTracker = new ProgressTracker(
@@ -383,8 +400,13 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                      null);
 
             }
-            iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
-
+            if (!loadData){
+              iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
+            }
+            else{
+            	iterKey = storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, opts);
+            }
+            
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
 
@@ -400,8 +422,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             log.debug(String.format(
                     "Updating record iterator for Records modified after "
                     + ProgressTracker.ISO_TIME, lastRecordTimestamp));
-            long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
+                        
+            long iterKey = 0;
 
+            if (!loadData){
+                iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
+              }
+              else{
+              	iterKey = storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, null);
+              }
+            
+            
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
 

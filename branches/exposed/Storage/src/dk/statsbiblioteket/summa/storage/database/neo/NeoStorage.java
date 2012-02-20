@@ -36,6 +36,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import javax.management.RuntimeErrorException;
+
 /**
  * NoSQL with focus on graph capabilities (parent-child relations).
  * </p><p>
@@ -203,6 +205,16 @@ public class NeoStorage implements Storage {
         return hitsKey++;
     }
 
+    
+    
+    @Override
+    public long getRecordsModifiedAfterLoadData(
+        long time, String base, QueryOptions options) throws IOException {
+    
+    	throw new RuntimeException("Not implemented yet");
+    }
+    
+    
     @Override
     public Record next(long iteratorKey) throws IOException {
         IndexHits<Node> iHits = hits.get(iteratorKey);

@@ -43,6 +43,10 @@ public class VoidStorage extends StorageBase {
         return 0;
     }
 
+    public long getRecordsModifiedAfterLoadData(long time,   String base, QueryOptions options) throws IOException {
+  return 0;
+}
+    
     public Record getRecord(String id, QueryOptions options)
                                                             throws IOException {
         log.debug("Get record: " + id);
