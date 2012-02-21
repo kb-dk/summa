@@ -1431,7 +1431,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 statement = stmtGetModifiedAfterAll.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfterAll);
             } else {
-                statement = stmtGetModifiedAfterNoData.getSql();
+                statement = stmtGetModifiedAfter.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfter);
             }
       
