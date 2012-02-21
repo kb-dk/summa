@@ -48,7 +48,8 @@ public class PagingCursor implements Cursor {
     private ResultSetCursor page;
     private Record nextRecord;
     private DatabaseStorage db;
-
+    private boolean loadData=false;
+    
     /**
      * PageCursor constructor.
      *
@@ -56,10 +57,11 @@ public class PagingCursor implements Cursor {
      * @param firstPage The first page of {@link ResultSetCursor}.
      */
     public PagingCursor(DatabaseStorage db,
-                        ResultSetCursor firstPage) {
-        this.db = db;
+                        ResultSetCursor firstPage, boolean loadData) {
+        this.db = db;        
         page = firstPage;
-
+        this.loadData=loadData;
+        
         // This will always be unique, so no key collision
         key = db.getTimestampGenerator().next();
         lastAccess = db.getTimestampGenerator().systemTime(key);
@@ -76,7 +78,7 @@ public class PagingCursor implements Cursor {
         }
 
         log.debug("Created " + this + " for storage " + db + ", and resultset "
-                + firstPage);
+                + firstPage+ "loadData:"+loadData);
     }
 
     @Override
@@ -159,9 +161,13 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
 
         try {
-            page = db.getRecordsModifiedAfterCursorLoadData(lastMtimeTimestamp,
-                                                    getBase(),
-                                                    getQueryOptions());
+           if (loadData){        	
+        	    page = db.getRecordsModifiedAfterCursorLoadData(lastMtimeTimestamp,getBase(), getQueryOptions());                         
+           }
+           else{
+        	   page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp,getBase(), getQueryOptions());
+           }
+           
             if (log.isTraceEnabled()) {
                 log.trace("Got new page for " + this + ": " + page);
             }

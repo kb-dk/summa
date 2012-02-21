@@ -1298,7 +1298,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (usePagingModel) {
-            iter = new PagingCursor(this, (ResultSetCursor) iter);
+            iter = new PagingCursor(this, (ResultSetCursor) iter,false);
         }
         return registerCursor(iter);
     }
@@ -1341,7 +1341,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (usePagingModel) {
-            iter = new PagingCursor(this, (ResultSetCursor) iter);
+            iter = new PagingCursor(this, (ResultSetCursor) iter,true);
         }
         return registerCursor(iter);
     }
