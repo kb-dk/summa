@@ -163,6 +163,10 @@ public class StreamingDocumentCreator
         } catch (XMLStreamException e) {
             String message =
                     "Unable to extract content from XMLStream from " + record;
+           
+            //TODO remove.
+            log.fatal("Extract XML failed. Record was skipped. Record-id:"+record.getId());
+            
             if (log.isDebugEnabled()) {
                 log.debug(message + ". Problematic content was:\n"
                           + record.getContentAsUTF8(), e);
