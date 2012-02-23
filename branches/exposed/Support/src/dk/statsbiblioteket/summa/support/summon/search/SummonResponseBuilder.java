@@ -448,7 +448,7 @@ public class SummonResponseBuilder implements Configurable {
 
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
             "ID", "Score", "Title", "Subtitle", "Author", "ContentType",
-            "PublicationDate_xml"));
+            "PublicationDate_xml", "Author_xml"));
         // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
@@ -536,7 +536,7 @@ public class SummonResponseBuilder implements Configurable {
             shortformat.append(" : ").append(XMLUtil.encode(subTitle));
         }
         shortformat.append("</dc:title>\n");
-        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
+        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author_xml");
         shortformat.append("        <dc:type xml:lang=\"da\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
@@ -609,6 +609,29 @@ public class SummonResponseBuilder implements Configurable {
                           + (month == null ? "" : month
                                                   + (day == null ? "" : day)),
                     false);
+            }
+
+            if ("Authors_xml".equals(name)) {
+                /*
+                  <field name="Author_xml">
+                    <contributor middlename="A" givenname="CHRISTY" surname="VISHER" fullname="VISHER, CHRISTY A"/>
+                    <contributor middlename="L" givenname="RICHARD" surname="LINSTER" fullname="LINSTER, RICHARD L"/>
+                    <contributor middlename="K" givenname="PAMELA" surname="LATTIMORE" fullname="LATTIMORE, PAMELA K"/>
+                  </field>
+                 */
+                final StringBuffer value = new StringBuffer(50);
+                iterateElements(xml, "field", "contributor", new XMLCallback() {
+                    @Override
+                    public void execute(XMLStreamReader xml) throws XMLStreamException {
+                        value.append(value.length() == 0 ? xml.getAttributeValue("", "fullname") :
+                                "\n" + xml.getAttributeValue("", "fullname"));
+                    }
+                });
+                if (value.length() == 0) {
+                    log.debug("No value for field '" + name + "'");
+                    return null;
+                }
+                return new DocumentResponse.Field(name, value.toString(), true);
             }
 
             if (!xmlFieldsWarningFired) {
