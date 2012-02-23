@@ -611,7 +611,7 @@ public class SummonResponseBuilder implements Configurable {
                     false);
             }
 
-            if ("Authors_xml".equals(name)) {
+            if ("Author_xml".equals(name)) {
                 /*
                   <field name="Author_xml">
                     <contributor middlename="A" givenname="CHRISTY" surname="VISHER" fullname="VISHER, CHRISTY A"/>
