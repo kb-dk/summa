@@ -536,7 +536,7 @@ public class SummonResponseBuilder implements Configurable {
             shortformat.append(" : ").append(XMLUtil.encode(subTitle));
         }
         shortformat.append("</dc:title>\n");
-        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author_xml");
+        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
         shortformat.append("        <dc:type xml:lang=\"da\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
