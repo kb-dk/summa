@@ -43,10 +43,9 @@ import org.apache.commons.logging.LogFactory;
  * Retrieves Records from storage based on the criteria given in the properties.
  * Supports stopping during retrieval and resuming by timestamp.
  * </p><p>
- * Note: Besides the configurations stated below, the address for the
- * Storage must be specified with the key
- * {@link ConnectionConsumer#CONF_RPC_TARGET}. The address can be a standard
- * RMI address, such as {@code //localhost:6789/storage}.
+ * Note: Besides the configurations stated below, the address for the Storage must be specified with the key
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}. The address can be a standard RMI address, such as
+ * {@code //localhost:6789/storage}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -54,12 +53,14 @@ import org.apache.commons.logging.LogFactory;
 // TODO: If keepalive, the state should be saved at regular intervals
 // TODO: Change the + 1000 ms when the time granularity of JavaDB improves
 public class RecordReader implements ObjectFilter, StorageChangeListener {
-    /** Local log instance. */
+    /**
+     * Local log instance.
+     */
     private static Log log = LogFactory.getLog(RecordReader.class);
 
     /**
-     * The state of progress is stored in this file upon close. This allows
-     * for a workflow where a Storage is harvested in parts.
+     * The state of progress is stored in this file upon close. This allows for a workflow where a Storage is harvested
+     * in parts.
      * </p><p>
      * The progress file is resolved to the default dir if it is not absolute.
      * </p><p>
@@ -67,9 +68,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * for example "horizon.progress.xml".
      * If no base is defined, the default value is "progress.xml".
      */
-    public static final String CONF_PROGRESS_FILE =
-            "summa.storage.recordreader.progressfile";
-    /** Default value for {@link #CONF_PROGRESS_FILE}. */
+    public static final String CONF_PROGRESS_FILE = "summa.storage.recordreader.progressfile";
+    /**
+     * Default value for {@link #CONF_PROGRESS_FILE}.
+     */
     public static final String DEFAULT_PROGRESS_FILE_POSTFIX = "progress.xml";
 
     /**
@@ -82,162 +84,171 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * </p><p>
      * This property is optional. Default is true.
      */
-    public static final String CONF_USE_PERSISTENCE =
-            "summa.storage.recordreader.usepersistence";
-    /** Default value for {@link #CONF_USE_PERSISTENCE}. */
+    public static final String CONF_USE_PERSISTENCE = "summa.storage.recordreader.usepersistence";
+    /**
+     * Default value for {@link #CONF_USE_PERSISTENCE}.
+     */
     public static final boolean DEFAULT_USE_PERSISTENCE = true;
 
     /**
-     * If true, any existing progress is ignored and the harvest from the
-     * Storage is restarted.
+     * If true, any existing progress is ignored and the harvest from the Storage is restarted.
      * </p><p>
      * This property is optional. Default is false.
      */
-    public static final String CONF_START_FROM_SCRATCH =
-            "summa.storage.recordreader.startfromscratch";
-    /** Default value for {@link #CONF_START_FROM_SCRATCH}. */
+    public static final String CONF_START_FROM_SCRATCH = "summa.storage.recordreader.startfromscratch";
+    /**
+     * Default value for {@link #CONF_START_FROM_SCRATCH}.
+     */
     public static final boolean DEFAULT_START_FROM_SCRATCH = false;
 
     /**
-     * The maximum number of Records to read before signaling EOF onwards in
-     * the filter chain. Specifying -1 means no limit.
+     * The maximum number of Records to read before signaling EOF onwards in the filter chain.
+     * Specifying -1 means no limit.
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_MAX_READ_RECORDS =
-            "summa.storage.recordreader.maxread.records";
-    /** Default value for {@link #CONF_MAX_READ_RECORDS}. */
+    public static final String CONF_MAX_READ_RECORDS = "summa.storage.recordreader.maxread.records";
+    /**
+     * Default value for {@link #CONF_MAX_READ_RECORDS}.
+     */
     public static final int DEFAULT_MAX_READ_RECORDS = -1;
 
     /**
-     * The maximum number of seconds before signaling EOF onwards in the
-     * filter chain. Specifying -1 means no limit.
+     * The maximum number of seconds before signaling EOF onwards in the filter chain.
+     * Specifying -1 means no limit.
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_MAX_READ_SECONDS =
-            "summa.storage.recordreader.maxread.seconds";
-    /** Default value for {@link #CONF_MAX_READ_SECONDS}. */
+    public static final String CONF_MAX_READ_SECONDS = "summa.storage.recordreader.maxread.seconds";
+    /**
+     * Default value for {@link #CONF_MAX_READ_SECONDS}.
+     */
     public static final int DEFAULT_MAX_READ_SECONDS = -1;
 
     /**
-     * Only Records with matching base will be retrieved. Specifying the empty
-     * string as base means all bases. No wildcards are allowed.
+     * Only Records with matching base will be retrieved. Specifying the empty string as base means all bases.
+     * No wildcards are allowed.
      * </p><p>
-     * This property is optional. Default is "" (all records).  
+     * This property is optional. Default is "" (all records).
      */
-    public static final String CONF_BASE =
-            "summa.storage.recordreader.base";
-    /** Default value for {@link #CONF_BASE}. */
+    public static final String CONF_BASE = "summa.storage.recordreader.base";
+    /**
+     * Default value for {@link #CONF_BASE}.
+     */
     public static final String DEFAULT_BASE = "";
 
     /**
      * Number of records to extract before storing a progress file.
-     * The file will also be written if {@link #CONF_PROGRESS_GRACETIME} is
-     * passed.
+     * The file will also be written if {@link #CONF_PROGRESS_GRACETIME} is passed.
      * <p/>
-     * If the batch size is negative then progress will never be written
-     * no matter how many records are read, but surpassing the gracetime
-     * will still trigger a write.
+     * If the batch size is negative then progress will never be written  no matter how many records are read, but
+     * surpassing the gracetime will still trigger a write.
      * <p/>
      * This property is optional.
      * Default is {@link #DEFAULT_PROGRESS_BATCH_SIZE}
      */
-    public static final String CONF_PROGRESS_BATCH_SIZE =
-            "summa.storage.recordreader.progress.batchsize";
-    /** Default value for {@link #CONF_PROGRESS_BATCH_SIZE}. */
+    public static final String CONF_PROGRESS_BATCH_SIZE = "summa.storage.recordreader.progress.batchsize";
+    /**
+     * Default value for {@link #CONF_PROGRESS_BATCH_SIZE}.
+     */
     public static final long DEFAULT_PROGRESS_BATCH_SIZE = 500;
 
     /**
      * Number of milliseconds to wait while writing a progress file.
-     * The progress file will also be written if
-     * {@link #CONF_PROGRESS_BATCH_SIZE} records has been extracted.
-     * If the grace time is negative the progress file will never be written
-     * because of time based rules, only by surpassing the batch size.
+     * The progress file will also be written if {@link #CONF_PROGRESS_BATCH_SIZE} records has been extracted.
+     * If the grace time is negative the progress file will never be written  because of time based rules, only by
+     * surpassing the batch size.
      * <p/>
      * This property is optional.
      * Default is {@link #DEFAULT_PROGRESS_GRACETIME}
      */
-    public static final String CONF_PROGRESS_GRACETIME =
-            "summa.storage.recordreader.progress.gracetime";
-    /** Default value for {@link #CONF_PROGRESS_GRACETIME}. */
+    public static final String CONF_PROGRESS_GRACETIME = "summa.storage.recordreader.progress.gracetime";
+    /**
+     * Default value for {@link #CONF_PROGRESS_GRACETIME}.
+     */
     public static final long DEFAULT_PROGRESS_GRACETIME = 5000;
 
     /**
      * If true, the connection should stay alive after the initial poll.
-     * Calls to hasNext(), next() and pump() will block until new Records are
-     * added to the Storage or close is called.
+     * Calls to hasNext(), next() and pump() will block until new Records are added to the Storage or close is called.
      * </p><p>
-     * Note: The property {@link StorageWatcher#CONF_POLL_INTERVAL} controls the
-     *       polling interval.
+     * Note: The property {@link StorageWatcher#CONF_POLL_INTERVAL} controls the  polling interval.
      * </p><p>
      * This property is optional. Default is false.
      */
-    public static final String CONF_STAY_ALIVE =
-            "summa.storage.recordreader.stayalive";
-    /** Default value for {@link #CONF_STAY_ALIVE}. */
+    public static final String CONF_STAY_ALIVE = "summa.storage.recordreader.stayalive";
+    /**
+     * Default value for {@link #CONF_STAY_ALIVE}.
+     */
     public static final boolean DEFAULT_STAY_ALIVE = false;
 
     /**
-     * A boolean switch deciding whether or not to request expansion of
-     * child records. The default value is {@code false}.
+     * A boolean switch deciding whether or not to request expansion of child records.
+     * The default value is {@code false}.
      */
-    public static final String CONF_EXPAND_CHILDREN =
-            "summa.storage.recordreader.expandchildren";
-    /** Default value for {@link #CONF_EXPAND_CHILDREN}. */
+    public static final String CONF_EXPAND_CHILDREN = "summa.storage.recordreader.expandchildren";
+    /**
+     * Default value for {@link #CONF_EXPAND_CHILDREN}.
+     */
     public static final boolean DEFAULT_EXPAND_CHILDREN = false;
 
     /**
-     * The maximum depth to expand children to if {@link #CONF_EXPAND_CHILDREN}
-     * is true.
+     * The maximum depth to expand children to if {@link #CONF_EXPAND_CHILDREN}  is true.
      * </p><p>
-     * Optional. Default is 100. -1 means no limit (not recommended due to
-     * the possibility of endless recursion).
+     * Optional. Default is 100. -1 means no limit (not recommended due to the possibility of endless recursion).
      */
-    public static final String CONF_EXPANSION_DEPTH =
-        "summa.storage.recordreader.expansiondepth";
-    /** Default value for {@link #CONF_EXPANSION_DEPTH}. */
+    public static final String CONF_EXPANSION_DEPTH = "summa.storage.recordreader.expansiondepth";
+    /**
+     * Default value for {@link #CONF_EXPANSION_DEPTH}.
+     */
     public static final int DEFAULT_EXPANSION_DEPTH = 100;
 
     /**
-     * A boolean switch deciding whether or not to request expansion of
-     * parent records. The default value is {@code false}.
+     * A boolean switch deciding whether or not to request expansion of  parent records.
+     * The default value is {@code false}.
      */
-    public static final String CONF_EXPAND_PARENTS =
-            "summa.storage.recordreader.expandparents";
-    /** Default value for {@link #CONF_EXPAND_PARENTS}. */
+    public static final String CONF_EXPAND_PARENTS = "summa.storage.recordreader.expandparents";
+    /**
+     * Default value for {@link #CONF_EXPAND_PARENTS}.
+     */
     public static final boolean DEFAULT_EXPAND_PARENTS = false;
 
     /**
-     * The maximum height to expand parents to if {@link #CONF_EXPAND_PARENTS}
-     * is true.
+     * The maximum height to expand parents to if {@link #CONF_EXPAND_PARENTS} is true.
      * </p><p>
-     * Optional. Default is 100. -1 means no limit (not recommended due to
-     * the possibility of endless recursion).
+     * Optional. Default is 100. -1 means no limit (not recommended due to the possibility of endless recursion).
      */
-    public static final String CONF_EXPANSION_HEIGHT =
-        "summa.storage.recordreader.expansionheight";
-    /** Default value for {@link #CONF_EXPANSION_HEIGHT}. */
+    public static final String CONF_EXPANSION_HEIGHT = "summa.storage.recordreader.expansionheight";
+    /**
+     * Default value for {@link #CONF_EXPANSION_HEIGHT}.
+     */
     public static final int DEFAULT_EXPANSION_HEIGHT = 100;
-    
+
 
     /**
      * Will load the data column for methodsgetAllRecordsModifiedAfter {@link #CONF_LOAD_DATA_COLUMN}
-     * Ingest method will be much faster if data are not loaded. But for indexing, data are needed of course.     
+     * Ingest method will be much faster if data are not loaded. But for indexing, data are needed of course.
      */
-    public static final String CONF_LOAD_DATA_COLUMN =
-        "summa.storage.recordreader.load.data.column";
-    /** Default value for {@link #CONF_LOAD_DATA_COLUMN}. */
+    public static final String CONF_LOAD_DATA_COLUMN = "summa.storage.recordreader.load.data.column";
+    /**
+     * Default value for {@link #CONF_LOAD_DATA_COLUMN}.
+     */
     public static final boolean DEFAULT_LOAD_DATA_COLUMN = false;
-    
-    
-    /** The readable storage. */
+
+
+    /**
+     * The readable storage.
+     */
     @SuppressWarnings({"FieldCanBeLocal"})
     private ReadableStorage storage;
-    /** The base. */
+    /**
+     * The base.
+     */
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
-    /** The progress tracker. */
+    /**
+     * The progress tracker.
+     */
     private ProgressTracker progressTracker;
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
@@ -248,27 +259,44 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
     private boolean loadData = DEFAULT_LOAD_DATA_COLUMN;
-    
-    
-    /** The storage watcher used to check for changes. */
+
+
+    /**
+     * The storage watcher used to check for changes.
+     */
     private final StorageWatcher storageWatcher;
-    /** True if end of file is reached. */
+    /**
+     * True if end of file is reached.
+     */
     private boolean eofReached = false;
-    /** Number of read records. */
+    /**
+     * Number of read records.
+     */
     private long recordCounter = 0;
-    /** Start time for this record reader instance. */
+    /**
+     * Start time for this record reader instance.
+     */
     private long startTime = System.currentTimeMillis();
-    /** Time stamp for last processed record. */
+    /**
+     * Time stamp for last processed record.
+     */
     private long lastRecordTimestamp;
-    /** Time stamp for last iterator update. */
+    /**
+     * Time stamp for last iterator update.
+     */
     private long lastIteratorUpdate;
-    /** Record iterator. */
+    /**
+     * Record iterator.
+     */
     private Iterator<Record> recordIterator = null;
 
     /**
      * Connects to the Storage specified in the configuration and request an
      * iteration of the Records specified by the properties.
+     *
      * @param conf contains setup information.
+     * @throws java.io.IOException if it was not possible to connect to the
+     *                             Storage or if the filename for the progress file was illegal.
      * @see #CONF_BASE
      * @see #CONF_MAX_READ_RECORDS
      * @see #CONF_MAX_READ_SECONDS
@@ -277,8 +305,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * @see #CONF_PROGRESS_FILE
      * @see #CONF_START_FROM_SCRATCH
      * @see #CONF_USE_PERSISTENCE
-     * @throws java.io.IOException if it was not possible to connect to the
-     * Storage or if the filename for the progress file was illegal.
      */
     public RecordReader(Configuration conf) throws IOException {
         log.trace("Constructing RecordReader");
@@ -290,37 +316,36 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             base = null;
         }
 
-        String progressFileString =
-                conf.getString(CONF_PROGRESS_FILE, null);
+        String progressFileString = conf.getString(CONF_PROGRESS_FILE, null);
         File progressFile;
         if (progressFileString == null || "".equals(progressFileString)) {
-            progressFile = new File((base == null ? "" : base + ".")
-                                         + DEFAULT_PROGRESS_FILE_POSTFIX);
-            log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE
-                      + ". Constructing progress file '" + progressFile + "'");
+            progressFile = new File((base == null ? "" : base + ".") + DEFAULT_PROGRESS_FILE_POSTFIX);
+            log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE + ". Constructing progress file '"
+                      + progressFile + "'");
         } else {
             progressFile = new File(progressFileString);
             log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
         progressFile = Resolver.getPersistentFile(progressFile);
 
-        usePersistence =   conf.getBoolean(CONF_USE_PERSISTENCE,    DEFAULT_USE_PERSISTENCE);
+        usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE, DEFAULT_USE_PERSISTENCE);
         startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH, DEFAULT_START_FROM_SCRATCH);
-        expandChildren =   conf.getBoolean(CONF_EXPAND_CHILDREN,    DEFAULT_EXPAND_CHILDREN);
-        maxExpansionDepth =    conf.getInt(CONF_EXPANSION_DEPTH,    maxExpansionDepth);
-        expandParents =    conf.getBoolean(CONF_EXPAND_PARENTS,     DEFAULT_EXPAND_PARENTS);
-        maxExpansionHeight =   conf.getInt(CONF_EXPANSION_HEIGHT,   maxExpansionHeight);
-        maxReadRecords =       conf.getInt(CONF_MAX_READ_RECORDS,   DEFAULT_MAX_READ_RECORDS);
-        maxReadSeconds =       conf.getInt(CONF_MAX_READ_SECONDS,   DEFAULT_MAX_READ_SECONDS);
-        loadData =     conf.getBoolean(CONF_LOAD_DATA_COLUMN,       DEFAULT_LOAD_DATA_COLUMN);
-        
-        
-        log.info("CONF_LOAD_DATA_COLUMN:"+loadData);
-        
+        expandChildren = conf.getBoolean(CONF_EXPAND_CHILDREN, DEFAULT_EXPAND_CHILDREN);
+        maxExpansionDepth = conf.getInt(CONF_EXPANSION_DEPTH, maxExpansionDepth);
+        expandParents = conf.getBoolean(CONF_EXPAND_PARENTS, DEFAULT_EXPAND_PARENTS);
+        maxExpansionHeight = conf.getInt(CONF_EXPANSION_HEIGHT, maxExpansionHeight);
+        maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS, DEFAULT_MAX_READ_RECORDS);
+        maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS, DEFAULT_MAX_READ_SECONDS);
+        loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
+
+
+        log.info("CONF_LOAD_DATA_COLUMN:" + loadData);
+
         if (usePersistence) {
             log.debug("Enabling progress tracker");
             progressTracker = new ProgressTracker(
-                progressFile, conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
+                progressFile,
+                conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
                 conf.getLong(CONF_PROGRESS_GRACETIME, DEFAULT_PROGRESS_GRACETIME));
         } else {
             log.info("Progress tracking disabled");
@@ -345,6 +370,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     /**
      * If !START_FROM_SCRATCH && USE_PERSISTENCE then get last timestamp
      * from persistence file, else return 0.
+     *
      * @return the timestamp to continue harvesting from.
      */
     private long getStartTime() {
@@ -361,19 +387,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             log.info("Resuming from " + progressTracker.getLastUpdate());
             return progressTracker.getLastUpdate();
         } else {
-            log.debug("Not set to resume or keep progress state. "
-                      + "Starting from time 0");
+            log.debug("Not set to resume or keep progress state. Starting from time 0");
             return 0;
         }
     }
 
     /**
-     * If the iterator is null, a new iterator is requested. If the iterator
-     * has reached the end, the method checks to see is the Storage has been
-     * updated since last iterator creation. If so, a new iterator is created.
+     * If the iterator is null, a new iterator is requested. If the iterator has reached the end, the method checks to
+     * see is the Storage has been updated since last iterator creation. If so, a new iterator is created.
      * If not, the method waits for an update from StorageWatcher.
      *
-     * @return {@code true} iff the iterator was good
+     * @return {@code true} iff the iterator was good.
      * @throws java.io.IOException if an iterator could not be created.
      */
     private boolean checkIterator() throws IOException {
@@ -383,67 +407,54 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
         if (recordIterator == null) {
             log.debug(String.format(
-                    "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
-                    lastRecordTimestamp));
+                "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
+                lastRecordTimestamp));
 
             // Detect if we need special query options and perform the query as
             // we are configured
-            long iterKey;
             QueryOptions opts;
-            if (!expandChildren && !expandParents) {
-                opts = null; // No special treatment
-            } else {
-                 opts = new QueryOptions(
-                     null, null,
-                     expandChildren ? maxExpansionDepth : 0,
-                     expandParents ? maxExpansionHeight : 0,
-                     null);
+            opts = !expandChildren && !expandParents ? null :
+                   new QueryOptions(
+                       null, null,
+                       expandChildren ? maxExpansionDepth : 0,
+                       expandParents ? maxExpansionHeight : 0,
+                       null);
+            long iterKey = loadData ?
+                           storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, opts) :
+                           storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
 
-            }
-            if (!loadData){
-              iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
-            }
-            else{
-            	iterKey = storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, opts);
-            }
-            
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
 
             return false;
         } else if (recordIterator.hasNext()) {
             return true;
-        } else {
-            if (storageWatcher == null) {
-                log.trace("storageWatcher is null, so no renew of iterator");
-                return false;
-            }
-            // We have an iterator but it is empty
-            log.debug(String.format(
-                    "Updating record iterator for Records modified after "
-                    + ProgressTracker.ISO_TIME, lastRecordTimestamp));
-                        
-            long iterKey = 0;
-
-            if (!loadData){
-                iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
-              }
-              else{
-              	iterKey = storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, null);
-              }
-            
-            
-            lastIteratorUpdate = System.currentTimeMillis();
-            recordIterator = new StorageIterator(storage, iterKey);
-
-            if (!recordIterator.hasNext()) {
-                log.debug("Received update notification from StorageWatcher, but no new Records is available from the "
-                          + "record iterator");
-                recordIterator = null;
-                return false;
-            }
-            return true;
         }
+
+        if (storageWatcher == null) {
+            log.trace("storageWatcher is null, so no renew of iterator");
+            return false;
+        }
+        // We have an iterator but it is empty
+        log.debug(String.format(
+            "Updating record iterator for Records modified after " + ProgressTracker.ISO_TIME,
+            lastRecordTimestamp));
+
+        long iterKey = loadData ?
+                       storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, null) :
+                       storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
+
+
+        lastIteratorUpdate = System.currentTimeMillis();
+        recordIterator = new StorageIterator(storage, iterKey);
+
+        if (!recordIterator.hasNext()) {
+            log.debug("Received update notification from StorageWatcher, but no new Records is available from the "
+                      + "record iterator");
+            recordIterator = null;
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -456,6 +467,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     /**
      * Return true if end of record iterator is reached.
+     *
      * @return True if end of record iterator is reached.
      */
     private boolean isEof() {
@@ -481,6 +493,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         if (isEof()) {
             return false;
         }
+        //noinspection LoopConditionNotUpdatedInsideLoop
         while (!recordIterator.hasNext()) {
             log.trace("hasNext: RecordIterater does not have next. Waiting and checking");
             try {
@@ -535,12 +548,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 synchronized (storageWatcher) {
                     if (storageWatcher.getLastNotify(base) >
                         lastIteratorUpdate) {
-                        log.debug("Detected changes on base '"+base
-                                  +"'since last check. Skipping wait");
+                        log.debug("Detected changes on base '" + base + "'since last check. Skipping wait");
                         break;
                     }
-                    log.debug("No changes on base '"+base+"' since last check."
-                              + " Waiting for storage watcher...");
+                    log.debug("No changes on base '" + base + "' since last check. Waiting for storage watcher...");
                     storageWatcher.wait();
                 }
             } catch (InterruptedException e) {
@@ -566,22 +577,19 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.debug("Emitting " + payload);
 
         if (log.isTraceEnabled()) {
-            log.trace("next(): Got lastModified timestamp "
-                      + String.format(ProgressTracker.ISO_TIME,
-                                      payload.getRecord().getLastModified())
+            log.trace("next(): Got lastModified timestamp " +
+                      String.format(ProgressTracker.ISO_TIME, payload.getRecord().getLastModified())
                       + " for " + payload);
         }
 
         if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
-            log.debug("Reached maximum number of Records to read ("
-                      + maxReadRecords + ")");
+            log.debug("Reached maximum number of Records to read (" + maxReadRecords + ")");
             markEof();
         }
 
         if (maxReadSeconds != -1 &&
             maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
-            log.debug("Reached maximum allow time usage ("
-                      + maxReadSeconds + ") seconds");
+            log.debug("Reached maximum allow time usage (" + maxReadSeconds + ") seconds");
             markEof();
         }
 
@@ -594,35 +602,33 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException(
-                "No removal of Payloads for RecordReader");
+        throw new UnsupportedOperationException("No removal of Payloads for RecordReader");
     }
 
     @Override
     public void setSource(Filter filter) {
-        throw new UnsupportedOperationException(
-                "RecordReader must be the first filter in the chain");
+        throw new UnsupportedOperationException("RecordReader must be the first filter in the chain");
     }
 
     @Override
     public boolean pump() throws IOException {
         if (!hasNext()) {
-             return false;
-         }
-         Payload next = next();
-         if (next == null) {
-             return false;
-         }
-        Logging.logProcess("RecordReader",
-                           "Calling close for Payload as part of pump()",
+            return false;
+        }
+        Payload next = next();
+        if (next == null) {
+            return false;
+        }
+        Logging.logProcess("RecordReader", "Calling close for Payload as part of pump()",
                            Logging.LogLevel.TRACE, next);
-         next.close();
-         return true;
-     }
+        next.close();
+        return true;
+    }
 
     /**
      * If success is true and persistence enabled, the current progress in the
      * harvest is stored. If success is false, no progress is stored.
+     *
      * @param success whether the while ingest has been successfull or not.
      */
     // TODO: Check why this is not called in FacetTest
@@ -640,7 +646,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             log.debug("Stopping storage watcher");
             storageWatcher.stop();
             log.info("Storage watcher stopped");
-        }        
+        }
     }
 
     /**
@@ -653,10 +659,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     @Override
-    public void storageChanged(StorageWatcher watch, String base,
-                               long timeStamp, Object userData) {
-        log.trace("Storage was changed for base " + base + " and timestamp "
-                  + timeStamp);
+    public void storageChanged(StorageWatcher watch, String base, long timeStamp, Object userData) {
+        log.trace("Storage was changed for base " + base + " and timestamp " + timeStamp);
         watch.notifyAll();
         // TODO : Update the Semaphore with at most 1   (remember syns)
     }

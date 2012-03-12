@@ -27,8 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * A simple wrapper for a SearchNode that makes it a Callable and Runnable,
  * useful for wrapping in FutureTask or similar.
  * </p><p>
- * Note: While it is possible to re-use the wrapper, remember that it is not
- *       thread-safe.
+ * Note: While it is possible to re-use the wrapper, remember that it is not thread-safe.
  * </p><p>
  * Note: getFreeSlots is not done asynchronously.
  */
@@ -54,6 +53,7 @@ public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
         this.node = node;
     }
 
+    @Override
     public Object call() throws Exception {
         switch (call) {
             case search:
@@ -74,6 +74,7 @@ public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
         return null;
     }
 
+    @Override
     public void run() {
         try {
             call();
@@ -92,6 +93,7 @@ public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
 
     /* SearchNode interface */
 
+    @Override
     public void search(Request request,
                        ResponseCollection responses) throws RemoteException {
         this.request = request;
@@ -99,21 +101,25 @@ public class SearchNodeAsync implements Callable<Object>, Runnable, SearchNode {
         call = CALL.search;
     }
 
+    @Override
     public void warmup(String request) {
         warmupRequest = request;
         call = CALL.warmup;
     }
 
+    @Override
     public void open(String location) throws RemoteException {
         this.location = location;
         call = CALL.open;
 
     }
 
+    @Override
     public void close() throws RemoteException {
         call = CALL.close;
     }
 
+    @Override
     public int getFreeSlots() {
         return node.getFreeSlots();
     }
