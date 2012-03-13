@@ -212,6 +212,16 @@ public class SummonSearchNode extends SearchNodeImpl {
     public static final String SEARCH_SUMMON_PARAM_PREFIX =
         CONF_SUMMON_PARAM_PREFIX;
 
+    /**
+     * If true, the SummonSearchNode does not attempt to extract facet-query from the query and passes the query and
+     * filter through unmodified. Mainly used for debugging.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String SEARCH_PASSTHROUGH_QUERY = "summon.passthrough.query";
+    public static final boolean DEFAULT_PASSTHROUGH_QUERY = false;
+
+
     private static final DateFormat formatter =
         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     private SummonResponseBuilder responseBuilder;
@@ -347,13 +357,12 @@ public class SummonSearchNode extends SearchNodeImpl {
         boolean reverseSort = request.getBoolean(
             DocumentKeys.SEARCH_REVERSE, false);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
-        int maxRecords = request.getInt(
-            DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
+        int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
 
-        boolean resolveLinks = request.getBoolean(
-            SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
-        boolean collectdocIDs = request.getBoolean(
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        boolean resolveLinks = request.getBoolean(SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
+        boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
 
         if (rawQuery == null && filter == null) {
             log.debug("No filter or query, proceeding anyway as other params "
@@ -392,13 +401,13 @@ public class SummonSearchNode extends SearchNodeImpl {
             convertSummonParam(summonSearchParams, entry);
         }
 
-        if (query != null) {
+        if (query != null && !passThroughQuery) {
             query = convertQuery(query, summonSearchParams);
         }
         if ("".equals(query)) {
             query = null;
         }
-        if (filter != null) {
+        if (filter != null && !passThroughQuery) {
             filter = convertQuery(filter, summonSearchParams);
         }
         if ("".equals(filter)) {
@@ -738,7 +747,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         return retval;
     }
 
-    private static String computeIdString(String acceptType, String  date, String  host, String  path, Map<String, List<String>> queryParameters) {
+    private static String computeIdString(String acceptType, String  date, String  host, String  path,
+                                          Map<String, List<String>> queryParameters) {
         return appendStrings(acceptType, date, host, path, computeSortedQueryString(queryParameters, false));
     }
 
@@ -753,7 +763,9 @@ public class SummonSearchNode extends SearchNodeImpl {
 
         // for each parameter, get its key and values
         for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
-
+/*            if ("s.q".equals(entry.getKey())) {
+                System.out.println("Summon query: '" + entry.getValue() + "'");
+            }*/
             // for each value, create a string in the format key=value
             for (String value : entry.getValue()) {
                 if (urlencode) {

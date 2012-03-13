@@ -166,17 +166,17 @@ public class QueryRewriter {
      */
     public String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
-        Query walked = walkQuery(q);
-        return walked == null ? null : convertQueryToString(walked);
+        Query walked = walkQuery(q, true);
+        return walked == null ? null : convertQueryToString(walked, true);
     }
 
-    private Query walkQuery(Query query) {
+    private Query walkQuery(Query query, boolean top) {
         if (query instanceof BooleanQuery) {
             BooleanQuery booleanQuery = (BooleanQuery) query;
             BooleanQuery result = new BooleanQuery();
             boolean foundSome = false;
             for (BooleanClause clause : booleanQuery.getClauses()) {
-                Query walked = walkQuery(clause.getQuery());
+                Query walked = walkQuery(clause.getQuery(), false);
                 if (walked != null) {
                     BooleanClause clauseResult = new BooleanClause(walked, clause.getOccur());
                     result.add(clauseResult);
@@ -198,7 +198,7 @@ public class QueryRewriter {
         return event.onQuery(query);
     }
 
-    private String convertQueryToString(Query query) {
+    private String convertQueryToString(Query query, boolean top) {
         String result = "";
 
         if (query instanceof TermQuery) {
@@ -207,7 +207,7 @@ public class QueryRewriter {
             // boosting this term is incorrect syntax. Example: "- " is OK. "-^1" is not OK. It must be converted to
             // "\"- \"^1".
             result = convertSubqueryToString(tq.getTerm().field(), tq.getTerm().text(), true);
-            // It's okay if we send on 1.0 by bad comparison
+            // It does not hurt if we mistakenly send on 1.0 by bad comparison
             //noinspection FloatingPointEquality
             if (tq.getBoost() != 1.0f) {
                 result += "^" + tq.getBoost();
@@ -216,34 +216,53 @@ public class QueryRewriter {
             PrefixQuery prefixQuery = (PrefixQuery) query;
             return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
         } else if (query instanceof BooleanQuery) {
-            // convert the boolean query to a string recursively
-            BooleanQuery booleanQuery = (BooleanQuery) query;
-            String inner = "";
-            for (int i = 0; i < booleanQuery.getClauses().length; i++) {
-                BooleanClause currentClause = booleanQuery.getClauses()[i];
-                switch (currentClause.getOccur()) {
-                    case SHOULD:
-                        inner += convertQueryToString(currentClause.getQuery());
-                        if (i != booleanQuery.getClauses().length - 1) {
-                            inner += " OR ";
-                        }
-                        break;
-                    case MUST:
-                        inner += "+" + convertQueryToString(currentClause.getQuery()) + " ";
-                        break;
-                    case MUST_NOT:
-                        inner += "-" + convertQueryToString(currentClause.getQuery()) + " ";
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown occur: " + currentClause.getOccur());
-                }
-            }
-            result += "(" + inner.trim() + ")";
+            String inner = booleanQueryToString((BooleanQuery) query);
+            result += top ? inner.trim() : "(" + inner.trim() + ")";
         } else {
             result += query.toString();
         }
 
         return result.trim();
+    }
+
+    /*
+    This method implicitly expects the searcher to use AND as default. The omission of + when all clauses are MUST is
+    necessary as the Solr DisMax query parser apparently does not accept "+foo +bar".
+     */
+    private String booleanQueryToString(BooleanQuery query) {
+        // convert the boolean query to a string recursively
+        BooleanQuery booleanQuery = (BooleanQuery) query;
+        String inner = "";
+        boolean onlyMust = containsOnlyMust(booleanQuery);
+        for (int i = 0; i < booleanQuery.getClauses().length; i++) {
+            BooleanClause currentClause = booleanQuery.getClauses()[i];
+            switch (currentClause.getOccur()) {
+                case SHOULD:
+                    inner += convertQueryToString(currentClause.getQuery(), false);
+                    if (i != booleanQuery.getClauses().length - 1) {
+                        inner += " OR ";
+                    }
+                    break;
+                case MUST:
+                    inner += (onlyMust ? "" : "+") + convertQueryToString(currentClause.getQuery(), false) + " ";
+                    break;
+                case MUST_NOT:
+                    inner += "-" + convertQueryToString(currentClause.getQuery(), false) + " ";
+                    break;
+                default:
+                    throw new RuntimeException("Unknown occur: " + currentClause.getOccur());
+            }
+        }
+        return inner;
+    }
+
+    private boolean containsOnlyMust(BooleanQuery booleanQuery) {
+        for (int i = 0; i < booleanQuery.getClauses().length; i++) {
+            if (booleanQuery.getClauses()[i].getOccur() != BooleanClause.Occur.MUST) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String convertSubqueryToString(String field, String text, boolean quote) {

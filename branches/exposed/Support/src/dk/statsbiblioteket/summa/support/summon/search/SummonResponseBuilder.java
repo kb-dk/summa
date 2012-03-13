@@ -19,7 +19,6 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;

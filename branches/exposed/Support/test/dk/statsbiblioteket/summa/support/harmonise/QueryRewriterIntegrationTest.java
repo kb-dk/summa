@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -22,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tests that the rewriter produces semantically equivalent queries when the term queries are not rewritten
@@ -88,11 +91,48 @@ public class QueryRewriterIntegrationTest extends TestCase {
     private void checkQuery(String query)
             throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
-        compareHits(search(query), search(rewritten));
+        compareHits(query, search(query), search(rewritten));
     }
 
-    private void compareHits(ResponseCollection rc1, ResponseCollection rc2) {
-        assertEquals(countResults(rc1), countResults(rc2));
+    // Avoids query rewriting inside SummonSearchNode
+    private void checkQueryDirect(String query)
+            throws RemoteException, ParseException {
+        String rewritten = requestRewriter.rewrite(query);
+        compareHits(query, searchDirect(query), searchDirect(rewritten));
+    }
+
+    private void compareHits(String query, ResponseCollection rc1, ResponseCollection rc2) {
+        String rs1 = Strings.join(getResults(rc1), ", ");
+        assertEquals("Expected equality for query '" + query + "'",
+                     rs1, Strings.join(getResults(rc2), ", "));
+        assertFalse("There was no result for '" + query + "'", "".equals(rs1));
+    }
+
+    private void compareHits(String query, boolean shouldMatch, ResponseCollection rc1, ResponseCollection rc2) {
+        if (shouldMatch) {
+            assertEquals("Expected equality for query '" + query + "'",
+                         Strings.join(getResults(rc1), ", "), Strings.join(getResults(rc2), ", "));
+        } else {
+            String qr1 = Strings.join(getResults(rc1), ", ");
+            String qr2 = Strings.join(getResults(rc2), ", ");
+            if (qr1.equals(qr2)) {
+                fail("Expected non-equality for query '" + query + "' with result '" + qr1 + "'");
+            }
+        }
+    }
+
+    private List<String> getResults(ResponseCollection responses) {
+        for (Response response : responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse dr = (DocumentResponse)response;
+                ArrayList<String> results = new ArrayList<String>((int)dr.getHitCount());
+                for (DocumentResponse.Record record: dr.getRecords()) {
+                    results.add(record.getId());
+                }
+                return results;
+            }
+        }
+        return null;
     }
 
     private int countResults(ResponseCollection responses) {
@@ -110,6 +150,18 @@ public class QueryRewriterIntegrationTest extends TestCase {
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, query);
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+
+        summon.search(request, responses);
+
+        return responses;
+    }
+
+    private ResponseCollection searchDirect(String query) throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, query);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        request.put(SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true);
 
         summon.search(request, responses);
 
@@ -143,8 +195,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
         requestRewriter.rewrite(query);
         String andBindsHarder = "((foo AND bar) AND baz) OR (spam AND eggs) OR ham";
 
-        compareHits(search(query), search(andBindsHarder));
-        compareHits(search(query), search(requestRewriter.rewrite(andBindsHarder)));
+        compareHits(query, search(query), search(andBindsHarder));
+        compareHits(query, search(query), search(requestRewriter.rewrite(andBindsHarder)));
     }
 
     public void testRewrite5() throws RemoteException, ParseException {
@@ -165,7 +217,7 @@ public class QueryRewriterIntegrationTest extends TestCase {
         String query = "foo OR bar AND baz";
         String rewritten = "(foo OR (+bar +baz))";
 
-        compareHits(search(query), search(rewritten));
+        compareHits(query + "' and '" + rewritten, search(query), search(rewritten));
     }
 
     public void testRewrite8() throws RemoteException, ParseException {
@@ -183,4 +235,56 @@ public class QueryRewriterIntegrationTest extends TestCase {
     public void testRewriteDivider() throws RemoteException, ParseException {
         checkQuery("foo - bar");
     }
+
+    public void testRewriteTitleMatch() throws RemoteException, ParseException {
+        checkQuery("miller genre as social action");
+    }
+
+    public void testRewriteTitleMatchDirect() throws RemoteException, ParseException {
+        checkQueryDirect("miller genre as social action");
+    }
+
+    public void testRewriteTitleMatchWeightDirect() throws RemoteException, ParseException {
+        checkQueryDirect("miller genre^2 as social action");
+    }
+
+    public void testColonSpace() throws RemoteException, ParseException {
+        checkQuery("foo: bar");
+    }
+
+    // This fails as the DisMax treats the direct query as "+foo +bar +baz", which it does not support.
+    // The rewritten query is reduced to "foo bar baz".
+//    public void testRewriteExplicitAndDirect() throws RemoteException, ParseException {
+//        checkQueryDirect("foo AND bar AND baz");
+//    }
+
+    public void testApostrophes() throws RemoteException, ParseException {
+        String simple = "miller genre as social action";
+        String apostrophed = "\"miller\" \"genre\" \"as\" \"social\" \"action\"";
+        compareHits(simple, searchDirect(simple), searchDirect(apostrophed));
+    }
+
+    public void testSpecificTitle() throws RemoteException, ParseException {
+        checkQuery("towards a cooperative experimental system development approach");
+        checkQueryDirect("towards a cooperative experimental system development approach");
+    }
+
+    public void testApostrophesExplicitAnd() throws RemoteException, ParseException {
+        String simple = "miller genre as social action";
+         // Solr DisMax query parser does not like this
+        String apostrophed = "+\"miller\" +\"genre\" +\"as\" +\"social\" +\"action\"";
+        compareHits(simple, false, searchDirect(simple), searchDirect(apostrophed));
+    }
+
+    public void testExplicitMust() throws RemoteException, ParseException {
+        String simple = "miller genre as social action";
+        String must = "+miller +genre +as +social +action"; // Solr DisMax query parser does not like this
+        compareHits(simple, false, searchDirect(simple), searchDirect(must));
+    }
+
+    public void testRewriteWeightsDirect() throws RemoteException, ParseException {
+        String query = "foo^2 bar^3";
+        checkQueryDirect(query);
+    }
+
 }
