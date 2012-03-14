@@ -1,12 +1,12 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
+import dk.statsbiblioteket.summa.support.summon.search.SummonTestHelper;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -18,10 +18,6 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +29,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
 public class QueryRewriterIntegrationTest extends TestCase {
-    private static Log log = LogFactory.getLog(
-            QueryRewriterIntegrationTest.class);
-
-    private static final File SECRET = new File(
-            System.getProperty("user.home") + "/summon-credentials.dat");
-    private String id;
-    private String key;
+    private static Log log = LogFactory.getLog(QueryRewriterIntegrationTest.class);
 
     private SummonSearchNode summon;
     private QueryRewriter requestRewriter;
@@ -51,25 +41,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        if (!SECRET.exists()) {
-            throw new IllegalStateException(
-                    "The file '" + SECRET.getAbsolutePath() + "' must exist and "
-                            + "contain two lines, the first being access ID, the second"
-                            + "being access key for the Summon API");
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(
-                new FileInputStream(SECRET), "utf-8"));
-        id = br.readLine();
-        key = br.readLine();
-        br.close();
-        log.debug("Loaded credentials from " + SECRET);
 
-        Configuration conf = Configuration.newMemoryBased(
-                SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-                SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        summon = new SummonSearchNode(conf);
+        summon = SummonTestHelper.createSummonSearchNode();
         requestRewriter = new QueryRewriter(new QueryRewriter.Event() {
             @Override
             public Query onQuery(TermQuery query) {
@@ -80,6 +53,11 @@ public class QueryRewriterIntegrationTest extends TestCase {
 
     @Override
     public void tearDown() {
+        try {
+            summon.close();
+        } catch (RemoteException e) {
+            log.warn("Exception while closing SummonSearchNode", e);
+        }
         summon = null;
         requestRewriter = null;
     }
@@ -102,26 +80,26 @@ public class QueryRewriterIntegrationTest extends TestCase {
     }
 
     private void compareHits(String query, ResponseCollection rc1, ResponseCollection rc2) {
-        String rs1 = Strings.join(getResults(rc1), ", ");
+        String rs1 = Strings.join(getResultIDs(rc1), ", ");
         assertEquals("Expected equality for query '" + query + "'",
-                     rs1, Strings.join(getResults(rc2), ", "));
+                     rs1, Strings.join(getResultIDs(rc2), ", "));
         assertFalse("There was no result for '" + query + "'", "".equals(rs1));
     }
 
     private void compareHits(String query, boolean shouldMatch, ResponseCollection rc1, ResponseCollection rc2) {
         if (shouldMatch) {
             assertEquals("Expected equality for query '" + query + "'",
-                         Strings.join(getResults(rc1), ", "), Strings.join(getResults(rc2), ", "));
+                         Strings.join(getResultIDs(rc1), ", "), Strings.join(getResultIDs(rc2), ", "));
         } else {
-            String qr1 = Strings.join(getResults(rc1), ", ");
-            String qr2 = Strings.join(getResults(rc2), ", ");
+            String qr1 = Strings.join(getResultIDs(rc1), ", ");
+            String qr2 = Strings.join(getResultIDs(rc2), ", ");
             if (qr1.equals(qr2)) {
                 fail("Expected non-equality for query '" + query + "' with result '" + qr1 + "'");
             }
         }
     }
 
-    private List<String> getResults(ResponseCollection responses) {
+    private List<String> getResultIDs(ResponseCollection responses) {
         for (Response response : responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse dr = (DocumentResponse)response;

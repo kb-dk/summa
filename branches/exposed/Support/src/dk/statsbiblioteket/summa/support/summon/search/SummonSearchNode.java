@@ -92,8 +92,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Optional. Default is api.summon.serialssolutions.com.
      */
     public static final String CONF_SUMMON_HOST = "summon.host";
-    public static final String DEFAULT_SUMMON_HOST =
-        "api.summon.serialssolutions.com";
+    public static final String DEFAULT_SUMMON_HOST = "api.summon.serialssolutions.com";
 
     /**
      * The rest call at {@link #CONF_SUMMON_HOST}. This is unlikely to change.
@@ -101,7 +100,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Optional. Default is '/search'.
      */
     public static final String CONF_SUMMON_RESTCALL = "summon.restcall";
-    public static final String DEFAULT_SUMMON_RESTCALL = "/search";
+    public static final String DEFAULT_SUMMON_RESTCALL = "/2.0.0/search";
 
     /**
      * The access ID for Summon. Serial Solutions controls this and in order to
@@ -630,8 +629,7 @@ public class SummonSearchNode extends SearchNodeImpl {
             retval = linkResolve(retval);
         }
         linkResolve += System.currentTimeMillis();
-        log.trace("simpleSearch done in "
-                  + (System.currentTimeMillis() - buildQuery) + "ms");
+        log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(
             retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs
                     + "|summon.linkresolve:" + linkResolve);
@@ -650,7 +648,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         // Note: summon supports pure negative filters so we do not use
         // DocumentKeys.SEARCH_FILTER_PURENEGATIVE for anything
         if (filter != null) { // We allow missing filter
-            querymap.put("s.fq",   Arrays.asList(filter));
+            querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
         }
         querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
@@ -732,8 +730,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         log.trace("Parameter preparation to Summon done in " + (System.currentTimeMillis() - methodStart) + "ms");
         try {
             long serviceStart = System.currentTimeMillis();
-            result = getData("http://api.summon.serialssolutions.com", "/search?" +
-                    queries, date, idstring, null,new ResponseCollection());
+            result = getData("http://api.summon.serialssolutions.com",
+                             "/search?" + queries, date, idstring, null,new ResponseCollection());
             log.trace("Call to Summon done in " + (System.currentTimeMillis() - serviceStart) + "ms");
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

@@ -15,6 +15,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -53,26 +54,9 @@ public class SummonSearchNodeTest extends TestCase {
         super(name);
     }
 
-    private static final File SECRET =
-        new File(System.getProperty("user.home") + "/summon-credentials.dat");
-    private String id;
-    private String key;
-
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        if (!SECRET.exists()) {
-            throw new IllegalStateException(
-                "The file '" + SECRET.getAbsolutePath() + "' must exist and "
-                + "contain two lines, the first being access ID, the second"
-                + "being access key for the Summon API");
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(
-            new FileInputStream(SECRET), "utf-8"));
-        id = br.readLine();
-        key = br.readLine();
-        br.close();
-        log.debug("Loaded credentials from " + SECRET);
     }
 
     @Override
@@ -85,14 +69,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testBasicSearch() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
-
         log.debug("Creating SummonSearchNode");
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
 //        summon.open(""); // Fake open for setting permits
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
@@ -109,11 +87,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testShortFormat() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            SummonResponseBuilder.CONF_SHORT_DATE, true
-        );
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SummonResponseBuilder.CONF_SHORT_DATE, true);
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -128,8 +103,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("There should be at least 1 extracted date",
                    dates.size() > 0);
         for (String date: dates) {
-            assertTrue("the returned dates should be of length 4 or less, got '"
-                       + date + "'", date.length() <= 4);
+            assertTrue("the returned dates should be of length 4 or less, got '" + date + "'", date.length() <= 4);
         }
 //        System.out.println("Got dates:\n" + Strings.join(dates, ", "));
     }
@@ -137,14 +111,8 @@ public class SummonSearchNodeTest extends TestCase {
     public void testIDSearch() throws IOException, TransformerException {
         String ID = "summon_FETCH-gale_primary_2105957371";
 
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            SummonResponseBuilder.CONF_SHORT_DATE, true
-        );
-
         log.debug("Creating SummonSearchNode");
-        SearchNode summon = new SummonSearchNode(conf);
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         Request req = new Request(
             DocumentKeys.SEARCH_QUERY, "recordID:\"" + ID + "\"",
             DocumentKeys.SEARCH_MAX_RECORDS, 1,
@@ -156,19 +124,11 @@ public class SummonSearchNodeTest extends TestCase {
     public void testGetField() throws IOException, TransformerException {
         String ID = "summon_FETCH-gale_primary_2105957371";
 
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-//            InteractionAdjuster.CONF_ADJUST_RESPONSE_FIELDS_ENABLED, true,
-            SummonResponseBuilder.CONF_SHORT_DATE, true
-        );
-
         log.debug("Creating SummonSearchNode");
-        SearchNode summon = new SummonSearchNode(conf);
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         String fieldName = "shortformat";
         String field = getField(summon, ID, fieldName);
-        assertTrue("The field '" + fieldName + "' from ID '" + ID
-                   + "' should have content",
+        assertTrue("The field '" + fieldName + "' from ID '" + ID + "' should have content",
                    field != null && !"".equals(field));
 //        System.out.println("'" + field + "'");
     }
@@ -189,46 +149,32 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(res.toXML());
         Document dom = DOM.stringToDOM(res.toXML());
         Node subDom = DOM.selectNode(
-            dom, "/responsecollection/response/documentresult/record/"
-                 + "field[@name='" + fieldName + "']");
+            dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
         retXML = DOM.domToString(subDom);
         return retXML;
     }
 
 
     public void testMoreLikeThis() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo");
         assertTrue("A search for 'foo' should give hits", standard > 0);
 
-        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo",
-                           LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
-        assertEquals(
-            "A search with a MoreLikeThis ID should not give hits", 0, mlt);
+        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo", LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
+        assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
 
     }
 
     public void testColonSearch() throws RemoteException {
         final String OK = "FETCH-proquest_dll_14482952011";
-        final String PROBLEM = "FETCH-doaj_primary_oai:doaj-articles:"
-                               + "932b6445ce452a2b2a544189863c472e1";
+        final String PROBLEM = "FETCH-doaj_primary_oai:doaj-articles:932b6445ce452a2b2a544189863c472e1";
         performSearch("ID:\"" + OK + "\"");
         performSearch("ID:\"" + PROBLEM + "\"");
     }
 
     private void performSearch(String query) throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
         log.debug("Creating SummonSearchNode");
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, query);
@@ -242,12 +188,9 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testFacetOrder() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
             //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -260,8 +203,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> facets = getFacetNames(responses);
-        List<String> expected = new ArrayList<String>(Arrays.asList(
-            SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
+        List<String> expected = new ArrayList<String>(Arrays.asList(SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
         for (int i = expected.size()-1 ; i >= 0 ; i--) {
             if (!facets.contains(expected.get(i))) {
                 expected.remove(i);
@@ -275,12 +217,9 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testSpecificFacets() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            SummonSearchNode.CONF_SUMMON_FACETS, "SubjectTerms"
-        );
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        conf.set(SummonSearchNode.CONF_SUMMON_FACETS, "SubjectTerms");
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -300,23 +239,30 @@ public class SummonSearchNodeTest extends TestCase {
     public void testNegativeFacets() throws RemoteException {
         final String QUERY = "foo fighters NOT limits NOT (boo OR bam)";
         final String FACET = "SubjectTerms:\"united states\"";
-        SummonSearchNode summon = new SummonSearchNode(
-            Configuration.newMemoryBased(
-                SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-                SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-            ));
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         assertHits("There should be at least one hit for positive faceting",
                    summon,
                    DocumentKeys.SEARCH_QUERY, QUERY,
                    DocumentKeys.SEARCH_FILTER, FACET);
-        assertHits("There should be at least one hit for paranthesized positive"
-                   + " faceting", summon,
+        assertHits("There should be at least one hit for parenthesized positive faceting", summon,
                    DocumentKeys.SEARCH_QUERY, QUERY,
                    DocumentKeys.SEARCH_FILTER, "(" + FACET + ")");
-        assertHits("There should be at least one hit for filter with pure "
-                   + "negative faceting", summon,
+        assertHits("There should be at least one hit for filter with pure negative faceting", summon,
                    DocumentKeys.SEARCH_QUERY, QUERY,
                    DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
+                   DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
+        summon.close();
+    }
+
+    public void testQueryWithNegativeFacets() throws RemoteException {
+        final String QUERY = "foo";
+        final String FACET = "SubjectTerms:\"analysis\"";
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        assertHits("There should be at least one hit for positive faceting", summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET);
+        assertHits("There should be at least one hit for query with negative facet", summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
                    DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
         summon.close();
     }
@@ -329,13 +275,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testSortedSearch() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
-            "sort_year_asc - PublicationDate"
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "sort_year_asc - PublicationDate");
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -363,13 +304,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testSortedDate() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
-            "sort_year_asc - PublicationDate"
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "sort_year_asc - PublicationDate");
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -396,13 +332,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testSortedSearchRelevance() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS,
-            "sort_year_asc - PublicationDate"
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "sort_year_asc - PublicationDate");
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -420,13 +351,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testPaging() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        log.debug("Creating SummonSearchNode");
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
 //        summon.open(""); // Fake open for setting permits
         List<String> ids0 = getAttributes(
             summon, new Request(
@@ -509,13 +434,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testRecommendations() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
@@ -537,12 +456,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testReportedTiming() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
@@ -569,12 +483,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testFilterVsQuery() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long qHitCount = getHits(
             summon, DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
         long fHitCount = getHits(
@@ -586,12 +495,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testFilterVsQuery2() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long qHitCount = getHits(
             summon,
             DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
@@ -609,12 +513,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testFilterVsQuery3() throws RemoteException {
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long qCombinedHitCount = getHits(
             summon,
             DocumentKeys.SEARCH_QUERY,
@@ -651,17 +550,10 @@ public class SummonSearchNodeTest extends TestCase {
     public void testCustomParams() throws RemoteException {
         final String QUERY = "reactive arthritis yersinia lassen";
 
-        Configuration confInside = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
-        );
-        Configuration confOutside = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key,
-            SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
-            new ArrayList<String>(Arrays.asList("false"))
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+        Configuration confInside = SummonTestHelper.getDefaultSummonConfiguration();
+        Configuration confOutside = SummonTestHelper.getDefaultSummonConfiguration();
+        confOutside.set(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+                        new ArrayList<String>(Arrays.asList("false"))
         );
 
         Request request = new Request();
@@ -710,7 +602,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertEquals("Range #2 should be correct", "baz,87:goa", ranges.get(1));
         assertEquals("The resulting query should be stripped of ranges",
-                     "(+\"foo\")", stripped);
+                     "\"foo", stripped);
     }
 
     public void testConvertRangeQueriesEmpty() throws RemoteException {
@@ -749,18 +641,13 @@ public class SummonSearchNodeTest extends TestCase {
   //      final String QUERY = "reactive arthritis yersinia lassen";
         final String QUERY = "author:(Helweg Larsen) abuse";
 
-        Configuration conf = Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, id,
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, key
-        );
-
         Request request = new Request();
         request.addJSON(
             "{search.document.query:\"" + QUERY + "\", "
             + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
 //        String r1 = request.toString(true);
 
-        SummonSearchNode summon = new SummonSearchNode(conf);
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         summon.search(request, responses);
         int count15 = countResults(responses);
@@ -804,6 +691,12 @@ public class SummonSearchNodeTest extends TestCase {
                      count15, count20);
     }
 
+    // Author can be returned in the field Author_xml (primary) and Author (secondary). If both fields are present,
+    // Author should be ignored.
+    public void testAuthorExtraction() throws IOException {
+
+    }
+
     private int countResults(ResponseCollection responses) {
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
@@ -815,6 +708,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testAdjustingSearcher() throws IOException {
+        SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
         Configuration conf = Configuration.newMemoryBased(
             InteractionAdjuster.CONF_IDENTIFIER, "summon",
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
@@ -822,8 +716,8 @@ public class SummonSearchNodeTest extends TestCase {
             AdjustingSearchNode.CONF_INNER_SEARCHNODE);
         inner.set(SearchNodeFactory.CONF_NODE_CLASS,
                   SummonSearchNode.class.getCanonicalName());
-        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, id);
-        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, key);
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
 
         log.debug("Creating adjusting SummonSearchNode");
         AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
@@ -840,6 +734,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testIDAdjustment() throws IOException {
+        SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
         Configuration conf = Configuration.newMemoryBased(
             InteractionAdjuster.CONF_IDENTIFIER, "summon",
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
@@ -847,8 +742,8 @@ public class SummonSearchNodeTest extends TestCase {
             AdjustingSearchNode.CONF_INNER_SEARCHNODE);
         inner.set(SearchNodeFactory.CONF_NODE_CLASS,
                   SummonSearchNode.class.getCanonicalName());
-        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, id);
-        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, key);
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
+        inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
 
         log.debug("Creating adjusting SummonSearchNode");
         AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
