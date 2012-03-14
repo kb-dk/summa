@@ -59,8 +59,7 @@ public class StreamCopyFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getStream() == null) {
             if (warnOnNoStream) {
-                Logging.logProcess("StreamCopyFilter", "No Stream in Payload",
-                                   Logging.LogLevel.WARN, payload);
+                Logging.logProcess("StreamCopyFilter", "No Stream in Payload", Logging.LogLevel.WARN, payload);
             }
             return true;
         }

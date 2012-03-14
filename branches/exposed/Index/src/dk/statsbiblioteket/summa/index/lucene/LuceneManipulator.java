@@ -396,7 +396,7 @@ public class LuceneManipulator implements IndexManipulator {
         } catch (ExecutionException e) {
             Logging.logProcess(
                     "LuceneManipulator.waitForJob",
-                    "Index failed due to exception",
+                    "Indexing failed due to exception",
                     Logging.LogLevel.WARN, payload, e);
             log.warn(String.format(
                     "The write job for %s failed with exception", payload), e);

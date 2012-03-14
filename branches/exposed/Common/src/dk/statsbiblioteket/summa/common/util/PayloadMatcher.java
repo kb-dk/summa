@@ -150,8 +150,7 @@ public class PayloadMatcher {
             metaKeys != null) {
             if (payload.getRecord() == null) {
                 Logging.logProcess(this.getClass().getSimpleName(),
-                        String.format("Payload without Record. "
-                                      + "Cannot perform extended matching"),
+                        "Payload without Record. Cannot perform extended matching",
                         Logging.LogLevel.WARN, payload);
                 return false;
             }

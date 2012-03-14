@@ -84,7 +84,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
             Logging.logProcess(
                     getName() + "#" + this.getClass().getSimpleName(),
                     "Discarding due to parent existence",
-                    Logging.LogLevel.TRACE, payload);
+                    Logging.LogLevel.DEBUG, payload);
             //noinspection DuplicateStringLiteralInspection
             log.debug("Discarding " + payload + " due to parent existence");
             return true;
@@ -95,7 +95,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
             Logging.logProcess(
                     getName() + "#" + this.getClass().getSimpleName(),
                     "Discarding due to children existence",
-                    Logging.LogLevel.TRACE, payload);
+                    Logging.LogLevel.DEBUG, payload);
             //noinspection DuplicateStringLiteralInspection
             log.debug("Discarding " + payload + " due to children existence");
             return true;

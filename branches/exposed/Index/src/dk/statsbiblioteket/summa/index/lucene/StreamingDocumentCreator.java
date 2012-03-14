@@ -61,9 +61,9 @@ public class StreamingDocumentCreator
     // TODO: Entity-encode fields
 
     // TODO: Reconsider this namespace
-    public static final String SUMMA_NAMESPACE =
+    public static final String SUMMA_NAMESPACE = "http://statsbiblioteket.dk/summa/2008/Document";
 //            "http://statsbiblioteket.dk/2008/Index";
-            "http://statsbiblioteket.dk/summa/2008/Document";
+
     // TODO: Make DocumentCreator support namespace qualified attributes
 
     private static final String SUMMA_DOCUMENT = "SummaDocument";
@@ -84,16 +84,14 @@ public class StreamingDocumentCreator
      * @throws Configurable.ConfigurationException if there was a problem with
      *         the configuration.
      */
-    public StreamingDocumentCreator(Configuration conf) throws
-                                                        ConfigurationException {
+    public StreamingDocumentCreator(Configuration conf) throws ConfigurationException {
         super(conf);
         inputFactory = XMLInputFactory.newInstance();
         // TODO: Check to see if we need to handle CData-events
 //        inputFactory.setProperty("report-cdata-event", Boolean.TRUE);
         //inputFactory.setProperty(XMLInputFactory.IS_COALESCING,
         //                         Boolean.TRUE);
-        inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE,
-                                 Boolean.TRUE);
+        inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
         // No resolving of external DTDs
         inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
 
@@ -110,15 +108,13 @@ public class StreamingDocumentCreator
     }
 
     @Override
-    public boolean finish(Payload payload,
-                          org.apache.lucene.document.Document state,
-                          boolean success) throws PayloadException {
+    public boolean finish(Payload payload, org.apache.lucene.document.Document state, boolean success)
+                                                                                               throws PayloadException {
         if (!success) {
             Logging.logProcess(
                 "StreamingDocumentCreator", "Unable to create Lucene document",
                 Logging.LogLevel.DEBUG, payload);
-            throw new PayloadException(
-                "Unable to create Lucene document", payload);
+            throw new PayloadException("Unable to create Lucene document", payload);
         }
         payload.getObjectData().put(Payload.LUCENE_DOCUMENT, state);
         Logging.logProcess(
@@ -129,17 +125,14 @@ public class StreamingDocumentCreator
     }
 
     @Override
-    public boolean processRecord(Record record, boolean origin, Document doc)
-                                                       throws PayloadException {
+    public boolean processRecord(Record record, boolean origin, Document doc) throws PayloadException {
         XMLStreamReader reader;
         try {
-            reader = inputFactory.createXMLStreamReader(RecordUtil.getReader(
-                record, RecordUtil.PART_CONTENT));
+            reader = inputFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART_CONTENT));
         } catch (XMLStreamException e) {
             log.debug("Unable to make an XMLStream from " + record);
             if (origin) {
-                throw new PayloadException(
-                    "Unable to make an XMLStream from " + record, e);
+                throw new PayloadException("Unable to make an XMLStream from " + record, e);
             }
             return false;
         }
@@ -161,34 +154,26 @@ public class StreamingDocumentCreator
             }
             return false;
         } catch (XMLStreamException e) {
-            String message =
-                    "Unable to extract content from XMLStream from " + record;
+            String message = "Unable to extract content from XMLStream from " + record;
            
-            //TODO remove.
-            log.fatal("Extract XML failed. Record was skipped. Record-id:"+record.getId());
-            
             if (log.isDebugEnabled()) {
-                log.debug(message + ". Problematic content was:\n"
-                          + record.getContentAsUTF8(), e);
+                log.debug(message + ". Problematic content was:\n" + record.getContentAsUTF8(), e);
             }
-            Logging.logProcess("StreamingDocumentcreator", message,
-                               Logging.LogLevel.WARN, record.toString(), e);
+            Logging.logProcess("StreamingDocumentcreator", message, Logging.LogLevel.WARN, record, e);
             if (origin) {
                 throw new PayloadException(message, e);
             }
             return false;
         } catch (IndexServiceException e) {
-            String message =
-                "Exception while updating the Lucene document for " + record;
+            String message = "Exception while updating the Lucene document for " + record;
             log.debug(message, e);
             throw new PayloadException(message, e);
         }
         return true;
     }
 
-    private void processHeader(
-        XMLStreamReader reader, Document doc, Record record, boolean origin)
-                                     throws ParseException, XMLStreamException {
+    private void processHeader(XMLStreamReader reader, Document doc, Record record, boolean origin)
+                                                                             throws ParseException, XMLStreamException {
         long startTime = System.nanoTime();
         log.trace("Parsing header-information for " + record.getId());
         skipComments(reader);
@@ -201,8 +186,7 @@ public class StreamingDocumentCreator
         }
 
         if (!reader.hasNext()) {
-            throw new ParseException(
-                    "The stream must have at lest one element", 0);
+            throw new ParseException("The stream must have at lest one element", 0);
         }
         reader.next();
         skipComments(reader);
@@ -214,32 +198,28 @@ public class StreamingDocumentCreator
                     "The start element should be %s:%s, but was %s:%s",
                     SUMMA_NAMESPACE, SUMMA_DOCUMENT,
                     reader.getName().getNamespaceURI(), reader.getLocalName()),
-                    reader.getLocation().getCharacterOffset());
+                                     reader.getLocation().getCharacterOffset());
         }
         try {
             //noinspection DuplicateStringLiteralInspection
-            String boostString = getAttributeValue(reader, SUMMA_NAMESPACE,
-                                                   SUMMA_BOOST);
+            String boostString = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_BOOST);
             if (boostString != null) {
                 float boost = Float.parseFloat(boostString);
                 if (origin) {
-                    log.trace("Assigning boost " + boost + " to document for "
-                              + record.getId());
+                    log.trace("Assigning boost " + boost + " to document for " + record.getId());
                     doc.setBoost(boost);
                 } else {
-                    log.trace("Skipping boost " + boost + " to document for "
-                              + record.getId() + " as it is not origin");
+                    log.trace("Skipping boost " + boost + " to document for " + record.getId()
+                              + " as it is not origin");
                 }
             } else {
-                log.trace("No explicit boost for document for "
-                          + record.getId());
+                log.trace("No explicit boost for document for " + record.getId());
             }
         } catch (Exception e) {
-            log.debug("Exception extracting and setting boost for "
-                      + record.getId(), e);
+            log.debug("Exception extracting and setting boost for " + record.getId(), e);
         }
-        log.trace("Extracted header-information for " + record.getId() + " in "
-                  + (System.nanoTime() - startTime) + " ns");
+        log.trace("Extracted header-information for " + record.getId() + " in " + (System.nanoTime() - startTime)
+                  + " ns");
     }
 
     private void skipComments(XMLStreamReader reader) throws
@@ -253,9 +233,8 @@ public class StreamingDocumentCreator
     }
 
     @SuppressWarnings({"UnusedParameters"})
-    private void processBody(XMLStreamReader reader, Document luceneDoc,
-                             Record record, boolean origin)
-            throws ParseException, XMLStreamException, IndexServiceException {
+    private void processBody(XMLStreamReader reader, Document luceneDoc, Record record, boolean origin)
+                                                      throws ParseException, XMLStreamException, IndexServiceException {
         long startTime = System.nanoTime();
 
         // Fields
@@ -267,8 +246,7 @@ public class StreamingDocumentCreator
         while(reader.hasNext()) {
             reader.next();
             skipComments(reader);
-            if (reader.getEventType() == XMLStreamReader.START_ELEMENT
-                && SUMMA_FIELDS.equals(reader.getLocalName())
+            if (reader.getEventType() == XMLStreamReader.START_ELEMENT && SUMMA_FIELDS.equals(reader.getLocalName())
                 && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI())) {
                 log.trace("Found <" + SUMMA_FIELDS + ">. Parsing fields");
                 break;
@@ -291,8 +269,7 @@ public class StreamingDocumentCreator
                     || reader.getEventType() == XMLStreamReader.COMMENT) {
                     // Ignore text and comments in between fields
                 } else {
-                    log.debug("Expected start-element but got "
-                              + XMLUtil.eventID2String(
+                    log.debug("Expected start-element but got " + XMLUtil.eventID2String(
                             reader.getEventType()) + " in " + record);
                 }
                 continue;
@@ -300,16 +277,12 @@ public class StreamingDocumentCreator
             if (!(SUMMA_FIELD.equals(reader.getLocalName()) &&
                   SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
                 log.debug(String.format(
-                        "The expected element was %s:%s, but the received was "
-                        + "%s:%s. Ignoring element",
-                        SUMMA_NAMESPACE, SUMMA_FIELD,
-                        reader.getName().getNamespaceURI(),
-                        reader.getLocalName()));
+                        "The expected element was %s:%s, but the received was %s:%s. Ignoring element",
+                        SUMMA_NAMESPACE, SUMMA_FIELD, reader.getName().getNamespaceURI(), reader.getLocalName()));
                 continue;
             }
             // <field name="author" boost="2.0">Jens Hansen</field>
-            String fieldName = getAttributeValue(reader, SUMMA_NAMESPACE,
-                                                 SUMMA_NAME);
+            String fieldName = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_NAME);
             if (fieldName == null) {
                 throw new ParseException(String.format(
                         "Field without name-attribute in %s", record),
@@ -319,14 +292,12 @@ public class StreamingDocumentCreator
             Float boost = null;
             try {
                 //noinspection DuplicateStringLiteralInspection
-                String boostString = getAttributeValue(reader, SUMMA_NAMESPACE,
-                                                       SUMMA_BOOST);
+                String boostString = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_BOOST);
                 if (boostString != null) {
                     boost = Float.valueOf(boostString);
                 }
             } catch (Exception e) {
-                log.debug("Exception extracting boost for field " + fieldName,
-                          e);
+                log.debug("Exception extracting boost for field " + fieldName, e);
             }
 
             // TODO: Verify how we handle embedded HTML
@@ -337,15 +308,12 @@ public class StreamingDocumentCreator
                 if ("".equals(content)) {
                     continue; // We do not want to store empty content
                 }
-                LuceneIndexField indexField =
-                        addFieldToDocument(descriptor, luceneDoc,
-                                           fieldName, content, boost);
+                LuceneIndexField indexField = addFieldToDocument(descriptor, luceneDoc, fieldName, content, boost);
                 if (indexField.isInFreetext()) {
                     addToFreetext(descriptor, luceneDoc, fieldName, content);
                 }
             } else {
-                log.debug("No content for field " + fieldName + " in "
-                          + record);
+                log.debug("No content for field " + fieldName + " in " + record);
             }
         }
         log.trace("Extracted and added body-information for " + record + " in "
