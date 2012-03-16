@@ -275,6 +275,7 @@ public class SummonSearchNodeTest extends TestCase {
                    DocumentKeys.SEARCH_FILTER, FACET);
         assertHits("There should be at least one hit for query with negative facet", summon,
                    DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, Boolean.TRUE.toString(),
                    DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
         summon.close();
     }
@@ -502,9 +503,13 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
             DocumentKeys.SEARCH_QUERY, "old");
 
-        assertTrue("The filter(old) hit count " + fHitCount + " should differ from query(old) hit count " + qHitCount
-                   + " by more than 100 as filter query apparently does not query parse with default fields",
-                   Math.abs(fHitCount - qHitCount) > 100);
+        assertTrue("The filter(old) hit count " + fHitCount + " should differ less than 100 from query(old) hit count "
+                   + qHitCount + " as summon API 2.0.0 does field expansion on filters",
+                   Math.abs(fHitCount - qHitCount) < 100);
+        // This was only true in the pre-API 2.0.0. Apparently the new API does expands default fields for filters
+//        assertTrue("The filter(old) hit count " + fHitCount + " should differ from query(old) hit count " + qHitCount
+//                   + " by more than 100 as filter query apparently does not query parse with default fields",
+//                   Math.abs(fHitCount - qHitCount) > 100);
     }
 
     public void testFilterVsQuery3() throws RemoteException {
