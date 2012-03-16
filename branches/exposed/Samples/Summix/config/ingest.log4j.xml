@@ -26,6 +26,17 @@
         </layout>
     </appender>
 
+    <appender name="PROCESS_FAILED" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="WARN"/>
+        <param name="File" value="log/process_failed.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="FATAL"/>
@@ -49,7 +60,13 @@
         <appender-ref ref="PROCESS" />
     </logger>
 
-    <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
+    <!-- Records dropped due to errors in the Records (i.e. Records that were expected to pass) go here -->
+    <logger name="process">
+        <level value="warn" />
+        <appender-ref ref="PROCESS_FAILED" />
+    </logger>
+
+    <!-- all loggers inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="FATAL" />
         <appender-ref ref="FULL_LOG" />
