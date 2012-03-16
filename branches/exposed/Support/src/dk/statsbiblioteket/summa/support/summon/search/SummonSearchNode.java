@@ -643,9 +643,9 @@ public class SummonSearchNode extends SearchNodeImpl {
         // Note: summon supports pure negative filters so we do not use
         // DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE for anything
         if (filter != null) { // We allow missing filter
-            if (supportsPureNegative) {
+            if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
                 querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
-            } else if (request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
+            } else {
                 if (query == null) {
                     throw new IllegalArgumentException(
                         "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE

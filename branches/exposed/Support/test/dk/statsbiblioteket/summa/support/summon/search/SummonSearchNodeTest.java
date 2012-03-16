@@ -80,10 +80,8 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         //System.out.println(responses.toXML());
-        assertTrue("The result should contain at least one record",
-                   responses.toXML().contains("<record score"));
-        assertTrue("The result should contain at least one tag",
-                   responses.toXML().contains("<tag name"));
+        assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
+        assertTrue("The result should contain at least one tag", responses.toXML().contains("<tag name"));
     }
 
     public void testShortFormat() throws RemoteException {
@@ -134,9 +132,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     /* This is equivalent to SearchWS#getField */
-    private String getField(
-        SearchNode searcher, String id, String fieldName)
-                                      throws IOException, TransformerException {
+    private String getField(SearchNode searcher, String id, String fieldName) throws IOException, TransformerException {
         String retXML;
 
         Request req = new Request();
@@ -183,8 +179,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
 //        System.out.println(responses.toXML());
-        assertTrue("The result should contain at least one record",
-                   responses.toXML().contains("<record score"));
+        assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
     }
 
     public void testFacetOrder() throws RemoteException {
@@ -310,8 +305,7 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> sortValues = getAttributes(summon, request, "sortValue");
         String lastValue = null;
         for (String sortValue: sortValues) {
-            assertTrue("The sort values should be in unicode order but was "
-                       + Strings.join(sortValues, ", "),
+            assertTrue("The sort values should be in unicode order but was " + Strings.join(sortValues, ", "),
                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
 //            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
@@ -333,19 +327,16 @@ public class SummonSearchNodeTest extends TestCase {
 //        request.put(DocumentKeys.SEARCH_REVERSE, true);
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
-        List<String> fields = getField(
-            summon, request, "PublicationDate_xml_iso");
+        List<String> fields = getField(summon, request, "PublicationDate_xml_iso");
         log.debug("Finished searching");
         String lastValue = null;
         for (String sortValue: fields) {
-            assertTrue("The field values should be in unicode order but was "
-                       + Strings.join(fields, ", "),
+            assertTrue("The field values should be in unicode order but was " + Strings.join(fields, ", "),
                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
 //            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
         }
-        log.debug("Test passed with field values\n"
-                  + Strings.join(fields, "\n"));
+        log.debug("Test passed with field values\n" + Strings.join(fields, "\n"));
     }
 
     public void testSortedSearchRelevance() throws RemoteException {
@@ -387,18 +378,14 @@ public class SummonSearchNodeTest extends TestCase {
                         Strings.join(ids0, ", "), Strings.join(ids1, ", "));
     }
 
-    private void assertNotEquals(
-        String message, String expected, String actual) {
-        assertFalse(
-            message + ".\nExpected: " + expected + "\nActual:   " + actual,
-            expected.equals(actual));
+    private void assertNotEquals(String message, String expected, String actual) {
+        assertFalse(message + ".\nExpected: " + expected + "\nActual:   " + actual,
+                    expected.equals(actual));
     }
 
-    private List<String> getAttributes(
-        SearchNode searcher, Request request, String attributeName)
-                                                        throws RemoteException {
-        final Pattern IDPATTERN = Pattern.compile(
-            "<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
+    private List<String> getAttributes(SearchNode searcher, Request request, String attributeName)
+                                                                                                throws RemoteException {
+        final Pattern IDPATTERN = Pattern.compile("<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
         return getPattern(searcher, request, IDPATTERN);
 /*        ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
@@ -414,9 +401,7 @@ public class SummonSearchNodeTest extends TestCase {
         return result;*/
     }
 
-    private List<String> getField(
-        SearchNode searcher, Request request, String fieldName)
-                                                        throws RemoteException {
+    private List<String> getField(SearchNode searcher, Request request, String fieldName) throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile(
             "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
         return getPattern(searcher, request, IDPATTERN);
@@ -435,9 +420,7 @@ public class SummonSearchNodeTest extends TestCase {
         return result;
     }
 
-    private List<String> getPattern(
-        SearchNode searcher, Request request, Pattern pattern)
-                                                        throws RemoteException {
+    private List<String> getPattern(SearchNode searcher, Request request, Pattern pattern) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         responses.iterator().next().merge(responses.iterator().next());
@@ -482,8 +465,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertNotNull("There should be raw time", rawTime);
         Integer reportedTime = getTiming(responses, "summon.reportedtime");
         assertNotNull("There should be reported time", reportedTime);
-        assertTrue("The reported time (" + reportedTime + ") should be lower "
-                   + "than the raw time (" + rawTime + ")",
+        assertTrue("The reported time (" + reportedTime + ") should be lower than the raw time (" + rawTime + ")",
                    reportedTime <= rawTime);
         log.debug("Timing raw=" + rawTime + ", reported=" + reportedTime);
     }
@@ -493,7 +475,7 @@ public class SummonSearchNodeTest extends TestCase {
         for (String timing: timings) {
             String[] tokens = timing.split(":");
             if (tokens.length == 2 && key.equals(tokens[0])) {
-                    return Integer.parseInt(tokens[1]);
+                return Integer.parseInt(tokens[1]);
             }
         }
         return null;
@@ -501,13 +483,11 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFilterVsQuery() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long qHitCount = getHits(
-            summon, DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
-        long fHitCount = getHits(
-            summon, DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama");
+        long qHitCount = getHits(summon, DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
+        long fHitCount = getHits(summon, DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama");
 
-        assertTrue("The filter hit count " + fHitCount + " should differ from "
-                   + "query hit count " + qHitCount + " by less than 100",
+        assertTrue("The filter hit count " + fHitCount + " should differ from query hit count " + qHitCount
+                   + " by less than 100",
                    Math.abs(fHitCount - qHitCount) < 100);
     }
 
@@ -522,10 +502,8 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
             DocumentKeys.SEARCH_QUERY, "old");
 
-        assertTrue("The filter(old) hit count " + fHitCount + " should differ"
-                   + " from query(old) hit count " + qHitCount
-                   + " by more than 100 as filter query apparently does not "
-                   + "query parse with default fields",
+        assertTrue("The filter(old) hit count " + fHitCount + " should differ from query(old) hit count " + qHitCount
+                   + " by more than 100 as filter query apparently does not query parse with default fields",
                    Math.abs(fHitCount - qHitCount) > 100);
     }
 
@@ -610,28 +588,22 @@ public class SummonSearchNodeTest extends TestCase {
     public void testConvertRangeQueries() throws RemoteException {
         final String QUERY = "foo bar:[10 TO 20] OR baz:[87 TO goa]";
         Map<String, List<String>> params = new HashMap<String, List<String>>();
-        String stripped = new SummonSearchNode(
-            getSummonConfiguration()).convertQuery(QUERY, params);
+        String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
-        assertEquals("The right number of ranges should be extracted",
-                     2, ranges.size());
+        assertEquals("The right number of ranges should be extracted", 2, ranges.size());
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertEquals("Range #2 should be correct", "baz,87:goa", ranges.get(1));
-        assertEquals("The resulting query should be stripped of ranges",
-                     "\"foo\"", stripped);
+        assertEquals("The resulting query should be stripped of ranges", "\"foo\"", stripped);
     }
 
     public void testConvertRangeQueriesEmpty() throws RemoteException {
         final String QUERY = "bar:[10 TO 20]";
         Map<String, List<String>> params = new HashMap<String, List<String>>();
-        String stripped =
-            new SummonSearchNode(
-                getSummonConfiguration()).convertQuery(QUERY, params);
+        String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
-        assertEquals("The right number of ranges should be extracted",
-                     1, ranges.size());
+        assertEquals("The right number of ranges should be extracted", 1, ranges.size());
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertNull("The resulting query should be null", stripped);
     }
@@ -645,8 +617,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFaultyQuoteRemoval() throws RemoteException {
         final String QUERY = "bar:\"foo:zoo\"";
         Map<String, List<String>> params = new HashMap<String, List<String>>();
-        String stripped = new SummonSearchNode(
-            getSummonConfiguration()).convertQuery(QUERY, params);
+        String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNull("RangeFilter should not be defined", params.get("s.rf"));
         assertEquals("The resulting query should unchanged", QUERY, stripped);
     }
@@ -660,8 +631,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         Request request = new Request();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", "
-            + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
+            "{search.document.query:\"" + QUERY + "\", " + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
 //        String r1 = request.toString(true);
 
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -671,8 +641,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         request.clear();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", "
-            + "summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
+            "{search.document.query:\"" + QUERY + "\", " + "summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
   //      String r2 = request.toString(true);
         responses.clear();
         summon.search(request, responses);
@@ -704,8 +673,7 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println("Request 20:  " + r2 + ": " + count20);
 //        System.out.println("Request O15: " + rOld15 + ": " + countOld15);
 //        System.out.println("Request O20: " + rOld20 + ": " + countOld20);
-        assertEquals("The number of hits should not be affected by page size",
-                     count15, count20);
+        assertEquals("The number of hits should not be affected by page size", count15, count20);
     }
 
     // Author can be returned in the field Author_xml (primary) and Author (secondary). If both fields are present,
@@ -729,10 +697,8 @@ public class SummonSearchNodeTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased(
             InteractionAdjuster.CONF_IDENTIFIER, "summon",
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
-        Configuration inner = conf.createSubConfiguration(
-            AdjustingSearchNode.CONF_INNER_SEARCHNODE);
-        inner.set(SearchNodeFactory.CONF_NODE_CLASS,
-                  SummonSearchNode.class.getCanonicalName());
+        Configuration inner = conf.createSubConfiguration(AdjustingSearchNode.CONF_INNER_SEARCHNODE);
+        inner.set(SearchNodeFactory.CONF_NODE_CLASS, SummonSearchNode.class.getCanonicalName());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
 
@@ -757,8 +723,7 @@ public class SummonSearchNodeTest extends TestCase {
             InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
         Configuration inner = conf.createSubConfiguration(
             AdjustingSearchNode.CONF_INNER_SEARCHNODE);
-        inner.set(SearchNodeFactory.CONF_NODE_CLASS,
-                  SummonSearchNode.class.getCanonicalName());
+        inner.set(SearchNodeFactory.CONF_NODE_CLASS, SummonSearchNode.class.getCanonicalName());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
 
@@ -772,8 +737,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("There should be at least one ID", ids.size() > 0);
 
         request.clear();
-        request.put(DocumentKeys.SEARCH_QUERY, IndexUtils.RECORD_FIELD + ":\""
-                                               + ids.get(0) + "\"");
+        request.put(DocumentKeys.SEARCH_QUERY, IndexUtils.RECORD_FIELD + ":\"" + ids.get(0) + "\"");
         List<String> researchIDs = getAttributes(adjusting, request, "id");
         assertTrue("There should be at least one hit for a search for ID '"
                    + ids.get(0) + "'", researchIDs.size() > 0);
