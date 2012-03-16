@@ -254,6 +254,23 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
+    // summon used to support pure negative filters (in 2011) but apparently does not with the 2.0.0-API.
+    // If they change their stance on the issue, we want to swith back to using pure negative filters, as it
+    // does not affect ranking.
+    public void testNegativeFacetsSupport() throws RemoteException {
+        final String QUERY = "foo fighters NOT limits NOT (boo OR bam)";
+        final String FACET = "SubjectTerms:\"united states\"";
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SummonSearchNode.CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, true);
+        SummonSearchNode summon = new SummonSearchNode(conf);
+        assertEquals("There should be zero hits for filter with assumed pure negative faceting support", 0,
+                     getHits(summon,
+                             DocumentKeys.SEARCH_QUERY, QUERY,
+                             DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
+                             DocumentKeys.SEARCH_FILTER, "NOT " + FACET));
+        summon.close();
+    }
+
     public void testQueryWithNegativeFacets() throws RemoteException {
         final String QUERY = "foo";
         final String FACET = "SubjectTerms:\"analysis\"";
@@ -602,7 +619,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("Range #1 should be correct", "bar,10:20", ranges.get(0));
         assertEquals("Range #2 should be correct", "baz,87:goa", ranges.get(1));
         assertEquals("The resulting query should be stripped of ranges",
-                     "\"foo", stripped);
+                     "\"foo\"", stripped);
     }
 
     public void testConvertRangeQueriesEmpty() throws RemoteException {

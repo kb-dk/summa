@@ -47,7 +47,6 @@ import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.rmi.RemoteException;
@@ -215,6 +214,17 @@ public class SummonSearchNode extends SearchNodeImpl {
     public static final String SEARCH_PASSTHROUGH_QUERY = "summon.passthrough.query";
     public static final boolean DEFAULT_PASSTHROUGH_QUERY = false;
 
+    /**
+     * If true, calls to summon assumes that pure negative filters (e.g. "NOT foo NOT bar") are supported.
+     * If false, pure negative filters are handled by rewriting the query to "(query) filter", so if query is "baz"
+     * and the filter is "NOT foo NOT bar", the result is "(baz) NOT foo NOT bar".
+     * Note that rewriting also requires the {@link DocumentKeys#SEARCH_FILTER_PURE_NEGATIVE} parameter to be true.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SUPPORTS_PURE_NEGATIVE_FILTERS = "summon.purenegativefilters.support";
+    public static final boolean DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS = false;
+
 
     private static final DateFormat formatter =
         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
@@ -231,6 +241,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     private String combineMode = DEFAULT_SUMMON_FACETS_COMBINEMODE;
     private boolean defaultResolveLinks = DEFAULT_SUMMON_RESOLVE_LINKS;
     private final Map<String, List<String>> summonDefaultParams;
+    public final boolean supportsPureNegative;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -249,6 +260,8 @@ public class SummonSearchNode extends SearchNodeImpl {
         for (Map.Entry<String, Serializable> entry : conf) {
             convertSummonParam(summonDefaultParams, entry);
         }
+        supportsPureNegative = conf.getBoolean(
+            CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -409,8 +422,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         String summonTiming;
         try {
             Pair<String, String> sums = summonSearch(
-                filter, query, summonSearchParams,
-                collectdocIDs ? facets : null,
+                request, filter, query, summonSearchParams, collectdocIDs ? facets : null,
                 startIndex, maxRecords, resolveLinks, sortKey, reverseSort,responses);
             summonResponse = sums.getKey();
             summonTiming = sums.getValue();
@@ -557,6 +569,8 @@ public class SummonSearchNode extends SearchNodeImpl {
     /**
      * Perform a search in Summon.
      *
+     *
+     * @param request
      * @param filter    a Solr-style filter (same syntax as query).
      * @param query     a Solr-style query.
      * @param summonParams optional extended params for Summon. If not null,
@@ -571,44 +585,39 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param sortKey the field to sort on. If null, default ranking sort is
      *                used.
      * @param reverseSort if true, sort order is reversed.
+     * @param responses results are stored here.
      * @return XML with the search result as per Summon API followed by timing
      *         information.
      * @throws java.rmi.RemoteException if there were an error performing the
      * remote search call.
      */
     private Pair<String, String> summonSearch(
-        String filter, String query, Map<String, List<String>> summonParams,
-        SummonFacetRequest facets, int startIndex,
-        int maxRecords, boolean resolveLinks, String sortKey,
-        boolean reverseSort,ResponseCollection responses) throws RemoteException {
+        Request request, String filter, String query, Map<String, List<String>> summonParams, SummonFacetRequest facets,
+        int startIndex, int maxRecords, boolean resolveLinks, String sortKey, boolean reverseSort,
+        ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
         int startpage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
         @SuppressWarnings({"UnnecessaryLocalVariable"})
         int perpage = maxRecords;
-        log.trace("Calling simpleSearch(" + query + ", " + facets + ", "
-                  + startIndex + ", " + maxRecords + ")");
+        log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> querymap = buildSummonQuery(
-               filter, query, facets, startpage, perpage, sortKey, reverseSort);
+            request, filter, query, facets, startpage, perpage, sortKey, reverseSort);
         if (summonParams != null) {
             querymap.putAll(summonParams);
         }
 
         Date date = new Date();
-        String idstring = computeIdString(
-            "application/xml", summonDateFormat.format(date), host, restCall,
-            querymap);
+        String idstring = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, querymap);
         String queryString = computeSortedQueryString(querymap, true);
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
         String result;
 
         try {
-            result = getData("http://" + host, restCall + "?" +
-                    queryString, date, idstring, null,responses);
+            result = getData("http://" + host, restCall + "?" + queryString, date, idstring, null,responses);
         } catch (Exception e) {
             throw new RemoteException(
-                "Unable to perform remote call to "  + host + restCall
-                + " with argument '" + queryString, e);
+                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString, e);
         }
         long prefixIDs = -System.currentTimeMillis();
         String retval = prefixIDs(result, idPrefix);
@@ -620,25 +629,38 @@ public class SummonSearchNode extends SearchNodeImpl {
         linkResolve += System.currentTimeMillis();
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(
-            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs
-                    + "|summon.linkresolve:" + linkResolve);
+            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs + "|summon.linkresolve:"
+                    + linkResolve);
     }
 
     private Map<String, List<String>> buildSummonQuery(
-        String filter, String query, SummonFacetRequest facets,
+        Request request, String filter, String query, SummonFacetRequest facets,
         int startpage, int perpage, String sortKey, boolean reverseSort) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
         querymap.put("s.dym", Arrays.asList("true"));
         querymap.put("s.ho",  Arrays.asList("true"));
+        // Note: summon supports pure negative filters so we do not use
+        // DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE for anything
+        if (filter != null) { // We allow missing filter
+            if (supportsPureNegative) {
+                querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
+            } else if (request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
+                if (query == null) {
+                    throw new IllegalArgumentException(
+                        "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
+                        + "' is not possible in summon. Filter is '" + filter + "'");
+                }
+                query = "(" + query + ") " + filter;
+                log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
+                          + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and summon is set up to not support pure "
+                          + "negative filters natively. resulting query is '" + query + "'");
+            }
+        }
         if (query != null) { // We allow missing query
             querymap.put("s.q",   Arrays.asList(query));
         }
-        // Note: summon supports pure negative filters so we do not use
-        // DocumentKeys.SEARCH_FILTER_PURENEGATIVE for anything
-        if (filter != null) { // We allow missing filter
-            querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
-        }
+
         querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
         querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
 
@@ -670,14 +692,14 @@ public class SummonSearchNode extends SearchNodeImpl {
         return querymap;
     }
 
-    /**
+    /*
      * Add to an existing Summon search using commands
      * @param queryString The query string identifiying an existing Summon search
      * @param resolveLinks whether or not to call the link resolver to resolve openurls to actual links
      * @param commands The commands to apply to the search
      * @return A String containing XML describing the search result
      */
-    public String continueSearch(String queryString, boolean resolveLinks, String... commands) {
+/*    public String continueSearch(String queryString, boolean resolveLinks, String... commands) {
         long methodStart = System.currentTimeMillis();
         log.trace("Calling continueSearch(" + queryString + ", " + commands + ")");
         String result = "";
@@ -733,7 +755,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         log.trace("continueSearch done in " + (System.currentTimeMillis() - methodStart) + "ms");
         return retval;
     }
-
+  */
     private static String computeIdString(String acceptType, String  date, String  host, String  path,
                                           Map<String, List<String>> queryParameters) {
         return appendStrings(acceptType, date, host, path, computeSortedQueryString(queryParameters, false));
@@ -907,7 +929,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false, new ResponseCollection()).getKey();
+            null, null, "ID:" + id, null, null, 1, 1, false, null, false, new ResponseCollection()).getKey();
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -947,7 +969,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Gets a record from Summon
      * @param id Summon id
      * @return A String containing a Summon record in XML
-     * @throws java.rmi.RemoteException
+     * @throws java.rmi.RemoteException if the Record could not be retrieved.
      */
     public String getRecord(String id) throws RemoteException {
         return getRecord(id, false);
@@ -958,7 +980,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param id Summon id
      * @param resolveLinks Whether or not to resolve links through the link resolver
      * @return A String containing a Summon record in XML
-     * @throws java.rmi.RemoteException
+     * @throws java.rmi.RemoteException if the Record could not be retrieved.
      */
     public String getRecord(String id, boolean resolveLinks)
                                                         throws RemoteException {
@@ -969,7 +991,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, "ID:" + id, null, null, 1, 1, false, null, false,new ResponseCollection()).getKey();
+            null, null, "ID:" + id, null, null, 1, 1, false, null, false,new ResponseCollection()).getKey();
         if (resolveLinks) {
             temp = linkResolve(temp);
         }
@@ -1015,7 +1037,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         return retval.toString();
     }
 
-    /**
+    /*
      * Adds links elements to a Summon search result based on the contained openurls.
      * @param searchResult A String containing XML with the result from a Summon query
      * @return The searchResult where the documents have been enriched with links
