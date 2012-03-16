@@ -58,11 +58,7 @@
     <logger name="process">
         <level value="debug" />
         <appender-ref ref="PROCESS" />
-    </logger>
-
-    <!-- Records dropped due to errors in the Records (i.e. Records that were expected to pass) go here -->
-    <logger name="process">
-        <level value="warn" />
+        <!-- Records dropped due to errors in the Records (i.e. Records that were expected to pass) go here -->
         <appender-ref ref="PROCESS_FAILED" />
     </logger>
 
