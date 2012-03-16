@@ -206,9 +206,9 @@ public class QueryRewriterIntegrationTest extends TestCase {
         checkQuery("foo AND bar OR baz");
     }
 
-    public void testRewriteBZ2416() throws RemoteException, ParseException {
+/*    public void testRewriteBZ2416() throws RemoteException, ParseException {
         checkQuery("Ungdomsuddannelse - Sociale Publikationer");
-    }
+    }*/
 
     public void testRewriteWithField() throws RemoteException, ParseException {
         checkQuery("chaos -recordBase:sb*");
