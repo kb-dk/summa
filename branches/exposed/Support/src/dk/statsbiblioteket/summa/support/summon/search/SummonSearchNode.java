@@ -168,8 +168,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Optional. Default is 15.
      * See http://api.summon.serialssolutions.com/help/api/search/commands/add-facet-field
      */
-    public static final String CONF_SUMMON_FACETS_DEFAULTPAGESIZE =
-        "summon.facets.defaultpagesize";
+    public static final String CONF_SUMMON_FACETS_DEFAULTPAGESIZE = "summon.facets.defaultpagesize";
     public static final int DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE = 15;
 
     /**
@@ -177,8 +176,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      * Optional. Default is 'and'. Can only be 'and' or 'or'.
      * See http://api.summon.serialssolutions.com/help/api/search/commands/add-facet-field
      */
-    public static final String CONF_SUMMON_FACETS_COMBINEMODE =
-        "summon.facets.combinemode";
+    public static final String CONF_SUMMON_FACETS_COMBINEMODE = "summon.facets.combinemode";
     public static final String DEFAULT_SUMMON_FACETS_COMBINEMODE = "and";
 
     /**
@@ -188,12 +186,10 @@ public class SummonSearchNode extends SearchNodeImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_SUMMON_RESOLVE_LINKS =
-        "summon.resolvelinks";
+    public static final String CONF_SUMMON_RESOLVE_LINKS = "summon.resolvelinks";
     public static final boolean DEFAULT_SUMMON_RESOLVE_LINKS = false;
 
-    public static final String SEARCH_SUMMON_RESOLVE_LINKS =
-        "search.summon.resolvelinks";
+    public static final String SEARCH_SUMMON_RESOLVE_LINKS = "search.summon.resolvelinks";
 
     /**
      * Properties with this prefix are added to the summon query. Values are
@@ -208,8 +204,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     /**
      * Search-time variation of {@link #CONF_SUMMON_PARAM_PREFIX}.
      */
-    public static final String SEARCH_SUMMON_PARAM_PREFIX =
-        CONF_SUMMON_PARAM_PREFIX;
+    public static final String SEARCH_SUMMON_PARAM_PREFIX = CONF_SUMMON_PARAM_PREFIX;
 
     /**
      * If true, the SummonSearchNode does not attempt to extract facet-query from the query and passes the query and
@@ -244,15 +239,11 @@ public class SummonSearchNode extends SearchNodeImpl {
         accessID =   conf.getString(CONF_SUMMON_ACCESSID);
         accessKey =  conf.getString(CONF_SUMMON_ACCESSKEY);
         idPrefix =   conf.getString(CONF_SUMMON_IDPREFIX, idPrefix);
-        defaultPageSize = conf.getInt(
-            CONF_SUMMON_DEFAULTPAGESIZE, defaultPageSize);
-        defaultFacetPageSize = conf.getInt(
-            CONF_SUMMON_FACETS_DEFAULTPAGESIZE, defaultFacetPageSize);
+        defaultPageSize = conf.getInt(CONF_SUMMON_DEFAULTPAGESIZE, defaultPageSize);
+        defaultFacetPageSize = conf.getInt(CONF_SUMMON_FACETS_DEFAULTPAGESIZE, defaultFacetPageSize);
         defaultFacets = conf.getString(CONF_SUMMON_FACETS, defaultFacets);
-        combineMode = conf.getString(
-            CONF_SUMMON_FACETS_COMBINEMODE, combineMode);
-        defaultResolveLinks = conf.getBoolean(
-            CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
+        combineMode = conf.getString(CONF_SUMMON_FACETS_COMBINEMODE, combineMode);
+        defaultResolveLinks = conf.getBoolean(CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
         responseBuilder = new SummonResponseBuilder(conf);
         summonDefaultParams = new HashMap<String, List<String>>();
         for (Map.Entry<String, Serializable> entry : conf) {
@@ -283,9 +274,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         if (entry.getValue() instanceof String) {
             summonParam.put(key, Arrays.asList((String)entry.getValue()));
             if (log.isTraceEnabled()) {
-                log.trace(
-                    "convertSummonParam assigning " + key + ":"
-                    + entry.getValue());
+                log.trace("convertSummonParam assigning " + key + ":" + entry.getValue());
             }
         } else if (entry.getValue() instanceof List) {
             ArrayList<String> values = new ArrayList<String>();

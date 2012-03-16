@@ -345,9 +345,7 @@ public class InteractionAdjuster implements Configurable {
         }
     }
 
-    private String rewriteQuery(
-        final String query, final ManyToManyMapper... maps)
-                                                         throws ParseException {
+    private String rewriteQuery(final String query, final ManyToManyMapper... maps) throws ParseException {
         return new QueryRewriter(
             new QueryRewriter.Event() {
 
@@ -373,8 +371,7 @@ public class InteractionAdjuster implements Configurable {
                         }
                         sw.append(term.text());
                     }
-                    List<Pair<String, String>> terms = makeTerms(
-                        field, sw.toString(), maps);
+                    List<Pair<String, String>> terms = makeTerms(field, sw.toString(), maps);
                     Query result = makeQuery(terms, query.getBoost());
                     if (result instanceof PhraseQuery) {
                         ((PhraseQuery)result).setSlop(query.getSlop());
@@ -392,12 +389,10 @@ public class InteractionAdjuster implements Configurable {
                 		return unsupportedQuery;
                 	}                    
                     
-                    List<Pair<String, String>> terms = makeTerms(
-                        query.getTerm().field(), query.getTerm().text(), maps);
+                    List<Pair<String, String>> terms = makeTerms(query.getTerm().field(), query.getTerm().text(), maps);
                     Query result = makeQuery(terms, query.getBoost());
                     if (log.isTraceEnabled()) {
-                        log.trace("rewriteQuery(query) changed " + query
-                                  + " to " + result);
+                        log.trace("rewriteQuery(query) changed " + query + " to " + result);
                     }
                     return result;
                 }
@@ -452,8 +447,7 @@ public class InteractionAdjuster implements Configurable {
                             @Override
                             public Query createQuery(String field) {
                                 return new FuzzyQuery(
-                                    new Term(field,new BytesRef(
-                                        query.getTerm().bytes())),
+                                    new Term(field,new BytesRef(query.getTerm().bytes())),
                                     query.getMinSimilarity(),
                                     query.getPrefixLength());
                             }
@@ -462,8 +456,7 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(Query query) {
-                    log.trace("Ignoring query of type "
-                              + query.getClass().getSimpleName());
+                    log.trace("Ignoring query of type " + query.getClass().getSimpleName());
                     return query;
                 }
             }).rewrite(query);
@@ -523,8 +516,7 @@ public class InteractionAdjuster implements Configurable {
 
     private Query makeQuery(List<Pair<String, String>> terms, float boost) {
         if (terms.size() == 1) {
-            Query q = createPhraseOrTermQuery(
-                terms.get(0).getKey(), terms.get(0).getValue());
+            Query q = createPhraseOrTermQuery(terms.get(0).getKey(), terms.get(0).getValue());
             q.setBoost(boost);
             return q;
         }

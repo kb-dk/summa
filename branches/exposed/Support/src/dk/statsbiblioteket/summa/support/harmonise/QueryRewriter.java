@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.support.harmonise;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -37,6 +38,17 @@ import java.io.Reader;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, hsm")
 public class QueryRewriter {
+
+    /**
+     * Controls whether toString on BooleanQueries with all-MUST clauses appends a '+' in front of all terms.
+     * True means that a '+' is appended. Even though this should ultimately parse to the same (assuming that the
+     * searcher uses AND as default), Solr DisMax does not like explicit '+' and falls back to standard query parsing.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_EXPLICIT_MUST = "queryrewriter.explicit.must";
+    public static final boolean DEFAULT_EXPLICIT_MUST = false;
+
 
     /**
      * A simple callback that fires when the rewriter encounters Queries.
@@ -124,23 +136,41 @@ public class QueryRewriter {
 
     private Event event;
     private QueryParser queryParser;
+    private final boolean explicitPlus;
 
     /**
      * Constructs a new QueryRewriter.
      *
-     * @param event the event to be fired on all Term queries
+     * @param event the event to be fired on all sub-queries
+     * @deprecated use the full constructor {@link QueryRewriter#QueryRewriter(Configuration, QueryParser, Event)} as
+     *             a QueryParser matching the underlying QueryParser should ensure the best result.
      */
     public QueryRewriter(Event event) {
+        this(null, null, event);
+    }
+
+    /**
+     * @param conf        specific setup for the QueryRewriter. null is allowed.
+     * @param queryParser should be comparable to the parser used by the intended searcher. If null, a standard Lucene
+     *                    WhitespaceTokenizer will be used inside of a plain analyzer.
+     * @param event fired on all sub-queries.
+     */
+    public QueryRewriter(Configuration conf, QueryParser queryParser, Event event) {
         this.event = event;
+        if (queryParser == null) {
+            this.queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
+                @Override
+                public TokenStream tokenStream(String s, Reader reader) {
+                    return new WhitespaceTokenizer(Version.LUCENE_31, reader);
+                }
+            });
 
-        queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
-            @Override
-            public TokenStream tokenStream(String s, Reader reader) {
-                return new WhitespaceTokenizer(Version.LUCENE_31, reader);
-            }
-        });
-
-        queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+            this.queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+        } else {
+            this.queryParser = queryParser;
+        }
+        explicitPlus = conf == null ? DEFAULT_EXPLICIT_MUST :
+                       conf.getBoolean(CONF_EXPLICIT_MUST, DEFAULT_EXPLICIT_MUST);
     }
 
     /**
@@ -229,11 +259,10 @@ public class QueryRewriter {
     This method implicitly expects the searcher to use AND as default. The omission of + when all clauses are MUST is
     necessary as the Solr DisMax query parser apparently does not accept "+foo +bar".
      */
-    private String booleanQueryToString(BooleanQuery query) {
+    private String booleanQueryToString(BooleanQuery booleanQuery) {
         // convert the boolean query to a string recursively
-        BooleanQuery booleanQuery = (BooleanQuery) query;
         String inner = "";
-        boolean onlyMust = containsOnlyMust(booleanQuery);
+        boolean onlyMust = containsOnlyMust(booleanQuery) && !explicitPlus;
         for (int i = 0; i < booleanQuery.getClauses().length; i++) {
             BooleanClause currentClause = booleanQuery.getClauses()[i];
             switch (currentClause.getOccur()) {

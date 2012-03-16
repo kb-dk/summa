@@ -1,5 +1,6 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -43,12 +44,15 @@ public class QueryRewriterIntegrationTest extends TestCase {
         super.setUp();
 
         summon = SummonTestHelper.createSummonSearchNode();
-        requestRewriter = new QueryRewriter(new QueryRewriter.Event() {
-            @Override
-            public Query onQuery(TermQuery query) {
-                return query;
-            }
-        });
+        requestRewriter = new QueryRewriter(
+            Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, false),
+            null,
+            new QueryRewriter.Event() {
+                @Override
+                public Query onQuery(TermQuery query) {
+                    return query;
+                }
+            });
     }
 
     @Override
