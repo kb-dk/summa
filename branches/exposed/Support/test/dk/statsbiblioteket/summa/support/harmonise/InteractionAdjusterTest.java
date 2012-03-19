@@ -1,9 +1,7 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
-import com.sun.xml.internal.messaging.saaj.soap.ver1_1.Fault1_1Impl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
-import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
@@ -13,12 +11,10 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.support.lucene.search.sort.ReusableSortComparator;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import org.apache.poi.hssf.record.formula.functions.Search;
+import junit.framework.TestSuite;
 
 import java.io.IOException;
 import java.io.Serializable;
