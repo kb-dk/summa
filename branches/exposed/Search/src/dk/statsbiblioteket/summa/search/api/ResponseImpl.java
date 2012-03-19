@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.index.codecs.preflex.SegmentTermPositions;
 
 import java.io.Serializable;
 
