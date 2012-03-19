@@ -45,19 +45,23 @@ import java.io.StringWriter;
 import java.util.*;
 
 /**
- * Acts as a transformer of requests and responses. Queries can be rewritten
- * with weight-adjustment of terms, scores for returned documents can be
- * tweaked.
+ * Acts as a transformer of requests and responses. Queries can be rewritten with weight-adjustment of terms, scores for
+ * returned documents can be tweaked.
  * </p><p>
- * IMPORTANT: Search-arguments for this adjuster are special as they should be
- * prepended by an identifier that matches the adjuster. If no identifier is
- * given, the argument will be applied to all adjusters.
+ * IMPORTANT: Search-arguments for this adjuster are special as they should be prepended by an identifier that matches
+ * the adjuster. If no identifier is given, the argument will be applied to all adjusters.
+ * </p><p>
+ * IMPORTANT: Specific for score and multiply is the possibility for specifying special behaviour when the query
+ * is simple by prepending with {@code adjusterid.simple.}. If the query is simple and the simple-prefix is
+ * specified, it overrides the default score and multiply for the adjuster with the same id. A simple query is
+ * specified as a non-qualified term-query e.g. {@code 'foo'} or {@code '"foo"^1.2'} or a BooleanQuery of TermQuerys
+ * that are all specified as neutral or required e.g. {@code 'foo bar'} or {@code '+"foo"^1.2 +"bar"^0.9'}, but not
+ * {@code '+"foo"^1.2 -"bar"^0.9'}.
  * </p><p>
  * Limitations: Document field and facet field replacement is 1:1.
  *              Tag replacement is 1:n.
  * </p><p>
- * Note that there are CONF-equivalents to some SEARCH-arguments. Effects are
- * cumulative.
+ * Note that there are CONF-equivalents to some SEARCH-arguments. Effects are cumulative.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -68,10 +72,8 @@ public class InteractionAdjuster implements Configurable {
     private static Log log = LogFactory.getLog(InteractionAdjuster.class);
 
     /**
-     * The id for this search adjuster. All search-time arguments must be
-     * prepended with this id and a dot.
-     * Example: The id is 'remote_a' and the returned scores should be
-     * multiplied by 1.5. The search-argument must be
+     * The id for this search adjuster. All search-time arguments must be prepended with this id and a dot.
+     * Example: The id is 'remote_a' and the returned scores should be multiplied by 1.5. The search-argument must be
      * {@code remote_a.adjust.score.multiply=1.5}.
      */
     public static final String CONF_IDENTIFIER = "adjuster.id";
@@ -85,16 +87,12 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_ADJUST_ENABLED = SEARCH_ADJUST_ENABLED;
     public static final boolean DEFAULT_ADJUST_ENABLED = true;
 
-    public static final String SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED =
-        "adjuster.response.fields.enabled";
-    public static final String CONF_ADJUST_RESPONSE_FIELDS_ENABLED =
-        SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED;
+    public static final String SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED = "adjuster.response.fields.enabled";
+    public static final String CONF_ADJUST_RESPONSE_FIELDS_ENABLED = SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED;
     public static final boolean DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED = true;
 
-    public static final String SEARCH_ADJUST_RESPONSE_FACETS_ENABLED =
-        "adjuster.response.facets.enabled";
-    public static final String CONF_ADJUST_RESPONSE_FACETS_ENABLED =
-        SEARCH_ADJUST_RESPONSE_FACETS_ENABLED;
+    public static final String SEARCH_ADJUST_RESPONSE_FACETS_ENABLED = "adjuster.response.facets.enabled";
+    public static final String CONF_ADJUST_RESPONSE_FACETS_ENABLED = SEARCH_ADJUST_RESPONSE_FACETS_ENABLED;
     public static final boolean DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED = true;
 
     /**
@@ -105,13 +103,26 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_ADJUST_SCORE_ADD = SEARCH_ADJUST_SCORE_ADD;
 
     /**
+     * Add a constant to returned scores for documents from simple queries (see the JavaDoc for the class for details).
+     * Additions are performed after multiplications.
+     */
+    public static final String SEARCH_SIMPLE_ADJUST_SCORE_ADD = "simple.adjuster.score.add";
+    public static final String CONF_SIMPLE_ADJUST_SCORE_ADD = SEARCH_SIMPLE_ADJUST_SCORE_ADD;
+
+    /**
      * Multiply the returned scores for documents with a constant.
      * Multiplications are performed before additions.
      */
-    public static final String SEARCH_ADJUST_SCORE_MULTIPLY =
-        "adjuster.score.multiply";
-    public static final String CONF_ADJUST_SCORE_MULTIPLY =
-        SEARCH_ADJUST_SCORE_MULTIPLY;
+    public static final String SEARCH_ADJUST_SCORE_MULTIPLY = "adjuster.score.multiply";
+    public static final String CONF_ADJUST_SCORE_MULTIPLY = SEARCH_ADJUST_SCORE_MULTIPLY;
+
+    /**
+     * Multiply the returned scores for documents with a constant if they resulted from a simple query (see the JavaDoc
+     * for the class for details).
+     * Multiplications are performed before additions.
+     */
+    public static final String SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY = "simple.adjuster.score.multiply";
+    public static final String CONF_SIMPLE_ADJUST_SCORE_MULTIPLY = SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY;
 
     /**
      * Maps from field names to field names, one way when rewriting queries,
@@ -127,23 +138,19 @@ public class InteractionAdjuster implements Configurable {
      * Optional. Default is no rewriting.
      */
     // TODO: Handle many-to-many re-writing
-    public static final String CONF_ADJUST_DOCUMENT_FIELDS =
-        "adjuster.document.fields";
-    public static final String
-        SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
+    public static final String CONF_ADJUST_DOCUMENT_FIELDS = "adjuster.document.fields";
+    public static final String SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
     
     /**
-     * Fields that are rewritten to a term that match nothing at summon
+     * Fields that are rewritten to a term that match nothing in the searcher.
      */
-    public static final String
-       CONF_ADJUST_UNSUPPORTED_FIELDS = "adjuster.document.unsupported.fields";
+    public static final String CONF_ADJUST_UNSUPPORTED_FIELDS = "adjuster.document.unsupported.fields";
         
     /**
-     * Query that match nothing at summon (ie. year:991234)
+     * Query that match nothing in the searcher (ie. year:991234)
      */
-    public static final String
-      CONF_ADJUST_UNSUPPORTED_QUERY= "adjuster.document.unsupported.query";
+    public static final String CONF_ADJUST_UNSUPPORTED_QUERY= "adjuster.document.unsupported.query";
            
     
     /**
@@ -160,10 +167,8 @@ public class InteractionAdjuster implements Configurable {
      * Optional. Default is no rewriting.
      */
     // TODO: Handle many-to-many re-writing
-    public static final String CONF_ADJUST_FACET_FIELDS =
-        "adjuster.facet.fields";
-    public static final String 
-        SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
+    public static final String CONF_ADJUST_FACET_FIELDS = "adjuster.facet.fields";
+    public static final String SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
     
     /**
      * Maps, extends and contracts tag names for returned facet results.
@@ -179,8 +184,10 @@ public class InteractionAdjuster implements Configurable {
 
     private final String id;
     private final String prefix;
-    private double baseFactor = 1.0;
-    private double baseAddition = 0.0;
+    private double baseFactor;
+    private double baseAddition;
+    private double simpleBaseFactor;
+    private double simpleBaseAddition;
     private ManyToManyMapper defaultDocumentFields = null;
     private ManyToManyMapper defaultFacetFields = null;
     private List<TagAdjuster> tagAdjusters = null;
@@ -190,26 +197,30 @@ public class InteractionAdjuster implements Configurable {
     private boolean adjustResponseFieldsEnabled;
     private boolean adjustResponseFacetsEnabled;
 
-    public InteractionAdjuster(Configuration conf)
-                                                 throws ConfigurationException {
+    public InteractionAdjuster(Configuration conf) throws ConfigurationException {
         id = conf.getString(CONF_IDENTIFIER);
         enabled = conf.getBoolean(CONF_ADJUST_ENABLED, DEFAULT_ADJUST_ENABLED);
         prefix = id + ".";
-        baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, baseFactor);
-        baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, baseAddition);
+
+        baseFactor = conf.getDouble(CONF_ADJUST_SCORE_MULTIPLY, 1.0);
+        baseFactor *= conf.getDouble(prefix + CONF_ADJUST_SCORE_MULTIPLY, 1.0);
+        simpleBaseFactor = conf.getDouble(CONF_SIMPLE_ADJUST_SCORE_MULTIPLY, baseFactor);
+        simpleBaseFactor *= conf.getDouble(prefix + CONF_SIMPLE_ADJUST_SCORE_MULTIPLY, 1.0);
+
+        baseAddition = conf.getDouble(CONF_ADJUST_SCORE_ADD, 0.0);
+        baseAddition += conf.getDouble(prefix + CONF_ADJUST_SCORE_ADD, 0.0);
+        simpleBaseAddition = conf.getDouble(CONF_SIMPLE_ADJUST_SCORE_ADD, baseAddition);
+        simpleBaseAddition += conf.getDouble(prefix + CONF_SIMPLE_ADJUST_SCORE_ADD, 0.0);
+
         adjustResponseFieldsEnabled = conf.getBoolean(
-            CONF_ADJUST_RESPONSE_FIELDS_ENABLED,
-            DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
+            CONF_ADJUST_RESPONSE_FIELDS_ENABLED, DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
         adjustResponseFacetsEnabled = conf.getBoolean(
-            CONF_ADJUST_RESPONSE_FACETS_ENABLED,
-            DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED);
+            CONF_ADJUST_RESPONSE_FACETS_ENABLED, DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
-            defaultDocumentFields = new ManyToManyMapper(
-                conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS));
+            defaultDocumentFields = new ManyToManyMapper(conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
-            defaultFacetFields = new ManyToManyMapper(
-                conf.getStrings(CONF_ADJUST_FACET_FIELDS));
+            defaultFacetFields = new ManyToManyMapper(conf.getStrings(CONF_ADJUST_FACET_FIELDS));
         }              
         if (conf.valueExists(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> taConfs;
@@ -217,9 +228,8 @@ public class InteractionAdjuster implements Configurable {
                 taConfs = conf.getSubConfigurations(CONF_ADJUST_FACET_TAGS);
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException(
-                    "Expected a list of sub configurations for key "
-                    + CONF_ADJUST_FACET_TAGS + " but the current Configuration "
-                    + "does not support them", e);
+                    "Expected a list of sub configurations for key " + CONF_ADJUST_FACET_TAGS + " but the current "
+                    + "Configuration does not support them", e);
             }
             tagAdjusters = new ArrayList<TagAdjuster>(taConfs.size());
             for (Configuration tagConf: taConfs) {
@@ -239,16 +249,12 @@ public class InteractionAdjuster implements Configurable {
         }
                                
         log.debug(String.format(
-            "Constructed search adjuster with id='%s', enabled=%b, "
-            + "baseFactor=%f, baseAddition=%f, "
-            + "adjustingDocumentFields='%s', "
-            + "adjustingFacetFields='%s', tagAdjusters=%d, "
+            "Constructed search adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
+            + "adjustingDocumentFields='%s', adjustingFacetFields='%s', tagAdjusters=%d, "
             + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
             id, enabled, baseFactor, baseAddition,
-            conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS,
-                            new ArrayList<String>(0)),
-            conf.getStrings(CONF_ADJUST_FACET_FIELDS,
-                            new ArrayList<String>(0)),
+            conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS, new ArrayList<String>(0)),
+            conf.getStrings(CONF_ADJUST_FACET_FIELDS, new ArrayList<String>(0)),
             tagAdjusters == null ? 0 : tagAdjusters.size(),
             adjustResponseFieldsEnabled, adjustResponseFacetsEnabled));
     }
@@ -265,10 +271,10 @@ public class InteractionAdjuster implements Configurable {
      */
     public Request rewrite(Request request) {
         log.trace("rewrite called");
-        String incomming=null;
+        String incoming=null;
         
         if (log.isDebugEnabled()) {
-        incomming=request.toString();        	
+            incoming=request.toString();
         }
         
         Request adjusted = clone(request);
@@ -284,7 +290,7 @@ public class InteractionAdjuster implements Configurable {
         }
        
         if (log.isDebugEnabled()) {
-          log.debug("Query Request:" + incomming + " Query rewritten:"+adjusted);
+          log.debug("Query Request:" + incoming + " Query rewritten:"+adjusted);
           
         }
         return adjusted;
@@ -308,22 +314,18 @@ public class InteractionAdjuster implements Configurable {
 
         if (documentFieldMap == null && facetFieldMap == null &&
             tagAdjusters == null) {
-            log.trace("No document fields, facet fields or tag adjusters for "
-                      + "rewriteQuery");
+            log.trace("No document fields, facet fields or tag adjusters for rewriteQuery");
             return;
         }
 
-        log.trace("Rewriting fields and content in document filter, query and"
-                  + " sort");
+        log.trace("Rewriting fields and content in document filter, query and sort");
         if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
             request.put(DocumentKeys.SEARCH_FILTER, rewriteQuery(
-                request.getString(DocumentKeys.SEARCH_FILTER),
-                documentFieldMap, facetFieldMap));
+                request.getString(DocumentKeys.SEARCH_FILTER), documentFieldMap, facetFieldMap));
         }
         if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
             request.put(DocumentKeys.SEARCH_QUERY, rewriteQuery(
-                request.getString(DocumentKeys.SEARCH_QUERY),
-                documentFieldMap, facetFieldMap));
+                request.getString(DocumentKeys.SEARCH_QUERY), documentFieldMap, facetFieldMap));
         }
         if (documentFieldMap != null
             && request.containsKey(DocumentKeys.SEARCH_SORTKEY)) {
@@ -332,21 +334,18 @@ public class InteractionAdjuster implements Configurable {
             if (replaced != null) {
                 if (replaced.size()> 1) {
                     // TODO: Can't we do this with Lucene?
-                    log.warn("Warning: The sort key '" + key + "' will be "
-                             + "replaced with multiple values "
+                    log.warn("Warning: The sort key '" + key + "' will be replaced with multiple values "
                              + Strings.join(replaced, ", "));
-                    request.put(DocumentKeys.SEARCH_SORTKEY,
-                                Strings.join(replaced, ", "));
+                    request.put(DocumentKeys.SEARCH_SORTKEY, Strings.join(replaced, ", "));
                 } else {
-                    request.put(DocumentKeys.SEARCH_SORTKEY,
-                                replaced.iterator().next());
+                    request.put(DocumentKeys.SEARCH_SORTKEY, replaced.iterator().next());
                 }
             }
         }
     }
 
     private String rewriteQuery(final String query, final ManyToManyMapper... maps) throws ParseException {
-        return new QueryRewriter(
+        return new QueryRewriter(null, null, // TODO: Consider supplying the SummaAnalyzer
             new QueryRewriter.Event() {
 
                 // For phrases we only replace the field (if any)
@@ -409,10 +408,8 @@ public class InteractionAdjuster implements Configurable {
                         query, query.getField(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
-                                return new TermRangeQuery(
-                                    field, query.getLowerTerm(),
-                                    query.getUpperTerm(), query.includesLower(),
-                                    query.includesUpper());
+                                return new TermRangeQuery(field, query.getLowerTerm(), query.getUpperTerm(),
+                                                          query.includesLower(), query.includesUpper());
                             }
                         }, maps);
                 }
@@ -429,8 +426,7 @@ public class InteractionAdjuster implements Configurable {
                             @Override
                             public Query createQuery(String field) {
                                 return new PrefixQuery(
-                                    new Term(field,new BytesRef(
-                                        query.getPrefix().bytes())));
+                                    new Term(field,new BytesRef(query.getPrefix().bytes())));
                             }
                         }, maps);
                 }
@@ -447,9 +443,8 @@ public class InteractionAdjuster implements Configurable {
                             @Override
                             public Query createQuery(String field) {
                                 return new FuzzyQuery(
-                                    new Term(field,new BytesRef(query.getTerm().bytes())),
-                                    query.getMinSimilarity(),
-                                    query.getPrefixLength());
+                                    new Term(field, new BytesRef(query.getTerm().bytes())),
+                                    query.getMinSimilarity(), query.getPrefixLength());
                             }
                         }, maps);
                 }
@@ -586,15 +581,13 @@ public class InteractionAdjuster implements Configurable {
 
     private void rewriteFacetFields(Request request) {
         log.trace("rewriteFacetFields called");
-        ManyToManyMapper facetFieldMap = resolveMap(
-            request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
+        ManyToManyMapper facetFieldMap = resolveMap(request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (facetFieldMap == null) {
             return;
         }
         log.trace("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
-            List<String> facets = request.getStrings(
-                FacetKeys.SEARCH_FACET_FACETS);
+            List<String> facets = request.getStrings(FacetKeys.SEARCH_FACET_FACETS);
             List<String> adjusted = new ArrayList<String>(facets.size() * 2);
             for (String facet: facets) {
                 if (facetFieldMap.getForward().containsKey(facet)) {
@@ -604,8 +597,7 @@ public class InteractionAdjuster implements Configurable {
                     adjusted.add(facet);
                 }
             }
-            request.put(FacetKeys.SEARCH_FACET_FACETS,
-                        Strings.join(adjusted, ", "));
+            request.put(FacetKeys.SEARCH_FACET_FACETS, Strings.join(adjusted, ", "));
         }
     }
 
@@ -645,16 +637,12 @@ public class InteractionAdjuster implements Configurable {
             return;
         }
         adjustDocuments(request, responses);
-        responses.addTiming("interactionadjuster.adjust.documents",
-                            System.currentTimeMillis() - startTime);
-        if (request.getBoolean(SEARCH_ADJUST_RESPONSE_FACETS_ENABLED,
-                               adjustResponseFacetsEnabled)) {
+        responses.addTiming("interactionadjuster.adjust.documents", System.currentTimeMillis() - startTime);
+        if (request.getBoolean(SEARCH_ADJUST_RESPONSE_FACETS_ENABLED, adjustResponseFacetsEnabled)) {
             adjustFacets(request, responses);
-            responses.addTiming("interactionadjuster.adjust.facets",
-                                System.currentTimeMillis() - startTime);
+            responses.addTiming("interactionadjuster.adjust.facets", System.currentTimeMillis() - startTime);
         }
-        responses.addTiming("interactionadjuster.adjust.total",
-                            System.currentTimeMillis() - startTime);
+        responses.addTiming("interactionadjuster.adjust.total", System.currentTimeMillis() - startTime);
     }
 
     private void adjustDocuments(
@@ -666,10 +654,8 @@ public class InteractionAdjuster implements Configurable {
                 continue;
             }
             if (!(response instanceof DocumentResponse)) {
-                log.error("adjustDocuments found response wil name "
-                          + DocumentResponse.NAME + " and expected Class "
-                          + DocumentResponse.class + " but got "
-                          + response.getClass());
+                log.error("adjustDocuments found response wil name " + DocumentResponse.NAME + " and expected Class "
+                          + DocumentResponse.class + " but got " + response.getClass());
                 continue;
             }
             documentResponse = (DocumentResponse)response;
@@ -682,8 +668,7 @@ public class InteractionAdjuster implements Configurable {
         replaceDocumentFields(request, documentResponse);
     }
 
-    private void adjustFacets(
-        Request request, ResponseCollection responses) {
+    private void adjustFacets(Request request, ResponseCollection responses) {
         log.trace("adjustFacets called");
         FacetResultExternal facetResponse = null;
         for (Response response: responses) {
@@ -692,17 +677,14 @@ public class InteractionAdjuster implements Configurable {
             }
             // TODO: Requiring FacetResultExternal is too harsh
             if (!(response instanceof FacetResultExternal)) {
-                log.error("adjustDocuments found response wil name "
-                          + DocumentResponse.NAME + " and expected Class "
-                          + DocumentResponse.class + " but got "
-                          + response.getClass());
+                log.error("adjustDocuments found response wil name " + DocumentResponse.NAME + " and expected Class "
+                          + DocumentResponse.class + " but got " + response.getClass());
                 continue;
             }
             facetResponse = (FacetResultExternal)response;
         }
         if (facetResponse == null) {
-            log.debug(
-                "No FacetResponseExternal found in adjustDocuments. Exiting");
+            log.debug("No FacetResponseExternal found in adjustDocuments. Exiting");
             return;
         }
         replaceFacetFields(request, facetResponse);
@@ -712,16 +694,13 @@ public class InteractionAdjuster implements Configurable {
                 tagAdjuster.adjust(facetResponse);
             }
         }
-        facetResponse.addTiming("tagadjuster.adjusts.total",
-                                System.currentTimeMillis() - startAdjust);
+        facetResponse.addTiming("tagadjuster.adjusts.total", System.currentTimeMillis() - startAdjust);
     }
 
     private boolean warnedOnIncompleteFacetMap = false;
-    private void replaceFacetFields(
-        Request request, FacetResultExternal facetResponse) {
+    private void replaceFacetFields(Request request, FacetResultExternal facetResponse) {
         log.trace("adjustFacetFields called");
-        ManyToManyMapper facetMap = resolveMap(
-            request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
+        ManyToManyMapper facetMap = resolveMap(request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (facetMap == null) {
             return;
         }
@@ -731,19 +710,16 @@ public class InteractionAdjuster implements Configurable {
             if (entry.getValue().size() > 1 && !warnedOnIncompleteFacetMap) {
                 warnedOnIncompleteFacetMap = true;
                 log.warn(String.format(
-                    "Encountered mapping from source '%s' to destinations '%s'."
-                    + " Multiple sources is not yet supported",
+                    "Encountered mapping from source '%s' to destinations '%s'. Multiple sources is not yet supported",
                     entry.getValue(), entry.getKey()));
             }
         }
 
-        Map<String, String> reversedSimplified =
-            new HashMap<String, String>(facetMap.getForward().size());
+        Map<String, String> reversedSimplified = new HashMap<String, String>(facetMap.getForward().size());
         for (Map.Entry<String, Set<String>> entry:
             facetMap.getReverse().entrySet()) {
             if (entry.getValue().size() > 0) {
-                reversedSimplified.put(
-                    entry.getKey(), entry.getValue().iterator().next());
+                reversedSimplified.put(entry.getKey(), entry.getValue().iterator().next());
             }
         }
         facetResponse.renameFacetsAndFields(reversedSimplified);
@@ -753,48 +729,34 @@ public class InteractionAdjuster implements Configurable {
         Request request, DocumentResponse documentResponse) {
         log.trace("replaceDocumentFields called");
         long startTime = System.currentTimeMillis();
-        ManyToManyMapper docFieldMap = resolveMap(
-            request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
+        ManyToManyMapper docFieldMap = resolveMap(request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         if (docFieldMap == null) {
             return;
         }
 
-        if (documentResponse.getSortKey() != null
-            && docFieldMap.getReverse().containsKey(
-            documentResponse.getSortKey())) {
-            documentResponse.setSortKey(Strings.join(
-                docFieldMap.getReverse().get(documentResponse.getSortKey()),
-                ", "));
+        if (documentResponse.getSortKey() != null &&
+            docFieldMap.getReverse().containsKey(documentResponse.getSortKey())) {
+            documentResponse.setSortKey(Strings.join(docFieldMap.getReverse().get(documentResponse.getSortKey()),", "));
         }
-        if (!request.getBoolean(SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED,
-                               adjustResponseFieldsEnabled)) {
+        if (!request.getBoolean(SEARCH_ADJUST_RESPONSE_FIELDS_ENABLED, adjustResponseFieldsEnabled)) {
             return;
         }
-        log.trace("Replacing document fields ("
-                  + docFieldMap.getForward().size()
-                  + " replacements)");
+        log.trace("Replacing document fields (" + docFieldMap.getForward().size() + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
-            List<DocumentResponse.Field> newFields =
-                new ArrayList<DocumentResponse.Field>(
-                    record.getFields().size()*2);
+            List<DocumentResponse.Field> newFields = new ArrayList<DocumentResponse.Field>(record.getFields().size()*2);
             for (DocumentResponse.Field field: record.getFields()) {
                 if (docFieldMap.getReverse().containsKey(field.getName())) {
                     if (log.isTraceEnabled()) {
-                        log.trace("Changing field name '" + field.getName()
-                                  + "' to '"+ Strings.join(
-                            docFieldMap.getReverse().get(field.getName()), ", ")
-                                  + " for " + record.getId());
+                        log.trace("Changing field name '" + field.getName() + "' to '" + Strings.join(
+                            docFieldMap.getReverse().get(field.getName()), ", ") + " for " + record.getId());
                     }
-                    Set<String> alts =
-                        docFieldMap.getReverse().get(field.getName());
+                    Set<String> alts = docFieldMap.getReverse().get(field.getName());
                     if (alts.size() == 1) { // 1:1
                         field.setName(alts.iterator().next());
                         newFields.add(field);
                     } else { // 1:n
                         for (String alt: alts) {
-                            newFields.add(new DocumentResponse.Field(
-                                alt, field.getContent(),
-                                field.isEscapeContent()));
+                            newFields.add(new DocumentResponse.Field(alt, field.getContent(), field.isEscapeContent()));
                         }
                     }
                 } else { // No mapping
@@ -804,9 +766,10 @@ public class InteractionAdjuster implements Configurable {
             record.getFields().clear();
             record.getFields().addAll(newFields);
         }
-        documentResponse.addTiming("interactionadjuster.replacedocumentfields",
-                                   System.currentTimeMillis() - startTime);
+        documentResponse.addTiming("interactionadjuster.replacedocumentfields", System.currentTimeMillis() - startTime);
     }
+
+    private final QueryRewriter qrw = new QueryRewriter(null, null, null); // Danger! No event. Use only for isSimple!
 
     /**
      * If the responses contain a {@link DocumentResponse}, the scores for the
@@ -814,33 +777,57 @@ public class InteractionAdjuster implements Configurable {
      * @param request   potential tweaks to factor and addition.
      * @param documentResponse the response to adjustAll.
      */
-    private void adjustDocumentScores(
-        Request request, DocumentResponse documentResponse) {
+    private void adjustDocumentScores(Request request, DocumentResponse documentResponse) {
         log.trace("adjustDocumentScores called");
-        double factor = baseFactor;
-        double addition = baseAddition;
+        boolean isSimple = request.containsKey(DocumentKeys.SEARCH_QUERY)
+                           && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY));
+
+        double factor = isSimple ? simpleBaseFactor : baseFactor;
+        double addition = isSimple ? simpleBaseAddition : baseAddition;
         if (request.containsKey(SEARCH_ADJUST_SCORE_MULTIPLY)) {
             factor *= request.getDouble(SEARCH_ADJUST_SCORE_MULTIPLY);
         }
         if (request.containsKey(prefix + SEARCH_ADJUST_SCORE_MULTIPLY)) {
             factor *= request.getDouble(prefix + SEARCH_ADJUST_SCORE_MULTIPLY);
         }
+        if (isSimple && request.containsKey(SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY)
+            || request.containsKey(prefix + SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY)) {
+            // Note: Complete override
+            factor = simpleBaseFactor;
+            if (request.containsKey(SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY)) {
+                factor *= simpleBaseFactor * request.getDouble(SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY);
+            }
+            if (request.containsKey(prefix + SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY)) {
+                factor *= simpleBaseFactor * request.getDouble(prefix + SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY);
+            }
+        }
+
         if (request.containsKey(SEARCH_ADJUST_SCORE_ADD)) {
             addition += request.getDouble(SEARCH_ADJUST_SCORE_ADD);
         }
         if (request.containsKey(prefix + SEARCH_ADJUST_SCORE_ADD)) {
             addition += request.getDouble(prefix + SEARCH_ADJUST_SCORE_ADD);
         }
+        if (isSimple && request.containsKey(SEARCH_SIMPLE_ADJUST_SCORE_ADD)
+            || request.containsKey(prefix + SEARCH_SIMPLE_ADJUST_SCORE_ADD)) {
+            // Note: Complete override
+            factor = simpleBaseAddition;
+            if (request.containsKey(SEARCH_SIMPLE_ADJUST_SCORE_ADD)) {
+                addition *= simpleBaseFactor * request.getDouble(SEARCH_SIMPLE_ADJUST_SCORE_ADD);
+            }
+            if (request.containsKey(prefix + SEARCH_SIMPLE_ADJUST_SCORE_ADD)) {
+                addition *= simpleBaseFactor * request.getDouble(prefix + SEARCH_SIMPLE_ADJUST_SCORE_ADD);
+            }
+        }
+
         // It is okay to compare as worst case is an unnecessary adjustment
         //noinspection FloatingPointEquality
         if (addition == 0 && factor == 1.0) {
-            log.trace("No adjustment to make to scores "
-                      + "(factor == 1.0, addition == 0.0");
+            log.trace("No adjustment to make to scores " + "(factor == 1.0, addition == 0.0");
             return;
         }
 
-        log.trace("adjustDocuments called with factor " + factor + ", addition "
-                  + addition);
+        log.trace("adjustDocuments called with factor " + factor + ", addition " + addition);
         for (DocumentResponse.Record record: documentResponse.getRecords()){
             record.setScore((float)(record.getScore() * factor + addition));
         }

@@ -1,6 +1,8 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
+import com.sun.xml.internal.messaging.saaj.soap.ver1_1.Fault1_1Impl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
@@ -11,17 +13,22 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.lucene.search.sort.ReusableSortComparator;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import org.apache.poi.hssf.record.formula.functions.Search;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InteractionAdjusterTest extends TestCase {
+
     public InteractionAdjusterTest(String name) {
         super(name);
     }
@@ -48,8 +55,7 @@ public class InteractionAdjusterTest extends TestCase {
         Request rewritten = adjuster.rewrite(request);
         assertEquals("The rewritten facet fields should be as expected",
                      "Language, ContentType",
-                     Strings.join(rewritten.getStrings(
-                         FacetKeys.SEARCH_FACET_FACETS), ", "));
+                     Strings.join(rewritten.getStrings(FacetKeys.SEARCH_FACET_FACETS), ", "));
     }
 
     public void testSortQueryRewrite() {
@@ -141,23 +147,18 @@ public class InteractionAdjusterTest extends TestCase {
 
     private void assertFacetResultRewrite(
         ResponseCollection responses, String field, String term) {
-        assertEquals("The adjusted response should contain rewritten facet "
-                     + "query field for material type",
+        assertEquals("The adjusted response should contain rewritten facet query field for material type",
                      field,
                      ((FacetResultExternal)responses.iterator().next()).
-                         getFields().entrySet().iterator().next().
-                         getValue()[0]);
-        assertEquals("The adjusted response should contain rewritten field for"
-                     + " material type",
+                         getFields().entrySet().iterator().next().getValue()[0]);
+        assertEquals("The adjusted response should contain rewritten field for material type",
                      field,
                      ((FacetResultExternal)responses.iterator().next()).
                          getMap().entrySet().iterator().next().getKey());
-        assertEquals("The adjusted response should contain rewritten tag for"
-                     + " material type",
+        assertEquals("The adjusted response should contain rewritten tag for material type",
                      term,
                      ((FacetResultExternal)responses.iterator().next()).
-                         getMap().entrySet().iterator().next().getValue().
-                         get(0).getKey());
+                         getMap().entrySet().iterator().next().getValue().get(0).getKey());
     }
 
     public void testSortResultRewrite() {
@@ -167,16 +168,14 @@ public class InteractionAdjusterTest extends TestCase {
             DocumentKeys.SEARCH_SORTKEY, "sort_year_asc"
         );
         DocumentResponse docResponse = new DocumentResponse(
-            "filter", "query", 0, 10, "PublicationDate", false,
-            new String[0], 10, 10);
+            "filter", "query", 0, 10, "PublicationDate", false, new String[0], 10, 10);
         ResponseCollection responses = new ResponseCollection();
         responses.add(docResponse);
         adjuster.adjust(request, responses);
 
         assertEquals("The adjusted response should contain rewritten sort",
                      "sort_year_asc, sort_year_desc",
-                     ((DocumentResponse)responses.iterator().next()).
-                         getSortKey());
+                     ((DocumentResponse)responses.iterator().next()).getSortKey());
     }
 
     public void testDocumentFieldRewrite() {
@@ -223,9 +222,15 @@ public class InteractionAdjusterTest extends TestCase {
         return responses;
     }
 
+    private static final Serializable TEST_ADJUSTER_ID = "tester";
     private InteractionAdjuster createAdjuster() {
+        Configuration conf = createAdjusterConfiguration();
+        return new InteractionAdjuster(conf);
+    }
+
+    private Configuration createAdjusterConfiguration() {
         Configuration conf = Configuration.newMemoryBased(
-            InteractionAdjuster.CONF_IDENTIFIER, "tester",
+            InteractionAdjuster.CONF_IDENTIFIER, TEST_ADJUSTER_ID,
 /*            InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
             "author_normalised - Author, lma_long - ContentType, "
             + "llang - Language, lsubject - SubjectTerms",*/
@@ -244,15 +249,15 @@ public class InteractionAdjusterTest extends TestCase {
                      "llang;lang - Language",
                      "lsubject - SubjectTerms"
                  });
-       
+
         conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS,
         	    new String[]{
      		        "ma",
      		        "unsupported_field"
                 });
         conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY,"year:999999");
-                
-        
+
+
         List<Configuration> tags;
         try {
             tags = conf.createSubConfigurations(
@@ -290,23 +295,19 @@ public class InteractionAdjusterTest extends TestCase {
 
         tags.get(2).set(TagAdjuster.CONF_FACET_NAME, "fa");
         tags.get(2).set(TagAdjuster.CONF_TAG_MAP, "ContentA - ca");
-        return new InteractionAdjuster(conf);
+        return conf;
     }
 
     public void testQueryFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster,
-                         "(+Language:\"foo\" +\"bar\")", "llang:\"foo\" bar");
-        assertAdjustment(adjuster,
-                "(FieldB:\"ContentA\" OR FieldA:\"ContentA\")",
-                "fa:ca");
+        assertAdjustment(adjuster, "Language:\"foo\" \"bar\"", "llang:\"foo\" bar");
+        assertAdjustment(adjuster, "FieldB:\"ContentA\" OR FieldA:\"ContentA\"", "fa:ca");
     }
 
     
     public void testQueryUnsupportedField() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster,
-                         "(+\"foo\" +year:\"999999\")", "foo ma:bar");
+        assertAdjustment(adjuster, "\"foo\" year:\"999999\"", "foo ma:bar");
     }
 
     
@@ -314,7 +315,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryFieldMultiple() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(ContentType:\"Newspaper Article\" OR "
+                         "ContentType:\"Newspaper Article\" OR "
                          + "ContentType:\"Magazine Article\" OR "
                          + "ContentType:\"Newsletter\" OR "
                          + "ContentType:\"Book Review\" OR "
@@ -322,18 +323,17 @@ public class InteractionAdjusterTest extends TestCase {
                          + "ContentType:\"Publication Article\" OR "
                          + "ContentType:\"Journal Article\" OR "
                          + "ContentType:\"Book Chapter\" OR "
-                         + "ContentType:\"Article\")",
+                         + "ContentType:\"Article\"",
                          "lma_long:\"artikel\"");
         assertAdjustment(adjuster,
-                         "(-ContentType:\"Book Chapter\")",
+                         "-ContentType:\"Book Chapter\"",
                          "-lma_long:\"artikelibog\"");
     }
 
 
     public void testQueryTagRewrite_nonAdjusting() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster,
-                         "(+Language:\"foo\" +\"bar\")", "llang:\"foo\" bar");
+        assertAdjustment(adjuster, "Language:\"foo\" \"bar\"", "llang:\"foo\" bar");
         assertAdjustment(adjuster, "\"English\"", "English");
         assertAdjustment(adjuster, "\"eng\"", "eng");
         assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
@@ -381,7 +381,7 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster,
                          "Language:\"Space man\"", "llang:always");
         assertAdjustment(adjuster,
-                         "(Language:\"Source B\" OR Language:\"Source A\")",
+                         "Language:\"Source B\" OR Language:\"Source A\"",
                          "llang:\"Dest A\"");
     }
 
@@ -406,13 +406,13 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:\"foo\" OR Language:\"English\")",
+                         "Language:\"foo\" OR Language:\"English\"",
                          "llang:(foo OR eng)");
     }
 
     public void testQueryDividerRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "(+\"foo\" +\"-\" +\"bar\")", "foo - bar");
+        assertAdjustment(adjuster, "\"foo\" \"-\" \"bar\"", "foo - bar");
     }
 
     public void testQueryDividerPhraseRewrite_multiValue() {
@@ -423,7 +423,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:\"Doo\" OR Language:\"Moo\")",
+                         "Language:\"Doo\" OR Language:\"Moo\"",
                          "llang:\"single\"");
     }
 
@@ -431,18 +431,78 @@ public class InteractionAdjusterTest extends TestCase {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(
             adjuster,
-            "(+(Language:\"Doo\" OR Language:\"Moo\") +Language:\"Boom\")",
+            "(Language:\"Doo\" OR Language:\"Moo\") Language:\"Boom\"",
             "llang:\"single\" llang:boo");
     }
 
     public void testQueryTagRewrite_nton() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "(Language:\"Bim\" OR Language:\"Bam\")",
+                         "Language:\"Bim\" OR Language:\"Bam\"",
                          "llang:\"bi\"");
         assertAdjustment(adjuster,
-                         "(Language:\"Bim\" OR Language:\"Bam\")",
+                         "Language:\"Bim\" OR Language:\"Bam\"",
                          "llang:\"ba\"");
+    }
+
+    public void testMultiply() {
+        testAdjustment("Untouched record", "foo bar", new ConvenientMap(
+            ), 1.0f);
+        testAdjustment("Multiply modified record", "foo bar", new ConvenientMap(
+                InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f
+            ), 2.0f);
+        testAdjustment("Multiply id-based modified record", "foo bar", new ConvenientMap(
+                TEST_ADJUSTER_ID + "." + InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f
+            ), 2.0f);
+        testAdjustment("Multiply id-based stacked modified record", "foo bar", new ConvenientMap(
+                InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f,
+                TEST_ADJUSTER_ID + "." + InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f
+            ), 4.0f);
+        testAdjustment("Multiply id-based simple modified record", "foo bar", new ConvenientMap(
+                TEST_ADJUSTER_ID + "." + InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+            ), 3.0f);
+        testAdjustment("Multiply id-based simple stacked modified record", "foo bar", new ConvenientMap(
+                InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f, // Overridden below
+                InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 1.0f, // Overrides above
+                TEST_ADJUSTER_ID + "." + InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+            ), 3.0f);
+        testAdjustment("Multiply modified non-simple record", "foo -bar", new ConvenientMap(
+                InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f,
+                InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+            ), 2.0f);
+        testAdjustment("Multiply modified simple record", "foo bar", new ConvenientMap(
+                InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f,
+                InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+            ), 3.0f);
+    }
+
+    public void testAdjustment(String message, String query, ConvenientMap setup, float expected) {
+        {
+            Request request = new Request();
+            for (Map.Entry<String, Serializable> entry: setup.entrySet()) {
+                request.put(entry.getKey(), entry.getValue());
+            }
+            request.put(DocumentKeys.SEARCH_QUERY, query);
+            InteractionAdjuster adjuster = createAdjuster();
+            ResponseCollection responses = createSampleResponseWithFields();
+            adjuster.adjust(request, responses);
+            assertEquals(message + " with query '" + query + " should have the expected weight for search-based setup",
+                         expected, ((DocumentResponse)responses.iterator().next()).getRecords().get(0).getScore());
+        }
+
+        {
+            Configuration conf = createAdjusterConfiguration();
+            for (Map.Entry<String, Serializable> entry: setup.entrySet()) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
+            InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+            Request request = new Request(DocumentKeys.SEARCH_QUERY, query);
+            ResponseCollection responses = createSampleResponseWithFields();
+            adjuster.adjust(request, responses);
+            assertEquals(message + " with query '" + query + " should have the expected weight for conf-based setup",
+                         expected, ((DocumentResponse)responses.iterator().next()).getRecords().get(0).getScore());
+
+        }
     }
 
     /**
@@ -453,8 +513,7 @@ public class InteractionAdjusterTest extends TestCase {
      * @param query will be rewritten using the adjuster and the result compared
      *        to expected.
      */
-    private void assertAdjustment(
-        InteractionAdjuster adjuster, String expected, String query) {
+    private void assertAdjustment(InteractionAdjuster adjuster, String expected, String query) {
         Request request = new Request(
             DocumentKeys.SEARCH_FILTER, query,
             DocumentKeys.SEARCH_QUERY, query
@@ -467,4 +526,5 @@ public class InteractionAdjusterTest extends TestCase {
                      expected,
                      rewritten.get(DocumentKeys.SEARCH_FILTER));
     }
+
 }

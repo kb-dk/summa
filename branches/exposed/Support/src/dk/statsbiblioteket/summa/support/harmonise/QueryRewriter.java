@@ -49,7 +49,6 @@ public class QueryRewriter {
     public static final String CONF_EXPLICIT_MUST = "queryrewriter.explicit.must";
     public static final boolean DEFAULT_EXPLICIT_MUST = false;
 
-
     /**
      * A simple callback that fires when the rewriter encounters Queries.
      * Returning null is allowed.
@@ -157,20 +156,55 @@ public class QueryRewriter {
      */
     public QueryRewriter(Configuration conf, QueryParser queryParser, Event event) {
         this.event = event;
-        if (queryParser == null) {
-            this.queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
-                @Override
-                public TokenStream tokenStream(String s, Reader reader) {
-                    return new WhitespaceTokenizer(Version.LUCENE_31, reader);
-                }
-            });
-
-            this.queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
-        } else {
-            this.queryParser = queryParser;
-        }
+        this.queryParser = queryParser == null ? createDefaultQueryParser() : queryParser;
         explicitPlus = conf == null ? DEFAULT_EXPLICIT_MUST :
                        conf.getBoolean(CONF_EXPLICIT_MUST, DEFAULT_EXPLICIT_MUST);
+    }
+
+    private QueryParser createDefaultQueryParser() {
+        QueryParser queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
+            @Override
+            public TokenStream tokenStream(String s, Reader reader) {
+                return new WhitespaceTokenizer(Version.LUCENE_31, reader);
+            }
+        });
+
+        queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+        return queryParser;
+    }
+
+    /**
+     * Parses the Query and returns true if it contains only non-qualified terms that are either neutral or required.
+     * Sampled: {@code 'foo bar'} or {@code '+"foo"^1.2 +"bar"^0.9'}, but not {@code '+"foo"^1.2 -"bar"^0.9'} or
+     * {@code foo [2000 TO 2009]}.
+     * </p><p>
+     * In case of parse errors, false is returned.
+     * </p><p>
+     * Simple queries are assumed to be usable by the simple DisMax in Solr. Note that eDisMax supports more than
+     * simple queries.
+     * @param query a textual query.
+     * @return true if the query is simple.
+     */
+    public boolean isSimple(String query) {
+        Query q;
+        try {
+            q = queryParser.parse(query);
+        } catch (ParseException e) {
+            return false;
+        }
+        if (q instanceof TermQuery) {
+            return true;
+        }
+        if (!(q instanceof BooleanQuery)) {
+            return false;
+        }
+        BooleanQuery bq = (BooleanQuery)q;
+        for (BooleanClause bc: bq.getClauses()) {
+            if (bc.isProhibited() || !(bc.getQuery() instanceof TermQuery)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -188,11 +222,9 @@ public class QueryRewriter {
      * https://issues.apache.org/jira/browse/LUCENE-167
      *
      * @param query the unmodified query.
-     * @return the rewritten query. Note that this might be null if the Query
-     *         is collapsed to nothing.
+     * @return the rewritten query. Note that this might be null if the Query is collapsed to nothing.
      * @throws org.apache.lucene.queryparser.classic.ParseException
-     *          if the query could
-     *          not be parsed by the Lucene query parser.
+     *          if the query could not be parsed by the Lucene query parser.
      */
     public String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
