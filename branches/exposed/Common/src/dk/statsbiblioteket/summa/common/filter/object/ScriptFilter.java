@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -379,14 +380,13 @@ public class ScriptFilter extends ObjectFilterImpl {
             }
 
             String message = (String) engine.get("feedbackMessage");
+            String mes = (time / oneSecond) + "ms" + (message == null ? "" : " (" + message + ")");
             if (result) {
-                log.debug("Processed " + payload.getId() + " in "
-                          + (time / oneSecond) + "ms"
-                          + (message == null ? "" : (": " + message)));
+                Logging.logProcess("ScriptFilter", "Processed in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug("Processed " + payload.getId() + " in " + mes);
             } else {
-                log.debug("Discarded " + payload.getId() + " in "
-                          + (time / oneSecond) + "ms"
-                          + (message == null ? "" : (": " + message)));
+                Logging.logProcess("ScriptFilter", "Discarded in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug("Discarded " + payload.getId() + " in " + mes);
             }
 
             return result;
