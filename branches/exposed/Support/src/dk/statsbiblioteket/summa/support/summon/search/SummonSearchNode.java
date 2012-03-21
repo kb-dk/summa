@@ -18,13 +18,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
-import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -80,25 +80,20 @@ import java.util.regex.Pattern;
     // TODO: Implement getRecord in Storage
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public class SummonSearchNode extends SearchNodeImpl {
+        author = "te, mv")
+public class SummonSearchNode extends SolrSearchNode {
     private static Log log = LogFactory.getLog(SummonSearchNode.class);
-    private static Log summonlog = LogFactory.getLog("summon_performance");
 
     /**
-     * The entry point for calls to Summon. This is unlikely to change.
+     * If true, all configuration parameters, except the explicit ones in this class, that starts with "summon."
+     * are converted to start with "solr." in order to conform with the superclass.
      * </p><p>
-     * Optional. Default is api.summon.serialssolutions.com.
+     * Optional. Default is true;
      */
-    public static final String CONF_SUMMON_HOST = "summon.host";
+    public static final String CONF_LEGACY_PREFIX_CONVERT = "summon.legacyprefixconvert";
+    public static final boolean DEFAULT_LEGACY_PREFIX_CONVERT = true;
+
     public static final String DEFAULT_SUMMON_HOST = "api.summon.serialssolutions.com";
-
-    /**
-     * The rest call at {@link #CONF_SUMMON_HOST}. This is unlikely to change.
-     * </p><p>
-     * Optional. Default is '/search'.
-     */
-    public static final String CONF_SUMMON_RESTCALL = "summon.restcall";
     public static final String DEFAULT_SUMMON_RESTCALL = "/2.0.0/search";
 
     /**
@@ -119,34 +114,9 @@ public class SummonSearchNode extends SearchNodeImpl {
      */
     public static final String CONF_SUMMON_ACCESSKEY = "summon.accesskey";
 
-    /**
-     * The prefix will be added to all IDs returned by Summon.
-     * </p><p>
-     * Optional. Default is summon_.
-     */
-    public static final String CONF_SUMMON_IDPREFIX = "summon.id.prefix";
     public static final String DEFAULT_SUMMON_IDPREFIX = "summon_";
 
-    /**
-     * The default number of documents results to return from a search.
-     * </p><p>
-     * This can be overridden with {@link DocumentKeys#SEARCH_MAX_RECORDS}.
-     * </p><p>
-     * Optional. Default is 15.
-     */
-    public static final String CONF_SUMMON_DEFAULTPAGESIZE =
-        "summon.defaultpagesize";
-    public static final int DEFAULT_SUMMON_DEFAULTPAGESIZE = 15;
-
-    /**
-     * The default facets if none are specified. The syntax is a comma-separated
-     * list of facet names, optionally with max tags in paranthesis.
-     * This can be overridden with {@link FacetKeys#SEARCH_FACET_FACETS}.
-     * Specifying the empty string turns off faceting.
-     * </p><p>
-     * Optional. Default is {@link #DEFAULT_SUMMON_FACETS}.
-     */
-    public static final String CONF_SUMMON_FACETS = "summon.facets";
+//    See http://api.summon.serialssolutions.com/help/api/search/commands/add-facet-field
     public static final String DEFAULT_SUMMON_FACETS =
         "Author, " // Map
         + "ContentType, " // Map 1:n
@@ -159,36 +129,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         //"SourceID,and,1,5",
         + "SubjectTerms, " // SB:subject
         + "TemporalSubjectTerms"; // Direct
-
-    /**
-     * The default number of tags tags to show in a facet if not specified
-     * elsewhere.
-     * </p><p>
-     * Optional. Default is 15.
-     * See http://api.summon.serialssolutions.com/help/api/search/commands/add-facet-field
-     */
-    public static final String CONF_SUMMON_FACETS_DEFAULTPAGESIZE = "summon.facets.defaultpagesize";
-    public static final int DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE = 15;
-
-    /**
-     * Whether facets should be searched with and or or.
-     * Optional. Default is 'and'. Can only be 'and' or 'or'.
-     * See http://api.summon.serialssolutions.com/help/api/search/commands/add-facet-field
-     */
-    public static final String CONF_SUMMON_FACETS_COMBINEMODE = "summon.facets.combinemode";
-    public static final String DEFAULT_SUMMON_FACETS_COMBINEMODE = "and";
-
-    /**
-     * Whether or not links in the Summon response should be resolved using the
-     * 360 link resolver.
-     * This can be overridden with {@link #SEARCH_SUMMON_RESOLVE_LINKS}.
-     * </p><p>
-     * Optional. Default is false.
-     */
-    public static final String CONF_SUMMON_RESOLVE_LINKS = "summon.resolvelinks";
-    public static final boolean DEFAULT_SUMMON_RESOLVE_LINKS = false;
-
-    public static final String SEARCH_SUMMON_RESOLVE_LINKS = "search.summon.resolvelinks";
 
     /**
      * Properties with this prefix are added to the summon query. Values are
@@ -205,65 +145,49 @@ public class SummonSearchNode extends SearchNodeImpl {
      */
     public static final String SEARCH_SUMMON_PARAM_PREFIX = CONF_SUMMON_PARAM_PREFIX;
 
-    /**
-     * If true, the SummonSearchNode does not attempt to extract facet-query from the query and passes the query and
-     * filter through unmodified. Mainly used for debugging.
-     * </p><p>
-     * Optional. Default is false.
-     */
-    public static final String SEARCH_PASSTHROUGH_QUERY = "summon.passthrough.query";
-    public static final boolean DEFAULT_PASSTHROUGH_QUERY = false;
-
-    /**
-     * If true, calls to summon assumes that pure negative filters (e.g. "NOT foo NOT bar") are supported.
-     * If false, pure negative filters are handled by rewriting the query to "(query) filter", so if query is "baz"
-     * and the filter is "NOT foo NOT bar", the result is "(baz) NOT foo NOT bar".
-     * Note that rewriting also requires the {@link DocumentKeys#SEARCH_FILTER_PURE_NEGATIVE} parameter to be true.
-     * </p><p>
-     * Optional. Default is false.
-     */
-    public static final String CONF_SUPPORTS_PURE_NEGATIVE_FILTERS = "summon.purenegativefilters.support";
-    public static final boolean DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS = false;
-
-
-    private static final DateFormat formatter =
-        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-    private SummonResponseBuilder responseBuilder;
-
-    private String host = DEFAULT_SUMMON_HOST;
-    private String restCall = DEFAULT_SUMMON_RESTCALL;
-    private String accessID;
-    private String accessKey;
-    private String idPrefix = DEFAULT_SUMMON_IDPREFIX;
-    private int defaultPageSize = DEFAULT_SUMMON_DEFAULTPAGESIZE;
-    private int defaultFacetPageSize = DEFAULT_SUMMON_FACETS_DEFAULTPAGESIZE;
-    private String defaultFacets = DEFAULT_SUMMON_FACETS;
-    private String combineMode = DEFAULT_SUMMON_FACETS_COMBINEMODE;
-    private boolean defaultResolveLinks = DEFAULT_SUMMON_RESOLVE_LINKS;
-    private final Map<String, List<String>> summonDefaultParams;
-    public final boolean supportsPureNegative;
+    private final String accessID;
+    private final String accessKey;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
-        super(conf);
-        host = conf.getString(CONF_SUMMON_HOST, host);
-        restCall = conf.getString(CONF_SUMMON_RESTCALL, restCall);
+        super(legacyConvert(conf));
         accessID =   conf.getString(CONF_SUMMON_ACCESSID);
         accessKey =  conf.getString(CONF_SUMMON_ACCESSKEY);
-        idPrefix =   conf.getString(CONF_SUMMON_IDPREFIX, idPrefix);
-        defaultPageSize = conf.getInt(CONF_SUMMON_DEFAULTPAGESIZE, defaultPageSize);
-        defaultFacetPageSize = conf.getInt(CONF_SUMMON_FACETS_DEFAULTPAGESIZE, defaultFacetPageSize);
-        defaultFacets = conf.getString(CONF_SUMMON_FACETS, defaultFacets);
-        combineMode = conf.getString(CONF_SUMMON_FACETS_COMBINEMODE, combineMode);
-        defaultResolveLinks = conf.getBoolean(CONF_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
-        responseBuilder = new SummonResponseBuilder(conf);
-        summonDefaultParams = new HashMap<String, List<String>>();
         for (Map.Entry<String, Serializable> entry : conf) {
             convertSummonParam(summonDefaultParams, entry);
         }
-        supportsPureNegative = conf.getBoolean(
-            CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
+    }
+
+    // Converts the Configuration so that legacy-versions of the properties (those starting with "summon.") are
+    // copied to new versions (prefix ".solr").
+    private static Configuration legacyConvert(Configuration conf) {
+        if (conf.getBoolean(CONF_LEGACY_PREFIX_CONVERT, DEFAULT_LEGACY_PREFIX_CONVERT)) {
+            final String[] SKIP = new String[]{CONF_SUMMON_ACCESSID, CONF_SUMMON_ACCESSKEY};
+            Configuration adds = Configuration.newMemoryBased();
+            for (Map.Entry<String, Serializable> entry: conf) {
+                if (entry.getKey().startsWith("summon.") && Arrays.binarySearch(SKIP, entry.getKey()) < 0) {
+                    adds.set("solr." + entry.getKey().substring(0, 7), entry.getValue());
+                }
+            }
+            for (Map.Entry<String, Serializable> entry: adds) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (!conf.valueExists(CONF_SOLR_HOST)) {
+            conf.set(CONF_SOLR_HOST, DEFAULT_SUMMON_HOST);
+        }
+        if (!conf.valueExists(CONF_SOLR_RESTCALL)) {
+            conf.set(CONF_SOLR_RESTCALL, DEFAULT_SUMMON_RESTCALL);
+        }
+        if (!conf.valueExists(CONF_SOLR_IDPREFIX)) {
+            conf.set(CONF_SOLR_IDPREFIX, DEFAULT_SUMMON_IDPREFIX);
+        }
+        if (!conf.valueExists(CONF_SOLR_FACETS)) {
+            conf.set(CONF_SOLR_FACETS, DEFAULT_SUMMON_FACETS);
+        }
+        return conf;
     }
 
     /**
@@ -275,15 +199,12 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @param summonParam the map where the key/value is stored.
      * @param entry the source for the key/value pair.
      */
-    private void convertSummonParam(Map<String, List<String>> summonParam,
-                                    Map.Entry<String, Serializable> entry) {
+    private void convertSummonParam(Map<String, List<String>> summonParam, Map.Entry<String, Serializable> entry) {
         if (!entry.getKey().startsWith(CONF_SUMMON_PARAM_PREFIX)) {
-            log.trace("convertSummonParam got unsupported key "
-                      + entry.getKey() + ". Ignoring entry");
+            log.trace("convertSummonParam got unsupported key " + entry.getKey() + ". Ignoring entry");
             return;
         }
-        String key = entry.getKey().substring(
-                CONF_SUMMON_PARAM_PREFIX.length(), entry.getKey().length());
+        String key = entry.getKey().substring(CONF_SUMMON_PARAM_PREFIX.length(), entry.getKey().length());
         if (entry.getValue() instanceof String) {
             summonParam.put(key, Arrays.asList((String)entry.getValue()));
             if (log.isTraceEnabled()) {
@@ -295,19 +216,15 @@ public class SummonSearchNode extends SearchNodeImpl {
                 if (v instanceof String) {
                     values.add((String)v);
                 } else {
-                    log.warn(
-                        "Expected List entry of type String in Summon "
-                        + "parameter " + key + ", but got Object of class "
-                        + v.getClass());
+                    log.warn("Expected List entry of type String in Summon parameter " + key + ", but got Object of "
+                             + "class " + v.getClass());
                 }
             }
             if (values.size() == 0) {
-                log.warn(
-                    "Got empty list for Summon param " + key+ ". Ignoring");
+                log.warn("Got empty list for Summon param " + key+ ". Ignoring");
             } else {
                 if (log.isTraceEnabled()) {
-                    log.trace("convertSummonParam assigning list " + key + ":"
-                              + Strings.join(values, ", "));
+                    log.trace("convertSummonParam assigning list " + key + ":" + Strings.join(values, ", "));
                 }
                 summonParam.put(key, values);
             }
@@ -318,25 +235,21 @@ public class SummonSearchNode extends SearchNodeImpl {
             }
             summonParam.put(key, Arrays.asList((String[])entry.getValue()));
         } else {
-            log.warn("convertSummonParam expected String, List<String> og "
-                     + "String[] for key " + key + " but got value of class "
-                     + entry.getValue().getClass());
+            log.warn("convertSummonParam expected String, List<String> or String[] for key " + key
+                     + " but got value of class " + entry.getValue().getClass());
         }
     }
 
     @Override
-    protected void managedSearch(
-        Request request, ResponseCollection responses) throws RemoteException {
+    protected void managedSearch(Request request, ResponseCollection responses) throws RemoteException {
         try {
             barrierSearch(request, responses);
         } catch (StackOverflowError e) {
             String message = String.format(
-                "Caught StackOverflow at outer level during handling of"
-                + "Summon request %s:\n%s",
+                "Caught StackOverflow at outer level during handling of Summon request %s:\n%s",
                 request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
-            throw new RemoteException(
-                "SummonSearchNode.managedSearch: " + message);
+            throw new RemoteException("SummonSearchNode.managedSearch: " + message);
         }
     }
 
@@ -344,8 +257,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            log.trace("MoreLikeThis search is not supported by Summon, "
-                      + "returning immediately");
+            log.trace("MoreLikeThis search is not supported by Summon, returning immediately");
             return;
         }
 
@@ -360,14 +272,12 @@ public class SummonSearchNode extends SearchNodeImpl {
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
         int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
 
-        boolean resolveLinks = request.getBoolean(SEARCH_SUMMON_RESOLVE_LINKS, defaultResolveLinks);
         boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
 
         if (rawQuery == null && filter == null) {
-            log.debug("No filter or query, proceeding anyway as other params "
-                      + "might be specified");
+            log.debug("No filter or query, proceeding anyway as other params might be specified");
         }
 
         // s.fq
@@ -387,17 +297,14 @@ public class SummonSearchNode extends SearchNodeImpl {
             }
         }*/
 
-        String facetsDef =  request.getString(
-            FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
+        String facetsDef =  request.getString(FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
         if ("".equals(facetsDef)) {
             facetsDef = null;
         }
-        SummonFacetRequest facets = null == facetsDef || "".equals(facetsDef) ?
-                                    null : new SummonFacetRequest(
-            facetsDef, defaultFacetPageSize, combineMode);
+        SummonFacetRequest facets = null == facetsDef || "".equals(facetsDef) ? null :
+                                    new SummonFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
 
-        Map<String, List<String>> summonSearchParams =
-            new HashMap<String, List<String>>(summonDefaultParams);
+        Map<String, List<String>> summonSearchParams = new HashMap<String, List<String>>(summonDefaultParams);
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSummonParam(summonSearchParams, entry);
         }
@@ -416,14 +323,13 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         long searchTime = -System.currentTimeMillis();
-        log.trace("Performing search for '" + query + "' with facets '"
-                  + facets + "'");
+        log.trace("Performing search for '" + query + "' with facets '" + facets + "'");
         String summonResponse;
         String summonTiming;
         try {
             Pair<String, String> sums = summonSearch(
                 request, filter, query, summonSearchParams, collectdocIDs ? facets : null,
-                startIndex, maxRecords, resolveLinks, sortKey, reverseSort,responses);
+                startIndex, maxRecords, sortKey, reverseSort,responses);
             summonResponse = sums.getKey();
             summonTiming = sums.getValue();
         } catch (StackOverflowError e) {
@@ -431,52 +337,43 @@ public class SummonSearchNode extends SearchNodeImpl {
                 "Caught StackOverflow while performing summon request %s:\n%s",
                 request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
-            throw new RemoteException(
-                "SummonSearchNode.barrierSearch: " + message);
+            throw new RemoteException("SummonSearchNode.barrierSearch: " + message);
 
         }
         if (summonResponse == null || "".equals(summonResponse)) {
-            throw new RemoteException(
-                "Summon search for '" + query + " yielded empty result");
+            throw new RemoteException("Summon search for '" + query + " yielded empty result");
         }
         searchTime += System.currentTimeMillis();
 
         long buildResponseTime = -System.currentTimeMillis();
         long hitCount;
         try {
-            hitCount = responseBuilder.buildResponses(
-                request, facets, responses, summonResponse, summonTiming);
+            hitCount = responseBuilder.buildResponses(request, facets, responses, summonResponse, summonTiming);
         } catch (XMLStreamException e) {
-            String message = "Unable to transform Summon XML response to Summa "
-                             + "response for '" + request + "'";
+            String message = "Unable to transform Summon XML response to Summa response for '" + request + "'";
             if (log.isDebugEnabled()) {
                 log.debug(message + ". Full XML follows:\n" + summonResponse);
             }
             throw new RemoteException(message, e);
         } catch (StackOverflowError e) {
             String message = String.format(
-                "Caught StackOverflow while building response for summon "
-                + "request %s\nReduced stack trace:\n%s\nReduced raw summon "
-                + "response:\n%s",
+                "Caught StackOverflow while building response for summon request %s\nReduced stack trace:\n%s\n"
+                + "Reduced raw summon response:\n%s",
                 request.toString(true), reduceStackTrace(request, e),
                 summonResponse.length() > 2000 ?
                 summonResponse.substring(0, 2000) : summonResponse);
             log.error(message, e);
-            throw new RemoteException(
-                "SummonSearchNode.barrierSearch: " + message);
+            throw new RemoteException("SummonSearchNode.barrierSearch: " + message);
 
         }
         buildResponseTime += System.currentTimeMillis();
 
-        log.debug("fullSearch(..., " + filter + ", " + rawQuery + ", "
-                  + startIndex + ", " + maxRecords + ", " + sortKey + ", "
-                  + reverseSort + ") with " + hitCount + " hits finished in "
-                  + searchTime + " ms (" + searchTime + " ms for remote search "
-                  + "call, " + buildResponseTime + " ms for converting to "
+        log.debug("fullSearch(..., " + filter + ", " + rawQuery + ", " + startIndex + ", " + maxRecords + ", "
+                  + sortKey + ", " + reverseSort + ") with " + hitCount + " hits finished in " + searchTime + " ms ("
+                  + searchTime + " ms for remote search " + "call, " + buildResponseTime + " ms for converting to "
                   + "Summa response)");
         responses.addTiming("summon.search.buildresponses", buildResponseTime);
-        responses.addTiming("summon.search.total",
-                            (System.currentTimeMillis() - startTime));
+        responses.addTiming("summon.search.total", (System.currentTimeMillis() - startTime));
     }
 
     /**
@@ -504,8 +401,7 @@ public class SummonSearchNode extends SearchNodeImpl {
                         sq = new ArrayList<String>();
                         summonSearchParams.put(RF, sq);
                     }
-                    sq.add(query.getField() + ","
-                           + query.getLowerTerm().utf8ToString() + ":"
+                    sq.add(query.getField() + "," + query.getLowerTerm().utf8ToString() + ":"
                            + query.getUpperTerm().utf8ToString());
                     return null;
                 }
@@ -513,12 +409,10 @@ public class SummonSearchNode extends SearchNodeImpl {
                 @Override
                 public Query onQuery(TermQuery query) {
                     // ID is first class so no configuration here
-                    if ("ID".equals(query.getTerm().field())
-                        || IndexUtils.RECORD_FIELD.equals(
-                        query.getTerm().field())) {
+                    if ("ID".equals(query.getTerm().field()) ||
+                        IndexUtils.RECORD_FIELD.equals(query.getTerm().field())) {
                         String text = query.getTerm().text();
-                        if (idPrefix != null && text != null
-                            && text.startsWith(idPrefix)) {
+                        if (idPrefix != null && text != null && text.startsWith(idPrefix)) {
                             text = text.substring(idPrefix.length());
                         }
                         TermQuery tq = new TermQuery(new Term("ID", text));
@@ -529,8 +423,7 @@ public class SummonSearchNode extends SearchNodeImpl {
                 }
             }).rewrite(query);
         } catch (ParseException e) {
-            throw new IllegalArgumentException(
-                "Error parsing '" + query + "'", e);
+            throw new IllegalArgumentException("Error parsing '" + query + "'", e);
         }
     }
 
@@ -543,8 +436,7 @@ public class SummonSearchNode extends SearchNodeImpl {
     @Override
     protected void managedWarmup(String request) {
         if (!warmupCalled) {
-            log.debug("No warmup for '" + request
-                      + "' as warmup is handled externally. Further requests "
+            log.debug("No warmup for '" + request + "' as warmup is handled externally. Further requests "
                       + "for warmup will be silently ignored");
             warmupCalled = true;
         }
@@ -558,8 +450,7 @@ public class SummonSearchNode extends SearchNodeImpl {
 
     @Override
     protected void managedClose() throws RemoteException {
-        log.debug("managedClose() called. No effect as this search node is "
-                  + "stateless");
+        log.debug("managedClose() called. No effect as this search node is stateless");
     }
 
     /* Copied and slightly modified from Yellowfoot (internal project at
@@ -593,7 +484,7 @@ public class SummonSearchNode extends SearchNodeImpl {
      */
     private Pair<String, String> summonSearch(
         Request request, String filter, String query, Map<String, List<String>> summonParams, SummonFacetRequest facets,
-        int startIndex, int maxRecords, boolean resolveLinks, String sortKey, boolean reverseSort,
+        int startIndex, int maxRecords, String sortKey, boolean reverseSort,
         ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
         int startpage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
@@ -622,15 +513,9 @@ public class SummonSearchNode extends SearchNodeImpl {
         long prefixIDs = -System.currentTimeMillis();
         String retval = prefixIDs(result, idPrefix);
         prefixIDs += System.currentTimeMillis();
-        long linkResolve = -System.currentTimeMillis();
-        if (resolveLinks) {
-            retval = linkResolve(retval);
-        }
-        linkResolve += System.currentTimeMillis();
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(
-            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs + "|summon.linkresolve:"
-                    + linkResolve);
+            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
     }
 
     private Map<String, List<String>> buildSummonQuery(
@@ -666,8 +551,7 @@ public class SummonSearchNode extends SearchNodeImpl {
 
         // TODO: Add support for sorting on multiple fields
         if (sortKey != null) {
-            querymap.put("s.sort", Arrays.asList(
-                         sortKey + ":" + (reverseSort ? "desc" : "asc")));
+            querymap.put("s.sort", Arrays.asList(sortKey + ":" + (reverseSort ? "desc" : "asc")));
         }
 
         if (facets != null) {
@@ -842,12 +726,10 @@ public class SummonSearchNode extends SearchNodeImpl {
 
 
     static {
-        System.setProperty("java.protocol.handler.pkgs",
-                           "com.sun.net.ssl.internal.www.protocol");
+        System.setProperty("java.protocol.handler.pkgs", "com.sun.net.ssl.internal.www.protocol");
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
     }
-    DateFormat summonDateFormat =
-        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
+    DateFormat summonDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     /*
      * Gets the data from the remote Summon server
      * @param target
@@ -858,9 +740,8 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @return A String containing XML describing the result of the call
      * @throws Exception
      */
-    private String getData(
-        String target, String content, Date date, String idstring,
-        String sessionId, ResponseCollection responses) throws Exception {
+    private String getData(String target, String content, Date date, String idstring,
+                           String sessionId, ResponseCollection responses) throws Exception {
         StringBuilder retval = new StringBuilder();
 
         if (log.isDebugEnabled()) {
@@ -873,9 +754,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         conn.setRequestProperty("Accept", "application/xml");
         conn.setRequestProperty("Accept-Charset", "utf-8");
         conn.setRequestProperty("x-summon-date", summonDateFormat.format(date));
-        conn.setRequestProperty(
-            "Authorization",
-            "Summon " + accessID + ";" + buildDigest(accessKey, idstring));
+        conn.setRequestProperty("Authorization", "Summon " + accessID + ";" + buildDigest(accessKey, idstring));
         if (sessionId != null && !sessionId.equals("")) {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
@@ -888,15 +767,13 @@ public class SummonSearchNode extends SearchNodeImpl {
         BufferedReader in;
         try {
         	long rawCall = -System.currentTimeMillis();             
-        	in = new BufferedReader(new InputStreamReader(
-                conn.getInputStream(), "UTF-8"));
+        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
             String str;
         
             while ((str = in.readLine()) != null) {
                 retval.append(str);
             }
-            log.trace("Reading from Summon done in "
-                      + (System.currentTimeMillis() - readStart) + "ms");
+            log.trace("Reading from Summon done in " + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
             rawCall += System.currentTimeMillis();
             responses.addTiming("summon.connect", summonConnect);
@@ -904,11 +781,9 @@ public class SummonSearchNode extends SearchNodeImpl {
             
         } catch (IOException e) {
             log.warn(String.format(
-                "getData(target=%s, content=%s, date=%s, idstring=%s, "
-                + "sessionID=%s failed with error stream\n%s",
+                "getData(target=%s, content=%s, date=%s, idstring=%s, sessionID=%s failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
-                Strings.flush(
-                    new InputStreamReader(conn.getErrorStream(), "UTF-8"))), e);
+                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8"))), e);
         }
 
         return retval.toString();
@@ -929,7 +804,7 @@ public class SummonSearchNode extends SearchNodeImpl {
         }
 
         String temp = summonSearch(
-            null, null, "ID:" + id, null, null, 1, 1, false, null, false, new ResponseCollection()).getKey();
+            null, null, "ID:" + id, null, null, 1, 1, null, false, new ResponseCollection()).getKey();
         Document dom = DOM.stringToDOM(temp);
 
 
@@ -982,33 +857,18 @@ public class SummonSearchNode extends SearchNodeImpl {
      * @return A String containing a Summon record in XML
      * @throws java.rmi.RemoteException if the Record could not be retrieved.
      */
-    public String getRecord(String id, boolean resolveLinks)
-                                                        throws RemoteException {
-        String retval = "";
+    public String getRecord(String id, boolean resolveLinks) throws RemoteException {
+        throw new UnsupportedOperationException("Not implemented yet");
+/*        String retval = "";
 
         if (id.startsWith(idPrefix)) {
             id = id.substring(idPrefix.length());
         }
 
         String temp = summonSearch(
-            null, null, "ID:" + id, null, null, 1, 1, false, null, false,new ResponseCollection()).getKey();
-        if (resolveLinks) {
-            temp = linkResolve(temp);
-        }
+            null, null, "ID:" + id, null, null, 1, 1, null, false,new ResponseCollection()).getKey();
 
-        if (!temp.trim().equals("")){
-        Document dom = DOM.stringToDOM(temp);
-        Node firstDoc = DOM.selectNode(dom, "//documents/document");
-
-        try {
-            retval = DOM.domToString(firstDoc, true);
-        } catch (TransformerException e) {
-            log.error("Unable to convert dom node to string", e);
-        }
-
-        }
-
-        return retval;
+        return retval;*/
     }
 
     /**
@@ -1037,75 +897,6 @@ public class SummonSearchNode extends SearchNodeImpl {
         return retval.toString();
     }
 
-    /*
-     * Adds links elements to a Summon search result based on the contained openurls.
-     * @param searchResult A String containing XML with the result from a Summon query
-     * @return The searchResult where the documents have been enriched with links
-     */
-    private static String linkResolve(String searchResult) {
-        throw new UnsupportedOperationException(
-            "Link resolving is not yet a part of this implementation");
-        /*
-        long methodStart = System.currentTimeMillis();
-        log.trace("Calling linkResolve");
-
-        String retval = searchResult;
-
-        List<String> openurls = new ArrayList<String>();
-
-
-        Document dom = DOM.stringToDOM(searchResult);
-
-        NodeList documents = DOM.selectNodeList(dom, "//document");
-
-
-        if (documents.getLength() > 0) {
-            for (int i = 0; i < documents.getLength(); i++) {
-                Node n = documents.item(i);
-                String openurl = DOM.selectString(n, "@openUrl");
-                openurls.add(openurl);
-            }
-
-            String arg = Strings.join(openurls, ",");
-
-            long serviceStart = System.currentTimeMillis();
-            // TODO: Consider how to handle this
-            WebServices services = WebServices.getInstance();
-            String links = (String) services.execute("getfrom360linkmulti", arg);
-            long serviceTime = System.currentTimeMillis() - serviceStart;
-            log.trace("Called getfrom360linkmulti in : " + serviceTime + "ms");
-
-            Document linksDom = DOM.stringToDOM(links);
-            NodeList linksNL = DOM.selectNodeList(linksDom, "//links");
-            Node imp;
-            for (int i = 0; i < linksNL.getLength(); i++) {
-                Node linksNode = linksNL.item(i);
-                String ou = DOM.selectString(linksNode, "@openurl");
-                Node importTo = DOM.selectNode(dom, "//document[@openUrl=\"" + ou + "\"]");
-                if (importTo != null) {
-                    imp = dom.importNode(linksNode, true);
-                    importTo.appendChild(imp);
-                } else {
-                    log.warn("Unable to find document with openurl: " + ou);
-                }
-            }
-
-
-            try {
-                retval = DOM.domToString(dom);
-            } catch (TransformerException e) {
-                log.error("Failed to transform searchresult", e);
-                retval = "";
-            }
-            log.trace("Time spent on DOM manipulation: " + (System.currentTimeMillis() - methodStart - serviceTime) + "ms");
-            log.trace("Called linkResolve in : " + (System.currentTimeMillis() - methodStart) + "ms");
-            return retval;
-
-        }  else {
-            return retval;
-        }
-        */
-    }
 
 /*    public static void main(String[] args) {
 

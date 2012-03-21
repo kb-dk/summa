@@ -185,7 +185,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFacetOrder() throws RemoteException {
         Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
         conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
-            //SummonSearchNode.CONF_SUMMON_FACETS, ""
+            //SummonSearchNode.CONF_SOLR_FACETS, ""
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -214,7 +214,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testSpecificFacets() throws RemoteException {
         Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
         conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
-        conf.set(SummonSearchNode.CONF_SUMMON_FACETS, "SubjectTerms");
+        conf.set(SummonSearchNode.CONF_SOLR_FACETS, "SubjectTerms");
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
