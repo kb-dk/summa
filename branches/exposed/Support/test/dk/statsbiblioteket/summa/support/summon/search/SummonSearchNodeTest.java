@@ -710,15 +710,105 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Creating adjusting SummonSearchNode");
         AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
         ResponseCollection responses = new ResponseCollection();
-        Request request = new Request();
-        //request.put(DocumentKeys.SEARCH_QUERY, "foo");
-        request.put(DocumentKeys.SEARCH_QUERY, "recursion in string theory");
-        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        Request request = new Request(
+            //request.put(DocumentKeys.SEARCH_QUERY, "foo");
+            DocumentKeys.SEARCH_QUERY, "recursion in string theory",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         adjusting.search(request, responses);
         log.debug("Finished searching");
         // TODO: Add proper test
 //        System.out.println(responses.toXML());
+    }
+
+    // Author_xml contains the authoritative order for the authors so it should override the non-XML-version
+    public void testAuthor_xmlExtraction() throws RemoteException {
+        String fieldName = "Author";
+        String query = "PQID:821707502";
+
+/*        {
+            Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+            conf.set(SummonResponseBuilder.CONF_XML_OVERRIDES_NONXML, false);
+            SearchNode summon = new SummonSearchNode(conf);
+            ResponseCollection responses = new ResponseCollection();
+            summon.search(new Request(DocumentKeys.SEARCH_QUERY, query), responses);
+
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            for (DocumentResponse.Record record: docs.getRecords()) {
+                System.out.println("\n" + record.getId());
+                String author = "";
+                String author_xml = "";
+                for (DocumentResponse.Field field: record.getFields()) {
+                    if ("Author".equals(field.getName())) {
+                        author = field.getContent().replace("\n", ", ").replace("<h>", "").replace("</h>", "");
+                        System.out.println("Author:     " + author);
+                    } else if ("Author_xml".equals(field.getName())) {
+                        author_xml = field.getContent().replace("\n", ", ");
+                        System.out.println("Author_xml: " + author_xml);
+                    } else if ("PQID".equals(field.getName())) {
+                        System.out.println("PQID: " + field.getContent());
+                    }
+                }
+                if (author.length() != author_xml.length()) {
+                    fail("We finally found a difference between Author and Author_xml besides name ordering");
+                }
+            }
+            summon.close();
+        }
+  */
+
+        { // Old behaviour
+            String expected = "Koetse, Willem\n"
+                              + "Krebs, Christopher P\n"
+                              + "Lindquist, Christine\n"
+                              + "Lattimore, Pamela K\n"
+                              + "Cowell, Alex J";
+            Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+            conf.set(SummonResponseBuilder.CONF_XML_OVERRIDES_NONXML, false);
+            SearchNode summonNonXML = new SummonSearchNode(conf);
+            assertFieldContent("XML no override", summonNonXML, query, fieldName, expected, false);
+            summonNonXML.close();
+        }
+
+        { // New behaviour
+            String expected = "Lattimore, Pamela K\n"
+                              + "Krebs, Christopher P\n"
+                              + "Koetse, Willem\n"
+                              + "Lindquist, Christine\n"
+                              + "Cowell, Alex J";
+            SearchNode summonXML = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("XML override", summonXML, query, fieldName, expected, false);
+            summonXML.close();
+        }
+
+    }
+
+    private void assertFieldContent(String message, SearchNode searchNode, String query, String fieldName,
+                                    String expected, boolean sort) throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
+        searchNode.search(new Request(DocumentKeys.SEARCH_QUERY, query), responses);
+        DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+        assertEquals(message + ". There should only be a single hit", 1, docs.getHitCount());
+        boolean found = false;
+        for (DocumentResponse.Record record: docs.getRecords()) {
+            for (DocumentResponse.Field field: record.getFields()) {
+                if (fieldName.equals(field.getName())) {
+                    String content = field.getContent();
+                    if (sort) {
+                        String[] tokens = content.split("\n");
+                        Arrays.sort(tokens);
+                        content = Strings.join(tokens, "\n");
+
+                    }
+                    assertEquals(message + ".The field '" + fieldName + "' should have the right content",
+                                 expected, content);
+                    found = true;
+                }
+            }
+        }
+        if (!found) {
+            fail("Unable to locate the field '" + fieldName + "'");
+        }
     }
 
     public void testIDAdjustment() throws IOException {

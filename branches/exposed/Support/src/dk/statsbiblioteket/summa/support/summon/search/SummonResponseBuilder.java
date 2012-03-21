@@ -100,6 +100,18 @@ public class SummonResponseBuilder implements Configurable {
     public static final String CONF_SHORT_DATE = "summonresponsebuilder.shortformat.shortdate";
     public static final boolean DEFAULT_SHORT_DATE = true;
 
+    /**
+     * If a field name and the same field name with "_xml" both exists, attempt to convert the "_xml"-version to
+     * a String and override the non-"_xml"-version.
+     * </p><p>
+     * Note: This is not guaranteed to catch all xml-variations.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_XML_OVERRIDES_NONXML = "summonresponsebuilder.xmloverrides";
+    public static final boolean DEFAULT_XML_OVERRIDES_NONXML = true;
+
+
     private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -110,10 +122,12 @@ public class SummonResponseBuilder implements Configurable {
     private String recordBase = DEFAULT_RECORDBASE;
     private final Map<String, String> sortRedirect;
     private final boolean shortDate;
+    private final boolean xmlOverrides;
 
     public SummonResponseBuilder(Configuration conf) {
         recordBase = conf.getString(CONF_RECORDBASE, recordBase);
         shortDate = conf.getBoolean(CONF_SHORT_DATE, DEFAULT_SHORT_DATE);
+        xmlOverrides = conf.getBoolean(CONF_XML_OVERRIDES_NONXML, DEFAULT_XML_OVERRIDES_NONXML);
         if ("".equals(recordBase)) {
             recordBase = null;
         }
@@ -459,6 +473,22 @@ public class SummonResponseBuilder implements Configurable {
             }
 
         });
+
+        if (xmlOverrides) {
+            // Author
+            for (DocumentResponse.Field field: fields) {
+                if ("Author_xml".equals(field.getName())) {
+                    for (int i = fields.size() - 1 ; i >= 0 ; i--) {
+                        if ("Author".equals(fields.get(i).getName())) {
+                            fields.remove(i);
+                        }
+                    }
+                    field.setName("Author");
+                    break;
+                }
+            }
+        }
+
         String id = extracted.getString("ID", null);
 
         if (id == null) {
@@ -549,8 +579,7 @@ public class SummonResponseBuilder implements Configurable {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private DocumentResponse.Field extractField(XMLStreamReader xml)
-        throws XMLStreamException {
+    private DocumentResponse.Field extractField(XMLStreamReader xml) throws XMLStreamException {
         String name = getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
@@ -595,12 +624,12 @@ public class SummonResponseBuilder implements Configurable {
                     log.debug("No value for field '" + name + "'");
                     return null;
                 }
+//                System.out.println(value);
                 return new DocumentResponse.Field(name, value.toString(), true);
             }
 
             if (!xmlFieldsWarningFired) {
-                log.warn("XML fields are not supported yet. Skipping '"
-                         + name + "'");
+                log.warn("XML fields are not supported yet. Skipping '" + name + "'");
                 xmlFieldsWarningFired = true;
             }
             return null;
