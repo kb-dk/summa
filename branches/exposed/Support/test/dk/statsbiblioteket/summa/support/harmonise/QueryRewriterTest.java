@@ -209,16 +209,26 @@ public class QueryRewriterTest extends TestCase {
                        "foo^2 bar^3");
     }
 
-    public void testExplicitMust() throws ParseException {
+    public void testTerseMust() throws ParseException {
         final String QUERY = "foo bar";
-        String explicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, false), null,
+        String explicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true), null,
                                             new QueryRewriter.Event()).rewrite(QUERY);
-        String implicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, true), null,
+        String implicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, false), null,
                                             new QueryRewriter.Event()).rewrite(QUERY);
         if (explicit.equals(implicit)) {
             fail("The rewritten queries should differ, but were both '" + implicit + "'");
         }
     }
+
+    public void testTerseParentheses() throws ParseException {
+        assertEquals("The rewritten Query should be with parentheses", "+(+foo +bar)",
+                     new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, false), null,
+                                       new QueryRewriter.Event()).rewrite("foo bar"));
+        assertEquals("The rewritten Query should be without parentheses", "(+foo +bar)",
+                     new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true), null,
+                                       new QueryRewriter.Event()).rewrite("foo bar"));
+    }
+
 
     private void assertIdentity(String expected, String input) throws ParseException {
         assertEquals("Rewrite should be correct",

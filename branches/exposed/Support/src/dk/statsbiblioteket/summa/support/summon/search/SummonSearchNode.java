@@ -38,12 +38,10 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -94,6 +92,7 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final boolean DEFAULT_LEGACY_PREFIX_CONVERT = true;
 
     public static final String DEFAULT_SUMMON_HOST = "api.summon.serialssolutions.com";
+//    public static final String DEFAULT_SUMMON_RESTCALL = "/search";
     public static final String DEFAULT_SUMMON_RESTCALL = "/2.0.0/search";
 
     /**

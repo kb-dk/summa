@@ -729,7 +729,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection explicitMustResponses = new ResponseCollection();
         {
             Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
-            conf.set(QueryRewriter.CONF_EXPLICIT_MUST, true);
+            conf.set(QueryRewriter.CONF_TERSE, false);
             SearchNode summon  = new SummonSearchNode(conf);
             Request request = new Request(
                 DocumentKeys.SEARCH_QUERY, QUERY
@@ -741,7 +741,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection implicitMustResponses = new ResponseCollection();
         {
             Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
-            conf.set(QueryRewriter.CONF_EXPLICIT_MUST, false);
+            conf.set(QueryRewriter.CONF_TERSE, true);
             SearchNode summon  = new SummonSearchNode(conf);
             Request request = new Request(
                 DocumentKeys.SEARCH_QUERY, QUERY

@@ -40,14 +40,16 @@ import java.io.Reader;
 public class QueryRewriter {
 
     /**
-     * Controls whether toString on BooleanQueries with all-MUST clauses appends a '+' in front of all terms.
-     * True means that a '+' is appended. Even though this should ultimately parse to the same (assuming that the
-     * searcher uses AND as default), Solr DisMax does not like explicit '+' and falls back to standard query parsing.
+     * If true, the QueryRewriter attempts to make a safe terse output. This affects parentheses on BooleanQueries
+     * and explicit must ('+) on clauses. Summon DisMax does not like parentheses and explicit '+' and falls back to
+     * standard query parsing.
      * </p><p>
-     * Optional. Default is false.
+     * Sample: "(+foo +(+bar +zoo))" -> "foo (bar zoo)".
+     * </p><p>
+     * Optional. Default is true.
      */
-    public static final String CONF_EXPLICIT_MUST = "queryrewriter.explicit.must";
-    public static final boolean DEFAULT_EXPLICIT_MUST = false;
+    public static final String CONF_TERSE = "queryrewriter.output.terse";
+    public static final boolean DEFAULT_TERSE = true;
 
     /**
      * A simple callback that fires when the rewriter encounters Queries.
@@ -135,7 +137,7 @@ public class QueryRewriter {
 
     private Event event;
     private QueryParser queryParser;
-    private final boolean explicitPlus;
+    private final boolean terse;
 
     /**
      * Constructs a new QueryRewriter.
@@ -157,8 +159,7 @@ public class QueryRewriter {
     public QueryRewriter(Configuration conf, QueryParser queryParser, Event event) {
         this.event = event;
         this.queryParser = queryParser == null ? createDefaultQueryParser() : queryParser;
-        explicitPlus = conf == null ? DEFAULT_EXPLICIT_MUST :
-                       conf.getBoolean(CONF_EXPLICIT_MUST, DEFAULT_EXPLICIT_MUST);
+        terse = conf == null ? DEFAULT_TERSE : conf.getBoolean(CONF_TERSE, DEFAULT_TERSE);
     }
 
     private QueryParser createDefaultQueryParser() {
@@ -279,7 +280,7 @@ public class QueryRewriter {
             return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
         } else if (query instanceof BooleanQuery) {
             String inner = booleanQueryToString((BooleanQuery) query);
-            result += top ? inner.trim() : "(" + inner.trim() + ")";
+            result += top && terse ? inner.trim() : "(" + inner.trim() + ")";
         } else {
             result += query.toString();
         }
@@ -294,7 +295,7 @@ public class QueryRewriter {
     private String booleanQueryToString(BooleanQuery booleanQuery) {
         // convert the boolean query to a string recursively
         String inner = "";
-        boolean onlyMust = containsOnlyMust(booleanQuery) && !explicitPlus;
+        boolean onlyMust = containsOnlyMust(booleanQuery) && terse;
         for (int i = 0; i < booleanQuery.getClauses().length; i++) {
             BooleanClause currentClause = booleanQuery.getClauses()[i];
             switch (currentClause.getOccur()) {

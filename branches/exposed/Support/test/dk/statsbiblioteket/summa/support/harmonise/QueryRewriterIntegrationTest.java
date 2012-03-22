@@ -40,7 +40,7 @@ public class QueryRewriterIntegrationTest extends TestCase {
 
         summon = SummonTestHelper.createSummonSearchNode();
         requestRewriter = new QueryRewriter(
-            Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, false),
+            Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true),
             null,
             new QueryRewriter.Event() {
                 @Override
