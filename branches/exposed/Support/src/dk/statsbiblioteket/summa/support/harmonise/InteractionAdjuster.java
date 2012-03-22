@@ -39,6 +39,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
+import org.apache.tools.ant.util.ConcatFileInputStream;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -141,7 +142,17 @@ public class InteractionAdjuster implements Configurable {
     public static final String CONF_ADJUST_DOCUMENT_FIELDS = "adjuster.document.fields";
     public static final String SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
-    
+    /**
+     * If true, requests with filters marked with pure negative are never treated as simple queries.
+     * </p><p>
+     * This is relevant for triggering adjustments due to (non)conformance to DisMax queries. If there is a pure
+     * negative filter that must be merged into the query, the resulting query will not be simple.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE = "adjuster.purenegative.isnotsimple";
+    public static final boolean DEFAULT_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE = true;
+
     /**
      * Fields that are rewritten to a term that match nothing in the searcher.
      */
@@ -196,6 +207,7 @@ public class InteractionAdjuster implements Configurable {
     private final boolean enabled;
     private boolean adjustResponseFieldsEnabled;
     private boolean adjustResponseFacetsEnabled;
+    private final boolean pureNegativeNotSimple;
 
     public InteractionAdjuster(Configuration conf) throws ConfigurationException {
         id = conf.getString(CONF_IDENTIFIER);
@@ -211,6 +223,9 @@ public class InteractionAdjuster implements Configurable {
         baseAddition += conf.getDouble(prefix + CONF_ADJUST_SCORE_ADD, 0.0);
         simpleBaseAddition = conf.getDouble(CONF_SIMPLE_ADJUST_SCORE_ADD, baseAddition);
         simpleBaseAddition += conf.getDouble(prefix + CONF_SIMPLE_ADJUST_SCORE_ADD, 0.0);
+
+        pureNegativeNotSimple = conf.getBoolean(
+            CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, DEFAULT_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE);
 
         adjustResponseFieldsEnabled = conf.getBoolean(
             CONF_ADJUST_RESPONSE_FIELDS_ENABLED, DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
@@ -779,7 +794,10 @@ public class InteractionAdjuster implements Configurable {
      */
     private void adjustDocumentScores(Request request, DocumentResponse documentResponse) {
         log.trace("adjustDocumentScores called");
-        boolean isSimple = request.containsKey(DocumentKeys.SEARCH_QUERY)
+        boolean isSimple = (!pureNegativeNotSimple
+                            || !(request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE)
+                                 && request.containsKey(DocumentKeys.SEARCH_FILTER)))
+                           && request.containsKey(DocumentKeys.SEARCH_QUERY)
                            && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY));
 
         double factor = isSimple ? simpleBaseFactor : baseFactor;

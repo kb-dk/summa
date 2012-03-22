@@ -472,14 +472,46 @@ public class InteractionAdjusterTest extends TestCase {
             ), 3.0f);
     }
 
+    public void testSimpledetection() {
+        testAdjustment("Indirect non-simple record trigger false", "foo", "-bar", true,
+                       new ConvenientMap(
+                           InteractionAdjuster.CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, false),
+                       new ConvenientMap(
+                           DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, true,
+                           InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f,
+                           InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+                       ), 3.0f);
+        testAdjustment("Indirect non-simple record trigger true", "foo", "-bar", true,
+                       new ConvenientMap(
+                           InteractionAdjuster.CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, true),
+                       new ConvenientMap(
+                           DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, true,
+                           InteractionAdjuster.SEARCH_ADJUST_SCORE_MULTIPLY, 2.0f,
+                           InteractionAdjuster.SEARCH_SIMPLE_ADJUST_SCORE_MULTIPLY, 3.0f
+                       ), 2.0f);
+    }
+
     public void testAdjustment(String message, String query, ConvenientMap setup, float expected) {
+        testAdjustment(message, query, null, false, new ConvenientMap(), setup, expected);
+    }
+    public void testAdjustment(
+        String message, String query, String filter, boolean isPureNegative, ConvenientMap forcedSetup,
+        ConvenientMap setup, float expected) {
         {
             Request request = new Request();
             for (Map.Entry<String, Serializable> entry: setup.entrySet()) {
                 request.put(entry.getKey(), entry.getValue());
             }
             request.put(DocumentKeys.SEARCH_QUERY, query);
-            InteractionAdjuster adjuster = createAdjuster();
+            if (filter != null) {
+                request.put(DocumentKeys.SEARCH_FILTER, filter);
+                request.put(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, isPureNegative);
+            }
+            Configuration conf = createAdjusterConfiguration();
+            for (Map.Entry<String, Serializable> entry: forcedSetup.entrySet()) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
+            InteractionAdjuster adjuster = new InteractionAdjuster(conf);
             ResponseCollection responses = createSampleResponseWithFields();
             adjuster.adjust(request, responses);
             assertEquals(message + " with query '" + query + " should have the expected weight for search-based setup",
@@ -488,11 +520,18 @@ public class InteractionAdjusterTest extends TestCase {
 
         {
             Configuration conf = createAdjusterConfiguration();
+            for (Map.Entry<String, Serializable> entry: forcedSetup.entrySet()) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
             for (Map.Entry<String, Serializable> entry: setup.entrySet()) {
                 conf.set(entry.getKey(), entry.getValue());
             }
             InteractionAdjuster adjuster = new InteractionAdjuster(conf);
             Request request = new Request(DocumentKeys.SEARCH_QUERY, query);
+            if (filter != null) {
+                request.put(DocumentKeys.SEARCH_FILTER, filter);
+                request.put(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, isPureNegative);
+            }
             ResponseCollection responses = createSampleResponseWithFields();
             adjuster.adjust(request, responses);
             assertEquals(message + " with query '" + query + " should have the expected weight for conf-based setup",
