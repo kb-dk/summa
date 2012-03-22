@@ -1,5 +1,6 @@
 package dk.statsbiblioteket.summa.support.harmonise;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -206,6 +207,17 @@ public class QueryRewriterTest extends TestCase {
     public void testProximityWeighted() throws ParseException {
         assertIdentity("\"foo\"^2.0 \"bar\"^3.0",
                        "foo^2 bar^3");
+    }
+
+    public void testExplicitMust() throws ParseException {
+        final String QUERY = "foo bar";
+        String explicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, false), null,
+                                            new QueryRewriter.Event()).rewrite(QUERY);
+        String implicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_EXPLICIT_MUST, true), null,
+                                            new QueryRewriter.Event()).rewrite(QUERY);
+        if (explicit.equals(implicit)) {
+            fail("The rewritten queries should differ, but were both '" + implicit + "'");
+        }
     }
 
     private void assertIdentity(String expected, String input) throws ParseException {

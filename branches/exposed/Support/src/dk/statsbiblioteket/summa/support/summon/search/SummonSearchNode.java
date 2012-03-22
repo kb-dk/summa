@@ -147,9 +147,11 @@ public class SummonSearchNode extends SolrSearchNode {
 
     private final String accessID;
     private final String accessKey;
+    private final Configuration conf; // Used when constructing QueryRewriter
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
+        this.conf = conf;
         accessID =   conf.getString(CONF_SUMMON_ACCESSID);
         accessKey =  conf.getString(CONF_SUMMON_ACCESSKEY);
         for (Map.Entry<String, Serializable> entry : conf) {
@@ -393,7 +395,7 @@ public class SummonSearchNode extends SolrSearchNode {
         final Map<String, List<String>> summonSearchParams) {
         final String RF = "s.rf";
         try {
-            return new QueryRewriter(new QueryRewriter.Event() {
+            return new QueryRewriter(conf, null, new QueryRewriter.Event() {
                 @Override
                 public Query onQuery(TermRangeQuery query) {
                     List<String> sq = summonSearchParams.get(RF);
@@ -471,8 +473,6 @@ public class SummonSearchNode extends SolrSearchNode {
      *                   from 0. This is translated to startpage for Solr.
      *
      * @param maxRecords number of items per page.
-     * @param resolveLinks whether or not to call the link resolver to resolve
-     *                  openurls to actual links.
      * @param sortKey the field to sort on. If null, default ranking sort is
      *                used.
      * @param reverseSort if true, sort order is reversed.

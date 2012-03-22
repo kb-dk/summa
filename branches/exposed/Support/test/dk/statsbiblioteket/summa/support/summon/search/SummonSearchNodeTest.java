@@ -25,7 +25,9 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
+import dk.statsbiblioteket.summa.support.harmonise.HarmoniseTestHelper;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
+import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -226,7 +228,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> facets = getFacetNames(responses);
-        assertEquals("The number of facets should be correct", 1,facets.size());
+        assertEquals("The number of facets should be correct", 1, facets.size());
         assertEquals("The returned facet should be correct",
                      "SubjectTerms", Strings.join(facets, ", "));
     }
@@ -721,6 +723,35 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
+    // The ranking should differ when we turn explicit must on/off as it triggers summon DisMax conformance on/off
+    public void testExplicitMust() throws IOException {
+        final String QUERY = "miller genre as social action";
+        ResponseCollection explicitMustResponses = new ResponseCollection();
+        {
+            Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+            conf.set(QueryRewriter.CONF_EXPLICIT_MUST, true);
+            SearchNode summon  = new SummonSearchNode(conf);
+            Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY
+            );
+            summon.search(request, explicitMustResponses);
+            summon.close();
+        }
+
+        ResponseCollection implicitMustResponses = new ResponseCollection();
+        {
+            Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+            conf.set(QueryRewriter.CONF_EXPLICIT_MUST, false);
+            SearchNode summon  = new SummonSearchNode(conf);
+            Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY
+            );
+            summon.search(request, implicitMustResponses);
+            summon.close();
+        }
+        HarmoniseTestHelper.compareHits(QUERY, false, explicitMustResponses, implicitMustResponses);
+    }
+
     // Author_xml contains the authoritative order for the authors so it should override the non-XML-version
     public void testAuthor_xmlExtraction() throws RemoteException {
         String fieldName = "Author";
@@ -837,6 +868,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("There should be at least one hit for a search for ID '"
                    + ids.get(0) + "'", researchIDs.size() > 0);
     }
+
     // TODO: "foo:bar zoo"
 
 }
