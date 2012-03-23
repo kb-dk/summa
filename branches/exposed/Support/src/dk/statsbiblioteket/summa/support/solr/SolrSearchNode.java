@@ -138,6 +138,15 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
      */
     public static final String SEARCH_SOLR_PARAM_PREFIX = CONF_SOLR_PARAM_PREFIX;
 
+    /**
+     * If true, {@link DocumentKeys#SEARCH_FILTER} must contain simple facet queries only. A simple facet query is
+     * one or more {@code facet:term} pairs, optionally prefixed with {@code -} or {@code NOT}.
+     * </p><p>
+     * Valid sample query: {@code foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam}.
+     * </p><p>
+     * Note: This is basically an ugly hack until we switch to treating facet filtering as first class.
+     */
+    public static final String SEARCH_SOLR_FILTER_IS_FACET = "solr.filterisfacet";
 
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
@@ -271,7 +280,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
         if ("".equals(query)) {
             query = null;
         }
-        if (filter != null && !passThroughQuery) {
+        if (filter != null && !passThroughQuery && !request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
             filter = convertQuery(filter, solrSearchParams);
         }
         if ("".equals(filter)) {

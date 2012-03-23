@@ -36,6 +36,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -152,6 +153,22 @@ public class SummonSearchNodeTest extends TestCase {
         return retXML;
     }
 
+    public void testConvertFilterToFacet() throws ParseException {
+        String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
+        String[] EXPECTED = new String[]{
+            "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
+        Map<String, List<String>> result = new HashMap<String, List<String>>();
+        SummonSearchNode.convertFilterToFacet(QUERY, result);
+        assertEquals("Only a single entry should be generated", 1, result.size());
+        List<String> resultList = result.entrySet().iterator().next().getValue();
+        Collections.sort(resultList);
+//        System.out.println("Result list: " + Strings.join(resultList, " "));
+        for (String e: EXPECTED) {
+            assertTrue("The expected facet filter '" + e + "' should exist in the result list "
+                       + Strings.join(resultList, " "),
+                       Collections.binarySearch(resultList, e) >= 0);
+        }
+    }
 
     public void testMoreLikeThis() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -248,6 +265,33 @@ public class SummonSearchNodeTest extends TestCase {
                    DocumentKeys.SEARCH_QUERY, QUERY,
                    DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
                    DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
+        summon.close();
+    }
+
+    public void testFilterFacets() throws RemoteException {
+        final String QUERY = "foo fighters";
+        final String FACET = "SubjectTerms:\"united states\"";
+        final String FACET_NEG = "-SubjectTerms:\"united states\"";
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        assertHits("There should be at least one hit for standard positive faceting",
+                   summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET);
+        assertHits("There should be at least one hit for facet filter positive faceting",
+                   summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET,
+                   SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        assertHits("There should be at least one hit for standard negative faceting",
+                   summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET_NEG,
+                   DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true");
+        assertHits("There should be at least one hit for facet filter negative faceting",
+                   summon,
+                   DocumentKeys.SEARCH_QUERY, QUERY,
+                   DocumentKeys.SEARCH_FILTER, FACET_NEG,
+                   SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
         summon.close();
     }
 
