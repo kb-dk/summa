@@ -61,9 +61,8 @@ public class QueryRewriter {
          * its place.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(TermQuery query) {
             return query;
@@ -74,9 +73,8 @@ public class QueryRewriter {
          * its place.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(PhraseQuery query) {
             return query;
@@ -87,9 +85,8 @@ public class QueryRewriter {
          * its place.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(TermRangeQuery query) {
             return query;
@@ -100,9 +97,8 @@ public class QueryRewriter {
          * its place.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(PrefixQuery query) {
             return query;
@@ -113,22 +109,19 @@ public class QueryRewriter {
          * its place.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(FuzzyQuery query) {
             return query;
         }
 
         /**
-         * Optionally change the given Query or construct a new Query in
-         * its place. This is the fallback method.
+         * Optionally change the given Query or construct a new Query in its place. This is the fallback method.
          *
          * @param query the query to be processed.
-         * @return the processed query. This can be the given query (optionally
-         *         modified) or a new Query, which will be inserted into the Query tree
-         *         at the originating position.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
          */
         public Query onQuery(Query query) {
             return query;
@@ -162,7 +155,7 @@ public class QueryRewriter {
         terse = conf == null ? DEFAULT_TERSE : conf.getBoolean(CONF_TERSE, DEFAULT_TERSE);
     }
 
-    private QueryParser createDefaultQueryParser() {
+    public static QueryParser createDefaultQueryParser() {
         QueryParser queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
             @Override
             public TokenStream tokenStream(String s, Reader reader) {
@@ -209,23 +202,20 @@ public class QueryRewriter {
     }
 
     /**
-     * Rewrites the query from one textual representation to another textual
-     * representation. Any difference in the semantics of the given and
-     * resulting query is due to the modification of the specific term queries.
-     * In other words, if the term queries are not modified, the resulting query
-     * tring is semantically equivalent to the given query string with respect
-     * to the standard Lucene query parser.
+     * Rewrites the query from one textual representation to another textual representation. Any difference in the
+     * semantics of the given and resulting query is due to the modification of the specific term queries.
+     * In other words, if the term queries are not modified, the resulting query String is semantically equivalent to
+     * the given query string with respect to the standard Lucene query parser.
      * </p>
-     * Note that the Lucene query parser handles boolean operators in a rather
-     * exotic way. For details, see
+     * Note that the Lucene query parser handles boolean operators in a rather exotic way. For details, see
      * http://wiki.apache.org/lucene-java/BooleanQuerySyntax
      * https://issues.apache.org/jira/browse/LUCENE-1823
      * https://issues.apache.org/jira/browse/LUCENE-167
      *
      * @param query the unmodified query.
      * @return the rewritten query. Note that this might be null if the Query is collapsed to nothing.
-     * @throws org.apache.lucene.queryparser.classic.ParseException
-     *          if the query could not be parsed by the Lucene query parser.
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the query could not be parsed by the Lucene query
+     *         parser.
      */
     public String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);

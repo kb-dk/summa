@@ -118,8 +118,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
         //
         // That means query does not return the same number of hits
         String query = "foo AND bar AND baz OR spam AND eggs OR ham";
-        assertFalse(
-            HarmoniseTestHelper.countResults(search(query)) == HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
+        assertFalse(HarmoniseTestHelper.countResults(search(query)) ==
+                    HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
     }
 
     public void testRewrite4Alternative() throws RemoteException, ParseException {
@@ -135,8 +135,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
 
     public void testRewrite5() throws RemoteException, ParseException {
         String query = "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)";
-        assertFalse(
-            HarmoniseTestHelper.countResults(search(query)) == HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
+        assertFalse(HarmoniseTestHelper.countResults(search(query)) ==
+                    HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
     }
 
     public void testRewrite6() throws RemoteException, ParseException {
@@ -145,8 +145,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
 
     public void testRewrite7() throws RemoteException, ParseException {
         String query = "foo OR bar AND baz";
-        assertFalse(
-            HarmoniseTestHelper.countResults(search(query)) == HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
+        assertFalse(HarmoniseTestHelper.countResults(search(query)) ==
+                    HarmoniseTestHelper.countResults(search(requestRewriter.rewrite(query))));
     }
 
     public void testRewrite7Alternative() throws RemoteException, ParseException {
