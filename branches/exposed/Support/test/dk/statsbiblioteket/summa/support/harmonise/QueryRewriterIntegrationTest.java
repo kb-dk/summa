@@ -197,7 +197,8 @@ public class QueryRewriterIntegrationTest extends TestCase {
     public void testApostrophes() throws RemoteException, ParseException {
         String simple = "miller genre as social action";
         String apostrophed = "\"miller\" \"genre\" \"as\" \"social\" \"action\"";
-        HarmoniseTestHelper.compareHits(simple, searchDirect(simple), searchDirect(apostrophed));
+        HarmoniseTestHelper.compareHits(
+            simple + " and " + apostrophed, searchDirect(simple), searchDirect(apostrophed));
     }
 
     public void testSpecificTitle() throws RemoteException, ParseException {

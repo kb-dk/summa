@@ -22,13 +22,10 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.DOM;
-import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -37,15 +34,12 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
-import org.w3c.dom.Document;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.rmi.RemoteException;
 import java.security.Security;
@@ -69,7 +63,6 @@ import java.util.regex.Pattern;
  * Summa and Summon, 1 is added to the given start index.
  * Supported FacetKeys: {@link FacetKeys#SEARCH_FACET_FACETS} without the sort
  * option.
- * Note that {@link #SEARCH_SUMMON_RESOLVE_LINKS} is unique to this searcher.
  */
 // Map contenttype, language. Convert date (til år lige nu), potentially library
     // TODO: Check if startpos is 0 or 1, adjuct accordingly
@@ -96,8 +89,8 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String DEFAULT_SUMMON_RESTCALL = "/2.0.0/search";
 
     /**
-     * The access ID for Summon. Serial Solutions controls this and in order to
-     * use this filter, a valid access ID must be provided.
+     * The access ID for Summon. Serial Solutions controls this and in order to use this filter, a valid access ID must
+     * be provided.
      * </p><p>
      * Mandatory.
      * @see {@link #CONF_SUMMON_ACCESSKEY}.
@@ -105,8 +98,8 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String CONF_SUMMON_ACCESSID = "summon.accessid";
 
     /**
-     * The access key for Summon. Serial Solutions controls this and in order to
-     * use this filter, a valid access key must be provided.
+     * The access key for Summon. Serial Solutions controls this and in order to use this filter, a valid access key
+     * must be provided.
      * </p><p>
      * Mandatory.
      * @see {@link #CONF_SUMMON_ACCESSID}.
@@ -129,32 +122,18 @@ public class SummonSearchNode extends SolrSearchNode {
         + "SubjectTerms, " // SB:subject
         + "TemporalSubjectTerms"; // Direct
 
-    /**
-     * Properties with this prefix are added to the summon query. Values are
-     * lists of Strings. If one or more {@link #SEARCH_SUMMON_PARAM_PREFIX} are
-     * specified as part of a search query, the parameters are added to the
-     * configuration defaults. Existing params with the same key are
-     * overwritten.
-     * </p><p>
-     * Optional. Default is empty.
-     */
-    public static final String CONF_SUMMON_PARAM_PREFIX = "summonparam.";
-    /**
-     * Search-time variation of {@link #CONF_SUMMON_PARAM_PREFIX}.
-     */
-    public static final String SEARCH_SUMMON_PARAM_PREFIX = CONF_SUMMON_PARAM_PREFIX;
-
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
+        setID("summon");
         this.conf = conf;
         accessID =   conf.getString(CONF_SUMMON_ACCESSID);
         accessKey =  conf.getString(CONF_SUMMON_ACCESSKEY);
         for (Map.Entry<String, Serializable> entry : conf) {
-            convertSummonParam(summonDefaultParams, entry);
+            convertSolrParam(solrDefaultParams, entry);
         }
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
@@ -169,6 +148,9 @@ public class SummonSearchNode extends SolrSearchNode {
             for (Map.Entry<String, Serializable> entry: conf) {
                 if (entry.getKey().startsWith("summon.") && Arrays.binarySearch(SKIP, entry.getKey()) < 0) {
                     adds.set("solr." + entry.getKey().substring(0, 7), entry.getValue());
+                }
+                if (entry.getKey().startsWith("summonparam.") && Arrays.binarySearch(SKIP, entry.getKey()) < 0) {
+                    adds.set("solr.param." + entry.getKey().substring(0, 12), entry.getValue());
                 }
             }
             for (Map.Entry<String, Serializable> entry: adds) {
@@ -192,207 +174,19 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     /**
-     * Extracts parameters with key prefix "summonparam." and stores the
-     * truncated keys with their value(s) as a list of Strings.
+     * It seems that the Summon query parser does not support ranges. Instead it expects ranges to be stated in 's.rf'
+     * as 'field,minvalue:maxvalue'. This method parses the query, extracts & removes the range query parts and adds
+     * them to the Summon search parameters.
      * </p><p>
-     * If the key is not prefixed by "summonparam.", it is ignored.
-     * </p>
-     * @param summonParam the map where the key/value is stored.
-     * @param entry the source for the key/value pair.
-     */
-    private void convertSummonParam(Map<String, List<String>> summonParam, Map.Entry<String, Serializable> entry) {
-        if (!entry.getKey().startsWith(CONF_SUMMON_PARAM_PREFIX)) {
-            log.trace("convertSummonParam got unsupported key " + entry.getKey() + ". Ignoring entry");
-            return;
-        }
-        String key = entry.getKey().substring(CONF_SUMMON_PARAM_PREFIX.length(), entry.getKey().length());
-        if (entry.getValue() instanceof String) {
-            summonParam.put(key, Arrays.asList((String)entry.getValue()));
-            if (log.isTraceEnabled()) {
-                log.trace("convertSummonParam assigning " + key + ":" + entry.getValue());
-            }
-        } else if (entry.getValue() instanceof List) {
-            ArrayList<String> values = new ArrayList<String>();
-            for (Object v: (List)entry.getValue()) {
-                if (v instanceof String) {
-                    values.add((String)v);
-                } else {
-                    log.warn("Expected List entry of type String in Summon parameter " + key + ", but got Object of "
-                             + "class " + v.getClass());
-                }
-            }
-            if (values.size() == 0) {
-                log.warn("Got empty list for Summon param " + key+ ". Ignoring");
-            } else {
-                if (log.isTraceEnabled()) {
-                    log.trace("convertSummonParam assigning list " + key + ":" + Strings.join(values, ", "));
-                }
-                summonParam.put(key, values);
-            }
-        } else if (entry.getValue() instanceof String[]) {
-            if (log.isTraceEnabled()) {
-                log.trace("convertSummonParam assigning array " + key + ":"
-                          + Strings.join((String[])entry.getValue(), ", "));
-            }
-            summonParam.put(key, Arrays.asList((String[])entry.getValue()));
-        } else {
-            log.warn("convertSummonParam expected String, List<String> or String[] for key " + key
-                     + " but got value of class " + entry.getValue().getClass());
-        }
-    }
-
-    @Override
-    protected void managedSearch(Request request, ResponseCollection responses) throws RemoteException {
-        try {
-            barrierSearch(request, responses);
-        } catch (StackOverflowError e) {
-            String message = String.format(
-                "Caught StackOverflow at outer level during handling of Summon request %s:\n%s",
-                request.toString(true), reduceStackTrace(request, e));
-            log.error(message, e);
-            throw new RemoteException("SummonSearchNode.managedSearch: " + message);
-        }
-    }
-
-    private void barrierSearch(
-        Request request, ResponseCollection responses) throws RemoteException {
-        long startTime = System.currentTimeMillis();
-        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            log.trace("MoreLikeThis search is not supported by Summon, returning immediately");
-            return;
-        }
-
-        String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
-        String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
-        String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
-        if (DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
-            sortKey = null; // null equals relevance ranking
-        }
-        boolean reverseSort = request.getBoolean(
-            DocumentKeys.SEARCH_REVERSE, false);
-        int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
-        int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
-
-        boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-
-        boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
-
-        if (rawQuery == null && filter == null) {
-            log.debug("No filter or query, proceeding anyway as other params might be specified");
-        }
-
-        // s.fq
-
-        String query;
-        query = "*".equals(rawQuery) ? "*:*" : rawQuery;
-
-/*        if (filter == null) {
-            query = rawQuery;
-        } else if (rawQuery == null) {
-            query = filter;
-        } else {
-            if ("*".equals(rawQuery)) {
-                query = filter;
-            } else {
-                query = "(" + filter + ") AND (" + rawQuery + ")";
-            }
-        }*/
-
-        String facetsDef =  request.getString(FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
-        if ("".equals(facetsDef)) {
-            facetsDef = null;
-        }
-        SummonFacetRequest facets = null == facetsDef || "".equals(facetsDef) ? null :
-                                    new SummonFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
-
-        Map<String, List<String>> summonSearchParams = new HashMap<String, List<String>>(summonDefaultParams);
-        for (Map.Entry<String, Serializable> entry : request.entrySet()) {
-            convertSummonParam(summonSearchParams, entry);
-        }
-
-        if (query != null && !passThroughQuery) {
-            query = convertQuery(query, summonSearchParams);
-        }
-        if ("".equals(query)) {
-            query = null;
-        }
-        if (filter != null && !passThroughQuery) {
-            filter = convertQuery(filter, summonSearchParams);
-        }
-        if ("".equals(filter)) {
-            filter = null;
-        }
-
-        long searchTime = -System.currentTimeMillis();
-        log.trace("Performing search for '" + query + "' with facets '" + facets + "'");
-        String summonResponse;
-        String summonTiming;
-        try {
-            Pair<String, String> sums = summonSearch(
-                request, filter, query, summonSearchParams, collectdocIDs ? facets : null,
-                startIndex, maxRecords, sortKey, reverseSort,responses);
-            summonResponse = sums.getKey();
-            summonTiming = sums.getValue();
-        } catch (StackOverflowError e) {
-            String message = String.format(
-                "Caught StackOverflow while performing summon request %s:\n%s",
-                request.toString(true), reduceStackTrace(request, e));
-            log.error(message, e);
-            throw new RemoteException("SummonSearchNode.barrierSearch: " + message);
-
-        }
-        if (summonResponse == null || "".equals(summonResponse)) {
-            throw new RemoteException("Summon search for '" + query + " yielded empty result");
-        }
-        searchTime += System.currentTimeMillis();
-
-        long buildResponseTime = -System.currentTimeMillis();
-        long hitCount;
-        try {
-            hitCount = responseBuilder.buildResponses(request, facets, responses, summonResponse, summonTiming);
-        } catch (XMLStreamException e) {
-            String message = "Unable to transform Summon XML response to Summa response for '" + request + "'";
-            if (log.isDebugEnabled()) {
-                log.debug(message + ". Full XML follows:\n" + summonResponse);
-            }
-            throw new RemoteException(message, e);
-        } catch (StackOverflowError e) {
-            String message = String.format(
-                "Caught StackOverflow while building response for summon request %s\nReduced stack trace:\n%s\n"
-                + "Reduced raw summon response:\n%s",
-                request.toString(true), reduceStackTrace(request, e),
-                summonResponse.length() > 2000 ?
-                summonResponse.substring(0, 2000) : summonResponse);
-            log.error(message, e);
-            throw new RemoteException("SummonSearchNode.barrierSearch: " + message);
-
-        }
-        buildResponseTime += System.currentTimeMillis();
-
-        log.debug("fullSearch(..., " + filter + ", " + rawQuery + ", " + startIndex + ", " + maxRecords + ", "
-                  + sortKey + ", " + reverseSort + ") with " + hitCount + " hits finished in " + searchTime + " ms ("
-                  + searchTime + " ms for remote search " + "call, " + buildResponseTime + " ms for converting to "
-                  + "Summa response)");
-        responses.addTiming("summon.search.buildresponses", buildResponseTime);
-        responses.addTiming("summon.search.total", (System.currentTimeMillis() - startTime));
-    }
-
-    /**
-     * It seems that the Summon query parser does not support ranges. Instead
-     * it expects ranges to be stated in 's.rf' as 'field,minvalue:maxvalue'.
-     * This method parses the query, extracts & removes the range query parts
-     * and adds them to the Summon search parameters.
-     * </p><p>
-     * Similarly, term queries with the field 'ID' are special as the text-
-     * section must be modified by stripping leading {@link #idPrefix}.
+     * Similarly, term queries with the field 'ID' are special as the text section must be modified by stripping leading
+     * {@link #idPrefix}.
      * @param query as entered by the user.
      * @param summonSearchParams range-queries are added to this.
      * @return the query minus range queries.
      */
-    public String convertQuery(
-        final String query,
-        final Map<String, List<String>> summonSearchParams) {
-        final String RF = "s.rf";
+    @Override
+    public String convertQuery(final String query, final Map<String, List<String>> summonSearchParams) {
+        final String RF = "s.rf"; // RangeField
         try {
             return new QueryRewriter(conf, null, new QueryRewriter.Event() {
                 @Override
@@ -428,61 +222,25 @@ public class SummonSearchNode extends SolrSearchNode {
         }
     }
 
-    private String getEmptyIsNull(Request request, String key) {
-        String response = request.getString(key, null);
-        return "".equals(response) ? null : response;
-    }
-
-    private boolean warmupCalled = false;
-    @Override
-    protected void managedWarmup(String request) {
-        if (!warmupCalled) {
-            log.debug("No warmup for '" + request + "' as warmup is handled externally. Further requests "
-                      + "for warmup will be silently ignored");
-            warmupCalled = true;
-        }
-    }
-
-    @Override
-    protected void managedOpen(String location) throws RemoteException {
-        log.info("Open called with location '" + location + "' which is "
-                 + "ignored by this search node as it is stateless");
-    }
-
-    @Override
-    protected void managedClose() throws RemoteException {
-        log.debug("managedClose() called. No effect as this search node is stateless");
-    }
-
-    /* Copied and slightly modified from Yellowfoot (internal project at
-       Statsbiblioteket)
-     */
-
     /**
      * Perform a search in Summon.
      *
-     *
-     * @param request
-     * @param filter    a Solr-style filter (same syntax as query).
-     * @param query     a Solr-style query.
-     * @param summonParams optional extended params for Summon. If not null,
-     *                  these will be added to the Summon request.
-     * @param facets    which facets to request or null if no facets are wanted.
-     * @param startIndex the index for the first Record to return, counting
-     *                   from 0. This is translated to startpage for Solr.
-     *
+     * @param request    the basic request.
+     * @param filter     a Solr-style filter (same syntax as query).
+     * @param query      a Solr-style query.
+     * @param solrParams optional extended params for Solr. If not null, these will be added to the Solr request.
+     * @param facets     which facets to request or null if no facets are wanted.
+     * @param startIndex the index for the first Record to return, counting from 0.
      * @param maxRecords number of items per page.
-     * @param sortKey the field to sort on. If null, default ranking sort is
-     *                used.
+     * @param sortKey    the field to sort on. If null, default ranking sort is used.
      * @param reverseSort if true, sort order is reversed.
-     * @param responses results are stored here.
-     * @return XML with the search result as per Summon API followed by timing
-     *         information.
-     * @throws java.rmi.RemoteException if there were an error performing the
-     * remote search call.
+     * @param responses  results are stored here.
+     * @return XML with the search result as per Solr API followed by timing information.
+     * @throws java.rmi.RemoteException if there were an error performing the remote search call.
      */
-    private Pair<String, String> summonSearch(
-        Request request, String filter, String query, Map<String, List<String>> summonParams, SummonFacetRequest facets,
+    @Override
+    protected Pair<String, String> solrSearch(
+        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort,
         ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
@@ -492,8 +250,8 @@ public class SummonSearchNode extends SolrSearchNode {
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> querymap = buildSummonQuery(
             request, filter, query, facets, startpage, perpage, sortKey, reverseSort);
-        if (summonParams != null) {
-            querymap.putAll(summonParams);
+        if (solrParams != null) {
+            querymap.putAll(solrParams);
         }
 
         Date date = new Date();
@@ -513,12 +271,11 @@ public class SummonSearchNode extends SolrSearchNode {
         String retval = prefixIDs(result, idPrefix);
         prefixIDs += System.currentTimeMillis();
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
-        return new Pair<String, String>(
-            retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
+        return new Pair<String, String>(retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
     }
 
     private Map<String, List<String>> buildSummonQuery(
-        Request request, String filter, String query, SummonFacetRequest facets,
+        Request request, String filter, String query, SolrFacetRequest facets,
         int startpage, int perpage, String sortKey, boolean reverseSort) {
         Map<String, List<String>> querymap = new HashMap<String, List<String>>();
 
@@ -575,119 +332,10 @@ public class SummonSearchNode extends SolrSearchNode {
         return querymap;
     }
 
-    /*
-     * Add to an existing Summon search using commands
-     * @param queryString The query string identifiying an existing Summon search
-     * @param resolveLinks whether or not to call the link resolver to resolve openurls to actual links
-     * @param commands The commands to apply to the search
-     * @return A String containing XML describing the search result
-     */
-/*    public String continueSearch(String queryString, boolean resolveLinks, String... commands) {
-        long methodStart = System.currentTimeMillis();
-        log.trace("Calling continueSearch(" + queryString + ", " + commands + ")");
-        String result = "";
-
-        String newQueryString = queryString;
-        for (String s : commands) {
-            try {
-                newQueryString += "&s.cmd=" + URLEncoder.encode(s, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                newQueryString += "&s.cmd=" + s;
-            }
-        }
-        // TODO: use http://hc.apache.org/ instead?
-        Map<String, List<String>> tempParams = new HashMap<String, List<String>>();
-        try {
-            for (String param : newQueryString.split("&")) {
-                String[] pair = param.split("=");
-                String key = null;
-                key = URLDecoder.decode(pair[0], "UTF-8");
-                String value = URLDecoder.decode(pair[1], "UTF-8");
-                List<String> values = tempParams.get(key);
-                if (values == null) {
-                    values = new ArrayList<String>();
-                    tempParams.put(key, values);
-                }
-                values.add(value);
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-
-        Date date = new Date();
-        DateFormat formatter = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-
-        String idstring = computeIdString("application/xml", formatter.format(date),
-                "api.summon.serialssolutions.com", "/search", tempParams);
-        String queries = computeSortedQueryString(tempParams, true);
-        log.trace("Parameter preparation to Summon done in " + (System.currentTimeMillis() - methodStart) + "ms");
-        try {
-            long serviceStart = System.currentTimeMillis();
-            result = getData("http://api.summon.serialssolutions.com",
-                             "/search?" + queries, date, idstring, null,new ResponseCollection());
-            log.trace("Call to Summon done in " + (System.currentTimeMillis() - serviceStart) + "ms");
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-        String retval = prefixIDs(result, idPrefix);
-        if (resolveLinks) {
-            retval = linkResolve(retval);
-        }
-        log.trace("continueSearch done in " + (System.currentTimeMillis() - methodStart) + "ms");
-        return retval;
-    }
-  */
     private static String computeIdString(String acceptType, String  date, String  host, String  path,
                                           Map<String, List<String>> queryParameters) {
         return appendStrings(acceptType, date, host, path, computeSortedQueryString(queryParameters, false));
     }
-
-    /**
-     * Sort and optionally urlencodes a query string
-     * @param queryParameters A Map<String, List<String>> containing the query parameters
-     * @param urlencode Whether or not to urlencode the query parameters
-     * @return A sorted and urlencoded query string
-     */
-    private static String computeSortedQueryString(Map<String, List<String>> queryParameters, boolean urlencode) {
-        List<String> parameterStrings = new ArrayList<String>();
-
-        // for each parameter, get its key and values
-        for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
-/*            if ("s.q".equals(entry.getKey())) {
-                System.out.println("Summon query: '" + entry.getValue() + "'");
-            }*/
-            // for each value, create a string in the format key=value
-            for (String value : entry.getValue()) {
-                if (urlencode) {
-                    try {
-                        parameterStrings.add(entry.getKey() + "=" + URLEncoder.encode(value,"UTF-8"));
-                    } catch (UnsupportedEncodingException e) {
-                        parameterStrings.add(entry.getKey() + "=" + value);
-                    }
-                } else {
-                    parameterStrings.add(entry.getKey() + "=" + value);
-                }
-            }
-        }
-
-        // sort the individual parameters
-        Collections.sort(parameterStrings);
-        StringBuilder queryString = new StringBuilder();
-
-        // append strings together with the '&' character as a delimiter
-        for (String parameterString : parameterStrings) {
-            queryString.append(parameterString).append("&");
-        }
-
-        // remove any final trailing '&'
-        if (queryString.length() > 0) {
-            queryString.setLength(queryString.length() - 1);
-        }
-        return queryString.toString();
-    }
-
 
 
     /**
@@ -789,89 +437,8 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     /**
-     * Given an id returns the corresponding Summon record in a format similar to Summa's shortformat
-     * @param id Summon id
-     * @return A String containing XML in shortformat
-     * @throws java.rmi.RemoteException if Summon could not be contacted-
-     */
-    public String getShortRecord(String id) throws RemoteException {
-        // TODO: include id in shortrecord tag to help out sendListEmail.jsp and ExportToExternalFormat.java
-        StringBuilder retval = new StringBuilder();
-
-        if (id.startsWith(idPrefix)) {
-            id = id.substring(idPrefix.length());
-        }
-
-        String temp = summonSearch(
-            null, null, "ID:" + id, null, null, 1, 1, null, false, new ResponseCollection()).getKey();
-        Document dom = DOM.stringToDOM(temp);
-
-
-        retval.append("<field name=\"shortformat\">\n");
-        retval.append("  <shortrecord>\n");
-        retval.append("    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n");
-        retval.append("      <rdf:Description>\n");
-        retval.append("        <dc:title>").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"Title\"]/value/text()", ""))).
-                append(" : ").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"Subtitle\"]/value/text()", ""))).
-                append("</dc:title>\n");
-        retval.append("        <dc:creator>").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"Author\"]/value/text()", ""))).
-                append("</dc:creator>\n");
-        retval.append("        <dc:type xml:lang=\"da\">").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"ContentType\"]/value/text()", ""))).
-                append("</dc:type>\n");
-        retval.append("        <dc:type xml:lang=\"en\">").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"ContentType\"]/value/text()", ""))).
-                append("</dc:type>\n");
-        retval.append("        <dc:date>").
-                append(XMLUtil.encode(DOM.selectString(dom, "//documents/document/field[@name=\"PublicationDate_xml\"]/datetime/@year", ""))).
-                append("</dc:date>\n");
-        retval.append("        <dc:format></dc:format>\n");
-        retval.append("      </rdf:Description>\n");
-        retval.append("    </rdf:RDF>\n");
-        retval.append("  </shortrecord>\n");
-        retval.append("</field>\n");
-
-
-        return retval.toString();
-    }
-
-
-    /**
-     * Gets a record from Summon
-     * @param id Summon id
-     * @return A String containing a Summon record in XML
-     * @throws java.rmi.RemoteException if the Record could not be retrieved.
-     */
-    public String getRecord(String id) throws RemoteException {
-        return getRecord(id, false);
-    }
-
-    /**
-     * Gets a record from Summon while optionally resolving links
-     * @param id Summon id
-     * @param resolveLinks Whether or not to resolve links through the link resolver
-     * @return A String containing a Summon record in XML
-     * @throws java.rmi.RemoteException if the Record could not be retrieved.
-     */
-    public String getRecord(String id, boolean resolveLinks) throws RemoteException {
-        throw new UnsupportedOperationException("Not implemented yet");
-/*        String retval = "";
-
-        if (id.startsWith(idPrefix)) {
-            id = id.substring(idPrefix.length());
-        }
-
-        String temp = summonSearch(
-            null, null, "ID:" + id, null, null, 1, 1, null, false,new ResponseCollection()).getKey();
-
-        return retval;*/
-    }
-
-    /**
-     * Takes the xml result from a Summon query and prefixes all IDs with prefix. It looks for the value-tag in <field name="ID">
+     * Takes the xml result from a Summon query and prefixes all IDs with prefix. It looks for the value-tag in
+     * <field name="ID">.
      * @param content xml result from a Summon query as a String
      * @param prefix the String the use as prefix
      * @return content with all IDs prefixed with prefix
@@ -895,20 +462,5 @@ public class SummonSearchNode extends SolrSearchNode {
 
         return retval.toString();
     }
-
-
-/*    public static void main(String[] args) {
-
-        String temp;
-
-
-        temp = simpleSearch("foo", "1", "3", false);
-        System.out.println(temp);
-
-        temp = simpleSearch("CatchAll:foo", "1", "3", false);
-        System.out.println(temp);
-    }
-  */
-
 
 }

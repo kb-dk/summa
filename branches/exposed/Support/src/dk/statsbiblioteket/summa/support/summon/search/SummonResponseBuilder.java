@@ -149,7 +149,7 @@ public class SummonResponseBuilder implements Configurable {
 
     private boolean rangeWarned = false;
     public long buildResponses(
-        Request request, SummonFacetRequest facets,
+        Request request, SolrFacetRequest facets,
         ResponseCollection responses,
         String summonResponse, String summonTiming) throws XMLStreamException {
         long startTime = System.currentTimeMillis();
@@ -292,7 +292,7 @@ public class SummonResponseBuilder implements Configurable {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private FacetResult<String> extractFacetResult(XMLStreamReader xml, SummonFacetRequest facets)
+    private FacetResult<String> extractFacetResult(XMLStreamReader xml, SolrFacetRequest facets)
         throws XMLStreamException {
         long startTime = System.currentTimeMillis();
         HashMap<String, Integer> facetIDs =
@@ -301,7 +301,7 @@ public class SummonResponseBuilder implements Configurable {
         HashMap<String, String[]> fields =
             new HashMap<String, String[]>(facets.getFacets().size());
         for (int i = 0 ; i < facets.getFacets().size() ; i++) {
-            SummonFacetRequest.Facet facet = facets.getFacets().get(i);
+            SolrFacetRequest.Facet facet = facets.getFacets().get(i);
             facetIDs.put(facet.getField(), i);
             // TODO: Consider displayname
             fields.put(facet.getField(), new String[]{facet.getField()});

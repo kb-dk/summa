@@ -93,6 +93,11 @@ public abstract class SearchNodeImpl implements SearchNode {
             SummaSearcherImpl.DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     /**
+     * The id of the SearchNode. If no ID is given, a default id will be used.
+     */
+    public static final String CONF_ID = "summa.search.id";
+
+    /**
      * The size in bytes of the buffer used when retrieving warmup-data.
      */
     private static final int BUFFER_SIZE = 8192;
@@ -107,23 +112,39 @@ public abstract class SearchNodeImpl implements SearchNode {
     private int warmupMaxTime = DEFAULT_WARMUP_MAXTIME;
     private boolean searchWhileOpening = DEFAULT_SEARCH_WHILE_OPENING;
     private ChangingSemaphore slots = new ChangingSemaphore(0);
+    private String id;
+    private boolean explicitID = false;
 
     public SearchNodeImpl(Configuration conf) {
         log.trace("Constructing SearchNodeImpl");
-        concurrentSearches = conf.getInt(CONF_NUMBER_OF_CONCURRENT_SEARCHES,
-                                         concurrentSearches);
+        concurrentSearches = conf.getInt(CONF_NUMBER_OF_CONCURRENT_SEARCHES, concurrentSearches);
         warmupData = conf.getString(CONF_WARMUP_DATA, warmupData);
         warmupMaxTime = conf.getInt(CONF_WARMUP_MAXTIME, warmupMaxTime);
-        searchWhileOpening = conf.getBoolean(CONF_SEARCH_WHILE_OPENING,
-                                             searchWhileOpening);
-        searcherAvailabilityTimeout =
-                conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
-                            searcherAvailabilityTimeout);
+        searchWhileOpening = conf.getBoolean(CONF_SEARCH_WHILE_OPENING, searchWhileOpening);
+        searcherAvailabilityTimeout = conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout);
+        explicitID = conf.valueExists(CONF_ID);
+        id = conf.getString(CONF_ID,  this.getClass().getSimpleName());
         log.debug(String.format(
                 "Constructed SearchNodeImpl with concurrentSearches %d, "
                 + "warmupData '%s', warmupMaxTime %d, searchWhileOpening %s",
-                concurrentSearches, warmupData, warmupMaxTime,
-                searchWhileOpening));
+                concurrentSearches, warmupData, warmupMaxTime, searchWhileOpening));
+    }
+
+    /**
+     * @return the ID for this searcher.
+     */
+    public String getID() {
+        return id;
+    }
+    protected void setID(String id) {
+        this.id = id; // Only config triggers explicitID
+    }
+
+    /**
+     * @return true if the ID was specified in the Configuration.
+     */
+    protected boolean isIDExplicit() {
+        return explicitID;
     }
 
     /**

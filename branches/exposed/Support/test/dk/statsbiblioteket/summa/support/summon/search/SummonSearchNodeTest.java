@@ -554,7 +554,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         Configuration confInside = SummonTestHelper.getDefaultSummonConfiguration();
         Configuration confOutside = SummonTestHelper.getDefaultSummonConfiguration();
-        confOutside.set(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+        confOutside.set(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
                         new ArrayList<String>(Arrays.asList("false"))
         );
 
@@ -570,7 +570,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection responsesOutside = new ResponseCollection();
         summonOutside.search(request, responsesOutside);
 
-        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+        request.put(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
                     new ArrayList<String>(Arrays.asList("false")));
         ResponseCollection responsesSearchTweak = new ResponseCollection();
         summonInside.search(request, responsesSearchTweak);
@@ -657,7 +657,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.clear();
         request.put(DocumentKeys.SEARCH_QUERY, QUERY);
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+        request.put(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
                     new ArrayList<String>(Arrays.asList("false")));
         request.put(DocumentKeys.SEARCH_MAX_RECORDS, 15);
         String rOld15 = request.toString(true);
@@ -668,7 +668,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.clear();
         request.put(DocumentKeys.SEARCH_QUERY, QUERY);
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-        request.put(SummonSearchNode.CONF_SUMMON_PARAM_PREFIX + "s.ho",
+        request.put(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
                     new ArrayList<String>(Arrays.asList("false")));
         request.put(DocumentKeys.SEARCH_MAX_RECORDS, 20);
         String rOld20 = request.toString(true);

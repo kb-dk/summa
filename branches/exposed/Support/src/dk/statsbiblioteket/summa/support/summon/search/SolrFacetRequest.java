@@ -30,14 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * A representation of a facet request. Used to bridge Summa and Summon facet
- * handling.
+ * A representation of a facet request. Used to bridge Summa and Solr facet handling.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummonFacetRequest {
-    private static Log log = LogFactory.getLog(SummonFacetRequest.class);
+public class SolrFacetRequest {
+    private static Log log = LogFactory.getLog(SolrFacetRequest.class);
     private String originalRequest;
     private Structure originalStructure;
     private List<Facet> facets;
@@ -47,25 +46,20 @@ public class SummonFacetRequest {
      *                    pageSize in parenthesis after fact name.
      * @param defaultFacetPageSize if no page size is specified for a facet,
      *                    this page size is used.
-     * @param combineMode 'and' or 'or' as per the Summon API.
+     * @param combineMode 'and' or 'or' as per the Solr API.
      */
-    public SummonFacetRequest(String facetsDef, int defaultFacetPageSize,
-                              String combineMode) {
+    public SolrFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
         originalRequest = facetsDef;
         originalStructure = new Structure(facetsDef, defaultFacetPageSize);
         facets = new ArrayList<Facet>(originalStructure.getFacetList().size());
         for (FacetStructure fc: originalStructure.getFacetList()) {
             if (!FacetStructure.SORT_POPULARITY.equals(fc.getSortType())) {
-                log.warn("The facet request '" + facetsDef + "' defines sort "
-                         + "order that is not '"
-                         + FacetStructure.SORT_POPULARITY + "'. This is not "
-                         + "supported by this faceter");
+                log.warn("The facet request '" + facetsDef + "' defines sort order that is not '"
+                         + FacetStructure.SORT_POPULARITY + "'. This is not supported by this faceter");
             }
-            facets.add(new Facet(
-                fc.getFields()[0], combineMode, 1, fc.getWantedTags()));
+            facets.add(new Facet(fc.getFields()[0], combineMode, 1, fc.getWantedTags()));
         }
-        log.trace("Constructed facet request from '" + facetsDef + "' with "
-                  + "defaultFacetPageSize=" + defaultFacetPageSize
+        log.trace("Constructed facet request from '" + facetsDef + "' with defaultFacetPageSize=" + defaultFacetPageSize
                   + " and combineMode=" + combineMode);
     }
 
@@ -83,12 +77,12 @@ public class SummonFacetRequest {
     }
 
     /**
-     * @return the facet request as a list of Summon API facet definitions.
+     * @return the facet request as a list of Solr API facet definitions.
      */
     public List<String> getFacetQueries() {
         List<String> facetQueries = new ArrayList<String>(facets.size());
         for (Facet facet: facets) {
-            facetQueries.add(facet.getSummonCall());
+            facetQueries.add(facet.getSolrCall());
         }
         return facetQueries;
     }
@@ -110,20 +104,18 @@ public class SummonFacetRequest {
         private int startPage;
         private int pageSize;
 
-        public Facet(String field, String combineMode,
-                     int startPage, int pageSize) {
+        public Facet(String field, String combineMode, int startPage, int pageSize) {
             this.field = field;
             if (!("and".equals(combineMode) || "or".equals(combineMode))) {
                 throw new IllegalArgumentException(
-                    "Only 'and' and 'or' are acceptable combine modes for "
-                    + "facets. Received '" + combineMode + "'");
+                    "Only 'and' and 'or' are acceptable combine modes for facets. Received '" + combineMode + "'");
             }
             this.combineMode = combineMode;
             this.startPage = startPage;
             this.pageSize = pageSize;
         }
 
-        public String getSummonCall() {
+        public String getSolrCall() {
             return field + "," + combineMode + ",1," + pageSize;
         }
 
