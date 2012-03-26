@@ -32,8 +32,49 @@ import java.util.List;
 public class QuerySanitizer {
     private static Log log = LogFactory.getLog(QuerySanitizer.class);
 
+    /**
+     * Whether or not mismatched quotes should be fixed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FIX_QUOTES = "sanitizer.fixquotes";
+    public static final boolean DEFAULT_FIX_QUOTES = true;
+
+    /**
+     * Whether or not mismatched parentheses should be fixed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FIX_PARENTHESES = "sanitizer.fixparentheses";
+    public static final boolean DEFAULT_FIX_PARENTHESES = true;
+
+    /**
+     * Whether or not qualifiers without terms (foo:) should be fixed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FIX_QUALIFIERS = "sanitizer.fixqualifierswithoutterms";
+    public static final boolean DEFAULT_FIX_QUALIFIERS = true;
+
+    /**
+     * Whether or not trailing exclamation marks should be fixed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FIX_EXCLAMATIONS = "sanitizer.fixtrailingexclamationmarks";
+    public static final boolean DEFAULT_FIX_EXCLAMATIONS = true;
+
+    private final boolean fixQuotes;
+    private final boolean fixParentheses;
+    private final boolean fixQualifiers;
+    private final boolean fixExclamations;
+
     @SuppressWarnings({"UnusedParameters"})
     public QuerySanitizer(Configuration conf) {
+        fixQuotes =       conf.getBoolean(CONF_FIX_QUOTES, DEFAULT_FIX_QUOTES);
+        fixParentheses =  conf.getBoolean(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES);
+        fixQualifiers =   conf.getBoolean(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS);
+        fixExclamations = conf.getBoolean(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS);
         log.debug("Created QuerySanitizer");
     }
 
@@ -114,10 +155,18 @@ public class QuerySanitizer {
     private SanitizedQuery sanitize(SanitizedQuery query) {
         int lastChangeCount = -1;
         while (query.getChangeCount() != lastChangeCount) {
-            fixQuotes(query); // Must be first
-            fixParentheses(query);
-            removeTrailing(query, "Qualifier (term with colon) without content", ':'); // TODO: Consider 'foo:(bar baz)'
-            removeTrailing(query, "Exclamation mark without expression", '!');         // TODO: Consider 'foo!!!'
+            if (fixQuotes) {
+                fixQuotes(query); // Must be first
+            }
+            if (fixParentheses) {
+                fixParentheses(query);
+            }
+            if (fixQualifiers) { // TODO: Consider 'foo:(bar baz)'
+                removeTrailing(query, "Qualifier (term with colon) without content", ':');
+            }
+            if (fixExclamations) { // TODO: Consider 'foo!!!'
+                removeTrailing(query, "Exclamation mark without expression", '!');
+            }
             lastChangeCount = query.getChangeCount();
         }
         return query;
@@ -161,29 +210,6 @@ public class QuerySanitizer {
         if (parenthesisLevel > 0) {
             query.addChange(
                 removeChar(removeChar(q, '('), ')'), SanitizedQuery.CHANGE.error, "Missing end parenthesis");
-        }
-    }
-
-    private void fixColonWithoutTerm(SanitizedQuery query) {
-        String q = query.getLastQuery();
-        boolean inQuote = false;
-        boolean escape = false;
-        for (int i = 0 ; i < q.length() ; i++) {
-            char p = i == 0 ? 0 : q.charAt(i-1); // previous
-            char c = q.charAt(i);                // current
-            char n = i == q.length()-1 ? 0 : q.charAt(i+1); // next
-            if (escape) {
-                escape = false;
-            } else if (p == '\\') {
-                escape = true;
-            } else if (c == '\"') {
-                inQuote = !inQuote;
-            } else if (!inQuote && c == ':' && (n == 0 || n == ' ')) { // TODO: Consider 'foo:(bar baz)'
-                query.addChange(n == 0 ? q.substring(0, q.length()-1) :
-                                q.substring(0, i) + q.substring(i + 1), SanitizedQuery.CHANGE.summasyntax,
-                                "Qualifier (term with colon) without content");
-                return;
-            }
         }
     }
 

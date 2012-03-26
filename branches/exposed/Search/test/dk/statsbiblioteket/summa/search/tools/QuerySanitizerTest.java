@@ -12,7 +12,6 @@ public class QuerySanitizerTest extends TestCase {
     private QuerySanitizer sanitizer = new QuerySanitizer(Configuration.newMemoryBased());
 
     private QuerySanitizer.SanitizedQuery.CHANGE ERROR = QuerySanitizer.SanitizedQuery.CHANGE.error;
-    private QuerySanitizer.SanitizedQuery.CHANGE NONE = QuerySanitizer.SanitizedQuery.CHANGE.none;
     private QuerySanitizer.SanitizedQuery.CHANGE SYNTAX = QuerySanitizer.SanitizedQuery.CHANGE.summasyntax;
 
     public QuerySanitizerTest(String name) {
