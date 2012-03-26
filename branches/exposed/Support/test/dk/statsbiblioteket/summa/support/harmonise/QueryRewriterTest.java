@@ -204,6 +204,13 @@ public class QueryRewriterTest extends TestCase {
                        "foo bar");
     }
 
+    public void testAmpersand() throws ParseException {
+        assertIdentity("\"foo\" \"&\" \"bar\"",
+                       "foo & bar");
+        assertIdentity("\"foo&bar\"", // TODO: Consider if this should be tokenized so that weight adjustements works
+                       "foo&bar");
+    }
+
     public void testProximityWeighted() throws ParseException {
         assertIdentity("\"foo\"^2.0 \"bar\"^3.0",
                        "foo^2 bar^3");
