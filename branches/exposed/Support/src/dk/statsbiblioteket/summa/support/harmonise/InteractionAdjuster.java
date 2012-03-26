@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +40,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
-import org.apache.tools.ant.util.ConcatFileInputStream;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -794,11 +794,14 @@ public class InteractionAdjuster implements Configurable {
      */
     private void adjustDocumentScores(Request request, DocumentResponse documentResponse) {
         log.trace("adjustDocumentScores called");
-        boolean isSimple = (!pureNegativeNotSimple
-                            || !(request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE)
-                                 && request.containsKey(DocumentKeys.SEARCH_FILTER)))
-                           && request.containsKey(DocumentKeys.SEARCH_QUERY)
-                           && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY));
+        boolean filtersContaminateQuery =
+            request.containsKey(DocumentKeys.SEARCH_FILTER)
+            && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
+            && !(pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
+
+        boolean isSimple = (!filtersContaminateQuery
+                            && request.containsKey(DocumentKeys.SEARCH_QUERY)
+                            && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY)));
 
         double factor = isSimple ? simpleBaseFactor : baseFactor;
         double addition = isSimple ? simpleBaseAddition : baseAddition;
