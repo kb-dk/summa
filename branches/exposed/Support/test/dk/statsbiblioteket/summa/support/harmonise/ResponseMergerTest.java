@@ -88,6 +88,25 @@ public class ResponseMergerTest extends TestCase {
         ));
     }
 
+    public void testForceEquality() {
+        Configuration conf = Configuration.newMemoryBased(
+            ResponseMerger.CONF_MODE, ResponseMerger.MODE.concatenate,
+            ResponseMerger.CONF_ORDER, "searcherC, searcherA"
+        );
+
+        ResponseMerger merger1 = new ResponseMerger(conf);
+        ResponseCollection responses1 = merger1.merge(new Request(), generateResponses());
+
+        conf.set(ResponseMerger.CONF_POST, ResponseMerger.POST.enforce);
+        conf.set(ResponseMerger.CONF_FORCE_TOPX, 4);
+        conf.set(ResponseMerger.CONF_FORCE_RULES, "searcherB(0)");
+        ResponseMerger merger2 = new ResponseMerger(conf);
+        ResponseCollection responses2 = merger2.merge(new Request(), generateResponses());
+
+        assertEquals("forceRules with 0 should not change anything",
+                     responses1.iterator().next().toXML(), responses2.iterator().next().toXML());
+    }
+
     // Note: The insertion-points for Bs are semi-random with a seed from query
     public void testIfNone() {
         // Plain enforce
