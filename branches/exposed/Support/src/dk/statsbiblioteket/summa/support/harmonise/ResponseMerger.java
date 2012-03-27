@@ -544,7 +544,7 @@ public class ResponseMerger implements Configurable {
                 matches++;
             }
         }
-        if (matches >= topX) {
+        if (matches >= required) {
             return; // Enough matches already
         }
         // Extract the required records
