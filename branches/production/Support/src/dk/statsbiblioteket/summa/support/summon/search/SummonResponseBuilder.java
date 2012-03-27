@@ -152,6 +152,7 @@ public class SummonResponseBuilder implements Configurable {
         Request request, SolrFacetRequest facets,
         ResponseCollection responses,
         String summonResponse, String summonTiming) throws XMLStreamException {
+//        System.out.println(summonResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         boolean collectdocIDs = request.getBoolean(
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
@@ -484,6 +485,11 @@ public class SummonResponseBuilder implements Configurable {
                         }
                     }
                     field.setName("Author");
+
+                    if (extracted.containsKey("Author")) {
+                        extracted.put("Author", field.getContent());
+                    }
+
                     break;
                 }
             }
