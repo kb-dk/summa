@@ -571,6 +571,7 @@ public class SummonResponseBuilder implements Configurable {
         }
     }
 
+    private boolean warnedOnMissingFullname = false;
     private boolean xmlFieldsWarningFired = false;
     /**
      * Extracts a Summon document field and converts it to
@@ -622,13 +623,29 @@ public class SummonResponseBuilder implements Configurable {
                 iterateElements(xml, "field", "contributor", new XMLCallback() {
                     @Override
                     public void execute(XMLStreamReader xml) throws XMLStreamException {
-                        value.append(value.length() == 0 ? xml.getAttributeValue("", "fullname") :
-                                "\n" + xml.getAttributeValue("", "fullname"));
+                        boolean found = false;
+                        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+                            if ("fullname".equals(xml.getAttributeLocalName(i))) {
+                                if (value.length() != 0) {
+                                    value.append("\n");
+                                }
+                                value.append(xml.getAttributeValue(i));
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found && !warnedOnMissingFullname) {
+                            log.warn("Unable to locate attribute 'fullname' in 'contributor' element in 'Author_xml'. "
+                                     + "This warning will not be repeated");
+                            warnedOnMissingFullname = true;
+                        }
                     }
                 });
                 if (value.length() == 0) {
                     log.debug("No value for field '" + name + "'");
                     return null;
+                } else if (log.isTraceEnabled()) {
+                    log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
                 }
 //                System.out.println(value);
                 return new DocumentResponse.Field(name, value.toString(), true);

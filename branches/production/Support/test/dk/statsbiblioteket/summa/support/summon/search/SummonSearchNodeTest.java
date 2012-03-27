@@ -898,6 +898,39 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    public void testAuthor_xmlExtraction_shortformat2() throws RemoteException {
+        String query = "ID:FETCH-LOGICAL-c1590-71216b8d44129eb55dba9244d0a7ad32261d9b5e7a00e7987e3aa5b33750b0dc1";
+        { // sanity-check the Author-field
+            String expected = "Fallah, Mahdi\n"
+                              + "Kharazmi, Elham";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("author direct", summon, query, "Author", expected, false);
+            summon.close();
+        }
+
+        { // shortformat should match Author
+            String expected =
+                "  <shortrecord>\n"
+                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                + "      <rdf:Description>\n"
+                + "        <dc:title>Substantial under-estimation in cancer incidence estimates for developing "
+                + "countries due to under-ascertainment in elderly cancer cases</dc:title>\n"
+                + "        <dc:creator>Fallah, Mahdi</dc:creator>\n"
+                + "        <dc:creator>Kharazmi, Elham</dc:creator>\n"
+                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                + "        <dc:date>2008</dc:date>\n"
+                + "        <dc:format></dc:format>\n"
+                + "      </rdf:Description>\n"
+                + "    </rdf:RDF>\n"
+                + "  </shortrecord>\n";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
+            summon.close();
+        }
+    }
+
     private void assertFieldContent(String message, SearchNode searchNode, String query, String fieldName,
                                     String expected, boolean sort) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
