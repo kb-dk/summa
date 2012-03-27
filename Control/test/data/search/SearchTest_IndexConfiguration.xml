@@ -1,0 +1,153 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2784</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+
+        <entry>
+            <key>filter.name</key>
+            <value class="string">Simple fagref index</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">StorageReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.startfromscratch</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.maxread.records</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.base</key>
+                                    <value class="string">fagref</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">FagrefTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">/tmp/summatest/data/search/fagref_xslt/fagref_index.xsl</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">OldToNewTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">DocumentCreator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">IndexUpdate</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.createnewindex</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.indexrootlocation</key>
+                                    <value class="string">/tmp/summatest/testindex</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.committimeout</key>
+                                    <value class="int">500</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.manipulators</key>
+                                    <value class="list">
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.index.descriptorsetup</key>
+                                                <value class="xproperties">
+                                                    <entry>
+                                                        <key>summa.common.indexdescriptor.absolutelocation</key>
+                                                        <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                                                    </entry>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </xproperties>
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
