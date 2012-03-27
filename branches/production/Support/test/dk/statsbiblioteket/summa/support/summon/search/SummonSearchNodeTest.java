@@ -858,6 +858,46 @@ public class SummonSearchNodeTest extends TestCase {
 
     }
 
+    public void testAuthor_xmlExtraction_shortformat() throws RemoteException {
+        String query = "ID:FETCH-LOGICAL-c937-88b9adcf681a925445118c26ea8da2ed792f182b51857048dbb48b11a133ea321";
+        { // sanity-check the Author-field
+            String expected = "Ferlay, Jacques\n"
+                              + "Shin, Hai-Rim\n"
+                              + "Bray, Freddie\n"
+                              + "Forman, David\n"
+                              + "Mathers, Colin\n"
+                              + "Parkin, Donald Maxwell";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("author direct", summon, query, "Author", expected, false);
+            summon.close();
+        }
+
+        { // shortformat should match Author
+            String expected =
+                "  <shortrecord>\n"
+                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                + "      <rdf:Description>\n"
+                + "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n"
+                + "        <dc:creator>Ferlay, Jacques</dc:creator>\n"
+                + "        <dc:creator>Shin, Hai-Rim</dc:creator>\n"
+                + "        <dc:creator>Bray, Freddie</dc:creator>\n"
+                + "        <dc:creator>Forman, David</dc:creator>\n"
+                + "        <dc:creator>Mathers, Colin</dc:creator>\n"
+                + "        <dc:creator>Parkin, Donald Maxwell</dc:creator>\n"
+                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                + "        <dc:date>2010</dc:date>\n"
+                + "        <dc:format></dc:format>\n"
+                + "      </rdf:Description>\n"
+                + "    </rdf:RDF>\n"
+                + "  </shortrecord>\n";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
+            summon.close();
+        }
+    }
+
     private void assertFieldContent(String message, SearchNode searchNode, String query, String fieldName,
                                     String expected, boolean sort) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
