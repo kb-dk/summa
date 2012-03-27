@@ -1,0 +1,19 @@
+<assembly
+    xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>standalone-${version}</id>
+    <formats>
+        <!-- the result is a jar file -->
+        <format>jar</format>
+    </formats>
+
+    <!-- strip the module prefixes -->
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <!-- <useTransitiveDependencies>false</useTransitiveDependencies> -->
+            <unpack>true</unpack>
+        </dependencySet>
+    </dependencySets>
+</assembly>
