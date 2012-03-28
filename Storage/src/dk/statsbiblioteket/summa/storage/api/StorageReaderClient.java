@@ -74,6 +74,10 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
                                       QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
 
+        if(true){
+        	return getRecordsModifiedAfterLoadData(time, base, options);
+        }
+        
         try {
             return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {

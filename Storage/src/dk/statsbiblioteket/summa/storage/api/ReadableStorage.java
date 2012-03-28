@@ -65,7 +65,7 @@ public interface ReadableStorage extends Configurable {
      *         modified after given time (sorted by record id).
      * @throws IOException on communication errors with the storage.
      */
-    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
+    long xgetRecordsModifiedAfter(long time, String base, QueryOptions options)
                                                              throws IOException;
 
     
