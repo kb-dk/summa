@@ -388,8 +388,7 @@ public class SummonResponseBuilder implements Configurable {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
-    private List<DocumentResponse.Record> extractRecords(
-        XMLStreamReader xml, final String sortKey)
+    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey)
         throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records = new ArrayList<DocumentResponse.Record>(50);
@@ -405,9 +404,21 @@ public class SummonResponseBuilder implements Configurable {
             }
 
         });
+//        fixMissingScores(records);
         return records;
     }
-
+  /*
+    final static float ZERO = 0.0f;
+    private void fixMissingScores(List<DocumentResponse.Record> records) {
+        for (int i = 0 ; i < records.size() ; i++) {
+            if (records.get(i).getScore() == ZERO) {
+                float newScore
+                if (i > 0 && i < records.size() -1) { // Previous and next
+                }
+            }
+        }
+    }
+    */
 
     /**
      * Extracts a Summon document and converts it to
