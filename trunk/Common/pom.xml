@@ -57,32 +57,11 @@
     </dependencies>
 
     <build>
-        <!-- Source -->
-        <sourceDirectory>src/</sourceDirectory>
         <resources>
-      
             <resource>
-                <directory>data</directory>
+                <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>
-      
-            <resource>
-                <directory>src/</directory>
-            </resource>
-            
         </resources>
-        <!-- Tests -->
-        <testSourceDirectory>test/</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>data/</directory>
-            </testResource>
-            <testResource>
-                <directory>test/data/</directory>
-            </testResource>
-            <testResource>
-                <directory>test/</directory>
-            </testResource>
-        </testResources>
     </build>
 </project>

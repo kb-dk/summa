@@ -203,7 +203,7 @@ public class TermStatClientTest extends TestCase {
     } */
 
     public static final File TEST_DIR = new File(
-            "Common/tmp/", "termstats");
+            "target/tmp/", "termstats");
     public static final File INDEX_LOCATION = new File(TEST_DIR, "lucene");
 
     private void generateIndex(int docCount) throws Exception {
