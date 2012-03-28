@@ -201,6 +201,14 @@ public class QueryRewriterIntegrationTest extends TestCase {
             simple + " and " + apostrophed, searchDirect(simple), searchDirect(apostrophed));
     }
 
+    public void testEscaping() throws RemoteException {
+        String raw = "Learning and child development\\: a cultural-historical study";
+        String escaped = "Learning and child development\\: a cultural-historical study";
+        String quoted = "Learning and child \"development:\" a cultural-historical study";
+        HarmoniseTestHelper.compareHits(escaped, true, searchDirect(escaped), searchDirect(quoted));
+        HarmoniseTestHelper.compareHits(raw, false, searchDirect(raw), searchDirect(quoted));
+    }
+
     public void testSpecificTitle() throws RemoteException, ParseException {
         checkQuery("towards a cooperative experimental system development approach");
         checkQueryDirect("towards a cooperative experimental system development approach");
