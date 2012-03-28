@@ -931,6 +931,27 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    public void testScoreAssignment() throws RemoteException {
+        String QUERY =
+            "The effect of multimedia on perceived equivocality and perceived usefulness of information systems";
+        String BAD =
+            "<record score=\"0.0\" "
+            + "id=\"summon_FETCH-LOGICAL-j865-7bb06e292771fe19b17b4f676a0939e693be812b38d8502735ffb8ab6e46b4d21\" "
+            + "source=\"Summon\">";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY,
+            DocumentKeys.SEARCH_MAX_RECORDS, 10,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(req, responses);
+        assertFalse("There should be a score != 0.0 for all records in\n" + responses.iterator().next().toXML(),
+                    responses.iterator().next().toXML().contains(BAD));
+        summon.close();
+
+    }
+
     private void assertFieldContent(String message, SearchNode searchNode, String query, String fieldName,
                                     String expected, boolean sort) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
