@@ -46,7 +46,7 @@ public class DumpFilterTest extends TestCase {
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
 
-    private static final File OUT = new File("Common/tmp/dumpTest"); 
+    private static final File OUT = new File("target/tmp/dumpTest");
             /*new File(new File(System.getProperty(
             "java.io.tmpdir")), "dumpTest");*/
 

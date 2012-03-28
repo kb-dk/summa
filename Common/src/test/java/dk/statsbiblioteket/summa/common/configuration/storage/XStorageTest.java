@@ -45,7 +45,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     private static Log log = LogFactory.getLog(XStorageTest.class);
     /** Sub storage XML location. */
     public static final File SUBSTORAGELOCATION =
-               Resolver.getFile("data/configurationFiles/substorage.xml").
+               Resolver.getFile("configurationFiles/substorage.xml").
                    getAbsoluteFile();
 
 
@@ -164,7 +164,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
 
     public void testStringsList() throws IOException {
         File MISCSTORAGELOCATION =
-            Resolver.getFile("data/configurationFiles/misc_storage.xml").
+            Resolver.getFile("target/test-classes/configurationFiles/misc_storage.xml").
                 getAbsoluteFile();
         XStorage xs = new XStorage(MISCSTORAGELOCATION);
         Configuration conf = new Configuration(xs);

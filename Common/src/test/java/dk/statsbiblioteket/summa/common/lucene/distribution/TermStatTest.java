@@ -55,7 +55,7 @@ public class TermStatTest extends TestCase {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static File TMP = new File("Common/tmp/", "termstattemp");
+    private static File TMP = new File("target/tmp/", "termstattemp");
     public void testPersistence() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         TermStat ts = new TermStat(conf);
