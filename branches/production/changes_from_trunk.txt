@@ -1,2 +1,4 @@
 SummonSearchNodeTest
 SummonResponseBuilder
+QuerySanitizer
+QuerySanitizerTest
