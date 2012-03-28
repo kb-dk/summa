@@ -1287,8 +1287,13 @@ public abstract class DatabaseStorage extends StorageBase {
 
        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime
                                        + ", '" + base + "', " + options + ").");
-        // Convert time to the internal binary format used by DatabaseStorage
-        long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
+       
+       if(true){
+       	return getRecordsModifiedAfterLoadData(mtime, base, options);
+       }
+       
+        // Convert time to the internal binary format used by DatabaseStorage                    
+       long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
 
         Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp,
                                                     base, options);

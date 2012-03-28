@@ -211,6 +211,11 @@ public class RMIStorageProxy extends UnicastRemoteObject
                                                         throws RemoteException {
         log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', "
                 + options + ").");
+      
+        if(true){
+        	return getRecordsModifiedAfterLoadData(time, base, options);
+        }
+        
         if (log.isTraceEnabled()) {
             log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', "
                 + options + ").");
