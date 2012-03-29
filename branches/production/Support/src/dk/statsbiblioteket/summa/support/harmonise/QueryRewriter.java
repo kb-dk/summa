@@ -251,6 +251,13 @@ public class QueryRewriter {
         return event.onQuery(query);
     }
 
+    /**
+     * @param query a standard Lucene query.
+     * @return a String representation fo the Query, parsable by the Lucene standard QueryParser.
+     */
+    public String toString(Query query) {
+        return convertQueryToString(query, true);
+    }
     private String convertQueryToString(Query query, boolean top) {
         String result = "";
 
