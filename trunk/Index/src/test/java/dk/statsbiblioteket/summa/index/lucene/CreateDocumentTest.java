@@ -68,11 +68,11 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
     }
 
     /** Gurli test document. */
-    private static final String GURLI = "data/fagref/gurli.margrethe.xml";
+    private static final String GURLI = "fagref/gurli.margrethe.xml";
     /** Hans test document. */
-    private static final String HANS = "data/fagref/hans.jensen.xml";
+    private static final String HANS = "fagref/hans.jensen.xml";
     /** Jens test document. */
-    private static final String JENS = "data/fagref/jens.hansen.xml";
+    private static final String JENS = "fagref/jens.hansen.xml";
 
     public void testProcesspayload() throws Exception {
         initcontent(GURLI, HANS, JENS);

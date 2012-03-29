@@ -248,7 +248,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         String descLocation =
                 "file://"
                 + Thread.currentThread().getContextClassLoader().getResource(
-                        "data/fagref/fagref_IndexDescriptor.xml").getFile();
+                        "fagref/fagref_IndexDescriptor.xml").getFile();
         File manConfLocation = File.createTempFile("configuration", ".xml");
         manConfLocation.deleteOnExit();
         Files.saveString(String.format(
@@ -303,7 +303,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         if (jens == null) {
             try {
                 jens = Streams.getUTF8Resource(
-                        "data/fagref/jens.hansen.newstyle.xml");
+                        "fagref/jens.hansen.newstyle.xml");
             } catch (IOException e) {
                 throw new RuntimeException("Could not load jens hansen data",
                                            e);
