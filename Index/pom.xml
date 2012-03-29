@@ -13,33 +13,6 @@
     <!-- TODO What about scripts -->
     <!-- TODO What about config -->
 
-    <build>
-        <!-- Source -->
-        <sourceDirectory>src/</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>config/</directory>
-            </resource>
-            <resource>
-                <directory>src/</directory>
-            </resource>
-        </resources>
-        <!-- Tests -->
-        <testSourceDirectory>test/</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>test/data/</directory>
-            </testResource>
-            <testResource>
-                <directory>data/</directory>
-            </testResource>
-            <!-- Idea hack -->
-            <testResource>
-                <directory>test/</directory>
-            </testResource>
-        </testResources>
-    </build>
-
     <!-- Dependencies for Summa Search -->
     <dependencies>
         <dependency>

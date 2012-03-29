@@ -79,8 +79,8 @@ public class LegacyTest extends TestCase {
     }*/
 
     public void testFagref() throws Exception {
-        String OLD_JENS = "data/fagref/jens.hansen.oldstyle.xml";
-        String EXPECTED_LOC = "data/fagref/jens.hansen.newstyle.xml";
+        String OLD_JENS = "fagref/jens.hansen.oldstyle.xml";
+        String EXPECTED_LOC = "fagref/jens.hansen.newstyle.xml";
         URL xslt = XMLTransformerTest.getURL("LegacyToSummaDocumentXML.xslt");
 
         String transformed = transform(OLD_JENS, "fagref:jens.hansen",
