@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 
 import javax.crypto.Mac;
@@ -123,6 +122,7 @@ public class SummonSearchNode extends SolrSearchNode {
 
     private final String accessID;
     private final String accessKey;
+    private final FacetQueryTransformer facetQueryTransformer;
     private final Configuration conf; // Used when constructing QueryRewriter
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
@@ -134,6 +134,7 @@ public class SummonSearchNode extends SolrSearchNode {
         for (Map.Entry<String, Serializable> entry : conf) {
             convertSolrParam(solrDefaultParams, entry);
         }
+        facetQueryTransformer = new FacetQueryTransformer(conf);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -179,12 +180,12 @@ public class SummonSearchNode extends SolrSearchNode {
      * </p><p>
      * Similarly, term queries with the field 'ID' are special as the text section must be modified by stripping leading
      * {@link #idPrefix}.
-     * @param query as entered by the user.
+     * @param filter as entered by the user.
      * @param summonSearchParams range-queries are added to this.
      * @return the query minus range queries.
      */
     @Override
-    public String convertQuery(final String query, final Map<String, List<String>> summonSearchParams) {
+    public String convertQuery(final String filter, final Map<String, List<String>> summonSearchParams) {
         final String RF = "s.rf"; // RangeField
         try {
             return new QueryRewriter(conf, null, new QueryRewriter.Event() {
@@ -215,9 +216,9 @@ public class SummonSearchNode extends SolrSearchNode {
                     }
                     return query;
                 }
-            }).rewrite(query);
+            }).rewrite(filter);
         } catch (ParseException e) {
-            throw new IllegalArgumentException("Error parsing '" + query + "'", e);
+            throw new IllegalArgumentException("Error parsing '" + filter + "'", e);
         }
     }
 
@@ -288,20 +289,32 @@ public class SummonSearchNode extends SolrSearchNode {
         // Note: summon supports pure negative filters so we do not use
         // DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE for anything
         if (filter != null) { // We allow missing filter
+            boolean facetsHandled = false;
             if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
-                convertFilterToFacet(filter, querymap);
-            } else if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
-            } else {
-                if (query == null) {
-                    throw new IllegalArgumentException(
-                        "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
-                        + "' is not possible in summon. Filter is '" + filter + "'");
+                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueryToFacet(filter);
+                if (facetRequest == null) {
+                    log.debug("Unable to convert facet filter '" + filter + "' to Solr facet request. Switching to "
+                              + "filter/query based handling");
+                } else {
+                    log.debug("Successfully converted filter '" + filter + "' to Solr facet query");
+                    querymap.putAll(facetRequest);
+                    facetsHandled = true;
                 }
-                query = "(" + query + ") " + filter;
-                log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
-                          + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and summon is set up to not support pure "
-                          + "negative filters natively. resulting query is '" + query + "'");
+            }
+            if (!facetsHandled) {
+                if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
+                    querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
+                } else {
+                    if (query == null) {
+                        throw new IllegalArgumentException(
+                            "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
+                            + "' is not possible in summon. Filter is '" + filter + "'");
+                    }
+                    query = "(" + query + ") " + filter;
+                    log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
+                              + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and summon is set up to not support pure "
+                              + "negative filters natively. resulting query is '" + query + "'");
+                }
             }
         }
         if (query != null) { // We allow missing query
@@ -440,87 +453,6 @@ public class SummonSearchNode extends SolrSearchNode {
         }
 
         return retval.toString();
-    }
-
-    private static final QueryParser qp = QueryRewriter.createDefaultQueryParser();
-    /*
-     * The filter is marked as being pure facet:term pairs with optional NOT or -. If this is not the case, a
-     * ParseException will be thrown. The filter will be converted to facet filters in the query map.
-     * // http://api.summon.serialssolutions.com/help/api/search/parameters/facet-value-filter
-     */
-    static void convertFilterToFacet(String filter, Map<String, List<String>> querymap) throws ParseException {
-        log.debug("The filter '" + filter + "' is marked as a facet filter. Attempting conversion...");
-        Query q = qp.parse(filter);
-        if (q instanceof TermQuery) {
-            convertTermQuery(querymap, (TermQuery)q, false);
-        } else if (q instanceof PhraseQuery) {
-                convertPhraseQuery(querymap, (PhraseQuery) q, false);
-        } else if (q instanceof BooleanQuery) {
-            for (BooleanClause clause: ((BooleanQuery)q).getClauses()) {
-                if (clause.getOccur() == BooleanClause.Occur.SHOULD) {
-                    throw new ParseException("Encountered SHOULD in BooleanClause '" + clause + "' where only MUST or "
-                                             + "MUST_NOT are allowed in filter '" + filter + "'");
-                }
-                if (clause.getQuery() instanceof TermQuery) {
-                    convertTermQuery(
-                        querymap, (TermQuery)clause.getQuery(), clause.getOccur() == BooleanClause.Occur.MUST_NOT);
-                } else if (clause.getQuery() instanceof PhraseQuery) {
-                    convertPhraseQuery(
-                        querymap, (PhraseQuery)clause.getQuery(), clause.getOccur() == BooleanClause.Occur.MUST_NOT);
-                } else {
-                    throw new ParseException("Expected TermQuery or PhraseQuery as inner Query in BooleanQuery but got "
-                                             + clause.getQuery().getClass().getSimpleName() + " in '" + filter + "'");
-                }
-            }
-        } else {
-            throw new ParseException("Only TermQuery and BooleanQuery is supported. Got '"
-                                     + q.getClass().getSimpleName() + " from filter '" + filter + "'");
-        }
-    }
-
-    private static void convertPhraseQuery(
-        Map<String, List<String>> querymap, PhraseQuery pq, boolean negated) throws ParseException {
-        if (pq.getTerms()[0].field() == null || "".equals(pq.getTerms()[0].field())) {
-            throw new ParseException("Encountered PhraseQuery without field '" + pq + "'");
-        }
-        StringWriter terms = new StringWriter(100);
-        boolean first = true;
-        for (Term term: pq.getTerms()) {
-            if (term.text() == null || "".equals(term.text())) {
-                throw new ParseException("Encountered Term without text '" + pq + "' in PhraseQuery '" + pq + "'");
-            }
-            if (first) {
-                first = false;
-            } else {
-                terms.append(" "); // This should work as we use a plain WhiteSpaceAnalyzer for tokenization
-            }
-            terms.append(term.text());
-        }
-        appendPut(querymap, "s.fvf", pq.getTerms()[0].field() + "," + terms + "," + negated);
-    }
-
-    static void convertTermQuery(
-        Map<String, List<String>> querymap, TermQuery tq, boolean negated) throws ParseException {
-        if (tq.getTerm().field() == null || "".equals(tq.getTerm().field())) {
-            throw new ParseException("Encountered TermQuery without field '" + tq + "'");
-        }
-        if (tq.getTerm().text() == null || "".equals(tq.getTerm().text())) {
-            throw new ParseException("Encountered TermQuery without text '" + tq + "'");
-        }
-        appendPut(querymap, "s.fvf", tq.getTerm().field() + "," + tq.getTerm().text() + "," + negated);
-    }
-
-    private static void appendPut(Map<String, List<String>> querymap, String key, String... values) {
-        List<String> existing = querymap.get(key);
-        if (existing == null) {
-            querymap.put(key, Arrays.asList(values));
-            return;
-        }
-        if (!(existing instanceof ArrayList)) {
-            existing = new ArrayList<String>(existing);
-            querymap.put(key, existing);
-        }
-        existing.addAll(Arrays.asList(values));
     }
 
     /**

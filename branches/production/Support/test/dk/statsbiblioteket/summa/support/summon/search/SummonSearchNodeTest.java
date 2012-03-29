@@ -157,8 +157,8 @@ public class SummonSearchNodeTest extends TestCase {
         String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
         String[] EXPECTED = new String[]{
             "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
-        Map<String, List<String>> result = new HashMap<String, List<String>>();
-        SummonSearchNode.convertFilterToFacet(QUERY, result);
+        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
+        Map<String, List<String>> result = fqt.convertQueryToFacet(QUERY);
         assertEquals("Only a single entry should be generated", 1, result.size());
         List<String> resultList = result.entrySet().iterator().next().getValue();
         Collections.sort(resultList);
