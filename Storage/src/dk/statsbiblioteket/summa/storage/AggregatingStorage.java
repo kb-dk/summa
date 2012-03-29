@@ -563,9 +563,6 @@ public class AggregatingStorage extends StorageBase {
                       + time + ", '" + base + "')");
         }
 
-        if(true){
-        	return getRecordsModifiedAfterLoadData(time, base, options);
-        }
         
         IteratorContext ctx;
         long now = System.currentTimeMillis();
