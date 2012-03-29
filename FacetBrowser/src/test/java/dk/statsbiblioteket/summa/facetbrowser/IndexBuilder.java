@@ -175,7 +175,7 @@ public class IndexBuilder {
                          TIMESTAMP_FILE);
 
         Files.saveString(
-                Resolver.getUTF8Content("data/TestIndexDescriptor.xml"),
+                Resolver.getUTF8Content("TestIndexDescriptor.xml"),
                 DESCRIPTOR);
 
         System.out.println("Finished creating test-index in "
