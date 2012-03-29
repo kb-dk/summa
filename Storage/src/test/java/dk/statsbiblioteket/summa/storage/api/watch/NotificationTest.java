@@ -62,8 +62,7 @@ public class NotificationTest extends TestCase {
         }
     }
 
-    static final String testDBLocation =
-                                      "summatest" + File.separator +  "test_db";
+    static final String testDBLocation ="target"+File.separator+ "summatest" + File.separator +  "test_db";
 
     static final String testId1 = "testId1";
     static final String testId2 = "testId2";
