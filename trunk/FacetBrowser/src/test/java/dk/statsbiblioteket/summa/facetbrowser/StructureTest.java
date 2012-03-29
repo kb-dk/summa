@@ -99,7 +99,7 @@ public class StructureTest extends TestCase {
 
     public void testConfig() throws Exception {
         URL confLocation = Resolver.getURL(
-                "data/StructureTestData.xml");
+                "StructureTestData.xml");
         Configuration conf = Configuration.load(confLocation.getFile());
         Structure structure = new Structure(conf);
 
@@ -126,7 +126,7 @@ public class StructureTest extends TestCase {
     }
 
     public void testIndexDescriptorSetup() throws IOException {
-        URL descLocation = Resolver.getURL("data/TestIndexDescriptor.xml");
+        URL descLocation = Resolver.getURL("TestIndexDescriptor.xml");
         Configuration conf = Configuration.newMemoryBased();
         Configuration descSub =
                 conf.createSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
