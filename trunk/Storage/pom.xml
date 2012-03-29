@@ -13,35 +13,6 @@
     <name>Summa Storage module</name>
 
     <build>
-        <!-- Source -->
-        <sourceDirectory>src/</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>data/</directory>
-            </resource>
-            <resource>
-                <directory>config/</directory>
-            </resource>
-            <!-- We have some resource down in code directory.  Exlude .java files can be added -->
-            <resource>
-                <directory>src</directory>                
-            </resource>
-        </resources>
-        <!-- Tests -->
-        <testSourceDirectory>test/</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>data/</directory>
-            </testResource>
-            <!-- Idea hack -->
-            <testResource>
-                <directory>test/data</directory>
-            </testResource>
-            <!-- Idea hack -->
-            <testResource>
-                <directory>test/</directory>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
