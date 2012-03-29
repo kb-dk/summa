@@ -1,4 +1,12 @@
+SolrSearchNode
+SummonSearchNode
 SummonSearchNodeTest
 SummonResponseBuilder
 QuerySanitizer
 QuerySanitizerTest
+QueryRewriterIntegrationTest
+FacetQueryTransformer
+FacetQueryTransformerTest
+InteractionAdjuster
+InteractionAdjusterTest
+QueryRewriter

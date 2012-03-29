@@ -797,7 +797,7 @@ public class InteractionAdjuster implements Configurable {
         boolean filtersContaminateQuery =
             request.containsKey(DocumentKeys.SEARCH_FILTER)
             && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
-            && !(pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
+            && (pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
 
         boolean isSimple = (!filtersContaminateQuery
                             && request.containsKey(DocumentKeys.SEARCH_QUERY)
