@@ -45,7 +45,7 @@ public class UnpackFilterTest extends TestCase {
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(new Payload(Resolver.getURL(
-                        "data/zip/subdouble/sub2/double_stuffed.zip").
+                        "zip/subdouble/sub2/double_stuffed.zip").
                     openStream())));
         unpacker.setSource(feeder);
 
@@ -58,14 +58,14 @@ public class UnpackFilterTest extends TestCase {
 
     public void testRecursive() throws Exception {
         assertContains(
-            "data/zip/subdouble/sub2/double_stuffed.zip",
+            "zip/subdouble/sub2/double_stuffed.zip",
             Arrays.asList(
                 "double_zipped_foo2", "foo", "kaboom", "zoo", "zoo2"));
     }
 
     public void testRecursiveDoubleSub() throws Exception {
         assertContains(
-            "data/zip/double_stuffed2.zip",
+            "zip/double_stuffed2.zip",
             Arrays.asList(
                 "double_zipped_foo2", "double_zipped_foo2b",
                 "foo", "kaboom", "zoo", "zoo2"));
@@ -109,7 +109,7 @@ public class UnpackFilterTest extends TestCase {
     }
 
     public void testContent1() throws IOException {
-        assertSimpleIteration("data/zip/double_stuffed2.zip");
+        assertSimpleIteration("zip/double_stuffed2.zip");
     }
 
 /*    public void testContentSingleGiant() throws IOException {
@@ -124,7 +124,7 @@ public class UnpackFilterTest extends TestCase {
 
     // TODO: Generate a zip64 test-file and test iteration
     public void xtestContentAlephSub() throws IOException {
-        assertSimpleIteration("data/zip/full_part.zip");
+        assertSimpleIteration("zip/full_part.zip");
     }
 
     public void assertSimpleIteration(String source) throws IOException {

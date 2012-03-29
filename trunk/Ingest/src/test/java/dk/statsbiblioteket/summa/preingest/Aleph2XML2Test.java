@@ -58,7 +58,7 @@ public class Aleph2XML2Test extends TestCase {
     }
 
     public ObjectFilter getStreamReader() {
-        URL inputDir = Resolver.getURL("data/aleph/");
+        URL inputDir = Resolver.getURL("aleph/");
         log.debug("getStreamReader: Located root " + inputDir.getFile());
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, inputDir.getFile());
