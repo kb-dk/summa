@@ -123,9 +123,9 @@ public class ZIPParserTest extends TestCase {
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(new Payload(Resolver.getURL(
-                        "data/zip/myzip.zip").openStream()),
+                        "zip/myzip.zip").openStream()),
                               new Payload(Resolver.getURL(
-                        "data/zip/myzip2.zip").openStream())));
+                        "zip/myzip2.zip").openStream())));
         unzipper.setSource(feeder);
 
         assertTrue("The unzipper should have at least one element",
@@ -143,7 +143,7 @@ public class ZIPParserTest extends TestCase {
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(new Payload(Resolver.getURL(
-                        "data/zip/large200.zip").openStream())));
+                        "zip/large200.zip").openStream())));
         unzipper.setSource(feeder);
 
         assertTrue("The unzipper should have at least one element",

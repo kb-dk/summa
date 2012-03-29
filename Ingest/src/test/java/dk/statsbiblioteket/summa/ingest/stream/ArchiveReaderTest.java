@@ -32,9 +32,9 @@ public class ArchiveReaderTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        File t = Resolver.getFile("data/zip");
+        File t = Resolver.getFile("zip");
         assertTrue(
-            "The test data source 'data/zip' should exist", t.exists());
+            "The test data source 'zip' should exist", t.exists());
         TMP = new File(t.getParent(), "ZIPTMP").getAbsoluteFile();
         if (TMP.exists()) {
             Files.delete(TMP);

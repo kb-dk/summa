@@ -76,7 +76,7 @@ public class FileReaderTest extends TestCase {
             Files.delete(rootDeep);
         }
         Files.copy(Resolver.getFile(
-                "data/filereader/dummyA.xml").getParentFile(), rootDeep, false);
+                "filereader/dummyA.xml").getParentFile(), rootDeep, false);
     }
 
     Random random = new Random();
