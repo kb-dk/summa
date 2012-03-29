@@ -75,7 +75,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     }
 
     public File location =
-            new File("test/tmp/", "tempindex");
+            new File("target/tmp/", "tempindex");
 
     private LuceneManipulator openIndex(int buffer) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
