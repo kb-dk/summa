@@ -53,7 +53,7 @@ public class FacetPerformanceTest extends NoExitTestCase {
 
 
     public static final File TMP =
-        new File("tmp", "facetperformance");
+        new File("target/tmp", "facetperformance");
     public static final String INDEX = new File(TMP, "index").getAbsolutePath();
     @Override
     public void setUp () throws Exception {
