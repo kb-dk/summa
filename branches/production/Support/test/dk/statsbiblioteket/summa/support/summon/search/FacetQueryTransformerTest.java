@@ -56,6 +56,14 @@ public class FacetQueryTransformerTest extends TestCase {
         assertConvert("foo:bar (zoo:moo OR bil:ted)", null);
     }
 
+
+    public void testRealWorldExamples() throws ParseException {
+        assertConvert("(-(ContentType:\"Book / eBook\" OR ContentType:\"Book\" OR ContentType:\"eBook\" OR "
+                      + "ContentType:\"Microform\" OR ContentType:\"Microfilm\")"
+                      + " -Language:\"Portuguese\")"
+                      + " -ContentType:\"Newspaper Article\"",
+                      "ddd");
+    }
     private void assertConvert(String query, String expected) throws ParseException {
         Map<String, List<String>> processed = fqt.convertQueryToFacet(query);
         List<String> calls = processed == null ? null : processed.get("s.fvf");

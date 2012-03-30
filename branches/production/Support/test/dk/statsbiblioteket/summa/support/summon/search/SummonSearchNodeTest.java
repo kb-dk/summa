@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.HarmoniseTestHelper;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -1008,5 +1009,28 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     // TODO: "foo:bar zoo"
+
+
+    // It seems that "Book / eBook" is special and will be translated to s.fvgf (Book OR eBook) by summon
+    // This is important as it means that we cannot use filter ContentType:"Book / eBook" to get the same
+    // hits as a proper facet query
+    public void testFacetTermWithDivider() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+
+        long filterCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_FILTER, "ContentType:\"Book / eBook\"",
+            SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        long queryCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
+
+        assertTrue("There should be at least 1 hit", filterCount > 0);
+        assertEquals("The number of hits for filter and query based restrictions should be the same",
+                     filterCount, queryCount);
+        summon.close();
+    }
 
 }
