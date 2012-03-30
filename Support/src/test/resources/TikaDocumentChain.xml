@@ -32,7 +32,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.filereader.rootfolder</key>
-                                    <value class="string">data/arc</value>
+                                    <value class="string">target/test-classes/arc</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.filereader.recursive</key>

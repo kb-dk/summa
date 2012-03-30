@@ -12,30 +12,6 @@
     <name>Summa Support module</name>
 
     <build>
-        <!-- Source -->
-        <sourceDirectory>src/</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>data/</directory>
-            </resource>
-            <resource>
-                <directory>src/</directory>
-            </resource>
-        </resources>
-        <!-- Tests -->
-        <testSourceDirectory>test/</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>data/</directory>
-            </testResource>
-            <testResource>
-                <directory>test/data</directory>
-            </testResource>
-            <!-- Idea hack -->
-            <testResource>
-                <directory>test/</directory>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

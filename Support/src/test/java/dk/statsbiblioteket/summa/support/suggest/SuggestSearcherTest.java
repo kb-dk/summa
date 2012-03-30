@@ -38,7 +38,7 @@ public class SuggestSearcherTest extends TestCase {
     public static final String EXPORT_FILE = "suggest_out.dat";
     private static Log log = LogFactory.getLog(SuggestSearcherTest.class);
 
-    File storageRoot = new File("test/tmp/", "suggest_storage");
+    File storageRoot = new File("target/tmp/", "suggest_storage");
     SummaSearcher searcher;
 
 
@@ -52,7 +52,7 @@ public class SuggestSearcherTest extends TestCase {
 
     private SummaSearcher getSearcher() throws Exception {
         Configuration conf =
-                Configuration.load("data/suggest/SuggestSearch.xml");
+                Configuration.load("suggest/SuggestSearch.xml");
         conf.set(SummaSearcherImpl.CONF_STATIC_ROOT, storageRoot.toString());
         conf.set(SuggestSearchNode.CONF_NORMALIZE_QUERIES, false);
         return new SummaSearcherImpl(conf);
