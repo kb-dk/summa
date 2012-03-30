@@ -55,9 +55,9 @@ public class RelationResolverTest extends TestCase {
         super(name);
     }
 
-    private File STORAGE = new File("RelationResolverTest/storage");
+    private File STORAGE = new File("target/RelationResolverTest/storage");
     private File NONMATCHED =
-        new File("RelationResolverTest/relations/nonmatched");
+        new File("target/RelationResolverTest/relations/nonmatched");
 
     @Override
     public void setUp() throws Exception {
