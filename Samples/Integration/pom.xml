@@ -78,23 +78,6 @@
     <!-- TODO doc/ to documentation -->
     <!-- TODO what about config/ -->
     <build>
-        <testResources>
-            <testResource>
-                <targetPath>resources</targetPath>
-                <directory>${basedir}/test/resources</directory>
-                <!--<directory>${basedir}/test/resources</directory>-->
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </testResource>
-        </testResources>
-
-        <!-- Source -->
-        <sourceDirectory>src/</sourceDirectory>
-       
-        <!-- Tests -->
-        <testSourceDirectory>test/</testSourceDirectory>
-        
         <plugins>
             <!-- Exclude all unittests -->
             <plugin>
