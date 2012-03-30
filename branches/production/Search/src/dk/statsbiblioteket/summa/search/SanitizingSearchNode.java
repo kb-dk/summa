@@ -92,20 +92,28 @@ public class SanitizingSearchNode implements SearchNode {
 
     private Request sanitize(Request request) {
         String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         if (oldQuery != null
             && request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries)
             && request.containsKey(DocumentKeys.SEARCH_QUERY)) { // TODO: Feedback should bubble to front end
             String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
             request.put(DocumentKeys.SEARCH_QUERY, newQuery);
-            log.debug("Sanitized query '" + oldQuery + "' to '" + newQuery + "'");
+            if (oldQuery.equals(newQuery)) {
+                log.debug("Sanitized query is unchanged: '" + oldQuery + "'");
+            } else {
+                log.debug("Sanitized query '" + oldQuery + "' to '" + newQuery + "'");
+            }
         }
+        String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         if (oldFilter != null
             && request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeFilters)
             && request.containsKey(DocumentKeys.SEARCH_FILTER)) { // TODO: Feedback should bubble to front end
             String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
             request.put(DocumentKeys.SEARCH_FILTER, newFilter);
-            log.debug("Sanitized Filter '" + oldFilter + "' to '" + newFilter + "'");
+            if (oldFilter.equals(newFilter)) {
+                log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
+            } else {
+                log.debug("Sanitized filter '" + oldFilter + "' to '" + newFilter + "'");
+            }
         }
         return request;
     }
