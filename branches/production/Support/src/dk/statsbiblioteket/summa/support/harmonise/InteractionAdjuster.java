@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;

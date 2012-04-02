@@ -4,9 +4,14 @@ SummonSearchNodeTest
 SummonResponseBuilder
 QuerySanitizer
 QuerySanitizerTest
+QueryRewriter
 QueryRewriterIntegrationTest
 FacetQueryTransformer
 FacetQueryTransformerTest
 InteractionAdjuster
 InteractionAdjusterTest
-QueryRewriter
+UpdateFromFulldumpFilter
+SanitizingSearchNode -> QueryRewritingSearchNode
+QueryPhraser
+QueryPhraserTest
+

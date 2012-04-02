@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search.tools;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +30,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class QuerySanitizer {
+public class QuerySanitizer implements Configurable {
     private static Log log = LogFactory.getLog(QuerySanitizer.class);
 
     public enum ACTION {ignore, remove, escape}

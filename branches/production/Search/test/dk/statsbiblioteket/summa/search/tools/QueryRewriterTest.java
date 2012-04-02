@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.support.harmonise;
+package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;

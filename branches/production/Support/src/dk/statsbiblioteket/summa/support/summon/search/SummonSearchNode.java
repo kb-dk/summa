@@ -22,7 +22,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;

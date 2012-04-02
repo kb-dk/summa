@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
