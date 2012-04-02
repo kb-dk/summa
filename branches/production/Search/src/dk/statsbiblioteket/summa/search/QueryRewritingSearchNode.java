@@ -33,8 +33,8 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SanitizingSearchNode implements SearchNode {
-    private static Log log = LogFactory.getLog(SanitizingSearchNode.class);
+public class QueryRewritingSearchNode implements SearchNode {
+    private static Log log = LogFactory.getLog(QueryRewritingSearchNode.class);
 
     /**
      * Whether or not incoming queries should be sanitized.
@@ -69,7 +69,7 @@ public class SanitizingSearchNode implements SearchNode {
     private final SearchNode inner;
     private final QuerySanitizer sanitizer;
 
-    public SanitizingSearchNode(Configuration conf) {
+    public QueryRewritingSearchNode(Configuration conf) {
         if (!conf.valueExists(CONF_INNER_SEARCHNODE)) {
             throw new ConfigurationException(
                 "No inner search node defined. A proper sub-configuration must exist for key " + CONF_INNER_SEARCHNODE);
@@ -87,7 +87,7 @@ public class SanitizingSearchNode implements SearchNode {
         sanitizer = new QuerySanitizer(conf);
         sanitizeQueries = conf.getBoolean(CONF_SANITIZE_QUERIES, DEFAULT_SANITIZE_QUERIES);
         sanitizeFilters = conf.getBoolean(CONF_SANITIZE_FILTERS, DEFAULT_SANITIZE_FILTERS);
-        log.debug("Created SanitizingSearchNode with inner SearchNode " + inner);
+        log.debug("Created QueryRewritingSearchNode with inner SearchNode " + inner);
     }
 
     private Request sanitize(Request request) {
