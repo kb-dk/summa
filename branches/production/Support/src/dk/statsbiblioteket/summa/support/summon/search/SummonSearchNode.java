@@ -110,15 +110,15 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String DEFAULT_SUMMON_FACETS =
         "Author, " // Map
         + "ContentType, " // Map 1:n
-        + "Genre, " // Direct
+//        + "Genre, " // Direct // Does not exist anymore as of 20120402
         + "IsScholarly, " // Direct
         + "Language, " // Map
         + "IsFullText, "
         //"Library,and,1,5",
         //"PackageID,and,1,5",
         //"SourceID,and,1,5",
-        + "SubjectTerms, " // SB:subject
-        + "TemporalSubjectTerms"; // Direct
+        + "SubjectTerms, "; // SB:subject
+        //+ "TemporalSubjectTerms"; // Direct // Does not exist anymore as of 20120402
 
     private final String accessID;
     private final String accessKey;
@@ -446,11 +446,14 @@ public class SummonSearchNode extends SolrSearchNode {
             responses.addTiming("summon.rawcall", rawCall); 
             
         } catch (IOException e) {
-            log.warn(String.format(
-                "getData(target=%s, content=%s, date=%s, idstring=%s, sessionID=%s failed with error stream\n%s",
+            String error = String.format(
+                "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
-                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8"))), e);
+                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+            log.warn(error, e);
+            throw new IOException(error, e);
         }
+        // TODO: Should we disconnect?
 
         return retval.toString();
     }

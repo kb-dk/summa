@@ -622,13 +622,11 @@ public class SummonSearchNodeTest extends TestCase {
 
         int countInside = countResults(responsesInside);
         int countOutside = countResults(responsesOutside);
-        assertTrue("The number of results for a search for '" + QUERY
-                   + "' within holdings (" + confInside + ") should be less "
-                   + "that outside holdings (" + confOutside + ")",
+        assertTrue("The number of results for a search for '" + QUERY + "' within holdings (" + confInside
+                   + ") should be less that outside holdings (" + confOutside + ")",
                    countInside < countOutside);
-        log.info(String.format(
-            "The search for '%s' gave %d hits within holdings and %d hits in"
-            + " total", QUERY, countInside, countOutside));
+        log.info(String.format("The search for '%s' gave %d hits within holdings and %d hits in total",
+                               QUERY, countInside, countOutside));
 
         int countSearchTweak = countResults(responsesSearchTweak);
         assertEquals(
@@ -1027,10 +1025,34 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_QUERY, "foo",
             DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
 
-        assertTrue("There should be at least 1 hit", filterCount > 0);
+        assertTrue("There should be at least 1 hit for either query or filter request",
+                   queryCount > 0 || filterCount > 0);
         assertEquals("The number of hits for filter and query based restrictions should be the same",
                      filterCount, queryCount);
         summon.close();
     }
 
+    public void testFacetFieldValidity() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        String[][] FACET_QUERIES = new String[][]{
+            //{"Ferlay", "Author", "Ferlay\\, Jacques"}, // We need a sample from the Author facet
+            {"foo", "Language", "German"},
+            {"foo", "IsScholarly", "true"},
+            {"foo", "IsFullText", "true"},
+            {"foo", "ContentType", "Book / eBook"},
+            {"foo", "SubjectTerms", "biology"}
+        };
+        for (String[] facetQuery: FACET_QUERIES) {
+            String q = facetQuery[0];
+            String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
+            log.debug(String.format("Searching for query '%s' with facet filter '%s'", q, ff));
+            long queryCount = getHits(
+                summon,
+                DocumentKeys.SEARCH_QUERY, q,
+                DocumentKeys.SEARCH_FILTER, ff,
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+            assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
+                       queryCount > 0);
+        }
+    }
 }
