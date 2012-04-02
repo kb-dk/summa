@@ -105,7 +105,7 @@ public class SanitizingSearchNode implements SearchNode {
         }
         String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         if (oldFilter != null
-            && request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeFilters)
+            && request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters)
             && request.containsKey(DocumentKeys.SEARCH_FILTER)) { // TODO: Feedback should bubble to front end
             String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
             request.put(DocumentKeys.SEARCH_FILTER, newFilter);
