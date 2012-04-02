@@ -31,11 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * Take a fulldump and treat it as a update, where non-existing records should
@@ -66,9 +62,9 @@ import java.util.NoSuchElementException;
  * must set to a Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_OK,
-        author = "hbk, te",
-        reviewers = "te")
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, hbk",
+        comment = "Switched from HashMap with null for each value to HashSet")
 public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     private Log log = LogFactory.getLog(UpdateFromFulldumpFilter.class);
     // storage to manipulate.
@@ -128,7 +124,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
     /**
      * Map containing ids for records in storage.
      */
-    protected Map<String, Record> ids = null;
+    protected Set<String> ids = null;
 
     private boolean recordsGotten = false;
     /**
@@ -168,7 +164,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                      config.getInt(CONF_NUMBER_OF_RECORDS_FROM_STORAGE,
                                DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
-        ids = new HashMap<String, Record>();
+        ids = new HashSet<String>();
     }
 
     /**
@@ -191,7 +187,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 tmpRecords = readableStorage.next(
                         iteratorKey, numberOfRecordsFromStorage);
                 for(Record r: tmpRecords) {
-                    ids.put(r.getId(), null);
+                    ids.add(r.getId());
                     i++;
                 }
             }
@@ -253,14 +249,14 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                      + "records.");
             if(ids.size() < maxNumberDeletes) {
                 try {
-                    for(String id: new ArrayList<String>(ids.keySet())) {
+                    for (String id: ids) { // TODO: We could do this in bulk but beware of OOM
                         Record tmp = readableStorage.getRecord(id, null);
                         tmp.setDeleted(true);
                         tmp.setIndexable(false);
                         Logging.logProcess(
-                                "UpdateFromFulldumpFilter",
-                                "Marking as deleted and not idexable",
-                                Logging.LogLevel.DEBUG, id);
+                            "UpdateFromFulldumpFilter",
+                            "Marking as deleted and not idexable",
+                            Logging.LogLevel.DEBUG, id);
                         writableStorage.flush(tmp);
                     }
                     log.info("Marked '" + ids.size() + "' records as deleted "
@@ -277,7 +273,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                         + "contains records that should have been deleted");
             }
         } else {
-            log.error("Dirty closure of UpdateFromFulldumpFilter. No Records " 
+            log.error("Dirty closure of UpdateFromFulldumpFilter. No Records "
                       + "are removed from Storage. There should have been "
                       + "removed: " + ids.size() + " records");
         }
