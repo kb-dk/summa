@@ -766,7 +766,6 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
-    // The ranking should differ when we turn explicit must on/off as it triggers summon DisMax conformance on/off
     public void testExplicitMust() throws IOException {
         final String QUERY = "miller genre as social action";
         ResponseCollection explicitMustResponses = new ResponseCollection();
@@ -794,6 +793,56 @@ public class SummonSearchNodeTest extends TestCase {
         }
         HarmoniseTestHelper.compareHits(QUERY, false, explicitMustResponses, implicitMustResponses);
     }
+
+    /*
+    Tests if explicit weight-adjustment of terms influences the scores significantly.
+     */
+    public void testExplicitWeightScoring() throws RemoteException {
+        testScoreDifference("dolphin whales", "dolphin whales^1.000001", 10.0f);
+    }
+
+    /*
+    Tests if quoting of terms influences the scores significantly.
+     */
+    public void testQuotingScoring() throws RemoteException {
+        testScoreDifference("dolphin whales", "\"dolphin\" \"whales\"", 10.0f);
+    }
+
+    private void testScoreDifference(String query1, String query2, float MAX_DIFFERENCE) throws RemoteException {
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+
+        ResponseCollection raw = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, query1), raw);
+
+        ResponseCollection weighted = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, query2), weighted);
+
+        summon.close();
+
+        List<Double> rawScores = getScores(raw);
+        List<Double> weightedScores = getScores(weighted);
+
+        assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
+                     rawScores.size(), weightedScores.size());
+        for (int i = 0 ; i < rawScores.size() ; i++) {
+            assertTrue(String.format(
+                "The scores at position %d were %s and %s. Max difference allowed is %s. "
+                + "All scores for '%s' and '%s':\n%s\n%s",
+                i, rawScores.get(i), weightedScores.get(i), MAX_DIFFERENCE,
+                query1, query2, Strings.join(rawScores, ", "), Strings.join(weightedScores, ", ")),
+                       Math.abs(rawScores.get(i) - weightedScores.get(i)) <= MAX_DIFFERENCE);
+        }
+    }
+
+    private List<Double> getScores(ResponseCollection responses) {
+        DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+        List<Double> result = new ArrayList<Double>(docs.size());
+        for (DocumentResponse.Record record: docs.getRecords()) {
+            result.add((double)record.getScore());
+        }
+        return result;
+    }
+
 
     // Author_xml contains the authoritative order for the authors so it should override the non-XML-version
     public void testAuthor_xmlExtraction() throws RemoteException {
