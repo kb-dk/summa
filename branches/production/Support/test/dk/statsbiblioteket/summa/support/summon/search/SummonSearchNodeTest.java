@@ -15,6 +15,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
@@ -813,10 +814,12 @@ public class SummonSearchNodeTest extends TestCase {
         try {
             List<String> ids1 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query1), "id");
             List<String> ids2 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query2), "id");
-            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
+            ExtraAsserts.assertPermutations("Query '" + query1 + "' and '" + query2 + "'", ids1, ids2);
+/*            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
                          ids1.size(), ids2.size());
             assertEquals("The document order for '" + query1 + "' and '" + query2 + "' should be equal",
                          Strings.join(ids1, ", "), Strings.join(ids2, ", "));
+                         */
         } finally {
             summon.close();
         }

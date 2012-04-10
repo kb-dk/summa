@@ -122,6 +122,40 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
     }
 
     /**
+     * Compares list1 with list2 and gives a detailed description of the permutations required to transform list1 to
+     * list2.
+     * @param message the message to write in case on non-equality.
+     * @param list1 primary objects to compare.
+     * @param list2 secondary objects to compare.
+     */
+    public static void assertPermutations(String message, List list1, List list2) {
+        assertEquals(message + ". The lists should be of equal length", list1.size(), list2.size());
+        boolean mismatch = false;
+        for (int i = 0 ; i < list1.size() ; i++) {
+            if (!list1.get(i).equals(list2.get(i))) {
+                mismatch = true;
+                break;
+            }
+        }
+        if (!mismatch) {
+            return;
+        }
+        assertTrue("The lists should have content but did not", list1.size() > 0);
+        int matches = 0;
+        int permutations = 0;
+        for (int i = 0 ; i < list1.size() ; i++) {
+            Object o1 = list1.get(i);
+            if (list2.contains(o1)) {
+                matches++;
+                permutations += Math.abs(i - list2.indexOf(o1));
+            }
+        }
+        fail(String.format(
+            "Mismatched lists. Matches: %d/%d, total permutations of matches between lists: %d (average %.1f)",
+            matches, list1.size(), permutations, permutations * 1.0 / matches));
+    }
+
+    /**
      * Converts the given ints to a comma-separated String.
      * @param ints the integers to dump.
      * @return the integers as a String.
