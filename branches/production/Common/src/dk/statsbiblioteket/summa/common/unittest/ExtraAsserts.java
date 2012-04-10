@@ -140,19 +140,23 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
         if (!mismatch) {
             return;
         }
-        assertTrue("The lists should have content but did not", list1.size() > 0);
+        assertTrue(message + ".The lists should have content but did not", list1.size() > 0);
         int matches = 0;
         int permutations = 0;
+        int perfect = 0;
         for (int i = 0 ; i < list1.size() ; i++) {
             Object o1 = list1.get(i);
             if (list2.contains(o1)) {
                 matches++;
                 permutations += Math.abs(i - list2.indexOf(o1));
+                if (i == list2.indexOf(o1)) {
+                    perfect++;
+                }
             }
         }
-        fail(String.format(
-            "Mismatched lists. Matches: %d/%d, total permutations of matches between lists: %d (average %.1f)",
-            matches, list1.size(), permutations, permutations * 1.0 / matches));
+        fail(String.format(message + ". Mismatched lists. Matches: %d/%d (%d at same position), total permutations of "
+                           + "matches between lists: %d (average %.1f)",
+                           matches, list1.size(), perfect, permutations, permutations * 1.0 / matches));
     }
 
     /**
