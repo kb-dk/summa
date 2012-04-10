@@ -798,17 +798,38 @@ public class SummonSearchNodeTest extends TestCase {
     Tests if explicit weight-adjustment of terms influences the scores significantly.
      */
     public void testExplicitWeightScoring() throws RemoteException {
-        testScoreDifference("dolphin whales", "dolphin whales^1.000001", 10.0f);
+        assertScores("dolphin whales", "dolphin whales^1.000001", 10.0f);
+    }
+
+    /*
+    Tests if explicit weight-adjustment of terms influences the order of documents.
+     */
+    public void testExplicitWeightOrder() throws RemoteException {
+        assertOrder("dolphin whales", "dolphin whales^1.000001");
+    }
+
+    private void assertOrder(String query1, String query2) throws RemoteException {
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+        try {
+            List<String> ids1 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query1), "id");
+            List<String> ids2 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query2), "id");
+            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
+                         ids1.size(), ids2.size());
+            assertEquals("The document order for '" + query1 + "' and '" + query2 + "' should be equal",
+                         Strings.join(ids1, ", "), Strings.join(ids2, ", "));
+        } finally {
+            summon.close();
+        }
     }
 
     /*
     Tests if quoting of terms influences the scores significantly.
      */
     public void testQuotingScoring() throws RemoteException {
-        testScoreDifference("dolphin whales", "\"dolphin\" \"whales\"", 10.0f);
+        assertScores("dolphin whales", "\"dolphin\" \"whales\"", 10.0f);
     }
 
-    private void testScoreDifference(String query1, String query2, float MAX_DIFFERENCE) throws RemoteException {
+    private void assertScores(String query1, String query2, float maxDifference) throws RemoteException {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
 
         ResponseCollection raw = new ResponseCollection();
@@ -828,9 +849,9 @@ public class SummonSearchNodeTest extends TestCase {
             assertTrue(String.format(
                 "The scores at position %d were %s and %s. Max difference allowed is %s. "
                 + "All scores for '%s' and '%s':\n%s\n%s",
-                i, rawScores.get(i), weightedScores.get(i), MAX_DIFFERENCE,
+                i, rawScores.get(i), weightedScores.get(i), maxDifference,
                 query1, query2, Strings.join(rawScores, ", "), Strings.join(weightedScores, ", ")),
-                       Math.abs(rawScores.get(i) - weightedScores.get(i)) <= MAX_DIFFERENCE);
+                       Math.abs(rawScores.get(i) - weightedScores.get(i)) <= maxDifference);
         }
     }
 
