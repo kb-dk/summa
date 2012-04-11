@@ -186,6 +186,7 @@ public class SummonSearchNode extends SolrSearchNode {
      */
     @Override
     public String convertQuery(final String filter, final Map<String, List<String>> summonSearchParams) {
+        // TODO: Perform legacy conversion "summonparam.*" -> "solrparam.*"
         final String RF = "s.rf"; // RangeField
         try {
             return new QueryRewriter(conf, null, new QueryRewriter.Event() {
