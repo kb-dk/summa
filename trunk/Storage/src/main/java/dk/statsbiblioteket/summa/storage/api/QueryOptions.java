@@ -207,7 +207,8 @@ public class QueryOptions implements Serializable {
              original.indexableFilter(),
              original.childDepth(),
              original.parentHeight(),
-             original.meta());
+             original.meta(),
+             original.attributes);
     }
 
     /**
