@@ -16,3 +16,5 @@ QueryPhraser
 QueryPhraserTest
 SummaQueryParserTest
 ExtraAsserts
+SummaAnalyzerTest
+Rules

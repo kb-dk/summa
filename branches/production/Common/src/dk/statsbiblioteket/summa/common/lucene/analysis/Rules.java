@@ -65,7 +65,8 @@ public class Rules {
             "\u0085 > '';\u0082 > '';'ъ' > '';'、' > '';'，' > '';'̅' > '';\u009D > '';\u0086 > '';'̐' > '';\u0099 > '';" +
             "'' > '';\u008A > '';'' > '';\u009E > '';'ˆ' > '';\u008C > '';'̓' > '';'？' > '';\u008E > '';\u0087 > '';" +
             "'ǹ' > '';'；' > '';'＂' > '';\u0088 > '';'' > '';';' > '';\u009F > '';'：' > '';\u0089 > '';'˝' > '';'「' > '';" +
-            "\u0083 > '';\u0081 > '';'' > '';'„' > '';'' > '';\u0098 > '';'�' > '';'〉' > '';'」' > '';\u008D > '';";
+            "\u0083 > '';\u0081 > '';'' > '';'„' > '';'' > '';\u0098 > '';'�' > '';'〉' > '';'」' > '';\u008D > '';" +
+            "'>' > '';'<' > '';";
     /**
      * Rules for converting characters that can be interpreted as white space
      * into the ascii white space character
@@ -87,4 +88,3 @@ public class Rules {
     public static final String ALL_TRANSLITERATIONS =
             CHARACTER_TRANSLITERATIONS + VOID_TRANSLITERATIONS + BLANK_TRANSLITERATIONS;
 }
-
