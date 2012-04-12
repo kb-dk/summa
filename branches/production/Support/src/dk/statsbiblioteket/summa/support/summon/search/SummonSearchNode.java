@@ -120,10 +120,22 @@ public class SummonSearchNode extends SolrSearchNode {
         + "SubjectTerms, "; // SB:subject
         //+ "TemporalSubjectTerms"; // Direct // Does not exist anymore as of 20120402
 
+
+    /**
+     * If true, queries will be actively re-written to ensure that they do not conform to any format handled by the
+     * DisMax-like parser for summon.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_DISMAX_SABOTAGE = "summon.dismax.sabotage";
+    public static final String SEARCH_DISMAX_SABOTAGE = CONF_DISMAX_SABOTAGE;
+    public static final boolean DEFAULT_DISMAX_SABOTAGE = false;
+
     private final String accessID;
     private final String accessKey;
     private final FacetQueryTransformer facetQueryTransformer;
     private final Configuration conf; // Used when constructing QueryRewriter
+    private final boolean sabotageDismax;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -135,6 +147,7 @@ public class SummonSearchNode extends SolrSearchNode {
             convertSolrParam(solrDefaultParams, entry);
         }
         facetQueryTransformer = new FacetQueryTransformer(conf);
+        sabotageDismax = conf.getBoolean(CONF_DISMAX_SABOTAGE, DEFAULT_DISMAX_SABOTAGE);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -180,12 +193,12 @@ public class SummonSearchNode extends SolrSearchNode {
      * </p><p>
      * Similarly, term queries with the field 'ID' are special as the text section must be modified by stripping leading
      * {@link #idPrefix}.
-     * @param filter as entered by the user.
+     * @param query as entered by the user.
      * @param summonSearchParams range-queries are added to this.
      * @return the query minus range queries.
      */
     @Override
-    public String convertQuery(final String filter, final Map<String, List<String>> summonSearchParams) {
+    public String convertQuery(final String query, final Map<String, List<String>> summonSearchParams) {
         // TODO: Perform legacy conversion "summonparam.*" -> "solrparam.*"
         final String RF = "s.rf"; // RangeField
         try {
@@ -217,9 +230,9 @@ public class SummonSearchNode extends SolrSearchNode {
                     }
                     return query;
                 }
-            }).rewrite(filter);
+            }).rewrite(query);
         } catch (ParseException e) {
-            throw new IllegalArgumentException("Error parsing '" + filter + "'", e);
+            throw new IllegalArgumentException("Error parsing '" + query + "'", e);
         }
     }
 
@@ -319,6 +332,10 @@ public class SummonSearchNode extends SolrSearchNode {
             }
         }
         if (query != null) { // We allow missing query
+            if (request.getBoolean(SEARCH_DISMAX_SABOTAGE, sabotageDismax)) {
+                query = "(" + query + ")";
+                log.debug("Sabotaging summon DisMax by putting the query in parentheses: '" + query + "'");
+            }
             querymap.put("s.q",   Arrays.asList(query));
         }
 

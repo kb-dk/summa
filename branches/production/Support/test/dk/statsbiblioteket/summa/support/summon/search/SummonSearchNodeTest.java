@@ -825,6 +825,28 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    public void testDisMaxDisabling() throws RemoteException {
+        final String QUERY= "asian philosophy";
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+        try {
+            long plainCount =
+                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+            long sabotagedCount =
+                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+            assertEquals("The number of hits for a DisMax-enabled and DisMax-sabotages query should match",
+                         plainCount, sabotagedCount);
+
+            List<String> plain = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id");
+            List<String> sabotaged = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id");
+            assertFalse("The ids returned by DisMax-enabled and DisMax-sabotaged query should differ",
+                        Strings.join(plain, ", ").equals(Strings.join(sabotaged, ", ")));
+        } finally {
+            summon.close();
+        }
+    }
+
     /*
     Tests if quoting of terms influences the scores significantly.
      */
