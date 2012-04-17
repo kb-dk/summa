@@ -73,6 +73,22 @@ public class SummonSearchNodeTest extends TestCase {
         return new TestSuite(SummonSearchNodeTest.class);
     }
 
+    public void testNegativeFacet() throws RemoteException {
+        final String JSON =
+            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+            + "\"search.document.filter\":\" NOT ContentType:\\\"Newspaper Article\\\"\","
+            + "\"search.document.filter.purenegative\":\"true\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        assertFalse("The response should not have Newspaper Article as facet. total response was\n" + responses.toXML(),
+                    responses.toXML().contains("<tag name=\"Newspaper Article\""));
+        summon.close();
+    }
+
     public void testBasicSearch() throws RemoteException {
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
