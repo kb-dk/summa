@@ -181,7 +181,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                 for(Record r: tmpRecords) {
                     ids.add(r.getId());
                     recieved++;
-                    if (log.isDebugEnabled() && (recieved & 0xFFFFF000) == 0) { // Every 4096
+                    if (log.isDebugEnabled() && (recieved & 0x00000FFF) == 0) { // Every 4096
                         log.debug("Received " + recieved + " IDs for base '" + base + "'. Continuing...");
                     }
                 }
