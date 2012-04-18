@@ -70,14 +70,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
      * @throws IOException If error occur when fetching records from storage.
      */
     @Override
-    public long getRecordsModifiedAfter(long time, String base,
-                                      QueryOptions options) throws IOException {
+    public long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
 
-        if(true){
-        	return getRecordsModifiedAfterLoadData(time, base, options);
-        }
-        
         try {
             return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
@@ -89,33 +84,6 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    
-
-    /**
-     * Return records modified after the given time stamp and from the given
-     * base. These records are filtered by the query options.
-     * @param time The earliest time stamp for which we want records.
-     * @param base The base from which we want records.
-     * @param options The options records should be filtered by.
-     * @return A iterator key.
-     * @throws IOException If error occur when fetching records from storage.
-     */
-    @Override
-    public long getRecordsModifiedAfterLoadData(long time, String base,
-                                      QueryOptions options) throws IOException {
-        ReadableStorage storage = getConnection();
-
-        try {
-            return storage.getRecordsModifiedAfterLoadData(time, base, options);
-        } catch (Throwable t) {
-            connectionError(t);
-            throw new IOException("getRecordsModifiedAfterLoadData(" + time + ", "
-                                  + base + ") failed: " + t.getMessage(), t);
-        } finally {
-            releaseConnection();
-        }
-    }
-    
     /**
      * Return the modification time for a specific base in the storage.
      * @param base The base.
@@ -130,8 +98,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getModificationTime(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getModificationTime(" + base + ") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException("getModificationTime(" + base + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -141,16 +108,14 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
      * {@inheritDoc}
      */
     @Override
-    public List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                            throws IOException {
+    public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
             return storage.getRecords(ids, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecords(" + Logs.expand(ids, 10)
-                                  + ", options=" + options + ") failed: "
+            throw new IOException("getRecords(" + Logs.expand(ids, 10) + ", options=" + options + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
@@ -168,9 +133,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecord(id, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecord(" + id + ", options="
-                                  + options + ") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException("getRecord(" + id + ", options=" + options + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -193,8 +156,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             // other site?
             connectionError(t);
             checkForNoSuchElementException(t);
-            throw new IOException("next(" + iteratorKey + ") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException("next(" + iteratorKey + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -224,8 +186,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
      * {@inheritDoc}
      */
     @Override
-    public List<Record> next(long iteratorKey, int maxRecords)
-                                                            throws IOException {
+    public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -235,8 +196,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             throw new NoSuchElementException();
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("next(" + iteratorKey + ", " + maxRecords
-                                  + ") failed: " + t.getMessage(), t);
+            throw new IOException("next(" + iteratorKey + ", " + maxRecords + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }

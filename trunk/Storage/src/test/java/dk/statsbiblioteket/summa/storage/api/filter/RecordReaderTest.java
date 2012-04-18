@@ -147,7 +147,8 @@ public class RecordReaderTest extends TestCase {
         Payload p = r.next();
         Record rec = p.getRecord();
 
-        assertEquals(orig, rec);
+        assertEquals("\nVerbose orig: " + orig.toString(true) + "\nVerbose rec : " + rec.toString(true) + "\n",
+                     orig, rec);
         r.close(true);
         sto.close();
     }

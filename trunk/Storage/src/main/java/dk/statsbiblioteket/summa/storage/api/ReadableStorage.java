@@ -65,30 +65,8 @@ public interface ReadableStorage extends Configurable {
      *         modified after given time (sorted by record id).
      * @throws IOException on communication errors with the storage.
      */
-    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
-                                                             throws IOException;
+    long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws IOException;
 
-    
-    /**
-     *Same getRecordsModifiedAfter except the data column is loaded. (performance) 
-     *
-     *
-     * @param time A timestamp in milliseconds. The time from the machine with
-     * the srotage is used in all cases, so no synchronization with universal
-     * time is needed.
-     * @param base The name of the original record base or null if all bases are
-     *             to be used.
-     * @param options A possible {@code null} set of options to apply to the
-     *                query. Please see the documentation for
-     *                {@link QueryOptions} on how it is interpreted.
-     * @return An iterator key that can be used to iterate over all records
-     *         modified after given time (sorted by record id).
-     * @throws IOException on communication errors with the storage.
-     */
-    long getRecordsModifiedAfterLoadData(long time, String base, QueryOptions options)
-                                                             throws IOException;
-
-    
     /**
      * Returns the timestamp for the most recent modification in {@code base}.
      * <p/>

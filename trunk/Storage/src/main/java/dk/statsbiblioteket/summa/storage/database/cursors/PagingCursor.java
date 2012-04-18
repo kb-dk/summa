@@ -48,20 +48,17 @@ public class PagingCursor implements Cursor {
     private ResultSetCursor page;
     private Record nextRecord;
     private DatabaseStorage db;
-    private boolean loadData=false;
-    
+
     /**
      * PageCursor constructor.
      *
      * @param db The database storage.
      * @param firstPage The first page of {@link ResultSetCursor}.
      */
-    public PagingCursor(DatabaseStorage db,
-                        ResultSetCursor firstPage, boolean loadData) {
+    public PagingCursor(DatabaseStorage db, ResultSetCursor firstPage) {
         this.db = db;        
         page = firstPage;
-        this.loadData=loadData;
-        
+
         // This will always be unique, so no key collision
         key = db.getTimestampGenerator().next();
         lastAccess = db.getTimestampGenerator().systemTime(key);
@@ -77,8 +74,7 @@ public class PagingCursor implements Cursor {
             nextRecord = null;
         }
 
-        log.debug("Created " + this + " for storage " + db + ", and resultset "
-                + firstPage+ "loadData:"+loadData);
+        log.debug("Created " + this + " for storage " + db + ", and result set " + firstPage);
     }
 
     @Override
@@ -151,9 +147,8 @@ public class PagingCursor implements Cursor {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug(this + " depleted " + page + " after " + pageRecords
-                      + " records. Total " + totalRecords + " records in "
-                      + (System.currentTimeMillis() - firstAccess) + "ms");
+            log.debug(this + " depleted " + page + " after " + pageRecords + " records. Total " + totalRecords
+                      + " records in " + (System.currentTimeMillis() - firstAccess) + "ms");
         }
 
         // page is depleted
@@ -161,19 +156,14 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
 
         try {
-           if (loadData){        	
-        	    page = db.getRecordsModifiedAfterCursorLoadData(lastMtimeTimestamp,getBase(), getQueryOptions());                         
-           }
-           else{
-        	   page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp,getBase(), getQueryOptions());
-           }
-           
-            if (log.isTraceEnabled()) {
-                log.trace("Got new page for " + this + ": " + page);
+            page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp, getBase(), getQueryOptions());
+
+            if (log.isDebugEnabled()) {
+                log.trace("Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp + " for "
+                          + this + ": " + page);
             }
         } catch (IOException e) {
-            log.warn("Failed to execute query for next page: "
-                     + e.getMessage(), e);
+            log.warn("Failed to execute query for next page: " + e.getMessage(), e);
             logDepletedStats();
             return null;
         }
@@ -188,8 +178,7 @@ public class PagingCursor implements Cursor {
     }
 
     private void logDepletedStats () {
-        log.debug(this + " depleted after " + totalRecords + " records and "
-                  + (lastAccess - firstAccess) + "ms");
+        log.debug(this + " depleted after " + totalRecords + " records and " + (lastAccess - firstAccess) + "ms");
     }
 
     @Override

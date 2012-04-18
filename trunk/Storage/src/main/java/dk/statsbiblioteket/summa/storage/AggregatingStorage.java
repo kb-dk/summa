@@ -559,8 +559,7 @@ public class AggregatingStorage extends StorageBase {
     public long getRecordsModifiedAfter(long time, String base,
                                       QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace("AggregatingStorage.getRecordsModifiedAfter("
-                      + time + ", '" + base + "')");
+            log.trace("AggregatingStorage.getRecordsModifiedAfter(" + time + ", '" + base + "')");
         }
 
         
@@ -586,14 +585,12 @@ public class AggregatingStorage extends StorageBase {
         log.debug("getModification iterKey '" + iterKey + "'.");
         // TODO Handle iterKey collisions in a sane way!
         if (iterators.containsKey(iterKey)) {
-            throw new RuntimeException("Internal error. Iterator key "
-                                       + "collision '" + iterKey + "'");
+            throw new RuntimeException("Internal error. Iterator key collision '" + iterKey + "'");
         }
 
         iterators.put(iterKey, ctx);
         if (log.isTraceEnabled()) {
-            log.trace("getRecordsModifiedAfter returns: "
-                    + iterKey + ".");
+            log.trace("getRecordsModifiedAfter returns: " + iterKey + ".");
         }
         return iterKey;
     }
@@ -601,13 +598,6 @@ public class AggregatingStorage extends StorageBase {
     
     
  
-    @Override
-    public long getRecordsModifiedAfterLoadData(long time, String base,
-                                      QueryOptions options) throws IOException {
- 
-    	throw new RuntimeException("Not implemented");
-    }
-
     /**
      * Return last modification time for a given base.
      * @param base The base in storage.

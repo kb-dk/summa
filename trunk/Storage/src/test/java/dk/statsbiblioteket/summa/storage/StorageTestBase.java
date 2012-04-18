@@ -164,14 +164,12 @@ public class StorageTestBase extends TestCase {
         }
 
         if (nonDeletedCount != 0) {
-            fail ("Base '" + base + "' should be empty, but found " + nonDeletedCount
-                  + " records");
+            fail ("Base '" + base + "' should be empty, but found " + nonDeletedCount+ " records");
         }
 
         if (count != -1) {
             if (count != fullCount) {
-                fail("Expected " + count
-                      + " records in base, found " + fullCount);
+                fail("Expected " + count + " records in base, found " + fullCount);
             }
         }
     }
