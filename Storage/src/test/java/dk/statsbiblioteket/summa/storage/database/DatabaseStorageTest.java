@@ -82,10 +82,8 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(0, base.getDeletedCount());
         assertEquals(1, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
-        assertTrue("Base mtime must be updated, but "
-                   + "base.getModificationTime() <= storageStart: "
-                   + base.getModificationTime() + " <= "
-                   + storageStart,
+        assertTrue("Base mtime must be updated, but base.getModificationTime() <= storageStart: "
+                   + base.getModificationTime() + " <= " + storageStart,
                    base.getModificationTime() > storageStart);
     }
 

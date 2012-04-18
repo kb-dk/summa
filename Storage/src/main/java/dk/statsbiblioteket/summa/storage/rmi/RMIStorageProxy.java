@@ -212,58 +212,19 @@ public class RMIStorageProxy extends UnicastRemoteObject
         log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', "
                 + options + ").");
       
-        if(true){
-        	return getRecordsModifiedAfterLoadData(time, base, options);
-        }
-        
         if (log.isTraceEnabled()) {
-            log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', "
-                + options + ").");
+            log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ").");
         }
         try {
             return backend.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
-                    "getRecordsModifiedAfter(time=%d, base='%s', options=%s) "
-                    + "for %d:%s",
-                    time, base, options, registryPort, serviceName),
-                                         t, flattenExceptions);
+                    "getRecordsModifiedAfter(time=%d, base='%s', options=%s) for %d:%s",
+                    time, base, options, registryPort, serviceName), t, flattenExceptions);
             return -1;
         }
     }
 
-    
-    /**
-     * Return iterator key for records modified after input time, from the
-     * backend storage.
-     *
-     * @param time Time stamp records should be modified after.
-     * @param base The base to look in.
-     * @param options The query options.
-     * @return Iterator key for the result set.
-     * @throws RemoteException If error occurred while doing RMI call.
-     */
-    @Override
-    public long getRecordsModifiedAfterLoadData(long time, String base,
-                                        QueryOptions options)
-                                                        throws RemoteException {
-        log.debug("getRecordsModifiedAfterNotLoadData(" + time + ", '" + base + "', "
-                + options + ").");
-        if (log.isTraceEnabled()) {
-            log.trace("getRecordsModifiedAfterNotLoadData(" + time + ", '" + base + "', "
-                + options + ").");
-        }
-        try {
-            return backend.getRecordsModifiedAfterLoadData(time, base, options);
-        } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "getRecordsModifiedAfterNotLoadData(time=%d, base='%s', options=%s) "
-                    + "for %d:%s",
-                    time, base, options, registryPort, serviceName),
-                                         t, flattenExceptions);
-            return -1;
-        }
-    }
     
     /**
      * Return iterator key for records modified after input time, from the

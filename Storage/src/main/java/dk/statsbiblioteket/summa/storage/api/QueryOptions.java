@@ -77,16 +77,48 @@ import java.io.Serializable;
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
 public class QueryOptions implements Serializable {
-    private static final long serialVersionUID = 196854L;
+    private static final long serialVersionUID = 196855L;
+
+    /* The order of these are significant as they are used by StatementHandler to generate SQL queries */
     public static enum ATTRIBUTES {
-        RECORDID,
-        RECORDBASE,
-        RECORDCONTENT,
-        RECORDCREATIONTIME,
-        RECORDMODIFICATIONTIME,
-        RECORDMETA,
+        ID,
+        BASE,
+        DELETED,
+        INDEXABLE,
+        HAS_RELATIONS,
+        CONTENT,
+        CREATIONTIME,
+        MODIFICATIONTIME,
+        META,
+        PARENTS,
+        CHILDREN
     }
-    
+
+    public static final ATTRIBUTES[] ATTRIBUTES_SANS_CONTENT_AND_META = new ATTRIBUTES[]{
+        ATTRIBUTES.ID,
+        ATTRIBUTES.BASE,
+        ATTRIBUTES.DELETED,
+        ATTRIBUTES.INDEXABLE,
+        ATTRIBUTES.HAS_RELATIONS,
+        ATTRIBUTES.CREATIONTIME,
+        ATTRIBUTES.MODIFICATIONTIME,
+        ATTRIBUTES.PARENTS,
+        ATTRIBUTES.CHILDREN
+    };
+
+    public static final ATTRIBUTES[] ATTRIBUTES_ALL = new ATTRIBUTES[]{
+        ATTRIBUTES.ID,
+        ATTRIBUTES.BASE,
+        ATTRIBUTES.DELETED,
+        ATTRIBUTES.INDEXABLE,
+        ATTRIBUTES.HAS_RELATIONS,
+        ATTRIBUTES.CONTENT,
+        ATTRIBUTES.CREATIONTIME,
+        ATTRIBUTES.MODIFICATIONTIME,
+        ATTRIBUTES.META,
+        ATTRIBUTES.PARENTS,
+        ATTRIBUTES.CHILDREN
+    };
 
     /**
      * Iff {@code true} match only deleted records, and if {@code false} match
@@ -141,9 +173,8 @@ public class QueryOptions implements Serializable {
      * options.
      * @param attributes Attributes to fetch from storage.
      */
-    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
-                        int childDepth, int parentHeight, StringMap meta,
-                        ATTRIBUTES[] attributes) {
+    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter, int childDepth, int parentHeight,
+                        StringMap meta, ATTRIBUTES[] attributes) {
         this(deletedFilter, indexableFilter, childDepth, parentHeight, meta);
         this.attributes = attributes;
     }
@@ -183,8 +214,7 @@ public class QueryOptions implements Serializable {
      * @param parentHeight The parent height for records to fetch
      * {@link #childDepth}.
      */
-    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter,
-                        int childDepth, int parentHeight) {
+    public QueryOptions(Boolean deletedFilter, Boolean indexableFilter, int childDepth, int parentHeight) {
         this(deletedFilter, indexableFilter, childDepth, parentHeight, null);
     }
 
@@ -207,10 +237,18 @@ public class QueryOptions implements Serializable {
              original.indexableFilter(),
              original.childDepth(),
              original.parentHeight(),
-             original.meta(),
-             original.attributes);
+             original.meta() == null ? null : new StringMap(original.meta()),
+             copy(original.attributes));
     }
 
+    private static ATTRIBUTES[] copy(ATTRIBUTES[] attributes) {
+        if (attributes == null) {
+            return null;
+        }
+        ATTRIBUTES[] copy = new ATTRIBUTES[attributes.length];
+        System.arraycopy(attributes, 0, copy, 0, attributes.length);
+        return copy;
+    }
     /**
      * Return boolean value for {@link #deletedFilter}.
      *
@@ -355,29 +393,92 @@ public class QueryOptions implements Serializable {
         boolean indexable = r.isIndexable();
         boolean deleted = r.isDeleted();
         boolean contentCompressed = r.isContentCompressed();
+//        List<String> parentIds = null;
+//        List<String> childrenIds = null;
+//        List<Record> parents = null;
+//        List<Record> children = null;
         for(ATTRIBUTES attribute: attributes) {
             switch(attribute) {
-                case RECORDBASE:
-                    base = r.getBase();
-                    break;
-                case RECORDCONTENT:
-                    content = r.getContent(r.isContentCompressed());
-                    break;
-                case RECORDCREATIONTIME:
-                    ct = r.getCreationTime();
-                    break;
-                case RECORDMODIFICATIONTIME:
-                    mt = r.getModificationTime();
-                    break;
-                case RECORDID:
+                case ID:
                     id = r.getId();
                     break;
-                case RECORDMETA:
+                case BASE:
+                    base = r.getBase();
+                    break;
+                case DELETED:
+                    deleted = r.isDeleted();
+                    break;
+                case INDEXABLE:
+                    indexable = r.isIndexable();
+                    break;
+//                case HAS_RELATIONS:
+                case CONTENT:
+                    content = r.getContent(false);
+                    break;
+                case CREATIONTIME:
+                    ct = r.getCreationTime();
+                    break;
+                case MODIFICATIONTIME:
+                    mt = r.getModificationTime();
+                    break;
+                case META:
                     meta = r.getMeta();
                     break;
             }
         }
-        return new Record(id, base, deleted, indexable, content, ct,
-                mt, null, null, meta, contentCompressed);
+        Record record = new Record(id, base, deleted, indexable, content, ct, mt, r.getParentIds(), r.getChildIds(),
+                                   meta == null || meta.size() == 0 ? null : meta, contentCompressed);
+        record.setParents(r.getParents());
+        record.setChildren(r.getChildren());
+        return record;
     }
+
+    public ATTRIBUTES[] getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(ATTRIBUTES[] attributes) {
+        this.attributes = attributes;
+    }
+
+    public synchronized void addAttribute(ATTRIBUTES addition) {
+        if (attributes == null) {
+            attributes = new ATTRIBUTES[1];
+            attributes[0] = addition;
+                return;
+        }
+        for (ATTRIBUTES a: attributes) {
+            if (addition == a) {
+                return;
+            }
+        }
+        ATTRIBUTES[] newAttributes = new ATTRIBUTES[attributes.length + 1];
+        System.arraycopy(attributes, 0, newAttributes, 0, attributes.length);
+        newAttributes[newAttributes.length-1] = addition;
+        attributes = newAttributes;
+    }
+
+    public synchronized void removeAttribute(ATTRIBUTES remover) {
+        if (attributes == null) {
+            return;
+        }
+        if (attributes.length == 1) {
+            if (attributes[0] == remover) {
+                attributes = null;
+            }
+            return;
+        }
+        int pos = 0;
+        for (ATTRIBUTES existing : attributes) {
+            if (existing != remover) {
+                attributes[pos++] = existing;
+            }
+        }
+        if (pos != attributes.length) { // Matched
+            ATTRIBUTES[] newAttributes = new ATTRIBUTES[attributes.length-1];
+            System.arraycopy(attributes, 0, newAttributes, 0, attributes.length-1);
+            attributes = newAttributes;
+        }
+    }
+
 }

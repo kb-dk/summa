@@ -205,16 +205,7 @@ public class NeoStorage implements Storage {
         return hitsKey++;
     }
 
-    
-    
-    @Override
-    public long getRecordsModifiedAfterLoadData(
-        long time, String base, QueryOptions options) throws IOException {
-    
-    	throw new RuntimeException("Not implemented yet");
-    }
-    
-    
+
     @Override
     public Record next(long iteratorKey) throws IOException {
         IndexHits<Node> iHits = hits.get(iteratorKey);

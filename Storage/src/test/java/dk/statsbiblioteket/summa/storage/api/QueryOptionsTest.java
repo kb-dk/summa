@@ -15,6 +15,8 @@
 package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
@@ -75,9 +77,9 @@ public class QueryOptionsTest extends TestCase {
 
     public void testGetNewRecord() {
         QueryOptions opt = new QueryOptions(null, null, 0, 0, null,
-                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDBASE,
-                                                QueryOptions.ATTRIBUTES.RECORDMETA,
-                                                QueryOptions.ATTRIBUTES.RECORDID}
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.BASE,
+                                                QueryOptions.ATTRIBUTES.META,
+                                                QueryOptions.ATTRIBUTES.ID}
                 );
 
         Record r = opt.getNewRecord(new Record("test", "test-base", true, false,
@@ -85,8 +87,8 @@ public class QueryOptionsTest extends TestCase {
         assertNotNull(r);
 
         opt = new QueryOptions(null, null, 0, 0, null,
-                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDBASE,
-                                                QueryOptions.ATTRIBUTES.RECORDMETA}
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.BASE,
+                                                QueryOptions.ATTRIBUTES.META}
                 );
         try {
             r = opt.getNewRecord(r);
@@ -96,8 +98,8 @@ public class QueryOptionsTest extends TestCase {
         }
 
         opt = new QueryOptions(null, null, 0, 0, null,
-                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.RECORDID,
-                                                QueryOptions.ATTRIBUTES.RECORDMETA}
+                new QueryOptions.ATTRIBUTES[] { QueryOptions.ATTRIBUTES.ID,
+                                                QueryOptions.ATTRIBUTES.META}
                 );
         try {
             r = opt.getNewRecord(r);
@@ -106,6 +108,73 @@ public class QueryOptionsTest extends TestCase {
             // okay
         }
 
+    }
+
+    public void testAddAttribute() {
+        QueryOptions options = new QueryOptions();
+        assertNull("Initial attributes should be null", options.getAttributes());
+        options.addAttribute(QueryOptions.ATTRIBUTES.ID);
+        options.addAttribute(QueryOptions.ATTRIBUTES.META);
+        assertEquals("The added attributes should stick",
+                     Strings.join(new QueryOptions.ATTRIBUTES[]{
+                         QueryOptions.ATTRIBUTES.ID,
+                         QueryOptions.ATTRIBUTES.META
+                     }, ", "),
+                     Strings.join(options.getAttributes(), ", "));
+        options.addAttribute(QueryOptions.ATTRIBUTES.META);
+        assertEquals("Duplicate adds should make no difference",
+                     Strings.join(new QueryOptions.ATTRIBUTES[]{
+                         QueryOptions.ATTRIBUTES.ID,
+                         QueryOptions.ATTRIBUTES.META
+                     }, ", "),
+                     Strings.join(options.getAttributes(), ", "));
+    }
+
+    public void testRemoveAttribute() {
+        QueryOptions options = new QueryOptions();
+        options.setAttributes(QueryOptions.ATTRIBUTES_ALL);
+        assertEquals("All attributes should be as expected",
+                     Strings.join(new QueryOptions.ATTRIBUTES[]{
+                         QueryOptions.ATTRIBUTES.ID,
+                         QueryOptions.ATTRIBUTES.BASE,
+                         QueryOptions.ATTRIBUTES.DELETED,
+                         QueryOptions.ATTRIBUTES.INDEXABLE,
+                         QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                         QueryOptions.ATTRIBUTES.CONTENT,
+                         QueryOptions.ATTRIBUTES.CREATIONTIME,
+                         QueryOptions.ATTRIBUTES.MODIFICATIONTIME,
+                         QueryOptions.ATTRIBUTES.META,
+                         QueryOptions.ATTRIBUTES.PARENTS,
+                         QueryOptions.ATTRIBUTES.CHILDREN
+                     }, ", "),
+                     Strings.join(options.getAttributes(), ", "));
+        options.removeAttribute(QueryOptions.ATTRIBUTES.INDEXABLE);
+        options.removeAttribute(QueryOptions.ATTRIBUTES.META);
+        options.removeAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
+        options.removeAttribute(QueryOptions.ATTRIBUTES.ID);
+        assertEquals("Pruning should work",
+                     Strings.join(new QueryOptions.ATTRIBUTES[]{
+                         QueryOptions.ATTRIBUTES.BASE,
+                         QueryOptions.ATTRIBUTES.DELETED,
+                         QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                         QueryOptions.ATTRIBUTES.CONTENT,
+                         QueryOptions.ATTRIBUTES.CREATIONTIME,
+                         QueryOptions.ATTRIBUTES.MODIFICATIONTIME,
+                         QueryOptions.ATTRIBUTES.PARENTS,
+                     }, ", "),
+                     Strings.join(options.getAttributes(), ", "));
+        options.removeAttribute(QueryOptions.ATTRIBUTES.ID);
+        assertEquals("Multiple pruning should not change anything",
+                     Strings.join(new QueryOptions.ATTRIBUTES[]{
+                         QueryOptions.ATTRIBUTES.BASE,
+                         QueryOptions.ATTRIBUTES.DELETED,
+                         QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                         QueryOptions.ATTRIBUTES.CONTENT,
+                         QueryOptions.ATTRIBUTES.CREATIONTIME,
+                         QueryOptions.ATTRIBUTES.MODIFICATIONTIME,
+                         QueryOptions.ATTRIBUTES.PARENTS,
+                     }, ", "),
+                     Strings.join(options.getAttributes(), ", "));
     }
 
 }

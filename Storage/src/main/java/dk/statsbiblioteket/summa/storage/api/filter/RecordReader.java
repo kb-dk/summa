@@ -233,7 +233,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     /**
      * Default value for {@link #CONF_LOAD_DATA_COLUMN}.
      */
-    public static final boolean DEFAULT_LOAD_DATA_COLUMN = false;
+    public static final boolean DEFAULT_LOAD_DATA_COLUMN = true;
 
 
     /**
@@ -354,7 +354,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         if (conf.getBoolean(CONF_STAY_ALIVE, DEFAULT_STAY_ALIVE)) {
             storageWatcher = new StorageWatcher(conf);
-            storageWatcher.addListener(this, Arrays.asList(base), null);
+            storageWatcher.addListener(this, base == null ? null : Arrays.asList(base), null);
             storageWatcher.start();
             log.trace("Enabled storage watching for base " + base);
         } else {
@@ -412,16 +412,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
             // Detect if we need special query options and perform the query as
             // we are configured
-            QueryOptions opts;
-            opts = !expandChildren && !expandParents ? null :
-                   new QueryOptions(
-                       null, null,
-                       expandChildren ? maxExpansionDepth : 0,
-                       expandParents ? maxExpansionHeight : 0,
-                       null);
-            long iterKey = loadData ?
-                           storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, opts) :
-                           storage.getRecordsModifiedAfter(lastRecordTimestamp, base, opts);
+            long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, getQueryOptions());
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
@@ -440,9 +431,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             "Updating record iterator for Records modified after " + ProgressTracker.ISO_TIME,
             lastRecordTimestamp));
 
-        long iterKey = loadData ?
-                       storage.getRecordsModifiedAfterLoadData(lastRecordTimestamp, base, null) :
-                       storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
+        long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, getQueryOptions());
 
 
         lastIteratorUpdate = System.currentTimeMillis();
@@ -455,6 +444,23 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
         return true;
+    }
+
+    private QueryOptions getQueryOptions() {
+        QueryOptions opts = new QueryOptions(null, null,
+                                             expandChildren ? maxExpansionDepth : 0,
+                                             expandParents ? maxExpansionHeight : 0,
+                                             null, QueryOptions.ATTRIBUTES_ALL);
+        if (!expandChildren) {
+            opts.removeAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
+        }
+        if (!expandParents) {
+            opts.removeAttribute(QueryOptions.ATTRIBUTES.PARENTS);
+        }
+        if (!loadData) {
+            opts.removeAttribute(QueryOptions.ATTRIBUTES.CONTENT);
+        }
+        return opts;
     }
 
     /**
