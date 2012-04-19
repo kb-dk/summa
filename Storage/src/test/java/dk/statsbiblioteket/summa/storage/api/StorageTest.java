@@ -43,6 +43,24 @@ public class StorageTest extends StorageTestBase {
     /** Local logger. */
     private static Log log = LogFactory.getLog(StorageTest.class);
 
+    public void testGetRecordNoParent() throws IOException {
+        Record in = new Record(testId1, testBase1, testContent1);
+        in.setParentIds(Arrays.asList("nonexisting"));
+        storage.flush(in);
+
+        Record out = storage.getRecord(testId1, null);
+        assertNotNull("The extracted record should exist", out);
+    }
+
+    public void testGetRecordNoChild() throws IOException {
+        Record in = new Record(testId1, testBase1, testContent1);
+        in.setChildIds(Arrays.asList("nonexisting"));
+        storage.flush(in);
+
+        Record out = storage.getRecord(testId1, null);
+        assertNotNull("The extracted record should exist", out);
+    }
+
     public void testGetModifiedAfterAll() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
         storage.flush(r1);
