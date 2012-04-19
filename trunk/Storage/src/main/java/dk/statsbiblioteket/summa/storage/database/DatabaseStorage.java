@@ -1624,8 +1624,10 @@ public abstract class DatabaseStorage extends StorageBase {
             resultSet= stmt.executeQuery();
                 
             if (!resultSet.next()) {
-                log.info("No such record '" + recordId + "'");
-                return null;
+          	  log.warn("Parent/child relation error, record:" +recordId+" can not load an ancestor with id:"+parentId + " .Only children are loaded");             
+              stmt.setString(1, recordId);//using the record requested as top-parent
+              resultSet= stmt.executeQuery();
+              resultSet.next();         
             }
                   
                                                       
