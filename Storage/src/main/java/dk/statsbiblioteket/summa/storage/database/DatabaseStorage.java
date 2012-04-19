@@ -54,6 +54,7 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.neo4j.helpers.collection.CatchingIteratorWrapper;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -1590,66 +1591,67 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return the record with the given ID.
      */
     public Record getRecordWithFullObjectTree(String recordId) throws IOException{
-     	long startTime = System.currentTimeMillis();
-          Connection conn = getTransactionalConnection();
-          ResultSet resultSet = null;
-          try {
-              conn.setReadOnly(true);
+        long startTime = System.currentTimeMillis();
+        log.trace("getRecordWithFullObjectTree(" + recordId + ") called");
+        Connection conn = getTransactionalConnection();
+        ResultSet resultSet = null;
+        try {
+            conn.setReadOnly(true);
                                             
-              Boolean mayHaveParent = true;          
-              String parentId=recordId; // For each parent found, this value will be overwritten
+            Boolean mayHaveParent = true;
+            String parentId=recordId; // For each parent found, this value will be overwritten
 
-              while (mayHaveParent){
+            while (mayHaveParent){
 
-                  StatementHandle handle = statementHandler.getParentIds();
-                  // TODO: Use handle directly
-            	  PreparedStatement pstmtParentIdOnly = conn.prepareStatement(handle.getSql());
-            	  pstmtParentIdOnly.setString(1, parentId);
-            	  ResultSet parentRS= pstmtParentIdOnly.executeQuery();
-                  mayHaveParent = parentRS.next();
-                  if (mayHaveParent){            
-                	  parentId=parentRS.getString("parentID"); //Set new Parent                    
-                  }                             	  
-                  parentRS.close();
-              }
-              //Simple loading strategy. Load parent (full). Then load all children(full) in 1 SQL. Do this recurssive.
+                StatementHandle handle = statementHandler.getParentIds();
+                // TODO: Use handle directly
+                PreparedStatement pstmtParentIdOnly = conn.prepareStatement(handle.getSql());
+                pstmtParentIdOnly.setString(1, parentId);
+                ResultSet parentRS= pstmtParentIdOnly.executeQuery();
+                mayHaveParent = parentRS.next();
+                if (mayHaveParent){
+                    parentId=parentRS.getString("parentID"); //Set new Parent
+                }
+                parentRS.close();
+            }
+            //Simple loading strategy. Load parent (full). Then load all children(full) in 1 SQL. Do this recurssive.
 
-                  // TODO: Use handle directly
-              StatementHandle handle = statementHandler.getGetRecord(null);
-              PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+            // TODO: Use handle directly
+            StatementHandle handle = statementHandler.getGetRecord(null);
+            PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-              stmt.setString(1, parentId);//This is the top node in the tree
-              resultSet= stmt.executeQuery();
+            stmt.setString(1, parentId);//This is the top node in the tree
+            resultSet= stmt.executeQuery();
                 
-                  if (!resultSet.next()) {
-                      log.info("No such record '" + recordId + "'");
-                      return null;
-                  }
+            if (!resultSet.next()) {
+                log.info("No such record '" + recordId + "'");
+                return null;
+            }
                   
                                                       
-              Record topParentRecord= constructRecordFromRSNoRelationsSet(resultSet);
-              if (!topParentRecord.isHasRelations()){                        	
-            	  //Sanity check. Can probably be removed after some time if this never happens.
-                	if(!topParentRecord.getId().equals(recordId)){
-                	   throw new RuntimeException("Database inconsistency hasRelations for id" +topParentRecord.getId()
-                                                  +" and "+recordId);
-                	}                	
-                	  log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
-                              + (System.currentTimeMillis() - startTime) + "ms");
-                	
-                	return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests 
+            Record topParentRecord= constructRecordFromRSNoRelationsSet(resultSet);
+            if (!topParentRecord.isHasRelations()){
+                //Sanity check. Can probably be removed after some time if this never happens.
+                if(!topParentRecord.getId().equals(recordId)){
+                    throw new RuntimeException("Database inconsistency hasRelations for id" +topParentRecord.getId()
+                                               +" and "+recordId);
                 }
+                log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
+                          + (System.currentTimeMillis() - startTime) + "ms");
+                	
+                return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
+            }
                     
-              loadAndSetChildRelations(topParentRecord, conn);       
+            loadAndSetChildRelations(topParentRecord, conn);
                           
-             //Find the recordId in the object tree and return this. Minimal performance overhead here. 
-             //Post-order transversal algorithm                     
-              Record recordNode=findRecordIdPostOrderTransversal(recordId, topParentRecord);                             
+            //Find the recordId in the object tree and return this. Minimal performance overhead here.
+            //Post-order transversal algorithm
+            Record recordNode=findRecordIdPostOrderTransversal(recordId, topParentRecord);
        
-              log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
+            log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
                       + (System.currentTimeMillis() - startTime) + "ms");
               
-              return  recordNode;
+            return  recordNode;
                           
           } catch (SQLException e) {
         	  log.error(String.format("Failed to load record '%s'", recordId), e);
@@ -3154,12 +3156,15 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Touching: " + id);
 
         invalidateCachedStats();
+        Record r = null;
         try {
             stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
-            Record r = getRecord(id, null);
+            r = getRecord(id, null);
             updateLastModficationTimeForBase(r.getBase(), conn);
+        } catch (NullPointerException e) {
+            throw new NullPointerException("The retrieved record for id '" + id + "' was " + r);
         } finally {
             closeStatement(stmt);
         }
