@@ -31,6 +31,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.Reader;
 
+// TODO: Make a pool of parsers instead of using synchronized
 /**
  * Lucene query rewriter with callback on various types of queries.
  */
@@ -179,7 +180,7 @@ public class QueryRewriter {
      * @param query a textual query.
      * @return true if the query is simple.
      */
-    public boolean isSimple(String query) {
+    public synchronized boolean isSimple(String query) {
         Query q;
         try {
             q = queryParser.parse(query);
@@ -217,7 +218,7 @@ public class QueryRewriter {
      * @throws org.apache.lucene.queryparser.classic.ParseException if the query could not be parsed by the Lucene query
      *         parser.
      */
-    public String rewrite(String query) throws ParseException {
+    public synchronized String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
         Query walked = walkQuery(q, true);
         return walked == null ? null : convertQueryToString(walked, true);

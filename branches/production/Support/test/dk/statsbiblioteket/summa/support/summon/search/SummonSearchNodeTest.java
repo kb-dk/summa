@@ -314,7 +314,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     // summon used to support pure negative filters (in 2011) but apparently does not with the 2.0.0-API.
-    // If they change their stance on the issue, we want to swith back to using pure negative filters, as it
+    // If they change their stance on the issue, we want to switch back to using pure negative filters, as it
     // does not affect ranking.
     public void testNegativeFacetsSupport() throws RemoteException {
         final String QUERY = "foo fighters NOT limits NOT (boo OR bam)";

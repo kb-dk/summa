@@ -216,6 +216,11 @@ public class QueryRewriterTest extends TestCase {
                        "foo^2 bar^3");
     }
 
+    public void testQuoteWeight() throws ParseException {
+        assertIdentity("\"foo\"^2.2123",
+                       "\"foo\"^2.2123");
+    }
+
     public void testTerseMust() throws ParseException {
         final String QUERY = "foo bar";
         String explicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true), null,

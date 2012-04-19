@@ -49,6 +49,8 @@ public class FacetQueryTransformer {
 
     }
 
+
+    // TODO: Remove synchronized and use a pool of parsers
     /**
      * Queries must consist of BooleanQueries, TermQueries and PhraseQueries only. Samples:<br/>
      * {@code 'foo:bar'}<br/>
@@ -67,7 +69,7 @@ public class FacetQueryTransformer {
      * @return the generated solrRequest or null if the transformation could not be completed.
      * @throws org.apache.lucene.queryparser.classic.ParseException if the query could not be parsed at all.
      */
-    public Map<String, List<String>> convertQueryToFacet(String query) throws ParseException {
+    public synchronized Map<String, List<String>> convertQueryToFacet(String query) throws ParseException {
         log.debug("Converting query '" + query + "' to facet queries");
         Map<String, List<String>> solrRequest = new HashMap<String, List<String>>(20);
         if ("".equals(query) || query == null) {

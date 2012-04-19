@@ -51,6 +51,7 @@ import java.io.StringWriter;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Consider moving this down to field-level or to expand to a given list of fields
+// TODO: Remove synchronized and use a pool of parsers
 public class QueryPhraser implements Configurable {
     private static Log log = LogFactory.getLog(QueryPhraser.class);
 
@@ -92,7 +93,7 @@ public class QueryPhraser implements Configurable {
         return phrased;
     }
 
-    private String getTerms(String query) throws ParseException {
+    private synchronized String getTerms(String query) throws ParseException {
         Query q;
         q = qp.parse(query);
 /*        if (q instanceof TermQuery) {
