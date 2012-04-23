@@ -155,8 +155,9 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             }
         }
         fail(String.format(message + ". Mismatched lists. Matches: %d/%d (%d at same position), total permutations of "
-                           + "matches between lists: %d (average %.1f)",
-                           matches, list1.size(), perfect, permutations, permutations * 1.0 / matches));
+                           + "matches between lists: %d (average %.1f). Hits were\n%s\n%s",
+                           matches, list1.size(), perfect, permutations, permutations * 1.0 / matches,
+                           Strings.join(list1, ", "), Strings.join(list2, ", ")));
     }
 
     /**
