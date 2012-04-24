@@ -1,0 +1,5 @@
+<doc>
+    <field name="id">doc1</field>
+    <field name="name">Document 1</field>
+    <field name="description">The first and very simple Solr sample document.</field>
+</doc>
