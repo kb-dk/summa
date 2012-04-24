@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search.tools;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -29,53 +30,56 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class QuerySanitizer {
+public class QuerySanitizer implements Configurable {
     private static Log log = LogFactory.getLog(QuerySanitizer.class);
 
-    /**
-     * Whether or not mismatched quotes should be fixed.
-     * </p><p>
-     * Optional. Default is true.
-     */
-    public static final String CONF_FIX_QUOTES = "sanitizer.fixquotes";
-    public static final boolean DEFAULT_FIX_QUOTES = true;
+    public enum ACTION {ignore, remove, escape}
 
     /**
-     * Whether or not mismatched parentheses should be fixed.
+     * How to handle unbalanced quotation marks-
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Possible actions are ignore, remove (default) and escape.
      */
-    public static final String CONF_FIX_PARENTHESES = "sanitizer.fixparentheses";
-    public static final boolean DEFAULT_FIX_PARENTHESES = true;
+    public static final String CONF_FIX_QUOTES = "sanitizer.quotes";
+    public static final ACTION DEFAULT_FIX_QUOTES = ACTION.remove;
 
     /**
-     * Whether or not qualifiers without terms (foo:) should be fixed.
+     * How to handle mismatched parentheses.
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Possible actions are ignore, remove (default) and escape.
      */
-    public static final String CONF_FIX_QUALIFIERS = "sanitizer.fixqualifierswithoutterms";
-    public static final boolean DEFAULT_FIX_QUALIFIERS = true;
+    public static final String CONF_FIX_PARENTHESES = "sanitizer.parentheses";
+    public static final ACTION DEFAULT_FIX_PARENTHESES = ACTION.remove;
 
     /**
-     * Whether or not trailing exclamation marks should be fixed.
+     * How to handle qualifiers without terms (foo: ).
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Possible actions are ignore, remove and escape (default).
      */
-    public static final String CONF_FIX_EXCLAMATIONS = "sanitizer.fixtrailingexclamationmarks";
-    public static final boolean DEFAULT_FIX_EXCLAMATIONS = true;
+    public static final String CONF_FIX_QUALIFIERS = "sanitizer.qualifierswithoutterms";
+    public static final ACTION DEFAULT_FIX_QUALIFIERS = ACTION.escape;
 
-    private final boolean fixQuotes;
-    private final boolean fixParentheses;
-    private final boolean fixQualifiers;
-    private final boolean fixExclamations;
+    /**
+     * How to handle trailing exclamation marks.
+     * </p><p>
+     * Optional. Possible actions are ignore, remove and escape (default).
+     */
+    public static final String CONF_FIX_EXCLAMATIONS = "sanitizer.trailingexclamationmarks";
+    public static final ACTION DEFAULT_FIX_EXCLAMATIONS = ACTION.escape;
+
+    private final ACTION fixQuotes;
+    private final ACTION fixParentheses;
+    private final ACTION fixQualifiers;
+    private final ACTION fixExclamations;
 
     @SuppressWarnings({"UnusedParameters"})
     public QuerySanitizer(Configuration conf) {
-        fixQuotes =       conf.getBoolean(CONF_FIX_QUOTES, DEFAULT_FIX_QUOTES);
-        fixParentheses =  conf.getBoolean(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES);
-        fixQualifiers =   conf.getBoolean(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS);
-        fixExclamations = conf.getBoolean(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS);
-        log.debug("Created QuerySanitizer");
+        fixQuotes =       ACTION.valueOf(conf.getString(CONF_FIX_QUOTES, DEFAULT_FIX_QUOTES.toString()));
+        fixParentheses =  ACTION.valueOf(conf.getString(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES.toString()));
+        fixQualifiers =   ACTION.valueOf(conf.getString(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS.toString()));
+        fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
+        log.debug(String.format("Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s",
+                                fixQuotes, fixParentheses, fixQualifiers, fixExclamations));
     }
 
     /**
@@ -155,17 +159,17 @@ public class QuerySanitizer {
     private SanitizedQuery sanitize(SanitizedQuery query) {
         int lastChangeCount = -1;
         while (query.getChangeCount() != lastChangeCount) {
-            if (fixQuotes) {
+            if (fixQuotes != ACTION.ignore) {
                 fixQuotes(query); // Must be first
             }
-            if (fixParentheses) {
+            if (fixParentheses != ACTION.ignore) {
                 fixParentheses(query);
             }
-            if (fixQualifiers) { // TODO: Consider 'foo:(bar baz)'
-                removeTrailing(query, "Qualifier (term with colon) without content", ':');
+            if (fixQualifiers != ACTION.ignore) { // TODO: Consider 'foo:(bar baz)'
+                fixTrailing(query, "Qualifier (term with colon) without content", ':', fixQualifiers);
             }
-            if (fixExclamations) { // TODO: Consider 'foo!!!'
-                removeTrailing(query, "Exclamation mark without expression", '!');
+            if (fixExclamations != ACTION.ignore) { // TODO: Consider 'foo!!!'
+                fixTrailing(query, "Exclamation mark without expression", '!', fixExclamations);
             }
             lastChangeCount = query.getChangeCount();
         }
@@ -175,7 +179,7 @@ public class QuerySanitizer {
     private void fixQuotes(SanitizedQuery query) {
         int quoteCount = countQuotes(query.getLastQuery());
         if (quoteCount % 2 != 0) {
-            query.addChange(removeChar(query.getLastQuery(), '\"'), SanitizedQuery.CHANGE.error,
+            query.addChange(fixChar(query.getLastQuery(), '\"', fixQuotes), SanitizedQuery.CHANGE.error,
                             "Uneven (" + quoteCount + ") number of quotation marks");
         }
     }
@@ -201,19 +205,19 @@ public class QuerySanitizer {
             } else if (!inQuote && c == ')') {
                 parenthesisLevel--;
                 if (parenthesisLevel < 0) {
-                    query.addChange(
-                        removeChar(removeChar(q, '('), ')'), SanitizedQuery.CHANGE.error, "Missing start parenthesis");
+                    query.addChange(fixChar(fixChar(q, '(', fixParentheses), ')', fixParentheses),
+                                    SanitizedQuery.CHANGE.error, "Missing start parenthesis");
                     return;
                 }
             }
         }
         if (parenthesisLevel > 0) {
-            query.addChange(
-                removeChar(removeChar(q, '('), ')'), SanitizedQuery.CHANGE.error, "Missing end parenthesis");
+            query.addChange(fixChar(fixChar(q, '(', fixParentheses), ')', fixParentheses),
+                            SanitizedQuery.CHANGE.error, "Missing end parenthesis");
         }
     }
 
-    private void removeTrailing(SanitizedQuery query, String message, char trailer) {
+    private void fixTrailing(SanitizedQuery query, String message, char trailer, ACTION action) {
         String q = query.getLastQuery();
         boolean inQuote = false;
         boolean escape = false;
@@ -228,15 +232,21 @@ public class QuerySanitizer {
             } else if (c == '\"') {
                 inQuote = !inQuote;
             } else if (!inQuote && c == trailer && (n == 0 || n == ' ')) {
-                query.addChange(n == 0 ? q.substring(0, q.length()-1) :
-                                q.substring(0, i) + q.substring(i + 1), SanitizedQuery.CHANGE.summasyntax,
-                                message);
+                String newQuery = q.substring(0, i);
+                if (action == ACTION.escape) {
+                    newQuery += "\\" + c;
+                }
+                if (n != 0) {
+                    newQuery += q.substring(i + 1);
+                }
+
+                query.addChange(newQuery, SanitizedQuery.CHANGE.summasyntax, message);
                 return;
             }
         }
     }
 
-    private String removeChar(String query, char removable) {
+    private String fixChar(String query, char problem, ACTION action) {
         StringWriter reduced = new StringWriter(query.length());
         boolean inQuote = false;
         boolean escape = false;
@@ -249,8 +259,11 @@ public class QuerySanitizer {
             } else if (p == '\\') {
                 escape = true;
                 reduced.append(c);
-            } else if (!inQuote && c == removable) {
-                // Skip
+            } else if (!inQuote && c == problem) {
+                if (action == ACTION.escape) {
+                    reduced.append("\\").append(c);
+                }
+                // Else Skip char
             } else if (c == '\"') {
                 inQuote = !inQuote;
                 reduced.append(c);

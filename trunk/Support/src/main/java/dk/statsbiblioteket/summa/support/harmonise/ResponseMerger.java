@@ -531,82 +531,84 @@ public class ResponseMerger implements Configurable {
     /* Ensure that there are the required number of records with the given
        search ID among the topX records.
       */
-    private void enforce(Request request, AdjustWrapper aw, int topX,
-                         String searchID, int required) {
+    private void enforce(Request request, AdjustWrapper aw, int topX, String searchID, int required) {
         // Do we need to do this?
         List<AdjustWrapper.AdjustRecord> records = aw.getRecords();
         if (records.size() < topX) {
             return; // Not enough Records
         }
         int matches = 0;
+        int firstInsertPos = 0; // We only insert after last real entry
         for (int i = 0 ; i < topX && i < records.size() ; i++) {
             if (searchID.equals(records.get(i).getSearcherID())) {
                 matches++;
+                firstInsertPos = i+1;
             }
         }
         if (matches >= required) {
             return; // Enough matches already
         }
-        // Extract the required records
-        List<AdjustWrapper.AdjustRecord> first =
-            new ArrayList<AdjustWrapper.AdjustRecord>(required);
-        int position = 0;
-        while (position < records.size() && first.size() < required) {
+        int needed = required - matches;
+        boolean moveUp = firstInsertPos + needed > topX; // Not enough room for extra records so we pull some up
+        if (moveUp) {
+            firstInsertPos = topX - needed -1;
+            needed = required;
+        }
+
+        // Extract the needed records from the non-showing entries
+        List<AdjustWrapper.AdjustRecord> promotees = new ArrayList<AdjustWrapper.AdjustRecord>(required);
+        int position = firstInsertPos;
+        while (position < records.size() && promotees.size() < needed) {
             if (searchID.equals(records.get(position).getSearcherID())) {
-                first.add(records.remove(position));
+                promotees.add(records.remove(position));
                 continue;
             }
             position++;
         }
-        // Generate semi-random insertion-points among the topX
+
+        // Generate semi-random insertion-points from firstInsertPos to topX
         // We want the order to be the same between searches so we seed
-        // by hashing query & filter
-        Random random = new Random(
-            (request.getString(DocumentKeys.SEARCH_QUERY, "N/A")).hashCode()
-            << 12);
+        // by hashing query
+        Random random = new Random((request.getString(DocumentKeys.SEARCH_QUERY, "N/A")).hashCode() << 12);
         List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
-        for (int i = 0 ; i < topX ; i++) {
-            insertionPoints.add(i < required);
+        for (int i = firstInsertPos ; i < topX ; i++) {
+            insertionPoints.add(i-firstInsertPos < needed);
         }
         Collections.shuffle(insertionPoints, random);
+
         // Insert!
-        List<AdjustWrapper.AdjustRecord> result =
-            new ArrayList<AdjustWrapper.AdjustRecord>(
-                records.size() + first.size());
+        List<AdjustWrapper.AdjustRecord> result = new ArrayList<AdjustWrapper.AdjustRecord>(records.size() + promotees.size());
         for (int i = 0 ; i < topX ; i++) {
-            if (insertionPoints.get(i) && first.size() > 0) {
-                result.add(first.remove(0));
+            if (i >= firstInsertPos && insertionPoints.get(i-firstInsertPos) && promotees.size() > 0) {
+                result.add(promotees.remove(0));
             } else if (records.size() > 0) {
                 result.add(records.remove(0));
             }
         }
         result.addAll(records);
-        result.addAll(first); // Just to be sure (it should be empty)
+        result.addAll(promotees); // Just to be sure (it should be empty)
         aw.setRecords(result);
     }
 
     private List<Pair<String, Integer>> parseForceRules(String s) {
         String[] ruleTokens = s.split(" *, *");
         if (ruleTokens.length == 0) {
-            log.trace("parceForceRules found no rules in '" + s + "'");
+            log.trace("parseForceRules found no rules in '" + s + "'");
             return null;
         }
-        List<Pair<String, Integer>> rules =
-            new ArrayList<Pair<String, Integer>>(ruleTokens.length);
+        List<Pair<String, Integer>> rules = new ArrayList<Pair<String, Integer>>(ruleTokens.length);
         for (String ruleToken: ruleTokens) {
             // zoo(12)
             String[] subTokens = ruleToken.split(" *\\(", 2);
             // zoo
             if (subTokens.length < 2) {
                 throw new IllegalArgumentException(
-                    "The syntax for a rule is 'id(minCount)' but the input "
-                    + "was '" + ruleToken + "'");
+                    "The syntax for a rule is 'id(minCount)' but the input was '" + ruleToken + "'");
             }
             // "  5)  "
             String noParen = subTokens[1].split("\\)", 2)[0].trim();
             Integer count = Integer.parseInt(noParen);
-            log.debug("parseForceRules adding rule " + subTokens[0] + ", "
-                      + count);
+            log.debug("parseForceRules adding rule " + subTokens[0] + ", " + count);
             rules.add(new Pair<String, Integer>(subTokens[0], count));
         }
         return rules;

@@ -117,7 +117,7 @@ public class ResponseMergerTest extends TestCase {
             ResponseMerger.CONF_FORCE_TOPX, 7,
             ResponseMerger.CONF_FORCE_RULES, "searcherB(2)"),
             new Request(), generateResponses(), Arrays.asList(
-            "C1", "C2", "C3", "B1", "A1", "B2", "A2", "A3", "B3"
+            "C1", "C2", "C3", "A1", "A2", "B1", "B2", "A3", "B3"
         ));
         // IfNone
         assertEquals(Configuration.newMemoryBased(

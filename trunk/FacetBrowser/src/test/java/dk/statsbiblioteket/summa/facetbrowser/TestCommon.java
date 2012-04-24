@@ -99,7 +99,7 @@ public class TestCommon extends TestCase {
     public static String oneliner(IndexConnection connection, String recordID) throws IOException {
         String searchTerm = ClusterCommon.colonEscape(recordID);
         Hits hits =
-                 connection.getResults(ClusterCommon.ID + ":\"" +
+                 connection.getResults(ClusterCommon.RECORDID + ":\"" +
                                        searchTerm + "\"");
         if (hits == null || hits.length() == 0) {
             log.error("Could not find a document with recordID " + recordID);

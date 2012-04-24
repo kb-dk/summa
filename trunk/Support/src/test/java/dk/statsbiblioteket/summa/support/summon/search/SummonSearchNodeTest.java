@@ -15,6 +15,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
@@ -23,11 +24,12 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
 import dk.statsbiblioteket.summa.support.harmonise.HarmoniseTestHelper;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
-import dk.statsbiblioteket.summa.support.harmonise.QueryRewriter;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -69,6 +71,22 @@ public class SummonSearchNodeTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(SummonSearchNodeTest.class);
+    }
+
+    public void testNegativeFacet() throws RemoteException {
+        final String JSON =
+            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+            + "\"search.document.filter\":\" NOT ContentType:\\\"Newspaper Article\\\"\","
+            + "\"search.document.filter.purenegative\":\"true\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        assertFalse("The response should not have Newspaper Article as facet. total response was\n" + responses.toXML(),
+                    responses.toXML().contains("<tag name=\"Newspaper Article\""));
+        summon.close();
     }
 
     public void testBasicSearch() throws RemoteException {
@@ -157,8 +175,8 @@ public class SummonSearchNodeTest extends TestCase {
         String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
         String[] EXPECTED = new String[]{
             "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
-        Map<String, List<String>> result = new HashMap<String, List<String>>();
-        SummonSearchNode.convertFilterToFacet(QUERY, result);
+        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
+        Map<String, List<String>> result = fqt.convertQueryToFacet(QUERY);
         assertEquals("Only a single entry should be generated", 1, result.size());
         List<String> resultList = result.entrySet().iterator().next().getValue();
         Collections.sort(resultList);
@@ -296,7 +314,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     // summon used to support pure negative filters (in 2011) but apparently does not with the 2.0.0-API.
-    // If they change their stance on the issue, we want to swith back to using pure negative filters, as it
+    // If they change their stance on the issue, we want to switch back to using pure negative filters, as it
     // does not affect ranking.
     public void testNegativeFacetsSupport() throws RemoteException {
         final String QUERY = "foo fighters NOT limits NOT (boo OR bam)";
@@ -621,13 +639,11 @@ public class SummonSearchNodeTest extends TestCase {
 
         int countInside = countResults(responsesInside);
         int countOutside = countResults(responsesOutside);
-        assertTrue("The number of results for a search for '" + QUERY
-                   + "' within holdings (" + confInside + ") should be less "
-                   + "that outside holdings (" + confOutside + ")",
+        assertTrue("The number of results for a search for '" + QUERY + "' within holdings (" + confInside
+                   + ") should be less that outside holdings (" + confOutside + ")",
                    countInside < countOutside);
-        log.info(String.format(
-            "The search for '%s' gave %d hits within holdings and %d hits in"
-            + " total", QUERY, countInside, countOutside));
+        log.info(String.format("The search for '%s' gave %d hits within holdings and %d hits in total",
+                               QUERY, countInside, countOutside));
 
         int countSearchTweak = countResults(responsesSearchTweak);
         assertEquals(
@@ -767,7 +783,6 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
-    // The ranking should differ when we turn explicit must on/off as it triggers summon DisMax conformance on/off
     public void testExplicitMust() throws IOException {
         final String QUERY = "miller genre as social action";
         ResponseCollection explicitMustResponses = new ResponseCollection();
@@ -795,6 +810,101 @@ public class SummonSearchNodeTest extends TestCase {
         }
         HarmoniseTestHelper.compareHits(QUERY, false, explicitMustResponses, implicitMustResponses);
     }
+
+    /*
+    Tests if explicit weight-adjustment of terms influences the scores significantly.
+     */
+    public void testExplicitWeightScoring() throws RemoteException {
+        assertScores("dolphin whales", "dolphin whales^1.000001", 10.0f);
+    }
+
+    /*
+    Tests if explicit weight-adjustment of terms influences the order of documents.
+     */
+    public void testExplicitWeightOrder() throws RemoteException {
+        assertOrder("dolphin whales", "dolphin whales^1.000001");
+    }
+
+    private void assertOrder(String query1, String query2) throws RemoteException {
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+        try {
+            List<String> ids1 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query1), "id");
+            List<String> ids2 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query2), "id");
+            ExtraAsserts.assertPermutations("Query '" + query1 + "' and '" + query2 + "'", ids1, ids2);
+/*            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
+                         ids1.size(), ids2.size());
+            assertEquals("The document order for '" + query1 + "' and '" + query2 + "' should be equal",
+                         Strings.join(ids1, ", "), Strings.join(ids2, ", "));
+                         */
+        } finally {
+            summon.close();
+        }
+    }
+
+    public void testDisMaxDisabling() throws RemoteException {
+        final String QUERY= "asian philosophy";
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+        try {
+            long plainCount =
+                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+            long sabotagedCount =
+                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+            assertEquals("The number of hits for a DisMax-enabled and DisMax-sabotages query should match",
+                         plainCount, sabotagedCount);
+
+            List<String> plain = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id");
+            List<String> sabotaged = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id");
+            assertFalse("The ids returned by DisMax-enabled and DisMax-sabotaged query should differ",
+                        Strings.join(plain, ", ").equals(Strings.join(sabotaged, ", ")));
+        } finally {
+            summon.close();
+        }
+    }
+
+    /*
+    Tests if quoting of terms influences the scores significantly.
+     */
+    public void testQuotingScoring() throws RemoteException {
+        assertScores("dolphin whales", "\"dolphin\" \"whales\"", 10.0f);
+    }
+
+    private void assertScores(String query1, String query2, float maxDifference) throws RemoteException {
+        SearchNode summon  = SummonTestHelper.createSummonSearchNode();
+
+        ResponseCollection raw = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, query1), raw);
+
+        ResponseCollection weighted = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, query2), weighted);
+
+        summon.close();
+
+        List<Double> rawScores = getScores(raw);
+        List<Double> weightedScores = getScores(weighted);
+
+        assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
+                     rawScores.size(), weightedScores.size());
+        for (int i = 0 ; i < rawScores.size() ; i++) {
+            assertTrue(String.format(
+                "The scores at position %d were %s and %s. Max difference allowed is %s. "
+                + "All scores for '%s' and '%s':\n%s\n%s",
+                i, rawScores.get(i), weightedScores.get(i), maxDifference,
+                query1, query2, Strings.join(rawScores, ", "), Strings.join(weightedScores, ", ")),
+                       Math.abs(rawScores.get(i) - weightedScores.get(i)) <= maxDifference);
+        }
+    }
+
+    private List<Double> getScores(ResponseCollection responses) {
+        DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+        List<Double> result = new ArrayList<Double>(docs.size());
+        for (DocumentResponse.Record record: docs.getRecords()) {
+            result.add((double)record.getScore());
+        }
+        return result;
+    }
+
 
     // Author_xml contains the authoritative order for the authors so it should override the non-XML-version
     public void testAuthor_xmlExtraction() throws RemoteException {
@@ -858,6 +968,100 @@ public class SummonSearchNodeTest extends TestCase {
 
     }
 
+    public void testAuthor_xmlExtraction_shortformat() throws RemoteException {
+        String query = "ID:FETCH-LOGICAL-c937-88b9adcf681a925445118c26ea8da2ed792f182b51857048dbb48b11a133ea321";
+        { // sanity-check the Author-field
+            String expected = "Ferlay, Jacques\n"
+                              + "Shin, Hai-Rim\n"
+                              + "Bray, Freddie\n"
+                              + "Forman, David\n"
+                              + "Mathers, Colin\n"
+                              + "Parkin, Donald Maxwell";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("author direct", summon, query, "Author", expected, false);
+            summon.close();
+        }
+
+        { // shortformat should match Author
+            String expected =
+                "  <shortrecord>\n"
+                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                + "      <rdf:Description>\n"
+                + "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n"
+                + "        <dc:creator>Ferlay, Jacques</dc:creator>\n"
+                + "        <dc:creator>Shin, Hai-Rim</dc:creator>\n"
+                + "        <dc:creator>Bray, Freddie</dc:creator>\n"
+                + "        <dc:creator>Forman, David</dc:creator>\n"
+                + "        <dc:creator>Mathers, Colin</dc:creator>\n"
+                + "        <dc:creator>Parkin, Donald Maxwell</dc:creator>\n"
+                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                + "        <dc:date>2010</dc:date>\n"
+                + "        <dc:format></dc:format>\n"
+                + "      </rdf:Description>\n"
+                + "    </rdf:RDF>\n"
+                + "  </shortrecord>\n";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
+            summon.close();
+        }
+    }
+
+    public void testAuthor_xmlExtraction_shortformat2() throws RemoteException {
+        String query = "ID:FETCH-LOGICAL-c1590-71216b8d44129eb55dba9244d0a7ad32261d9b5e7a00e7987e3aa5b33750b0dc1";
+        { // sanity-check the Author-field
+            String expected = "Fallah, Mahdi\n"
+                              + "Kharazmi, Elham";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("author direct", summon, query, "Author", expected, false);
+            summon.close();
+        }
+
+        { // shortformat should match Author
+            String expected =
+                "  <shortrecord>\n"
+                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                + "      <rdf:Description>\n"
+                + "        <dc:title>Substantial under-estimation in cancer incidence estimates for developing "
+                + "countries due to under-ascertainment in elderly cancer cases</dc:title>\n"
+                + "        <dc:creator>Fallah, Mahdi</dc:creator>\n"
+                + "        <dc:creator>Kharazmi, Elham</dc:creator>\n"
+                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                + "        <dc:date>2008</dc:date>\n"
+                + "        <dc:format></dc:format>\n"
+                + "      </rdf:Description>\n"
+                + "    </rdf:RDF>\n"
+                + "  </shortrecord>\n";
+            SearchNode summon = SummonTestHelper.createSummonSearchNode();
+            assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
+            summon.close();
+        }
+    }
+
+    public void testScoreAssignment() throws RemoteException {
+        String QUERY =
+            "The effect of multimedia on perceived equivocality and perceived usefulness of information systems";
+        String BAD =
+            "<record score=\"0.0\" "
+            + "id=\"summon_FETCH-LOGICAL-j865-7bb06e292771fe19b17b4f676a0939e693be812b38d8502735ffb8ab6e46b4d21\" "
+            + "source=\"Summon\">";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY,
+            DocumentKeys.SEARCH_MAX_RECORDS, 10,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(req, responses);
+        assertFalse("There should be a score != 0.0 for all records in\n" + responses.iterator().next().toXML(),
+                    responses.iterator().next().toXML().contains(BAD));
+        summon.close();
+
+    }
+
     private void assertFieldContent(String message, SearchNode searchNode, String query, String fieldName,
                                     String expected, boolean sort) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
@@ -915,4 +1119,51 @@ public class SummonSearchNodeTest extends TestCase {
 
     // TODO: "foo:bar zoo"
 
+
+    // It seems that "Book / eBook" is special and will be translated to s.fvgf (Book OR eBook) by summon
+    // This is important as it means that we cannot use filter ContentType:"Book / eBook" to get the same
+    // hits as a proper facet query
+    public void testFacetTermWithDivider() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+
+        long filterCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_FILTER, "ContentType:\"Book / eBook\"",
+            SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        long queryCount = getHits(
+            summon,
+            DocumentKeys.SEARCH_QUERY, "foo",
+            DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
+
+        assertTrue("There should be at least 1 hit for either query or filter request",
+                   queryCount > 0 || filterCount > 0);
+        assertEquals("The number of hits for filter and query based restrictions should be the same",
+                     filterCount, queryCount);
+        summon.close();
+    }
+
+    public void testFacetFieldValidity() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        String[][] FACET_QUERIES = new String[][]{
+            //{"Ferlay", "Author", "Ferlay\\, Jacques"}, // We need a sample from the Author facet
+            {"foo", "Language", "German"},
+            {"foo", "IsScholarly", "true"},
+            {"foo", "IsFullText", "true"},
+            {"foo", "ContentType", "Book / eBook"},
+            {"foo", "SubjectTerms", "biology"}
+        };
+        for (String[] facetQuery: FACET_QUERIES) {
+            String q = facetQuery[0];
+            String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
+            log.debug(String.format("Searching for query '%s' with facet filter '%s'", q, ff));
+            long queryCount = getHits(
+                summon,
+                DocumentKeys.SEARCH_QUERY, q,
+                DocumentKeys.SEARCH_FILTER, ff,
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+            assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
+                       queryCount > 0);
+        }
+    }
 }

@@ -472,7 +472,7 @@ public class InteractionAdjusterTest extends TestCase {
             ), 3.0f);
     }
 
-    public void testSimpledetection() {
+    public void testSimpleDetection() {
         testAdjustment("Indirect non-simple record trigger false", "foo", "-bar", true,
                        new ConvenientMap(
                            InteractionAdjuster.CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, false),

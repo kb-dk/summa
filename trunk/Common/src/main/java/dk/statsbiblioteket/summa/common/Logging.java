@@ -96,8 +96,9 @@ public class Logging {
     public static void logProcess(String origin, String message, LogLevel level, Payload payload, Throwable cause) {
         String fullMessage;
         if ((level == LogLevel.WARN) || isProcessLogLevel(LogLevel.DEBUG) || isProcessLogLevel(LogLevel.TRACE)) {
-            fullMessage = (origin == null ? "" : origin + ": ") + message + ". " + payload + ". Content:\n"
-                          + getContentSnippet(payload);
+            String snippet = getContentSnippet(payload);
+            fullMessage = (origin == null ? "" : origin + ": ") + message + ". " + payload + ". Content:"
+                          + (snippet.length() <= 10 ? " " : "\n") + snippet;
         } else {
             fullMessage = (origin == null ? "" : origin + ": ") + message + ". " + payload;
         }
