@@ -306,10 +306,11 @@ public class Record implements Serializable, Comparable {
     public void setBase(String base) {
         if (base == null) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("base must be specified for record '" + getId() + "'");
+            throw new IllegalArgumentException("base must be specified for "
+                                               + "record '" + getId() + "'");
         }
         if ("".equals(base)) {
-            throw new IllegalArgumentException("base must not be the empty "
+            throw new IllegalArgumentException("base must not be the mpty "
                                                + "string for record '"
                                                + getId() + "'");
         }

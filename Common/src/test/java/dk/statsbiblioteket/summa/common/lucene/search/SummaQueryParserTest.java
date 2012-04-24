@@ -21,7 +21,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Profiler;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.Random;
@@ -98,6 +99,50 @@ public class SummaQueryParserTest extends TestCase {
                      "Hello*");
         assertEquals("Wildcards on a specific field should work", qp,
                      "foo:bar*[1.0]", "foo:bar*");
+    }
+
+    public void testPrefixQueries() throws IOException, ParseException {
+        int singleTermPrefixExpansionCount = testPrefixQueries("foo*");
+        testPrefixQueries("foo\\ bar*");
+//        testPrefixQueries("\"foo bar*\""); // PhraseQueries are never prefix queries
+//        testPrefixQueries("\"foo*\"");     // The asterisk is escaped by the quotes
+        testPrefixQueries("foo\\-bar*");
+        assertEquals("foo-bar* should yield the same number of inner PrefixQuerys as foo*",
+                     singleTermPrefixExpansionCount, testPrefixQueries("foo-bar*"));
+    }
+
+    /**
+     * Whether or nor the given query is converted to prefix queries.
+     * @param queryString the query to test.
+     * @throws java.io.IOException if no query parser could be acquired.
+     * @throws org.apache.lucene.queryparser.classic.ParseException if the test-query could not be parsed.
+     * @return the number of inner PrefixQueries.
+     */
+    public int testPrefixQueries(String queryString) throws IOException, ParseException {
+        SummaQueryParser qp = getQueryParser();
+        Query q = qp.parse(queryString);
+        int innerPrefix = 0;
+        assertTrue("The produced query for '" + queryString + "' should be a BooleanQuery but was a "
+                   + q.getClass().getSimpleName() + " with content '" + q.toString() + "'",
+                   q instanceof BooleanQuery);
+        for (BooleanClause clause: ((BooleanQuery)q).getClauses()) {
+            assertTrue("The sub clause query for '" + queryString + "' should be a PrefixQuery or a DisjunctionMaxQuery"
+                       + " but was a '" + clause.getQuery().getClass().getSimpleName() + "' with content '"
+                       + clause.getQuery() + "'",
+                       clause.getQuery() instanceof PrefixQuery || clause.getQuery() instanceof DisjunctionMaxQuery);
+            if (clause.getQuery() instanceof PrefixQuery) {
+                innerPrefix++;
+            }
+            if (clause.getQuery() instanceof DisjunctionMaxQuery) {
+                for (Query disQ: (DisjunctionMaxQuery)clause.getQuery()) {
+                    assertTrue("The disjunction max query sub query '" + queryString + "' should be a PrefixQuery but "
+                               + "was a '" + disQ.getClass().getSimpleName() + " with content '" + disQ + "'",
+                               disQ instanceof PrefixQuery);
+                    innerPrefix++;
+                }
+            }
+        }
+        return innerPrefix;
     }
 
     public void testRangeExpansion() throws Exception {

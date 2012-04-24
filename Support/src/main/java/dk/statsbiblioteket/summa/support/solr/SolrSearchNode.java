@@ -303,7 +303,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
             throw new RemoteException("SolrSearchNode.barrierSearch: " + message);
         }
         if (solrResponse == null || "".equals(solrResponse)) {
-            throw new RemoteException("Solr search for '" + query + " yielded empty result");
+            throw new RemoteException("Solr search for '" + query + "' yielded empty result");
         }
         searchTime += System.currentTimeMillis();
 

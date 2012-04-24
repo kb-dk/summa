@@ -100,6 +100,7 @@ public class MemoryStorage implements ConfigurationStorage {
      */
     public MemoryStorage(String initialResource) throws IOException {
         this(ClassLoader.getSystemResource(initialResource));
+
     }
 
     /**

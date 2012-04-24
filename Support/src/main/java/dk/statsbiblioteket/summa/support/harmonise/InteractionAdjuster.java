@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -797,7 +798,7 @@ public class InteractionAdjuster implements Configurable {
         boolean filtersContaminateQuery =
             request.containsKey(DocumentKeys.SEARCH_FILTER)
             && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
-            && !(pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
+            && (pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
 
         boolean isSimple = (!filtersContaminateQuery
                             && request.containsKey(DocumentKeys.SEARCH_QUERY)

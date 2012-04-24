@@ -10,6 +10,10 @@ import java.util.Arrays;
 
 public class QuerySanitizerTest extends TestCase {
     private QuerySanitizer sanitizer = new QuerySanitizer(Configuration.newMemoryBased());
+    private QuerySanitizer removingSanitizer = new QuerySanitizer(Configuration.newMemoryBased(
+        QuerySanitizer.CONF_FIX_EXCLAMATIONS, "remove",
+        QuerySanitizer.CONF_FIX_QUALIFIERS, "remove")
+    );
 
     private QuerySanitizer.SanitizedQuery.CHANGE ERROR = QuerySanitizer.SanitizedQuery.CHANGE.error;
     private QuerySanitizer.SanitizedQuery.CHANGE SYNTAX = QuerySanitizer.SanitizedQuery.CHANGE.summasyntax;
@@ -33,52 +37,61 @@ public class QuerySanitizerTest extends TestCase {
     }
 
     public void testUnbalancedQuotes() {
-        assertSanitize("Unbalanced quotes",              "foo bar",         "foo bar\"",         ERROR);
-        assertSanitize("Unbalanced quotes",              "foo bar",         "\"foo bar",         ERROR);
-        assertSanitize("Unbalanced quotes",              "foo bar zoo",     "foo \"bar zoo",     ERROR);
-        assertSanitize("Balanced quotes",                "foo \"bar zoo\"", "foo \"bar zoo\"");
-        assertSanitize("Escaped quotes",                 "foo \\\"bar zoo", "foo \\\"bar zoo");
-        assertSanitize("Unbalanced quotes with escaped", "foo \\\"bar zoo", "\"foo \\\"bar zoo", ERROR);
+        assertSanitize("Unbalanced quotes",              "foo bar",         "foo bar\"", false, ERROR);
+        assertSanitize("Unbalanced quotes",              "foo bar",         "\"foo bar", false, ERROR);
+        assertSanitize("Unbalanced quotes",              "foo bar zoo",     "foo \"bar zoo", false, ERROR);
+        assertSanitize("Balanced quotes",                "foo \"bar zoo\"", "foo \"bar zoo\"", false);
+        assertSanitize("Escaped quotes",                 "foo \\\"bar zoo", "foo \\\"bar zoo", false);
+        assertSanitize("Unbalanced quotes with escaped", "foo \\\"bar zoo", "\"foo \\\"bar zoo", false, ERROR);
     }
 
     public void testUnbalancedParentheses() {
-        assertSanitize("Quoted parentheses",          "foo \"(bar zoo\"",    "foo \"(bar zoo\"");
-        assertSanitize("Unbalanced parentheses",      "foo bar",             "foo bar)",     ERROR);
-        assertSanitize("Unbalanced parentheses",      "foo bar",             "(foo bar",     ERROR);
-        assertSanitize("Unbalanced parentheses",      "foo bar zoo",         "foo (bar zoo", ERROR);
-        assertSanitize("Balanced parentheses",        "foo (bar zoo)",       "foo (bar zoo)");
-        assertSanitize("Double balanced parentheses", "foo (bar (baz goo))", "foo (bar (baz goo))");
+        assertSanitize("Quoted parentheses",          "foo \"(bar zoo\"",    "foo \"(bar zoo\"", false);
+        assertSanitize("Unbalanced parentheses",      "foo bar",             "foo bar)", false, ERROR);
+        assertSanitize("Unbalanced parentheses",      "foo bar",             "(foo bar", false, ERROR);
+        assertSanitize("Unbalanced parentheses",      "foo bar zoo",         "foo (bar zoo", false, ERROR);
+        assertSanitize("Balanced parentheses",        "foo (bar zoo)",       "foo (bar zoo)", false);
+        assertSanitize("Double balanced parentheses", "foo (bar (baz goo))", "foo (bar (baz goo))", false);
     }
 
     public void testColonWithMissingTerms() {
-        assertSanitize("Bad colon",     "foo bar",      "foo: bar", SYNTAX);
-        assertSanitize("Bad colon",     "foo bar",      "foo bar:", SYNTAX);
-        assertSanitize("OK colon",      "foo:bar",      "foo:bar");
-        assertSanitize("Quoted colon",  "\"foo: bar\"",  "\"foo: bar\"");
-        assertSanitize("Escaped colon", "foo\\: bar",   "foo\\: bar");
+        assertSanitize("Bad colon",     "foo\\: bar",   "foo: bar",      false, SYNTAX);
+        assertSanitize("Bad colon",     "foo bar\\:",   "foo bar:",      false, SYNTAX);
+        assertSanitize("OK colon",      "foo:bar",      "foo:bar",       false);
+        assertSanitize("Quoted colon",  "\"foo: bar\"",  "\"foo: bar\"", false);
+        assertSanitize("Escaped colon", "foo\\: bar",   "foo\\: bar",    false);
     }
 
     public void testTrailingExclamationMark() {
-        assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo bar!", SYNTAX);
-        assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo! bar", SYNTAX);
-        assertSanitize("Bad trailing exclamation mark",     "foo!bar",      "foo!bar");
-        assertSanitize("Quoted trailing exclamation mark",  "\"foo bar!\"", "\"foo bar!\"");
-        assertSanitize("Escaped trailing exclamation mark", "foo bar\\!",   "foo bar\\!");
+        assertSanitize("Bad trailing exclamation mark",     "foo bar\\!",   "foo bar!",     false, SYNTAX);
+        assertSanitize("Bad trailing exclamation mark",     "foo\\! bar",   "foo! bar",     false, SYNTAX);
+        assertSanitize("Bad trailing exclamation mark",     "foo!bar",      "foo!bar",      false);
+        assertSanitize("Quoted trailing exclamation mark",  "\"foo bar!\"", "\"foo bar!\"", false);
+        assertSanitize("Escaped trailing exclamation mark", "foo bar\\!",   "foo bar\\!",   false);
+    }
+
+    public void testRemoveOption() {
+        assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo bar!", true, SYNTAX);
+        assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo! bar", true, SYNTAX);
+        assertSanitize("Bad trailing exclamation mark",     "foo!bar",     "foo!bar",  true);
+        assertSanitize("Bad colon",                         "foo bar",     "foo bar:", true, SYNTAX);
     }
 
     public void testMixedProblems() {
-        assertSanitize("Gallimaufry", "foo bar",        "\"foo (bar!",     ERROR, ERROR, SYNTAX);
-        assertSanitize("Hodgepodge",  "foo \"(\"bar",   "foo \"(\"bar!",   SYNTAX);
-        assertSanitize("Potpourri",   "foo (bar\"!\")", "foo (bar\"!\")");
-        assertSanitize("Salmagundi",  "foo\\!\\\" bar",     "foo\\!\\\" bar)", ERROR);
+        assertSanitize("Gallimaufry", "foo bar\\!",      "\"foo (bar!",     false, ERROR, ERROR, SYNTAX);
+        assertSanitize("Hodgepodge",  "foo \"(\"bar\\!", "foo \"(\"bar!",   false, SYNTAX);
+        assertSanitize("Potpourri",   "foo (bar\"!\")",  "foo (bar\"!\")",  false);
+        assertSanitize("Salmagundi",  "foo\\!\\\" bar",  "foo\\!\\\" bar)", false, ERROR);
     }
 
-    private void assertSanitize(
-        String message, String expected, String query, QuerySanitizer.SanitizedQuery.CHANGE... expectedChanges) {
-        assertEquals(message + ": '" + query + "'", expected, sanitizer.sanitize(query).getLastQuery());
+    private void assertSanitize(String message, String expected, String query, boolean removeOffending,
+                                QuerySanitizer.SanitizedQuery.CHANGE... expectedChanges) {
+        QuerySanitizer.SanitizedQuery clean =
+            removeOffending ? removingSanitizer.sanitize(query) : sanitizer.sanitize(query);
+        assertEquals(message + ": '" + query + "'", expected, clean.getLastQuery());
 
         String expectedC = Strings.join(Arrays.asList(expectedChanges), ", ");
-        String actualC = Strings.join(sanitizer.sanitize(query).getChanges(), ", ");
+        String actualC = Strings.join(clean.getChanges(), ", ");
         assertEquals(message + ": '" + query + "'. Change type", expectedC, actualC);
     }
 }

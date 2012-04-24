@@ -4,6 +4,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.summa.support.summon.search.SummonTestHelper;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -68,14 +69,14 @@ public class QueryRewriterIntegrationTest extends TestCase {
     private void checkQuery(String query)
             throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
-        HarmoniseTestHelper.compareHits(query, search(query), search(rewritten));
+        HarmoniseTestHelper.compareHits(query + "' and '" + rewritten, search(query), search(rewritten));
     }
 
     // Avoids query rewriting inside SummonSearchNode
     private void checkQueryDirect(String query)
             throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);
-        HarmoniseTestHelper.compareHits(query, searchDirect(query), searchDirect(rewritten));
+        HarmoniseTestHelper.compareHits(query + "' and '" + rewritten, searchDirect(query), searchDirect(rewritten));
     }
 
     private ResponseCollection search(String query) throws RemoteException {
@@ -180,6 +181,20 @@ public class QueryRewriterIntegrationTest extends TestCase {
         checkQueryDirect("miller genre as social action");
     }
 
+    /*
+     * This tests whether the exact same query yields different results. It seems that Serial Solutions performs
+     * updates around noon, Danish time, that results in fluxing search results for about an hour.
+     */
+    public void testSameSearch() throws RemoteException, ParseException {
+        final String query = "Learning and child development: a cultural-historical study";
+//        final String query = "miller genre as social action";
+        final int RUNS = 5;
+        for (int i = 0 ; i < RUNS ; i++) {
+            log.debug("Issuing same query '" + query + ": " + (i+1) + "/" + RUNS);
+            HarmoniseTestHelper.compareHits(query, searchDirect(query), searchDirect(query));
+        }
+    }
+
     public void testRewriteTitleMatchWeightDirect() throws RemoteException, ParseException {
         checkQueryDirect("miller genre^2 as social action");
     }
@@ -199,6 +214,14 @@ public class QueryRewriterIntegrationTest extends TestCase {
         String apostrophed = "\"miller\" \"genre\" \"as\" \"social\" \"action\"";
         HarmoniseTestHelper.compareHits(
             simple + " and " + apostrophed, searchDirect(simple), searchDirect(apostrophed));
+    }
+
+    public void testEscaping() throws RemoteException {
+        String raw =     "Learning and child development: a cultural-historical study";
+        String escaped = "Learning and child development\\: a cultural-historical study";
+        String quoted =  "Learning and child \"development:\" a cultural-historical study";
+        HarmoniseTestHelper.compareHits(escaped, true, searchDirect(escaped), searchDirect(quoted));
+        HarmoniseTestHelper.compareHits(raw, false, searchDirect(raw), searchDirect(quoted));
     }
 
     public void testSpecificTitle() throws RemoteException, ParseException {

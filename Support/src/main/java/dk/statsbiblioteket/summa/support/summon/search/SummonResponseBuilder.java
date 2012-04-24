@@ -152,9 +152,9 @@ public class SummonResponseBuilder implements Configurable {
         Request request, SolrFacetRequest facets,
         ResponseCollection responses,
         String summonResponse, String summonTiming) throws XMLStreamException {
+//        System.out.println(summonResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
-        boolean collectdocIDs = request.getBoolean(
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(summonResponse));
@@ -337,8 +337,15 @@ public class SummonResponseBuilder implements Configurable {
             public void execute(XMLStreamReader xml)  {
                 String tagName = getAttribute(xml, "value", null);
                 Integer tagCount = Integer.parseInt(getAttribute(xml, "count", "0"));
-                
-                summaFacetResult.addTag(facetName, tagName, tagCount);
+                // <facetCount value="Newspaper Article" count="27" isApplied="true" isNegated="true"
+                // isFurtherLimiting="false" removeCommand="removeFacetValueFilter(ContentType,Newspaper Article)"
+                // negateCommand="negateFacetValueFilter(ContentType,Newspaper Article)"/>
+
+                boolean isApplied = Boolean.parseBoolean(getAttribute(xml, "isApplied", "false"));
+                boolean isNegated = Boolean.parseBoolean(getAttribute(xml, "isNegated", "false"));
+                if (!(isApplied && isNegated)) { // Signifies negative facet value filter
+                    summaFacetResult.addTag(facetName, tagName, tagCount);
+                }
             }
         });
     }
@@ -387,8 +394,7 @@ public class SummonResponseBuilder implements Configurable {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
-    private List<DocumentResponse.Record> extractRecords(
-        XMLStreamReader xml, final String sortKey)
+    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey)
         throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records = new ArrayList<DocumentResponse.Record>(50);
@@ -404,9 +410,21 @@ public class SummonResponseBuilder implements Configurable {
             }
 
         });
+//        fixMissingScores(records);
         return records;
     }
-
+  /*
+    final static float ZERO = 0.0f;
+    private void fixMissingScores(List<DocumentResponse.Record> records) {
+        for (int i = 0 ; i < records.size() ; i++) {
+            if (records.get(i).getScore() == ZERO) {
+                float newScore
+                if (i > 0 && i < records.size() -1) { // Previous and next
+                }
+            }
+        }
+    }
+    */
 
     /**
      * Extracts a Summon document and converts it to
@@ -484,6 +502,11 @@ public class SummonResponseBuilder implements Configurable {
                         }
                     }
                     field.setName("Author");
+
+                    if (extracted.containsKey("Author")) {
+                        extracted.put("Author", field.getContent());
+                    }
+
                     break;
                 }
             }
@@ -565,6 +588,7 @@ public class SummonResponseBuilder implements Configurable {
         }
     }
 
+    private boolean warnedOnMissingFullname = false;
     private boolean xmlFieldsWarningFired = false;
     /**
      * Extracts a Summon document field and converts it to
@@ -616,13 +640,29 @@ public class SummonResponseBuilder implements Configurable {
                 iterateElements(xml, "field", "contributor", new XMLCallback() {
                     @Override
                     public void execute(XMLStreamReader xml) throws XMLStreamException {
-                        value.append(value.length() == 0 ? xml.getAttributeValue("", "fullname") :
-                                "\n" + xml.getAttributeValue("", "fullname"));
+                        boolean found = false;
+                        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+                            if ("fullname".equals(xml.getAttributeLocalName(i))) {
+                                if (value.length() != 0) {
+                                    value.append("\n");
+                                }
+                                value.append(xml.getAttributeValue(i));
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found && !warnedOnMissingFullname) {
+                            log.warn("Unable to locate attribute 'fullname' in 'contributor' element in 'Author_xml'. "
+                                     + "This warning will not be repeated");
+                            warnedOnMissingFullname = true;
+                        }
                     }
                 });
                 if (value.length() == 0) {
                     log.debug("No value for field '" + name + "'");
                     return null;
+                } else if (log.isTraceEnabled()) {
+                    log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
                 }
 //                System.out.println(value);
                 return new DocumentResponse.Field(name, value.toString(), true);

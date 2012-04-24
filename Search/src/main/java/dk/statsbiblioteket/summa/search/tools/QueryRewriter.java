@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.support.harmonise;
+package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -31,6 +31,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.Reader;
 
+// TODO: Make a pool of parsers instead of using synchronized
 /**
  * Lucene query rewriter with callback on various types of queries.
  */
@@ -179,7 +180,7 @@ public class QueryRewriter {
      * @param query a textual query.
      * @return true if the query is simple.
      */
-    public boolean isSimple(String query) {
+    public synchronized boolean isSimple(String query) {
         Query q;
         try {
             q = queryParser.parse(query);
@@ -217,7 +218,7 @@ public class QueryRewriter {
      * @throws org.apache.lucene.queryparser.classic.ParseException if the query could not be parsed by the Lucene query
      *         parser.
      */
-    public String rewrite(String query) throws ParseException {
+    public synchronized String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
         Query walked = walkQuery(q, true);
         return walked == null ? null : convertQueryToString(walked, true);
@@ -251,6 +252,13 @@ public class QueryRewriter {
         return event.onQuery(query);
     }
 
+    /**
+     * @param query a standard Lucene query.
+     * @return a String representation fo the Query, parsable by the Lucene standard QueryParser.
+     */
+    public String toString(Query query) {
+        return convertQueryToString(query, true);
+    }
     private String convertQueryToString(Query query, boolean top) {
         String result = "";
 

@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.support.harmonise;
+package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -214,6 +214,11 @@ public class QueryRewriterTest extends TestCase {
     public void testProximityWeighted() throws ParseException {
         assertIdentity("\"foo\"^2.0 \"bar\"^3.0",
                        "foo^2 bar^3");
+    }
+
+    public void testQuoteWeight() throws ParseException {
+        assertIdentity("\"foo\"^2.2123",
+                       "\"foo\"^2.2123");
     }
 
     public void testTerseMust() throws ParseException {
