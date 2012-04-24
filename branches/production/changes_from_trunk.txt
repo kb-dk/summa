@@ -1,4 +1,5 @@
 SolrSearchNode
+SolrManipulator
 SummonSearchNode
 SummonSearchNodeTest
 SummonResponseBuilder
@@ -21,3 +22,4 @@ Rules
 touch.job.js
 ResponseMerger
 ResponseMergerTest
+Logging

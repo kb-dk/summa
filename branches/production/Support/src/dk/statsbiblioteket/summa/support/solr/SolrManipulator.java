@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.solr;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -24,8 +25,14 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Received Records containing Solr Documents intended for indexing in Solr
- * and delivers them to an external Solr using HTTP.
+ * Receives Records containing Solr Documents intended for indexing in Solr and delivers them to an external Solr using
+ * HTTP.
+ * </p><p>
+ * The first version is expected to flush received documents one at a time, which is inefficient but simple.
+ * For later versions a batching model should be considered. See {@link RecordWriter} and {@link PayloadQueue} for
+ * inspiration as they maintain a byte-size-controlled queue for batching. Streaming should also be examined, but this
+ * is vulnerable to errors and has little gain over batching as documents are not visible in the searcher until
+ * {@link #commit()} has been called.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -35,15 +42,18 @@ public class SolrManipulator implements IndexManipulator {
 
     private boolean orderChanged = false;
 
+    public SolrManipulator(Configuration conf) {
+        // Configuration should contain host, port and other setup parameters for the remote Solr
+    }
+
     @Override
     public synchronized void open(File indexRoot) throws IOException {
-        log.info("Open(" + indexRoot + ") is ignored as this IndexManipulator "
-                 + "uses external indexing");
+        log.info("Open(" + indexRoot + ") is ignored as this IndexManipulator uses external indexing");
     }
 
     @Override
     public synchronized void clear() throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        throw new UnsupportedOperationException("Clear must be implemented for SolrManipulator");
     }
 
     @Override
@@ -56,24 +66,27 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public synchronized void commit() throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
         orderChanged  = false;
+        throw new UnsupportedOperationException(
+            "Commit is as valid for Solr as it is for Lucene. This must be implemented.");
     }
 
     @Override
     public synchronized void consolidate() throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        log.info("Consolidate called. Currently there is no implementation of this functionality. Note that consolidate"
+                 + " is becoming increasingly less important as Lucene/Solr develops");
     }
 
     @Override
     public synchronized void close() throws IOException {
         log.info("Closing down SolrManipulator");
+        throw new UnsupportedOperationException(
+            "Closing down means flushing any caches and ensuring that further calls to update fails");
     }
 
     @Override
     public void orderChangedSinceLastCommit() throws IOException {
-        log.debug("orderChangedsinceLastCommit() called. No effect for this "
-                  + "index manipulator");
+        log.debug("orderChangedSinceLastCommit() called. No effect for this index manipulator");
     }
 
     @Override
