@@ -61,7 +61,7 @@ public class SolrManipulator implements IndexManipulator {
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
         }
-        return false;
+        throw new UnsupportedOperationException("Update needs to be implemented");
     }
 
     @Override
