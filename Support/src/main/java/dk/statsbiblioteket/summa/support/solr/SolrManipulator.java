@@ -35,9 +35,11 @@ import java.net.URL;
  * For later versions a batching model should be considered.
  * See {@link dk.statsbiblioteket.summa.storage.api.filter.RecordWriter}
  * and {@link dk.statsbiblioteket.summa.common.filter.PayloadQueue} for
- * inspiration as they maintain a byte-size-controlled queue for batching. Streaming should also be examined, but this
- * is vulnerable to errors and has little gain over batching as documents are not visible in the searcher until
- * {@link #commit()} has been called.
+ * inspiration as they maintain a byte-size-controlled queue for batching.
+ *
+ * Streaming could also be examined, but this is vulnerable to errors and has little gain over batching as documents
+ * are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states that it is
+ * not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -153,6 +155,8 @@ public class SolrManipulator implements IndexManipulator {
             conn.setDoOutput(true);
             conn.setDoInput(true);
             conn.setRequestProperty("Content-Type", "application/xml");
+            conn.setRequestProperty("Accept", "application/xml");
+            conn.setRequestProperty("Accept-Charset", "utf-8");
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
             wr.write("<add>");
             wr.write(command);
