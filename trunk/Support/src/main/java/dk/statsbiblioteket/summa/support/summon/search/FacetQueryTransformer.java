@@ -147,7 +147,20 @@ public class FacetQueryTransformer {
             }
             terms.append(term.text());
         }
-        appendPut(querymap, "s.fvf", pq.getTerms()[0].field() + "," + terms + "," + negated);
+        addFacetQuery(querymap, pq.getTerms()[0].field(), terms.toString(), negated);
+    }
+
+    /**
+     * Add the facet content query to the given queryMap. The default implementation uses Solr SimpleFacetParameters.
+     * Override this to get custom queries for non-standard search backends.
+     * @param queryMap where to put the facet valu requests.
+     * @param field    the facet field.
+     * @param value    the wanted tag value for the field-
+     * @param negated  true if the search result should not contain the given field:value.
+     */
+    protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String value, boolean negated) {
+        // TODO: Test whether foo:bar NOT moo:zoo works when split into multiple facet queries
+        append(queryMap, "facet.query", (negated ? "NOT " : "") + field + ":\"" + value + "\"");
     }
 
     private void convertTermQuery(
@@ -158,19 +171,20 @@ public class FacetQueryTransformer {
         if (tq.getTerm().text() == null || "".equals(tq.getTerm().text())) {
             throw new ParseException("Encountered TermQuery without text '" + tq + "'");
         }
-        appendPut(querymap, "s.fvf", tq.getTerm().field() + "," + tq.getTerm().text() + "," + negated);
+        addFacetQuery(querymap, tq.getTerm().field(), tq.getTerm().text(), negated);
+        //append(querymap, "s.fvf", tq.getTerm().field() + "," + tq.getTerm().text() + "," + negated);
     }
 
-    private void appendPut(Map<String, List<String>> querymap, String key, String... values) {
-        List<String> existing = querymap.get(key);
+    protected void append(Map<String, List<String>> queryMap, String key, String value) {
+        List<String> existing = queryMap.get(key);
         if (existing == null) {
-            querymap.put(key, Arrays.asList(values));
+            queryMap.put(key, Arrays.asList(value));
             return;
         }
         if (!(existing instanceof ArrayList)) {
             existing = new ArrayList<String>(existing);
-            querymap.put(key, existing);
+            queryMap.put(key, existing);
         }
-        existing.addAll(Arrays.asList(values));
+        existing.add(value);
     }
 }

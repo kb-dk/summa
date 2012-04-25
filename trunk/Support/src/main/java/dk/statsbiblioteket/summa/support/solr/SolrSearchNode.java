@@ -22,16 +22,19 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.support.summon.search.FacetQueryTransformer;
 import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
 import dk.statsbiblioteket.summa.support.summon.search.SummonResponseBuilder;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.queryparser.classic.ParseException;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.rmi.RemoteException;
 import java.util.*;
@@ -42,7 +45,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class SolrSearchNode extends SearchNodeImpl {
+public class SolrSearchNode extends SearchNodeImpl {
     private static Log log = LogFactory.getLog(SolrSearchNode.class);
 
     // TODO: Assign mandatory ID, use it for timing and result delivery
@@ -59,7 +62,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
      * Optional. Default is '/solr' (Solr default).
      */
     public static final String CONF_SOLR_RESTCALL = "solr.restcall";
-    public static final String DEFAULT_SOLR_RESTCALL = "/solr";
+    public static final String DEFAULT_SOLR_RESTCALL = "/solr/select";
     /**
      * The prefix will be added to all IDs returned by Solr.
      * </p><p>
@@ -124,7 +127,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
 
     /**
      * Properties with this prefix are added to the Solr query. Values are
-     * lists of Strings. If one or more {@link #SEARCH_SOLR_PARAM_PREFIX} are
+     * lists of Strings. If one or more #CONF_SOLR_PARAM_PREFIX are
      * specified as part of a search query, the parameters are added to the
      * configuration defaults. Existing params with the same key are
      * overwritten.
@@ -135,7 +138,6 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
     /**
      * Search-time variation of {@link #CONF_SOLR_PARAM_PREFIX}.
      */
-    public static final String SEARCH_SOLR_PARAM_PREFIX = CONF_SOLR_PARAM_PREFIX;
 
     /**
      * If true, {@link DocumentKeys#SEARCH_FILTER} must contain simple facet queries only. A simple facet query is
@@ -159,10 +161,11 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
     protected final String combineMode;
     protected final Map<String, List<String>> solrDefaultParams;
     protected final boolean supportsPureNegative;
+    protected final FacetQueryTransformer facetQueryTransformer;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        setID("solr");
+        setID(conf.getString(CONF_ID, "solr"));
         responseBuilder = new SummonResponseBuilder(conf);
         solrDefaultParams = new HashMap<String, List<String>>();
 
@@ -175,6 +178,19 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
         supportsPureNegative = conf.getBoolean(
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
+        facetQueryTransformer = createFacetQueryTransformer(conf);
+        readyWithoutOpen();
+        log.info("Created SolrSearchNode(" + getID() + ")");
+    }
+
+    /**
+     * Create a transformer from Lucene search syntax queries into Solr facet queries. Override this to get specific
+     * facet queries for searchers that differ from standard Solr.
+     * @param conf base configuration for the transformer.
+     * @return a search backend specific transformer.
+     */
+    protected FacetQueryTransformer createFacetQueryTransformer(Configuration conf) {
+        return new FacetQueryTransformer(conf);
     }
 
     /**
@@ -188,16 +204,14 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
 
         // for each parameter, get its key and values
         for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
-/*            if ("s.q".equals(entry.getKey())) {
-                System.out.println("Summon query: '" + entry.getValue() + "'");
-            }*/
             // for each value, create a string in the format key=value
             for (String value : entry.getValue()) {
                 if (urlencode) {
                     try {
                         parameterStrings.add(entry.getKey() + "=" + URLEncoder.encode(value, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
-                        parameterStrings.add(entry.getKey() + "=" + value);
+                        throw new RuntimeException("Unable to encode '" + value + "' to UTF-8. UTF-8 support is "
+                                                   + "required for Summa to function", e);
                     }
                 } else {
                     parameterStrings.add(entry.getKey() + "=" + value);
@@ -207,18 +221,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
 
         // sort the individual parameters
         Collections.sort(parameterStrings);
-        StringBuilder queryString = new StringBuilder();
-
-        // append strings together with the '&' character as a delimiter
-        for (String parameterString : parameterStrings) {
-            queryString.append(parameterString).append("&");
-        }
-
-        // remove any final trailing '&'
-        if (queryString.length() > 0) {
-            queryString.setLength(queryString.length() - 1);
-        }
-        return queryString.toString();
+        return Strings.join(parameterStrings, "&");
     }
 
     @Override
@@ -249,7 +252,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
             sortKey = null; // null equals relevance ranking
         }
         boolean reverseSort = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
-        int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
+        int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
         boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
@@ -266,7 +269,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
             facetsDef = null;
         }
         SolrFacetRequest facets = null == facetsDef || "".equals(facetsDef) ? null :
-                                    new SolrFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
+                                  createFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
 
         Map<String, List<String>> solrSearchParams = new HashMap<String, List<String>>(solrDefaultParams);
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
@@ -310,6 +313,7 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
         long buildResponseTime = -System.currentTimeMillis();
         long hitCount;
         try {
+            System.out.println(solrResponse.replace(">", ">\n"));
             hitCount = responseBuilder.buildResponses(request, facets, responses, solrResponse, solrTiming);
         } catch (XMLStreamException e) {
             String message = "Unable to transform Solr XML response to Summa response for '" + request + "'";
@@ -335,6 +339,11 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
                   + "Summa response)");
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
         responses.addTiming(getID() + ".search.total", (System.currentTimeMillis() - startTime));
+    }
+
+    // Override this to get search backend specific facet request syntax
+    protected SolrFacetRequest createFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
+        return new SolrFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
     }
 
     /**
@@ -426,11 +435,13 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
     }
 
     /**
-     * Perform a search in Solr.
+     * Perform a search in Solr. Override this to get different behaviour for search backends other than standard Solr.
      *
-     * @param request    the basic request.
-     * @param filter     a Solr-style filter (same syntax as query).
-     * @param query      a Solr-style query.
+     * @param request    a standard Summa Search request, primarily filled with values from {@link DocumentKeys}.
+     * @param filter     a Solr-style filter (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
+     *                   but might have been rewritten.
+     * @param query      a Solr-style query. This is based on {@link DocumentKeys#SEARCH_QUERY} but might have been
+     *                   rewritten.
      * @param solrParams optional extended params for Solr. If not null, these will be added to the Solr request.
      * @param facets     which facets to request or null if no facets are wanted.
      * @param startIndex the index for the first Record to return, counting from 0.
@@ -441,9 +452,156 @@ public abstract class SolrSearchNode extends SearchNodeImpl {
      * @return XML with the search result as per Solr API followed by timing information.
      * @throws java.rmi.RemoteException if there were an error performing the remote search call.
      */
-    protected abstract Pair<String, String> solrSearch(
+    protected Pair<String, String> solrSearch(
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses)
-                                                                                                 throws RemoteException;
+                                                                                                throws RemoteException {
+        long buildQuery = -System.currentTimeMillis();
+        log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
+        Map<String, List<String>> queryMap;
+        try {
+            queryMap = buildSolrQuery(
+                request, filter, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
+        } catch (ParseException e) {
+            throw new RemoteException("Unable to build Solr query", e);
+        }
 
+        String queryString = computeSortedQueryString(queryMap, true);
+        buildQuery += System.currentTimeMillis();
+        log.trace("Parameter preparation done in " + buildQuery + "ms");
+        String result;
+
+        try {
+            result = getData(restCall + "?" + queryString, responses);
+        } catch (Exception e) {
+            throw new RemoteException(
+                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString, e);
+        }
+        log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
+        return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
+
+    }
+
+    private String getData(String command, ResponseCollection responses) throws IOException {
+        StringBuilder retval = new StringBuilder();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Performing Summon request for '" + command + "'");
+        }
+
+        URL url = new URL("http://" + host + command);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestProperty("Host", host);
+        conn.setRequestProperty("Accept", "application/xml");
+        conn.setRequestProperty("Accept-Charset", "utf-8");
+        conn.setConnectTimeout(1000);
+        Long readStart = System.currentTimeMillis();
+    	long summonConnect = -System.currentTimeMillis();
+        conn.connect();
+        summonConnect += System.currentTimeMillis();
+
+        BufferedReader in;
+        try {
+        	long rawCall = -System.currentTimeMillis();
+        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            String str;
+
+            while ((str = in.readLine()) != null) {
+                retval.append(str);
+            }
+            log.trace("Reading from Solr done in " + (System.currentTimeMillis() - readStart) + "ms");
+            in.close();
+            rawCall += System.currentTimeMillis();
+            responses.addTiming(getID() + ".connect", summonConnect);
+            responses.addTiming(getID() + ".rawcall", rawCall);
+
+        } catch (IOException e) {
+            String error = String.format(
+                "getData(host='%s', command='%s') for %s failed with error stream\n%s",
+                "http://" + host, command, getID(),
+                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+            log.warn(error, e);
+            throw new IOException(error, e);
+        }
+        // TODO: Should we disconnect?
+
+        return retval.toString();
+    }
+
+    /**
+     * Generate a map of search backend specific request parameters.
+     * @param request    a standard Summa Search request, primarily filled with values from {@link DocumentKeys}.
+     * @param filter     a Solr-style filter (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
+     *                   but might have been rewritten.
+     * @param query      a Solr-style query. This is based on {@link DocumentKeys#SEARCH_QUERY} but might have been
+     *                   rewritten.
+     * @param solrParams optional extended params for Solr. If not null, these will be added to the Solr request.
+     * @param facets     which facets to request or null if no facets are wanted.
+     * @param startIndex the index for the first Record to return, counting from 0.
+     * @param maxRecords number of items per page.
+     * @param sortKey    the field to sort on. If null, default ranking sort is used.
+     * @param reverseSort if true, sort order is reversed.
+     * @return key-value map with multiple values/key.
+     * @throws ParseException if the facets could not be parsed.
+     */
+    protected Map<String, List<String>> buildSolrQuery(
+        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
+        int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
+        int startPage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords);
+        Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
+
+        if (filter != null) { // We allow missing filter
+            boolean facetsHandled = false;
+            if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
+                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueryToFacet(filter);
+                if (facetRequest == null) {
+                    log.debug("Unable to convert facet filter '" + filter + "' to Solr facet request. Switching to "
+                              + "filter/query based handling");
+                } else {
+                    log.debug("Successfully converted filter '" + filter + "' to Solr facet query");
+                    queryMap.putAll(facetRequest);
+                    facetsHandled = true;
+                }
+            }
+            if (!facetsHandled) {
+                if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
+                    queryMap.put("fq", Arrays.asList(filter)); // FilterQuery
+                } else {
+                    if (query == null) {
+                        throw new IllegalArgumentException(
+                            "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
+                            + "' is not possible in Solr. Filter is '" + filter + "'");
+                    }
+                    query = "(" + query + ") " + filter;
+                    log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
+                              + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and Solr is set up to not support pure "
+                              + "negative filters natively. resulting query is '" + query + "'");
+                }
+            }
+        }
+        if (query != null) { // We allow missing query
+            queryMap.put("q", Arrays.asList(query));
+        }
+
+        queryMap.put("start", Arrays.asList(Integer.toString(startPage)));
+        queryMap.put("rows", Arrays.asList(Integer.toString(maxRecords)));
+
+        // TODO: Add support for sorting on multiple fields
+        if (reverseSort && sortKey == null) {
+            sortKey = "score"; // Relevance sorting
+        }
+        if (sortKey != null) {
+            queryMap.put("sort", Arrays.asList(sortKey + " " + (reverseSort ? "desc" : "asc")));
+        }
+
+        if (facets != null) { // The facets to display
+            queryMap.put("facet", Arrays.asList(Boolean.TRUE.toString()));
+            facets.addFacetQueries(queryMap);
+        }
+
+        if (solrParams != null) {
+            queryMap.putAll(solrParams);
+        }
+        return queryMap;
+    }
 }

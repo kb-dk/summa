@@ -31,13 +31,15 @@ import java.net.URL;
  * Receives Records containing Solr Documents intended for indexing in Solr and delivers them to an external Solr using
  * HTTP.
  * </p><p>
- * The first version is expected to flush received documents one at a time, which is inefficient but simple.
+ * The current version flushes received documents one at a time as soon as they are received. This is not very efficient
+ * but has the upside of being simple and solid.
  * For later versions a batching model should be considered.
  * See {@link dk.statsbiblioteket.summa.storage.api.filter.RecordWriter}
  * and {@link dk.statsbiblioteket.summa.common.filter.PayloadQueue} for
  * inspiration as they maintain a byte-size-controlled queue for batching.
  *
- * Streaming could also be examined, but this is vulnerable to errors and has little gain over batching as documents
+ * Streaming could also be examined, but transmission errors would leave the overall state as unknown with regard to
+ * the amount of documents passed to Solr. Speed-wise  this is vulnerable to errors and has little gain over batching as documents
  * are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states that it is
  * not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
  */
@@ -142,6 +144,11 @@ public class SolrManipulator implements IndexManipulator {
         return orderChanged;
     }
 
+    /**
+     * Opens a connection
+     * @param command
+     * @throws IOException
+     */
     private void send(String command) throws IOException {
         URL url = new URL(UPDATE);
         HttpURLConnection conn;
