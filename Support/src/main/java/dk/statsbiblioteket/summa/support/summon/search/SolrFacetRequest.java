@@ -25,9 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * A representation of a facet request. Used to bridge Summa and Solr facet handling.
@@ -57,11 +55,18 @@ public class SolrFacetRequest {
                 log.warn("The facet request '" + facetsDef + "' defines sort order that is not '"
                          + FacetStructure.SORT_POPULARITY + "'. This is not supported by this faceter");
             }
+            if (fc.getFields().length > 1 && !fieldWarningFired) {
+                log.warn("The facet request '" + facetsDef + "' defines more than on field for facet '" + fc.getName()
+                         + ". This is not supported by this faceter. Only the first field will be used. This warning "
+                         + "will not be repeated");
+                fieldWarningFired = true;
+            }
             facets.add(new Facet(fc.getFields()[0], combineMode, 1, fc.getWantedTags()));
         }
         log.trace("Constructed facet request from '" + facetsDef + "' with defaultFacetPageSize=" + defaultFacetPageSize
                   + " and combineMode=" + combineMode);
     }
+    private static boolean fieldWarningFired = false;
 
     public Structure getOriginalStructure() {
         return originalStructure;
@@ -76,16 +81,6 @@ public class SolrFacetRequest {
         return originalRequest;
     }
 
-    /**
-     * @return the facet request as a list of Solr API facet definitions.
-     */
-    public List<String> getFacetQueries() {
-        List<String> facetQueries = new ArrayList<String>(facets.size());
-        for (Facet facet: facets) {
-            facetQueries.add(facet.getSolrCall());
-        }
-        return facetQueries;
-    }
 
     /**
      * @return max tags aka pageSize for each facet.
@@ -96,6 +91,55 @@ public class SolrFacetRequest {
             max.put(facet.getField(), facet.getPageSize());
         }
         return max;
+    }
+
+    public void addFacetQueries(Map<String, List<String>> queryMap) {
+        for (Facet facet: facets) {
+            addFacetQuery(
+                queryMap, facet.getField(), facet.getCombineMode(), facet.getStartPage(), facet.getPageSize());
+        }
+    }
+
+    // Override to get search backend specific behaviour.
+
+    /**
+     * Adds a single facet query from the list of facets. This will be called once for every Facet.
+     * This uses SimpleFacetParameters for standard Solr. See https://wiki.apache.org/solr/SimpleFacetParameters for
+     * details. Override this method  to get search backend specific facet query syntax.
+     * @param queryMap    the Sold queries.
+     * @param field       the field for the facet to add.
+     * @param combineMode 'or' or 'and'. While this has no influence on the display, it might be used to extract how
+     *                    drill-down should be requested.
+     * @param startPage   where to start in the tag list.
+     * @param pageSize    the number of tags on a single page.
+     */
+    protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
+                                 int startPage, int pageSize) {
+        append(queryMap, "facet.field", field);
+        String prefix = "facet." + field + ".";
+        // TODO: Check if startPage is counted from 0 or 1
+        queryMap.put(prefix + "offset", Arrays.asList(Integer.toString(startPage * pageSize)));
+        queryMap.put(prefix + "limit",  Arrays.asList(Integer.toString(pageSize)));
+    }
+
+    /**
+     * If the key does not exist in the queryMap, the value is added (encapsulated in a List). If a value for the key
+     * already exists, the value is added to the List corresponding to the key.
+     * @param queryMap where to append the value to.
+     * @param key      the key for the value.
+     * @param value    the value to add.
+     */
+    protected void append(Map<String, List<String>> queryMap, String key, String value) {
+        List<String> existing = queryMap.get(key);
+        if (existing == null) {
+            queryMap.put(key, Arrays.asList(value));
+            return;
+        }
+        if (!(existing instanceof ArrayList)) {
+            existing = new ArrayList<String>(existing);
+            queryMap.put(key, existing);
+        }
+        existing.add(value);
     }
 
     public static final class Facet {
@@ -113,10 +157,6 @@ public class SolrFacetRequest {
             this.combineMode = combineMode;
             this.startPage = startPage;
             this.pageSize = pageSize;
-        }
-
-        public String getSolrCall() {
-            return field + "," + combineMode + ",1," + pageSize;
         }
 
         public String getField() {

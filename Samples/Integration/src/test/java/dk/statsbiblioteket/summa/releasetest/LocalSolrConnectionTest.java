@@ -20,31 +20,23 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.support.solr.SolrManipulator;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
-import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.index.PayloadProcessorProvider;
 
-import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Test connection to a local Solr at port 8983 (default).
@@ -83,7 +75,11 @@ public class LocalSolrConnectionTest extends TestCase {
         testBasicIngest();
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(DocumentKeys.SEARCH_QUERY, "description:first"), responses);
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "description:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id name description"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits",
                      1, ((DocumentResponse)responses.iterator().next()).getHitCount());
         searcher.close();
@@ -104,13 +100,6 @@ public class LocalSolrConnectionTest extends TestCase {
     }
 
     private SearchNode getSearcher() throws RemoteException {
-        return new SolrSearchNode(Configuration.newMemoryBased()) {
-            @Override
-            protected Pair<String, String> solrSearch(Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets, int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses) throws RemoteException {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
-        };
+        return new SolrSearchNode(Configuration.newMemoryBased());
     }
-
-
 }

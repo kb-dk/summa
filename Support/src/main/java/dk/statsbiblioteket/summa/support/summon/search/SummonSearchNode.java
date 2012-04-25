@@ -133,7 +133,6 @@ public class SummonSearchNode extends SolrSearchNode {
 
     private final String accessID;
     private final String accessKey;
-    private final FacetQueryTransformer facetQueryTransformer;
     private final Configuration conf; // Used when constructing QueryRewriter
     private final boolean sabotageDismax;
 
@@ -146,10 +145,20 @@ public class SummonSearchNode extends SolrSearchNode {
         for (Map.Entry<String, Serializable> entry : conf) {
             convertSolrParam(solrDefaultParams, entry);
         }
-        facetQueryTransformer = new FacetQueryTransformer(conf);
         sabotageDismax = conf.getBoolean(CONF_DISMAX_SABOTAGE, DEFAULT_DISMAX_SABOTAGE);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
+    }
+
+    @Override
+    protected FacetQueryTransformer createFacetQueryTransformer(final Configuration conf) {
+        return new FacetQueryTransformer(conf) {
+            @Override
+            protected void addFacetQuery(
+                Map<String, List<String>> queryMap, String field, String value, boolean negated) {
+                append(queryMap, "s.fvf", field + "," + value + "," + negated);
+            }
+        };
     }
 
     // Converts the Configuration so that legacy-versions of the properties (those starting with "summon.") are
@@ -255,27 +264,22 @@ public class SummonSearchNode extends SolrSearchNode {
     @Override
     protected Pair<String, String> solrSearch(
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
-        int startIndex, int maxRecords, String sortKey, boolean reverseSort,
-        ResponseCollection responses) throws RemoteException {
+        int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses)
+                                                                                                throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
-        int startpage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
-        @SuppressWarnings({"UnnecessaryLocalVariable"})
-        int perpage = maxRecords;
+        startIndex++; // summon counts from 1
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
-        Map<String, List<String>> querymap;
+        Map<String, List<String>> queryMap;
         try {
-            querymap = buildSummonQuery(
-                request, filter, query, facets, startpage, perpage, sortKey, reverseSort);
+            queryMap = buildSolrQuery(
+                request, filter, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
         } catch (ParseException e) {
             throw new RemoteException("Unable to build Solr query", e);
         }
-        if (solrParams != null) {
-            querymap.putAll(solrParams);
-        }
 
         Date date = new Date();
-        String idstring = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, querymap);
-        String queryString = computeSortedQueryString(querymap, true);
+        String idstring = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, queryMap);
+        String queryString = computeSortedQueryString(queryMap, true);
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
         String result;
@@ -293,15 +297,28 @@ public class SummonSearchNode extends SolrSearchNode {
         return new Pair<String, String>(retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
     }
 
-    private Map<String, List<String>> buildSummonQuery(
-        Request request, String filter, String query, SolrFacetRequest facets,
-        int startpage, int perpage, String sortKey, boolean reverseSort) throws ParseException {
-        Map<String, List<String>> querymap = new HashMap<String, List<String>>();
+    @Override
+    protected SolrFacetRequest createFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
+        return new SolrFacetRequest(facetsDef, defaultFacetPageSize, combineMode) {
+            @Override
+            protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
+                                         int startPage, int pageSize) {
+                append(queryMap, "s.ff", field + "," + combineMode + ",1," + pageSize);
+            }
+        };
+    }
 
-        querymap.put("s.dym", Arrays.asList("true"));
-        querymap.put("s.ho",  Arrays.asList("true"));
-        // Note: summon supports pure negative filters so we do not use
-        // DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE for anything
+    @Override
+    protected Map<String, List<String>> buildSolrQuery(
+        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
+        int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
+        @SuppressWarnings("UnnecessaryLocalVariable")
+        int perPage = maxRecords;
+        int startPage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
+        Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
+
+        queryMap.put("s.dym", Arrays.asList("true"));
+        queryMap.put("s.ho", Arrays.asList("true"));
         if (filter != null) { // We allow missing filter
             boolean facetsHandled = false;
             if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
@@ -311,13 +328,13 @@ public class SummonSearchNode extends SolrSearchNode {
                               + "filter/query based handling");
                 } else {
                     log.debug("Successfully converted filter '" + filter + "' to Solr facet query");
-                    querymap.putAll(facetRequest);
+                    queryMap.putAll(facetRequest);
                     facetsHandled = true;
                 }
             }
             if (!facetsHandled) {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                    querymap.put("s.fq",   Arrays.asList(filter)); // FilterQuery
+                    queryMap.put("s.fq", Arrays.asList(filter)); // FilterQuery
                 } else {
                     if (query == null) {
                         throw new IllegalArgumentException(
@@ -336,19 +353,19 @@ public class SummonSearchNode extends SolrSearchNode {
                 query = "(" + query + ")";
                 log.debug("Sabotaging summon DisMax by putting the query in parentheses: '" + query + "'");
             }
-            querymap.put("s.q",   Arrays.asList(query));
+            queryMap.put("s.q", Arrays.asList(query));
         }
 
-        querymap.put("s.ps",  Arrays.asList(Integer.toString(perpage)));
-        querymap.put("s.pn",  Arrays.asList(Integer.toString(startpage)));
+        queryMap.put("s.ps", Arrays.asList(Integer.toString(perPage)));
+        queryMap.put("s.pn", Arrays.asList(Integer.toString(startPage)));
 
         // TODO: Add support for sorting on multiple fields
         if (sortKey != null) {
-            querymap.put("s.sort", Arrays.asList(sortKey + ":" + (reverseSort ? "desc" : "asc")));
+            queryMap.put("s.sort", Arrays.asList(sortKey + ":" + (reverseSort ? "desc" : "asc")));
         }
 
         if (facets != null) {
-            querymap.put("s.ff", facets.getFacetQueries());
+            facets.addFacetQueries(queryMap);
         } else {
             log.debug("No facets specified, skipping faceting");
         }
@@ -364,9 +381,12 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         ranges.append(",").append(":").append(currentYear - 15);
         rangefacet.add("PublicationDate," + ranges.toString());
-        querymap.put("s.rff", rangefacet);
+        queryMap.put("s.rff", rangefacet);
 
-        return querymap;
+        if (solrParams != null) {
+            queryMap.putAll(solrParams);
+        }
+        return queryMap;
     }
 
     private static String computeIdString(String acceptType, String  date, String  host, String  path,
@@ -460,8 +480,8 @@ public class SummonSearchNode extends SolrSearchNode {
             log.trace("Reading from Summon done in " + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
             rawCall += System.currentTimeMillis();
-            responses.addTiming("summon.connect", summonConnect);
-            responses.addTiming("summon.rawcall", rawCall); 
+            responses.addTiming(getID() + ".connect", summonConnect);
+            responses.addTiming(getID() + ".rawcall", rawCall);
             
         } catch (IOException e) {
             String error = String.format(
