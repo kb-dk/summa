@@ -77,7 +77,7 @@ public class LocalSolrConnectionTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id name description"
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits",

@@ -151,6 +151,11 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     @Override
+    protected SolrResponseBuilder createResponseBuilder(Configuration conf) {
+        return new SummonResponseBuilder(conf);
+    }
+
+    @Override
     protected FacetQueryTransformer createFacetQueryTransformer(final Configuration conf) {
         return new FacetQueryTransformer(conf) {
             @Override

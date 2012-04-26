@@ -7,6 +7,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import org.apache.lucene.queryparser.classic.ParseException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,13 @@ public class FacetQueryTransformerTest extends TestCase {
         super(name);
     }
 
-    private FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
+    private FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased()) {
+        @Override
+        protected void addFacetQuery(
+            Map<String, List<String>> queryMap, String field, String value, boolean negated) {
+            append(queryMap, "s.fvf", field + "," + value + "," + negated);
+        }
+    };
 
     @Override
     public void setUp() throws Exception {
@@ -29,6 +36,23 @@ public class FacetQueryTransformerTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(FacetQueryTransformerTest.class);
+    }
+
+    public void testConvertFilterToFacet() throws ParseException {
+        String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
+        String[] EXPECTED = new String[]{
+            "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
+        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
+        Map<String, List<String>> result = fqt.convertQueryToFacet(QUERY);
+        assertEquals("Only a single entry should be generated", 1, result.size());
+        List<String> resultList = result.entrySet().iterator().next().getValue();
+        Collections.sort(resultList);
+//        System.out.println("Result list: " + Strings.join(resultList, " "));
+        for (String e: EXPECTED) {
+            assertTrue("The expected facet filter '" + e + "' should exist in the result list: "
+                       + Strings.join(resultList, " "),
+                       Collections.binarySearch(resultList, e) >= 0);
+        }
     }
 
     public void testTrivial() throws ParseException {
@@ -57,13 +81,14 @@ public class FacetQueryTransformerTest extends TestCase {
     }
 
 
-    public void testRealWorldExamples() throws ParseException {
+/*    public void testRealWorldExamples() throws ParseException {
         assertConvert("(-(ContentType:\"Book / eBook\" OR ContentType:\"Book\" OR ContentType:\"eBook\" OR "
                       + "ContentType:\"Microform\" OR ContentType:\"Microfilm\")"
                       + " -Language:\"Portuguese\")"
                       + " -ContentType:\"Newspaper Article\"",
                       "ddd");
-    }
+
+    }*/
     private void assertConvert(String query, String expected) throws ParseException {
         Map<String, List<String>> processed = fqt.convertQueryToFacet(query);
         List<String> calls = processed == null ? null : processed.get("s.fvf");

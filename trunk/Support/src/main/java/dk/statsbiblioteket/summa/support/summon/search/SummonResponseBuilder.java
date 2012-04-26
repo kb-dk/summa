@@ -19,7 +19,6 @@
  */
 package dk.statsbiblioteket.summa.support.summon.search;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
@@ -29,14 +28,12 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
@@ -55,44 +52,13 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummonResponseBuilder implements Configurable {
+public class SummonResponseBuilder extends SolrResponseBuilder {
     private static Log log = LogFactory.getLog(SummonResponseBuilder.class);
 
-    /**
-     * Recommended behaviour for a Summa document searcher is to provide a
-     * recordBase as this makes backtracking easier and allows for optimized
-     * lookups.
-     * </p><p>
-     * Specifying a recordBase results in the field 'recordBase' being added
-     * to records in DocumentResponses.
-     * </p><p>
-     * Optional. Default is 'summon'.
-     */
-    public static final String CONF_RECORDBASE = "summonresponsebuilder.recordbase";
-    public static final String DEFAULT_RECORDBASE = "summon";
+    public static final String DEFAULT_SUMMON_SORT_FIELD_REDIRECT = "PublicationDate - PublicationDate_xml_iso";
 
     /**
-     * A 1:1 map of field names to redirect. If sorting of field A is requested,
-     * specifying "A - B" means that the content of field B will be used as the
-     * sort value instead of the content from field A.
-     * </p><p>
-     * The format is a list of rules (comma-separation works) with each rule
-     * defines as "A - B", where A is the sort field and B is the field to
-     * extract sort values from.
-     * </p><p>
-     * Optional. Default is "PublicationDate - PublicationDate_xml_iso".
-     * </p><p>
-     * Note: The default mapping is chosen because summon provides date-sorting
-     * with sort-option "PublicationDate", but the field "PublicationDate" is
-     * multi valued and not normalised. The field PublicationDate_xml_iso is
-     * an extracted ISO-date from that authoritative XML in the single value
-     * field PublicationDate_xml.
-     */
-    public static final String CONF_SORT_FIELD_REDIRECT = "summonresponsebuilder.sort.field.redirect";
-    public static final String DEFAULT_SORT_FIELD_REDIRECT = "PublicationDate - PublicationDate_xml_iso";
-
-    /**
-     * If true, only the year is usen when generating shortformat. If false,
+     * If true, only the year is used when generating shortformat. If false,
      * month and day is included iso-style, if they are available.
      * </p><p>
      * Optional. Default is true.
@@ -111,76 +77,58 @@ public class SummonResponseBuilder implements Configurable {
     public static final String CONF_XML_OVERRIDES_NONXML = "summonresponsebuilder.xmloverrides";
     public static final boolean DEFAULT_XML_OVERRIDES_NONXML = true;
 
+    public static final String DEFAULT_SUMMON_RECORDBASE = "summon";
 
-    private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
-    {
-        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
-        // No resolving of external DTDs
-        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-    }
-
-    private String recordBase = DEFAULT_RECORDBASE;
-    private final Map<String, String> sortRedirect;
     private final boolean shortDate;
     private final boolean xmlOverrides;
 
     public SummonResponseBuilder(Configuration conf) {
-        recordBase = conf.getString(CONF_RECORDBASE, recordBase);
+        super(adjust(conf));
         shortDate = conf.getBoolean(CONF_SHORT_DATE, DEFAULT_SHORT_DATE);
         xmlOverrides = conf.getBoolean(CONF_XML_OVERRIDES_NONXML, DEFAULT_XML_OVERRIDES_NONXML);
-        if ("".equals(recordBase)) {
-            recordBase = null;
+        log.info("Created SummonResponseBuilder inherited from SolrResponseBuilder");
+    }
+
+    private static Configuration adjust(Configuration conf) {
+        if (!conf.valueExists(CONF_SORT_FIELD_REDIRECT)) {
+            conf.set(CONF_SORT_FIELD_REDIRECT, DEFAULT_SUMMON_SORT_FIELD_REDIRECT);
         }
-        List<String> rules = conf.getStrings(
-            CONF_SORT_FIELD_REDIRECT, new ArrayList<String>(Arrays.asList(DEFAULT_SORT_FIELD_REDIRECT)));
-        sortRedirect = new HashMap<String, String>(rules.size());
-        for (String rule: rules) {
-            String[] tokens = rule.split(" *- *");
-            if (tokens.length != 2) {
-                throw new ConfigurationException(
-                    "Error parsing sort field redirect rule '" + rule + "'. "
-                    + "Expected a rule with the format 'source - destination'");
-            }
-            sortRedirect.put(tokens[0], tokens[1]);
+        if (!conf.valueExists(CONF_RECORDBASE)) {
+            conf.set(CONF_RECORDBASE, DEFAULT_SUMMON_RECORDBASE);
         }
-        log.info("Created SummonResponseBuilder with base '" + recordBase + "' and sort field redirect rules '"
-                 + Strings.join(rules, ", ") + "'");
+        // conversion of legacy properties
+        legacyCopy(conf, "summonresponsebuilder.recordbase", CONF_RECORDBASE);
+        legacyCopy(conf, "summonresponsebuilder.sort.field.redirect", CONF_SORT_FIELD_REDIRECT);
+        return conf;
+    }
+    private static void legacyCopy(Configuration conf, String oldKey, String newKey) {
+        if (conf.valueExists(oldKey) && !conf.valueExists(newKey)) {
+            log.warn("The key '" + oldKey + "' is deprecated in favor of '" + newKey
+                     + "'. Please adjust settings accordingly to avoid this warning");
+            conf.set(newKey, conf.getString(oldKey));
+        }
     }
 
     private boolean rangeWarned = false;
-    public long buildResponses(
-        Request request, SolrFacetRequest facets,
-        ResponseCollection responses,
-        String summonResponse, String summonTiming) throws XMLStreamException {
+    @Override
+    public long buildResponses(Request request, SolrFacetRequest facets, ResponseCollection responses,
+                               String solrResponse, String solrTiming) throws XMLStreamException {
 //        System.out.println(summonResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
-        boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
         try {
-            xml = xmlFactory.createXMLStreamReader(new StringReader(summonResponse));
+            xml = xmlFactory.createXMLStreamReader(new StringReader(solrResponse));
         } catch (XMLStreamException e) {
-            throw new IllegalArgumentException("Unable to construct a reader from input", e);
+            throw new IllegalArgumentException("Unable to construct a reader from input for request " + request, e);
         }
 
-        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-        int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0) + 1;
-        String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
-        boolean reverse = request.getBoolean(
-            DocumentKeys.SEARCH_REVERSE, false);
-
         if (!findTagStart(xml, "response")) {
-            log.warn("Could not locate start tag 'response', exiting");
+            log.warn("Could not locate start tag 'response', exiting parsing of response for " + request);
             return 0;
         }
-        long searchTime = Long.parseLong(
-            getAttribute(xml, "totalRequestTime", "0"));
-        long hitCount = Long.parseLong(
-            getAttribute(xml, "recordCount", "0"));
-        if (!findTagStart(xml, "response")) {
-            log.warn("Could not locate start tag 'response', exiting");
-            return 0;
-        }
+        long searchTime = Long.parseLong(getAttribute(xml, "totalRequestTime", "0"));
+        long hitCount = Long.parseLong(getAttribute(xml, "recordCount", "0"));
         String summonQueryString = "N/A";
         int maxRecords = -1;
         List<DocumentResponse.Record> records = null;
@@ -193,14 +141,13 @@ public class SummonResponseBuilder implements Configurable {
                 summonQueryString = getAttribute(xml, "queryString", summonQueryString);
                 continue;
             }
-            if ("rangeFacetFields".equals(currentTag) && collectdocIDs
-                && !rangeWarned) {
+            if ("rangeFacetFields".equals(currentTag) && facetingEnabled && !rangeWarned) {
                 log.warn("buildResponses(...) encountered facet range from summon. Currently there is no support for "
                          + "this. Further encounters of range facets will not be logged");
                 rangeWarned = true;
                 // TODO: Implement range facets from Summon
             }
-            if ("facetFields".equals(currentTag) && collectdocIDs) {
+            if ("facetFields".equals(currentTag) && facetingEnabled) {
                 FacetResult<String> facetResult = extractFacetResult(xml, facets);
                 if (facetResult != null) {
                     responses.add(facetResult);
@@ -214,6 +161,7 @@ public class SummonResponseBuilder implements Configurable {
             }
             if ("documents".equals(currentTag)) {
 //                recordTime = -System.currentTimeMillis();
+                String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
                 records = extractRecords(xml, sortKey);
 //                recordTime += System.currentTimeMillis();
             }
@@ -222,19 +170,18 @@ public class SummonResponseBuilder implements Configurable {
             log.warn("No records extracted from request " + request + ". Returning 0 hits");
             return 0;
         }
-        // Start index reduced by 1 to match general contract of starting at 0.
-        DocumentResponse documentResponse = new DocumentResponse(
-            filter, query, startIndex-1, maxRecords, sortKey, reverse,
-            new String[0], searchTime, hitCount);
-        documentResponse.setPrefix("summon.");
+        DocumentResponse documentResponse = createBasicDocumentResponse(request);
+        documentResponse.setSearchTime(searchTime);
+        documentResponse.setHitCount(hitCount);
+        documentResponse.setPrefix(searcherID + ".");
         documentResponse.addTiming("reportedtime", searchTime);
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
-        documentResponse.addTiming(summonTiming);
+        documentResponse.addTiming(solrTiming);
         documentResponse.addTiming("buildresponses.documents", System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
-        responses.addTiming("summon.buildresponses.total", System.currentTimeMillis() - startTime);
+        responses.addTiming(searcherID + ".buildresponses.total", System.currentTimeMillis() - startTime);
         return documentResponse.getHitCount();
     }
 
@@ -256,16 +203,13 @@ public class SummonResponseBuilder implements Configurable {
     }
 
     private void extractRecommendationList(
-        XMLStreamReader xml, RecommendationResponse response)
-                                                     throws XMLStreamException {
+        XMLStreamReader xml, RecommendationResponse response) throws XMLStreamException {
         String type = getAttribute(xml, "type", null);
         if (type == null) {
-            throw new IllegalArgumentException(
-                "Type required for recommendationList");
+            throw new IllegalArgumentException("Type required for recommendationList");
         }
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
-        final RecommendationResponse.RecommendationList recList =
-            response.newList(type);
+        final RecommendationResponse.RecommendationList recList = response.newList(type);
         iterateElements(xml, "recommendationList", "recommendation",
             new XMLCallback() {
                 @Override
@@ -273,8 +217,7 @@ public class SummonResponseBuilder implements Configurable {
                                                      throws XMLStreamException {
                     String title = getAttribute(xml, "title", null);
                     if (title == null) {
-                        throw new IllegalArgumentException(
-                            "Title required for recommendationList");
+                        throw new IllegalArgumentException("Title required for recommendationList");
                     }
                     String description = getAttribute(xml, "description", "");
                     String link = getAttribute(xml, "link", "");
@@ -285,12 +228,10 @@ public class SummonResponseBuilder implements Configurable {
 
     /**
      * Extracts all facet responses.
-     * @param xml    the stream to extract Summon facet information from.
-     *               Must be positioned at 'facetFields'.
+     * @param xml    the stream to extract Summon facet information from. Must be positioned at 'facetFields'.
      * @param facets a definition of the facets to extract.
      * @return a Summa FacetResponse.
-     * @throws javax.xml.stream.XMLStreamException if there was an error
-     * accessing the xml stream.
+     * @throws javax.xml.stream.XMLStreamException if there was an error accessing the xml stream.
      */
     private FacetResult<String> extractFacetResult(XMLStreamReader xml, SolrFacetRequest facets)
         throws XMLStreamException {
@@ -298,8 +239,7 @@ public class SummonResponseBuilder implements Configurable {
         HashMap<String, Integer> facetIDs =
             new HashMap<String, Integer>(facets.getFacets().size());
         // 1 facet = 1 field in Summon-world
-        HashMap<String, String[]> fields =
-            new HashMap<String, String[]>(facets.getFacets().size());
+        HashMap<String, String[]> fields = new HashMap<String, String[]>(facets.getFacets().size());
         for (int i = 0 ; i < facets.getFacets().size() ; i++) {
             SolrFacetRequest.Facet facet = facets.getFacets().get(i);
             facetIDs.put(facet.getField(), i);
@@ -308,7 +248,7 @@ public class SummonResponseBuilder implements Configurable {
         }
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
-        summaFacetResult.setPrefix("summon.");
+        summaFacetResult.setPrefix(searcherID + ".");
         iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
@@ -350,38 +290,6 @@ public class SummonResponseBuilder implements Configurable {
         });
     }
 
-    private abstract static class XMLCallback {
-        public abstract void execute(XMLStreamReader xml) throws XMLStreamException;
-        public void close() { } // Called when iteration has finished
-    }
-
-    /**
-     * Iterates over elements in the stream until end element is encountered
-     * or end of document is reached. For each element matching actionElement,
-     * callback is called.
-     * @param xml        the stream to iterate.
-     * @param endElement the stopping element.
-     * @param actionElement callback is activated when encountering elements
-     *                   with this name.
-     * @param callback   called for each encountered element.
-     * @throws javax.xml.stream.XMLStreamException if the stream could not
-     * be iterated or an error occured during callback.
-     */
-    private void iterateElements(XMLStreamReader xml, String endElement, String actionElement, XMLCallback callback)
-        throws XMLStreamException {
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT
-                || (xml.getEventType() == XMLStreamReader.END_ELEMENT
-                    && xml.getLocalName().equals(endElement))) {
-                break;
-            }
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT && xml.getLocalName().equals(actionElement)) {
-                callback.execute(xml);
-            }
-            xml.next();
-        }
-    }
-    
     /**
      * Extracts all Summon documents and converts them to
      * {@link }DocumentResponse#Record}.
@@ -458,8 +366,7 @@ public class SummonResponseBuilder implements Configurable {
         // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
-        final List<DocumentResponse.Field> fields =
-            new ArrayList<DocumentResponse.Field>(50);
+        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
         final String sortField = sortRedirect.containsKey(sortKey) ?
                                  sortRedirect.get(sortKey) : sortKey;
 
@@ -512,12 +419,13 @@ public class SummonResponseBuilder implements Configurable {
             }
         }
 
-        String id = extracted.getString("ID", null);
+        String recordID = extracted.getString("ID", null);
 
-        if (id == null) {
+        if (recordID == null) {
             log.warn("Unable to locate field 'ID' in Summon document. Skipping document");
             return null;
         }
+        fields.add(new DocumentResponse.Field(DocumentKeys.RECORD_ID, recordID, true));
         fields.add(new DocumentResponse.Field("availibilityToken", availibilityToken, true));
         fields.add(new DocumentResponse.Field("hasFullText", hasFullText, true));
         fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
@@ -530,62 +438,22 @@ public class SummonResponseBuilder implements Configurable {
 
         String sortV = sortKey == null || sortValue[0] == null ? null : sortValue[0];
         if (!extracted.containsKey("Score")) {
-            log.debug("The record '" + id + "' did not contain a Score. Assigning " + lastScore);
+            log.debug("The record '" + recordID + "' did not contain a Score. Assigning " + lastScore);
         }
         DocumentResponse.Record record = new DocumentResponse.Record(
-            id, "Summon", extracted.getFloat("Score", lastScore), sortV);
+            recordID, searcherID, extracted.getFloat("Score", lastScore), sortV);
         for (DocumentResponse.Field field: fields) {
             record.addField(field);
         }
         return record;
     }
 
-    private String createShortformat(ConvenientMap extracted) {
-      // TODO: Incorporate this properly instead of String-hacking
-        final StringBuffer shortformat = new StringBuffer(500);
-        shortformat.append("  <shortrecord>\n");
-        shortformat.append("    <rdf:RDF xmlns:dc=\"http://purl.org/dc/element"
-                           + "s/1.1/\" xmlns:rdf=\"http://www.w3.org/1999/02/"
-                           + "22-rdf-syntax-ns#\">\n");
-        shortformat.append("      <rdf:Description>\n");
-
-        shortformat.append("        <dc:title>").
-            append(XMLUtil.encode(extracted.getString("Title", "")));
-        String subTitle = extracted.getString("Subtitle", "");
-        if (!"".equals(subTitle)) {
-            shortformat.append(" : ").append(XMLUtil.encode(subTitle));
-        }
-        shortformat.append("</dc:title>\n");
-        addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
-        shortformat.append("        <dc:type xml:lang=\"da\">").
-            append(XMLUtil.encode(extracted.getString("ContentType", ""))).
-            append("</dc:type>\n");
-        shortformat.append("        <dc:type xml:lang=\"en\">").
-            append(XMLUtil.encode(extracted.getString("ContentType", ""))).
-            append("</dc:type>\n");
+    @Override
+    protected String createShortformat(ConvenientMap extracted) {
         String date = extracted.getString("PublicationDate_xml", "????");
         date = shortDate && date.length() > 4 ? date.substring(0, 4) : date;
-        shortformat.append("        <dc:date>").
-            append(date).append("</dc:date>\n");
-
-
-        shortformat.append("        <dc:format></dc:format>\n");
-        shortformat.append("      </rdf:Description>\n");
-        shortformat.append("    </rdf:RDF>\n");
-        shortformat.append("  </shortrecord>\n");
-        return shortformat.toString();
-    }
-
-    private void addMultiple(ConvenientMap extracted, StringBuffer shortformat,
-                             String indent, String tag, String field) {
-        String[] elements = extracted.getString(field, "").split("\n");
-        for (String element: elements) {
-            if (!"".equals(element)) {
-                shortformat.append(String.format(
-                    "%s<%s>%s</%s>\n",
-                    indent, tag, XMLUtil.encode(element), tag));
-            }
-        }
+        extracted.put("Date", date);
+        return super.createShortformat(extracted);
     }
 
     private boolean warnedOnMissingFullname = false;
@@ -688,69 +556,4 @@ public class SummonResponseBuilder implements Configurable {
         return new DocumentResponse.Field(name, value.toString(), true);
     }
 
-    /**
-     * Skips everything until a start tag is reacted or the readers is depleted.
-     * @param xml the stream to iterate over.
-     * @return the name of the start tag or null if EOD.
-     * @throws javax.xml.stream.XMLStreamException if there was an error
-     * accessing the xml stream.
-     */
-    private String jumpToNextTagStart(XMLStreamReader xml)
-        throws XMLStreamException {
-        if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-            xml.next(); // Skip if already located at a start
-        }
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-                return xml.getLocalName();
-            }
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                return null;
-            }
-            xml.next();
-        }
-    }
-
-    /**
-     *
-     * @param xml stream positioned at a start tag.
-     * @param attributeName the wanted attribute
-     * @param defaultValue the value to return if the attributes is not present.
-     * @return the attribute content og the default value.
-     */
-    private String getAttribute(
-        XMLStreamReader xml, String attributeName, String defaultValue) {
-        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
-            if (xml.getAttributeLocalName(i).equals(attributeName)) {
-                return xml.getAttributeValue(i);
-            }
-        }
-        return defaultValue;
-    }
-
-    /**
-     * Iterates over the xml until a start tag with startTagName is reached.
-     * @param xml          the stream to iterate over.
-     * @param startTagName the name of the tag to locate.
-     * @return true if the tag was found, else false.
-     * @throws javax.xml.stream.XMLStreamException if there were an error
-     * seeking the xml stream.
-     */
-    private boolean findTagStart(
-        XMLStreamReader xml, String startTagName) throws XMLStreamException {
-        while (true)  {
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT && startTagName.equals(xml.getLocalName())) {
-                return true;
-            }
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                return false;
-            }
-            try {
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new XMLStreamException(
-                    "Error seeking to start tag for element '" + startTagName + "'", e);
-            }
-        }
-    }
 }
