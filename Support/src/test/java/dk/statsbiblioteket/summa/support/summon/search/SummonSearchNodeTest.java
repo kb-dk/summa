@@ -73,6 +73,25 @@ public class SummonSearchNodeTest extends TestCase {
         return new TestSuite(SummonSearchNodeTest.class);
     }
 
+    public void testIDResponse() throws IOException, TransformerException {
+        String QUERY = "gene and protein evolution";
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY,
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        List<String> ids = getAttributes(summon, req, "id");
+        assertTrue("There should be at least 1 result", ids.size() >= 1);
+
+        final Pattern EMBEDDED_ID_PATTERN = Pattern.compile("<field name=\"recordID\">(.+?)</field>", Pattern.DOTALL);
+        List<String> embeddedIDs = getPattern(summon, req, EMBEDDED_ID_PATTERN);
+        ExtraAsserts.assertEquals("The embedded IDs should match the plain IDs", ids, embeddedIDs);
+        System.out.println("Received IDs: " + Strings.join(ids, ", "));
+
+        summon.close();
+    }
+
     public void testNegativeFacet() throws RemoteException {
         final String JSON =
             "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
@@ -112,8 +131,7 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
 //        summon.open(""); // Fake open for setting permits
-        final Pattern DATEPATTERN = Pattern.compile(
-            "<dc:date>(.+?)</dc:date>", Pattern.DOTALL);
+        final Pattern DATEPATTERN = Pattern.compile("<dc:date>(.+?)</dc:date>", Pattern.DOTALL);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, "shortformat");
@@ -169,23 +187,6 @@ public class SummonSearchNodeTest extends TestCase {
             dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
         retXML = DOM.domToString(subDom);
         return retXML;
-    }
-
-    public void testConvertFilterToFacet() throws ParseException {
-        String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
-        String[] EXPECTED = new String[]{
-            "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
-        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
-        Map<String, List<String>> result = fqt.convertQueryToFacet(QUERY);
-        assertEquals("Only a single entry should be generated", 1, result.size());
-        List<String> resultList = result.entrySet().iterator().next().getValue();
-        Collections.sort(resultList);
-//        System.out.println("Result list: " + Strings.join(resultList, " "));
-        for (String e: EXPECTED) {
-            assertTrue("The expected facet filter '" + e + "' should exist in the result list "
-                       + Strings.join(resultList, " "),
-                       Collections.binarySearch(resultList, e) >= 0);
-        }
     }
 
     public void testMoreLikeThis() throws RemoteException {

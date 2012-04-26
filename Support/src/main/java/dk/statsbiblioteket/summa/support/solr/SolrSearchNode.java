@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.summon.search.FacetQueryTransformer;
 import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
+import dk.statsbiblioteket.summa.support.summon.search.SolrResponseBuilder;
 import dk.statsbiblioteket.summa.support.summon.search.SummonResponseBuilder;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -151,7 +152,7 @@ public class SolrSearchNode extends SearchNodeImpl {
 
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-    protected SummonResponseBuilder responseBuilder;
+    protected SolrResponseBuilder responseBuilder;
     protected final String host;
     protected final String restCall;
     protected final String idPrefix;
@@ -166,7 +167,7 @@ public class SolrSearchNode extends SearchNodeImpl {
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         setID(conf.getString(CONF_ID, "solr"));
-        responseBuilder = new SummonResponseBuilder(conf);
+        responseBuilder = createResponseBuilder(conf);
         solrDefaultParams = new HashMap<String, List<String>>();
 
         host = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
@@ -181,6 +182,16 @@ public class SolrSearchNode extends SearchNodeImpl {
         facetQueryTransformer = createFacetQueryTransformer(conf);
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
+    }
+
+    /**
+     * Create a response builder from Solr to Summa responses. Override this to get parsing of responses that differ
+     * from standard Solr.
+     * @param conf base configuration for the transformer.
+     * @return a search backend specific transformer.
+     */
+    protected SolrResponseBuilder createResponseBuilder(Configuration conf) {
+        return new SolrResponseBuilder(conf);
     }
 
     /**
@@ -313,7 +324,7 @@ public class SolrSearchNode extends SearchNodeImpl {
         long buildResponseTime = -System.currentTimeMillis();
         long hitCount;
         try {
-            System.out.println(solrResponse.replace(">", ">\n"));
+//            System.out.println(solrResponse.replace(">", ">\n"));
             hitCount = responseBuilder.buildResponses(request, facets, responses, solrResponse, solrTiming);
         } catch (XMLStreamException e) {
             String message = "Unable to transform Solr XML response to Summa response for '" + request + "'";
