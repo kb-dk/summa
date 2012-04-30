@@ -17,6 +17,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -108,9 +110,11 @@ public class SolrResponseBuilder implements Configurable {
                  + "redirect rules '" + Strings.join(rules, ", ") + "'");
     }
 
-    public long buildResponses(Request request, SolrFacetRequest facets, ResponseCollection responses,
+    public long buildResponses(Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
+        System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
+        log.debug("buildResponses(...) called");
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(solrResponse));
@@ -121,6 +125,7 @@ public class SolrResponseBuilder implements Configurable {
             log.warn("Could not locate start tag 'response', exiting parsing of response for " + request);
             return 0;
         }
+        xml.next();
         final DocumentResponse documentResponse = createBasicDocumentResponse(request);
 
         iterateTags(xml, new Callback() {
@@ -129,6 +134,7 @@ public class SolrResponseBuilder implements Configurable {
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("lst".equals(current)) {
                     String name = getAttribute(xml, "name", null);
+                    xml.next();
                     if (name == null) {
                         log.warn("Expected attribute 'name' in tag lst. Skipping content for lst");
                         skipSubTree(xml);
@@ -136,6 +142,11 @@ public class SolrResponseBuilder implements Configurable {
                     }
                     if ("responseHeader".equals(name)) {
                         parseHeader(xml, documentResponse);
+                        // Cursor is at end of sub tree after parseHeader
+                        return true;
+                    }
+                    if ("facet_counts".equals(name)) {
+                        parseFacets(xml, facets, responses);
                         // Cursor is at end of sub tree after parseHeader
                         return true;
                     }
@@ -163,8 +174,88 @@ public class SolrResponseBuilder implements Configurable {
                 return false;
             }
         });
+        documentResponse.addTiming("reportedtime", documentResponse.getSearchTime());
+        documentResponse.addTiming("buildresponses.total", System.currentTimeMillis() - startTime);
+        documentResponse.addTiming(solrTiming);
         responses.add(documentResponse);
         return documentResponse.getHitCount();
+    }
+
+    private void parseFacets(
+        XMLStreamReader xml, SolrFacetRequest facets, ResponseCollection responses) throws XMLStreamException {
+        long startTime = System.currentTimeMillis();
+        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>(facets.getFacets().size());
+        // 1 facet = 1 field in Solr-world
+        HashMap<String, String[]> fields = new HashMap<String, String[]>(facets.getFacets().size());
+        for (int i = 0 ; i < facets.getFacets().size() ; i++) {
+            SolrFacetRequest.Facet facet = facets.getFacets().get(i);
+            facetIDs.put(facet.getField(), i);
+            // TODO: Consider displayname
+            fields.put(facet.getField(), new String[]{facet.getField()});
+        }
+        final FacetResultExternal facetResult = new FacetResultExternal(
+            facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
+        facetResult.setPrefix(searcherID + ".");
+        iterateTags(xml, new Callback() {
+            @Override
+            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                if ("facet_fields".equals(getAttribute(xml, "name", null))) {
+                    xml.next();
+                    parseFacets(xml, facetResult);
+                    return true;
+                }
+                // TODO: <lst name="facet_dates"/> <lst name="facet_ranges"/>
+                return false;
+            }
+        });
+        facetResult.sortFacets();
+        facetResult.addTiming("buildresponses.facets", System.currentTimeMillis() - startTime);
+        responses.add(facetResult);
+    }
+
+    private void parseFacets(XMLStreamReader xml, final FacetResultExternal facets) throws XMLStreamException {
+        iterateTags(xml, new Callback() {
+            @Override
+            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                if (!"lst".equals(current)) {
+                    log.warn("Encountered tag '" + current + "' in facet_fields. Expected 'lst'. Ignoring element");
+                    return false;
+                }
+                final String facetName = getAttribute(xml, "name", null);
+                if (facetName == null) {
+                    log.warn("Encountered tag 'lst' inside facet_fields without attribute name. Ignoring element");
+                    return false;
+                }
+                xml.next();
+                parseFacet(xml, facets, facetName);
+                return true;
+            }
+        });
+    }
+
+    private void parseFacet(
+        XMLStreamReader xml, final FacetResultExternal facets, final String facetName) throws XMLStreamException {
+        iterateTags(xml, new Callback() {
+            @Override
+            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                final String tagName = getAttribute(xml, "name", null);
+                if (tagName == null) {
+                    log.warn("Encountered tag type '" + current + "' inside facet '" + facetName
+                             + "' without attribute name. Ignoring element");
+                    return false;
+                }
+                String content = xml.getElementText();
+                try {
+                    int count = Integer.parseInt(content);
+                    facets.addTag(facetName, tagName, count);
+                    log.trace("Added tag " + facetName + ":" + tagName + "(" + count + ")");
+                } catch (NumberFormatException e) {
+                    log.warn("Encountered tag '" + tagName + "' inside facet '" + facetName
+                             + "' with un-parsable count '" + content + "'. Ignoring tag");
+                }
+                return true;
+            }
+        });
     }
 
     private void skipSubTree(XMLStreamReader xml) throws XMLStreamException {
@@ -178,11 +269,12 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     private void parseHeader(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
+        log.trace("parseHeader(...) called");
         iterateTags(xml, new Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) {
+            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("int".equals(current) && "QTime".equals(getAttribute(xml, "name", null))) {
-                    String content = xml.getText();
+                    String content = xml.getElementText();
                     try {
                         response.setSearchTime(Long.parseLong(content));
                     } catch (NumberFormatException e) {
@@ -196,11 +288,14 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     private void parseResponse(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
+        log.trace("parseResponse(...) called");
         response.setHitCount(Long.parseLong(getAttribute(xml, "numFound", "-1")));
+        xml.next();
         iterateTags(xml, new Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("doc".equals(current)) {
+                    xml.next();
                     parseDoc(xml, response);
                     return true;
                 }
@@ -209,11 +304,71 @@ public class SolrResponseBuilder implements Configurable {
         });
     }
 
-    private void parseDoc(XMLStreamReader xml, DocumentResponse response) throws XMLStreamException {
+    private void parseDoc(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
+        final String sortKey = response.getSortKey() == null || response.getSortKey().equals(DocumentKeys.SORT_ON_SCORE)
+                               ? null : response.getSortKey();
+
+        log.trace("parseDoc(...) called");
         iterateTags(xml, new Callback() {
+            float score = 0.0f;
+            String id = null;
+            List<SimplePair<String, String>> fields = new ArrayList<SimplePair<String, String>>(100);
+
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                return false; // TODO: Implement this
+                String name = getAttribute(xml, "name", null);
+                if (name == null) {
+                    log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
+                    return false;
+                }
+                String content = xml.getElementText();
+                if (content.length() == 0) {
+                    log.debug("Content for " + current + "#" + name + " for document " + id + " was empty. Skipping");
+                    return true;
+                }
+
+                if ("score".equals(name)) {
+                    try {
+                        score = Float.parseFloat(content);
+                    } catch (NumberFormatException e) {
+                        log.warn("Unable to parse float score '" + content + "' from "+ current + "#" + name
+                                 + " for document " + id + ". Score will be set to " + score);
+                    }
+                } else if ("id".equals(name)) {
+                    id = content;
+                }
+                fields.add(new SimplePair<String, String>(name, content));
+                return true;
+            }
+
+            @Override
+            public void end() {
+                if (id == null) {
+                    log.warn("id was undefined after ");
+                }
+                fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
+                String sortValue = null;
+                if (sortKey == null) {
+                    sortValue = Float.toString(score);
+                } else {
+                    for (SimplePair<String, String> field: fields) {
+                        if (sortKey.equals(field.getKey())) {
+                            sortValue = field.getValue();
+                            break;
+                        }
+                    }
+                    if ("".equals(sortValue)) {
+                        log.debug("Unable to extract sortValue for key '" + sortKey + "' from document " + id);
+                    }
+                }
+                DocumentResponse.Record record = new DocumentResponse.Record(id, searcherID, score, sortValue);
+                for (SimplePair<String, String> field: fields) {
+                    record.addField(new DocumentResponse.Field(field.getKey(), field.getValue(), true));
+                }
+                if (log.isTraceEnabled()) {
+                    log.debug("constructed and added " + record);
+                }
+                response.addRecord(record);
             }
         });
     }
@@ -222,7 +377,6 @@ public class SolrResponseBuilder implements Configurable {
     // Leaves the cursor after END_ELEMENT
     protected void iterateTags(XMLStreamReader xml, Callback callback) throws XMLStreamException {
         List<String> tagStack = new ArrayList<String>(10);
-
         while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
                 String currentTag = xml.getLocalName();
@@ -235,7 +389,7 @@ public class SolrResponseBuilder implements Configurable {
             if (xml.getEventType() == XMLStreamReader.END_ELEMENT) {
                 String currentTag = xml.getLocalName();
                 if (tagStack.size() == 0) {
-                    xml.next();
+                    callback.end();
                     return;
                 }
                 if (!currentTag.equals(tagStack.get(tagStack.size()-1))) {
@@ -245,6 +399,7 @@ public class SolrResponseBuilder implements Configurable {
                 }
                 tagStack.remove(tagStack.size()-1);
             } else if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
+                callback.end();
                 return;
             }
             xml.next();
@@ -367,7 +522,10 @@ public class SolrResponseBuilder implements Configurable {
         int maxRecords =  request.getInt(    DocumentKeys.SEARCH_MAX_RECORDS, 0);
         String sortKey =  request.getString( DocumentKeys.SEARCH_SORTKEY, null);
         boolean reverse = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
-        return new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
+        DocumentResponse response = new DocumentResponse(
+            filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
+        response.setPrefix(searcherID + ".");
+        return response;
     }
 
     /**
