@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
@@ -61,7 +62,7 @@ public class LocalSolrConnectionTest extends TestCase {
 
     // Only tests if ingest passes without error
     public void testBasicIngest() throws Exception {
-        ObjectFilter data = getDataProvider();
+        ObjectFilter data = getDataProvider(false);
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
         assertTrue("There should be a next for the indexer", indexer.hasNext());
@@ -80,14 +81,62 @@ public class LocalSolrConnectionTest extends TestCase {
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits",
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        String PHRASE = "Solr sample document";
+        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        searcher.close();
+    }
+    public void testFacetedSearch() throws Exception {
+        testBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "description:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+            FacetKeys.SEARCH_FACET_FACETS, "description"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 1",
+                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
+//        System.out.println(responses.toXML());
+    }
+    public void testDelete() throws Exception {
+        testBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "description:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description"
+        );
+        searcher.search(request, responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        ObjectFilter data = getDataProvider(true);
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(data);
+        indexer.next();
+        indexer.close(true);
+
+        responses.clear();
+        searcher.search(request, responses);
+        assertTrue("There should be a response after document delete", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits after delete. Response was\n" + responses.toXML(),
+                     0, ((DocumentResponse)responses.iterator().next()).getHitCount());
         searcher.close();
     }
 
-    private ObjectFilter getDataProvider() throws IOException {
+    private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         String doc1 = Resolver.getUTF8Content("solr/SolrSampleDocument1.xml");
-        return new PayloadFeederHelper(Arrays.asList(new Payload(new Record("doc1", "dummy", doc1.getBytes("utf-8")))));
+        Payload payload = new Payload(new Record("doc1", "dummy", doc1.getBytes("utf-8")));
+        payload.getRecord().setDeleted(deleted);
+        return new PayloadFeederHelper(Arrays.asList(payload));
     }
 
     private IndexController getIndexer() throws IOException {
@@ -96,6 +145,7 @@ public class LocalSolrConnectionTest extends TestCase {
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "id"); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
 

@@ -73,6 +73,18 @@ public class SummonSearchNodeTest extends TestCase {
         return new TestSuite(SummonSearchNodeTest.class);
     }
 
+    public void testPageFault() throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        try {
+            summon.search(new Request(DocumentKeys.SEARCH_QUERY, "book",
+                                      DocumentKeys.SEARCH_START_INDEX, 10000), responses);
+        } catch (RemoteException e) {
+            log.debug("Received RemoteException as expected");
+        }
+        fail("Search with large page number was expected to fail. Received response:\n" + responses.toXML());
+    }
+
     public void testIDResponse() throws IOException, TransformerException {
         String QUERY = "gene and protein evolution";
 
