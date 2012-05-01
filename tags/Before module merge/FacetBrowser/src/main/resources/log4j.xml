@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  Log4j Configuration                                                  -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<!-- $Id: log4j.xml,v 1.2 2007/03/05 15:31:42 te Exp $ -->
+
+<!--
+   | For more configuration infromation and examples see the Jakarta Log4j
+   | owebsite: http://jakarta.apache.org/log4j
+ -->
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+    <!-- ================================= -->
+    <!--         Send to logfile           -->
+    <!-- ================================= -->
+
+    <!-- A time/date based rolling appender -->
+    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="WARN"/><!-- or DEBUG or INFO -->
+        <param name="File" value="log/logfile.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+
+     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out"/>
+        <param name="Threshold" value="DEBUG"/>
+        <layout class="org.apache.log4j.PatternLayout">
+        <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
+        </layout>
+      </appender>
+
+    <!-- The full log appender uses a extremely slow pattern, on production systems use
+    only this appender with a threshold of fatal -->
+    <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="FATAL"/>
+        <param name="File" value="log/fatal.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="1MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                   value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="dk.statsbiblioteket.summa.facetbrowser">
+        <level value="DEBUG"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- all loggers inherit the root logger - so don't include the root appenders
+    in the other loggers (will duplicate log entries in the log file) -->
+    <root>
+        <level value="INFO" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</log4j:configuration>
+
+
