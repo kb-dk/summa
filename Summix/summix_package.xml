@@ -52,7 +52,7 @@
         </fileSet>
         <!-- War files -->
         <fileSet>
-            <directory>${basedir}/../../Web/Modules/Search/target/</directory>
+            <directory>${basedir}/../Web/Modules/Search/target/</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>
             <includes>
@@ -60,7 +60,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/../../Web/Modules/Storage/target/</directory>
+            <directory>${basedir}/../Web/Modules/Storage/target/</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>
             <includes>
@@ -68,7 +68,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/../../Web/Modules/Status/target/</directory>
+            <directory>${basedir}/../Web/Modules/Status/target/</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>
             <includes>
@@ -76,7 +76,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/../../Web/Modules/Website/target/</directory>
+            <directory>${basedir}/../Web/Modules/Website/target/</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>
             <includes>
@@ -85,7 +85,7 @@
         </fileSet>
         <!-- Readme, License, ChangeLog -->
         <fileSet>
-            <directory>${basedir}/../../</directory>
+            <directory>${basedir}/../</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/</outputDirectory>
             <includes>
