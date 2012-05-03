@@ -102,68 +102,15 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika</artifactId>
         </dependency>
-        <!-- Local dependencies -->
+        <!-- Local dependencies -->        
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>summa-common</artifactId>
+            <artifactId>summa-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>summa-integration</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-ingest</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-storage</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-storage</artifactId>
-            <version>${project.version}</version>
-            <classifier>api</classifier>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-index</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-search</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-search</artifactId>
-            <version>${project.version}</version>
-            <classifier>api</classifier>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-support</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-support</artifactId>
-            <version>${project.version}</version>
-            <classifier>api</classifier>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-facetbrowser</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-facetbrowser</artifactId>
+            <artifactId>summa-core</artifactId>
             <version>${project.version}</version>
             <classifier>api</classifier>
         </dependency>
