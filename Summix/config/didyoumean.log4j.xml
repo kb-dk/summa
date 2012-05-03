@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+    <!-- A time/date based rolling appender -->
+    <appender name="FILE" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/didyoumean.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
+    <appender name="FULL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="FATAL"/>
+        <param name="File" value="log/didyoumean.fatal.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="1MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="dk.statsbiblioteket.summa">
+        <level value="debug" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
+    <root>
+        <level value="FATAL" />
+        <appender-ref ref="FULL_LOG" />
+    </root>
+
+</log4j:configuration>
+
+
