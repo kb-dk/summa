@@ -55,11 +55,7 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser">
-        <level value="DEBUG"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
+   
     <!-- all loggers inherit the root logger - so don't include the root appenders
     in the other loggers (will duplicate log entries in the log file) -->
     <root>
