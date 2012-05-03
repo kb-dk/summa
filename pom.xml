@@ -21,6 +21,7 @@
 
     <!-- Summa modules -->
     <modules>
+        <module>Core</module> 
         <module>Common</module>
         <module>Storage</module>
         <module>Search</module>
