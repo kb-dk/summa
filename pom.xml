@@ -22,7 +22,6 @@
     <!-- Summa modules -->
     <modules>
         <module>Core</module> 
-        <module>Summix/</module>
     <!--<module>Common</module> -->
     <!--<module>Storage</module>  -->
     <!--<module>Search</module>  -->
@@ -33,6 +32,8 @@
         <module>Web</module>
    <!-- <module>Samples/Integration/</module> -->
    <!-- <module>Samples/Assembly/</module>   Module only creates .jar containing all .jars from modules. It it not used currently.-->
+            <module>Summix/</module> <!-- This must be last-->
+    
     </modules>
 
     <!-- Summa dependencies -->
