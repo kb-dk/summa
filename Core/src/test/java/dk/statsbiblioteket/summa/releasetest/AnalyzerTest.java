@@ -69,14 +69,14 @@ public class AnalyzerTest extends TestCase {
 
     private void createIndex() throws Exception {
         log.debug("Creating index");
-        Configuration creatorConf = Configuration.load("analyzer/DocumentCreatorConfiguration.xml");
+        Configuration creatorConf = Configuration.load("integration/analyzer/DocumentCreatorConfiguration.xml");
         StreamingDocumentCreator creator = new StreamingDocumentCreator(creatorConf);
         creator.setSource(new PayloadFeederHelper(getPayloads()));
         List<Payload> processed = extractPayloads(creator);
 
         // We've got Lucene Documents, ready for indexing
 
-        Configuration luceneConf = Configuration.load("analyzer/LuceneConfiguration.xml");
+        Configuration luceneConf = Configuration.load("integration/analyzer/LuceneConfiguration.xml");
         LuceneManipulator lucene = new LuceneManipulator(luceneConf);
         lucene.open(ROOT);
 
@@ -133,7 +133,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     private LuceneSearchNode getLuceneSearchNode() throws IOException {
-        Configuration searchConf = Configuration.load("analyzer/SearchConfiguration.xml");
+        Configuration searchConf = Configuration.load("integration/analyzer/SearchConfiguration.xml");
         LuceneSearchNode sn = new LuceneSearchNode(searchConf);
         sn.open(ROOT.toString());
         assertTrue("There should be at least one document indexed",
@@ -145,7 +145,7 @@ public class AnalyzerTest extends TestCase {
         String[] DOCS = new String[]{"document1.xml"};
         List<Payload> payloads = new ArrayList<Payload>(DOCS.length);
         for (String doc: DOCS) {
-            String content = Resolver.getUTF8Content("analyzer/" + doc);
+            String content = Resolver.getUTF8Content("integration/analyzer/" + doc);
             Record record = new Record(doc, "dummyBase", content.getBytes("utf-8"));
             Payload payload = new Payload(record);
             payloads.add(payload);

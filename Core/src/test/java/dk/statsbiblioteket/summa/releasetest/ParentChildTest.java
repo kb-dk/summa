@@ -211,7 +211,7 @@ public class ParentChildTest extends NoExitTestCase {
         final String HORIZON_DATA = new File(ReleaseTestCommon.DATA_ROOT, "parent-child/horizondump").getAbsolutePath();
         System.setProperty("data", HORIZON_DATA);
         Configuration ingestConf = ReleaseHelper.loadGeneralConfiguration(
-            storage, "parent-child/horizon_ingest_configuration.xml");
+            storage, "integration/parent-child/horizon_ingest_configuration.xml");
         FilterService ingestService = new FilterService(ingestConf);
         try {
             ingestService.start();
@@ -265,7 +265,7 @@ public class ParentChildTest extends NoExitTestCase {
     public Configuration getIndexConfiguration(String storageID) throws Exception {
 
         Configuration indexConf = ReleaseHelper.loadGeneralConfiguration(
-            storageID, "parent-child/index_configuration.xml");
+            storageID, "integration/parent-child/index_configuration.xml");
 
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 

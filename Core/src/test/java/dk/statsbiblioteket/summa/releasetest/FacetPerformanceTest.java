@@ -75,7 +75,7 @@ public class FacetPerformanceTest extends NoExitTestCase {
 
     public static Configuration getSearcherConfiguration() throws Exception {
         Configuration searcherConf = Configuration.load(
-              "facetperformance/FacetPerformance_SearchConfiguration.xml");
+              "integration/facetperformance/FacetPerformance_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX);
@@ -85,15 +85,15 @@ public class FacetPerformanceTest extends NoExitTestCase {
     public static Configuration getIndexConfiguration(int records)
                                                               throws Exception {
         URL descriptorLocation = Resolver.getURL(
-                "facetperformance/FacetPerformance_IndexDescriptor.xml");
+                "integration/facetperformance/FacetPerformance_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
         URL xsltLocation = Resolver.getURL(
-            "facetperformance/fagref/fagref_index.xsl");
+            "integration/facetperformance/fagref/fagref_index.xsl");
         assertNotNull("The XSLT location should not be null",
                       descriptorLocation);
         Configuration indexConf = Configuration.load(
-               "facetperformance/FacetPerformance_IndexConfiguration.xml");
+               "integration/facetperformance/FacetPerformance_IndexConfiguration.xml");
         assertNotNull("The index configuration should not be empty",
                       indexConf);
 

@@ -44,7 +44,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.template.location</key>
-                                    <value class="string">facetperformance/fagref_template.xml</value>
+                                    <value class="string">integration/facetperformance/fagref_template.xml</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.idtemplate</key>

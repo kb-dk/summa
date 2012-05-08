@@ -46,7 +46,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.template.location</key>
-                                    <value class="string">generator/fagref_template.xml</value>
+                                    <value class="string">integration/generator/fagref_template.xml</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.idtemplate</key>

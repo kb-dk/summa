@@ -133,7 +133,7 @@ public class LocalSolrConnectionTest extends TestCase {
     }
 
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
-        String doc1 = Resolver.getUTF8Content("solr/SolrSampleDocument1.xml");
+        String doc1 = Resolver.getUTF8Content("integration/solr/SolrSampleDocument1.xml");
         Payload payload = new Payload(new Record("doc1", "dummy", doc1.getBytes("utf-8")));
         payload.getRecord().setDeleted(deleted);
         return new PayloadFeederHelper(Arrays.asList(payload));

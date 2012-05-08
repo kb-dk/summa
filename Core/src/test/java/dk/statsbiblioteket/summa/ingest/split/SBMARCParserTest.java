@@ -64,7 +64,7 @@ public class SBMARCParserTest extends TestCase {
 
     // TODO: Test 014*z => 014*a (same for 015)
     public ObjectFilter getStreamReader() {
-        URL inputDir = Resolver.getURL("horizon/");
+        URL inputDir = Resolver.getURL("ingest/horizon/");
         log.debug("getStreamReader: Located root " + inputDir.getFile());
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, inputDir.getFile());
@@ -97,7 +97,7 @@ public class SBMARCParserTest extends TestCase {
     }
 
     public void testControlField() throws Exception {
-        URL inputDir = Resolver.getURL("iso2709/");
+        URL inputDir = Resolver.getURL("ingest/iso2709/");
         log.debug("getStreamReader: Located root " + inputDir.getFile());
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, inputDir.getFile());

@@ -197,7 +197,7 @@ public class SummaQueryParserTest extends TestCase {
 
     private SummaQueryParser getQueryParser() throws IOException {
         LuceneIndexDescriptor descriptor = new LuceneIndexDescriptor(
-                       Resolver.getURL("queryparser/IndexDescriptor.xml"));
+                       Resolver.getURL("common/queryparser/IndexDescriptor.xml"));
         Configuration conf = Configuration.newMemoryBased();
         conf.set(SummaQueryParser.CONF_QUERY_TIME_FIELD_BOOSTS, true);
         return new SummaQueryParser(conf, descriptor);

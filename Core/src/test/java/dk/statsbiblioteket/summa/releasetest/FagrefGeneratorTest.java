@@ -107,7 +107,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
                               "Pærer", "Datalogi", "Astrofysik", "Astrologi",
                               "Astronomi", "Tryllebær", "Tegneserier",
                               "Palæontologi", "Drømme", "Kaslafniansk")));
-        conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION, "generator/fagref_template.xml");
+        conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION, "integration/generator/fagref_template.xml");
         return new RecordGenerator(conf);
     }
 
@@ -127,7 +127,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.info("Finished starting Storage in " + storageProfiler.getSpendTime());
         Configuration conf = ReleaseHelper.loadGeneralConfiguration(
-            STORAGE, "generator/generator_configuration.xml");
+            STORAGE, "integration/generator/generator_configuration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
                 set(RecordGenerator.CONF_RECORDS, RECORDS);
@@ -157,7 +157,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         };
         indexProfiler.setExpectedTotal(RECORDS);
         Configuration indexConf = IndexTest.loadFagrefProperties(
-            STORAGE, "search/FacetTest_IndexConfiguration.xml");
+            STORAGE, "integration/search/FacetTest_IndexConfiguration.xml");
         // Facets are no longer defined as part of indexing
 /*        Configuration facetConf =
                 indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).

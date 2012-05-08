@@ -79,7 +79,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"), "testdist");
-    public static final File DESCRIPTOR = Resolver.getFile("distribution/index_descriptor.xml");
+    public static final File DESCRIPTOR = Resolver.getFile("integration/distribution/index_descriptor.xml");
 
     public void testDistributedTermStats() throws Exception {
         assertTrue("There should be an index descriptor " + DESCRIPTOR,
@@ -421,7 +421,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         List<SummaSearcher> searchers = new ArrayList<SummaSearcher>(
                 locations.size());
         Configuration conf = Configuration.load(
-                "distribution/search_configuration.xml");
+                "integration/distribution/search_configuration.xml");
         if (termStatLocation != null) {
             conf.getSubConfiguration(
                     LuceneSearchNode.CONF_TERMSTAT_CONFIGURATION).set(
@@ -454,7 +454,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
                                                             throws Exception {
         
         Configuration indexConf = Configuration.load(
-                "distribution/index_configuration.xml");
+                "integration/distribution/index_configuration.xml");
         indexConf.set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                       destination.getAbsolutePath());
         indexConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).

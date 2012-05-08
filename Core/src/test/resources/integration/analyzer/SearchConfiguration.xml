@@ -5,7 +5,7 @@
             <value class="xproperties">
                 <entry>
                     <key>summa.common.indexdescriptor.absolutelocation</key>
-                    <value class="string">analyzer/Analyzer_IndexDescriptor.xml</value>
+                    <value class="string">integration/analyzer/Analyzer_IndexDescriptor.xml</value>
                 </entry>
             </value>
         </entry>

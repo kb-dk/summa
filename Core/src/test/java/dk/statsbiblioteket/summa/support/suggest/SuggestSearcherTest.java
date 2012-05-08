@@ -52,7 +52,7 @@ public class SuggestSearcherTest extends TestCase {
 
     private SummaSearcher getSearcher() throws Exception {
         Configuration conf =
-                Configuration.load("suggest/SuggestSearch.xml");
+                Configuration.load("support/suggest/SuggestSearch.xml");
         conf.set(SummaSearcherImpl.CONF_STATIC_ROOT, storageRoot.toString());
         conf.set(SuggestSearchNode.CONF_NORMALIZE_QUERIES, false);
         return new SummaSearcherImpl(conf);

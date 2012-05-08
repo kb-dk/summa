@@ -53,13 +53,13 @@ public class XHTMLEntityResolverTest extends TestCase {
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer(new StreamSource(
                 new FileInputStream(Resolver.getFile(
-                        "XHTMLEntityResolver/identity.xslt"))));
+                        "common/XHTMLEntityResolver/identity.xslt"))));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Result result = new StreamResult(out);
         try {
             transformer.transform(new StreamSource(new FileInputStream(
                     Resolver.getFile(
-                            "XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))),
+                            "common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))),
                                   result);
             fail("Transformation of XHTML 1.0 content without DTD-resolving"
                  + " should fail");
@@ -71,17 +71,17 @@ public class XHTMLEntityResolverTest extends TestCase {
 
     public void testEscapingTransformation() throws Exception {
         testEscapingTransformation(
-                "XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml");
+                "common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml");
     }
 
     public void testEscapingTransformation2() throws Exception {
-        testEscapingTransformation("XHTMLEntityResolver/tour_test.xml");
+        testEscapingTransformation("common/XHTMLEntityResolver/tour_test.xml");
     }
 
     public void testEscapingTransformationNondeclared() throws Exception {
         try {
             testEscapingTransformation(
-                    "XHTMLEntityResolver/webpage_html-nondeclared.html");
+                    "common/XHTMLEntityResolver/webpage_html-nondeclared.html");
         } catch(Exception e) {
             e.printStackTrace();
             fail("Should be fixed");
@@ -93,7 +93,7 @@ public class XHTMLEntityResolverTest extends TestCase {
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer(new StreamSource(
                 new FileInputStream(Resolver.getFile(
-                        "XHTMLEntityResolver/identity.xslt"))));
+                        "common/XHTMLEntityResolver/identity.xslt"))));
 
         XMLReader reader = XMLReaderFactory.createXMLReader();
         reader.setEntityResolver(new XHTMLEntityResolver(null));

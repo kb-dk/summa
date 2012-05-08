@@ -47,7 +47,7 @@ public class IndexBuilder {
     public static final File INDEX_ROOT =
             new File("target/tmp/", "index_root");
     public static final File DESCRIPTOR =
-            new File(INDEX_ROOT, "TestIndexDescriptor.xml");
+            new File(INDEX_ROOT, "facetbrowser/TestIndexDescriptor.xml");
     public static final File DATE_LOCATION =
             new File(INDEX_ROOT, "20080904-143735");
     public static final String INDEX_LOCATION =
@@ -175,7 +175,7 @@ public class IndexBuilder {
                          TIMESTAMP_FILE);
 
         Files.saveString(
-                Resolver.getUTF8Content("TestIndexDescriptor.xml"),
+                Resolver.getUTF8Content("facetbrowser/TestIndexDescriptor.xml"),
                 DESCRIPTOR);
 
         System.out.println("Finished creating test-index in "

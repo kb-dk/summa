@@ -48,7 +48,7 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
      * @throws Exception If error occur.
      */
     public RemoteStorageTest() throws Exception {
-        super(new FileStorage("configurationFiles/configuration.xml"));
+        super(new FileStorage("common/configurationFiles/configuration.xml"));
         testName = this.getClass().getSimpleName();
     }
 

@@ -90,7 +90,7 @@ public class SearchPerformanceMediator {
     public static final String CONF_QUERIES_FILE =
             "summa.performance.queries.file";
     public static final String DEFAULT_QUERIES_FILE =
-            "performance/queries.dat";
+            "integration/performance/queries.dat";
 
     /**
      * A list of the fields to extract for each hit.
@@ -110,7 +110,7 @@ public class SearchPerformanceMediator {
     public static final String CONF_INDEX_DESCRIPTOR =
             "summa.performance.index.descriptor";
     public static final String DEFAULT_INDEX_DESCRIPTOR =
-            "index/IndexDescriptor.xml";
+            "performance/index/IndexDescriptor.xml";
 
     public int maxHits;
     public boolean simulate;

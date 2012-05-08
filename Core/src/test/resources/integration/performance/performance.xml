@@ -6,7 +6,7 @@
         
         <entry>
             <key>summa.performance.index.location</key>
-            <value class="string">performance/index</value>
+            <value class="string">integration/performance/index</value>
         </entry>
         <entry>
             <key>summa.performance.dir.type</key>
@@ -48,7 +48,7 @@
         </entry>
         <entry>
             <key>summa.performance.queries.file</key>
-            <value class="string">performance/queries.dat</value>
+            <value class="string">integration/performance/queries.dat</value>
         </entry>
         <entry>
             <key>summa.performance.fields</key>
@@ -56,7 +56,7 @@
         </entry>
         <entry>
             <key>summa.performance.index.descriptor</key>
-            <value class="string">performance/index/IndexDescriptor.xml</value>
+            <value class="string">integration/performance/index/IndexDescriptor.xml</value>
         </entry>
     </xproperties>
 </xproperties>

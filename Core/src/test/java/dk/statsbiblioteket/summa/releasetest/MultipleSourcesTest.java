@@ -80,7 +80,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
     }
 
     public void testHorizonIngest() throws Exception {
-        testSpecificIngest("horizon");
+        testSpecificIngest("integration/horizon");
     }
     public void testCSAIngest() throws Exception {
         testSpecificIngest("csa");
@@ -333,7 +333,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
     private Configuration getIndexConfiguration() throws Exception {
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "multiple/index_configuration.xml").
+                        "integration/multiple/index_configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 

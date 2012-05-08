@@ -78,7 +78,7 @@ public class XMLSplitterHandlerTest extends TestCase implements
         parser.setProperty(XMLSplitterParser.LEXICAL_HANDLER, handler);
 
         Payload payload = new Payload(Resolver.getURL(
-                "double_default_oai.xml").openStream());
+                "ingest/double_default_oai.xml").openStream());
         parser.parse(payload.getStream(), handler);
         assertEquals("the right number of Records should be produced",
                      1, received.size());
