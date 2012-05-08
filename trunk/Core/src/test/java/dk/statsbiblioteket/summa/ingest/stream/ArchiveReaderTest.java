@@ -32,7 +32,7 @@ public class ArchiveReaderTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        File t = Resolver.getFile("zip");
+        File t = Resolver.getFile("ingest/zip");
         assertTrue(
             "The test data source 'zip' should exist", t.exists());
         TMP = new File(t.getParent(), "ZIPTMP").getAbsoluteFile();

@@ -262,7 +262,7 @@ public class IngestTest extends NoExitTestCase {
         final String STORAGE_NAME = "serviceflow_storage";
 
         File dataLocation = new File(Resolver.getURL(
-                "5records").getFile());
+                "integration/5records").getFile());
         assertTrue("The test-data should be present at " + dataLocation,
                    dataLocation.exists());
 
@@ -271,7 +271,7 @@ public class IngestTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
 
         File filterConfFile = new File(Resolver.getURL(
-                "5records/filter_setup.xml").getFile());
+                "integration/5records/filter_setup.xml").getFile());
         assertTrue("The filter conf. '" + filterConfFile + "' should exist",
                    filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());

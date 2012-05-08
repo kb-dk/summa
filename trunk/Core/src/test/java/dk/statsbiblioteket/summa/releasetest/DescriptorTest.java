@@ -74,12 +74,12 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private Configuration getStaticSearcherConfiguration() throws Exception {
-        URL descriptorLocation = Resolver.getURL("descriptor/DescriptorTest_IndexDescriptor.xml");
+        URL descriptorLocation = Resolver.getURL("integration/descriptor/DescriptorTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
         Configuration searcherConf = Configuration.load(
-            "descriptor/StaticDescriptor_SearchConfiguration.xml");
+            "integration/descriptor/StaticDescriptor_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -91,7 +91,7 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     private Configuration getCopySearcherConfiguration() throws IOException {
-        Configuration searcherConf = Configuration.load("descriptor/CopyDescriptor_SearchConfiguration.xml");
+        Configuration searcherConf = Configuration.load("integration/descriptor/CopyDescriptor_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, SearchTest.INDEX_ROOT.toString());
@@ -164,28 +164,28 @@ public class DescriptorTest extends NoExitTestCase {
     public void testUpdateCopySearch() throws Exception {
         final String STORAGE = "updatecopy_storage";
         Configuration conf = IndexTest.loadFagrefProperties(
-            STORAGE, "descriptor/DescriptorTest_IndexFullConfiguration.xml");
+            STORAGE, "integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testUpdateStaticSearch() throws Exception {
         final String STORAGE = "updatestatic_storage";
         Configuration conf = IndexTest.loadFagrefProperties(
-            STORAGE, "descriptor/DescriptorTest_IndexFullConfiguration.xml");
+            STORAGE, "integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getStaticSearcherConfiguration(), "author");
     }
 
     public void testFullStaticSearch() throws Exception {
         final String STORAGE = "fullstatic_storage";
         Configuration conf = IndexTest.loadFagrefProperties(
-            STORAGE, "descriptor/DescriptorTest_IndexFullConfiguration.xml");
+            STORAGE, "integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getCopySearcherConfiguration(), "author");
     }
 
     public void testFullCopySearch() throws Exception {
         final String STORAGE = "fullcopy_storage";
         Configuration conf = IndexTest.loadFagrefProperties(
-            STORAGE, "descriptor/DescriptorTest_IndexFullConfiguration.xml");
+            STORAGE, "integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         testFacetSearch(STORAGE, conf, getStaticSearcherConfiguration(), "author");
     }
 
@@ -199,8 +199,8 @@ public class DescriptorTest extends NoExitTestCase {
 
         log.debug("Creating initial index");
         Configuration indexFullConf = IndexTest.loadFagrefProperties(
-            STORAGE, "descriptor/DescriptorTest_IndexFullConfiguration.xml");
-        URL basicDescriptor = Resolver.getURL("descriptor/DescriptorTest_IndexDescriptor.xml");
+            STORAGE, "integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        URL basicDescriptor = Resolver.getURL("integration/descriptor/DescriptorTest_IndexDescriptor.xml");
         index(indexFullConf, basicDescriptor);
 
         log.debug("Testing initial index, copy searcher");
@@ -222,7 +222,7 @@ public class DescriptorTest extends NoExitTestCase {
         //indexFullConf = Configuration.load("descriptor/DescriptorTest_IndexFullConfiguration.xml");
 
         oldLocation = searcher.getIndexLocation();
-        URL extraDescriptor = Resolver.getURL("descriptor/DescriptorTest_IndexDescriptorExtra.xml");
+        URL extraDescriptor = Resolver.getURL("integration/descriptor/DescriptorTest_IndexDescriptorExtra.xml");
         index(indexFullConf, extraDescriptor);
         log.debug("Verifying that new index contains new facet");
         searcher.checkIndex();
@@ -293,17 +293,17 @@ public class DescriptorTest extends NoExitTestCase {
     }
 
     public void fullIndex() throws Exception {
-        Configuration conf = Configuration.load("descriptor/DescriptorTest_IndexFullConfiguration.xml");
+        Configuration conf = Configuration.load("integration/descriptor/DescriptorTest_IndexFullConfiguration.xml");
         index(conf);
     }
 
     public void updateIndex() throws Exception {
-        Configuration conf = Configuration.load("descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
+        Configuration conf = Configuration.load("integration/descriptor/DescriptorTest_IndexUpdateConfiguration.xml");
         index(conf);
     }
 
     public void index(Configuration conf) throws Exception {
-        URL descriptorLocation = Resolver.getURL("descriptor/DescriptorTest_IndexDescriptor.xml");
+        URL descriptorLocation = Resolver.getURL("integration/descriptor/DescriptorTest_IndexDescriptor.xml");
         index(conf, descriptorLocation);
     }
 
@@ -318,7 +318,7 @@ public class DescriptorTest extends NoExitTestCase {
 
     private void updateIndexConfiguration(
             Configuration conf, URL descriptorLocation) throws Exception {
-        URL xsltLocation = Resolver.getURL("search/fagref_xslt/fagref_index.xsl");
+        URL xsltLocation = Resolver.getURL("integration/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
                       xsltLocation);
         assertNotNull("The descriptor location should not be null",

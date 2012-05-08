@@ -495,10 +495,10 @@ public class IterativeTest extends NoExitTestCase {
 
     private Configuration getIndexConfiguration() throws IOException {
         String descriptorLocation = Resolver.getURL(
-                "iterative/IterativeTest_IndexDescriptor.xml")
+                "integration/iterative/IterativeTest_IndexDescriptor.xml")
                 .getFile();
         String confString = Resolver.getUTF8Content(
-                "iterative/IterativeTest_IndexConfiguration.xml");
+                "integration/iterative/IterativeTest_IndexConfiguration.xml");
         log.debug("Replacing [IndexDescriptorLocation] with "
                   + descriptorLocation);
         confString = confString.replaceAll("\\[IndexDescriptorLocation\\]",

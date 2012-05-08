@@ -64,13 +64,13 @@ public class SearchTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(SearchTest.class);
 
     public final static String fagref_hj =
-        Resolver.getFile("search/input/part1").getAbsolutePath();
+        Resolver.getFile("integration/search/input/part1").getAbsolutePath();
     public final static String fagref_jh_gm =
-        Resolver.getFile("search/input/part2").getAbsolutePath();
+        Resolver.getFile("integration/search/input/part2").getAbsolutePath();
     public final static String fagref_1plus2 =
-        Resolver.getFile("search/input/part1plus2").getAbsolutePath();
+        Resolver.getFile("integration/search/input/part1plus2").getAbsolutePath();
     public final static String fagref_clone =
-        Resolver.getFile("search/input/partClone").getAbsolutePath();
+        Resolver.getFile("integration/search/input/partClone").getAbsolutePath();
 
     @Override
     public void setUp () throws Exception {
@@ -97,7 +97,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public static File root = new File(Resolver.getURL(
-            "search/SearchTest_IngestConfiguration.xml").
+            "integration/search/SearchTest_IngestConfiguration.xml").
             getFile()).getParentFile();
     public static String BASE = "fagref";
 
@@ -127,7 +127,7 @@ public class SearchTest extends NoExitTestCase {
         PayloadFeederHelper feeder =
             new PayloadFeederHelper(Arrays.asList(payload));
                                                         
-        Configuration conf = Configuration.load("search/SearchTest_IngestConfiguration.xml");
+        Configuration conf = Configuration.load("integration/search/SearchTest_IngestConfiguration.xml");
         Configuration writerConf =
             conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
@@ -172,10 +172,10 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private Configuration getSearcherConfiguration() throws Exception {
-        URL descriptorLocation = Resolver.getURL("search/SearchTest_IndexDescriptor.xml");
+        URL descriptorLocation = Resolver.getURL("integration/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null", descriptorLocation);
 
-        Configuration searcherConf = Configuration.load("search/SearchTest_SearchConfiguration.xml");
+        Configuration searcherConf = Configuration.load("integration/search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty",
                       searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -241,7 +241,7 @@ public class SearchTest extends NoExitTestCase {
   */
     public static void updateIndex(String storageID) throws Exception {
         Configuration indexConf = IndexTest.loadFagrefProperties(
-            storageID, "search/SearchTest_IndexConfiguration.xml");
+            storageID, "integration/search/SearchTest_IndexConfiguration.xml");
         IndexTest.updateIndex(indexConf);
     }
 

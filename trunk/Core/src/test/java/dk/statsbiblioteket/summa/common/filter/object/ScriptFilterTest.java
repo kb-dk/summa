@@ -125,7 +125,7 @@ public class ScriptFilterTest extends TestCase {
 
     public void testInlineScript() throws Exception {
         ObjectFilter filter = new ScriptFilter(
-                                           Configuration.load("inline-js.xml"));
+                                           Configuration.load("common/inline-js.xml"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
                        new Record("id1", "base1", "test content 1".getBytes()));
@@ -140,7 +140,7 @@ public class ScriptFilterTest extends TestCase {
     public void testJavaCallbacksExternal() throws Exception {
         ObjectFilter filter = new ScriptFilter(
               Configuration.newMemoryBased(
-                      ScriptFilter.CONF_SCRIPT_URL, "java-callbacks.js"
+                      ScriptFilter.CONF_SCRIPT_URL, "common/java-callbacks.js"
               ));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,

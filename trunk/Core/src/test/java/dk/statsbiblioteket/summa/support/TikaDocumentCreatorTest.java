@@ -48,12 +48,12 @@ public class TikaDocumentCreatorTest extends TestCase {
     }
 
     public void testStrictXHTML() throws Exception {
-        String descriptorLocation = "tika/TikaTest_IndexDescriptor.xml";
+        String descriptorLocation = "support/tika/TikaTest_IndexDescriptor.xml";
 
         Payload strict = new Payload(new FileInputStream(Resolver.getFile(
-                "tika/strict1.xhtml")));
+                "support/tika/strict1.xhtml")));
         Payload lax = new Payload(new FileInputStream(Resolver.getFile(
-                "tika/lax1.xhtml")));
+                "support/tika/lax1.xhtml")));
         PayloadFeederHelper feeder =
                 new PayloadFeederHelper(Arrays.asList(strict, lax));
         Configuration conf = Configuration.newMemoryBased();

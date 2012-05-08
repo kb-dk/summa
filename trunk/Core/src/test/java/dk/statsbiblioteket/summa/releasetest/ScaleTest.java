@@ -97,19 +97,19 @@ public class ScaleTest extends NoExitTestCase {
 
     private Configuration getConfiguration() throws Exception {
         Configuration conf =
-                Configuration.load("scale/scale_configuration.xml");
+                Configuration.load("integration/scale/scale_configuration.xml");
         List<Configuration> filters =
                 conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
 
         // Generator
         filters.get(0).set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION,
-                           Resolver.getFile("scale/fagref_template.xml").
+                           Resolver.getFile("integration/scale/fagref_template.xml").
                                    getAbsolutePath());
 
         // Fagref-XSLT
         String xsltLocation =
-                Resolver.getURL("scale/xslt/fagref_index.xsl").getFile();
+                Resolver.getURL("integration/scale/xslt/fagref_index.xsl").getFile();
         filters.get(1).set(XMLTransformer.CONF_XSLT, xsltLocation);
 
         // OldToNew
@@ -119,7 +119,7 @@ public class ScaleTest extends NoExitTestCase {
 
         // Document creator
         String descriptorLocation = Resolver.getURL(
-                "scale/scale_index_descriptor.xml").getFile();
+                "integration/scale/scale_index_descriptor.xml").getFile();
         log.debug("Descriptor location: " + descriptorLocation);
         filters.get(3).getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);

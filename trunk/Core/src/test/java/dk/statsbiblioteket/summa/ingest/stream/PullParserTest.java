@@ -56,8 +56,8 @@ public class PullParserTest extends TestCase {
         ObjectFilter puller = new StreamController(conf);
 
         String urls =
-                Resolver.getURL("filereader/dummyA.xml").toString() + "\n"
-                + Resolver.getURL("filereader/dummyC.xml").toString();
+                Resolver.getURL("ingest/filereader/dummyA.xml").toString() + "\n"
+                + Resolver.getURL("ingest/filereader/dummyC.xml").toString();
         Payload sourcePayload = new Payload(
                 new ByteArrayInputStream(urls.getBytes("utf-8")));
         PayloadFeederHelper feeder = new PayloadFeederHelper(

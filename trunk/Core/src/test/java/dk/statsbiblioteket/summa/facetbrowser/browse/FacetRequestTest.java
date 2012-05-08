@@ -44,7 +44,7 @@ public class FacetRequestTest extends TestCase {
 
     public void testTrivialParse() throws Exception {
         Structure structure = new Structure(Resolver.getURL(
-                "TestIndexDescriptor.xml"));
+                "facetbrowser/TestIndexDescriptor.xml"));
         assertEquals("The facets should be as expected",
                      "a, foo", Strings.join(structure.getFacetNames(), ", "));
         FacetRequest request = new FacetRequest(
@@ -55,7 +55,7 @@ public class FacetRequestTest extends TestCase {
 
     public void testAdvancedParse() throws Exception {
         Structure structure = new Structure(Resolver.getURL(
-                "TestIndexDescriptor.xml"));
+                "facetbrowser/TestIndexDescriptor.xml"));
         // input, expected
         String[][] TESTS = new String[][]{
                 {"a", "a (15 POPULARITY)"},

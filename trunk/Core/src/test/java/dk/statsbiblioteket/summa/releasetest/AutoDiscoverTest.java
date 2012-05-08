@@ -90,14 +90,14 @@ public class AutoDiscoverTest extends TestCase {
 
     private File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
     private String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
-    private File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("auto/data"));
+    private File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("integration/auto/data"));
 
     private List<String> TEST_FILES = Arrays.asList(
             "gurli.margrethe.xml", "hans.jensen.xml", "jens.hansen.xml");
     private String FAGREF_XSLT = Resolver.urlToFile(Resolver.getURL(
-            "search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
+            "integration/search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
     private String INDEX_DESCRIPTOR =
-            Resolver.getURL("auto/setup/IndexDescriptor.xml").getFile();
+            Resolver.getURL("integration/auto/setup/IndexDescriptor.xml").getFile();
 
     private void putFiles() throws Exception {
         for (String file: TEST_FILES) {
@@ -133,7 +133,7 @@ public class AutoDiscoverTest extends TestCase {
 
     private FilterService createIngestChain(String storage) throws Exception {
         Configuration conf = ReleaseHelper.loadGeneralConfiguration(
-            storage, "auto/setup/IngestConfiguration.xml");
+            storage, "integration/auto/setup/IngestConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
@@ -156,7 +156,7 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     private Service createIndexer(String storage) throws Exception {
-        Configuration conf = IndexTest.loadFagrefProperties(storage, "auto/setup/IndexConfiguration.xml");
+        Configuration conf = IndexTest.loadFagrefProperties(storage, "integration/auto/setup/IndexConfiguration.xml");
         // Special IndexDescriptor (do we really need it or can we just use fagref descriptor?)
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
@@ -307,7 +307,7 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     private SearchService createSearcher() throws Exception {
-        Configuration conf = IndexTest.loadFagrefProperties("not_used", "auto/setup/SearchConfiguration.xml");
+        Configuration conf = IndexTest.loadFagrefProperties("not_used", "integration/auto/setup/SearchConfiguration.xml");
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);

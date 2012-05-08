@@ -36,11 +36,11 @@ public class TransformCallbackTest extends TestCase {
     private static Log log = LogFactory.getLog(TransformCallbackTest.class);
 
     private static final String XSLTLocationString =
-            "transformCallback/getLikes.xsl";
+            "index/transformCallback/getLikes.xsl";
     private static final String XMLLocationString =
-            "transformCallback/callback_input.xml";
+            "index/transformCallback/callback_input.xml";
     private static final String XMLLocationStringNoName =
-            "transformCallback/callback_input_nonamespace.xml";
+            "index/transformCallback/callback_input_nonamespace.xml";
 
     public void testCallback() throws Exception {
         Properties prop = new Properties();

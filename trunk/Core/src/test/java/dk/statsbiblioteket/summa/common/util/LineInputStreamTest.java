@@ -53,7 +53,7 @@ public class LineInputStreamTest extends TestCase {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void testRealFile() throws Exception {
         FileInputStream is = new FileInputStream(Resolver.getFile(
-                "LineInputStream/white.xml"));
+                "common/LineInputStream/white.xml"));
         LineInputStream lis = new LineInputStream(is);
         String line;
         int lc = 0;

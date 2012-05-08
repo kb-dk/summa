@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 public class ConfigurationStorageTestCase extends TestCase {
     private static Log log = LogFactory.getLog(ConfigurationStorageTestCase.class);
     static final String CONFIGNAME =
-            "target/test-classes/configurationFiles/configuration.xml";
+            "target/test-classes/common/configurationFiles/configuration.xml";
     public ConfigurationStorage storage;
     public String testName;
 

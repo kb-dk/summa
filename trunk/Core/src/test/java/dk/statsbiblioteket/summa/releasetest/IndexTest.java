@@ -82,7 +82,7 @@ public class IndexTest extends NoExitTestCase {
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
         Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "search/IndexTest_IndexConfiguration.xml");
+            STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
         updateIndex(indexConf);
         assertEquals("After update one the number of indexes should be correct",
                      1, countIndexes());
@@ -99,7 +99,7 @@ public class IndexTest extends NoExitTestCase {
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
         Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "search/IndexTest_IndexConfiguration.xml");
+            STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
 //                getSubConfiguration("IndexUpdate").
@@ -135,16 +135,16 @@ public class IndexTest extends NoExitTestCase {
         // Index chain setup
         URL xsltLocation =
                 Thread.currentThread().getContextClassLoader().getResource(
-                        "fagref/fagref_index.xsl");
+                        "integration/fagref/fagref_index.xsl");
         assertNotNull("The original xslt location should not be null",
                       xsltLocation);
         String descriptorLocation =
                 "file://"
                 + Thread.currentThread().getContextClassLoader().getResource(
-                        "fagref/fagref_IndexDescriptor.xml").getFile();
+                        "integration/fagref/fagref_IndexDescriptor.xml").getFile();
 //        System.out.println(descriptorLocation);
         Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "fagref/fagref_index_setup.xml");
+            STORAGE_ID, "integration/fagref/fagref_index_setup.xml");
 
         assertNotNull(
             "Configuration should contain " + FilterControl.CONF_CHAINS,
@@ -185,7 +185,7 @@ public class IndexTest extends NoExitTestCase {
 
     public void testGetResource() {
         URL dataLocation = Resolver.getURL(
-            "fagref/fagref_testdata.txt");
+            "integration/fagref/fagref_testdata.txt");
         assertNotNull("The test data resource (.txt) should not be null",
                       dataLocation);
     }
@@ -195,13 +195,13 @@ public class IndexTest extends NoExitTestCase {
     public static void fillStorage(String storage) throws Exception {
         // Ingest
         URL dataLocation = Resolver.getURL(
-            "fagref/fagref_testdata.txt");
+            "integration/fagref/fagref_testdata.txt");
         assertNotNull("The data location should not be null", dataLocation);
         File ingestRoot = new File(dataLocation.getFile()).getParentFile();
         System.setProperty("fagref_filter_storage",
                            ReleaseHelper.STORAGE_RMI_PREFIX + storage);
         String filterConfString = Streams.getUTF8Resource(
-                    "fagref/fagref_filter_setup.xml");
+                    "integration/fagref/fagref_filter_setup.xml");
         filterConfString = filterConfString.replace(
                     "/tmp/summatest/data/fagref", ingestRoot.toString());
         assertFalse("Replace should work",
@@ -227,7 +227,7 @@ public class IndexTest extends NoExitTestCase {
 
         Record gurli = ReleaseHelper.getRecords(storage).get(0);
         String fileContent =
-                Resolver.getUTF8Content("fagref/gurli.margrethe.xml");
+                Resolver.getUTF8Content("integration/fagref/gurli.margrethe.xml");
         assertEquals("The stored content should match the file-content",
                      fileContent.trim(), gurli.getContentAsUTF8().trim());
     }
@@ -259,13 +259,13 @@ public class IndexTest extends NoExitTestCase {
 
     private static void setFagrefProperties(String storageID) {
         URL xsltLocation = Resolver.getURL(
-                "search/fagref_xslt/fagref_index.xsl");
+                "integration/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
                       xsltLocation);
         System.setProperty("fagref_xslt", xsltLocation.getFile());
 
         URL descriptorLocation = Resolver.getURL(
-                "search/SearchTest_IndexDescriptor.xml");
+                "integration/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
         System.setProperty("fagref_descriptor", descriptorLocation.getFile());

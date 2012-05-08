@@ -130,7 +130,7 @@ public class ThreadedStreamParserTest extends TestCase {
         // No resolving of external DTDs
         inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         XMLStreamReader reader = inputFactory.createXMLStreamReader(
-                Resolver.getURL("double_default_oai.xml").openStream(),
+                Resolver.getURL("ingest/double_default_oai.xml").openStream(),
                 "utf-8");
         while (reader.hasNext()) {
             reader.next();

@@ -42,12 +42,12 @@ import junit.framework.TestSuite;
 public class ConfigurationTest extends TestCase {
     /** Configurations XML. */
     private static final String CONFIGURATIONXML =
-        "configurationFiles/configuration.xml";
+        "common/configurationFiles/configuration.xml";
     /** Simple storage XML. */
     private static final String SIMPLEXSTORAGEXML =
-        "configurationFiles/simple_xstorage.xml";
+        "common/configurationFiles/simple_xstorage.xml";
     private static final String STRINGSXML =
-        "configurationFiles/string_list_xstorage.xml";
+        "common/configurationFiles/string_list_xstorage.xml";
     /** TMP path. */
     private static final String TMP = "target/tmp";
 
@@ -507,16 +507,16 @@ public class ConfigurationTest extends TestCase {
 
     public void testPathEscape() {
         assertTrue("mykey should exist in XProperties in plainPath",
-                   Configuration.load("plainPath/simpleconf.xml").
+                   Configuration.load("common/plainPath/simpleconf.xml").
                            valueExists("mykey"));
         assertTrue("mykey should exist in XProperties in special#%Path",
-                   Configuration.load("special#%Path/simpleconf.xml").
+                   Configuration.load("common/special#%Path/simpleconf.xml").
                            valueExists("mykey"));
         assertTrue("myOldKey should exist in Properties in plainPath",
-                   Configuration.load("plainPath/oldconf.xml").
+                   Configuration.load("common/plainPath/oldconf.xml").
                            valueExists("myOldKey"));
         assertTrue("myOldKey should exist in Properties in special#%Path",
-                   Configuration.load("special#%Path/oldconf.xml").
+                   Configuration.load("common/special#%Path/oldconf.xml").
                            valueExists("myOldKey"));
     }
 
@@ -558,22 +558,22 @@ public class ConfigurationTest extends TestCase {
     public final void testDefaultResources() {
         /** Configurations paths. */
         final String[] defaultResources = {
-            "configuration.xml",
-            "configuration.js",
-            "config.xml",
-            "config.js",
-            "properties.xml",
-            "properties.js",
-            "configuration.properties",
-            "config.properties",
-            "config/configuration.xml",
-            "config/configuration.js",
-            "config/config.xml",
-            "config/config.js",
-            "config/properties.xml",
-            "config/properties.js",
-            "config/configuration.properties",
-            "config/config.properties"
+            "common/configuration.xml",
+            "common/configuration.js",
+            "common/config.xml",
+            "common/config.js",
+            "common/properties.xml",
+            "common/properties.js",
+            "common/configuration.properties",
+            "common/config.properties",
+            "common/config/configuration.xml",
+            "common/config/configuration.js",
+            "common/config/config.xml",
+            "common/config/config.js",
+            "common/config/properties.xml",
+            "common/config/properties.js",
+            "common/config/configuration.properties",
+            "common/config/config.properties"
         };
         for (int i = 0; i < defaultResources.length; i++) {
             assertEquals(defaultResources[i],
