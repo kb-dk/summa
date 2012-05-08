@@ -1,4 +1,0 @@
-tclsh graph_size.tcl metis_15000_RAID1_8GB_i37_t1.log metis_15000_RAID1_8GB_i37_t2.log  metis_15000_RAID1_8GB_i37_t4.log harddisk_threading
-
-tclsh graph_size.tcl metis_flash_RAID0_8GB_i37_t1.log metis_flash_RAID0_8GB_i37_t2.log metis_flash_RAID0_8GB_i37_t4.log ssd_threading
-
