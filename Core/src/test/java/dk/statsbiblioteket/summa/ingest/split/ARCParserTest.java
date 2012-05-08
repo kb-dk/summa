@@ -43,8 +43,8 @@ public class ARCParserTest extends TestCase {
         return new TestSuite(ARCParserTest.class);
     }
 
-    public static final File SAMPLE = new File("target/test-classes/arc/summa_test_arc_file.arc");
-    public static final File ZIP = new File("target/test-classes/arc/summa_test_arc_file.zip");
+    public static final File SAMPLE = new File("target/test-classes/ingest/arc/summa_test_arc_file.arc");
+    public static final File ZIP = new File("target/test-classes/ingest/arc/summa_test_arc_file.zip");
     
 
     public void testPacked() {
