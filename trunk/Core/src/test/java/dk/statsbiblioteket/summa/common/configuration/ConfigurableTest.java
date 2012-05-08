@@ -44,7 +44,7 @@ public class ConfigurableTest extends TestCase {
     public void testStorageInstantiations() {
         Configuration base = null;
         try {
-            base = new Configuration(new FileStorage("configuration.xml"));
+            base = new Configuration(new FileStorage("common/configuration.xml"));
         } catch(Exception e) {
             fail("Exception not expected when creating a new FileStorage");
         }
