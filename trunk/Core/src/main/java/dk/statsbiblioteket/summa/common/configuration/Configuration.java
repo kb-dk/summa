@@ -67,6 +67,24 @@ public class Configuration implements Serializable,
      * can be found under {@link #CONF_CONFIGURATION_PROPERTY}.
      */
     public static final String[] DEFAULT_RESOURCES = {
+        //For summarize
+    	"configuration.xml",
+        "configuration.js",
+        "config.xml",
+        "config.js",
+        "properties.xml",
+        "properties.js",
+        "configuration.properties",
+        "config.properties",
+        "config/configuration.xml",
+        "config/configuration.js",
+        "config/config.xml",
+        "config/config.js",
+        "config/properties.xml",
+        "config/properties.js",
+        "config/configuration.properties",
+        "config/config.properties",    	
+    	//For unittests
         "common/configuration.xml",
         "common/configuration.js",
         "common/config.xml",
