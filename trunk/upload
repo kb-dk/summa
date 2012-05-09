@@ -14,10 +14,10 @@ then
 fi
 USER=$1
 
-cd Samples/Summix/target
+cd Summix/target
 VERSION=`ls *SNAPSHOT.zip | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
 
-FOLDER=$VERSION-l4exp-SNAPSHOT
+FOLDER=$VERSION-trunk-SNAPSHOT
 if [ ! -d $FOLDER ]
 then
     mkdir $FOLDER
