@@ -81,7 +81,8 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static final File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"), "testdist");
     public static final File DESCRIPTOR = Resolver.getFile("integration/distribution/index_descriptor.xml");
 
-    public void testDistributedTermStats() throws Exception {
+    // Disabled as merge has not (and probably never will) been implemented
+/*    public void testDistributedTermStats() throws Exception {
         assertTrue("There should be an index descriptor " + DESCRIPTOR,
                    DESCRIPTOR.exists());
         List<File> indexLocations = createThreeIndexes();
@@ -138,7 +139,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         aggregator.close();
         close(searchers);
     }
-
+*/
     /* Create an updated TermStat. Does not close the given TermStat */
     private TermStat updateCount(TermStat termStat, String term, int count)
                                                               throws Exception {
