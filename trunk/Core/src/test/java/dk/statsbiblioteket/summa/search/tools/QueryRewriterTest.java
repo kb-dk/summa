@@ -233,10 +233,10 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testTerseParentheses() throws ParseException {
-        assertEquals("The rewritten Query should be with parentheses", "+(+foo +bar)",
+        assertEquals("The rewritten Query should be with parentheses", "(+\"foo\" +\"bar\")",
                      new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, false), null,
                                        new QueryRewriter.Event()).rewrite("foo bar"));
-        assertEquals("The rewritten Query should be without parentheses", "(+foo +bar)",
+        assertEquals("The rewritten Query should be without parentheses", "\"foo\" \"bar\"",
                      new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true), null,
                                        new QueryRewriter.Event()).rewrite("foo bar"));
     }
