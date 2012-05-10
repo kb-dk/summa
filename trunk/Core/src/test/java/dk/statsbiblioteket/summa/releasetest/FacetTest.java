@@ -707,11 +707,13 @@ public class FacetTest extends NoExitTestCase {
         hans.setDeleted(true);
         //***
         //This update does not work for some reason. Storage-record is not changed
-        // and program does not even enter the storage-code to update/insert records. 
+        // and program does not even enter the storage-code to update/insert records.
         //Hard to figure out what happens.
-        SearchTest.update(hans);
+        SearchTest.update(STORAGE, hans);
 
-        
+        Thread.sleep(200);
+
+
         hans = storage.getRecord(HANS, null);
         long deleteModTime = hans.getModificationTime();
         assertTrue("The Hans-Record should be marked as deleted but was " + hans,
