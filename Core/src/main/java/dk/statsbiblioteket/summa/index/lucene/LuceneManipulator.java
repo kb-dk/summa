@@ -526,12 +526,11 @@ public class LuceneManipulator implements IndexManipulator {
     /* Note: Sets executor = null */
     private void flushPending() {
         if (executor == null) {
-            log.debug("Nothing to flush");
+            log.debug("flushPending(): No pending index update jobs");
             return;
         }
 
-        log.debug("Waiting for " + available.size()
-                  + " pending jobs to finish");
+        log.debug("Waiting for " + available.size() + " pending jobs to finish");
         try {
             executor.shutdown();
             executor.awaitTermination(10, TimeUnit.MINUTES);
