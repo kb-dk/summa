@@ -28,8 +28,11 @@ import java.io.StringWriter;
 import java.util.*;
 
 /**
- * Utility class for converting filter queries into facet queries conforming to the Solr API:
+ * Utility class for converting filter queries into facet queries for Solr.
+ * Originally an utility class for converting queries into the summon API
  * http://api.summon.serialssolutions.com/help/api/search/parameters/facet-value-filter
+ * but this functionality should now be handled by overriding
+ * {@link #addFacetQuery(java.util.Map, String, String, boolean)}.
  * </p><p>
  * Note that a complete transformation is not possible, e.g. {@code moo:boo NOT (foo:bar AND zoo:baz)}.
  * In case of incomplete transformations, the whole result is discarded.

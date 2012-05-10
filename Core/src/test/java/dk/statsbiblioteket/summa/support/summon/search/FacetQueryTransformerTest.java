@@ -42,7 +42,13 @@ public class FacetQueryTransformerTest extends TestCase {
         String QUERY = "foo:bar -zoo:baz +ak:ve AND loo:poo NOT bum:bam";
         String[] EXPECTED = new String[]{
             "foo,bar,false", "zoo,baz,true", "ak,ve,false", "loo,poo,false", "bum,bam,true"};
-        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased());
+        FacetQueryTransformer fqt = new FacetQueryTransformer(Configuration.newMemoryBased()) {
+            @Override
+            protected void addFacetQuery(
+                Map<String, List<String>> queryMap, String field, String value, boolean negated) {
+                append(queryMap, "s.fvf", field + "," + value + "," + negated);
+            }
+        };
         Map<String, List<String>> result = fqt.convertQueryToFacet(QUERY);
         assertEquals("Only a single entry should be generated", 1, result.size());
         List<String> resultList = result.entrySet().iterator().next().getValue();
