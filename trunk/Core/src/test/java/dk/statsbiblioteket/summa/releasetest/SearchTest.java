@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.Security;
@@ -34,6 +35,7 @@ import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
+import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -132,6 +134,25 @@ public class SearchTest extends NoExitTestCase {
             conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(2);
 //                getSubConfiguration("Writer").
+        RecordWriter writer = new RecordWriter(writerConf);
+
+        writer.setSource(feeder);
+        writer.pump();
+        writer.close(true);
+    }
+
+    public static void update(String storageID, Record record) throws Exception {
+        Payload payload = new Payload(record);
+        PayloadFeederHelper feeder =
+            new PayloadFeederHelper(Arrays.asList(payload));
+
+        Configuration conf = Configuration.load("integration/search/SearchTest_IngestConfiguration.xml");
+        Configuration writerConf =
+            conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2); // RecordWriter
+
+//                getSubConfiguration("Writer").
+        writerConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/" + storageID);
         RecordWriter writer = new RecordWriter(writerConf);
 
         writer.setSource(feeder);
