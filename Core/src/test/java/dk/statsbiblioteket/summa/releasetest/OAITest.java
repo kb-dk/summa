@@ -76,7 +76,7 @@ public class OAITest extends NoExitTestCase {
 
     public static StorageService getStorageService() throws IOException {
         Configuration storageConf = Configuration.load(Resolver.getURL(
-                "test-storage-1/config/configuration.xml").getFile());
+                "integration/oaitest/test-storage-1/config/configuration.xml").getFile());
         storageConf.set(Service.CONF_SERVICE_ID, "StorageService");
         log.info("Starting storage");
         StorageService storage = new StorageService(storageConf);
@@ -128,7 +128,7 @@ public class OAITest extends NoExitTestCase {
 //                ReleaseTestCommon.DATA_ROOT,
 //                "oai/oai_IndexDescriptor.xml").toString();
         Configuration searchConf = Configuration.load(Resolver.getURL(
-                "test-facet-search-1/config/configuration.xml").
+                "integration/oaitest/test-facet-search-1/config/configuration.xml").
                 getFile());
         searchConf.set(Service.CONF_SERVICE_ID, "SearchService");
 //        searchConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -145,7 +145,7 @@ public class OAITest extends NoExitTestCase {
 //                ReleaseTestCommon.DATA_ROOT,
 //                "oai/oai_IndexDescriptor.xml").toString();
         Configuration searchConf = Configuration.load(Resolver.getURL(
-                "test-facet-search-1/config/configuration.xml").
+                "integration/oaitest/test-facet-search-1/config/configuration.xml").
                 getFile());
         return new SummaSearcherImpl(searchConf);
     }
@@ -153,7 +153,7 @@ public class OAITest extends NoExitTestCase {
     public static void performOAIIndex() throws Exception {
         log.info("Starting index");
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                "test-facet-index-1/config/configuration.xml").
+                "integration/oaitest/test-facet-index-1/config/configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
         String oaiTransformerXSLT = new File(
@@ -195,7 +195,7 @@ public class OAITest extends NoExitTestCase {
     public static FilterService performOAIIngest() throws Exception {
         log.info("Starting ingest");
         Configuration ingestConf = Configuration.load(Resolver.getURL(
-                "test-ingest-oai/config/configuration.xml").getFile());
+                "integration/oaitest/test-ingest-oai/config/configuration.xml").getFile());
         ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
