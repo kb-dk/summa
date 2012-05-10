@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
@@ -43,7 +44,10 @@ import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.SlowMultiReaderWrapper;
 import org.apache.lucene.store.*;
+import org.apache.lucene.util.Bits;
 
 /**
  * Index-building unit-test with focus on iterative building, including
@@ -121,8 +125,7 @@ public class IterativeTest extends NoExitTestCase {
         creator.processPayload(payload);
         Document doc = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
         assertEquals("The document should contain the right ID",
-                     "foo",
-                     doc.getField(IndexUtils.RECORD_FIELD).stringValue());
+                     "foo", doc.getField(IndexUtils.RECORD_FIELD).stringValue());
     }
 
     /*
@@ -130,6 +133,7 @@ public class IterativeTest extends NoExitTestCase {
      */
     public void testSimpleIndexBuild() throws Exception {
         storage.flush(new Record("foo", BASE, new byte[0]));
+        assertTrue("The flushed Record should be in Storage", storage.getRecord("foo", null) != null);
         updateIndex();
         assertEquals("The number of processed ids should be correct",
                      1, IterativeHelperDocCreator.processedIDs.size());
@@ -159,6 +163,11 @@ public class IterativeTest extends NoExitTestCase {
 
         assertIndexEquals("The index should contain multiple document",
                           Arrays.asList("foo1", "foo2", "foo3"), 0);
+
+        storage.flush(new Record("foo4", BASE, new byte[0]));
+        updateIndex();
+        assertEquals("The number of processed ids should be correct after second round of updates",
+                     4, IterativeHelperDocCreator.processedIDs.size());
 //        assertTagsEquals("The index should contain multiple Title tags",
 //                          "Title", Arrays.asList("Title_foo1", "Title_foo2",
 //                                                 "Title_foo3"));
@@ -196,18 +205,24 @@ public class IterativeTest extends NoExitTestCase {
     public void testDeleteEnd() throws Exception {
         storage.flush(new Record("foo1", BASE, new byte[0]));
         storage.flush(new Record("foo2", BASE, new byte[0]));
+        Record firstFoo2 = storage.getRecord("foo2", null);
         updateIndex();
         Record deletedRecord = new Record("foo2", BASE, new byte[0]);
         deletedRecord.setDeleted(true);
         Thread.sleep(10); // Hack to make createdTime != modifiedTime
         deletedRecord.touch();
         storage.flush(deletedRecord);
+        Record secondFoo2 = storage.getRecord("foo2", null);
+        assertTrue("Flushed record should be marked as deleted when re-requested",
+                   secondFoo2.isDeleted());
+        assertFalse("Flushed record should be have different mtime when re-requested",
+                   firstFoo2.getModificationTime() == secondFoo2.getModificationTime());
         updateIndex();
 
         assertEquals("The number of processed ids should be correct",
                      3, IterativeHelperDocCreator.processedIDs.size());
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo1"), 1);
+                          Arrays.asList("foo1"), 0);
 //        assertTagsEquals("The index should contain a single Title tag",
 //                          "Title", Arrays.asList("Title_foo1"));
     }
@@ -229,7 +244,7 @@ public class IterativeTest extends NoExitTestCase {
         assertEquals("The number of processed ids should be correct",
                      3, IterativeHelperDocCreator.processedIDs.size());
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo2"), 1);
+                          Arrays.asList("foo2"), 0);
 //        assertTagsEquals("The index should contain a single Title tag",
 //                          "Title", Arrays.asList("Title_foo2"));
     }
@@ -253,7 +268,7 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex();
 
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo2", "foo3"), 1);
+                          Arrays.asList("foo2", "foo3"), 0);
 //        assertTagsEquals("The index should contain multiple Title tag",
 //                          "Title", Arrays.asList("Title_foo2", "Title_foo3"));
     }
@@ -294,7 +309,7 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex();
 
         assertIndexEquals("The index should contain multiple document",
-                          Arrays.asList("foo2", "foo1"), 1);
+                          Arrays.asList("foo2", "foo1"), 0);
 //        assertTagsEquals("The index should contain multiple Title tags",
 //                          "Title", Arrays.asList("Title_foo1", "Title_foo2"));
     }
@@ -312,7 +327,7 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex();
 
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo1"), 1);
+                          Arrays.asList("foo1"), 0);
 //        assertTagsEquals("The index should contain a single Title tag",
 //                          "Title", Arrays.asList("Title_foo1"));
     }
@@ -416,14 +431,14 @@ public class IterativeTest extends NoExitTestCase {
         }
         IndexReader ir = getIndexReader();
         List<String> foundIDs = new ArrayList<String>(ir.maxDoc());
+        Bits liveDocs = MultiFields.getLiveDocs(ir);
         int deletedCount = 0;
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
-            if (!ir.getLiveDocs().get(i)) {
+            if (liveDocs != null && !liveDocs.get(i)) {
                 deletedCount++;
                 log.trace("assertIndexEquals: Found deleted at pos " + i);
             } else {
-                String id = ir.document(i).getField(IndexUtils.RECORD_FIELD).
-                        stringValue();
+                String id = ir.document(i).getField(IndexUtils.RECORD_FIELD).stringValue();
                 foundIDs.add(id);
                 log.trace("assertIndexEquals: Found id '" + id + "'");
             }
@@ -461,26 +476,23 @@ public class IterativeTest extends NoExitTestCase {
         Configuration conf = getIndexConfiguration();
         // Ensure that consolidate is called
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
+            getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
 //                getSubConfiguration("IndexUpdate").
-                set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
+            set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
         // Ensure that deletes are removed
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
+            getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
 //                getSubConfiguration("IndexUpdate").
-             getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
+            getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
 //                getSubConfiguration("LuceneUpdater").
-                set(LuceneManipulator.CONF_MAX_SEGMENTS_ON_CONSOLIDATE, 1);
+            set(LuceneManipulator.CONF_MAX_SEGMENTS_ON_CONSOLIDATE, 1);
         // Sanity-check
         assertEquals("The value for consolidatetimeout should be present",
                      -1,
-                     conf.getSubConfigurations(FilterControl.CONF_CHAINS).
-                             get(0).
-                             getSubConfigurations(FilterSequence.CONF_FILTERS).
-                             get(2).
+                     conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                             getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
 //                             getSubConfiguration("IndexUpdate").
-                             getInt(IndexControllerImpl.
-                             CONF_CONSOLIDATE_TIMEOUT));
+                             getInt(IndexControllerImpl.CONF_CONSOLIDATE_TIMEOUT));
         updateIndex(conf);
     }
 
@@ -490,26 +502,27 @@ public class IterativeTest extends NoExitTestCase {
         filters.start();
         log.debug("Waiting for finish");
         filters.waitForFinish();
+        System.out.println("Index finished\n  " +
+                           Strings.join(IndexTest.INDEX_ROOT.listFiles()[0].listFiles()[0].listFiles(), "\n  ")
+                           + "\n" + filters.getVerboseStatus());
         filters.stop();
     }
 
     private Configuration getIndexConfiguration() throws IOException {
         String descriptorLocation = Resolver.getURL(
-                "integration/iterative/IterativeTest_IndexDescriptor.xml")
-                .getFile();
-        String confString = Resolver.getUTF8Content(
-                "integration/iterative/IterativeTest_IndexConfiguration.xml");
-        log.debug("Replacing [IndexDescriptorLocation] with "
-                  + descriptorLocation);
-        confString = confString.replaceAll("\\[IndexDescriptorLocation\\]",
-                                           descriptorLocation);
-        log.debug("Replacing [IndexRootLocation] with "
-                  + IndexTest.INDEX_ROOT.getPath());
-        confString = confString.replaceAll("\\[IndexRootLocation\\]",
-                                           IndexTest.INDEX_ROOT.getPath());
+            "integration/iterative/IterativeTest_IndexDescriptor.xml").getFile();
+        assertNotNull("The descriptorLocation should exist", descriptorLocation);
+        String confString = Resolver.getUTF8Content("integration/iterative/IterativeTest_IndexConfiguration.xml");
+        log.debug("Replacing [IndexDescriptorLocation] with " + descriptorLocation);
+        confString = confString.replaceAll("\\[IndexDescriptorLocation\\]", descriptorLocation);
+        log.debug("Replacing [Storage] with " + STORAGE);
+        confString = confString.replaceAll("\\[Storage\\]", STORAGE);
+        log.debug("Replacing [IndexRootLocation] with " + IndexTest.INDEX_ROOT.getPath());
+        confString = confString.replaceAll("\\[IndexRootLocation\\]", IndexTest.INDEX_ROOT.getPath());
         File confFile = File.createTempFile("IndexConfiguration", ".xml");
+        confFile.deleteOnExit();
         Files.saveString(confString, confFile);
-        System.out.println(confFile);
+//        System.out.println(confFile);
         return Configuration.load(confFile.getPath());
     }
 
