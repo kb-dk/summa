@@ -21,11 +21,11 @@ import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.summon.search.FacetQueryTransformer;
 import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
 import dk.statsbiblioteket.summa.support.summon.search.SolrResponseBuilder;
-import dk.statsbiblioteket.summa.support.summon.search.SummonResponseBuilder;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -34,6 +34,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -42,11 +43,13 @@ import java.util.*;
 
 /**
  * A wrapper for Solr web calls, transforming requests and responses from and to Summa equivalents.
- * */
+ * </p><p>
+ * Besides the keys stated below, it is highly advisable to specify
+ **/
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SolrSearchNode extends SearchNodeImpl {
+public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements DocumentSearcher
     private static Log log = LogFactory.getLog(SolrSearchNode.class);
 
     // TODO: Assign mandatory ID, use it for timing and result delivery
@@ -64,6 +67,20 @@ public class SolrSearchNode extends SearchNodeImpl {
      */
     public static final String CONF_SOLR_RESTCALL = "solr.restcall";
     public static final String DEFAULT_SOLR_RESTCALL = "/solr/select";
+    /**
+     * The timeout in milliseconds for establishing a connection to the remote Solr.
+     * </p><p>
+     * Optional. Default is 2000 milliseconds.
+     */
+    public static final String CONF_SOLR_CONNECTION_TIMEOUT = "solr.connection.timeout";
+    public static final int DEFAULT_SOLR_CONNECTION_TIMEOUT = 2000;
+    /**
+     * The timeout in milliseconds for receiving data after a connection has been established to the remote Solr.
+     * </p><p>
+     * Optional. Default is 8000 milliseconds.
+     */
+    public static final String CONF_SOLR_READ_TIMEOUT = "solr.read.timeout";
+    public static final int DEFAULT_SOLR_READ_TIMEOUT = 8000;
     /**
      * The prefix will be added to all IDs returned by Solr.
      * </p><p>
@@ -150,11 +167,21 @@ public class SolrSearchNode extends SearchNodeImpl {
      */
     public static final String SEARCH_SOLR_FILTER_IS_FACET = "solr.filterisfacet";
 
+    /**
+     * The Solr field with the unique ID for a document.
+     * </p><p>
+     * Optional. Default is 'recordID'.
+     */
+    public static final String CONF_ID_FIELD = "solr.field.id";
+    public static final String DEFAULT_ID_FIELD = "recordID";
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
     protected final String host;
     protected final String restCall;
+    protected final int connectionTimeout;
+    protected final int readTimeout;
     protected final String idPrefix;
     protected final int defaultPageSize;
     protected final int defaultFacetPageSize;
@@ -163,23 +190,32 @@ public class SolrSearchNode extends SearchNodeImpl {
     protected final Map<String, List<String>> solrDefaultParams;
     protected final boolean supportsPureNegative;
     protected final FacetQueryTransformer facetQueryTransformer;
+    protected final Set<String> nonescapedFields = new HashSet<String>(10);
+    protected final String FIELD_ID;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         setID(conf.getString(CONF_ID, "solr"));
+        List<String> nonEscaped = conf.getStrings(DocumentSearcher.CONF_NONESCAPED_FIELDS, new ArrayList<String>(0));
+        nonescapedFields.addAll(nonEscaped);
         responseBuilder = createResponseBuilder(conf);
+        responseBuilder.setNonescapedFields(nonescapedFields);
         solrDefaultParams = new HashMap<String, List<String>>();
 
         host = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
+        connectionTimeout = conf.getInt(CONF_SOLR_CONNECTION_TIMEOUT, DEFAULT_SOLR_CONNECTION_TIMEOUT);
+        readTimeout = conf.getInt(CONF_SOLR_READ_TIMEOUT, DEFAULT_SOLR_READ_TIMEOUT);
         idPrefix =   conf.getString(CONF_SOLR_IDPREFIX, DEFAULT_SOLR_IDPREFIX);
         defaultPageSize = conf.getInt(CONF_SOLR_DEFAULTPAGESIZE, DEFAULT_SOLR_DEFAULTPAGESIZE);
         defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
         defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
+        FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         supportsPureNegative = conf.getBoolean(
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
+
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
     }
@@ -248,8 +284,7 @@ public class SolrSearchNode extends SearchNodeImpl {
         }
     }
 
-    private void barrierSearch(
-        Request request, ResponseCollection responses) throws RemoteException {
+    private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             log.trace("MoreLikeThis search is not supported yet, returning immediately");
@@ -286,7 +321,6 @@ public class SolrSearchNode extends SearchNodeImpl {
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSolrParam(solrSearchParams, entry);
         }
-
         if (query != null && !passThroughQuery) {
             query = convertQuery(query, solrSearchParams);
         }
@@ -301,6 +335,15 @@ public class SolrSearchNode extends SearchNodeImpl {
         }
 
         long searchTime = -System.currentTimeMillis();
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+            if (FIELD_ID != null && !"".equals(FIELD_ID)) {
+                query = FIELD_ID + ":\"" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) + "\"";
+            } else {
+                query = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+            }
+            solrSearchParams.put("mlt", Arrays.asList("true"));
+            log.debug("Performing MoreLikeThis search for '" + query);
+        }
         log.trace("Performing search for '" + query + "' with facets '" + facets + "'");
         String solrResponse;
         String solrTiming;
@@ -497,7 +540,7 @@ public class SolrSearchNode extends SearchNodeImpl {
         StringBuilder retval = new StringBuilder();
 
         if (log.isDebugEnabled()) {
-            log.debug("Performing Summon request for '" + command + "'");
+            log.debug("Performing Solr request for '" + command + "'");
         }
 
         URL url = new URL("http://" + host + command);
@@ -505,10 +548,18 @@ public class SolrSearchNode extends SearchNodeImpl {
         conn.setRequestProperty("Host", host);
         conn.setRequestProperty("Accept", "application/xml");
         conn.setRequestProperty("Accept-Charset", "utf-8");
-        conn.setConnectTimeout(1000);
+        conn.setConnectTimeout(connectionTimeout);
+        conn.setReadTimeout(readTimeout);
         Long readStart = System.currentTimeMillis();
     	long summonConnect = -System.currentTimeMillis();
-        conn.connect();
+        try {
+            conn.connect();
+        } catch (ConnectException e) {
+            String message = "Unable to connect to remote Solr with URL '" + url.toExternalForm()
+                             + "' and connection timeout " + connectionTimeout;
+            log.error(message, e);
+            throw (ConnectException)new ConnectException(message).initCause(e);
+        }
         summonConnect += System.currentTimeMillis();
 
         BufferedReader in;
@@ -561,6 +612,9 @@ public class SolrSearchNode extends SearchNodeImpl {
         int startPage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
 
+        if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
+            queryMap.put("fl", Arrays.asList(Strings.join(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS), ",")));
+        }
         if (filter != null) { // We allow missing filter
             boolean facetsHandled = false;
             if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {

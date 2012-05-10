@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -46,6 +47,7 @@ import java.net.URL;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: How to handle new index?
 public class SolrManipulator implements IndexManipulator {
     private static Log log = LogFactory.getLog(SolrManipulator.class);
 
@@ -78,6 +80,7 @@ public class SolrManipulator implements IndexManipulator {
 
     private int updatesSinceLastCommit = 0;
 
+    // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {
         host = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
@@ -106,10 +109,28 @@ public class SolrManipulator implements IndexManipulator {
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         }
-        send(payload.getRecord().getContentAsUTF8());
+        send(packAddition(payload.getRecord().getContentAsUTF8()));
         updatesSinceLastCommit++;
         log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
         return false;
+    }
+
+    private int ok = 0;
+    private int fail = 0;
+    private String packAddition(String solrDocument) {
+        if (solrDocument.contains("<")) {
+            ok++;
+        } else {
+            fail++;
+        }
+        log.info("packAddition(ok=" + ok + ", fail=" + fail + "): "
+                 + (solrDocument.length() < 20 ? solrDocument : solrDocument.substring(0, 20).replace("\n", "")));
+        final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
+        return "<add>" + (
+            solrDocument.startsWith(XML_HEADER) ?
+            solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
+            solrDocument)
+               + "</add>";
     }
 
     @Override
@@ -165,9 +186,7 @@ public class SolrManipulator implements IndexManipulator {
             conn.setRequestProperty("Accept", "application/xml");
             conn.setRequestProperty("Accept-Charset", "utf-8");
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            wr.write("<add>");
             wr.write(command);
-            wr.write("</add>");
             wr.flush();
             wr.close();
             int code = conn.getResponseCode();
@@ -177,6 +196,10 @@ public class SolrManipulator implements IndexManipulator {
                     code, trim(command, 100), getResponse(conn));
                 throw new IOException(message);
             }
+        } catch (ConnectException e) {
+            String snippet = command.length() > 40 ? command.substring(0, 40) : command;
+            throw (IOException)new IOException(
+                "ConnectException for '" + UPDATE + "' with '" + snippet + "'").initCause(e);
         } finally {
             conn.disconnect();
         }

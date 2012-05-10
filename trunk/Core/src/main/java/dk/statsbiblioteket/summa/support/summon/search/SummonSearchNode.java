@@ -467,7 +467,8 @@ public class SummonSearchNode extends SolrSearchNode {
         if (sessionId != null && !sessionId.equals("")) {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
-        conn.setConnectTimeout(1000);
+        conn.setConnectTimeout(connectionTimeout);
+        conn.setReadTimeout(readTimeout);
         Long readStart = System.currentTimeMillis();
     	long summonConnect = -System.currentTimeMillis();
         conn.connect();

@@ -73,12 +73,21 @@ public class SummonSearchNodeTest extends TestCase {
         return new TestSuite(SummonSearchNodeTest.class);
     }
 
+    public void testMoreLikeThis() throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo");
+        assertTrue("A search for 'foo' should give hits", standard > 0);
+
+        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo", LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
+        assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
+    }
+
     public void testPageFault() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         try {
-            summon.search(new Request(DocumentKeys.SEARCH_QUERY, "book",
-                                      DocumentKeys.SEARCH_START_INDEX, 10000), responses);
+            summon.search(new Request(
+                DocumentKeys.SEARCH_QUERY, "book", DocumentKeys.SEARCH_START_INDEX, 10000), responses);
         } catch (RemoteException e) {
             log.debug("Received RemoteException as expected");
         }
@@ -199,16 +208,6 @@ public class SummonSearchNodeTest extends TestCase {
             dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
         retXML = DOM.domToString(subDom);
         return retXML;
-    }
-
-    public void testMoreLikeThis() throws RemoteException {
-        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo");
-        assertTrue("A search for 'foo' should give hits", standard > 0);
-
-        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo", LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
-        assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
-
     }
 
     public void testColonSearch() throws RemoteException {

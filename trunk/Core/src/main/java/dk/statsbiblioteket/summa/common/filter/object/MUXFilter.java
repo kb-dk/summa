@@ -124,6 +124,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private final Profiler profiler;
     private final PayloadQueue outqueue;
     private final boolean allowUnmatched;
+    private final String name;
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
@@ -162,14 +163,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
             log.warn("No feeders defined for MUXFilter. There will never be any"
                      + " output although the source will be drained");
         }
-        allowUnmatched = conf.getBoolean(
-            CONF_ALLOW_UNMATCHED, DEFAULT_ALLOW_UNMATCHED);
+        allowUnmatched = conf.getBoolean(CONF_ALLOW_UNMATCHED, DEFAULT_ALLOW_UNMATCHED);
+        name = conf.getString(ObjectFilterImpl.CONF_FILTER_NAME, "Unnamed (" + feeders + " feeders)");
         profiler = new Profiler();
         profiler.setBpsSpan(100);
         profiler.pause();
         log.info(String.format(
-            "Constructed MUXFilter with %d feeders, allow unmatched: %b",
-            feeders.size(), allowUnmatched));
+            "Constructed MUXFilter '%s' with %d feeders, allow unmatched: %b",
+            name, feeders.size(), allowUnmatched));
     }
 
     /**
@@ -195,8 +196,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 try {
                     nextPayload = source.next();
                 } catch (Exception e) {
-                    log.warn("run(): Exception while getting next from source. "
-                             + "Retrying in 500 ms", e);
+                    log.warn(
+                        "run(): Exception while getting next from source in '" + name + "'. Retrying in 500 ms", e);
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e1) {
@@ -218,8 +219,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 }
                 feeder = getFeeder(nextPayload);
             } catch (Exception e) {
-                log.error("Unexpected exception while getting feeder for "
-                          + nextPayload);
+                log.error("Unexpected exception while getting feeder for " + nextPayload + " in '" + name + "'");
                 continue;
             }
             if (feeder == null) {
@@ -270,16 +270,16 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         if (feederCandidate == null) {
             if (allowUnmatched) {
-                log.debug("Unable to locate a MUXFilterFeeder for " + payload
-                         + ". The Payload will be passed on directly");
+                log.debug("Unable to locate a MUXFilterFeeder for " + payload + " in '" + name
+                          + "'. The Payload will be passed on directly");
                 Logging.logProcess(
-                    "MUXFilter", "Unable to locate feeder. Passing unmodified",
+                    "MUXFilter " + name, "Unable to locate feeder. Passing unmodified",
                     Logging.LogLevel.TRACE, payload);
             } else {
-                log.warn("Unable to locate a MUXFilterFeeder for " + payload
-                         + ". The Payload will be discarded");
+                log.warn("Unable to locate a MUXFilterFeeder for " + payload + " in '" + name
+                         + "'. The Payload will be discarded");
                 Logging.logProcess(
-                    "MUXFilter", "Unable to locate feeder. Discarding Payload",
+                    "MUXFilter " + name, "Unable to locate feeder. Discarding Payload",
                     Logging.LogLevel.WARN, payload);
             }
         }
@@ -308,7 +308,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     + "guaranteed", this.source, source));
         }
         this.source = (ObjectFilter)source;
-        log.debug("Source " + source + " specified. Starting mux-thread");
+        log.debug("Source " + source + " specified. Starting mux-thread for " + name);
         Thread t = new Thread(this, "MUXFilter-" + this.hashCode());
 //        t.setUncaughtExceptionHandler(this);
         t.start();
