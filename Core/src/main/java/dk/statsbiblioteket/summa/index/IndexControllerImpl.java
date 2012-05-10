@@ -60,9 +60,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         comment = "JavaDoc needed")
-public class IndexControllerImpl extends StateThread implements
-                                                     IndexManipulator,
-                                                     IndexController {
+public class IndexControllerImpl extends StateThread implements IndexManipulator, IndexController {
     /** Logger for this class. */
     private static Log log = LogFactory.getLog(IndexControllerImpl.class);
     /** Fail logger for this class. */
@@ -84,8 +82,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is "index".
      */
-    public static final String CONF_INDEX_ROOT_LOCATION =
-                                                "summa.index.indexrootlocation";
+    public static final String CONF_INDEX_ROOT_LOCATION = "summa.index.indexrootlocation";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
@@ -95,8 +92,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is false.
      */
-    public static final String CONF_CREATE_NEW_INDEX =
-                                                   "summa.index.createnewindex";
+    public static final String CONF_CREATE_NEW_INDEX = "summa.index.createnewindex";
     /** Default value for {@link #CONF_CREATE_NEW_INDEX}. */
     public static final boolean DEFAULT_CREATE_NEW_INDEX = false;
 
@@ -111,8 +107,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_COMMIT_TIMEOUT =
-                                                    "summa.index.committimeout";
+    public static final String CONF_COMMIT_TIMEOUT = "summa.index.committimeout";
     /** Default value for {@link #CONF_COMMIT_TIMEOUT}. */
     public static final int DEFAULT_COMMIT_TIMEOUT = -1;
 
@@ -127,8 +122,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is 1000. -1 means disabled.
      */
-    public static final String CONF_COMMIT_MAX_DOCUMENTS =
-                                               "summa.index.commitmaxdocuments";
+    public static final String CONF_COMMIT_MAX_DOCUMENTS = "summa.index.commitmaxdocuments";
     /** Default value for {@link #CONF_COMMIT_MAX_DOCUMENTS}. */
     public static final int DEFAULT_COMMIT_MAX_DOCUMENTS = 1000;
 
@@ -142,8 +136,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_CONSOLIDATE_TIMEOUT =
-                                               "summa.index.consolidatetimeout";
+    public static final String CONF_CONSOLIDATE_TIMEOUT = "summa.index.consolidatetimeout";
     /** Default value for {@link #CONF_CONSOLIDATE_TIMEOUT}. */
     public static final int DEFAULT_CONSOLIDATE_TIMEOUT = -1;
 
@@ -158,8 +151,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_CONSOLIDATE_MAX_DOCUMENTS =
-                                          "summa.index.consolidatemaxdocuments";
+    public static final String CONF_CONSOLIDATE_MAX_DOCUMENTS = "summa.index.consolidatemaxdocuments";
     /** Default value for {@link #CONF_CONSOLIDATE_MAX_DOCUMENTS}. */
     public static final int DEFAULT_CONSOLIDATE_MAX_DOCUMENTS = -1;
 
@@ -174,8 +166,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * This property is optional. Default is 70.
      */
-    public static final String CONF_CONSOLIDATE_MAX_COMMITS =
-                                            "summa.index.consolidatemaxcommits";
+    public static final String CONF_CONSOLIDATE_MAX_COMMITS = "summa.index.consolidatemaxcommits";
     /** Default value for {@link #CONF_CONSOLIDATE_MAX_COMMITS}. */
     public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 70;
 
@@ -185,8 +176,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_CONSOLIDATE_ON_CLOSE =
-                                               "summa.index.consolidateonclose";
+    public static final String CONF_CONSOLIDATE_ON_CLOSE = "summa.index.consolidateonclose";
     /** Default value for {@link #CONF_CONSOLIDATE_ON_CLOSE}. */
     public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
 
@@ -196,8 +186,7 @@ public class IndexControllerImpl extends StateThread implements
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_FORCE_CONSOLIDATE_ON_CLOSE =
-                                          "summa.index.forceconsolidateonclose";
+    public static final String CONF_FORCE_CONSOLIDATE_ON_CLOSE = "summa.index.forceconsolidateonclose";
     /** Default value for {@link #CONF_FORCE_CONSOLIDATE_ON_CLOSE}. */
     public static final boolean DEFAULT_FORCE_CONSOLIDATE_ON_CLOSE = false;
 
@@ -234,60 +223,44 @@ public class IndexControllerImpl extends StateThread implements
 
     public IndexControllerImpl(Configuration conf) {
         log.debug("Creating IndexControllerImpl");
-        String indexRootCandidate = conf.getString(
-                CONF_INDEX_ROOT_LOCATION, DEFAULT_INDEX_ROOT_LOCATION);
+        String indexRootCandidate = conf.getString(CONF_INDEX_ROOT_LOCATION, DEFAULT_INDEX_ROOT_LOCATION);
         log.debug("Located indexRootCandidate '" + indexRootCandidate + "'");
         try {
             indexRoot = new File(indexRootCandidate);
         } catch (Exception e) {
-            log.error("Could not construct File from '" + indexRootCandidate
-                      + "'. Defaulting to '" + DEFAULT_INDEX_ROOT_LOCATION
-                      + "'");
+            log.error("Could not construct File from '" + indexRootCandidate + "'. Defaulting to '"
+                      + DEFAULT_INDEX_ROOT_LOCATION + "'");
             indexRoot = new File(DEFAULT_INDEX_ROOT_LOCATION);
         }
         try {
             indexLocation = Resolver.getPersistentFile(indexRoot);
         } catch (Exception e) {
-            throw new ConfigurationException(String.format(
-                    "Exception resolving '%s' to absolute path", indexRoot), e);
+            throw new ConfigurationException(String.format("Exception resolving '%s' to absolute path", indexRoot), e);
         }
         log.debug(String.format("Using indexRoot '%s' at location '%s'",
-                                indexRoot.toString(),
-                                indexLocation.getAbsolutePath()));
+                                indexRoot.toString(), indexLocation.getAbsolutePath()));
         List<Configuration> manipulatorConfs;
         try {
             manipulatorConfs = conf.getSubConfigurations(CONF_MANIPULATORS);
             if (manipulatorConfs.size() == 0) {
-                log.warn("No manipulators specified in " + CONF_MANIPULATORS
-                         +". This is probably an error");
+                log.warn("No manipulators specified in " + CONF_MANIPULATORS + ". This is probably an error");
             } else {
-                log.debug("Got " + manipulatorConfs.size()
-                          + " manipulator configurations");
+                log.debug("Got " + manipulatorConfs.size() + " manipulator configurations");
             }
         } catch (Exception e) {
-            throw new ConfigurationException(
-                    "Could not get sub-configurations for key "
-                    + CONF_MANIPULATORS, e);
+            throw new ConfigurationException("Could not get sub-configurations for key " + CONF_MANIPULATORS, e);
         }
         IndexDescriptor.copySetupToSubConfigurations(conf, manipulatorConfs);
 
         log.trace("Extracting basic setup");
-        commitTimeout =
-                conf.getInt(CONF_COMMIT_TIMEOUT, commitTimeout);
-        commitMaxDocuments =
-                conf.getInt(CONF_COMMIT_MAX_DOCUMENTS, commitMaxDocuments);
-        consolidateTimeout =
-                conf.getInt(CONF_CONSOLIDATE_TIMEOUT, consolidateTimeout);
-        consolidateMaxDocuments =
-           conf.getInt(CONF_CONSOLIDATE_MAX_DOCUMENTS, consolidateMaxDocuments);
-        consolidateMaxCommits =
-               conf.getInt(CONF_CONSOLIDATE_MAX_COMMITS, consolidateMaxCommits);
-        boolean createNewIndex = conf.getBoolean(CONF_CREATE_NEW_INDEX,
-                                                 DEFAULT_CREATE_NEW_INDEX);
-        consolidateOnClose = conf.getBoolean(
-                CONF_CONSOLIDATE_ON_CLOSE, DEFAULT_CONSOLIDATE_ON_CLOSE);
-        forceConsolidateOnClose = conf.getBoolean(
-                CONF_FORCE_CONSOLIDATE_ON_CLOSE, forceConsolidateOnClose);
+        commitTimeout = conf.getInt(CONF_COMMIT_TIMEOUT, commitTimeout);
+        commitMaxDocuments = conf.getInt(CONF_COMMIT_MAX_DOCUMENTS, commitMaxDocuments);
+        consolidateTimeout = conf.getInt(CONF_CONSOLIDATE_TIMEOUT, consolidateTimeout);
+        consolidateMaxDocuments = conf.getInt(CONF_CONSOLIDATE_MAX_DOCUMENTS, consolidateMaxDocuments);
+        consolidateMaxCommits = conf.getInt(CONF_CONSOLIDATE_MAX_COMMITS, consolidateMaxCommits);
+        boolean createNewIndex = conf.getBoolean(CONF_CREATE_NEW_INDEX, DEFAULT_CREATE_NEW_INDEX);
+        consolidateOnClose = conf.getBoolean(CONF_CONSOLIDATE_ON_CLOSE, DEFAULT_CONSOLIDATE_ON_CLOSE);
+        forceConsolidateOnClose = conf.getBoolean(CONF_FORCE_CONSOLIDATE_ON_CLOSE, forceConsolidateOnClose);
         log.debug("Basic setup: commitTimeout: " + commitTimeout
                   + " ms, commitMaxDocuments: " + commitMaxDocuments
                   + ", consolidateTimeout: " + consolidateTimeout + " ms, "
@@ -301,8 +274,7 @@ public class IndexControllerImpl extends StateThread implements
         manipulators = new ArrayList<IndexManipulator>(manipulatorConfs.size());
         for (Configuration manipulatorConf: manipulatorConfs) {
             log.trace("Creating manipulator");
-            IndexManipulator manipulator =
-                    ManipulatorFactory.createManipulator(manipulatorConf);
+            IndexManipulator manipulator = ManipulatorFactory.createManipulator(manipulatorConf);
             log.trace("Manipulator created");
             manipulators.add(manipulator);
         }
@@ -310,8 +282,7 @@ public class IndexControllerImpl extends StateThread implements
 
         if (!conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)) {
             log.info(String.format(
-                    "No setup %s for IndexDescriptor specified. No descriptor-"
-                    + "XML will be stored with the index",
+                    "No setup %s for IndexDescriptor specified. No descriptor-XML will be stored with the index",
                     IndexDescriptor.CONF_DESCRIPTOR));
         } else {
             manipulators.add(new DescriptorManipulator(conf));
@@ -322,9 +293,7 @@ public class IndexControllerImpl extends StateThread implements
         try {
             open(indexLocation, createNewIndex);
         } catch (IOException e) {
-            throw new ConfigurationException(
-                    "Could not open index at '" + indexLocation.getPath() + "'",
-                    e);
+            throw new ConfigurationException("Could not open index at '" + indexLocation.getPath() + "'", e);
         }
         log.debug("Index opened, starting Watchdog");
         start();
@@ -341,17 +310,14 @@ public class IndexControllerImpl extends StateThread implements
         log.trace("Triggercheck called");
         if (commitTimeout != -1 &&
             lastCommit + commitTimeout < System.currentTimeMillis()
-            || commitMaxDocuments != -1 &&
-               commitMaxDocuments <= updatesSinceLastCommit
+            || commitMaxDocuments != -1 && commitMaxDocuments <= updatesSinceLastCommit
             || commitTimeout == 0) {
             commit();
         }
         if (consolidateTimeout != -1 &&
             lastConsolidate + consolidateTimeout < System.currentTimeMillis()
-            || consolidateMaxDocuments != -1 &&
-               consolidateMaxDocuments <= updatesSinceLastConsolidate
-            || consolidateMaxCommits != -1 &&
-               consolidateMaxCommits <= commitsSinceLastConsolidate
+            || consolidateMaxDocuments != -1 && consolidateMaxDocuments <= updatesSinceLastConsolidate
+            || consolidateMaxCommits != -1 && consolidateMaxCommits <= commitsSinceLastConsolidate
             || consolidateTimeout == 0) {
             consolidate();
         }
@@ -362,44 +328,34 @@ public class IndexControllerImpl extends StateThread implements
     protected void runMethod() {
         while (isRunning()) {
             if (commitTimeout == -1 && consolidateTimeout == -1) {
-                log.debug("No time-based triggers for Watchdog. "
-                          + "Exiting thread.");
+                log.debug("No time-based triggers for Watchdog. Exiting thread.");
                 break;
             }
             if (commitTimeout == 0 || consolidateTimeout == 0) {
-                log.debug("commitTimeout(" + commitTimeout
-                          + ") or consolidateTimeout(" + consolidateTimeout
-                          + ") is 0. This means triggering on all updates. "
-                          + "No time-based triggers needed for Watchdog. "
+                log.debug("commitTimeout(" + commitTimeout + ") or consolidateTimeout(" + consolidateTimeout
+                          + ") is 0. This means triggering on all updates. No time-based triggers needed for Watchdog. "
                           + "Exiting thread.");
                 break;
             }
-            long wakeupTime = commitTimeout == -1 ? Long.MAX_VALUE :
-                              lastCommit + commitTimeout;
+            long wakeupTime = commitTimeout == -1 ? Long.MAX_VALUE : lastCommit + commitTimeout;
             wakeupTime = consolidateTimeout == -1 ? wakeupTime :
-                         Math.min(wakeupTime,
-                                  lastConsolidate + consolidateTimeout);
+                         Math.min(wakeupTime, lastConsolidate + consolidateTimeout);
             long sleepTime = wakeupTime - System.currentTimeMillis();
             if (sleepTime > 0) {
                 log.trace("Watchdog sleeping for " + sleepTime + " ms");
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException("Interrupted while sleeping. "
-                                               + "Stopping timer-based "
-                                               + "watchdog", e);
+                    throw new RuntimeException("Interrupted while sleeping. Stopping timer-based watchdog", e);
                 }
             } else {
-                log.trace("No sleep-time in Watchdog. This eats a lot of "
-                          + "resources");
+                log.trace("No sleep-time in Watchdog. This eats a lot of resources");
             }
             try {
                 triggerCheck();
             } catch (IOException e) {
-                throw new RuntimeException("IOException during triggerCheck"
-                                           + " from watchdog thread. "
-                                           + "Stopping timer-based "
-                                           + "watchdog", e);
+                throw new RuntimeException(
+                    "IOException during triggerCheck from watchdog thread. Stopping timer-based watchdog", e);
             }
         }
     }
@@ -432,8 +388,7 @@ public class IndexControllerImpl extends StateThread implements
      * @param createNewIndex True if new should be created.
      * @throws IOException If error occur while creating/opening index.
      */
-    public synchronized void open(File indexRoot, boolean createNewIndex) throws
-                                                                   IOException {
+    public synchronized void open(File indexRoot, boolean createNewIndex) throws IOException {
         if (indexRoot == null) {
             throw new IllegalArgumentException("indexRoot must not be null");
         }
@@ -475,25 +430,21 @@ public class IndexControllerImpl extends StateThread implements
      * @return The concrete index root.
      * @throws IOException If error occur while creating index.
      */
-    private File getConcreteRoot(File indexRoot, boolean createNewIndex) throws
-                                                                   IOException {
+    private File getConcreteRoot(File indexRoot, boolean createNewIndex) throws IOException {
         if (!indexRoot.exists()) {
             log.debug("Creating non-existing indexRoot '" + indexRoot + "'");
             try {
                 if (!indexRoot.mkdirs()) {
-                    throw new IOException("Unable to create indexRoot '"
-                                          + indexRoot + "'");
+                    throw new IOException("Unable to create indexRoot '" + indexRoot + "'");
                 }
             } catch (SecurityException e) {
-                throw new IOException("Not allowed to create indexRoot '"
-                                      + indexRoot + "'", e);
+                throw new IOException("Not allowed to create indexRoot '" + indexRoot + "'", e);
             }
         }
         // Locate existing folders
         if (!createNewIndex) {
             log.trace("Attempting to locate existing index root");
-            File concreteRoot =
-                    IndexCommon.getCurrentIndexLocation(indexRoot, true);
+            File concreteRoot = IndexCommon.getCurrentIndexLocation(indexRoot, true);
             if (concreteRoot != null) {
                 log.debug("Located index root '" + concreteRoot + "'");
                 return concreteRoot;
@@ -505,12 +456,10 @@ public class IndexControllerImpl extends StateThread implements
         File concreteRoot = new File(indexRoot, folderName);
         log.debug("Got new root '" + concreteRoot + "'. Creating folder");
         if (concreteRoot.exists()) {
-            log.warn("Sanity-check fail: The root '" + concreteRoot
-                     + "' should be new but already exists");
+            log.warn("Sanity-check fail: The root '" + concreteRoot + "' should be new but already exists");
         }
         if (!concreteRoot.mkdirs()) {
-            throw new IOException("Could not create index folder '"
-                                  + concreteRoot + "'");
+            throw new IOException("Could not create index folder '" + concreteRoot + "'");
         }
         return concreteRoot;
     }
@@ -555,32 +504,27 @@ public class IndexControllerImpl extends StateThread implements
             //noinspection OverlyBroadCatchBlock
             try {
                 requestCommit = requestCommit | manipulator.update(payload);
-                newOrderChanged = newOrderChanged ||
-                                  manipulator.isOrderChangedSinceLastCommit();
+                newOrderChanged = newOrderChanged || manipulator.isOrderChangedSinceLastCommit();
             } catch (Exception e) {
-                Logging.logProcess(this.getClass().getSimpleName(),
-                                   "Failed indexing",
-                                   Logging.LogLevel.WARN, payload, e);
+                Logging.logProcess(
+                    this.getClass().getSimpleName(), "Failed indexing", Logging.LogLevel.WARN, payload, e);
                 if (manipulatorPosition == 0) {
                     failLog.warn(String.format(
-                            "IOException for the first manipulator (%s) while "
-                            + "indexing %s", manipulator, payload), e);
-                    log.debug("Failed to index " + payload + ". See the "
+                            "IOException for the first manipulator (%s) while indexing %s", manipulator, payload), e);
+                    log.debug("Failed to index " + payload + " with message '" +e.getMessage() + ". See the "
                               + LOG_FAILED + " log for details");
                     updatesSinceLastCommit--;
                     updatesSinceLastConsolidate--;
                 } else {
                     failLog.error(String.format(
-                            "IOException for manipulator #%d (%s) while"
-                            + " indexing %s", manipulatorPosition + 1,
-                                              manipulator, payload), e);
+                            "IOException for manipulator #%d (%s) while indexing %s",
+                            manipulatorPosition + 1, manipulator, payload), e);
 
                 }
                 if (failLog.isDebugEnabled()) {
                     log.trace(String.format(
                             "Failed indexing %s with content\n%s", payload,
-                            payload.getRecord() == null ? "NA"
-                            : payload.getRecord().getContentAsUTF8()));
+                            payload.getRecord() == null ? "NA" : payload.getRecord().getContentAsUTF8()));
                 }
                 break;
             }
@@ -590,10 +534,8 @@ public class IndexControllerImpl extends StateThread implements
             orderChangedSinceLastCommit();
         }
         Logging.logProcess(this.getClass().getSimpleName(),
-                           "Indexed update finished with deleted=" + 
-                           (payload.getRecord() == null ? "N/A" :
-                            payload.getRecord().isDeleted()),
-                           Logging.LogLevel.DEBUG, payload);
+                           "Indexed update finished with deleted=" + (payload.getRecord() == null ? "N/A" :
+                            payload.getRecord().isDeleted()), Logging.LogLevel.DEBUG, payload);
         // TODO: Keep received Payloads and close them on commit?
         profiler.beat();
         if (requestCommit) {
@@ -603,13 +545,10 @@ public class IndexControllerImpl extends StateThread implements
         triggerCheck();
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("update(" + payload + ") finished - update count for the "
-                      + "current location is " + profiler.getBeats()
-                      + " at current rate " + profiler.getBps(true)
-                      + " records/sec. updatesSinceLastCommit = "
-                      + updatesSinceLastCommit
-                      + ", updatesSinceLastConsolidate = "
-                      + updatesSinceLastConsolidate);
+            log.debug("update(" + payload + ") finished - update count for the current location is "
+                      + profiler.getBeats() + " at current rate " + profiler.getBps(true)
+                      + " records/sec. updatesSinceLastCommit = " + updatesSinceLastCommit
+                      + ", updatesSinceLastConsolidate = " + updatesSinceLastConsolidate);
         }
         return requestCommit;
     }
@@ -633,8 +572,7 @@ public class IndexControllerImpl extends StateThread implements
         markAsUpdated(lastCommit);
         updatesSinceLastCommit = 0;
         orderChangedSinceLastCommit = false;
-        log.trace("commit() finished in "
-                  + (System.currentTimeMillis() - startTime) + " ms");
+        log.trace("commit() finished in " + (System.currentTimeMillis() - startTime) + " ms");
     }
 
     @Override
@@ -647,9 +585,8 @@ public class IndexControllerImpl extends StateThread implements
             lastCommit = System.currentTimeMillis(); // Consolidate includes commit
             return;
         }
-        log.info(
-            "Starting consolidate (force == " + forceConsolidateOnClose
-            + ", updates == " + updatesSinceLastConsolidate + ")");
+        log.info("Starting consolidate (force == " + forceConsolidateOnClose + ", updates == "
+                 + updatesSinceLastConsolidate + ")");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.consolidate();
         }
@@ -675,9 +612,8 @@ public class IndexControllerImpl extends StateThread implements
             log.trace("Marking index as updated to file '" + currentFile + "'");
             Files.saveString(Long.toString(timestamp), currentFile);
         } catch (IOException e) {
-            log.error("Could not mark '" + currentFile + "' with timestamp " +
-                      timestamp + ". Index-watchers will not recognize the"
-                      + " indexes at '" + indexLocation + "' as being updated",
+            log.error("Could not mark '" + currentFile + "' with timestamp " + timestamp
+                      + ". Index-watchers will not recognize the indexes at '" + indexLocation + "' as being updated",
                       e);
         }
     }
@@ -686,25 +622,20 @@ public class IndexControllerImpl extends StateThread implements
     public synchronized void close() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format(
-                "close() called with consolidateOnClose %b, "
-                + "updatesSinceLastconsolidate %d, updatesSinceLastCommit %d "
+                "close() called with consolidateOnClose %b, updatesSinceLastconsolidate %d, updatesSinceLastCommit %d "
                 + "and received Payloads %d",
-                consolidateOnClose, updatesSinceLastConsolidate,
-                updatesSinceLastCommit, profiler.getBeats()));
+                consolidateOnClose, updatesSinceLastConsolidate, updatesSinceLastCommit, profiler.getBeats()));
         if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
         }
         indexIsOpen = false;
-        if ((consolidateOnClose && updatesSinceLastConsolidate > 0) ||
-            forceConsolidateOnClose) {
-            log.debug("Calling consolidate because of close. "
-                      + updatesSinceLastConsolidate
+        if ((consolidateOnClose && updatesSinceLastConsolidate > 0) || forceConsolidateOnClose) {
+            log.debug("Calling consolidate because of close. " + updatesSinceLastConsolidate
                       + " updates since last consolidate");
             consolidate();
         } else {
-            log.debug("Calling commit from close with " + updatesSinceLastCommit
-                      + " updates since last commit");
+            log.debug("Calling commit from close with " + updatesSinceLastCommit + " updates since last commit");
             commit();
         }
         log.debug("Closing down IndexControllerImpl");
@@ -722,8 +653,7 @@ public class IndexControllerImpl extends StateThread implements
             source = (ObjectFilter)filter;
         } else {
             throw new IllegalArgumentException(
-                    "Only ObjectFilters can be used as source. The provided "
-                    + "filter was a " + filter.getClass());
+                    "Only ObjectFilters can be used as source. The provided filter was a " + filter.getClass());
         }
     }
 
@@ -739,13 +669,11 @@ public class IndexControllerImpl extends StateThread implements
         Payload payload = next(); // Also calls update(payload)
         try {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("IndexControllerImpl",
-                               "Calling close for Payload as part of pump()",
+            Logging.logProcess("IndexControllerImpl", "Calling close for Payload as part of pump()",
                                Logging.LogLevel.TRACE, payload);
             payload.close();
         } catch (Exception e) {
-            log.warn("Exception while calling close() on payload '" + payload
-                     + "' in pump()");
+            log.warn("Exception while calling close() on payload '" + payload + "' in pump()");
         }
         return hasNext();
     }
@@ -768,8 +696,7 @@ public class IndexControllerImpl extends StateThread implements
             try {
                 close();
             } catch (IOException e) {
-                log.fatal("IOException while calling close() from close(true)",
-                          e);
+                log.fatal("IOException while calling close() from close(true)", e);
             }
         }
     }
@@ -781,8 +708,7 @@ public class IndexControllerImpl extends StateThread implements
             return false;
         }
         boolean hasNext = source.hasNext();
-        if (!hasNext && !getStatus().equals(STATUS.error)
-            && !getStatus().equals(STATUS.stopped)) {
+        if (!hasNext && !getStatus().equals(STATUS.error) && !getStatus().equals(STATUS.stopped)) {
             log.debug("Calling close() due to no more Payloads");
             try {
                 close();
@@ -801,15 +727,10 @@ public class IndexControllerImpl extends StateThread implements
         // Get the next payload
         long start = System.nanoTime();
         Payload payload = source.next();
-        if (log.isTraceEnabled()
-            || (log.isDebugEnabled()
-                && (profiler.getBeats()+1) % feedbackEvery == 0)) {
-            log.trace("Got payload #" + (profiler.getBeats()+1)
-                      + " from source in "
-                      + (System.nanoTime() - start)/1000000f + "ms"
-                      + ". UpdatesSinceLastCommit=" + updatesSinceLastCommit
-                      + ", updatesSinceLastconsolidate="
-                      + updatesSinceLastConsolidate);
+        if (log.isTraceEnabled() || (log.isDebugEnabled() && (profiler.getBeats()+1) % feedbackEvery == 0)) {
+            log.trace("Got payload #" + (profiler.getBeats()+1) + " from source in "
+                      + (System.nanoTime() - start)/1000000f + "ms. UpdatesSinceLastCommit=" + updatesSinceLastCommit
+                      + ", updatesSinceLastconsolidate=" + updatesSinceLastConsolidate);
         }
 
         // Process the payload
@@ -817,8 +738,7 @@ public class IndexControllerImpl extends StateThread implements
             update(payload);
         } catch (IOException e) {
             // Non-updates of indexes is a serious offense, so we escalate
-            throw new RuntimeException("IOException when calling next("
-                                       + payload + ")", e);
+            throw new RuntimeException("IOException when calling next(" + payload + ")", e);
         }
 
         return payload;
@@ -837,8 +757,7 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     @Override
-    public synchronized boolean removeManipulator(IndexManipulator
-            manipulator) {
+    public synchronized boolean removeManipulator(IndexManipulator manipulator) {
         return manipulators.remove(manipulator);
     }
 

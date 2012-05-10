@@ -37,10 +37,17 @@ import org.apache.commons.logging.Log;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Test connection to a local Solr at port 8983 (default).
+ * The local Solr can be a stock Solr 4 trunk, with the extra lines
+ * {@code <dynamicField name="*" type="text" multiValued="true" />} and
+ * {@code <field name="recordId" type="string" indexed="true" stored="true" required="true" />}
+ * also, the attribute {@code multiValued="true"} must be added to the field {@code id} and the uniqueKey must be set
+ * to {@code recordId}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -65,9 +72,12 @@ public class LocalSolrConnectionTest extends TestCase {
         ObjectFilter data = getDataProvider(false);
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
-        assertTrue("There should be a next for the indexer", indexer.hasNext());
-        indexer.next();
-        assertFalse("After a single call to next() there should be no more Payloads", indexer.hasNext());
+        for (int i = 0 ; i < SAMPLES ; i++) {
+            assertTrue("Check " + (i+1) + "/" + SAMPLES + ". There should be a next for the indexer",
+                       indexer.hasNext());
+            indexer.next();
+        }
+        assertFalse("After " + SAMPLES + " nexts, there should be no more Payloads", indexer.hasNext());
         indexer.close(true);
         log.debug("Finished basic ingest");
     }
@@ -78,7 +88,7 @@ public class LocalSolrConnectionTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description"
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score name description"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -110,19 +120,24 @@ public class LocalSolrConnectionTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description"
+            DocumentKeys.SEARCH_QUERY, "description:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score name description"
         );
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+                     2, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
         ObjectFilter data = getDataProvider(true);
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
-        indexer.next();
+        int delCount = 0;
+        while (indexer.hasNext()) {
+            delCount++;
+            indexer.next();
+        }
         indexer.close(true);
+        assertEquals("The number of Records send as deleted should match ingested Records", SAMPLES, delCount);
 
         responses.clear();
         searcher.search(request, responses);
@@ -132,11 +147,16 @@ public class LocalSolrConnectionTest extends TestCase {
         searcher.close();
     }
 
+    final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
-        String doc1 = Resolver.getUTF8Content("integration/solr/SolrSampleDocument1.xml");
-        Payload payload = new Payload(new Record("doc1", "dummy", doc1.getBytes("utf-8")));
-        payload.getRecord().setDeleted(deleted);
-        return new PayloadFeederHelper(Arrays.asList(payload));
+        List<Payload> samples = new ArrayList<Payload>(SAMPLES);
+        for (int i = 1 ; i <= SAMPLES ; i++) {
+            Payload payload = new Payload(new Record(
+                "doc" + i, "dummy", Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+            payload.getRecord().setDeleted(deleted);
+            samples.add(payload);
+        }
+        return new PayloadFeederHelper(samples);
     }
 
     private IndexController getIndexer() throws IOException {
@@ -145,7 +165,7 @@ public class LocalSolrConnectionTest extends TestCase {
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "id"); // 'id' is the default ID field for Solr
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
 

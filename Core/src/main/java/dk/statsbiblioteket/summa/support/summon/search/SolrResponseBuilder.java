@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -88,6 +89,7 @@ public class SolrResponseBuilder implements Configurable {
     protected String recordBase = DEFAULT_RECORDBASE;
     protected String searcherID;
     protected Map<String, String> sortRedirect;
+    protected Set<String> nonescapedFields = new HashSet<String>(10);
 
     public SolrResponseBuilder(Configuration conf) {
         recordBase = conf.getString(CONF_RECORDBASE, recordBase);
@@ -112,7 +114,7 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-        System.out.println(solrResponse.replace(">", ">\n"));
+//        System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -127,11 +129,33 @@ public class SolrResponseBuilder implements Configurable {
         }
         xml.next();
         final DocumentResponse documentResponse = createBasicDocumentResponse(request);
-
+        final boolean mlt = request.getBoolean(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null) != null;
         iterateTags(xml, new Callback() {
             @Override
             public boolean tagStart(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                if (mlt && "lst".equals(current) && "moreLikeThis".equals(getAttribute(xml, "name", null))) {
+                    log.debug("Parsing MoreLikeThis response");
+                    parseResponse(xml, documentResponse);
+                    // TODO: Remove query-id
+                    return true;
+                }
+                if (!mlt && "result".equals(current)) {
+                    String name = getAttribute(xml, "name", null);
+                    if (name == null) {
+                        log.warn("Expected attribute 'name' in tag result. Skipping content for result");
+                        skipSubTree(xml);
+                        return true;
+                    }
+                    if ("response".equals(name)) {
+                        parseResponse(xml, documentResponse);
+                        // Cursor is at end of sub tree after parseHeader
+                        return true;
+                    }
+                    log.debug("Encountered unsupported name in response '" + name + "'. Skipping element");
+                    skipSubTree(xml);
+                    return true;
+                }
                 if ("lst".equals(current)) {
                     String name = getAttribute(xml, "name", null);
                     xml.next();
@@ -154,26 +178,11 @@ public class SolrResponseBuilder implements Configurable {
                     skipSubTree(xml);
                     return true;
                 }
-                if ("result".equals(current)) {
-                    String name = getAttribute(xml, "name", null);
-                    if (name == null) {
-                        log.warn("Expected attribute 'name' in tag result. Skipping content for result");
-                        skipSubTree(xml);
-                        return true;
-                    }
-                    if ("response".equals(name)) {
-                        parseResponse(xml, documentResponse);
-                        // Cursor is at end of sub tree after parseHeader
-                        return true;
-                    }
-                    log.debug("Encountered unsupported name in response '" + name + "'. Skipping element");
-                    skipSubTree(xml);
-                    return true;
-                }
                 log.warn("Encountered unexpected tag '" + current + "' in Solr response. Skipping element");
                 return false;
             }
         });
+
         documentResponse.addTiming("reportedtime", documentResponse.getSearchTime());
         documentResponse.addTiming("buildresponses.total", System.currentTimeMillis() - startTime);
         documentResponse.addTiming(solrTiming);
@@ -321,7 +330,15 @@ public class SolrResponseBuilder implements Configurable {
                     log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
                     return false;
                 }
-                String content = xml.getElementText();
+                String content;
+                try {
+                    content = xml.getElementText();
+                } catch (XMLStreamException e) {
+                    log.warn("Exception while reading text in element '" + name + "' for document '" + id
+                             + "'. Probable cause is embedded XML", e);
+                    return true;
+
+                }
                 if (content.length() == 0) {
                     log.debug("Content for " + current + "#" + name + " for document " + id + " was empty. Skipping");
                     return true;
@@ -347,6 +364,10 @@ public class SolrResponseBuilder implements Configurable {
                     log.warn("id was undefined after ");
                 }
                 fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
+                // TODO: Cons
+/*                if (recordBase != null) {
+                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, recordBase));
+                }*/
                 String sortValue = null;
                 if (sortKey == null) {
                     sortValue = Float.toString(score);
@@ -363,7 +384,8 @@ public class SolrResponseBuilder implements Configurable {
                 }
                 DocumentResponse.Record record = new DocumentResponse.Record(id, searcherID, score, sortValue);
                 for (SimplePair<String, String> field: fields) {
-                    record.addField(new DocumentResponse.Field(field.getKey(), field.getValue(), true));
+                    record.addField(new DocumentResponse.Field(
+                        field.getKey(), field.getValue(), !nonescapedFields.contains(field.getKey())));
                 }
                 if (log.isTraceEnabled()) {
                     log.debug("constructed and added " + record);
@@ -531,7 +553,7 @@ public class SolrResponseBuilder implements Configurable {
     /**
      * Creates a Summa shortformat based on the given values.
      * @param extracted values extracted from a Solr response. Recognized keys are Title, Subtitle, Author, contentType
-     *                  and Date. All values are single exept Author which can contain multiple Authors, delimited by
+     *                  and Date. All values are single except Author which can contain multiple Authors, delimited by
      *                  newline.
      * @return a shortformat conforming to Summa standard.
      */
@@ -569,8 +591,7 @@ public class SolrResponseBuilder implements Configurable {
         String[] elements = extracted.getString(field, "").split("\n");
         for (String element: elements) {
             if (!"".equals(element)) {
-                shortformat.append(String.format("%s<%s>%s</%s>\n",
-                                                 indent, tag, XMLUtil.encode(element), tag));
+                shortformat.append(String.format("%s<%s>%s</%s>\n", indent, tag, XMLUtil.encode(element), tag));
             }
         }
     }
@@ -578,5 +599,10 @@ public class SolrResponseBuilder implements Configurable {
     protected abstract static class XMLCallback {
         public abstract void execute(XMLStreamReader xml) throws XMLStreamException;
         public void close() { } // Called when iteration has finished
+    }
+
+    public void setNonescapedFields(Set<String> nonescapedFields) {
+        this.nonescapedFields = new HashSet<String>(nonescapedFields);
+        log.debug("setNonescapedFields(" + Strings.join(nonescapedFields, ", ") + ")");
     }
 }

@@ -3,42 +3,40 @@
                 xmlns:doc="http://statsbiblioteket.dk/summa/2008/Document"
                 exclude-result-prefixes="doc">
     <!-- Simple (and lossy) transformation from SummaDocument to XML ready for
-         ingesting into Solr -->
-    <xsl:output method="xml" encoding="UTF-8"/>
+         ingesting into Solr (remember to wrap i <add>...</add> -->
+    <xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
     <xsl:template match="doc:SummaDocument">
-        <add>
-            <doc>
+        <doc>
             <xsl:text>
             </xsl:text>
-                <xsl:element name="field">
-                    <xsl:attribute name="name">id</xsl:attribute>
-                    <xsl:value-of select="@doc:id"/>
-                </xsl:element>
+            <xsl:element name="field">
+                <xsl:attribute name="name">id</xsl:attribute>
+                <xsl:value-of select="@doc:id"/>
+            </xsl:element>
                 <xsl:text>
                 </xsl:text>
-                <xsl:element name="field">
-                    <xsl:attribute name="name">recordId</xsl:attribute>
-                    <xsl:value-of select="@doc:id"/>
-                </xsl:element>
+            <xsl:element name="field">
+                <xsl:attribute name="name">recordId</xsl:attribute>
+                <xsl:value-of select="@doc:id"/>
+            </xsl:element>
                 <xsl:text>
                 </xsl:text>
 
-                <xsl:for-each select="doc:fields/doc:field">
-                    <xsl:element name="field">
-                        <xsl:attribute name="name">
-                            <xsl:value-of select="@doc:name"/>
-                        </xsl:attribute>
-<!--                        <xsl:attribute name="boost">
-                            <xsl:value-of select="@doc:boost"/>
-                        </xsl:attribute>-->
-                        <xsl:value-of select="."/>
-                    </xsl:element>
+            <xsl:for-each select="doc:fields/doc:field">
+                <xsl:element name="field">
+                    <xsl:attribute name="name">
+                        <xsl:value-of select="@doc:name"/>
+                    </xsl:attribute>
+                    <!--                        <xsl:attribute name="boost">
+                        <xsl:value-of select="@doc:boost"/>
+                    </xsl:attribute>-->
+                    <xsl:value-of select="."/>
+                </xsl:element>
                     <xsl:text>
                     </xsl:text>
-                </xsl:for-each>
+            </xsl:for-each>
             <xsl:text>
             </xsl:text>
-            </doc>
-        </add>
+        </doc>
     </xsl:template>
 </xsl:stylesheet>
