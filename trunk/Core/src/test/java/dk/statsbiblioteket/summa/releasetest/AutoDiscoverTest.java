@@ -19,8 +19,10 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
@@ -66,21 +68,25 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te")
-public class AutoDiscoverTest extends TestCase {
+public class AutoDiscoverTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(AutoDiscoverTest.class);
 
     @Override
     public void setUp () throws Exception {
         super.setUp();
-        if (TEST_DIR.exists()) {
+        delete(TEST_DIR);
+        delete(TEST_INDEX);
+        new File(INGEST_FOLDER).mkdirs();
+    }
+    private void delete(File folder) {
+        if (folder.exists()) {
             try {
-                Files.delete(TEST_DIR);
+                Files.delete(folder);
             } catch (Exception e) {
-                log.debug("Unable to delete " + TEST_DIR, e);
+                log.debug("Unable to delete " + folder, e);
             }
         }
-        TEST_DIR.mkdirs();
-        new File(INGEST_FOLDER).mkdirs();
+        folder.mkdirs();
     }
 
     @Override
@@ -89,6 +95,7 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     private File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
+    private File TEST_INDEX = new File(System.getProperty("java.io.tmpdir"), "testindex");
     private String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
     private File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("integration/auto/data"));
 
@@ -112,6 +119,32 @@ public class AutoDiscoverTest extends TestCase {
         FileOutputStream out = new FileOutputStream(dest);
         out.write(Zips.gzipBuffer(Files.loadString(src).getBytes("utf-8")));
         out.close();
+    }
+
+    public void testSearch() throws Exception {
+        final String STORAGE = "index_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        SearchService searchService = createSearcher();
+        searchService.start();
+        SearchClient searchClient = getSearchClient();
+        Service ingest = createIngestChain(STORAGE);
+        ingest.start();
+        Service index = createIndexer(STORAGE);
+        index.start();
+        putFiles();
+        Thread.sleep(5000);
+
+        Request request = new Request();
+        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
+
+        String response = searchClient.search(request).toXML();
+        log.debug("A search for 'hans' gave\n" + response);
+        assertTrue("The search for hans should yield a response with Hans-related content",
+                   response.indexOf("Fagekspert i Datalogi") > 0);
+        searchService.stop();
+        ingest.stop();
+        index.stop();
+        storage.close();
     }
 
     /* Creators for the different parts of the workflow. */
@@ -190,9 +223,9 @@ public class AutoDiscoverTest extends TestCase {
 
         String INDEX_ROOT = ReleaseHelper.INDEX_ROOT;
         assertTrue("The index root must exist", new File(INDEX_ROOT).exists());
-        File luceneDir = new File(new File(INDEX_ROOT).listFiles()[0],
-                                  "lucene");
-
+        File[] indexes = new File(INDEX_ROOT).listFiles();
+        assertNotNull("At least one index root should exist at " + INDEX_ROOT, indexes);
+        File luceneDir = new File(indexes[indexes.length-1], "lucene"); // Last one is the current one
         // The records are in storage now, give the indexer 2s to react. This
         // should be sufficient since the default poll time is 500ms
         int foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 4000);
@@ -200,9 +233,10 @@ public class AutoDiscoverTest extends TestCase {
         assertEquals("The lucene index should eventually contain " + TEST_FILES.size() + " records",
                      TEST_FILES.size(), foundDocs);
 
-        File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], "facet");
-        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT + ") should be > 0 bytes ",
-                   facetDir.listFiles()[0].length() > 0);
+        // No explicit facet structure anymore
+//        File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], "facet");
+//        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT + ") should be > 0 bytes ",
+//                   facetDir.listFiles()[0].length() > 0);
 
         ingest.stop();
         index.stop();
@@ -264,11 +298,11 @@ public class AutoDiscoverTest extends TestCase {
         return foundRecords;
     }
 
-    public int waitForDocCount (File index, int docCount, long timeout)
-                                                               throws Exception{
+    public int waitForDocCount (File index, int docCount, long timeout) throws Exception{
         boolean foundDocs = false;
         long startTime = System.currentTimeMillis();
-        int maxCount = 0;
+        int maxCount = -1;
+        File root = index.getParentFile();
 
         while (!foundDocs && (System.currentTimeMillis() - startTime < timeout)) {
             log.debug("Waiting for " + docCount + " documents in: " + index);
@@ -277,29 +311,31 @@ public class AutoDiscoverTest extends TestCase {
 
             if (!index.exists()) {
                 log.debug("No index yet in '" + index + "'");
+                continue;
             }
-            try {
-                IndexReader luceneIndex = IndexReader.open(new NIOFSDirectory(index));
-                maxCount = luceneIndex.maxDoc();
-                if (maxCount == docCount) {
-                    foundDocs = true;
-                } else {
-                    log.debug("Index not ready, found " + luceneIndex.maxDoc() + " documents");
-                }
-                luceneIndex.close();
-            } catch (Exception e) {
-                log.debug("Skipping Exception encountered while waiting for index", e);
+            if (!new File(root, IndexCommon.VERSION_FILE).exists()) {
+                log.debug("Index folder found, but no " + IndexCommon.VERSION_FILE + " yet in '" + root + "'");
+                continue;
             }
+            log.debug("Index folder and " + IndexCommon.VERSION_FILE + " found in " + index + ". Opening Lucene index");
+            IndexReader luceneIndex = IndexReader.open(new NIOFSDirectory(index));
+            maxCount = luceneIndex.maxDoc();
+            if (maxCount == docCount) {
+                foundDocs = true;
+            } else {
+                log.debug("Index not ready, found " + luceneIndex.maxDoc() + " documents");
+            }
+            luceneIndex.close();
         }
-
         if (foundDocs) {
             log.info("Got expected doc count, " + docCount + ", from: " + index);
         } else {
             if (index.exists()) {
-                log.warn("Did NOT get expected docu count from: " + index + " with " + index.listFiles().length
-                         + " files");
+                //noinspection ConstantConditions
+                log.warn("Found " + maxCount + " documents instead of the expected " + docCount + " documents in  "
+                         + index + " with " + index.listFiles().length + " files");
             } else {
-                log.warn("Did NOT get expected docu count as there are no index at " + index);
+                log.warn("Did not find an index at " + index + " after " + timeout + "ms");
             }
         }
 
@@ -307,7 +343,8 @@ public class AutoDiscoverTest extends TestCase {
     }
 
     private SearchService createSearcher() throws Exception {
-        Configuration conf = IndexTest.loadFagrefProperties("not_used", "integration/auto/setup/SearchConfiguration.xml");
+        Configuration conf = IndexTest.loadFagrefProperties(
+            "not_used", "integration/auto/setup/SearchConfiguration.xml");
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
@@ -318,32 +355,6 @@ public class AutoDiscoverTest extends TestCase {
         conf.set(ConnectionConsumer.CONF_RPC_TARGET,
                  "//localhost:28000/summa-searcher");
         return new SearchClient(conf);
-    }
-    public void testSearch() throws Exception {
-        final String STORAGE = "index_storage";
-        Storage storage = ReleaseHelper.startStorage(STORAGE);
-        SearchService searchService = createSearcher();
-        searchService.start();
-        SearchClient searchClient = getSearchClient();
-        Service ingest = createIngestChain(STORAGE);
-        ingest.start();
-        Service index = createIndexer(STORAGE);
-        index.start();
-        putFiles();
-        Thread.sleep(5000);
-
-        Request request = new Request();
-        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
-
-        String response = searchClient.search(request).toXML();
-        log.debug("A search for 'hans' gave\n" + response);
-        assertTrue("The search for hans should yield a response with "
-                   + "Hans-related content", 
-                   response.indexOf("Fagekspert i Datalogi") > 0);
-        searchService.stop();
-        ingest.stop();
-        index.stop();
-        storage.close();
     }
 }
 
