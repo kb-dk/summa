@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>dk.statsbiblioteket.summa</groupId>
+        <artifactId>summa</artifactId>
+        <version>1.8.0-20120514-exposed-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>summa-exposed</artifactId>
+    <name>Summa Exposed module</name>
+
+
+
+    <build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <!-- Jars -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- Build normal Jar -->
+                <configuration>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <includes>
+                        <include>**/*</include>
+                    </includes>
+                </configuration>
+                <!-- Create API jar at compile time, needed to validate that modules have right dependencies. -->
+                <executions>
+                    <execution>
+                        <id>api</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>api</classifier>
+                            <includes>
+                                <include>**/api/**/*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit-dep</artifactId>
+            <version>4.9</version>
+        </dependency>
+        <dependency>
+        	<groupId>com.carrotsearch.randomizedtesting</groupId>
+        	<artifactId>randomizedtesting-runner</artifactId>
+        	<version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+        </dependency>
+    </dependencies>
+</project>
