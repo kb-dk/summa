@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.8.0-20120502-trunk-SNAPSHOT</version>
+    <version>1.8.0-20120514-exposed-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -22,6 +22,7 @@
     <!-- Summa modules -->
     <modules>
         <module>Core</module> 
+        <module>Exposed</module> 
     <!--<module>Common</module> -->
     <!--<module>Storage</module>  -->
     <!--<module>Search</module>  -->
@@ -46,12 +47,17 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.0</version>
+            <version>4.10</version>
         </dependency>
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant-junit</artifactId>
+                <version>1.8.1</version>
+            </dependency>
             <dependency>
                 <groupId>org.neo4j</groupId>
                 <artifactId>neo4j</artifactId>
