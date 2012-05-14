@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <entry key="searchRetries">2</entry>
+
+    <!-- These settings are only for testing Cluster. They should not be used
+         for production. The reference properties file can be found in the
+         config for Search -->
+    <entry key="indexPath">/tmp/index</entry>
+    <entry key="io_service">//atria:8400/summa_io_postgres</entry>
+    <entry key="descriptor_xslt">searchDescriptor.xslt</entry>
+<!--    <entry key="defaultFields">au author_normalized su lsubj ti freetext</entry> -->
+    <entry key="defaultFields">freetext</entry>
+
+</properties>
+
