@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>1.8.0-20120502-trunk-SNAPSHOT</version>
+    <version>1.8.0-20120411-l4exp-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -21,19 +21,17 @@
 
     <!-- Summa modules -->
     <modules>
-        <module>Core</module> 
-    <!--<module>Common</module> -->
-    <!--<module>Storage</module>  -->
-    <!--<module>Search</module>  -->
-    <!--<module>Ingest</module>  -->
-    <!--<module>Index</module>  -->
-    <!--<module>FacetBrowser</module>  -->
-    <!--<module>Support</module>  -->
+        <module>Common</module>
+        <module>Storage</module>
+        <module>Search</module>
+        <module>Ingest</module>
+        <module>Index</module>
+        <module>FacetBrowser</module>
+        <module>Support</module>
         <module>Web</module>
-   <!-- <module>Samples/Integration/</module> -->
+        <module>Samples/Summix/</module>
+        <module>Samples/Integration/</module>
    <!-- <module>Samples/Assembly/</module>   Module only creates .jar containing all .jars from modules. It it not used currently.-->
-            <module>Summix/</module> <!-- This must be last-->
-    
     </modules>
 
     <!-- Summa dependencies -->

@@ -1,0 +1,111 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>dk.statsbiblioteket.summa</groupId>
+        <artifactId>summa</artifactId>
+        <version>1.8.0-20120411-l4exp-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>summa-integration</artifactId>
+    <name>Summa Integration module</name>
+    <description>Used for cross-module integrationtests. Unittests are excluded in maven project. Must be run in IDEA/Eclipse on demand.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.sbutil</groupId>
+            <artifactId>sbutil</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jline</groupId>
+            <artifactId>jline</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika</artifactId>
+        </dependency>
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-ingest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-storage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-index</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-search</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-support</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-facetbrowser</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <!-- TODO doc/ to documentation -->
+    <!-- TODO what about config/ -->
+    <build>
+        <testResources>
+            <testResource>
+                <targetPath>resources</targetPath>
+                <directory>${basedir}/test/resources</directory>
+                <!--<directory>${basedir}/test/resources</directory>-->
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
+
+        <!-- Source -->
+        <sourceDirectory>src/</sourceDirectory>
+       
+        <!-- Tests -->
+        <testSourceDirectory>test/</testSourceDirectory>
+        
+        <plugins>
+            <!-- Exclude all unittests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+             
+                </configuration>
+            </plugin>
+            
+            
+        </plugins>
+    </build>
+</project>
