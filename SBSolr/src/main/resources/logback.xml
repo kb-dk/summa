@@ -1,5 +1,5 @@
 <!-- $Id: -->
-<configuration scan="true" scanPeriod="30 seconds">
+<configuration scan="true" scanPeriod="5 minutes">
     <insertFromJNDI env-entry-name="java:comp/env/solr/logback" as="logbackConfiguration"/>
 
     <if condition='new java.io.File("${logbackConfiguration}").exists()&amp;&amp;new java.io.File("${logbackConfiguration}").isFile()'>

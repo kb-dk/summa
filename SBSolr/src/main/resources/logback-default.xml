@@ -1,6 +1,6 @@
 <!-- $Id: -->
 <included>
-    <contextName>sbsolr</contextName>
+    <contextName>summa-sbsolr</contextName>
 
     <if condition='isNull("catalina.base")'>
         <if condition='isNull("jetty.home")'>
