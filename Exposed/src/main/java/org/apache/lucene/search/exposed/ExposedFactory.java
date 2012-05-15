@@ -49,6 +49,7 @@ public class ExposedFactory {
     if (reader instanceof CompositeReader && fieldNames.size() == 1) {
       // Index-level single field
       IndexReader[] subs = ((CompositeReader)reader).getSequentialSubReaders();
+        // TODO: Consider using ReaderUtil.gathersubReaders
       List<TermProvider> fieldProviders =
           new ArrayList<TermProvider>(subs.length);
       List<ExposedRequest.Field> fieldRequests =
