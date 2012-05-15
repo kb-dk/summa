@@ -1,0 +1,20 @@
+<!-- $Id: -->
+<configuration scan="true" scanPeriod="30 seconds">
+    <insertFromJNDI env-entry-name="java:comp/env/solr/logback" as="logbackConfiguration"/>
+
+    <if condition='new java.io.File("${logbackConfiguration}").exists()&amp;&amp;new java.io.File("${logbackConfiguration}").isFile()'>
+        <then>
+            <include file="${logbackConfiguration}"/>
+        </then>
+        <else>
+            <if condition='"${logbackConfiguration}".contains(":")'>
+                <then>
+                    <include url="${logbackConfiguration}"/>
+                </then>
+                <else>
+                    <include resource="${logbackConfiguration}"/>
+                </else>
+            </if>
+        </else>
+    </if>
+</configuration>
