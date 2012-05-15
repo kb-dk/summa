@@ -18,16 +18,16 @@ import java.util.Map;
 
 /**
  * Provides a map from docID to tagIDs (0 or more / document), where tagID
- * refers to a tag one out of multiple TermProviders. The mapping is optimized
+ * refers to a tag in one out of multiple TermProviders. The mapping is optimized
  * towards low memory footprint and extraction of all tags for each given
  * document ID.
  * </p><p>
  * Technical notes: This is essentially a two-dimensional array of integers.
  * Dimension 1 is document ID, dimension 2 is references to indirects.
- * However, two-dimensional arrays take up a lot of memory so we handle this
- * by letting the array doc2ref contain one pointer for each docID into a second
- * array refs, which contains the references. We know the number of refs to
- * extract for a given docID by looking at the starting point for docID+1.
+ * However, plain Java two-dimensional arrays take up a lot of memory so we handle
+ * this by letting the array doc2ref contain one pointer for each docID into a
+ * second array refs, which contains the references. We know the number of refs
+ * to extract for a given docID by looking at the starting point for docID+1.
  * </p><p>
  * The distribution of the entries in refs is defined by the index layout and
  * is assumed to be random.
@@ -72,7 +72,6 @@ public class FacetMap {
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
     refs = pair.getValue();
-
 //    System.out.println("Unique count: " + uniqueTime
 //        + "ms, tag time: " + tagExtractTime + "ms");
   }
@@ -241,7 +240,29 @@ public class FacetMap {
         }
          */
 
+          int doc;
+          final int base = (int)tuple.docIDBase;
+          while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+  //            final int docID = ;
+    //          final int refsOrigo = (int)doc2ref.get(docID);
+  //          final int chunkOffset = (int)refs.get(refsOrigo);
+  //            final int chunkOffset = --tagCounts[docID];
+            final int refsPos = tagCounts[doc + base]++;
+            try {
+              refs.set(refsPos, indirect);
+            } catch (ArrayIndexOutOfBoundsException e) {
+              throw new RuntimeException(
+                  "Array index out of bounds. refs.size=" + refs.size()
+                      + ", refs.bitsPerValue=" + refs.getBitsPerValue()
+                      + ", refsPos="
+                      + refsPos
+                      + ", tuple.indirect+termOffset="
+                      + tuple.indirect + "+" + termOffset + "="
+                      + (tuple.indirect+termOffset), e);
+            }
+          }
 
+       /*
         int doc;
         // TODO: Test if bulk reading (which includes freqs) is faster
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
@@ -265,7 +286,7 @@ public class FacetMap {
 //            refs.set(refsOrigo, chunkOffset-1);
 //          }
         }
-
+         */
       }
     }
     fillTime += System.currentTimeMillis();

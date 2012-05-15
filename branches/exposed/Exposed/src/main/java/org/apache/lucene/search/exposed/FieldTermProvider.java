@@ -132,7 +132,8 @@ public class FieldTermProvider extends TermProviderImpl {
       while (lastOrdinalRequest != ordinal) {
         term = termsEnum.next();
         if (term == null) {
-          throw new IOException("Unable to locate term for ordinal " + ordinal);
+          throw new IOException("Unable to locate term for ordinal " + ordinal
+                                + ". Last ordinalRequest was " + lastOrdinalRequest);
         }
         lastOrdinalRequest++;
       }
@@ -141,7 +142,7 @@ public class FieldTermProvider extends TermProviderImpl {
     }
 
     termsEnum.seekExact(ordinal);
-/*    if (TermsEnum.SeekStatus.FOUND != termsEnum.seek(ordinal)) {
+    /*if ( TermsEnum.SeekStatus.FOUND != termsEnum.seek(ordinal)) {
       throw new IOException("Unable to locate term for ordinal " + ordinal);
     }*/
     BytesRef result = termsEnum.term();

@@ -103,7 +103,7 @@ public class OrdinalTermsEnum extends TermsEnum {
       //System.out.println(count + ": " + inner.term().utf8ToString());
       if (count % divider == 0) {
         marks.add(inner.termState());
-        terms.add((BytesRef) inner.term().clone());
+        terms.add(copy(inner.term()));
       }
       count++;
       if (inner.next() == null) {
@@ -112,6 +112,11 @@ public class OrdinalTermsEnum extends TermsEnum {
     }
     inner.seekExact(terms.get(0), marks.get(0));
     termCount = count;
+  }
+  private BytesRef copy(BytesRef bytesRef) {
+      byte[] bytes = new byte[bytesRef.length];
+      System.arraycopy(bytesRef.bytes, bytesRef.offset, bytes, 0, bytesRef.length);
+      return new BytesRef(bytes);
   }
 
   /**
