@@ -57,14 +57,44 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache</groupId> <!-- Could not be resolved automatically -->
+            <artifactId>zookeeper</artifactId>
+            <version>3.4.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+            <version>0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit-dep</artifactId>
             <version>4.9</version>
         </dependency>
         <dependency>
-        	<groupId>com.carrotsearch.randomizedtesting</groupId>
-        	<artifactId>randomizedtesting-runner</artifactId>
-        	<version>1.5.0</version>
+            <groupId>com.carrotsearch.randomizedtesting</groupId>
+            <artifactId>randomizedtesting-runner</artifactId>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ant</groupId>
@@ -74,6 +104,22 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
+        </dependency>
+        <dependency>
+            <!-- Must be before solr-core -->
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-test-framework</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-core</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <version>1337113</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
@@ -87,12 +133,37 @@
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-suggest</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
             <artifactId>lucene-queries</artifactId>
             <version>1337113</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
             <artifactId>lucene-queryparser</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-misc</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-grouping</artifactId>
             <version>1337113</version>
         </dependency>
         <dependency>
