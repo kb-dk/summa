@@ -34,16 +34,15 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import javax.xml.transform.TransformerException;
-import java.io.*;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -586,6 +585,71 @@ public class SummonSearchNodeTest extends TestCase {
 //        assertTrue("The filter(old) hit count " + fHitCount + " should differ from query(old) hit count " + qHitCount
 //                   + " by more than 100 as filter query apparently does not query parse with default fields",
 //                   Math.abs(fHitCount - qHitCount) > 100);
+    }
+
+    public void testDismaxAnd() throws RemoteException {
+        String QUERY1 = "public health policy";
+        String QUERY2 = "alternative medicine";
+        //String QUERY = "work and life balance";
+        //String QUERY = "Small business and Ontario";
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> titlesLower = getField(summon, new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY1 + " and " + QUERY2,
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+        ), "Title");
+        String lower = Strings.join(titlesLower, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
+        List<String> titlesUpper = getField(summon, new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY1 + " AND " + QUERY2,
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+        ), "Title");
+        String upper = Strings.join(titlesUpper, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
+
+        summon.close();
+        if (lower.equals(upper)) {
+            fail("Using 'and' and 'AND' should not yield the same result\n" + lower);
+        } else {
+            System.out.println("Using 'and' and 'AND' gave different results:\nand: " +
+            lower.replace("\n", ", ") + "\nAND: " + upper.replace("\n", ", "));
+        }
+    }
+
+    public void testDismaxWithQuoting() throws RemoteException {
+        String QUERY = "public health policy and alternative medicine";
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+
+        List<String> titlesRaw = getField(summon, new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY,
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+        ), "Title");
+        String raw = Strings.join(titlesRaw, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
+        List<String> titlesQuoted = getField(summon, new Request(
+            DocumentKeys.SEARCH_QUERY, QUERY,
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
+            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+        ), "Title");
+        String quoted = Strings.join(titlesQuoted, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
+        List<String> titlesNonDismaxed = getField(summon, new Request(
+            DocumentKeys.SEARCH_QUERY, "(" + QUERY + ")",
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
+            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+        ), "Title");
+        String nonDismaxed = Strings.join(titlesNonDismaxed, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
+
+        summon.close();
+        
+        System.out.println("raw " + (raw.equals(quoted) ? "=" : "!") + "= quoted");
+        System.out.println("raw " + (raw.equals(nonDismaxed) ? "=" : "!") + "= non dismaxed");
+        System.out.println("quoted " + (quoted.equals(nonDismaxed) ? "=" : "!") + "= non dismaxed");
+        System.out.println("raw =          " + raw.replace("\n", ", "));
+        System.out.println("quoted =       " + quoted.replace("\n", ", "));
+        System.out.println("non dismaxed = " + nonDismaxed.replace("\n", ", "));
+        
+        assertEquals("The result from the raw (and thus dismaxed) query should match the result from " 
+                     + "the quoted terms query",
+                     raw, quoted);
     }
 
     public void testFilterVsQuery3() throws RemoteException {
