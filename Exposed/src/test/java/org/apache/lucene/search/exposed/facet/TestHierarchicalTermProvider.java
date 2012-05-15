@@ -110,6 +110,7 @@ public class TestHierarchicalTermProvider extends TestCase {
             "augmented extra time: " + buildTime + " ms");
       }
     }
+    deleteIndex();
   }
 
   private void dumpField(IndexReader reader, String field, int tags)

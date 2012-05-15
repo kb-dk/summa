@@ -154,6 +154,10 @@ public class HierarchicalTermProvider implements TermProvider {
     }
   }
 
+  public String toString() {
+      return "HierarchicalTermProvider(source=" + source + ")";
+  }
+
   /* Plain delegations */
 
   public int getNearestTermIndirect(BytesRef key) throws IOException {
