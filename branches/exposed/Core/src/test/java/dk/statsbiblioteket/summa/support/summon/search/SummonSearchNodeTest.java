@@ -559,8 +559,12 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFilterVsQuery() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long qHitCount = getHits(summon, DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama");
-        long fHitCount = getHits(summon, DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama");
+        long qHitCount = getHits(summon,
+                                 DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+                                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
+        long fHitCount = getHits(summon,
+                                 DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+                                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
 
         assertTrue("The filter hit count " + fHitCount + " should differ from query hit count " + qHitCount
                    + " by less than 100",
@@ -898,14 +902,28 @@ public class SummonSearchNodeTest extends TestCase {
     Tests if explicit weight-adjustment of terms influences the order of documents.
      */
     public void testExplicitWeightOrder() throws RemoteException {
-        assertOrder("dolphin whales", "dolphin whales^1.000001");
+        assertOrder("dolphin whales", "dolphin whales^1.0");
+    }
+
+    public void testExplicitWeightOrderSingleTerm() throws RemoteException {
+        assertOrder("whales", "whales^1.0");
+    }
+
+    public void testExplicitWeightOrderFoo() throws RemoteException {
+        assertOrder("foo", "foo^1.0"); // By some funny coincidence, foo works when whales doesn't
     }
 
     private void assertOrder(String query1, String query2) throws RemoteException {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
         try {
-            List<String> ids1 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query1), "id");
-            List<String> ids2 = getAttributes(summon, new Request(DocumentKeys.SEARCH_QUERY, query2), "id");
+            List<String> ids1 = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, query1,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+            ), "id");
+            List<String> ids2 = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, query2,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+            ), "id");
             ExtraAsserts.assertPermutations("Query '" + query1 + "' and '" + query2 + "'", ids1, ids2);
 /*            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
                          ids1.size(), ids2.size());
@@ -950,7 +968,10 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
 
         ResponseCollection raw = new ResponseCollection();
-        summon.search(new Request(DocumentKeys.SEARCH_QUERY, query1), raw);
+        summon.search(new Request(
+            DocumentKeys.SEARCH_QUERY, query1,
+            SolrSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+        ), raw);
 
         ResponseCollection weighted = new ResponseCollection();
         summon.search(new Request(DocumentKeys.SEARCH_QUERY, query2), weighted);
