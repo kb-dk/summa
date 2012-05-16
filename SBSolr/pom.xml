@@ -15,10 +15,10 @@
     <dependencies>
         <!-- local solr war -->
         <dependency>
-          <groupId>solr</groupId>
-          <artifactId>apache-solr</artifactId>
-          <version>1339028</version>
-          <type>war</type>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr</artifactId>
+            <version>1339028</version>
+            <type>war</type>
         </dependency>
 
         <!-- logging -->
@@ -38,38 +38,35 @@
 
     <build>
         <plugins>
-      
-      
-     <plugin>
-<groupId>org.mortbay.jetty</groupId>
-<artifactId>maven-jetty-plugin</artifactId>
-<version>6.1.16</version>
-<configuration>
-  <systemProperties>
 
-            <systemProperty>
-              <name>catalina.home</name>
-              <value>${basedir}</value>
-            </systemProperty>
-            <systemProperty>
-              <name>org.mortbay.util.FileResource.checkAliases</name>
-              <value>False</value>
-            </systemProperty>
-          </systemProperties>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>maven-jetty-plugin</artifactId>
+                <version>6.1.16</version>
+                <configuration>
+                    <systemProperties>
+                        <systemProperty>
+                            <name>catalina.home</name>
+                            <value>${basedir}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>org.mortbay.util.FileResource.checkAliases</name>
+                            <value>False</value>
+                        </systemProperty>
+                    </systemProperties>
 
-<contextPath>/solr</contextPath>
-<webApp>${basedir}/target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war</webApp>
-<connectors>
-<connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-<port>8080</port>
-</connector>
-</connectors>
-<systemProperties>
+                    <contextPath>/solr</contextPath>
+                    <webApp>${basedir}/target/${project.build.finalName}</webApp>
+                    <connectors>
+                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+                            <port>9090</port>
+                        </connector>
+                    </connectors>
+                    <systemProperties>
 
-</systemProperties>                                                   
-</configuration>
-</plugin>     
-      
+                    </systemProperties>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
