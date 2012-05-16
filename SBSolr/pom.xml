@@ -52,24 +52,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
-                    <webResources>
-                        <webResource>
-                            <directory>${basedir}/src/main/webapp/WEB-INF</directory>
-                            <includes>
-                                <include>web.xml</include>
-                            </includes>
-                            <targetPath>WEB-INF</targetPath>
-                            <filtering>true</filtering>
-                        </webResource>
-                        <webResource>
-                            <directory>${basedir}/src/main/resources</directory>
-                            <includes>
-                                <include>logback-default.xml</include>
-                            </includes>
-                            <targetPath>WEB-INF/classes</targetPath>
-                            <filtering>true</filtering>
-                        </webResource>
-                    </webResources>
                     <overlays>
                         <overlay>
                             <groupId>org.apache.solr</groupId>
