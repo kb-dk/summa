@@ -15,11 +15,10 @@
     <dependencies>
         <!-- local solr war -->
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr</artifactId>
-            <version>4.0-SNAPSHOT</version>
-            <type>war</type>
-            <scope>runtime</scope>
+          <groupId>solr</groupId>
+          <artifactId>apache-solr</artifactId>
+          <version>1339028</version>
+          <type>war</type>
         </dependency>
 
         <!-- logging -->
@@ -54,8 +53,8 @@
                 <configuration>
                     <overlays>
                         <overlay>
-                            <groupId>org.apache.solr</groupId>
-                            <artifactId>solr</artifactId>
+                            <groupId>solr</groupId>
+                            <artifactId>apache-solr</artifactId>
                             <excludes>
                                 <exclude>WEB-INF/lib/slf4j-jdk*</exclude>
                                 <exclude>WEB-INF/lib/slf4j-api*</exclude>
