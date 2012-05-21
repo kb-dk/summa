@@ -33,6 +33,18 @@ cd maven-builds
 
 mvn deploy -DskipTests=true
 
-se de er kommet rigtigt ind: https://sbforge.org/nexus/index.html#view-repositories;snapshots~browsestorage 
 
+cd .. (så man står i trunk)
 
+ 
+manual upload source for følgende moduler, tilføj evt. flere hvis nødvendigt
+
+mvn deploy:deploy-file -Dfile=solr/build/solr-core/apache-solr-core-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/solr/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false 
+mvn deploy:deploy-file -Dfile=lucene/build/core/lucene-core-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/lucene/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=lucene/build/analysis/common/lucene-analyzers-common-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/lucene/analysis/common/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=lucene/build/queries/lucene-queries-4.0-SNAPSHOT.jar -DpomFile=maven-build/lucene/queries/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=lucene/build/queryparser/lucene-queryparser-4.0-SNAPSHOT.jar -DpomFile=maven-build/lucene/queryparser/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
+  
+
+  
+  se de er kommet rigtigt ind: https://sbforge.org/nexus/index.html#view-repositories;snapshots~browsestorage
