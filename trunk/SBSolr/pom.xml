@@ -13,7 +13,6 @@
     <packaging>war</packaging>
 
     <dependencies>
-        <!-- local solr war -->
         <dependency>
             <groupId>solr</groupId>
             <artifactId>apache-solr</artifactId>
@@ -38,6 +37,20 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat6-maven-plugin</artifactId>
+                <version>2.0-beta-1</version>
+                <configuration>
+                    <!-- http port -->
+                    <port>9090</port>
+                    <contextFile>${basedir}/src/test/tomcat/context.xml</contextFile>
+                    <additionalConfigFilesDir>${basedir}/src/test/tomcat/</additionalConfigFilesDir>
+                    <systemProperties>
+                        <test.config.dir>${basedir}/target/tomcat/conf</test.config.dir>
+                    </systemProperties>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
@@ -87,6 +100,7 @@
                             <excludes>
                                 <exclude>WEB-INF/lib/slf4j-jdk*</exclude>
                                 <exclude>WEB-INF/lib/slf4j-api*</exclude>
+                                <exclude>WEB-INF/lib/javax.servlet-api*</exclude>
                             </excludes>
                         </overlay>
                     </overlays>
