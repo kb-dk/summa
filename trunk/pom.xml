@@ -53,10 +53,10 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>solr</groupId>
-                <artifactId>apache-solr</artifactId>
-                <version>1339028</version>
+         <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr</artifactId>
+                <version>4.0-1340933-SNAPSHOT</version>
                 <type>war</type>
             </dependency>
             <dependency>
