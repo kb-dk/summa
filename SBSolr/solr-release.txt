@@ -4,6 +4,7 @@ svn co http://svn.apache.org/repos/asf/lucene/dev/trunk
 
 aflæs SVN commit version, f.eks. 1340933
 
+
 cd trunk
 ant get-maven-poms
 
@@ -28,22 +29,51 @@ indsæt (f.eks. efter  </properties>):
 
 mvn -N versions:update-child-modules
 
+
+
 ant generate-maven-artifacts
+mvn source:jar  ***
 cd maven-builds
 
+
 mvn deploy -DskipTests=true
+
+
 
 
 cd .. (så man står i trunk)
 
  
 manual upload source for følgende moduler, tilføj evt. flere hvis nødvendigt
+RET VERSIONSNUMMER!
 
-mvn deploy:deploy-file -Dfile=solr/build/solr-core/apache-solr-core-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/solr/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false 
-mvn deploy:deploy-file -Dfile=lucene/build/core/lucene-core-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/lucene/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
-mvn deploy:deploy-file -Dfile=lucene/build/analysis/common/lucene-analyzers-common-4.0-SNAPSHOT-src.jar -DpomFile=maven-build/lucene/analysis/common/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
-mvn deploy:deploy-file -Dfile=lucene/build/queries/lucene-queries-4.0-SNAPSHOT.jar -DpomFile=maven-build/lucene/queries/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
-mvn deploy:deploy-file -Dfile=lucene/build/queryparser/lucene-queryparser-4.0-SNAPSHOT.jar -DpomFile=maven-build/lucene/queryparser/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/snapshots/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=maven-build/solr/core/target/solr-core-4.0-1340933-sources.jar -DpomFile=maven-build/solr/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false 
+mvn deploy:deploy-file -Dfile=maven-build/lucene/core/target/lucene-core-4.0-1340933-sources.jar -DpomFile=maven-build/lucene/core/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=maven-build/lucene/analysis/common/target/lucene-analyzers-common-4.0-1340933-sources.jar -DpomFile=maven-build/lucene/analysis/common/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=maven-build/lucene/queries/target/lucene-queries-4.0-1340933-sources.jar -DpomFile=maven-build/lucene/queries/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false
+mvn deploy:deploy-file -Dfile=maven-build/lucene/queryparser/target/lucene-queryparser-4.0-1340933-sources.jar -DpomFile=maven-build/lucene/queryparser/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false
   
   
   se de er kommet rigtigt ind: https://sbforge.org/nexus/index.html#view-repositories;snapshots~browsestorage
+  
+  
+  
+  
+  
+ ***
+ 
+<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+ 
