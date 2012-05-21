@@ -1,0 +1,38 @@
+mkdir solr_release 
+cd solr_release
+svn co http://svn.apache.org/repos/asf/lucene/dev/trunk
+
+aflæs SVN commit version, f.eks. 1340933
+
+cd trunk
+ant get-maven-poms
+
+modificer pom.xml, ret version til SVN version.
+<version>4.0-SNAPSHOT</version> ->   <version>4.0-1340933-SNAPSHOT</version>
+
+
+indsæt (f.eks. efter  </properties>): 
+
+  <distributionManagement>
+    <repository>
+      <id>sbforge-nexus</id>
+      <name>SBForge Nexus Repo manager</name>
+      <url>https://sbforge.org/nexus/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>sbforge-nexus</id>
+      <name>SBForge Nexus Repo manager</name>
+      <url>https://sbforge.org/nexus/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+mvn -N versions:update-child-modules
+
+ant generate-maven-artifacts
+cd maven-builds
+
+mvn deploy -DskipTests=true
+
+se de er kommet rigtigt ind: https://sbforge.org/nexus/index.html#view-repositories;snapshots~browsestorage 
+
+
