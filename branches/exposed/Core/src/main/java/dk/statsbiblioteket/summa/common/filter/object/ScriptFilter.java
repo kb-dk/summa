@@ -19,25 +19,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.ByteArrayInputStream;
-import java.io.CharArrayReader;
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.script.*;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * An {@link ObjectFilter} processing incoming payloads in some scripting
@@ -149,6 +137,8 @@ public class ScriptFilter extends ObjectFilterImpl {
     private CompiledScript compiledScript;
     /** A char array containing the script. */
     private char[] script;
+    private long passCount = 0;
+    private long discardCount = 0;
 
     /**
      * Creates a script filter.
@@ -158,27 +148,23 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws ScriptException If error while compiling script.
      * @throws IOException If error occur reading script.
      */
-    public ScriptFilter(Reader script, boolean compileScript,
-                        String scriptExtension)
-                                           throws ScriptException, IOException {
-        super(Configuration.newMemoryBased(CONF_FILTER_NAME,
-                                      "ScriptFilter[" + scriptExtension + "]"));
+    public ScriptFilter(Reader script, boolean compileScript, String scriptExtension)
+        throws ScriptException, IOException {
+        super(Configuration.newMemoryBased(CONF_FILTER_NAME, "ScriptFilter[" + scriptExtension + "]"));
         final int bufferSize = 1024;
         this.compileScript = compileScript;
         engineManager = new ScriptEngineManager();
         engine = engineManager.getEngineByExtension(scriptExtension);
 
         if (engine == null) {
-            throw new ConfigurationException("No script engine for extension: "
-                                             + scriptExtension);
+            throw new ConfigurationException("No script engine for extension: " + scriptExtension);
         }
 
         // Invariant: If compileScript is true we also hold a valid
         //            CompiledScript in the compiledScript variable
         if (this.compileScript) {
             if (!(engine instanceof Compilable)) {
-                log.error("Script engine does not support compilation. "
-                          + "Going on in interpretive mode");
+                log.error("Script engine does not support compilation. Going on in interpretive mode");
                 this.compileScript = false;
             } else {
                 log.info("Downloading and compiling script");
@@ -206,8 +192,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws ScriptException If error while compiling script.
      * @throws IOException If error occur reading script.
      */
-    public ScriptFilter(InputStream script, boolean compileScript,
-                        String scriptExtension)
+    public ScriptFilter(InputStream script, boolean compileScript, String scriptExtension)
                                            throws ScriptException, IOException {
         this(new InputStreamReader(script), compileScript, scriptExtension);
     }
@@ -241,10 +226,8 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws ScriptException  If error while compiling script.
      * @throws IOException If error while reading script.
      */
-    public ScriptFilter(Configuration conf)
-                                           throws ScriptException, IOException {
-        this(readScript(conf), conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE),
-             getScriptExtension(conf));
+    public ScriptFilter(Configuration conf) throws ScriptException, IOException {
+        this(readScript(conf), conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE), getScriptExtension(conf));
     }
 
     /**
@@ -262,9 +245,8 @@ public class ScriptFilter extends ObjectFilterImpl {
             String urlString = url.toString();
 
             if (urlString.indexOf('.') == -1) {
-                log.warn("Unable to detect script extension from: "
-                         + urlString + ". Using default: "
-                         + DEFAULT_SCRIPT_LANG);
+                log.warn(
+                    "Unable to detect script extension from: " + urlString + ". Using default: " + DEFAULT_SCRIPT_LANG);
                 return DEFAULT_SCRIPT_LANG;
             }
 
@@ -273,8 +255,7 @@ public class ScriptFilter extends ObjectFilterImpl {
             return conf.getString(CONF_SCRIPT_LANG, DEFAULT_SCRIPT_LANG);
         } else {
             throw new ConfigurationException(String.format(
-                    "No URL or inlined script defined. Please set one of the %s"
-                    + " or %s properties for this filter",
+                    "No URL or inlined script defined. Please set one of the %s or %s properties for this filter",
                     CONF_SCRIPT_URL, CONF_SCRIPT_INLINE));
         }
     }
@@ -288,30 +269,25 @@ public class ScriptFilter extends ObjectFilterImpl {
         if (!conf.valueExists(CONF_SCRIPT_URL)
             && !conf.valueExists(CONF_SCRIPT_INLINE)) {
             throw new ConfigurationException(String.format(
-                    "No URL or inlined script defined. Please set one of the %s"
-                    + " or %s properties for this filter",
+                    "No URL or inlined script defined. Please set one of the %s or %s properties for this filter",
                     CONF_SCRIPT_URL, CONF_SCRIPT_INLINE));
         }
 
         if (conf.valueExists(CONF_SCRIPT_URL)) {
             if (conf.valueExists(CONF_SCRIPT_INLINE)) {
                 log.error(String.format(
-                        "Both an inlined script and a script URL are defined."
-                        + " Please use only one of %s or %s. Using script from"
-                        + " %s",
-                        CONF_SCRIPT_URL, CONF_SCRIPT_INLINE,
-                        conf.getString(CONF_SCRIPT_URL)));
+                        "Both an inlined script and a script URL are defined. Please use only one of %s or %s. "
+                        + "Using script from %s",
+                        CONF_SCRIPT_URL, CONF_SCRIPT_INLINE, conf.getString(CONF_SCRIPT_URL)));
             }
 
             try {
-                log.info("Reading script from "
-                         + conf.getString(CONF_SCRIPT_URL));
+                log.info("Reading script from " + conf.getString(CONF_SCRIPT_URL));
                 URL url = Resolver.getURL(conf.getString(CONF_SCRIPT_URL));
 
                 if (url == null) {
                     throw new ConfigurationException(
-                            "Unable to locate script: "
-                            + conf.getString(CONF_SCRIPT_URL));
+                            "Unable to locate script: " + conf.getString(CONF_SCRIPT_URL));
                 } else {
                     log.debug("Script resolved to: " + url);
                 }
@@ -319,8 +295,7 @@ public class ScriptFilter extends ObjectFilterImpl {
                 return url.openStream();
             } catch (MalformedURLException e) {
                 throw new ConfigurationException(String.format(
-                        "Malformed URL in %s: %s",
-                        CONF_SCRIPT_URL, e.getMessage()), e);
+                    "Malformed URL in %s: %s", CONF_SCRIPT_URL, e.getMessage()), e);
             } catch (IOException e) {
                 throw new ConfigurationException(String.format(
                         "Unable to read script data from URL '%s': %s",
@@ -347,23 +322,19 @@ public class ScriptFilter extends ObjectFilterImpl {
         engine.put("log", log);
 
         if (compiledScript != null) {
-            log.debug("Processing " + payload.getId()
-                      + " with compiled script");
+            log.debug("Processing " + payload.getId() + " with compiled script");
             try {
                 compiledScript.eval();
             } catch (ScriptException e) {
-                throw new PayloadException("Error evaluating compiled script: "
-                                           + e.getMessage(), e);
+                throw new PayloadException("Error evaluating compiled script: " + e.getMessage(), e);
             }
 
         } else {
-            log.debug("Processing " + payload.getId()
-                      + " with interpreted script");
+            log.debug("Processing " + payload.getId() + " with interpreted script");
             try {
                 engine.eval(new CharArrayReader(script));
             } catch (ScriptException e) {
-                throw new PayloadException("Error evaluating interpreted "
-                                           + "script: " + e.getMessage(), e);
+                throw new PayloadException("Error evaluating interpreted " + "script: " + e.getMessage(), e);
             }
 
         }
@@ -375,25 +346,24 @@ public class ScriptFilter extends ObjectFilterImpl {
             Boolean result = (Boolean) engine.get("allowPayload");
 
             if (result == null) {
-                throw new PayloadException(
-                        "Script returned null. It must return a boolean");
+                throw new PayloadException("Script returned null. It must return a boolean");
             }
 
             String message = (String) engine.get("feedbackMessage");
             String mes = (time / oneSecond) + "ms" + (message == null ? "" : " (" + message + ")");
             if (result) {
-                Logging.logProcess("ScriptFilter", "Processed in " + mes, Logging.LogLevel.DEBUG, payload);
-                log.debug("Processed " + payload.getId() + " in " + mes);
+                String pass = ++passCount + "/" + (passCount + discardCount);
+                Logging.logProcess("ScriptFilter", "Processed " + pass + " in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug("Processed " + payload.getId() + " (" + pass + ") in " + mes);
             } else {
-                Logging.logProcess("ScriptFilter", "Discarded in " + mes, Logging.LogLevel.DEBUG, payload);
-                log.debug("Discarded " + payload.getId() + " in " + mes);
+                String dis = ++discardCount + "/" + (discardCount + discardCount);
+                Logging.logProcess("ScriptFilter", "Discarded " + dis + " in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug("Discarded " + payload.getId() + " (" + dis + ")in " + mes);
             }
 
             return result;
         } catch (ClassCastException e) {
-            throw new PayloadException(
-                    "Script did not return a boolean, but a "
-                    + engine.get("allowPayload"));
+            throw new PayloadException("Script did not return a boolean, but a " + engine.get("allowPayload"));
         }
     }
 }
