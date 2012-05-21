@@ -27,8 +27,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.util.Version;
 import org.w3c.dom.Document;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -293,27 +294,21 @@ public class LuceneIndexDescriptor
 
     private void createAnalyzers() {
         log.debug("createAnalyzers called");
-        PerFieldAnalyzerWrapper indexWrapper =
-                new PerFieldAnalyzerWrapper(defaultField.getIndexAnalyzer());
-        PerFieldAnalyzerWrapper queryWrapper =
-                new PerFieldAnalyzerWrapper(defaultField.getQueryAnalyzer());
+        Map<String, Analyzer> indexAnalyzers = new HashMap<String, Analyzer>();
+        Map<String, Analyzer> queryAnalyzers = new HashMap<String, Analyzer>();
         for (Map.Entry<String, LuceneIndexField> entry:
                 getFields().entrySet()) {
-            log.debug("Adding field " + entry.getKey() + " index-analyzer "
-                      + entry.getValue().getIndexAnalyzer()
-                      + " and query-analyzer "
-                      + entry.getValue().getQueryAnalyzer());
+            log.debug("Adding field " + entry.getKey() + " index-analyzer " + entry.getValue().getIndexAnalyzer()
+                      + " and query-analyzer " + entry.getValue().getQueryAnalyzer());
             if (entry.getValue().getIndexAnalyzer() != null) {
-                indexWrapper.addAnalyzer(entry.getKey(),
-                                         entry.getValue().getIndexAnalyzer());
+                indexAnalyzers.put(entry.getKey(), entry.getValue().getIndexAnalyzer());
             }
             if (entry.getValue().getQueryAnalyzer() != null) {
-                queryWrapper.addAnalyzer(entry.getKey(),
-                                         entry.getValue().getQueryAnalyzer());
+                queryAnalyzers.put(entry.getKey(), entry.getValue().getQueryAnalyzer());
             }
         }
-        indexAnalyzer = indexWrapper;
-        queryAnalyzer = queryWrapper;
+        indexAnalyzer = new PerFieldAnalyzerWrapper(defaultField.getIndexAnalyzer(), indexAnalyzers);
+        queryAnalyzer = new PerFieldAnalyzerWrapper(defaultField.getQueryAnalyzer(), queryAnalyzers);
     }
 
     /**

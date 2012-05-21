@@ -18,63 +18,51 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-
-import org.apache.lucene.index.*;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Document;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.search.FieldCache;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.TopScoreDocCollector;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.SimpleFSLockFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ReaderUtil;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         comment = "Class and methods needs Javadoc")
+// TODO: Re-implement Inspect for Lucene 4 trunk
 public class Inspect {
     private static final String defaultIndex = "/space/512th";
 
-    private static BufferedReader in =
-            new BufferedReader(new InputStreamReader(System.in));
+    private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     private IndexReader ir;
     private static final long MAXSPEEDTIME = 1000 * 30;
     private List<String> fieldnames;
     private static final String COMMANDS =
-            "STATS [field divider], SPEED, HITS, TOPDOCS, QUIT, CACHE field, "
-            + "docID or FieldName\n\n"
-            + "STATS field divider example:\n"
-            + "=> STATS recordID :\n"
-            + "will extract all fields with the name 'recordID', then split "
-            + "the content of the field at : and count the frequency of the"
-            + "first token in the split.\n"
-            + "CACHE field example:\n"
-            + "=> CACHE sort_title :\n"
-            + "will populate a FieldCacheImpl with the content of sort_title "
-            + "in the form of plain strings.\n"
-            + "=> ";
+        "STATS [field divider], SPEED, HITS, TOPDOCS, QUIT, CACHE field, "
+        + "docID or FieldName\n\n"
+        + "STATS field divider example:\n"
+        + "=> STATS recordID :\n"
+        + "will extract all fields with the name 'recordID', then split "
+        + "the content of the field at : and count the frequency of the"
+        + "first token in the split.\n"
+        + "CACHE field example:\n"
+        + "=> CACHE sort_title :\n"
+        + "will populate a FieldCacheImpl with the content of sort_title "
+        + "in the form of plain strings.\n"
+        + "=> ";
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-
-            System.out.println("No index-location specified. Defaulting to " +
-            defaultIndex);
+            System.out.println("No index-location specified. Defaulting to " + defaultIndex);
             new Inspect(defaultIndex);
         } else {
             new Inspect(args[0]);
@@ -84,17 +72,17 @@ public class Inspect {
     public static final String STATS = "STATS";
     public static final String CACHE = "CACHE";
     public Inspect(String indexLocation) throws Exception {
-        openIndex(indexLocation);
+    //    openIndex(indexLocation);
         System.out.println("Simple Lucene Index inspection tool. Commands:");
         System.out.print(COMMANDS + ": ");
         String command;
-        while (!"QUIT".equals(command = in.readLine())) {
+/*        while (!"QUIT".equals(command = in.readLine())) {
             if (STATS.equals(command)) {
                 stats();
             } else if (command.startsWith(STATS)) {
-                    stats(command.substring(STATS.length() + 1).split(" "));
+                stats(command.substring(STATS.length() + 1).split(" "));
             } else if (command.startsWith(CACHE)) {
-                    cache(command.substring(CACHE.length() + 1));
+                cache(command.substring(CACHE.length() + 1));
             } else if ("SPEED".equals(command)) {
                 speed();
             } else if ("HITS".equals(command)) {
@@ -106,41 +94,45 @@ public class Inspect {
                     lookup(Integer.parseInt(command));
                 } catch (NumberFormatException e) {
                     field(command);
+                    */
 /*                    System.err.println("\"" + command
                                        + "\" not STATS, SPEED, QUIT, docID " +
                                        "or FieldName:"
                                        + e.getMessage());*/
-                }
+/*                }
             }
             System.out.print(COMMANDS);
-        }
+        }                              */
     }
 
     private void cache(String field) throws IOException {
         System.out.println("Populating cache for field '" + field + "'");
         Profiler profiler = new Profiler();
-        FieldCache.DocTerms result = FieldCache.DEFAULT.getTerms(ir, field);
-        
-        String time = profiler.getSpendTime();
+        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(readers, ir);
+
         long size = 0;
         int defined = 0;
         int nulls = 0;
-        BytesRef ref = new BytesRef();
-        for (int i = 0 ; i < result.size() ; i++) {
-            ref = result.getTerm(i, ref);
-            if (ref != null) {
-                size += ref.length;
-                defined++;
-            } else {
-                nulls++;
+        for (AtomicReader reader: readers) {
+            FieldCache.DocTerms result = FieldCache.DEFAULT.getTerms(reader, field);
+
+            BytesRef ref = new BytesRef();
+            for (int i = 0 ; i < result.size() ; i++) {
+                ref = result.getTerm(i, ref);
+                if (ref != null) {
+                    size += ref.length;
+                    defined++;
+                } else {
+                    nulls++;
+                }
             }
         }
-        System.out.println("Cached " + defined + " terms for field '"
-                           + field + "' of average size "
-                           + size * 1.0 / defined
-                           + "bytes (" + nulls + " nulls) in " + time);
+        String time = profiler.getSpendTime();
+        System.out.println("Cached " + defined + " terms for field '" + field + "' of average size "
+                           + size * 1.0 / defined + "bytes (" + nulls + " nulls) in " + time);
     }
-
+/*
     private void stats(String[] strings) throws IOException {
         int feedback = Math.max(1, ir.maxDoc() / 50);
         if (strings.length != 2) {
@@ -159,10 +151,8 @@ public class Inspect {
             if (split.length != 2) {
                 errors++;
                 if (errors == 1) {
-                    System.err.println("Term '" + ref.utf8ToString()
-                                       + "' in field " + fieldName
-                                       + "' did not divide by '" + divider
-                                       + "'. Skipping all following errors");
+                    System.err.println("Term '" + ref.utf8ToString() + "' in field " + fieldName
+                                       + "' did not divide by '" + divider + "'. Skipping all following errors");
                 }
             } else {
                 if (!buckets.containsKey(split[0])) {
@@ -175,9 +165,8 @@ public class Inspect {
                 System.out.print(".");
             }
         }
-        System.out.println("\nStats for field '" + fieldName + " with divider '"
-                           + divider + "'. DocCount: " + ir.maxDoc()
-                           + ". FieldTermCount: " + counter);
+        System.out.println("\nStats for field '" + fieldName + " with divider '" + divider + "'. DocCount: "
+                           + ir.maxDoc() + ". FieldTermCount: " + counter);
         for (Map.Entry<String, Integer> bucket: buckets.entrySet()) {
             System.out.println(bucket.getKey() + ": " + bucket.getValue());
         }
@@ -187,16 +176,14 @@ public class Inspect {
         }
         System.out.println("");
     }
-
+  */
     private void hits() throws IOException {
         IndexSearcher is = new IndexSearcher(ir);
-        TopScoreDocCollector topDocs =
-                        TopScoreDocCollector.create(Integer.MAX_VALUE, false);
+        TopScoreDocCollector topDocs = TopScoreDocCollector.create(Integer.MAX_VALUE, false);
         is.search(new MatchAllDocsQuery(), null, topDocs);
         System.gc();
         int feedback = topDocs.getTotalHits() / 100;
-        System.out.println("Iterating through " + topDocs.getTotalHits() + " hits, "
-                           + "requesting hits.doc for each one");
+        System.out.println("Iterating through " + topDocs.getTotalHits() + " hits, requesting hits.doc for each one");
         Profiler pf = new Profiler();
         pf.setExpectedTotal(topDocs.getTotalHits());
         for (int i = 0 ; i < topDocs.getTotalHits() ; i++) {
@@ -207,27 +194,21 @@ public class Inspect {
             }*/
             if (i % feedback == 0) {
                 System.gc();
-                System.out.println("Memory usage at "
-                                   + i + "/" + topDocs.getTotalHits() + ": "
-                                   + getMem());
+                System.out.println("Memory usage at " + i + "/" + topDocs.getTotalHits() + ": " + getMem());
             }
             pf.beat();
         }
-        System.out.println("Finished " + topDocs.getTotalHits() + " hits in "
-                           + pf.getSpendTime());
-    }                                                                                                
+        System.out.println("Finished " + topDocs.getTotalHits() + " hits in " + pf.getSpendTime());
+    }
 
     private void topdocs() throws IOException {
         IndexSearcher is = new IndexSearcher(ir);
-        TopScoreDocCollector topDocsCol =
-                        TopScoreDocCollector.create(Integer.MAX_VALUE, false);
+        TopScoreDocCollector topDocsCol = TopScoreDocCollector.create(Integer.MAX_VALUE, false);
         is.search(new MatchAllDocsQuery(), null, topDocsCol);
-        TopDocs topDocs = is.search(new MatchAllDocsQuery(), null,
-                                    topDocsCol.getTotalHits());
+        TopDocs topDocs = is.search(new MatchAllDocsQuery(), null, topDocsCol.getTotalHits());
         System.gc();
         int feedback = topDocs.totalHits / 100;
-        System.out.println("Iterating through " + topDocs.totalHits + " hits, "
-                           + "requesting hits.doc for each one");
+        System.out.println("Iterating through " + topDocs.totalHits + " hits, requesting hits.doc for each one");
         Profiler pf = new Profiler();
         pf.setExpectedTotal(topDocs.totalHits);
         for (int i = 0 ; i < topDocs.totalHits ; i++) {
@@ -238,14 +219,11 @@ public class Inspect {
             }*/
             if (i % feedback == 0) {
                 System.gc();
-                System.out.println("Memory usage at "
-                                   + i + "/" +topDocs.totalHits
-                                   + ": " + getMem());
+                System.out.println("Memory usage at " + i + "/" +topDocs.totalHits + ": " + getMem());
             }
             pf.beat();
         }
-        System.out.println("Finished " + topDocs.totalHits + " hits in "
-                           + pf.getSpendTime());
+        System.out.println("Finished " + topDocs.totalHits + " hits in " + pf.getSpendTime());
     }
 
     private void lookup(int i) throws IOException {
@@ -258,29 +236,23 @@ public class Inspect {
         for (String field: fieldnames) {
             String[] values = doc.getValues(field);
             if (values == null) {
-                byte[][] binary = doc.getBinaryValues(field);
+                BytesRef[] binary = doc.getBinaryValues(field);
                 if (binary == null) {
-                    Field[] fields = doc.getFields(field);
+                    IndexableField[] fields = doc.getFields(field);
                     if (fields == null) {
-                        String indirect = indirect(i, field);
-                        System.out.print("No String, binary values or" +
-                                           " sub-fields for " + field
-                                           + ". Indirect terms: ");
-                        System.out.println("".equals(indirect) ? "none" : 
-                                                                 indirect);
+/*                        String indirect = indirect(i, field);
+                        System.out.print("No String, binary values or sub-fields for " + field + ". Indirect terms: ");
+                        System.out.println("".equals(indirect) ? "none" : indirect);*/
                     } else {
-                        System.out.println("No strings or binary values for "
-                                           + field + ", but " + fields.length
-                                           + " sub-fields");
-                        for (Field f: fields) {
-                            System.out.println(" - ReaderValue: "
-                                               + f.readerValue() 
-                                               + " IsStored" + f.isStored());
+                        System.out.println(
+                            "No strings or binary values for " + field + ", but " + fields.length + " sub-fields");
+                        for (IndexableField f: fields) {
+                            System.out.println(
+                                " - ReaderValue: " + f.readerValue() + " IsStored: " + f.fieldType().stored());
                         }
                     }
                 } else {
-                    System.out.println("Field " + field + " has "
-                                       + binary.length + " binary values");
+                    System.out.println("Field " + field + " has " + binary.length + " binary values");
                 }
             } else {
                 System.out.print("Field " + field + ": ");
@@ -292,7 +264,7 @@ public class Inspect {
             }
         }
     }
-
+        /*
     private String indirect(int docID, String fieldName) throws IOException {
         StringWriter sw = new StringWriter(1000);
         TermsEnum terms = ir.terms(fieldName).iterator();
@@ -309,8 +281,8 @@ public class Inspect {
         }
         return sw.toString();
     }
-
-    public void stats() throws IOException {
+          */
+/*    public void stats() throws IOException {
         System.out.println("Mem: " + getMem());
         System.out.println("\nFields:");
 
@@ -332,7 +304,7 @@ public class Inspect {
         System.out.println("Total: " + ir.maxDoc()+ " documents, "
                            + totalTermCount + " terms");
     }
-
+  */
     public static String getMem() {
         return (Runtime.getRuntime().totalMemory() -
                 Runtime.getRuntime().freeMemory()) / 1048576 + "/" +
@@ -344,25 +316,23 @@ public class Inspect {
         System.out.println("Hello world!");
         System.out.println(getMem());
     }
-
+    /*
     public void openIndex(String indexLocation) throws IOException {
         System.out.println("Opening index at " + indexLocation);
-        ir = IndexReader.open(new NIOFSDirectory(new File(indexLocation),
-                                                 new SimpleFSLockFactory()));
-        Collection fields =
-                ir.getFieldNames(IndexReader.FieldOption.ALL);
+        ir = DirectoryReader.open(new NIOFSDirectory(new File(indexLocation), new SimpleFSLockFactory()));
+        Collection fields = ir.getFieldNames(IndexReader.FieldOption.ALL);
         fieldnames = new ArrayList<String>(fields.size());
         for (Object field: fields) {
             fieldnames.add((String)field);
         }
         Collections.sort(fieldnames);
     }
-
-    public void speed() throws Exception {
+      */
+    // TODO: Re-implement speed
+/*    public void speed() throws Exception {
         long endTime = System.currentTimeMillis() + MAXSPEEDTIME;
         System.out.println("Finding fields in documents");
-        Collection fields =
-                ir.getFieldNames(IndexReader.FieldOption.INDEXED);
+        Collection fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
         List<String> fieldnames = new ArrayList<String>(fields.size());
         for (Object field: fields) {
             System.out.println(field);
@@ -379,13 +349,11 @@ public class Inspect {
                 profiler.beat();
             }
             if (i % statspan == 0 || System.currentTimeMillis() > endTime) {
-                System.out.println(profiler.getBps(false) + " requests/sec"
-                                   + " Mem: " + getMem() + " doc " + i + "/"
+                System.out.println(profiler.getBps(false) + " requests/sec" + " Mem: " + getMem() + " doc " + i + "/"
                                    + ir.maxDoc());
             }
             if (System.currentTimeMillis() > endTime) {
-                System.out.println("Stopping speed measurement due as it " +
-                                   "exceeded the allocated time");
+                System.out.println("Stopping speed measurement due as it exceeded the allocated time");
                 return;
             }
         }
@@ -416,8 +384,7 @@ public class Inspect {
             return;
         }
 
-        System.out.println(" - Dumping the first " + MAXDOCS
-                           + " docs for " + fieldName + ": " + termName);
+        System.out.println(" - Dumping the first " + MAXDOCS + " docs for " + fieldName + ": " + termName);
         int counter = 0;
         DocsEnum docs = null;
         docs = terms.docs(ir.getLiveDocs(), docs);
@@ -426,8 +393,5 @@ public class Inspect {
             counter++;
         } while (counter < MAXDOCS && docs.nextDoc() != DocsEnum.NO_MORE_DOCS);
     }
+    */
 }
-
-
-
-

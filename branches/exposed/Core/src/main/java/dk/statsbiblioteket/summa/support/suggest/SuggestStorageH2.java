@@ -33,12 +33,7 @@ import org.h2.jdbcx.JdbcDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -469,8 +464,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
         } catch (SQLException e) {
             throw new IOException(
-                    "Unable to get " + maxResults + " recent suggestions for"
-                    + " the last " + ageSeconds + "s", e);
+                    "Unable to get " + maxResults + " recent suggestions for the last " + ageSeconds + "s", e);
         }
     }
 
@@ -481,8 +475,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     // -1 means add 1 to suggest_index.query_count
     @Override
-    public synchronized void addSuggestion(
-                    String query, int hits, int queryCount) throws IOException {
+    public synchronized void addSuggestion(String query, int hits, int queryCount) throws IOException {
 
         // Doing checkString() here makes sure we don't allocate huge amounts
         // of memory in our thread local StringBuilders used in join()
@@ -505,13 +498,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         try {
             insertSuggestion(query, hits, queryCount == -1 ? 1 : queryCount);
-            log.debug("Created new suggestion '"
-                      + query + "' with " + hits + " hits");
+            log.debug("Created new suggestion '" + query + "' with " + hits + " hits");
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
                 updateSuggestion(query, hits, queryCount);
-                log.debug("Updated suggestion '"
-                      + query + "' with " + hits + " hits");
+                log.debug("Updated suggestion '" + query + "' with " + hits + " hits");
             } else {
                 throw new IOException(String.format(
                         "Unable to complete addSuggestion(%s, %d, %d)",
@@ -702,8 +693,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
             try {
                 psUpdate = connection.prepareStatement(
-                        "INSERT INTO suggest_index (normalized_query)" +
-                        "VALUES (?)");
+                        "INSERT INTO suggest_index (normalized_query) VALUES (?)");
                 psUpdate.setString(1, normalizedQuery);
                 psUpdate.executeUpdate();
             } catch (SQLException e) {
@@ -715,8 +705,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
         } catch (SQLException e) {
             log.error(String.format(
-                    "Failed to update database with query %s, "
-                    + "hits=%s, queryCount=%s: %s",
+                    "Failed to update database with query %s, hits=%s, queryCount=%s: %s",
                     query, hits, queryCount, e.getMessage()), e);
         }
 
@@ -759,16 +748,14 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             return suggestions;
         } catch (SQLException e) {
             log.error(String.format(
-                    "SQLException while dumping a maximum of %d suggestions, "
-                    + "starting at %d", max, start), e);
+                    "SQLException while dumping a maximum of %d suggestions, starting at %d", max, start), e);
             return new ArrayList<String>();
         } finally {
             if (rs != null) {
                 try {
                     rs.close();
                 } catch (SQLException e) {
-                    log.warn(String.format("Exception while closing Resultset "
-                                           + "in listSuggestions(%d, %d)",
+                    log.warn(String.format("Exception while closing Resultset in listSuggestions(%d, %d)",
                                            start, max), e);
                 }
             }
@@ -903,8 +890,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             try {
                 stmt.close();
             } catch (SQLException e) {
-                log.warn("Error occured while closing statement: '" + stmt
-                         + "'", e);
+                log.warn("Error occured while closing statement: '" + stmt + "'", e);
             }
         }
         log.debug("Optimize finished in "
@@ -914,8 +900,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private void setMaxMemoryRows(int maxMemoryRows) {
         Statement stmt = null;
         try {
-            log.debug("Setting MAX_MEMORY_ROWS for suggest to "
-                      + maxMemoryRows);
+            log.debug("Setting MAX_MEMORY_ROWS for suggest to " + maxMemoryRows);
             stmt = connection.createStatement();
             //noinspection DuplicateStringLiteralInspection
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
@@ -973,8 +958,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     private String normalize(String s) {
         try {
-            TokenStream tokens = normalizer.reusableTokenStream(
-                    "query", new CharSequenceReader(s));
+            TokenStream tokens = normalizer.tokenStream("query", new CharSequenceReader(s));
             return join(tokens, " ");
         } catch (IOException e) {
             log.error(String.format(
@@ -985,12 +969,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     private String sanitize(String s) {
         try {
-            TokenStream tokens = sanitizer.reusableTokenStream(
-                    "query", new CharSequenceReader(s));
+            TokenStream tokens = sanitizer.tokenStream("query", new CharSequenceReader(s));
             return join(tokens, " ");
         } catch (IOException e) {
-            log.error(String.format(
-                    "Error analyzing query '%s': %s", s, e.toString()), e);
+            log.error(String.format("Error analyzing query '%s': %s", s, e.toString()), e);
             return "ERROR";
         }
     }

@@ -18,8 +18,8 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
 
@@ -44,6 +44,7 @@ public class SlimCollector extends Collector {
     private int[] content;
     private int pos = 0;
     private static final int DEFAULT_INITIAL_CAPACITY = 10000;
+    int base = 0;
 
     public SlimCollector() {
         content = new int[DEFAULT_INITIAL_CAPACITY];
@@ -53,13 +54,13 @@ public class SlimCollector extends Collector {
         content = new int[initialCapacity];
     }
 
-    public void collect(int i, float v) {
+    public void collect(int docID, float v) {
         if (pos == content.length) {
             int[] temp = new int[(int)(content.length*growthFactor)];
             System.arraycopy(content, 0, temp, 0, content.length);
             content = temp;
         }
-        content[pos++] = i;
+        content[pos++] = docID + base;
     }
 
     /**
@@ -111,13 +112,13 @@ public class SlimCollector extends Collector {
     }
 
     @Override
-    public void collect(int i) throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void collect(int docID) throws IOException {
+        collect(docID, 0);
     }
 
     @Override
-    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void setNextReader(AtomicReaderContext context) throws IOException {
+        base = context.docBase;
     }
 
     @Override
@@ -126,7 +127,3 @@ public class SlimCollector extends Collector {
     }
 
 }
-
-
-
-

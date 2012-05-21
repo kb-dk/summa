@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Field;
 
 /**
@@ -83,7 +83,7 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
         if (log.isTraceEnabled()) {
             log.trace("Adding field '" + fieldName + "' with "
                       + content.length()
-                      + " characters and boost " + field.getBoost()
+                      + " characters and boost " + field.boost()
                       + " to Lucene Document");
         }
         luceneDoc.add(field);

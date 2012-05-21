@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
@@ -278,7 +279,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         assertEquals("The number of documents in the index should match",
                      1, reader.maxDoc());
         Document readerDoc = reader.document(0);
-        Field readerField = readerDoc.getField(IndexUtils.RECORD_FIELD);
+        IndexableField readerField = readerDoc.getField(IndexUtils.RECORD_FIELD);
         assertNotNull(
             "The field '" + IndexUtils.RECORD_FIELD + "' should exist",
             readerField);

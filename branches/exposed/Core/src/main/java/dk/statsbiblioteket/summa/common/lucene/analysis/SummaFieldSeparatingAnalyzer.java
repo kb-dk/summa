@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.AnalyzerWrapper;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * You can wrap any other analyzer within this Analyzer. This Analyzer moderates
@@ -44,9 +44,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal",
         comment = "Method Javadoc needs updating")
-public class SummaFieldSeparatingAnalyzer extends Analyzer {
+public class SummaFieldSeparatingAnalyzer extends AnalyzerWrapper {
 
-    Analyzer _underlyingAnalyzer;
+    Analyzer underlyingAnalyzer;
 
     /**
      * Makes an SummaFieldSeparatingAnalyzer that wraps another analyzer
@@ -54,34 +54,37 @@ public class SummaFieldSeparatingAnalyzer extends Analyzer {
      * @param analyzer this analyzer will be wrapped
      */
     public SummaFieldSeparatingAnalyzer(Analyzer analyzer){
-        _underlyingAnalyzer = analyzer;
+        underlyingAnalyzer = analyzer;
     }
 
     @Override
-    public final TokenStream tokenStream(String fieldName, Reader reader){ 
-        return _underlyingAnalyzer.tokenStream(fieldName, reader);
+    protected Analyzer getWrappedAnalyzer(String fieldName) {
+        return new Analyzer() {
+            @Override
+            protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+
+                try {
+                    return new TokenStreamComponents(
+                        new KeywordTokenizer(reader), underlyingAnalyzer.tokenStream(fieldName, reader));
+                } catch (IOException e) {
+                    throw new RuntimeException("Could not create TokenStream from " + underlyingAnalyzer, e);
+                }
+            }
+
+            @Override
+            public int getPositionIncrementGap(String fieldName) {
+                return 100;
+            }
+        };
     }
 
     @Override
-    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
-                                                            throws IOException {
-        return _underlyingAnalyzer.reusableTokenStream(fieldName, reader);
-    }
-
-    // This method is where the magic happens. It says that there is a distance
-    // of 100 between each fieldable instance. This prevents that phrase
-    // searches can match
-    @Override
-    public int getPositionIncrementGap(String fieldName){
-        return 100;
+    protected TokenStreamComponents wrapComponents(String fieldName, TokenStreamComponents components) {
+        return components;
     }
 
     @Override
     public String toString() {
-        return "SummaFieldSeparatingAnalyzer(" + _underlyingAnalyzer + ")";
+        return "SummaFieldSeparatingAnalyzer(" + underlyingAnalyzer + ")";
     }
 }
-
-
-
-

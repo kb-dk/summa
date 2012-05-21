@@ -9,17 +9,16 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.*;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,20 +113,16 @@ public class SortHelper {
     public static List<String> getSortResult(String query,
             String[] sortTerms, SortFactory sortFactory) throws Exception {
         File root = createIndex(sortTerms);
-        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(root),
-                                                   true);
-        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
-                                     new StandardAnalyzer(Version.LUCENE_30));
-        TopDocs result = searcher.search(
-                qp.parse(query), null, 10000,
-                sortFactory.getSort(searcher.getIndexReader()));
-        List<String> sortfields =
-                new ArrayList<String>(result.scoreDocs.length);
+        DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(root));
+        IndexSearcher searcher = new IndexSearcher(reader);
+        QueryParser qp = new QueryParser(Version.LUCENE_40, "all", new StandardAnalyzer(Version.LUCENE_40));
+        TopDocs result = searcher.search(qp.parse(query), null, 10000, sortFactory.getSort(searcher.getIndexReader()));
+        List<String> sortfields = new ArrayList<String>(result.scoreDocs.length);
         for (ScoreDoc sd: result.scoreDocs) {
-            Field sortField = searcher.doc(sd.doc).getField(SORT_FIELD);
+            IndexableField sortField = searcher.doc(sd.doc).getField(SORT_FIELD);
             sortfields.add(sortField == null ? null : sortField.stringValue());
         }
-        searcher.close();
+        reader.close();
         return sortfields;
     }
 
@@ -175,24 +170,21 @@ public class SortHelper {
      *         not be parsed.
      */
     public static long performSortedSearch(
-            File index, String query, int hits, SortFactory sortFactory)
-            throws IOException, ParseException {
+            File index, String query, int hits, SortFactory sortFactory) throws IOException, ParseException {
         System.gc();
-        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(index));
-        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
-                                     new StandardAnalyzer(Version.LUCENE_30));
+        DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(index));
+        IndexSearcher searcher = new IndexSearcher(reader);
+        QueryParser qp = new QueryParser(Version.LUCENE_30, "all", new StandardAnalyzer(Version.LUCENE_30));
         sortFactory.indexChanged(searcher.getIndexReader());
         Sort sort = sortFactory.getSort(searcher.getIndexReader());
         TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
         System.gc();
-        long mem = Runtime.getRuntime().totalMemory()
-                   - Runtime.getRuntime().freeMemory();
+        long mem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         if (result == null) {
             throw new NullPointerException(
-                    "This should never happen and is only here to guard "
-                    + "against JITting TopDocs away");
+                    "This should never happen and is only here to guard against JITting TopDocs away");
         }
-        searcher.close();
+        reader.close();
         return mem;
     }
 
@@ -212,9 +204,9 @@ public class SortHelper {
     public static long timeSortedSearch(
             File index, String query, int hits, SortFactory sortFactory,
             int searches) throws IOException, ParseException {
-        IndexSearcher searcher = new IndexSearcher(new NIOFSDirectory(index));
-        QueryParser qp = new QueryParser(Version.LUCENE_30, "all",
-                                     new StandardAnalyzer(Version.LUCENE_30));
+        DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(index));
+        IndexSearcher searcher = new IndexSearcher(reader);
+        QueryParser qp = new QueryParser(Version.LUCENE_30, "all", new StandardAnalyzer(Version.LUCENE_30));
         Sort sort = sortFactory.getSort(searcher.getIndexReader());
 
         long searchTime = 0;
@@ -223,13 +215,12 @@ public class SortHelper {
             TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
             if (result == null) {
                 throw new NullPointerException(
-                        "This should never happen and is only here to guard "
-                        + "against JITting TopDocs away");
+                        "This should never happen and is only here to guard against JITting TopDocs away");
             }
             searchTime = System.currentTimeMillis() - startTime;
             log.debug("Search #" + (i+1) + " took " + searchTime + "ms");
         }
-        searcher.close();
+        reader.close();
         return searchTime;
     }
 }

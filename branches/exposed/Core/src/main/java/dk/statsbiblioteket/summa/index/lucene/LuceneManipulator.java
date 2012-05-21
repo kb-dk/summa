@@ -24,34 +24,20 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.LogDocMergePolicy;
-import org.apache.lucene.index.LogMergePolicy;
-import org.apache.lucene.index.SerialMergeScheduler;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.*;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
@@ -79,22 +65,18 @@ public class LuceneManipulator implements IndexManipulator {
      * </p><p>
      * This property is optional. Default is -1 (disabled).
      */
-    public static final String CONF_BUFFER_SIZE_PAYLOADS =
-            "summa.index.lucene.buffersizepayloads";
+    public static final String CONF_BUFFER_SIZE_PAYLOADS = "summa.index.lucene.buffersizepayloads";
     /** Default value for {@link #CONF_BUFFER_SIZE_PAYLOADS}. */
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
 
     /**
      * The amount of MB in the Lucene buffer before a flush is requested.
      * </p><p>
-     * This property is optional. Default is
-     * {@link IndexWriter#DEFAULT_RAM_BUFFER_SIZE_MB} (16.0 MB).
+     * This property is optional. Default is {@link IndexWriterConfig#DEFAULT_RAM_BUFFER_SIZE_MB} (16.0 MB).
      */
-    public static final String CONF_BUFFER_SIZE_MB =
-            "summa.index.lucene.buffersizemb";
+    public static final String CONF_BUFFER_SIZE_MB = "summa.index.lucene.buffersizemb";
     /** Default value for {@link #CONF_BUFFER_SIZE_MB}. */
-    public static final double DEFAULT_BUFFER_SIZE_MB =
-            IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
+    public static final double DEFAULT_BUFFER_SIZE_MB = IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
 
     /**
      * The number of Threads to use while adding or deleting Documents to the
@@ -107,8 +89,7 @@ public class LuceneManipulator implements IndexManipulator {
      * </p><p>
      * Optional. Default is 1.
      */
-    public static final String CONF_WRITER_THREADS =
-            "summa.index.lucene.writerthreads";
+    public static final String CONF_WRITER_THREADS = "summa.index.lucene.writerthreads";
     /** Default value for {@link #CONF_WRITER_THREADS}. */
     public static final int DEFAULT_WRITER_THREADS = 1;
 
@@ -121,8 +102,7 @@ public class LuceneManipulator implements IndexManipulator {
      * </p><p>
      * This property is optional. Default is 5.
      */
-    public static final String CONF_MAX_SEGMENTS_ON_CONSOLIDATE =
-            "summa.index.lucene.consolidate.maxsegments";
+    public static final String CONF_MAX_SEGMENTS_ON_CONSOLIDATE = "summa.index.lucene.consolidate.maxsegments";
     /** Default value for {@link #CONF_MAX_SEGMENTS_ON_CONSOLIDATE}. */
     public static final int DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE = 5;
 
@@ -135,8 +115,7 @@ public class LuceneManipulator implements IndexManipulator {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_EXPUNGE_DELETES_ON_COMMIT =
-            "summa.index.lucene.expungedeletesoncommit";
+    public static final String CONF_EXPUNGE_DELETES_ON_COMMIT = "summa.index.lucene.expungedeletesoncommit";
     /** Default value for {@link #CONF_EXPUNGE_DELETES_ON_COMMIT}. */
     public static final boolean DEFAULT_EXPUNGE_DELETES_ON_COMMIT = true;
 
@@ -158,8 +137,7 @@ public class LuceneManipulator implements IndexManipulator {
 
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
     private double buffersizeMB = DEFAULT_BUFFER_SIZE_MB;
-    private int maxMergeOnConsolidate =
-                                    DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
+    private int maxMergeOnConsolidate = DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
     private int writerThreads = DEFAULT_WRITER_THREADS;
     private boolean expungeDeleted = DEFAULT_EXPUNGE_DELETES_ON_COMMIT;
 
@@ -169,27 +147,19 @@ public class LuceneManipulator implements IndexManipulator {
     private ExecutorService executor;
 
     public LuceneManipulator(Configuration conf) {
-        bufferSizePayloads = conf.getInt(
-                CONF_BUFFER_SIZE_PAYLOADS, bufferSizePayloads);
-        String bsMB = conf.getString(
-                CONF_BUFFER_SIZE_MB, Double.toString(buffersizeMB));
+        bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS, bufferSizePayloads);
+        String bsMB = conf.getString(CONF_BUFFER_SIZE_MB, Double.toString(buffersizeMB));
         try {
             buffersizeMB = Double.parseDouble(bsMB);
         } catch (NumberFormatException e) {
-            log.warn(String.format(
-                    "Unable to parse '%s' from %s as a double",
-                    bsMB, CONF_BUFFER_SIZE_MB));
+            log.warn(String.format("Unable to parse '%s' from %s as a double", bsMB, CONF_BUFFER_SIZE_MB));
         }
-        maxMergeOnConsolidate = conf.getInt(
-                CONF_MAX_SEGMENTS_ON_CONSOLIDATE, maxMergeOnConsolidate);
+        maxMergeOnConsolidate = conf.getInt(CONF_MAX_SEGMENTS_ON_CONSOLIDATE, maxMergeOnConsolidate);
         writerThreads = conf.getInt(CONF_WRITER_THREADS, writerThreads);
         if (writerThreads < 1) {
-            throw new ConfigurationException(
-                    "The number of writer threads must be > 0. It was "
-                    + writerThreads);
+            throw new ConfigurationException("The number of writer threads must be > 0. It was " + writerThreads);
         }
-        expungeDeleted = conf.getBoolean(
-                CONF_EXPUNGE_DELETES_ON_COMMIT, expungeDeleted);
+        expungeDeleted = conf.getBoolean(CONF_EXPUNGE_DELETES_ON_COMMIT, expungeDeleted);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         available = new ArrayBlockingQueue<WriterCallable>(writerThreads);
         for (int i = 0 ; i < writerThreads ; i++) {
@@ -197,25 +167,22 @@ public class LuceneManipulator implements IndexManipulator {
         }
         executor = null;
         log.info(String.format(
-                "LuceneManipulator created. bufferSizePayloads is %d"
-                + ", bufferSizeMB is %f"
-                + ", maxMergeOnConsolidate is %d, writerThreads is %d, "
-                + "expungeDeletedOnCommit=%b",
+                "LuceneManipulator created. bufferSizePayloads is %d, bufferSizeMB is %f"
+                + ", maxMergeOnConsolidate is %d, writerThreads is %d, expungeDeletedOnCommit=%b",
                 bufferSizePayloads, buffersizeMB, maxMergeOnConsolidate,
                 writerThreads, expungeDeleted));
     }
 
+    @Override
     public synchronized void open(File indexRoot) throws IOException {
-        log.info("Opening Lucene index at '" + indexRoot + "/"
-                 + LuceneIndexUtils.LUCENE_FOLDER + "'");
+        log.info("Opening Lucene index at '" + indexRoot + "/" + LuceneIndexUtils.LUCENE_FOLDER + "'");
         close(false);
         this.indexRoot = indexRoot;
         File concrete = new File(indexRoot, LuceneIndexUtils.LUCENE_FOLDER);
         if (!concrete.exists()) {
             log.debug("Creating folder '" + concrete + "' for Lucene index");
             if (!concrete.mkdirs()) {
-                throw new IOException("Could not create the folder '"
-                                      + concrete + "'");
+                throw new IOException("Could not create the folder '" + concrete + "'");
             }
         }
         indexDirectory = new NIOFSDirectory(
@@ -241,9 +208,8 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         try {
-            IndexWriterConfig writerConfig =
-                        new IndexWriterConfig(Version.LUCENE_40,
-                                     new StandardAnalyzer(Version.LUCENE_40));
+            IndexWriterConfig writerConfig = new IndexWriterConfig(
+                Version.LUCENE_40, new StandardAnalyzer(Version.LUCENE_40));
             // FIXME: Add max field length
 //            writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
@@ -253,12 +219,11 @@ public class LuceneManipulator implements IndexManipulator {
             writerConfig.setRAMBufferSizeMB(buffersizeMB);
             // Old style merging to preserve order of documents
             writerConfig.setMergeScheduler(new SerialMergeScheduler());
-            log.debug(String.format(
-                       "Checking for index existence at '%s'", indexDirectory));
-            if (IndexReader.indexExists(indexDirectory)) {
+            log.debug(String.format("Checking for index existence at '%s'", indexDirectory));
+
+            if (DirectoryReader.indexExists(indexDirectory)) {
                 log.debug(String.format(
-                        "checkWriter: Setting configuration for an existing "
-                        +"index at '%s",
+                        "checkWriter: Setting configuration for an existing index at '%s",
                           indexDirectory.getDirectory()));
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
 
@@ -271,24 +236,17 @@ public class LuceneManipulator implements IndexManipulator {
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering
             } else {
-                log.debug("No existing index at '"
-                          + indexDirectory.getDirectory()
-                          + "', creating new index");
+                log.debug("No existing index at '" + indexDirectory.getDirectory() + "', creating new index");
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
                 writer = new IndexWriter(indexDirectory, writerConfig);
             }
         } catch (CorruptIndexException e) {
-            throw new IOException(String.format(
-                    "Corrupt index found at '%s'",
-                    indexDirectory.getDirectory()),e);
+            throw new IOException(String.format("Corrupt index found at '%s'", indexDirectory.getDirectory()),e);
         } catch (LockObtainFailedException e) {
-            throw new IOException(String.format(
-                    "Index at '%s' is locked", indexDirectory.getDirectory()),
+            throw new IOException(String.format("Index at '%s' is locked", indexDirectory.getDirectory()),
                     e);
         } catch (IOException e) {
-            throw new IOException(String.format(
-                    "Exception opening index '%s'",
-                    indexDirectory.getDirectory()), e);
+            throw new IOException(String.format("Exception opening index '%s'", indexDirectory.getDirectory()), e);
         }
     }
 
@@ -318,20 +276,19 @@ public class LuceneManipulator implements IndexManipulator {
         }
     } */
 
+    @Override
     public synchronized void clear() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("clear() called");
-        log.trace("clear: Calling close() on any existing index at '"
-                  + indexDirectory.getDirectory() + "'");
+        log.trace("clear: Calling close() on any existing index at '" + indexDirectory.getDirectory() + "'");
         close(false);
-        log.trace("clear: Removing old folder with Lucene index at '"
-                  + indexDirectory.getDirectory() + "'");
+        log.trace("clear: Removing old folder with Lucene index at '" + indexDirectory.getDirectory() + "'");
         Files.delete(indexDirectory.getDirectory());
-        log.trace("clear: Opening new Lucene index at '"
-                  + indexDirectory.getDirectory() + "'");
+        log.trace("clear: Opening new Lucene index at '" + indexDirectory.getDirectory() + "'");
         open(indexRoot);
     }
 
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
@@ -348,8 +305,8 @@ public class LuceneManipulator implements IndexManipulator {
         }
         IndexUtils.assignBasicProperties(payload);
         if (payload.getRecord() == null) {
-            log.debug("update: The Payload " + id + " did not have a record, so"
-                      + " it will always be processed as a plain addition");
+            log.debug("update: The Payload " + id + " did not have a record, so it will always be processed as a plain "
+                      + "addition");
         }
         if (payload.getRecord() != null &&
             (payload.getRecord().isDeleted() ||
@@ -368,8 +325,7 @@ public class LuceneManipulator implements IndexManipulator {
             try {
                 writerCallable = available.take();
             } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for a writerCallable for "
-                         + payload + ". Retrying");
+                log.warn("Interrupted while waiting for a writerCallable for " + payload + ". Retrying");
             }
         }
         writerCallable.init(writer, payload, descriptor.getIndexAnalyzer());
@@ -395,11 +351,9 @@ public class LuceneManipulator implements IndexManipulator {
             orderChangedSinceLastCommit();
         } catch (ExecutionException e) {
             Logging.logProcess(
-                    "LuceneManipulator.waitForJob",
-                    "Indexing failed due to exception",
+                    "LuceneManipulator.waitForJob", "Indexing failed due to exception",
                     Logging.LogLevel.WARN, payload, e);
-            log.warn(String.format(
-                    "The write job for %s failed with exception", payload), e);
+            log.warn(String.format("The write job for %s failed with exception", payload), e);
             // Do nothing else as the WriterCallable handles Exceptions itself
         }
         log.trace("Finished waiting for job");
@@ -428,11 +382,9 @@ public class LuceneManipulator implements IndexManipulator {
             writer.addDocument(document, descriptor.getIndexAnalyzer());
         } catch (IOException e) {
             String message = String.format(
-                    "Encountered IOException '%s' during addition of document "
-                    + "'%s' to index. Offending payload was %s. The index "
-                    + "location was '%s'. JVM shutdown in %d seconds",
-                    e.getMessage(), id, indexDirectory.getDirectory(),
-                    payload, 5);
+                    "Encountered IOException '%s' during addition of document '%s' to index. Offending payload was %s. "
+                    + "The index location was '%s'. JVM shutdown in %d seconds",
+                    e.getMessage(), id, indexDirectory.getDirectory(), payload, 5);
             log.fatal(message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
@@ -440,21 +392,18 @@ public class LuceneManipulator implements IndexManipulator {
             throw new IOException(message, e);
         }
         //noinspection DuplicateStringLiteralInspection
-        Logging.logProcess("LuceneManipulator", "Added Lucene document",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess("LuceneManipulator", "Added Lucene document", Logging.LogLevel.TRACE, payload);
         if (log.isTraceEnabled()) {
             log.trace("Dumping analyzed fields for " + payload);
             for (Object field: document.getFields()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("Field " + ((Field)field).name() + " has content "
-                          + ((Field)field).stringValue());
+                log.trace("Field " + ((Field)field).name() + " has content " + ((Field)field).stringValue());
             }
         }
         // TODO: Verify that docCount is trustable with regard to deletes
         payload.getData().put(
                 LuceneIndexUtils.META_ADD_DOCID, writer.maxDoc()-1);
-        log.trace("Updating idMapper with id '" + id + "' and pos "
-                  + (writer.maxDoc()-1));
+        log.trace("Updating idMapper with id '" + id + "' and pos " + (writer.maxDoc()-1));
 //        idMapper.put(id, writer.maxDoc()-1);
     }
 
@@ -474,11 +423,9 @@ public class LuceneManipulator implements IndexManipulator {
                 orderChanged = true;
         } catch (IOException e) {
                 String message = String.format(
-                     "Encountered IOException '%s' during deletion of document "
-                     + "'%s' to index. Offending payload was %s. The index "
-                     + "location was '%s'. JVM shutdown in %d seconds",
-                     e.getMessage(), id, indexDirectory.getDirectory(),
-                     payload, 5);
+                     "Encountered IOException '%s' during deletion of document '%s' to index. Offending payload was %s."
+                     + " The index location was '%s'. JVM shutdown in %d seconds",
+                     e.getMessage(), id, indexDirectory.getDirectory(), payload, 5);
                 log.fatal(message, e);
                 System.err.println(message);
                 e.printStackTrace(System.err);
@@ -493,34 +440,30 @@ public class LuceneManipulator implements IndexManipulator {
 //        }
     }
 
+    @Override
     public synchronized void commit() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("commit() called for '" + indexRoot + "'");
         long startTime = System.currentTimeMillis();
         if (writer == null) {
-            log.trace("commit: No writer, commit finished in "
-                  + (System.currentTimeMillis() - startTime) + " ms");
+            log.trace("commit: No writer, commit finished in " + (System.currentTimeMillis() - startTime) + " ms");
             return;
         }
 
-        log.debug("commit: Flushing index at '"
-                  + indexRoot + "' with docCount " + writer.maxDoc());
+        log.debug("commit: Flushing index at '" + indexRoot + "' with docCount " + writer.maxDoc());
         flushPending();
         orderChanged = false;
         if (expungeDeleted) {
-            log.trace("commit: Expunging deleted documents from '"
-                      + indexRoot + "'");
-            writer.expungeDeletes();
+            log.trace("commit: Expunging deleted documents from '" + indexRoot + "'");
+            writer.forceMergeDeletes(true);
         } else {
             log.trace("commit: Skipping the expunge deleted documents step");
         }
         log.trace("commit: Lucene committing index at '" + indexRoot + "'");
         writer.commit();
         log.debug(String.format(
-                "Commit finished for '%s' in %s ms with docCount %d and "
-                + "expungeDeleted=%b",
-                indexRoot , (System.currentTimeMillis() - startTime),
-                writer.maxDoc(), expungeDeleted));
+                "Commit finished for '%s' in %s ms with docCount %d and expungeDeleted=%b",
+                indexRoot , (System.currentTimeMillis() - startTime), writer.maxDoc(), expungeDeleted));
     }
 
     /* Note: Sets executor = null */
@@ -549,6 +492,7 @@ public class LuceneManipulator implements IndexManipulator {
         }
     }
 
+    @Override
     public synchronized void consolidate() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("consolidate() called");
@@ -561,16 +505,15 @@ public class LuceneManipulator implements IndexManipulator {
         log.trace("consolidate(): Removing deletions");
         writer.expungeDeletes(true);*/
         log.debug(String.format(
-                "Optimizing index at %s to a maximum of %d segments. "
-                + "This might take a while",
+                "Optimizing index at %s to a maximum of %d segments. This might take a while",
                 indexDirectory.getDirectory(), maxMergeOnConsolidate));
-        writer.optimize(maxMergeOnConsolidate, true);
+        writer.forceMerge(maxMergeOnConsolidate);
         log.trace("Closing writer");
         closeWriter(); // Is this still necessary?
-        log.debug("Consolidate finished in "
-                  + (System.currentTimeMillis()- startTime) + " ms");
+        log.debug("Consolidate finished in " + (System.currentTimeMillis()- startTime) + " ms");
     }
 
+    @Override
     public synchronized void close() throws IOException {
         close(true);
     }
@@ -658,4 +601,3 @@ public class LuceneManipulator implements IndexManipulator {
         return orderChanged;
     }
 }
-

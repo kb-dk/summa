@@ -14,16 +14,20 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.index.AtomicReaderContext;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.*;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.Bits;
+import org.apache.lucene.util.Version;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.analysis.core.SimpleAnalyzer;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.store.*;
-import org.apache.lucene.util.Version;
 
 /**
  * Simple reduction of an existing index by deletion of documents.
@@ -35,7 +39,7 @@ import org.apache.lucene.util.Version;
  * to the full index.
  * </p><p>
  * If the fraction 1.0 is given, an optimize is called on the unmodified index.
- * This can be used to convert indexes from older formats to format used by
+ * This can be used to convert indexes from older formats to the format used by
  * the Lucene-version in the classpath.
  * </p><p>
  * Note: This process is destructive, so make a copy of the index before
@@ -62,75 +66,98 @@ public class IndexReducer {
             try {
                 fraction = Double.parseDouble(args[1]);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("The fraction-argument '"
-                                                   + args[1]
-                                                   + "' was not a number", e);
+                throw new IllegalArgumentException("The fraction-argument '" + args[1] + "' was not a number", e);
             }
         }
         reduce(location, fraction);
     }
 
-    public static void reduce(File location, double fraction)
-            throws IOException {
+    public static void reduce(File location, double fraction) throws IOException {
         if (!location.exists()) {
             //noinspection DuplicateStringLiteralInspection
-            throw new FileNotFoundException("The stated index location '"
-                                            + location.getAbsoluteFile()
-                                            + "' does not exist");
+            throw new FileNotFoundException(
+                "The stated index location '" + location.getAbsoluteFile() + "' does not exist");
         }
         if (!(fraction > 0.0 && fraction <= 1.0)) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("The fraction must be > 0 and "
-                                               + "<= 1.0. it was '"
-                                               + fraction + "'");
+            throw new IllegalArgumentException("The fraction must be > 0 and <= 1.0. it was '" + fraction + "'");
         }
 
         long starttime = System.currentTimeMillis();
         if (fraction != 1.0) {
-            IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
-            int docCount = ir.maxDoc();
-            System.out.println("Reducing '" + location + "' to " + fraction
-                               + " size (" + ir.maxDoc() + " => "
-                               + (int)(ir.maxDoc() * fraction) + " documents)");
-            int feedback = Math.max(1, docCount / 100);
-            int lastReduction = -1;
-            double fractionCounter = 0.0;
-            for (int i = docCount-1; i >= 0; i--) {
-                if ((int)fractionCounter != lastReduction) {
-                    lastReduction = (int)fractionCounter;
-                } else {
-                    ir.deleteDocument(i);
-                }
-                fractionCounter += fraction;
-                if (i % feedback == 0) {
-                    System.out.println("Reduction progress: "
-                                       + (docCount-1-i) + "/" + docCount);
-                }
-            }
-            System.out.println("Closing reader...");
-            ir.close();
-            System.out.println("Reader closed");
+            performReduce(location, fraction);
         }
 
         System.out.println("Opening index writer...");
-        IndexWriterConfig writerConfig =
-                new IndexWriterConfig(Version.LUCENE_30,
-                                      new SimpleAnalyzer(Version.LUCENE_30));
+        IndexWriterConfig writerConfig = new IndexWriterConfig(
+            Version.LUCENE_40, new SimpleAnalyzer(Version.LUCENE_40));
         // FIXME: Set max field length to unlimited
 //        writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
-        IndexWriter iw = new IndexWriter(new NIOFSDirectory(location),
-                                         writerConfig); 
+        IndexWriter iw = new IndexWriter(new NIOFSDirectory(location), writerConfig);
         System.out.println("Optimizing index...");
-        iw.optimize();
+        iw.forceMerge(1);
         iw.close();
         System.out.println("Index optimized");
 
         long endtime = System.currentTimeMillis();
         double minutes = (endtime - starttime) / 1000.0 / 60.0;
-        System.out.println("Index reduction of '" + location + "' to fraction "
-                           + fraction + " took " + minutes + " minutes.");
+        System.out.println(
+            "Index reduction of '" + location + "' to fraction " + fraction + " took " + minutes + " minutes.");
+    }
+
+    private static void performReduce(File location, final double fraction) throws IOException {
+        final DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
+        IndexWriter writer = new IndexWriter(
+            new NIOFSDirectory(location),
+            new IndexWriterConfig(Version.LUCENE_40, new WhitespaceAnalyzer(Version.LUCENE_40)));
+        final int docCount = ir.maxDoc();
+        System.out.println("Reducing '" + location + "' to " + fraction + " size (" + ir.maxDoc() + " => "
+                           + (int)(ir.maxDoc() * fraction) + " documents...)");
+        writer.deleteDocuments(new FilteredQuery(new MatchAllDocsQuery(), new Filter() {
+            final int deleteInterval = (int) (1.0 * ir.maxDoc() / (ir.maxDoc() * (1.0 - fraction)));
+            int pos = 0;
+
+            @Override
+            public DocIdSet getDocIdSet(final AtomicReaderContext context, Bits acceptDocs) throws IOException {
+                DocIdSet docs = new DocIdSet() {
+                    @Override
+                    public DocIdSetIterator iterator() throws IOException {
+                        final int startPos = pos;
+                        return new DocIdSetIterator() {
+                            private int pos = startPos;
+                            private final int maxDoc = context.reader().maxDoc();
+
+                            @Override
+                            public int docID() {
+                                return 0;  //To change body of implemented methods use File | Settings | File Templates.
+                            }
+
+                            @Override
+                            public int nextDoc() throws IOException {
+                                // TODO: Implement skipping
+                                if (pos < maxDoc) {
+                                    return pos++;
+                                }
+                                return DocIdSetIterator.NO_MORE_DOCS;
+                            }
+
+                            @Override
+                            public int advance(int target) throws IOException {
+                                throw new UnsupportedOperationException("Makes no sense for reduction");
+                            }
+                        };
+                    }
+                };
+                pos += context.reader().maxDoc();
+                return docs;
+            }
+        }));
+        System.out.println("Documents marked as deleted. Closing writer...");
+        writer.close();
+        ir.close();
+        System.out.println("Writer closed");
     }
 }
 

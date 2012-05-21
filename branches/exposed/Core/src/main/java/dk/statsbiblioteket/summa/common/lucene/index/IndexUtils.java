@@ -64,11 +64,9 @@ public class IndexUtils {
             log.trace(String.format("assignBasicProperties(%s)", payload));
         }
         if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
-            String message = "No Document present, so no basic properties can"
-                               + " be assigned";
+            String message = "No Document present, so no basic properties can be assigned";
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("IndexUtils.assignBasicProperties",
-                               message, Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("IndexUtils.assignBasicProperties", message, Logging.LogLevel.DEBUG, payload);
             log.warn(String.format(message + ": " + payload));
             return;
         }
@@ -81,8 +79,7 @@ public class IndexUtils {
         if (payload.getRecord() == null) {
             String message = "No Record present, so no base can be assigned";
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("IndexUtils.assignBasicProperties",
-                               message, Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("IndexUtils.assignBasicProperties", message, Logging.LogLevel.DEBUG, payload);
             log.debug(String.format(message + ": " + payload));
             return;
         }
@@ -90,22 +87,17 @@ public class IndexUtils {
         assignSingleField(document, payload, RECORD_BASE, base);
     }
 
-    public static void assignSingleField(Document document, Payload payload,
-                                          String field, String term) {
+    public static void assignSingleField(Document document, Payload payload, String field, String term) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Assigning %s:%s to %s",
-                                    field, term, payload));
+            log.trace(String.format("Assigning %s:%s to %s", field, term, payload));
         }
         String[] fields = document.getValues(field);
         if (fields != null && fields.length > 1) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("The " + field + " for " + payload + " was already "
-                      + "assigned. Clearing and re-adding");
+            log.trace("The " + field + " for " + payload + " was already assigned. Clearing and re-adding");
             document.removeFields(field);
         }
-        document.add(new Field(field, term,
-                               Field.Store.YES,
-                               Field.Index.NOT_ANALYZED));
+        document.add(new Field(field, term, Field.Store.YES, Field.Index.NOT_ANALYZED));
     }
 
     /**
@@ -122,10 +114,8 @@ public class IndexUtils {
         String[] ids = document.getValues(RECORD_FIELD);
         if (ids != null && ids.length > 0) {
             if (ids.length > 1) {
-                Logs.log(log, Logs.Level.WARN, "Multiple RecordIDs defined "
-                                               + "in Document '"
-                                               + this + "'. Returning first"
-                                               + " RecordID out of: ",
+                Logs.log(log, Logs.Level.WARN,
+                         "Multiple RecordIDs defined in Document '" + this + "'. Returning first RecordID out of: ",
                          (Object)ids);
             }
             return ids[0];

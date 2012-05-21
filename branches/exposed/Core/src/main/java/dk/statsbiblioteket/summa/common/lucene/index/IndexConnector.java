@@ -14,21 +14,20 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
-import java.io.IOException;
-import java.io.File;
-import java.util.List;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.ParallelReader;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.RAMDirectory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Main entry for accessing indexes. Readers and Searchers can be requested.
@@ -180,7 +179,9 @@ public class IndexConnector {
                          + " sub-readers");
                 return new MultiReader(subReaders);
             case parallelIndex:
-                ParallelReader parallel = new ParallelReader();
+                throw new UnsupportedOperationException(
+                    "Support for ParallelReader was removed 20120516 as part of an upgrade to Lucene trunk");
+/*                ParallelReader parallel = new ParallelReader();
                 int counter = 1;
                 for (String indexKey: indexKeys) {
                     log.info("Getting sub-reader " + counter + "/"
@@ -190,7 +191,7 @@ public class IndexConnector {
                 }
                 log.info("Returning ParallelReader based on " + indexKeys.size()
                          + " sub-readers");
-                return parallel;
+                return parallel;*/
             case ramIndex:
                 log.info("Loading the index at location '" + linksS
                          + "' into RAM...");
