@@ -32,7 +32,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexableField;
 import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -235,16 +235,12 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);
         File confLocation = File.createTempFile("configuration", ".xml");
         confLocation.deleteOnExit();
-        Files.saveString(String.format(
-               CREATOR_SETUP,
-               "file://" + descriptorLocation.getAbsoluteFile().toString()),
-               confLocation);
-        assertTrue("The configuration should exist",
-                   descriptorLocation.getAbsoluteFile().exists());
+        Files.saveString(String.format(CREATOR_SETUP,
+                                       "file://" + descriptorLocation.getAbsoluteFile().toString()), confLocation);
+        assertTrue("The configuration should exist", descriptorLocation.getAbsoluteFile().exists());
 
         Configuration conf = new Configuration(new XStorage(confLocation));
-        LuceneIndexDescriptor id = new LuceneIndexDescriptor(
-                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR));
+        LuceneIndexDescriptor id = new LuceneIndexDescriptor(conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR));
         assertNotNull("A descriptor should be created", id);
         return conf;
     }
@@ -268,50 +264,41 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             assertNotNull("The document should contain the field " + fieldName,
                           doc.getField(fieldName));
         }
-        assertEquals("The document boost should be correct",
-                     1.5f, doc.getBoost());
+        // No docBoost in trunk
+//        assertEquals("The document boost should be correct",
+//                     1.5f, doc.getBoost());
     }
 
     public void testEnrichedRecord() throws Exception {
-        Record parent = new Record(
-            "parent", "foo", NAMESPACED_RECORD.getBytes("utf-8"));
-        Record child = new Record(
-            "child", "foo", CHILD_RECORD.getBytes("utf-8"));
+        Record parent = new Record("parent", "foo", NAMESPACED_RECORD.getBytes("utf-8"));
+        Record child = new Record("child", "foo", CHILD_RECORD.getBytes("utf-8"));
         parent.setChildren(Arrays.asList(child));
 
-        testEnrichedRecord(new Payload(parent), true,
-                           new String[]{"Foo bar", "Kazam", "Subway"});
-        testEnrichedRecord(new Payload(parent), false,
-                           new String[]{"Foo bar", "Kazam"});
+        testEnrichedRecord(new Payload(parent), true, new String[]{"Foo bar", "Kazam", "Subway"});
+        testEnrichedRecord(new Payload(parent), false, new String[]{"Foo bar", "Kazam"});
         parent.setChildren(null);
-        testEnrichedRecord(new Payload(parent), true,
-                           new String[]{"Foo bar", "Kazam"});
+        testEnrichedRecord(new Payload(parent), true, new String[]{"Foo bar", "Kazam"});
     }
-    public void testEnrichedRecord(Payload payload, boolean visitChildren,
-                                   String[] EXPECTED) throws Exception {
+    public void testEnrichedRecord(Payload payload, boolean visitChildren, String[] EXPECTED) throws Exception {
 
-        PayloadFeederHelper feeder =
-            new PayloadFeederHelper(Arrays.asList(payload));
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(payload));
         Configuration conf = getCreatorConf();
         conf.set(StreamingDocumentCreator.CONF_VISIT_CHILDREN, visitChildren);
         ObjectFilter creator = new StreamingDocumentCreator(conf);
         creator.setSource(feeder);
 
         Payload processed = creator.next();
-        Document doc =
-            (Document)processed.getData(Payload.LUCENE_DOCUMENT);
+        Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
         assertNotNull("A document should be created");
 
         Set<String> expected = new HashSet<String>(Arrays.asList(EXPECTED));
-        for (Field field: doc.getFields("mystored")) {
-            assertTrue("The value " + field.stringValue() + " should exist in"
-                       + " the expected list "
+        for (IndexableField field: doc.getFields("mystored")) {
+            assertTrue("The value " + field.stringValue() + " should exist in the expected list "
                        + Strings.join(Arrays.asList(EXPECTED), ", "),
                        expected.contains(field.stringValue()));
             expected.remove(field.stringValue());
         }
-        assertTrue("There should be no more expected values. Remaining: "
-                   + Strings.join(Arrays.asList(expected), ", "),
+        assertTrue("There should be no more expected values. Remaining: " + Strings.join(Arrays.asList(expected), ", "),
                    expected.size() == 0);
     }
 

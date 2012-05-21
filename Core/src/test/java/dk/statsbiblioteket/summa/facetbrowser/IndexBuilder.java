@@ -167,7 +167,7 @@ public class IndexBuilder {
                 j++;
             }
         }
-        writer.optimize();
+        writer.forceMerge(1);
         writer.close();
         versionFile().createNewFile();
 

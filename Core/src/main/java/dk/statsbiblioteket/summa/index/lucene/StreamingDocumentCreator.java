@@ -27,17 +27,15 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-
-import java.text.ParseException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Document;
+import java.text.ParseException;
 
 /**
  * Stream-based converter from SummaDocumentXML to Lucene Documents.
@@ -206,8 +204,13 @@ public class StreamingDocumentCreator
             if (boostString != null) {
                 float boost = Float.parseFloat(boostString);
                 if (origin) {
-                    log.trace("Assigning boost " + boost + " to document for " + record.getId());
-                    doc.setBoost(boost);
+                    if (!boostWarn) {
+                        log.warn("Attempting to assign " + boost + " to document for " + record.getId()
+                                 + " but document level boosts are not currently possible for Lucene trunk (20120515). "
+                                 + "This warning will not be displayed again for the run duration");
+                        //doc.setBoost(boost);
+                        boostWarn = true;
+                    }
                 } else {
                     log.trace("Skipping boost " + boost + " to document for " + record.getId()
                               + " as it is not origin");
@@ -221,6 +224,7 @@ public class StreamingDocumentCreator
         log.trace("Extracted header-information for " + record.getId() + " in " + (System.nanoTime() - startTime)
                   + " ns");
     }
+    private static boolean boostWarn = false;
 
     private void skipComments(XMLStreamReader reader) throws
                                                             XMLStreamException {

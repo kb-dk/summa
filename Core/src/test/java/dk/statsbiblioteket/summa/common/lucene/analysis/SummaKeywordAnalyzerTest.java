@@ -14,14 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import junit.framework.TestCase;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.StringReader;
-
-import junit.framework.TestCase;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * Test cases for {@link SummaKeywordAnalyzer}
@@ -31,75 +30,61 @@ public class SummaKeywordAnalyzerTest extends TestCase {
     SummaKeywordAnalyzer a;
     TokenStream t;
 
-    static void assertTokens(TokenStream tokenizer, String... tokens)
-                                                               throws Exception{
+    static void assertTokens(TokenStream tokenizer, String... tokens) throws Exception{
         CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
         int count = 0;
 
         while (tokenizer.incrementToken()) {
             if (count >= tokens.length) {
-                fail("Too many tokens from tokenizer, found " + (count+1)
-                     + ". Expected " + tokens.length + ".");
+                fail("Too many tokens from tokenizer, found " + (count+1) + ". Expected " + tokens.length + ".");
             }
 
-            assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         tokens[count], term.toString());
+            assertEquals("Mismatch in token number " + (count + 1) + ":", tokens[count], term.toString());
             count++;
         }
 
-        assertEquals("To few tokens from tokenizer, found " + count
-                     + ". Expected " + tokens.length + ".",
+        assertEquals("To few tokens from tokenizer, found " + count + ". Expected " + tokens.length + ".",
                      tokens.length, count);
     }
 
     static TokenStream getStream(String text) {
         return new LowerCaseFilter(org.apache.lucene.util.Version.LUCENE_30,
-                new WhitespaceTokenizer(
-                    org.apache.lucene.util.Version.LUCENE_30,
-                    new StringReader(text)));
+                new WhitespaceTokenizer(org.apache.lucene.util.Version.LUCENE_30, new StringReader(text)));
     }
 
     public void testFoo() throws Exception {
         a = new SummaKeywordAnalyzer();
-        t = a.reusableTokenStream("testField",
-                                  new StringReader("foo"));
+        t = a.tokenStream("testField", new StringReader("foo"));
         assertTokens(t, "foo");
 
-        t = a.tokenStream("testField",
-                           new StringReader("foo"));
+        t = a.tokenStream("testField", new StringReader("foo"));
         assertTokens(t, "foo");
     }
 
     public void testFooBar() throws Exception {
         a = new SummaKeywordAnalyzer();
-        t = a.reusableTokenStream("testField",
-                                  new StringReader("foo bar"));
+        t = a.tokenStream("testField", new StringReader("foo bar"));
         assertTokens(t, "foo bar");
 
-        t = a.tokenStream("testField",
-                          new StringReader("foo bar"));
+        t = a.tokenStream("testField", new StringReader("foo bar"));
         assertTokens(t, "foo bar");
     }
 
     public void testFooBarExtraSpaces() throws Exception {
         a = new SummaKeywordAnalyzer();
-        t = a.reusableTokenStream("testField",
-                                  new StringReader(" foo  bar   "));
+        t = a.tokenStream("testField", new StringReader(" foo  bar   "));
         assertTokens(t, "foo bar");
 
-        t = a.tokenStream("testField",
-                           new StringReader(" foo  bar   "));
+        t = a.tokenStream("testField", new StringReader(" foo  bar   "));
         assertTokens(t, "foo bar");
     }
 
     public void testPunctuation() throws Exception {
         a = new SummaKeywordAnalyzer();
-        t = a.reusableTokenStream("testField",
-                                  new StringReader(".foo  bar."));
+        t = a.tokenStream("testField", new StringReader(".foo  bar."));
         assertTokens(t, "foo bar");
 
-        t = a.tokenStream("testField",
-                           new StringReader("foo.bar   "));
+        t = a.tokenStream("testField", new StringReader("foo.bar   "));
         assertTokens(t, "foo bar");
     }
 

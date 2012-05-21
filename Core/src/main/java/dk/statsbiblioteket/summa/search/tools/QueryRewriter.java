@@ -21,15 +21,11 @@ package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
-
-import java.io.Reader;
 
 // TODO: Make a pool of parsers instead of using synchronized
 /**
@@ -157,12 +153,7 @@ public class QueryRewriter {
     }
 
     public static QueryParser createDefaultQueryParser() {
-        QueryParser queryParser = new QueryParser(Version.LUCENE_31, "", new Analyzer() {
-            @Override
-            public TokenStream tokenStream(String s, Reader reader) {
-                return new WhitespaceTokenizer(Version.LUCENE_31, reader);
-            }
-        });
+        QueryParser queryParser = new QueryParser(Version.LUCENE_40, "", new WhitespaceAnalyzer(Version.LUCENE_40));
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         return queryParser;

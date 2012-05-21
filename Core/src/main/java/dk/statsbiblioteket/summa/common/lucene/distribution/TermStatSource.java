@@ -22,14 +22,12 @@ package dk.statsbiblioteket.summa.common.lucene.distribution;
 import dk.statsbiblioteket.summa.common.util.Triple;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.index.DocsEnum;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ReaderUtil;
 
 import java.io.Closeable;
 import java.io.File;
@@ -58,7 +56,7 @@ public class TermStatSource implements Closeable {
     public TermStatSource(File index) throws IOException {
         log.debug("Opening index at " + index);
         this.index = index;
-        ir = IndexReader.open(new NIOFSDirectory(index));
+        ir = DirectoryReader.open(new NIOFSDirectory(index));
     }
 
     @Override
@@ -67,28 +65,15 @@ public class TermStatSource implements Closeable {
         ir.close();
     }
 
-    public Iterator<Triple<BytesRef, Long, Long>> getTerms(String field)
-                                                            throws IOException {
-        if (ir.getSequentialSubReaders() == null) {
-            log.debug("getTerms(" + field + ") creating single leaf iterator");
-            return new LeafIterator(ir, field);
-        }
-        IndexReader[] readers = ir.getSequentialSubReaders();
-        if (readers.length == 1) {
-            log.debug("getTerms(" + field + ") creating single leaf iterator "
-                      + "from single sub reader");
-            return new LeafIterator(readers[0], field);
-        }
-        log.debug("getTerms(" + field + ") creating single field iterator "
-                  + " with " + readers.length + " readers");
-        List<Iterator<Triple<BytesRef, Long, Long>>> providers =
-            new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(
-                readers.length);
-        for (IndexReader reader: readers) {
+    public Iterator<Triple<BytesRef, Long, Long>> getTerms(String field) throws IOException {
+        List<AtomicReader> irs = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(irs, ir);
+        log.debug("getTerms(" + field + ") creating single field iterator " + " with " + irs.size()+ " readers");
+        List<Iterator<Triple<BytesRef, Long, Long>>> providers = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(irs.size());
+        for (AtomicReader reader: irs) {
             LeafIterator li = new LeafIterator(reader, field);
             if (!li.hasNext()) {
-                log.debug("LeafIterator was not added to merger as it is empty "
-                          + "from the beginning");
+                log.debug("LeafIterator was not added to merger as it is empty from the beginning");
             } else {
                 providers.add(li);
             }
@@ -100,9 +85,7 @@ public class TermStatSource implements Closeable {
         Collection<String> fields) throws IOException {
         String designation = Strings.join(fields, ", ");
         log.debug("Creating multi field iterator for " + designation);
-        List<Iterator<Triple<BytesRef, Long, Long>>> sources =
-            new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(
-                fields.size());
+        List<Iterator<Triple<BytesRef, Long, Long>>> sources = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(fields.size());
         for (String field: fields) {
             sources.add(getTerms(field));
         }
@@ -122,10 +105,8 @@ public class TermStatSource implements Closeable {
             log.debug("Creating Merger(" + designation + ")");
             this.providers = providers;
             this.designation = designation;
-            values = new ArrayList<Triple<BytesRef, Long, Long>>(
-                providers.size());
-            Iterator<Iterator<Triple<BytesRef, Long, Long>>> pi =
-                providers.iterator();
+            values = new ArrayList<Triple<BytesRef, Long, Long>>(providers.size());
+            Iterator<Iterator<Triple<BytesRef, Long, Long>>> pi = providers.iterator();
 
             while (pi.hasNext()) {
                 Iterator<Triple<BytesRef, Long, Long>> provider = pi.next();
@@ -147,9 +128,8 @@ public class TermStatSource implements Closeable {
         public Triple<BytesRef, Long, Long> next() {
             if (values.size() != providers.size()) {
                 throw new IllegalStateException(
-                    "There were " + providers.size() + " and " + values.size() 
-                    + " values. The two numbers should be the same. There is "
-                    + "an error in the internal bookkeeping");
+                    "There were " + providers.size() + " and " + values.size() + " values. The two numbers should be "
+                    + "the same. There is an error in the internal bookkeeping");
             }
 
             int index = -1;
@@ -193,8 +173,7 @@ public class TermStatSource implements Closeable {
             termCount++;
             if (termCount == 0) {
                 log.debug(
-                    "Merger for " + designation + " depleted with " + termCount
-                    + " delivered terms");
+                    "Merger for " + designation + " depleted with " + termCount + " delivered terms");
             }
             if (log.isTraceEnabled()) {
                 log.trace("Merging iterator delivered " + result);
@@ -208,27 +187,22 @@ public class TermStatSource implements Closeable {
         }
     }
 
-    private static class LeafIterator implements
-                                      Iterator<Triple<BytesRef, Long, Long>> {
-        private IndexReader ir;
+    private static class LeafIterator implements Iterator<Triple<BytesRef, Long, Long>> {
+        private AtomicReader ir;
         private TermsEnum termsEnum;
         private DocsEnum docsEnum = null;
         private long termCount = 0;
         private String field;
         private boolean depleted;
 
-        public LeafIterator(IndexReader ir, String field) throws IOException {
-             if (ir.getSequentialSubReaders() != null) {
-                 throw new IllegalArgumentException(
-                     "Only leaf IndexReaders allowed. Got " + ir);
-             }
+        public LeafIterator(AtomicReader ir, String field) throws IOException {
             this.ir = ir;
             this.field = field;
             Terms terms = ir.fields().terms(field);
             if (terms == null) {
                 depleted = true;
             } else {
-                termsEnum = terms.iterator();
+                termsEnum = terms.iterator(null);
                 depleted = termsEnum.next() == null;
             }
         }
@@ -242,36 +216,30 @@ public class TermStatSource implements Closeable {
         @Override
         public Triple<BytesRef, Long, Long> next() {
             if (depleted) {
-                throw new IllegalStateException(
-                    "next was called when hasNext returns false");
+                throw new IllegalStateException("next was called when hasNext returns false");
             }
             try {
                 BytesRef current = termsEnum.term();
                 if (current == null) {
                     throw new IllegalStateException(
-                        "The next term was null for field '" + field
-                        + "', which should never happen");
+                        "The next term was null for field '" + field + "', which should never happen");
                 }
                 // Extracting stats
                 long tf = 0;
                 long df = 0;
-                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum);
-                DocsEnum.BulkReadResult bulk = docsEnum.getBulkResult();
-                int read;
-                while ((read = docsEnum.read()) != 0) {
-                    for (int i = 0 ; i < read ; i++) {
-                        tf += bulk.freqs.ints[i];
-                        df++;
-                    }
+                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum, false);
+                while (docsEnum.nextDoc() != DocsEnum.NO_MORE_DOCS) {
+                    tf += docsEnum.freq();
+                    df++;
                 }
-                final Triple<BytesRef, Long, Long> result =
-                    new Triple<BytesRef, Long, Long>(new BytesRef(current), tf, df);
+                BytesRef text = new BytesRef();
+                text.copyBytes(current);
+                final Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(current, tf, df);
                 termCount++;
                 depleted = termsEnum.next() == null;
                 if (depleted) {
                     if (log.isTraceEnabled()) {
-                        log.trace("LeafIterator depleted. Delivered "
-                                  + termCount + " term stats");
+                        log.trace("LeafIterator depleted. Delivered " + termCount + " term stats");
                     }
                 }
                 if (log.isTraceEnabled()) {

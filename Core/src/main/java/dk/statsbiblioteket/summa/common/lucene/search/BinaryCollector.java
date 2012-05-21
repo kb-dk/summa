@@ -14,10 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.*;
 
-import java.io.*;
+import org.apache.lucene.index.AtomicReaderContext;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Scorer;
+
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * TopCollector that uses simple binary-search with arrays instead of
@@ -30,6 +33,7 @@ public class BinaryCollector extends Collector {
     float[] scores;
     int count = 0;
     float min = -1;
+    int base = 0;
 
     /**
         * @param maxHits the maximum number of hits to return.
@@ -44,6 +48,7 @@ public class BinaryCollector extends Collector {
         if (score < min) {
             return;
         }
+        docID += base;
         int pos = binarySearch(scores, score);
         if (pos == count && count == maxHits) { // lowest
             ids[maxHits-1] = docID;
@@ -135,23 +140,30 @@ public class BinaryCollector extends Collector {
         return sw.toString();
     }
 
-    // TODO check if these "implementains" make sense.
     @Override
     public void setScorer(Scorer scorer) throws IOException {
-        // ignore score
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setNextReader(AtomicReaderContext context) throws IOException {
+        base = context.docBase;
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void collect(int i) throws IOException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    @Override
-    public void setNextReader(
-        IndexReader.AtomicReaderContext atomicReaderContext)
-        throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+/*
+    public void setNextReader(IndexReader indexReader, int base) throws IOException {
+        this.base = base;
     }
+  */
+    /*
+    public void setNextReader(AtomicReaderContext atomicReaderContext) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    } */
 
     @Override
     public boolean acceptsDocsOutOfOrder() {

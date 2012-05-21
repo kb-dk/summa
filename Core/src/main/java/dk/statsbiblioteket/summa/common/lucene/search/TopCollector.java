@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
+
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * TopCollector that uses simple array-copying instead of the more fancy
@@ -32,6 +32,7 @@ public class TopCollector extends Collector {
     float[] scores;
     int count = 0;
     float min = -1;
+    int base = 0;
 
     /**
      * @param maxHits the maximum number of hits to return.
@@ -42,15 +43,16 @@ public class TopCollector extends Collector {
         scores = new float[maxHits+1];
     }
 
-    public void collect(int i, float v) {
+    public void collect(int doc, float v) {
         if (v < min) {
             return;
         }
+        doc += base;
 //        System.out.println("min " + min + ", val " + v);
         for (int pos = 0 ; pos < count ; pos++) {
             if (v > scores[pos]) {
                 System.arraycopy(ids, pos, ids, pos+1, maxHits-pos-1);
-                ids[pos] = i;
+                ids[pos] = doc;
                 System.arraycopy(scores, pos, scores, pos+1, maxHits-pos-1);
                 scores[pos] = v;
                 count = Math.min(maxHits, ++count);
@@ -59,7 +61,7 @@ public class TopCollector extends Collector {
             }
         }
         count = Math.min(maxHits, ++count);
-        ids[count-1] = i;
+        ids[count-1] = doc;
         scores[count-1] = v;
         min = v;
     }
@@ -131,9 +133,14 @@ public class TopCollector extends Collector {
     }
 
     @Override
-    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void setNextReader(IndexReader indexReader, int base) throws IOException {
+        this.base = base;
     }
+
+    /*
+    public void setNextReader(AtomicReaderContext atomicReaderContext) throws IOException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    } */
 
 /*    @Override
     public void setNextReader(IndexReader indexReader, int i)

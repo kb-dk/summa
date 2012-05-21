@@ -14,22 +14,22 @@
  */
 package dk.statsbiblioteket.summa.performance;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IOContext;
-import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Sets up a simulated environment for testing raw search-performance.
@@ -158,45 +158,37 @@ public class SearchPerformance {
             return searcher;
         }
         String dirType = conf.getString(CONF_DIR_TYPE, DEFAULT_DIR_TYPE);
-        boolean readOnly = conf.getBoolean(CONF_DIR_READONLY,
-                                           DEFAULT_DIR_READONLY);
-        String locStr = conf.getString(CONF_INDEX_LOCATION,
-                                       DEFAULT_INDEX_LOCATION);
+        boolean readOnly = conf.getBoolean(CONF_DIR_READONLY, DEFAULT_DIR_READONLY);
+        String locStr = conf.getString(CONF_INDEX_LOCATION, DEFAULT_INDEX_LOCATION);
         File location= Resolver.getFile(locStr // Lucene 2.4
-                                        + (locStr.endsWith("/") ? "" : "/")
-                                        + "segments.gen");
+                                        + (locStr.endsWith("/") ? "" : "/") + "segments.gen");
         if (location == null) { // pre-2.4
-            location= Resolver.getFile(locStr
-                                       + (locStr.endsWith("/") ? "" : "/")
-                                       + "segments");
+            location= Resolver.getFile(locStr + (locStr.endsWith("/") ? "" : "/") + "segments");
         }
         location = location == null ? null : location.getParentFile();
-        log.debug("dirType = " + dirType + ", readOnly = " + readOnly
-                  + ", location = " + location);
+        log.debug("dirType = " + dirType + ", readOnly = " + readOnly + ", location = " + location);
         if (location == null) {
-            throw new IllegalArgumentException(String.format(
-                    "Unable to resolve '%s' to concrete index location",
-                    locStr));
+            throw new IllegalArgumentException(
+                String.format("Unable to resolve '%s' to concrete index location", locStr));
         }
         if (PARAM_DIR_FS.equals(dirType)) {
             log.debug("Creating FSDirectory(" + location + ")");
             try {
                 //noinspection DuplicateStringLiteralInspection
-                System.setProperty("org.apache.lucene.FSDirectory.class",
-                                   FSDirectory.class.getName());
+                System.setProperty("org.apache.lucene.FSDirectory.class", FSDirectory.class.getName());
                 FSDirectory dir = new NIOFSDirectory(location);
-                return new IndexSearcher(IndexReader.open(dir, readOnly));
+                DirectoryReader reader = DirectoryReader.open(dir);
+                return new IndexSearcher(reader);
             } catch (IOException e) {
-                throw new IOException("Unable to load index from '" + location
-                                      + "'", e);
+                throw new IOException("Unable to load index from '" + location + "'", e);
             }
         }
         if (PARAM_DIR_RAM.equals(dirType)) {
             log.debug("Creating RAMDirectory(" + location + ")");
             try {
-                RAMDirectory dir = new RAMDirectory(
-                    new NIOFSDirectory(location), new IOContext());
-                return new IndexSearcher(IndexReader.open(dir, readOnly));
+                RAMDirectory dir = new RAMDirectory(new NIOFSDirectory(location), new IOContext());
+                DirectoryReader reader = DirectoryReader.open(dir);
+                return new IndexSearcher(reader);
             } catch (IOException e) {
                 throw new IOException("Unable to load index into RAM from '"
                                       + location + "'", e);
@@ -209,7 +201,8 @@ public class SearchPerformance {
                 System.setProperty("org.apache.lucene.FSDirectory.class",
                                    NIOFSDirectory.class.getName());
                 FSDirectory dir = new NIOFSDirectory(location);
-                return new IndexSearcher(IndexReader.open(dir, readOnly));
+                DirectoryReader reader = DirectoryReader.open(dir);
+                return new IndexSearcher(reader);
             } catch (IOException e) {
                 throw new IOException("Unable to load index with NIO from '"
                                       + location + "'", e);
