@@ -16,7 +16,6 @@
         <dependency>
             <groupId>solr</groupId>
             <artifactId>apache-solr</artifactId>
-            <version>1339028</version>
             <type>war</type>
         </dependency>
 
@@ -24,13 +23,11 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.0.3</version>
         </dependency>
 
         <dependency>
             <groupId>janino</groupId>
             <artifactId>janino</artifactId>
-            <version>2.5.10</version>
         </dependency>
 
     </dependencies>
