@@ -13,52 +13,50 @@
     <packaging>war</packaging>
 
     <dependencies>
+
+<dependency>
+  <groupId>org.apache.lucene</groupId>
+  <artifactId>lucene-core</artifactId>
+  <version>4.0-1340933</version>
+</dependency>   
+        
+           
+
+
+<dependency>
+  <groupId>org.apache.solr</groupId>
+  <artifactId>solr-core</artifactId>
+  <version>4.0-1340933</version>
+<type> jar </type>
+</dependency>
+
+
+<dependency>
+  <groupId>org.apache.solr</groupId>
+  <artifactId>solr-test-framework</artifactId>
+  <version>4.0-1340933</version>
+</dependency>
+
+<dependency>
+  <groupId>org.apache.lucene</groupId>
+  <artifactId>lucene-test-framework</artifactId>
+  <version>4.0-1340933</version>
+</dependency>
+
+<dependency>
+  <groupId>org.apache.solr</groupId>
+  <artifactId>solr-solrj</artifactId>
+  <version>4.0-1340933</version>
+</dependency>
+
+        
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr</artifactId>
             <type>war</type>
         </dependency>
 
-        <!-- logging -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>janino</groupId>
-            <artifactId>janino</artifactId>
-        </dependency>
-
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-         <artifactId>lucene-core</artifactId>
-         <version>4.0-1340933</version>
-      </dependency>   
-        
-
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-core</artifactId>
-        <version>4.0-1340933</version>
-        <type> jar </type>
-      </dependency>
-
-
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-test-framework</artifactId>
-        <version>4.0-1340933</version>
-      </dependency>
-
-       <dependency>
-          <groupId>org.apache.lucene</groupId>
-         <artifactId>lucene-test-framework</artifactId>
-          <version>4.0-1340933</version>
-       </dependency>
-
-
-        <dependency>
+         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
@@ -77,6 +75,20 @@
               <version>6.1.12</version>
            </dependency>
 
+
+        <!-- logging -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>janino</groupId>
+            <artifactId>janino</artifactId>
+        </dependency>
+    
+  
+       
     </dependencies>
 
     <build>
