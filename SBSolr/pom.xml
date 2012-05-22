@@ -42,9 +42,8 @@
                     <!-- http port -->
                     <port>9090</port>
                     <contextFile>${basedir}/src/test/tomcat/context.xml</contextFile>
-                    <additionalConfigFilesDir>${basedir}/src/test/tomcat/</additionalConfigFilesDir>
                     <systemProperties>
-                        <test.config.dir>${basedir}/target/tomcat/conf</test.config.dir>
+                        <solr.data.dir>${basedir}/target/tomcat</solr.data.dir>
                     </systemProperties>
                 </configuration>
             </plugin>
