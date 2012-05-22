@@ -14,15 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.util.Profiler;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.Random;
@@ -53,22 +52,18 @@ public class SummaQueryParserTest extends TestCase {
               "freetext:foo[1.0]", "freetext:foo");
     }
 
-
-
     public void testDefaultExpansionWithBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals(
             "The parsed query should expand to default fields with boost", qp,
-            "(freetext:php[1.0] <title:php[1.0] titel:php[1.0]> "
-            + "id:php[1.0])[2.0]",
+            "(freetext:php[1.0] <title:php[1.0] titel:php[1.0]> id:php[1.0])[2.0]",
             "php^2");
     }
 
     public void testGroupExpansion() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should expand default groups", qp,
-                     "(freetext:foo[1.0] <title:foo[1.0] titel:foo[1.0]> "
-                     + "id:foo[1.0])[1.0]",
+                     "(freetext:foo[1.0] <title:foo[1.0] titel:foo[1.0]> id:foo[1.0])[1.0]",
                      "foo");
     }
 
@@ -84,11 +79,24 @@ public class SummaQueryParserTest extends TestCase {
     public void testGroupBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should boost groups", qp,
-      "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
-               "foo boost(ti^3)");
+                     "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
+                     "foo boost(ti^3)");
+        assertEquals("The parsed query should boost groups, take 2", qp,
+                     "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
+                     "foo boost(ti^3)");
         assertEquals("The parsed query should boost explicit field", qp,
                      "id:foo[3.0]",
                      "id:foo boost(id^3)");
+    }
+
+    public void testQueryParserReuse() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("The parsed query should boost groups", qp,
+                     "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
+                     "foo boost(ti^3)");
+        assertEquals("The parsed query should boost groups, take 2", qp,
+                     "(freetext:foo[1.0] <title:foo[3.0] titel:foo[3.0]> id:foo[1.0])[1.0]",
+                     "foo boost(ti^3)");
     }
 
     public void testWildcards() throws Exception {
@@ -175,18 +183,15 @@ public class SummaQueryParserTest extends TestCase {
                     'a' + random.nextInt(25))));
             profiler.beat();
         }
-        System.out.println("Dry-run generated " + RUNS + " queries at "
-                           + profiler.getBps(false) + " q/sec");
+        System.out.println("Dry-run generated " + RUNS + " queries at " + profiler.getBps(false) + " q/sec");
 
         random = new Random(87);
         profiler.reset();
         for (int i = 0 ; i < RUNS ; i++) {
-            qp.parse(new String(Character.toChars((char)(
-                    'a' + random.nextInt(25)))));
+            qp.parse(new String(Character.toChars((char)('a' + random.nextInt(25)))));
             profiler.beat();
         }
-        System.out.println("Processed " + RUNS + " queries at "
-                           + profiler.getBps(false) + " q/sec");
+        System.out.println("Processed " + RUNS + " queries at " + profiler.getBps(false) + " q/sec");
     }
 
     public void assertEquals(String message, SummaQueryParser qp,
@@ -197,7 +202,7 @@ public class SummaQueryParserTest extends TestCase {
 
     private SummaQueryParser getQueryParser() throws IOException {
         LuceneIndexDescriptor descriptor = new LuceneIndexDescriptor(
-                       Resolver.getURL("common/queryparser/IndexDescriptor.xml"));
+            Resolver.getURL("common/queryparser/IndexDescriptor.xml"));
         Configuration conf = Configuration.newMemoryBased();
         conf.set(SummaQueryParser.CONF_QUERY_TIME_FIELD_BOOSTS, true);
         return new SummaQueryParser(conf, descriptor);

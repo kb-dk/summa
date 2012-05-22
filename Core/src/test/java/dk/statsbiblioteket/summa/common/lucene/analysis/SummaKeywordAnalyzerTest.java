@@ -39,7 +39,8 @@ public class SummaKeywordAnalyzerTest extends TestCase {
                 fail("Too many tokens from tokenizer, found " + (count+1) + ". Expected " + tokens.length + ".");
             }
 
-            assertEquals("Mismatch in token number " + (count + 1) + ":", tokens[count], term.toString());
+            assertEquals("Mismatch in token number " + (count + 1) + ":",
+                         "'" + tokens[count] + "'", "'" + term.toString() + "'");
             count++;
         }
 

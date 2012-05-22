@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
 
@@ -99,9 +99,8 @@ public class TopCollector extends Collector {
      */
     public float getValue(int i) {
         if (i >= count) {
-            throw new ArrayIndexOutOfBoundsException("There is only " + count
-                                                     + " elements and element #"
-                                                     + i + " was requested");
+            throw new ArrayIndexOutOfBoundsException(
+                "There is only " + count + " elements and element #" + i + " was requested");
         }
         return scores[i];
     }
@@ -133,8 +132,8 @@ public class TopCollector extends Collector {
     }
 
     @Override
-    public void setNextReader(IndexReader indexReader, int base) throws IOException {
-        this.base = base;
+    public void setNextReader(AtomicReaderContext context) throws IOException {
+        base = context.docBase;
     }
 
     /*
