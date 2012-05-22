@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.Random;

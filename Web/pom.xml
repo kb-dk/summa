@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120514-exposed-SNAPSHOT</version>
+        <version>1.8.0-20120522-exposed-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-web</artifactId>
@@ -63,10 +63,18 @@
             <groupId>dk.statsbiblioteket.sbutil</groupId>
             <artifactId>sbutil</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-queries</artifactId>
+        </dependency>-->
+
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <version>1337113</version>
         </dependency>
+
+
         <!-- local dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>

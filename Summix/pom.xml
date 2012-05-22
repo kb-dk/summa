@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120514-exposed-SNAPSHOT</version>
+        <version>1.8.0-20120522-exposed-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -78,6 +78,7 @@
             <groupId>org.marc4j</groupId>
             <artifactId>marc4j</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-core</artifactId>
@@ -98,6 +99,71 @@
             <groupId>dk.statsbiblioteket.lucene.2369</groupId>
             <artifactId>lucene-analyzers-common</artifactId>
         </dependency>
+        -->
+
+        <dependency>
+            <!-- Must be before solr-core -->
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-test-framework</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-core</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-suggest</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-misc</artifactId>
+            <version>1337113</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <artifactId>lucene-grouping</artifactId>
+            <version>1337113</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika</artifactId>
