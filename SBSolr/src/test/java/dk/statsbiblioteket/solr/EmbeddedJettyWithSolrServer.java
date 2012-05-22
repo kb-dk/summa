@@ -13,13 +13,13 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	 */
 
 	public EmbeddedJettyWithSolrServer (String solr_solr_home_dir, String solr_war_path , String context, int port){
-	    this.setDaemon(true);
-		//System.setProperty("solr.solr.home", solr_solr_home_dir);   		   
+	    this.setDaemon(true);   		  
 		server = new Server(port);    	   
 		WebAppContext webapp = new WebAppContext(solr_war_path,context);                      				                          
 		
-		//This is because jetty in unit-test for some reason loads classes from lucene-test-framework. TODO find out why and stop it.
-		webapp.setExtraClasspath("/home/teg/Desktop/solr_release/trunk/lucene/build/test-framework/lucene-test-framework-4.0-SNAPSHOT.jar");
+		//På et tidspunkt var det nødvendigt at tilføje denne til jetty-classpath. Slå dem til igen hvis fejlen opstår.
+		//Det er en mockedint classe som fejler med ClassCastException (fordi klassen ikke er på classpath) 
+    	//webapp.setExtraClasspath("test_libs/lucene-test-framework-4.0-SNAPSHOT.jar");
 		server.setHandler(webapp);			             
 		serverUrl="http://localhost:"+port+context;
 	}
