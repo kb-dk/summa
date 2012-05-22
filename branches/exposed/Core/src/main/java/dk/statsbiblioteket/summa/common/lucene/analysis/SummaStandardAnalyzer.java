@@ -17,7 +17,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Default analyzer for fields in Summa. No translitteration will
+ * Default analyzer for fields in Summa. No transliteration will
  * be performed, but chars will be removed or replaced by space.
  *
  * @see SummaAnalyzer
@@ -31,9 +31,7 @@ public class SummaStandardAnalyzer extends SummaAnalyzer {
      * @see SummaAnalyzer
      */
    public SummaStandardAnalyzer() {
-       super(Rules.VOID_TRANSLITERATIONS
-             + Rules.BLANK_TRANSLITERATIONS,
-             false, "", true, true);
+       super(Rules.VOID_TRANSLITERATIONS + Rules.BLANK_TRANSLITERATIONS, false, "", true, true);
    }
 
 }

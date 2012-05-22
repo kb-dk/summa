@@ -19,6 +19,9 @@ import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.File;
 import java.io.Serializable;
@@ -27,10 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
  * Configuration Tester.
@@ -58,7 +57,7 @@ public class ConfigurationTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        if (!new File(TMP).mkdirs()) {
+        if (!new File(TMP).exists() && !new File(TMP).mkdirs()) {
             fail("Error creating '" + TMP + "'");
         }
     }
@@ -549,35 +548,5 @@ public class ConfigurationTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(ConfigurationTest.class);
-    }
-
-
-    /**
-     * Test defaults resources.
-     */
-    public final void testDefaultResources() {
-        /** Configurations paths. */
-        final String[] defaultResources = {
-            "common/configuration.xml",
-            "common/configuration.js",
-            "common/config.xml",
-            "common/config.js",
-            "common/properties.xml",
-            "common/properties.js",
-            "common/configuration.properties",
-            "common/config.properties",
-            "common/config/configuration.xml",
-            "common/config/configuration.js",
-            "common/config/config.xml",
-            "common/config/config.js",
-            "common/config/properties.xml",
-            "common/config/properties.js",
-            "common/config/configuration.properties",
-            "common/config/config.properties"
-        };
-        for (int i = 0; i < defaultResources.length; i++) {
-            assertEquals(defaultResources[i],
-                         Configuration.DEFAULT_RESOURCES[i]);
-        }
     }
 }

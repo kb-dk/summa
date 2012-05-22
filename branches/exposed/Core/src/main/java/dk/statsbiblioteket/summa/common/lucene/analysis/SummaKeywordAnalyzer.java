@@ -31,11 +31,12 @@ import java.io.Reader;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class SummaKeywordAnalyzer extends Analyzer {
-    public static final String RULES = "'_' > ' '";
+    public static final String RULES = "'_' > ' ';";
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(new KeywordTokenizer(ReplaceFactory.getReplacer(RULES)));
+        return new TokenStreamComponents(new KeywordTokenizer(
+            ReplaceFactory.getReplacer(reader, RuleParser.parse(RULES))));
     }
 }
 
