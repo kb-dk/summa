@@ -29,15 +29,10 @@ import org.mortbay.jetty.webapp.WebAppContext;
  
 public class SolrSearchConfigTest {
 	
-	//String solrWarPath="/home/teg/Desktop/apache-solr-3.6.0/example/webapps/solr.war";
-	//String solrHome= "/home/teg/Desktop/apache-solr-3.6.0/example/solr";
-	
-//String solrWarPath="/home/teg/Desktop/apache-solr-4.0/example/webapps/solr.war";
-	String solrWarPath="/home/teg/workspace/Solr/solr.war";
-	//String solrWarPath="/home/teg/workspace/summa/SBSolr/target/war/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
+	String solrWarPath="target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
 	
 	
-	String solrHome= "/home/teg/workspace/Solr/solr";
+	String solrHome= "/solr";
 	String context="/solr";
 	int port = 8080;
     
