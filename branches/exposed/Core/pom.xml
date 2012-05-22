@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120514-exposed-SNAPSHOT</version>
+        <version>1.8.0-20120522-exposed-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-core</artifactId>
@@ -56,7 +56,7 @@
         </plugins>
               
     </build>
-    
+
     <!-- Dependencies for Summa Search -->
     <dependencies>
 <!--
