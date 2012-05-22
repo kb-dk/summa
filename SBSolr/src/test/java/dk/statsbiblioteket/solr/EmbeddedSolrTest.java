@@ -16,7 +16,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class EmbeddedSolrTest extends AbstractSolrTestCase {
-	  
+	
+	
     private SolrServer server;
 	
     @Override
@@ -32,7 +33,7 @@ public class EmbeddedSolrTest extends AbstractSolrTestCase {
     @Before
     @Override
     public void setUp() throws Exception {
-        super.setUp();
+        super.setUp();       
         server = new EmbeddedSolrServer(h.getCoreContainer(), h.getCore().getName());
     }
 
