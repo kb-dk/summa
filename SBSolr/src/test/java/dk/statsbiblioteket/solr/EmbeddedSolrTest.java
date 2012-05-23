@@ -21,7 +21,7 @@ public class EmbeddedSolrTest{
 	
     @Before    
     public void setUp() throws Exception {             
-        System.setProperty("solr.solr.home", "/home/teg/workspace/summa/SBSolr/src/test/tomcat/solr");      
+        System.setProperty("solr.solr.home", "src/test/tomcat/solr");      
         CoreContainer.Initializer initializer = new CoreContainer.Initializer();
         CoreContainer coreContainer = initializer.initialize();
         server = new EmbeddedSolrServer(coreContainer, "");        
