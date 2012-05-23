@@ -2,8 +2,6 @@ package dk.statsbiblioteket.solr;
 
 import java.io.IOException;
 
-import org.apache.solr.client.solrj.embedded.*;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -11,30 +9,22 @@ import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.util.AbstractSolrTestCase;
+import org.apache.solr.core.CoreContainer;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
-public class EmbeddedSolrTest extends AbstractSolrTestCase {
+public class EmbeddedSolrTest{
 	
 	
     private SolrServer server;
 	
-    @Override
-    public String getSchemaFile() {
-        return "solr/conf/schema.xml";
-    }
-
-    @Override
-    public String getSolrConfigFile() {
-        return "solr/conf/solrconfig.xml";
-    }
-
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();       
-        server = new EmbeddedSolrServer(h.getCoreContainer(), h.getCore().getName());
+    @Before    
+    public void setUp() throws Exception {             
+        System.setProperty("solr.solr.home", "/home/teg/workspace/summa/SBSolr/src/test/tomcat/solr");      
+        CoreContainer.Initializer initializer = new CoreContainer.Initializer();
+        CoreContainer coreContainer = initializer.initialize();
+        server = new EmbeddedSolrServer(coreContainer, "");        
     }
 
     
@@ -42,7 +32,7 @@ public class EmbeddedSolrTest extends AbstractSolrTestCase {
     public void testThatDocumentIsFound() throws SolrServerException, IOException {
         SolrInputDocument document = new SolrInputDocument();
         document.addField("recordId", "1");
-        document.addField("text", "thomas bjørn");
+        document.addField("text", "thomas");
 
         server.add(document);
         server.commit();
