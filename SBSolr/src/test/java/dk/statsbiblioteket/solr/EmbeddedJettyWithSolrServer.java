@@ -20,6 +20,8 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		//På et tidspunkt var det nødvendigt at tilføje denne til jetty-classpath. Slå dem til igen hvis fejlen opstår.
 		//Det er en mockedint classe som fejler med ClassCastException (fordi klassen ikke er på classpath) 
     	//webapp.setExtraClasspath("test_libs/lucene-test-framework-4.0-SNAPSHOT.jar");
+	   webapp.setExtraClasspath("test_lib/lucene-test-framework-4.0.jar");
+		
 		server.setHandler(webapp);			             
 		serverUrl="http://localhost:"+port+context;
 	}
