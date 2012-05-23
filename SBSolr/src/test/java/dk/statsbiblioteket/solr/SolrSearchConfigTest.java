@@ -32,7 +32,7 @@ public class SolrSearchConfigTest {
 	String solrWarPath="target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
 	
 	
-	String solrHome= "target/solr"; //index directory will be created here.
+	String solrHome= "target/solr"; //data-dir (index) will be created here.
 	String context="/solr"; 
 	int port = 8080;
     
