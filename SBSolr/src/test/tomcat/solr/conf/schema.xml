@@ -280,8 +280,8 @@
 	<field name="author_corporation" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="lma_long" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="ma_short" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="isbn" type="text_general" indexed="true" stored="true"/>
-	<field name="issn" type="text_general" indexed="true" stored="true"/>
+	<field name="isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="issn" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="number" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="standard_number" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="id" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -322,7 +322,7 @@
 	<field name="barcode_normalised" type="text_general" indexed="true" stored="true"/>
 	<field name="call" type="text_general" indexed="true" stored="true"/>
 	<field name="collection" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="collection_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="collection_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="country" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="nv" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="item_status" type="text_general" indexed="true" stored="true"/>
