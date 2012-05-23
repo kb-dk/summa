@@ -34,7 +34,7 @@ public class SolrSearchConfigTest {
 	
 	String solrHome= "target/solr"; //data-dir (index) will be created here.
 	String context="/solr"; 
-	int port = 8080;
+	int port = 9090;
     
           
     @Test
