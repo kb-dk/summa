@@ -319,7 +319,7 @@
 	<field name="lvp" type="text_general" indexed="true" stored="true"/>
 	<field name="author_descr" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="barcode" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="barcode_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="barcode_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="call" type="text_general" indexed="true" stored="true"/>
 	<field name="collection" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="collection_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
