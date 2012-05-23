@@ -28,12 +28,12 @@
 
     <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
-        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
       <analyzer type="query">
-        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" enablePositionIncrements="true" />
         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -262,10 +262,11 @@
 	<field name="vp" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
               <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="title" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="main_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="peri" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="lti" type="text_general" indexed="true" stored="true"/>
-	<field name="lperi" type="text_general" indexed="true" stored="true"/>
+	<field name="lti" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lperi" type="text_general" indexed="true" stored="true" multiValued="true"/>	
 	<field name="class_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="ddc_kw" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="dk" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -277,26 +278,27 @@
 	<field name="author_person" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="au_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="author_corporation" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="lma_long" type="text_general" indexed="true" stored="true"/>
+	<field name="lma_long" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="ma_short" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="isbn" type="tint" indexed="true" stored="true"/>
-	<field name="issn" type="tint" indexed="true" stored="true"/>
+	<field name="isbn" type="text_general" indexed="true" stored="true"/>
+	<field name="issn" type="text_general" indexed="true" stored="true"/>
 	<field name="number" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="standard_number" type="text_general" indexed="true" stored="true"/>
-	<field name="id" type="tint" indexed="true" stored="true" multiValued="true"/>
-	<field name="fmbl" type="tint" indexed="true" stored="true" multiValued="true"/>
+	<field name="standard_number" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="id" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="fmbl" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="fubl" type="tint" indexed="true" stored="true" multiValued="true"/>
 	<field name="mesh" type="text_general" indexed="true" stored="true"/>
-	<field name="su_corp" type="text_general" indexed="true" stored="true"/>
-	<field name="su_lc_sol" type="text_general" indexed="true" stored="true"/>
+	<field name="su_corp" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="su_lc" type="text_general" indexed="true" stored="true" />
+	<field name="su_lc_sol" type="text_general" indexed="true" stored="true" />
 	<field name="su_pe" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_ser_sol" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_ulrichs" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_ulrichs_hier" type="text_general" indexed="true" stored="true"/>
-	<field name="su_dk" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_ser_sol" type="text_general" indexed="true" stored="true" multiValued="true" />
+	<field name="lsu_ulrichs" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lsu_ulrichs_hier" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="su_dk" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="led" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_oai" type="text_general" indexed="true" stored="true"/>
-	<field name="lsubject" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_oai" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lsubject" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_dk5" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_serial_solutions" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_ulrichs" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -304,9 +306,9 @@
 	<field name="subject_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="lcl_csa" type="text_general" indexed="true" stored="true"/>
 	<field name="lddc" type="text_general" indexed="true" stored="true"/>
-	<field name="lcl_all" type="text_general" indexed="true" stored="true"/>
+	<field name="lcl_all" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="ldbk" type="text_general" indexed="true" stored="true"/>
-	<field name="ldk5" type="text_general" indexed="true" stored="true"/>
+	<field name="ldk5" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="linst" type="text_general" indexed="true" stored="true"/>
 	<field name="lkl" type="text_general" indexed="true" stored="true"/>
 	<field name="llcc" type="text_general" indexed="true" stored="true"/>
@@ -314,11 +316,12 @@
 	<field name="ludk" type="text_general" indexed="true" stored="true"/>
 	<field name="cluster" type="text_general" indexed="true" stored="true"/>
 	<field name="lso" type="text_general" indexed="true" stored="true"/>
+	<field name="lvp" type="text_general" indexed="true" stored="true"/>
 	<field name="author_descr" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="barcode" type="text_general" indexed="true" stored="true"/>
+	<field name="barcode" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="barcode_normalised" type="text_general" indexed="true" stored="true"/>
 	<field name="call" type="text_general" indexed="true" stored="true"/>
-	<field name="collection" type="text_general" indexed="true" stored="true"/>
+	<field name="collection" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="collection_normalised" type="text_general" indexed="true" stored="true"/>
 	<field name="country" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="nv" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -327,8 +330,8 @@
 	<field name="item_mat" type="text_general" indexed="true" stored="true"/>
 	<field name="l_call" type="text_general" indexed="true" stored="true"/>
 	<field name="location" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="location_normalised" type="text_general" indexed="true" stored="true"/>
-	<field name="ma_lang" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="location_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="ma_long" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="op" type="text_general" indexed="true" stored="true"/>
 	<field name="original_language" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="other" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -338,13 +341,14 @@
 	<field name="ip" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="lip" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="commercials_subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_normalised" type="text_general" indexed="true" stored="true"/>
-	<field name="llfo" type="text_general" indexed="true" stored="true"/>
+	<field name="author_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="llfo" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="format" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="lang" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="llang" type="text_general" indexed="true" stored="true"/>
+	<field name="llang" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="no" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="openUrl" type="text_general" indexed="true" stored="true"/>
+	<field name="publ" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="py" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="rt" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="shortformat" type="text_general" indexed="true" stored="true"/>
