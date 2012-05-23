@@ -212,161 +212,161 @@
 
 <!-- begin converted from sb_index_descriptor -->
          <!-- Gruppe enrich -->
-        <field name="enrich_editor" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_isbn" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_publisher" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_publishdate" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_title" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_head" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_freetext" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_editor" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_publisher" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_publishdate" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_head" type="text_general" indexed="true" stored="true" multiValued="true"/>
+        <field name="enrich_freetext" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
          <!-- Gruppe html_header-->
-	<field name="html_h1" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="html_h2" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="html_h3" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="html_h4" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="html_h5" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="html_h6" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h1" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h2" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h3" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h4" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h5" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_h6" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
-	<field name="html_content" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="freetext" type="string" indexed="true" stored="true"/>
-	<field name="titel" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="se" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="html_content" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="freetext" type="text_general" indexed="true" stored="true"/>
+	<field name="titel" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="se" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="aj" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="aj" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="km" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="km" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="nm" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="nm" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="ts" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="ts" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="bs" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="bs" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler; DPB -->
-	<field name="fg" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="fg" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="ix" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="ix" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="ka" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="ka" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="kg" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="kg" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="kk" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="kk" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="sf" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="sf" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="lmo" type="string" indexed="true" stored="true"/>
+	<field name="lmo" type="text_general" indexed="true" stored="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="lvx" type="string" indexed="true" stored="true"/>
+	<field name="lvx" type="text_general" indexed="true" stored="true"/>
         <!--artikelbasen - praksisregler -->
-	<field name="vp" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="vp" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
-              <field name="text" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="main_title" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="peri" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lti" type="string" indexed="true" stored="true"/>
-	<field name="lperi" type="string" indexed="true" stored="true"/>
-	<field name="class_other" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="ddc_kw" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="dk" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="inst" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="kl" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lcc_kw" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="nlm_kw" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_main" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_person" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="au_other" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_corporation" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lma_long" type="string" indexed="true" stored="true"/>
-	<field name="ma_short" type="string" indexed="true" stored="true" multiValued="true"/>
+              <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="main_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="peri" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lti" type="text_general" indexed="true" stored="true"/>
+	<field name="lperi" type="text_general" indexed="true" stored="true"/>
+	<field name="class_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="ddc_kw" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="dk" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="inst" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="kl" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lcc_kw" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="nlm_kw" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="author_main" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="author_person" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="au_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="author_corporation" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lma_long" type="text_general" indexed="true" stored="true"/>
+	<field name="ma_short" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="isbn" type="tint" indexed="true" stored="true"/>
 	<field name="issn" type="tint" indexed="true" stored="true"/>
-	<field name="number" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="standard_number" type="string" indexed="true" stored="true"/>
+	<field name="number" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="standard_number" type="text_general" indexed="true" stored="true"/>
 	<field name="id" type="tint" indexed="true" stored="true" multiValued="true"/>
 	<field name="fmbl" type="tint" indexed="true" stored="true" multiValued="true"/>
 	<field name="fubl" type="tint" indexed="true" stored="true" multiValued="true"/>
-	<field name="mesh" type="string" indexed="true" stored="true"/>
-	<field name="su_corp" type="string" indexed="true" stored="true"/>
-	<field name="su_lc_sol" type="string" indexed="true" stored="true"/>
-	<field name="su_pe" type="string" indexed="true" stored="true"/>
-	<field name="lsu_ser_sol" type="string" indexed="true" stored="true"/>
-	<field name="lsu_ulrichs" type="string" indexed="true" stored="true"/>
-	<field name="lsu_ulrichs_hier" type="string" indexed="true" stored="true"/>
-	<field name="su_dk" type="string" indexed="true" stored="true"/>
-	<field name="led" type="string" indexed="true" stored="true"/>
-	<field name="lsu_oai" type="string" indexed="true" stored="true"/>
-	<field name="lsubject" type="string" indexed="true" stored="true"/>
-	<field name="subject_dk5" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="subject_serial_solutions" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="subject_ulrichs" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="subject_controlled" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="subject_other" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lcl_csa" type="string" indexed="true" stored="true"/>
-	<field name="lddc" type="string" indexed="true" stored="true"/>
-	<field name="lcl_all" type="string" indexed="true" stored="true"/>
-	<field name="ldbk" type="string" indexed="true" stored="true"/>
-	<field name="ldk5" type="string" indexed="true" stored="true"/>
-	<field name="linst" type="string" indexed="true" stored="true"/>
-	<field name="lkl" type="string" indexed="true" stored="true"/>
-	<field name="llcc" type="string" indexed="true" stored="true"/>
-	<field name="lnlm" type="string" indexed="true" stored="true"/>
-	<field name="ludk" type="string" indexed="true" stored="true"/>
-	<field name="cluster" type="string" indexed="true" stored="true"/>
-	<field name="lso" type="string" indexed="true" stored="true"/>
-	<field name="author_descr" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="barcode" type="string" indexed="true" stored="true"/>
-	<field name="barcode_normalised" type="string" indexed="true" stored="true"/>
-	<field name="call" type="string" indexed="true" stored="true"/>
-	<field name="collection" type="string" indexed="true" stored="true"/>
-	<field name="collection_normalised" type="string" indexed="true" stored="true"/>
-	<field name="country" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="nv" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="item_status" type="string" indexed="true" stored="true"/>
-	<field name="itype" type="string" indexed="true" stored="true"/>
-	<field name="item_mat" type="string" indexed="true" stored="true"/>
-	<field name="l_call" type="string" indexed="true" stored="true"/>
-	<field name="location" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="location_normalised" type="string" indexed="true" stored="true"/>
-	<field name="ma_lang" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="op" type="string" indexed="true" stored="true"/>
-	<field name="original_language" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="other" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="place" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="series_normalised" type="string" indexed="true" stored="true"/>
-	<field name="ww" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="ip" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lip" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="commercials_subject" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_normalised" type="string" indexed="true" stored="true"/>
-	<field name="llfo" type="string" indexed="true" stored="true"/>
-	<field name="format" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="lang" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="llang" type="string" indexed="true" stored="true"/>
-	<field name="no" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="openUrl" type="string" indexed="true" stored="true"/>
-	<field name="py" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="rt" type="string" indexed="true" stored="true" multiValued="true"/>
-	<field name="shortformat" type="string" indexed="true" stored="true"/>
-	<field name="sort_title" type="string" indexed="true" stored="true"/>
-	<field name="sort_year_asc" type="string" indexed="true" stored="true"/>
-	<field name="sort_year_desc" type="string" indexed="true" stored="true"/>
+	<field name="mesh" type="text_general" indexed="true" stored="true"/>
+	<field name="su_corp" type="text_general" indexed="true" stored="true"/>
+	<field name="su_lc_sol" type="text_general" indexed="true" stored="true"/>
+	<field name="su_pe" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_ser_sol" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_ulrichs" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_ulrichs_hier" type="text_general" indexed="true" stored="true"/>
+	<field name="su_dk" type="text_general" indexed="true" stored="true"/>
+	<field name="led" type="text_general" indexed="true" stored="true"/>
+	<field name="lsu_oai" type="text_general" indexed="true" stored="true"/>
+	<field name="lsubject" type="text_general" indexed="true" stored="true"/>
+	<field name="subject_dk5" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="subject_serial_solutions" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="subject_ulrichs" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="subject_controlled" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="subject_other" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lcl_csa" type="text_general" indexed="true" stored="true"/>
+	<field name="lddc" type="text_general" indexed="true" stored="true"/>
+	<field name="lcl_all" type="text_general" indexed="true" stored="true"/>
+	<field name="ldbk" type="text_general" indexed="true" stored="true"/>
+	<field name="ldk5" type="text_general" indexed="true" stored="true"/>
+	<field name="linst" type="text_general" indexed="true" stored="true"/>
+	<field name="lkl" type="text_general" indexed="true" stored="true"/>
+	<field name="llcc" type="text_general" indexed="true" stored="true"/>
+	<field name="lnlm" type="text_general" indexed="true" stored="true"/>
+	<field name="ludk" type="text_general" indexed="true" stored="true"/>
+	<field name="cluster" type="text_general" indexed="true" stored="true"/>
+	<field name="lso" type="text_general" indexed="true" stored="true"/>
+	<field name="author_descr" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="barcode" type="text_general" indexed="true" stored="true"/>
+	<field name="barcode_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="call" type="text_general" indexed="true" stored="true"/>
+	<field name="collection" type="text_general" indexed="true" stored="true"/>
+	<field name="collection_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="country" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="nv" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="item_status" type="text_general" indexed="true" stored="true"/>
+	<field name="itype" type="text_general" indexed="true" stored="true"/>
+	<field name="item_mat" type="text_general" indexed="true" stored="true"/>
+	<field name="l_call" type="text_general" indexed="true" stored="true"/>
+	<field name="location" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="location_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="ma_lang" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="op" type="text_general" indexed="true" stored="true"/>
+	<field name="original_language" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="other" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="place" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="series_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="ww" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="ip" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lip" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="commercials_subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="author_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="llfo" type="text_general" indexed="true" stored="true"/>
+	<field name="format" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lang" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="llang" type="text_general" indexed="true" stored="true"/>
+	<field name="no" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="openUrl" type="text_general" indexed="true" stored="true"/>
+	<field name="py" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="rt" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="shortformat" type="text_general" indexed="true" stored="true"/>
+	<field name="sort_title" type="text_general" indexed="true" stored="true"/>
+	<field name="sort_year_asc" type="text_general" indexed="true" stored="true"/>
+	<field name="sort_year_desc" type="text_general" indexed="true" stored="true"/>
 	<field name="year" type="tint" indexed="true" stored="true" multiValued="true"/>
-	<field name="ava" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="ava" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
-	<field name="tag" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="tag" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
-	<field name="tss_status" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="tss_status" type="text_general" indexed="true" stored="true" multiValued="true"/>
          <!--felt til own-koden som den fremgår af felt OWN i hol-posten -->
-	<field name="own" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="own" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
-	<field name="new" type="string" indexed="true" stored="true" multiValued="true"/>
+	<field name="new" type="text_general" indexed="true" stored="true" multiValued="true"/>
          <!-- Radio-tv -->
-	<field name="season_id" type="string" indexed="true" stored="true" required="false"/>
+	<field name="season_id" type="text_general" indexed="true" stored="true" required="false"/>
 	<field name="iso_date" type="date" indexed="true" stored="true" required="false"/>
         <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
         <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
-        <field name="recordId" type="string" indexed="true" stored="true" required="true"/>
+        <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
 
 <!-- end converted from sb_index_descriptor -->    
       
@@ -379,7 +379,7 @@
         Longer patterns will be matched first.  if equal size patterns
         both match, the first appearing in the schema will be used.  -->
    <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
-   <dynamicField name="*_s"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="*_s"  type="text_general"  indexed="true"  stored="true"/>
    <dynamicField name="*_l"  type="long"   indexed="true"  stored="true"/>
    <dynamicField name="*_t"  type="text_general"    indexed="true"  stored="true"/>
    <dynamicField name="*_txt" type="text_general"    indexed="true"  stored="true" multiValued="true"/>
