@@ -32,9 +32,9 @@ public class SolrSearchConfigTest {
 	String solrWarPath="target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
 	
 	
-	String solrHome= "target/solr"; //data-dir (index) will be created here.
+	String solrHome= "src/test/tomcat/solr"; //data-dir (index) will be created here.
 	String context="/solr"; 
-	int port = 9090;
+	int port = 8983;
     
           
     @Test
@@ -44,18 +44,18 @@ public class SolrSearchConfigTest {
     	//Start up webserver
         EmbeddedJettyWithSolrServer server=  new EmbeddedJettyWithSolrServer(solrHome,solrWarPath,context,port);           
         server.run();
-                
+          //Thread.sleep(10000000L);      
         //Wrap the server with HTTPSolrServer
         //I think this is the prefered way we should do it.
          String url = server.getServerUrl();    	
     	 SolrServer server1 = new HttpSolrServer( url );
-  	     
+  	     Thread.sleep(500000);
     	 //This is not found
     	 SolrParams params = new SolrQuery("XXXXXXXXXXXYUUUUUUUEEEEEe");
          QueryResponse response = server1.query(params);
          assertEquals(0L, response.getResults().getNumFound());
     	 //"video" is found 3 times in my SOLR example index.
-         params = new SolrQuery("video");
+         params = new SolrQuery("*.*");
          
          response = server1.query(params);
          assertEquals(3L, response.getResults().getNumFound());
