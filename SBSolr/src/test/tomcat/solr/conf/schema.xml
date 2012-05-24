@@ -211,14 +211,14 @@
    -->
 
 <!-- begin converted from sb_index_descriptor -->
-         <!-- Gruppe enrich -->
-        <field name="enrich_editor" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_publisher" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_publishdate" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_head" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <field name="enrich_freetext" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <!-- Gruppe enrich -->
+             <field name="enrich_editor" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_publisher" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_publishdate" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_head" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_freetext" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
          <!-- Gruppe html_header-->
 	<field name="html_h1" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -227,40 +227,39 @@
 	<field name="html_h4" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="html_h5" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="html_h6" type="text_general" indexed="true" stored="true" multiValued="true"/>
-
 	<field name="html_content" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	
 	<field name="freetext" type="text_general" indexed="true" stored="true"/>
 	<field name="titel" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="se" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="aj" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="km" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="nm" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="ts" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="bs" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler; DPB -->
+              <!--artikelbasen - praksisregler; DPB -->
 	<field name="fg" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="ix" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="ka" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="kg" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="kk" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="sf" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="lmo" type="text_general" indexed="true" stored="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="lvx" type="text_general" indexed="true" stored="true"/>
-        <!--artikelbasen - praksisregler -->
+              <!--artikelbasen - praksisregler -->
 	<field name="vp" type="text_general" indexed="true" stored="true" multiValued="true"/>
-
               <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="title" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="main_title" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -357,20 +356,20 @@
 	<field name="sort_year_desc" type="text_general" indexed="true" stored="true"/>
 	<field name="year" type="tint" indexed="true" stored="true" multiValued="true"/>
 	<field name="ava" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
+              <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
 	<field name="tag" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
+              <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
 	<field name="tss_status" type="text_general" indexed="true" stored="true" multiValued="true"/>
-         <!--felt til own-koden som den fremgår af felt OWN i hol-posten -->
+              <!--felt til own-koden som den fremgår af felt OWN i hol-posten -->
 	<field name="own" type="text_general" indexed="true" stored="true" multiValued="true"/>
-        <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
-	<field name="new" type="text_general" indexed="true" stored="true" multiValued="true"/>
-         <!-- Radio-tv -->
+              <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
+ 	<field name="new" type="text_general" indexed="true" stored="true" multiValued="true"/>
+              <!-- Radio-tv -->
 	<field name="season_id" type="text_general" indexed="true" stored="true" required="false"/>
 	<field name="iso_date" type="date" indexed="true" stored="true" required="false"/>
-        <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
-        <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
-        <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
+              <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
+              <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
+              <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
 
 <!-- end converted from sb_index_descriptor -->    
       
@@ -394,7 +393,6 @@
 
    <!-- Type used to index the lat and lon components for the "location" FieldType -->
    <dynamicField name="*_coordinate"  type="tdouble" indexed="true"  stored="false" />
-
    <dynamicField name="*_dt" type="date"    indexed="true"  stored="true"/>
    <dynamicField name="*_p"  type="location" indexed="true" stored="true"/>
 
@@ -404,20 +402,13 @@
    <dynamicField name="*_tf" type="tfloat"  indexed="true"  stored="true"/>
    <dynamicField name="*_td" type="tdouble" indexed="true"  stored="true"/>
    <dynamicField name="*_tdt" type="tdate"  indexed="true"  stored="true"/>
-
    <dynamicField name="*_pi"  type="pint"    indexed="true"  stored="true"/>
    <dynamicField name="*_c"   type="currency" indexed="true"  stored="true"/>
-
    <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
    <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
-
    <dynamicField name="random_*" type="random" />
 
-   <!-- uncomment the following to ignore any fields that don't already match an existing 
-        field name or dynamic field, rather than reporting them as an error. 
-        alternately, change the type="ignored" to some other type e.g. "text" if you want 
-        unknown fields indexed and/or stored by default --> 
-   <!--dynamicField name="*" type="ignored" multiValued="true" /-->
+
    
  </fields>
 
