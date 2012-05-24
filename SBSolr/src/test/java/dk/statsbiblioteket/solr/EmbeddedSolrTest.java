@@ -21,9 +21,10 @@ public class EmbeddedSolrTest{
 	
     @Before    
     public void setUp() throws Exception {             
+		System.setProperty("basedir", ".");
     	System.setProperty("solr.solr.home", "src/test/tomcat/solr");          	
     	System.setProperty("solr.data.dir", "target/data/embeddedSolrTest");
-    	    
+    	
         CoreContainer.Initializer initializer = new CoreContainer.Initializer();
         CoreContainer coreContainer = initializer.initialize();
         server = new EmbeddedSolrServer(coreContainer, "");        
@@ -34,15 +35,17 @@ public class EmbeddedSolrTest{
     public void testThatDocumentIsFound() throws SolrServerException, IOException {
         SolrInputDocument document = new SolrInputDocument();
     
-        document.addField("recordId","x4");
-        document.addField("text","Thomas og Bjørn");
+        document.addField("recordId","x5");
+        document.addField("author_main","mikis og henning");
         
        
         server.add(document);
         server.commit();
 
-        SolrParams params = new SolrQuery("bjørn");
-        QueryResponse response = server.query(params);
+       SolrQuery query = new SolrQuery("henning");
+       query.setQueryType("/edismax");
+        
+        QueryResponse response = server.query(query);
         System.out.println( response.getResults().getNumFound());
         
 
