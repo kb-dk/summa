@@ -101,11 +101,11 @@ public class SummonSearchNodeTest extends TestCase {
         Request req = new Request(
             DocumentKeys.SEARCH_QUERY, QUERY,
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-        List<String> ids = getAttributes(summon, req, "id");
+        List<String> ids = getAttributes(summon, req, "id", false);
         assertTrue("There should be at least 1 result", ids.size() >= 1);
 
         final Pattern EMBEDDED_ID_PATTERN = Pattern.compile("<field name=\"recordID\">(.+?)</field>", Pattern.DOTALL);
-        List<String> embeddedIDs = getPattern(summon, req, EMBEDDED_ID_PATTERN);
+        List<String> embeddedIDs = getPattern(summon, req, EMBEDDED_ID_PATTERN, false);
         ExtraAsserts.assertEquals("The embedded IDs should match the plain IDs", ids, embeddedIDs);
         System.out.println("Received IDs: " + Strings.join(ids, ", "));
 
@@ -144,6 +144,34 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("The result should contain at least one tag", responses.toXML().contains("<tag name"));
     }
 
+    public void testMultiID() throws RemoteException {
+        List<String> IDs = Arrays.asList("FETCH-proquest_dll_11531932811", "FETCH-proquest_dll_6357072911");
+        SummonSearchNode searcher = SummonTestHelper.createSummonSearchNode(true);
+
+        for (String id: IDs) {
+            assertEquals("The number of hits for ID '" + id + "' should match", 1, getAttributes(searcher, new Request(
+                DocumentKeys.SEARCH_QUERY, "ID:\"" + id + "\"",
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+            ), "id", false).size());
+        }
+
+        String IDS_QUERY = "(ID:\"" + Strings.join(IDs, "\" OR ID:\"") + "\")";
+
+        Request req = new Request(
+            DocumentKeys.SEARCH_QUERY, IDS_QUERY,
+            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+        );
+        List<String> returnedIDs = getAttributes(searcher, req, "id", false);
+        if (IDs.size() != returnedIDs.size()) {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(req, responses);
+            System.out.println("Returned IDs: " + Strings.join(returnedIDs, ", "));
+            System.out.println(responses.toXML());
+        }
+
+        assertEquals("There should be a result for each id", IDs.size(), returnedIDs.size());
+    }
+
     public void testShortFormat() throws RemoteException {
         Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
         conf.set(SummonResponseBuilder.CONF_SHORT_DATE, true);
@@ -156,7 +184,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, "shortformat");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
-        List<String> dates= getPattern(summon, request, DATEPATTERN);
+        List<String> dates= getPattern(summon, request, DATEPATTERN, false);
         assertTrue("There should be at least 1 extracted date",
                    dates.size() > 0);
         for (String date: dates) {
@@ -174,7 +202,7 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_QUERY, "recordID:\"" + ID + "\"",
             DocumentKeys.SEARCH_MAX_RECORDS, 1,
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-        List<String> ids = getAttributes(summon, req, "id");
+        List<String> ids = getAttributes(summon, req, "id", false);
         assertTrue("There should be at least 1 result", ids.size() >= 1);
     }
 
@@ -378,7 +406,7 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        List<String> sortValues = getAttributes(summon, request, "sortValue");
+        List<String> sortValues = getAttributes(summon, request, "sortValue", true);
         String lastValue = null;
         for (String sortValue: sortValues) {
             assertTrue("The sort values should be in unicode order but was " + Strings.join(sortValues, ", "),
@@ -386,8 +414,7 @@ public class SummonSearchNodeTest extends TestCase {
 //            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
         }
-        log.debug("Test passed with sort values\n"
-                  + Strings.join(sortValues, "\n"));
+        log.debug("Test passed with sort values\n" + Strings.join(sortValues, "\n"));
     }
 
     public void testSortedDate() throws RemoteException {
@@ -430,7 +457,7 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Searching");
         summon.search(request, responses);
         log.debug("Finished searching");
-        List<String> ids = getAttributes(summon, request, "id");
+        List<String> ids = getAttributes(summon, request, "id", false);
         assertTrue("There should be some hits", ids.size() > 0);
     }
 
@@ -442,13 +469,13 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_QUERY, "foo",
             DocumentKeys.SEARCH_MAX_RECORDS, 20,
             DocumentKeys.SEARCH_START_INDEX, 0),
-            "id");
+            "id", false);
         List<String> ids1 = getAttributes(
             summon, new Request(
             DocumentKeys.SEARCH_QUERY, "foo",
             DocumentKeys.SEARCH_MAX_RECORDS, 20,
             DocumentKeys.SEARCH_START_INDEX, 20),
-            "id");
+            "id", false);
 
         assertNotEquals("The hits should differ from page 0 and 1",
                         Strings.join(ids0, ", "), Strings.join(ids1, ", "));
@@ -459,10 +486,10 @@ public class SummonSearchNodeTest extends TestCase {
                     expected.equals(actual));
     }
 
-    private List<String> getAttributes(SearchNode searcher, Request request, String attributeName)
-                                                                                                throws RemoteException {
+    private List<String> getAttributes(
+        SearchNode searcher, Request request, String attributeName, boolean explicitMerge) throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile("<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
-        return getPattern(searcher, request, IDPATTERN);
+        return getPattern(searcher, request, IDPATTERN, explicitMerge);
 /*        ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         responses.iterator().next().merge(responses.iterator().next());
@@ -480,7 +507,7 @@ public class SummonSearchNodeTest extends TestCase {
     private List<String> getField(SearchNode searcher, Request request, String fieldName) throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile(
             "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
-        return getPattern(searcher, request, IDPATTERN);
+        return getPattern(searcher, request, IDPATTERN, false);
     }
 
     private List<String> getFacetNames(ResponseCollection responses) {
@@ -496,10 +523,13 @@ public class SummonSearchNodeTest extends TestCase {
         return result;
     }
 
-    private List<String> getPattern(SearchNode searcher, Request request, Pattern pattern) throws RemoteException {
+    private List<String> getPattern(
+        SearchNode searcher, Request request, Pattern pattern, boolean explicitMerge) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
-        responses.iterator().next().merge(responses.iterator().next());
+        if (explicitMerge) {
+            responses.iterator().next().merge(responses.iterator().next());
+        }
         String xml = responses.toXML();
         Matcher matcher = pattern.matcher(xml);
         List<String> result = new ArrayList<String>();
@@ -678,8 +708,7 @@ public class SummonSearchNodeTest extends TestCase {
                    Math.abs(fHitCount - qHitCount) < 100);
     }
 
-    private long getHits(SearchNode searcher, String... arguments)
-                                                        throws RemoteException {
+    private long getHits(SearchNode searcher, String... arguments) throws RemoteException {
         String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
@@ -919,11 +948,11 @@ public class SummonSearchNodeTest extends TestCase {
             List<String> ids1 = getAttributes(summon, new Request(
                 DocumentKeys.SEARCH_QUERY, query1,
                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
-            ), "id");
+            ), "id", false);
             List<String> ids2 = getAttributes(summon, new Request(
                 DocumentKeys.SEARCH_QUERY, query2,
                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
-            ), "id");
+            ), "id", false);
             ExtraAsserts.assertPermutations("Query '" + query1 + "' and '" + query2 + "'", ids1, ids2);
 /*            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
                          ids1.size(), ids2.size());
@@ -947,9 +976,9 @@ public class SummonSearchNodeTest extends TestCase {
                          plainCount, sabotagedCount);
 
             List<String> plain = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id");
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id", false);
             List<String> sabotaged = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id");
+                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id", false);
             assertFalse("The ids returned by DisMax-enabled and DisMax-sabotaged query should differ",
                         Strings.join(plain, ", ").equals(Strings.join(sabotaged, ", ")));
         } finally {
@@ -1204,12 +1233,12 @@ public class SummonSearchNodeTest extends TestCase {
         //request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_QUERY, "recursion in string theory");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
-        List<String> ids = getAttributes(adjusting, request, "id");
+        List<String> ids = getAttributes(adjusting, request, "id", false);
         assertTrue("There should be at least one ID", ids.size() > 0);
 
         request.clear();
         request.put(DocumentKeys.SEARCH_QUERY, IndexUtils.RECORD_FIELD + ":\"" + ids.get(0) + "\"");
-        List<String> researchIDs = getAttributes(adjusting, request, "id");
+        List<String> researchIDs = getAttributes(adjusting, request, "id", false);
         assertTrue("There should be at least one hit for a search for ID '"
                    + ids.get(0) + "'", researchIDs.size() > 0);
     }
