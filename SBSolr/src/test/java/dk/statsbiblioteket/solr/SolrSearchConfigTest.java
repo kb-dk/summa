@@ -16,10 +16,12 @@ import org.apache.solr.util.AbstractSolrTestCase;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.core.CoreContainer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mortbay.jetty.Server;
@@ -36,6 +38,12 @@ public class SolrSearchConfigTest {
 	String context="/solr"; 
 	int port = 8983;
     
+	 @Before    
+	    public void setUp() throws Exception {             
+	   System.out.println("before called");
+		 System.setProperty("basedir", ".");          		   	          
+	    }
+	
           
     @Test
     public void testEmbeddedJettyWithSolr() throws Exception {
@@ -51,11 +59,11 @@ public class SolrSearchConfigTest {
     	 SolrServer server1 = new HttpSolrServer( url );
   	     Thread.sleep(500000);
     	 //This is not found
-    	 SolrParams params = new SolrQuery("XXXXXXXXXXXYUUUUUUUEEEEEe");
+    	 SolrParams params = new SolrQuery("eeerere");
          QueryResponse response = server1.query(params);
          assertEquals(0L, response.getResults().getNumFound());
     	 //"video" is found 3 times in my SOLR example index.
-         params = new SolrQuery("*.*");
+         params = new SolrQuery("*:*");
          
          response = server1.query(params);
          assertEquals(3L, response.getResults().getNumFound());
