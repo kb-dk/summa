@@ -77,7 +77,6 @@ public class SummaKeywordAnalyzer extends Analyzer {
         } catch (IOException e) {
             throw new RuntimeException("IOException when reading from TokenStream" ,e);
         }
-        System.out.println("Got " + buf.toString());
         return new CharSequenceReader(buf);
     }
 }
