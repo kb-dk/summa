@@ -423,5 +423,7 @@
  <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
  <solrQueryParser defaultOperator="OR"/>
 
+   <!-- Copy fields to freetext <copyField source="" dest="freetext"/>-->
+   
    
 </schema>
