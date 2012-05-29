@@ -213,6 +213,13 @@
                 <artifactId>lucene-core</artifactId>
                 <version>1339028</version>
             </dependency>
+      
+             <dependency>
+              <groupId>solr</groupId>
+               <artifactId>apache-solr-core</artifactId>
+               <version>1339028</version>              
+               <classifier>apache-solr-core</classifier>
+             </dependency>
 
             <dependency>
                 <groupId>solr</groupId>
@@ -273,7 +280,7 @@
             <dependency>
                 <groupId>solr</groupId>
                 <artifactId>lucene-queryparser</artifactId>
-                <version>1339028</version>
+                <version>1339028</version>                
             </dependency>
 
             <dependency>
@@ -294,6 +301,7 @@
                 <groupId>solr</groupId>
                 <artifactId>lucene-queries</artifactId>
                 <version>1339028</version>
+                <classifier>lucene-queries</classifier>
             </dependency>
 
 
