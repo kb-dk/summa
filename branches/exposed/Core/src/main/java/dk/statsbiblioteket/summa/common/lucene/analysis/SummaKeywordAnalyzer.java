@@ -14,12 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
+import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * This KeywordAnalyzer strips off the _ character, that the QueryParser
@@ -31,12 +36,49 @@ import java.io.Reader;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class SummaKeywordAnalyzer extends Analyzer {
-    public static final String RULES = "'_' > ' ';";
+    public static final Map<String, String> RULES = RuleParser.parse("'_' > ' ';");
+
+    private SummaStandardAnalyzer standard = new SummaStandardAnalyzer();
+    private ReplaceFactory replaceFactory = new ReplaceFactory(RULES);
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(new KeywordTokenizer(
-            ReplaceFactory.getReplacer(reader, RuleParser.parse(RULES))));
+        return new TokenStreamComponents(new KeywordTokenizer(reader));
+    }
+
+    @Override
+    protected synchronized Reader initReader(Reader input) {
+        Reader reader = replaceFactory.getReplacer(input);
+
+        TokenStream ts;
+        try {
+            ts = standard.createComponents("ss", reader).getTokenStream();
+            ts = standard.tokenStream("dummy", reader);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to get tokenStream from SummaStandardAnalyzer", e);
+        }
+
+        StringBuffer buf = new StringBuffer();
+        CharTermAttribute term = ts.getAttribute(CharTermAttribute.class);
+        try {
+            ts.reset();
+            boolean first = true;
+            while (ts.incrementToken()) {
+                if (first) {
+                    first = false;
+                } else {
+                    buf.append(" ");
+                }
+//                buf.append(term.termBuffer(), 0, term.termLength())
+                buf.append(term.toString());
+            }
+            ts.end();
+            ts.close();
+        } catch (IOException e) {
+            throw new RuntimeException("IOException when reading from TokenStream" ,e);
+        }
+        System.out.println("Got " + buf.toString());
+        return new CharSequenceReader(buf);
     }
 }
 

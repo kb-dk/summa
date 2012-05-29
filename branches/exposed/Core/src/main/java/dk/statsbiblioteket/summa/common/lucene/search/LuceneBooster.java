@@ -223,9 +223,9 @@ public class LuceneBooster {
             PrefixQuery pq = ((PrefixQuery)query);
             return doBoost(query, boosts, pq.getPrefix().field());
             // TODO: Check if the booster supports "all" queries
-//        } else if(query instanceof MultiTermQuery) {
-//            MultiTermQuery mq = ((MultiTermQuery)query);
-//            return doBoost(query, boosts, mq.getField());
+        } else if(query instanceof MultiTermQuery) {
+            MultiTermQuery mq = ((MultiTermQuery)query);
+            return doBoost(query, boosts, mq.getField());
         } else if (query instanceof PhraseQuery) {
             PhraseQuery pq = (PhraseQuery)query;
             if (pq.getTerms() == null || pq.getTerms().length == 0) {

@@ -16,11 +16,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.AnalyzerWrapper;
-import org.apache.lucene.analysis.core.KeywordTokenizer;
-
-import java.io.IOException;
-import java.io.Reader;
+import org.apache.lucene.analysis.FieldSeparatingAnalyzer;
 
 /**
  * You can wrap any other analyzer within this Analyzer. This Analyzer moderates
@@ -37,16 +33,14 @@ import java.io.Reader;
  * Using an analyzer that tokenize input, a query:
  * {@code author:"Christian Andersen Pedersen"}
  * will match the given document. Wrapping the analyzer in the RepeatAnalyzer
- * will change the behavior around the added boundaries so that no prase query
+ * will change the behavior around the added boundaries so that no phrase query
  * can match across multiple additions of fields to the document.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal",
         comment = "Method Javadoc needs updating")
-public class SummaFieldSeparatingAnalyzer extends AnalyzerWrapper {
-
-    Analyzer underlyingAnalyzer;
+public class SummaFieldSeparatingAnalyzer extends FieldSeparatingAnalyzer {
 
     /**
      * Makes an SummaFieldSeparatingAnalyzer that wraps another analyzer
@@ -54,37 +48,12 @@ public class SummaFieldSeparatingAnalyzer extends AnalyzerWrapper {
      * @param analyzer this analyzer will be wrapped
      */
     public SummaFieldSeparatingAnalyzer(Analyzer analyzer){
-        underlyingAnalyzer = analyzer;
-    }
-
-    @Override
-    protected Analyzer getWrappedAnalyzer(String fieldName) {
-        return new Analyzer() {
-            @Override
-            protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-
-                try {
-                    return new TokenStreamComponents(
-                        new KeywordTokenizer(reader), underlyingAnalyzer.tokenStream(fieldName, reader));
-                } catch (IOException e) {
-                    throw new RuntimeException("Could not create TokenStream from " + underlyingAnalyzer, e);
-                }
-            }
-
-            @Override
-            public int getPositionIncrementGap(String fieldName) {
-                return 100;
-            }
-        };
-    }
-
-    @Override
-    protected TokenStreamComponents wrapComponents(String fieldName, TokenStreamComponents components) {
-        return components;
+        super(analyzer);
     }
 
     @Override
     public String toString() {
-        return "SummaFieldSeparatingAnalyzer(" + underlyingAnalyzer + ")";
+        return "SummaFieldSeparatingAnalyzer(" + super.toString() + ")";
     }
+
 }
