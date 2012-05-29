@@ -14,11 +14,10 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
-import dk.statsbiblioteket.summa.control.service.ScriptService;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import junit.framework.TestCase;
 
 import java.io.Serializable;
 
@@ -98,7 +97,7 @@ public class ScriptServiceTest extends TestCase {
 
     public void testExternalBlockingScript() {
         service = createScriptService(ScriptService.CONF_SCRIPT_URL,
-                                      "script-service-test.js");
+                                      "control/script-service-test.js");
         try {
             doTestBlockingScript(service);
         } catch(Exception e) {

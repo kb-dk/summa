@@ -14,23 +14,23 @@
  */
 package dk.statsbiblioteket.summa.preingest;
 
-import java.util.regex.Pattern;
-import java.net.URL;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.ingest.split.SBMARCParser;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.ingest.stream.Aleph2XML2;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.ingest.split.StreamController;
-import dk.statsbiblioteket.summa.ingest.split.SBMARCParser;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.net.URL;
+import java.util.regex.Pattern;
 
 /**
  * Aleph2XML2 Tester.
@@ -58,7 +58,7 @@ public class Aleph2XML2Test extends TestCase {
     }
 
     public ObjectFilter getStreamReader() {
-        URL inputDir = Resolver.getURL("aleph/");
+        URL inputDir = Resolver.getURL("ingest/aleph/");
         log.debug("getStreamReader: Located root " + inputDir.getFile());
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, inputDir.getFile());

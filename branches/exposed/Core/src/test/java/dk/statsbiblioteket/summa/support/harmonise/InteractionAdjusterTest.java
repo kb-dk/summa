@@ -4,9 +4,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -396,7 +396,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_fuzzy() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "Language:da~2.0", "llang:da~");
+                         "Language:da~2", "llang:da~");
     }
 
     public void testQueryTagRewrite_multiValue() {
