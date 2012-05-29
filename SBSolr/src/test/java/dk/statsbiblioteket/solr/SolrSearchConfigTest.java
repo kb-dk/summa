@@ -31,7 +31,7 @@ import org.mortbay.jetty.webapp.WebAppContext;
  
 public class SolrSearchConfigTest {
 	
-	String solrWarPath="target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
+	String solrWarPath="target/summa-sbsolr-1.8.0-20120529-trunk-SNAPSHOT.war";
 	
 	
 	String solrHome= "src/test/tomcat/solr"; //data-dir (index) will be created here.
@@ -57,7 +57,7 @@ public class SolrSearchConfigTest {
         //I think this is the prefered way we should do it.
          String url = server.getServerUrl();    	
     	 SolrServer server1 = new HttpSolrServer( url );
-  	     Thread.sleep(500000);
+  	    // Thread.sleep(500000);
     	 //This is not found
     	 SolrParams params = new SolrQuery("eeerere");
          QueryResponse response = server1.query(params);
