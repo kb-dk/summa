@@ -828,13 +828,13 @@
      <str name="defType">edismax</str>
      <str name="rows">10</str>
      <str name="qf">
-       enrich_editor
-       enrich_isbn
-       enrich_publisher
-       enrich_publishdate
-       enrich_title
-       enrich_head
-       enrich_freetext
+       enrich_editor^0.2
+       enrich_isbn^0.2
+       enrich_publisher^0.2
+       enrich_publishdate^0.2
+       enrich_title^0.2
+       enrich_head^0.2
+       enrich_freetext^0.05
        html_h1
        html_h2
        html_h3
@@ -842,8 +842,8 @@
        html_h5
        html_h6
        html_content
-       freetext        
-       titel        
+       freetext^0.5        
+       titel^1.8        
        se
        aj
        km
@@ -860,9 +860,8 @@
        lvx
        vp
        text
-       title^10
-       main_title
-       peri
+       main_title^4.0
+       peri^4.0
        lti
        lperi
        class_other
@@ -873,7 +872,7 @@
        lcc_kw
        nlm_kw
        author_person
-       author_main
+       author_main^2.0
        au_other
        author_corporation
        lma_long
@@ -900,7 +899,7 @@
        subject_dk5
        subject_serial_solutions
        subject_ulrichs
-       subject_controlled
+       subject_controlled^1.2
        subject_other
        lcl_csa
        lddc
@@ -931,8 +930,8 @@
        location_normalised
        ma_long
        op
-       original_language
-       other
+       original_language^0.4
+       other^0.4
        place
        series_normalised
        ww
@@ -944,7 +943,7 @@
        format
        lang
        llang
-       no
+       no^0.4
        openUrl
        publ
        py
