@@ -54,7 +54,19 @@
 
     <dependencyManagement>
         <dependencies>
+             
+             <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.0.3</version>
+            </dependency>
             <dependency>
+                <groupId>janino</groupId>
+                <artifactId>janino</artifactId>
+                <version>2.5.10</version>
+            </dependency>
+            
+            <dependency>     
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant-junit</artifactId>
                 <version>1.8.1</version>
@@ -266,7 +278,7 @@
 
             <dependency>
                 <groupId>solr</groupId>
-                <artifactId>solr</artifactId>
+                 <artifactId>apache-solr</artifactId>
                 <version>1339028</version>
                 <type>war</type>
             </dependency>
