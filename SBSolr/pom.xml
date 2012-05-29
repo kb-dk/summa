@@ -23,6 +23,7 @@
         <dependency>
             <groupId>solr</groupId>
             <artifactId>apache-solr-core</artifactId>
+            <classifier>apache-solr-core</classifier>
             <type>jar</type>
             <scope>test</scope>
             <exclusions>
