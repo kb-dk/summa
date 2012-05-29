@@ -170,7 +170,7 @@
                     <overlays>
                         <overlay>
                             <groupId>solr</groupId>
-                            <artifactId>solr</artifactId>
+                            <artifactId>apache-solr</artifactId>
                             <excludes>
                                 <exclude>WEB-INF/lib/slf4j-jdk*</exclude>
                                 <exclude>WEB-INF/lib/slf4j-api*</exclude>
