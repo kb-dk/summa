@@ -15,22 +15,25 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
+import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
-import dk.statsbiblioteket.util.LineReader;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.*;
 import java.nio.BufferOverflowException;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Persistent structure for TermStats from an index. The structure must be
@@ -52,6 +55,7 @@ Zoo\t54\t89
  * can be updated or queried.
  * </p><p>
  * Note: this TermStat-component is limited to Integer.MAX_VALUE terms.
+ * @deprecated the new way is to load data directly from the index, instead of pre-extracting to persistent structure.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

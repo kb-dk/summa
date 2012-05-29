@@ -14,10 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.*;
+import org.apache.lucene.index.AtomicReaderContext;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.Scorer;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * HitCollector that simply disregards the result. Used to measure performance.
@@ -38,7 +39,7 @@ public class DiscardingCollector extends Collector {
     }
 
     @Override
-    public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
+    public void setNextReader(AtomicReaderContext atomicReaderContext) throws IOException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
         /*

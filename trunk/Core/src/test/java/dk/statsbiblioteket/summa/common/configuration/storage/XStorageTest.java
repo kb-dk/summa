@@ -21,17 +21,15 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * XStorage Tester.
@@ -164,7 +162,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
 
     public void testStringsList() throws IOException {
         File MISCSTORAGELOCATION =
-            Resolver.getFile("target/test-classes/common/configurationFiles/misc_storage.xml").
+            Resolver.getFile("common/configurationFiles/misc_storage.xml").
                 getAbsoluteFile();
         XStorage xs = new XStorage(MISCSTORAGELOCATION);
         Configuration conf = new Configuration(xs);

@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import dk.statsbiblioteket.util.Strings;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.FieldsEnum;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.ReaderUtil;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.FieldSelector;
-import org.apache.lucene.document.MapFieldSelector;
-import org.apache.lucene.document.Field;
-import dk.statsbiblioteket.util.Strings;
-import org.apache.lucene.store.*;
+import java.util.*;
 
 /**
  * Simple dump of stored fields in the index.
@@ -59,11 +58,18 @@ public class IndexDumper {
     }
 
     public static void listFields(File location) throws IOException {
-        IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
-        Collection fieldNames = ir.getFieldNames(IndexReader.FieldOption.ALL);
-        System.out.println(String.format(
-                "Fields in '%s': %s", 
-                location, Strings.join(fieldNames, ", ")));
+        DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
+        Set<String> fieldNames = new HashSet<String>(100);
+        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(readers, ir);
+        for (AtomicReader ar: readers) {
+            String field;
+            FieldsEnum fe = ar.fields().iterator();
+            while ((field = fe.next()) != null) {
+                fieldNames.add(field);
+            }
+        }
+        System.out.println(String.format("Fields in '%s': %s", location, Strings.join(fieldNames, ", ")));
         ir.close();
     }
 
@@ -74,17 +80,17 @@ public class IndexDumper {
      * @param fields    the fields to dump.
      * @throws IOException if the index could not be accessed properly.
      */
-    public static void dump(File location, String delimiter,
-                             List<String> fields) throws IOException {
-        IndexReader ir = IndexReader.open(new NIOFSDirectory(location));
-        FieldSelector selector = new MapFieldSelector(fields);
+    public static void dump(File location, String delimiter, List<String> fields) throws IOException {
+        DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
+        Set<String> selector = new HashSet<String>(fields);
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
-            if (ir.getLiveDocs() != null || ir.getLiveDocs().get(i)) {
-                continue;
-            }
+            // TODO: Re-add support for skipping deleted docs
+//            if (ir.getLiveDocs() != null || ir.getLiveDocs().get(i)) {
+//                continue;
+//            }
             Document doc = ir.document(i, selector);
             for (int f = 0 ; f < fields.size() ; f++) {
-                Field field = doc.getField(fields.get(f));
+                IndexableField field = doc.getField(fields.get(f));
                 System.out.print(field == null ? "" : field.stringValue());
                 System.out.print(f == fields.size() - 1 ? "\n" : delimiter);
             }

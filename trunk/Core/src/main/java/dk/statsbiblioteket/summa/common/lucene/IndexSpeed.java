@@ -14,15 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -30,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
@@ -38,6 +29,11 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.*;
 
 /**
  * A class for testing index speed under various circumstances. This is more of
@@ -172,13 +168,14 @@ public class IndexSpeed {
 
     class SearcherThread extends Thread {
         private IndexSearcher searcher;
-        private IndexReader reader;
+        private DirectoryReader reader;
 
         public boolean running = false;
         private long nextOpening = System.currentTimeMillis();
         private long openingtime = 0; // Nano-seconds
         private int openingCounter = 0;
         private Query everything  = new MatchAllDocsQuery();
+        @Override
         public void run() {
             //noinspection OverlyBroadCatchBlock
             try {
@@ -191,19 +188,16 @@ public class IndexSpeed {
                         if (searcher == null || !reopen) {
                             if (searcher != null) {
                                 searcher.getIndexReader().close();
-                                searcher.close(); // Redundant?
                             }
-                            reader = IndexReader.open(writer.getDirectory());
+                            reader = DirectoryReader.open(writer.getDirectory());
                             searcher = new IndexSearcher(reader);
                         } else {
-                            IndexReader newreader =
-                                    searcher.getIndexReader().reopen();
-                            //noinspection ObjectEquality
-                            if (newreader != searcher.getIndexReader()) {
-                                searcher.getIndexReader().close();
-                                searcher.close(); // Redundant?
-                                searcher = new IndexSearcher(newreader);
+
+                            DirectoryReader newreader = DirectoryReader.openIfChanged(reader);
+                            if (reader != null) {
+                                reader.close();
                                 reader = newreader;
+                                searcher = new IndexSearcher(reader);
                             }
                         }
                         if (warm) {
@@ -222,7 +216,6 @@ public class IndexSpeed {
                 }
                 if (searcher != null) {
                     searcher.getIndexReader().close();
-                    searcher.close(); // Redundant?
                 }
             } catch (Exception e) {
                 System.err.println("Exception while opening searcher");
@@ -255,46 +248,33 @@ public class IndexSpeed {
             return sw.toString();
         }
 
+        @Override
         public void run() {
-            Field uniqueField =
-                    new Field("unique", "d-1",
-                              Field.Store.YES, Field.Index.NOT_ANALYZED);
-            Field semiRandomField =
-                    new Field("semirandom", SEMI_RANDOMS[0],
-                              Field.Store.YES, Field.Index.NOT_ANALYZED);
-            Field randomField =
-                    new Field("random", getRandom(),
-                              Field.Store.NO, Field.Index.ANALYZED);
+            Field uniqueField = new Field("unique", "d-1", Field.Store.YES, Field.Index.NOT_ANALYZED);
+            Field semiRandomField = new Field("semirandom", SEMI_RANDOMS[0], Field.Store.YES, Field.Index.NOT_ANALYZED);
+            Field randomField = new Field("random", getRandom(), Field.Store.NO, Field.Index.ANALYZED);
             Document document;
             int id;
             while ((id = ping()) != -1) {
                 if (!docReuse) {
                     document = new Document();
-                    uniqueField = new Field(
-                            "unique", "d" + id,
-                            Field.Store.YES, Field.Index.NOT_ANALYZED);
-                    semiRandomField = new Field(
-                            "semirandom",
-                            SEMI_RANDOMS[random.nextInt(SEMI_RANDOMS.length)],
-                            Field.Store.YES, Field.Index.NOT_ANALYZED);
+                    uniqueField = new Field("unique", "d" + id, Field.Store.YES, Field.Index.NOT_ANALYZED);
+                    semiRandomField = new Field("semirandom", SEMI_RANDOMS[random.nextInt(SEMI_RANDOMS.length)],
+                                                Field.Store.YES, Field.Index.NOT_ANALYZED);
                     document.add(uniqueField);
                     document.add(semiRandomField);
                     if (termlength > 0) {
-                        randomField = new Field("random", getRandom(),
-                                                Field.Store.NO,
-                                                Field.Index.ANALYZED);
+                        randomField = new Field("random", getRandom(), Field.Store.NO, Field.Index.ANALYZED);
                         document.add(randomField);
                     }
                 } else {
                     document = new Document();
-                    uniqueField.setValue(
-                            "d" + id);
-                    semiRandomField.setValue(
-                            SEMI_RANDOMS[random.nextInt(SEMI_RANDOMS.length)]);
+                    uniqueField.setStringValue("d" + id);
+                    semiRandomField.setStringValue(SEMI_RANDOMS[random.nextInt(SEMI_RANDOMS.length)]);
                     document.add(uniqueField);
                     document.add(semiRandomField);
                     if (termlength > 0) {
-                        randomField.setValue(getRandom());
+                        randomField.setStringValue(getRandom());
                         document.add(randomField);
                     }
                 }
@@ -316,20 +296,13 @@ public class IndexSpeed {
     }
 
     private void speedTest() throws IOException, InterruptedException {
-        String meta = maxdocs + " documents with rambuffer "
-                      + ramBuffer + " MB, flush " + flush + ", " + threads
-                      + " threads"
-                      + (termlength > 0 ?
-                         ", random field of length " + termlength :
-                         "")
-                      + " and docReuse " + docReuse
-                      + " at '" + indexLocation + "'";
-        feedbackInterval = Math.min(Math.max(100, maxdocs / 100),
-                                    feedbackInterval);
+        String meta = maxdocs + " documents with rambuffer " + ramBuffer + " MB, flush " + flush + ", " + threads
+                      + " threads" + (termlength > 0 ? ", random field of length " + termlength : "")
+                      + " and docReuse " + docReuse + " at '" + indexLocation + "'";
+        feedbackInterval = Math.min(Math.max(100, maxdocs / 100), feedbackInterval);
         log.info("Building " + meta);
         IndexWriterConfig writerConfig =
-               new IndexWriterConfig(Version.LUCENE_30,
-                                     new StandardAnalyzer(Version.LUCENE_30));
+               new IndexWriterConfig(Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
         /* writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
                                  new StandardAnalyzer(Version.LUCENE_30), true,
                                  IndexWriter.MaxFieldLength.UNLIMITED); */
@@ -337,8 +310,7 @@ public class IndexSpeed {
         // FIXME: Set unlimited field length
 //        writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
-        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
-                                  writerConfig);
+        writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)), writerConfig);
 /*        if (flush) {
             writer.setMaxBufferedDocs(1);
         }*/
@@ -364,28 +336,22 @@ public class IndexSpeed {
         }
         searcherThread.running = false;
 
-        String status = "Indexed " + maxdocs + " documents at "
-                        + profiler.getBps() + " doc/sec in "
-                        + profiler.getSpendTime() + ". "
-                        + searcherThread.getStats();
+        String status = "Indexed " + maxdocs + " documents at " + profiler.getBps() + " doc/sec in "
+                        + profiler.getSpendTime() + ". " + searcherThread.getStats();
         System.out.println(status);
         log.info(status);
         writer.close(true);
         System.out.print("Optimizing... ");
         Profiler optimizeProfiler = new Profiler();
-        writerConfig =
-               new IndexWriterConfig(Version.LUCENE_30,
-                                     new StandardAnalyzer(Version.LUCENE_30));
+        writerConfig = new IndexWriterConfig(Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
         // FIXME: Set unlimited field length
 //        writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         writer = new IndexWriter(new NIOFSDirectory(new File(indexLocation)),
                                  writerConfig);
-        writer.optimize(true);
-        System.out.println("Finished optimizing in "
-                           + optimizeProfiler.getSpendTime()
-                           + ".");
+        writer.forceMerge(1);
+        System.out.println("Finished optimizing in " + optimizeProfiler.getSpendTime() + ".");
         System.out.println("Total time spend: " + profiler.getSpendTime());
         System.out.println("Index: " + meta);
         writer.close();

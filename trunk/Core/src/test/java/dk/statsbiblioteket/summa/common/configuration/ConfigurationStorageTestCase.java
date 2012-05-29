@@ -14,9 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import dk.statsbiblioteket.summa.common.configuration.storage.*;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorageMBean;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 public class ConfigurationStorageTestCase extends TestCase {
     private static Log log = LogFactory.getLog(ConfigurationStorageTestCase.class);
     static final String CONFIGNAME =
-            "target/test-classes/common/configurationFiles/configuration.xml";
+            "common/configurationFiles/configuration.xml";
     public ConfigurationStorage storage;
     public String testName;
 

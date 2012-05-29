@@ -15,19 +15,21 @@
 package dk.statsbiblioteket.summa.performance;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.search.*;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.TokenMgrError;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.FieldSelector;
-import org.apache.lucene.document.SetBasedFieldSelector;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 
-import java.util.HashSet;
+import java.io.IOException;
 import java.util.Arrays;
-import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Iterates through a list of logged queries, performing a search on each.
@@ -87,20 +89,14 @@ public class SearchPerformanceThread extends Thread {
             }
             TopDocs topDocs = searcher.search(parsedQuery, mediator.maxHits);
             //noinspection DuplicateStringLiteralInspection
-            FieldSelector selector = new SetBasedFieldSelector(
-                    new HashSet<String>(Arrays.asList("shortformat")),
-                    new HashSet(5));
-            for (int i = 0 ;
-                 i < Math.min(topDocs.scoreDocs.length, mediator.maxHits) ;
-                 i++) {
+            Set<String> selector = new HashSet<String>(Arrays.asList("shortformat"));
+            for (int i = 0 ; i < Math.min(topDocs.scoreDocs.length, mediator.maxHits) ; i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
-                Document doc =
-                     searcher.getIndexReader().document(scoreDoc.doc, selector);
+                Document doc = searcher.getIndexReader().document(scoreDoc.doc, selector);
                 for (String field: mediator.fields) {
-                    Field iField = doc.getField(field);
+                    IndexableField iField = doc.getField(field);
                     if (log.isTraceEnabled()) {
-                        log.trace("Query(" + query + ") hit(" + i
-                                  + ") field '" + field
+                        log.trace("Query(" + query + ") hit(" + i + ") field '" + field
                                   + "'(" + iField.stringValue() + ")");
                     }
                 }
@@ -129,4 +125,3 @@ public class SearchPerformanceThread extends Thread {
         }
     }
 }
-

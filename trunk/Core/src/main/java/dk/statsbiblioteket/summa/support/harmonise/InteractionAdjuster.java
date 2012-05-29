@@ -35,12 +35,11 @@ import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -432,35 +431,35 @@ public class InteractionAdjuster implements Configurable {
 
                 @Override
                 public Query onQuery(final PrefixQuery query) {
-                	String baseField = query.getField();
+                	String baseField = query.getPrefix().field();
                  	if (unsupportedFields.contains(baseField)) {
                  		return unsupportedQuery;
                  	}     
                 	
                 	return handleFieldExpansionQuery(
-                        query, query.getField(), new FieldExpansionCallback() {
+                        query, query.getPrefix().field(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
                                 return new PrefixQuery(
-                                    new Term(field,new BytesRef(query.getPrefix().bytes())));
+                                    new Term(field, query.getPrefix().text()));
                             }
                         }, maps);
                 }
 
                 @Override
                 public Query onQuery(final FuzzyQuery query) {
-                	String baseField = query.getField();
+                	String baseField = query.getTerm().field();
                  	if (unsupportedFields.contains(baseField)) {
                  		return unsupportedQuery;
                  	}     
 
                 	return handleFieldExpansionQuery(
-                        query, query.getField(), new FieldExpansionCallback() {
+                        query, query.getTerm().field(), new FieldExpansionCallback() {
                             @Override
                             public Query createQuery(String field) {
                                 return new FuzzyQuery(
-                                    new Term(field, new BytesRef(query.getTerm().bytes())),
-                                    query.getMinSimilarity(), query.getPrefixLength());
+                                    new Term(field, query.getTerm().text()),
+                                    query.getMaxEdits(), query.getPrefixLength());
                             }
                         }, maps);
                 }

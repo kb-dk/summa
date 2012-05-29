@@ -20,8 +20,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -112,13 +112,11 @@ public class WriterCallable implements Callable<Long> {
     private long protectedCall() throws Exception {
         long startTime = System.nanoTime();
         if (payload.getRecord() == null) {
-            log.debug("update: " + payload + " did not have a record, so"
-                      + " it will always be processed as a plain addition");
+            log.debug(
+                "update: " + payload + " did not have a record, so it will always be processed as a plain addition");
         }
-        boolean deleted =
-                payload.getRecord() != null && payload.getRecord().isDeleted();
-        boolean updated =
-                payload.getRecord() != null && payload.getRecord().isModified();
+        boolean deleted = payload.getRecord() != null && payload.getRecord().isDeleted();
+        boolean updated = payload.getRecord() != null && payload.getRecord().isModified();
         if (deleted) { // Plain delete
             updateDeletion();
         } else { // Addition or update
@@ -128,16 +126,12 @@ public class WriterCallable implements Callable<Long> {
             updateAddition();
             if (log.isTraceEnabled()) {
                 log.trace("Dumping analyzed fields for " + payload);
-                Document document =
-                        (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+                Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
                 for (Object field: document.getFields()) {
-                    log.trace(
-                            "Field " + ((Field)field).name() + " has content '"
-                            + ((Field)field).stringValue() + "'");
+                    log.trace("Field " + ((Field)field).name() + " has content '" + ((Field)field).stringValue() + "'");
                 }
             }
         }
-
         return System.nanoTime() - startTime;
     }
 
@@ -148,20 +142,15 @@ public class WriterCallable implements Callable<Long> {
         } catch (IOException e) {
             die(e, "addition");
         }
-        payload.getData().put(
-                LuceneIndexUtils.META_ADD_DOCID, writer.maxDoc()-1);
+        payload.getData().put(LuceneIndexUtils.META_ADD_DOCID, writer.maxDoc()-1);
 
-        Logging.logProcess("LuceneManipulator", "Added Lucene document",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess("LuceneManipulator", "Added Lucene document", Logging.LogLevel.TRACE, payload);
     }
 
     private void updateDeletion() throws IOException {
         try {
-            writer.deleteDocuments(new Term(
-                    IndexUtils.RECORD_FIELD, payload.getId()));
-            Logging.logProcess(
-                    "LuceneManipulator", "Deleted Lucene document",
-                    Logging.LogLevel.TRACE, payload);
+            writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, payload.getId()));
+            Logging.logProcess("LuceneManipulator", "Deleted Lucene document", Logging.LogLevel.TRACE, payload);
         } catch (IOException e) {
             die(e, "deletion");
         }
@@ -169,8 +158,7 @@ public class WriterCallable implements Callable<Long> {
 
     private void die(IOException e, String action) throws IOException {
         String message = String.format(
-                "Encountered IOException '%s' during %s of document "
-                + "to index. Offending payload was %s. The index "
+                "Encountered IOException '%s' during %s of document to index. Offending payload was %s. The index "
                 + "location was '%s'. JVM shutdown in %d seconds",
                 e.getMessage(), action, payload, writer.getDirectory(), 5);
         log.fatal(message, e);
