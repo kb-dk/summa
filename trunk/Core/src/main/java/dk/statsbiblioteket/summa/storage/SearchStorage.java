@@ -16,11 +16,10 @@ package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -38,12 +37,17 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Proxy storage that uses a SearchNode for requesting Records by issuing ID-based searches and transforming the
- * result. Note that this Storage only supports the methods {@link #getRecord} and {@link #getRecord}.
+ * Proxy storage that either uses an embedded SearchNode or a remote SummaSearcher for requesting Records by issuing
+ * ID-based searches and transforming the result. Note that this Storage only supports the methods {@link #getRecord}
+ * and {@link #getRecord}.
  * </p><p>
- * The SearchNode is constructed using {@link SearchNodeFactory} so as a bare minimum, the class of the SearchNode
- * should be defined with {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#CONF_CLASS}. Normally it will also
- * be necessary to specify SearchNode specific properties.
+ * Using an embedded SearchNode is done by specifying
+ * {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#CONF_CLASS}, which is used by {@link SearchNodeFactory}.
+ * Normally it will also be necessary to specify SearchNode specific properties.
+ * </p><p>
+ * Using a remote Searcher is done by specifying
+ * {@link dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer#CONF_RPC_TARGET}, which is used by
+ * {@link SearchClient}. Normally it is not necessary to specify more properties.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -51,7 +55,8 @@ import java.util.List;
 public class SearchStorage implements ReadableStorage {
     private static Log log = LogFactory.getLog(SearchStorage.class);
 
-    private final SearchNode searcher;
+    private final SearchNode searchNode;
+    private final SearchClient searchClient;
 
     /**
      * The maximum number of IDs that will be requested from the SearchNode at the same time in {@link #getRecords}.
@@ -85,12 +90,25 @@ public class SearchStorage implements ReadableStorage {
     private final String recordBase;
 
     public SearchStorage(Configuration conf) throws RemoteException {
-        searcher = SearchNodeFactory.createSearchNode(conf);
+        if (conf.valueExists(SummaSearcher.CONF_CLASS)) {
+            log.debug("Creating an embedded SearchNode of class " + conf.getString(SummaSearcher.CONF_CLASS));
+            searchNode = SearchNodeFactory.createSearchNode(conf);
+            searchClient = null;
+        } else if (conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET)) {
+            log.debug("Connecting to a remote SummaSearcher at " + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
+            searchNode = null;
+            searchClient = new SearchClient(conf);
+        } else {
+            throw new ConfigurationException("Either " + SummaSearcher.CONF_CLASS + " or "
+                                             + ConnectionConsumer.CONF_RPC_TARGET + " must be specified");
+        }
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         idField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         recordBase = conf.getString(CONF_RECORD_BASE, DEFAULT_RECORD_BASE);
         log.info("Created SearchStorage with batchSize=" + batchSize + ", idField='" + idField
-                 + "', recordBase='" + recordBase + "'");
+                 + "', recordBase='" + recordBase + "', backed by "
+                 + (searchNode == null ? "SearchClient(" + conf.getString(ConnectionConsumer.CONF_RPC_TARGET) + ")" :
+                    "embedded SearchNode(" + conf.getString(SummaSearcher.CONF_CLASS) + ")"));
     }
 
     /**
@@ -148,13 +166,19 @@ public class SearchStorage implements ReadableStorage {
         return records;
     }
 
-    private DocumentResponse getDocumentResponse(String query) throws RemoteException {
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
+    private DocumentResponse getDocumentResponse(String query) throws IOException {
+        Request request = new Request(
             DocumentKeys.SEARCH_QUERY, query,
             DocumentKeys.SEARCH_MAX_RECORDS, batchSize,
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false
-        ), responses);
+        );
+        ResponseCollection responses;
+        if (searchClient == null) {
+            responses = new ResponseCollection();
+            searchNode.search(request, responses);
+        } else {
+            responses = searchClient.search(request);
+        }
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 return (DocumentResponse)response;
