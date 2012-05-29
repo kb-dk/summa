@@ -18,12 +18,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.File;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
 
 /**
  * SSHDeployer Tester.
@@ -215,7 +214,8 @@ public class SSHDeployerTest extends TestCase {
     /**
      * Test getHostName with colon in target.
      */
-    public void testGetHostNameWithColon() {
+    // Disabled as deployer is deprecated
+/*    public void testGetHostNameWithColon() {
         Configuration conf = makeConfiguration();
 
         conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:~/dir");
@@ -227,7 +227,7 @@ public class SSHDeployerTest extends TestCase {
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
     }
-
+  * /
     /**
      * Test get host name method.
      */
