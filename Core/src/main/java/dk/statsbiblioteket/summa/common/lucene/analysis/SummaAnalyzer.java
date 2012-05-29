@@ -16,14 +16,11 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.util.Version;
 
 import java.io.Reader;
-import java.util.LinkedList;
 
 /**
  * The SummaAnalyzer defines a configurable chain for tokenization.
@@ -47,26 +44,12 @@ public class SummaAnalyzer extends Analyzer {
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(reusableTokenStream(fieldName, reader));
+        return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_40, reader));
     }
 
-
-    /**
-     * Encapsulation of a TokenStream and it data source (a Tokenizer)
-     */
-    private static class TokenStreamContext {
-
-        /**
-                 * The topmost tokenstream tokens should be read from.
-                 */
-        public Tokenizer tokenizer;
-
-        /**
-         * The tokenSource is the bottom most Tokenizer in the chain of
-         * tokenstreams. We need a handle to this to be able to reset the
-         * underlying Reader
-         */
-        public LinkedList<ReplaceReader> filters = new LinkedList<ReplaceReader>();
+    @Override
+    protected Reader initReader(Reader reader) {
+        return wrap(reader);
     }
 
     /**
@@ -97,73 +80,14 @@ public class SummaAnalyzer extends Analyzer {
             tokenRules, keepDefaultTokenRules, Rules.DEFAULT_REPLACE_RULES)));
     }
 
-    /**
-     * The TokenStream returned is a TransliteratorTokenizer where input have
-     * parsed through the TokenMasker.
-     *
-     * @see org.apache.lucene.analysis.Analyzer#tokenStream(String,java.io.Reader)
-     * @param fieldName - name of the field
-     * @param reader - containing the text
-     * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
-     */
-//    public final TokenStream tokenStream(String fieldName, Reader reader) {
-//        TokenStreamContext ctx = prepareReusableTokenStream(fieldName, reader);
-//        return ctx.tokenStream;
-//    }
-
-    private TokenStreamContext prepareReusableTokenStream (String fieldName, Reader reader) {
-        TokenStreamContext ctx = new TokenStreamContext();
-
+    private Reader wrap(Reader reader) {
         if (ignoreCase) {
-            ctx.filters.add(new LowerCasingReader(reader));
-            ctx.filters.add(tokenReplacerFactory.getReplacer(ctx.filters.getLast()));
-        } else {
-            ctx.filters.add(tokenReplacerFactory.getReplacer(reader));
+            reader = new LowerCasingReader(reader);
         }
-
-        ctx.filters.add(transliteratorFactory.getReplacer(ctx.filters.getLast()));
-
-        ctx.tokenizer = new WhitespaceTokenizer(Version.LUCENE_40, ctx.filters.getLast());
-
-        return ctx;
+        reader = tokenReplacerFactory.getReplacer(reader);
+        reader = transliteratorFactory.getReplacer(reader);
+        return reader;
     }
-
-    // TODO: Make reusableTokenStream work again
-
-    
-    public final Tokenizer reusableTokenStream(String fieldName, Reader reader) {
-        TokenStreamContext ctx = prepareReusableTokenStream(fieldName, reader);
-        return ctx.tokenizer;
-    }
-    
-/*    @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
-            throws IOException {
-        // This method fetches a stored *thread local* TokenStreamContext
-        // this means that we have one unique token stream per thread
-
-        TokenStreamContext ctx = (TokenStreamContext)getPreviousTokenStream();
-        if (ctx == null) {
-            // Create a new tokenStream and add it to the thread local storage
-            ctx = prepareReusableTokenStream(fieldName, reader);
-            setPreviousTokenStream(ctx);
-        } else {
-            // Reset all readers in the filter chain
-            ReplaceReader prev = null;
-            for (ReplaceReader r : ctx.filters) {
-                if (prev == null) {
-                    r.setSource(reader);
-                } else {
-                    r.setSource(prev);
-                }
-
-                prev = r;
-            }
-        }
-
-        return ctx.tokenStream;
-    }
-  */
 
 }
 

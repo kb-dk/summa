@@ -167,8 +167,7 @@ public class SummaQueryParserTest extends TestCase {
     public void testRangeAndBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("Boosting on range queries should have no effect", qp,
-                     "(freetext:[a TO c]^2.0[2.0] <title:[a TO c][1.0] "
-                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])[1.0]",
+                     "(freetext:[a TO c]^2.0[2.0] <title:[a TO c][1.0] titel:[a TO c][1.0]> id:[a TO c][1.0])[1.0]",
                      "[a TO c] boost(freetext^2)");
     }
 

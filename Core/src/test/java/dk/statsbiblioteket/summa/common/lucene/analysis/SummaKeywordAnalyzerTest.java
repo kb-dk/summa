@@ -14,39 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import junit.framework.TestCase;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.StringReader;
 
 /**
  * Test cases for {@link SummaKeywordAnalyzer}
  */
-public class SummaKeywordAnalyzerTest extends TestCase {
+public class SummaKeywordAnalyzerTest extends AnalyzerTestCase {
 
     SummaKeywordAnalyzer a;
     TokenStream t;
-
-    static void assertTokens(TokenStream tokenizer, String... tokens) throws Exception{
-        CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
-        int count = 0;
-
-        while (tokenizer.incrementToken()) {
-            if (count >= tokens.length) {
-                fail("Too many tokens from tokenizer, found " + (count+1) + ". Expected " + tokens.length + ".");
-            }
-
-            assertEquals("Mismatch in token number " + (count + 1) + ":",
-                         "'" + tokens[count] + "'", "'" + term.toString() + "'");
-            count++;
-        }
-
-        assertEquals("To few tokens from tokenizer, found " + count + ". Expected " + tokens.length + ".",
-                     tokens.length, count);
-    }
 
     static TokenStream getStream(String text) {
         return new LowerCaseFilter(org.apache.lucene.util.Version.LUCENE_30,
@@ -81,12 +61,14 @@ public class SummaKeywordAnalyzerTest extends TestCase {
     }
 
     public void testPunctuation() throws Exception {
-        a = new SummaKeywordAnalyzer();
+        assertAnalyzer(new SummaKeywordAnalyzer(), ".foo  bar.", "foo bar");
+/*        a = new SummaKeywordAnalyzer();
         t = a.tokenStream("testField", new StringReader(".foo  bar."));
         assertTokens(t, "foo bar");
-
-        t = a.tokenStream("testField", new StringReader("foo.bar   "));
-        assertTokens(t, "foo bar");
+  */
+        assertAnalyzer(new SummaKeywordAnalyzer(), "moo.bar", "moo bar");
+//        t = a.tokenStream("testField", new StringReader("foo.bar   "));
+//        assertTokens(t, "foo bar");
     }
 
 }

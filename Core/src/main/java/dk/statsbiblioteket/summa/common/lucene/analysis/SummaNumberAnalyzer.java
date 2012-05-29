@@ -20,6 +20,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * This Analyzer wraps a StandardAnalyzer after stripping off typical separator
@@ -33,18 +34,21 @@ import java.io.Reader;
  * @version $Id: SummaNumberAnalyzer.java,v 1.3 2007/10/04 13:28:17 te Exp $
  *
  */
+// TODO: This passes "123 456" as "123 456". Wouldn't it be better to pass "123456"?
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class SummaNumberAnalyzer extends Analyzer {
 //    private static final Log log = LogFactory.getLog(SummaNumberAnalyzer.class);
 
-    public static final String RULES =
+    public static final Map<String, String> RULES = RuleParser.parse(
             "'-' > '';"
             + "'_' > '';"
             + "':' > '';"
             + "'/' > '';"
-            + "'\\' > ''";
+            + "'\\' > ''"
+        );
+    private static final ReplaceFactory replaceFactory = new ReplaceFactory(RULES);
 
 //    private static final char[] removable = new char[]{'-', '_',':', '/' , '\\'};
 
@@ -63,8 +67,12 @@ public class SummaNumberAnalyzer extends Analyzer {
   */
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(new KeywordTokenizer(
-            ReplaceFactory.getReplacer(reader, RuleParser.parse(RULES))));
+        return new TokenStreamComponents(new KeywordTokenizer(reader));
+    }
+
+    @Override
+    protected Reader initReader(Reader reader) {
+        return replaceFactory.getReplacer(reader);
     }
 
     /**
