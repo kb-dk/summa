@@ -15,17 +15,20 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Triple;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.index.*;
-import org.apache.lucene.store.*;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.FieldsEnum;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ReaderUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -292,10 +295,9 @@ public class TermStatClient implements Configurable {
     private Set<String> getFields(IndexReader ir, List<String> fieldRegexps,
                                   File index) throws IOException {
         Set<String> fields = new HashSet<String>(20);
-        IndexReader[] readers = ir.getSequentialSubReaders() == null ?
-                                new IndexReader[]{ir} :
-                                ir.getSequentialSubReaders();
-        for (IndexReader sub: readers) {
+        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(readers, ir);
+        for (AtomicReader sub: readers) {
             FieldsEnum fieldsEnum = sub.fields().iterator();
             String fieldName;
             while ((fieldName = fieldsEnum.next()) != null) {
@@ -314,8 +316,8 @@ public class TermStatClient implements Configurable {
     }
 
     private long getDocCount(IndexReader ir) {
-        if (ir.getSequentialSubReaders() == null) {
-            Bits liveDocs = ir.getLiveDocs();
+        if (ir instanceof AtomicReader) {
+            Bits liveDocs = ((AtomicReader)ir).getLiveDocs();
             if (liveDocs == null) {
                 return ir.maxDoc();
             }
@@ -328,7 +330,9 @@ public class TermStatClient implements Configurable {
             return count;
         }
         long count = 0;
-        for (IndexReader i: ir.getSequentialSubReaders()) {
+        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(readers, ir);
+        for (AtomicReader i: readers) {
             count += getDocCount(i);
         }
         return count;

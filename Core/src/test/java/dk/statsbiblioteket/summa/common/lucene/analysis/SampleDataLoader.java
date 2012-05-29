@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.TestCase;
 
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -30,11 +31,16 @@ import static java.lang.ClassLoader.getSystemResourceAsStream;
  */
 public class SampleDataLoader extends TestCase {
 
-    static final List<String> data = Arrays.asList(
-            Strings.flushLocal(getSystemResourceAsStream(
-                                                    "lgpl-2.1-german.txt"))
-            // Add more sample data sources here
-    );
+
+    static final List<String> data;
+    static {
+        String SOURCE = "common/lgpl-2.1-german.txt";
+        InputStream in = getSystemResourceAsStream(SOURCE);
+        if (in == null) {
+            throw new NullPointerException("Unable to locate '" + SOURCE + "'");
+        }
+        data = Arrays.asList(Strings.flushLocal(in));
+    }
 
     public SampleDataLoader() {
         // for unit test purpose

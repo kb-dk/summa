@@ -14,21 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import org.apache.commons.logging.Log;       import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.analysis.TokenStream;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
 
 import java.io.Reader;
-import java.io.IOException;
-import java.io.StringReader;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
-import org.apache.lucene.util.*;
+import java.util.Map;
 
 /**
- * This Analyzer wraps a StandardAnalyzer after stripping off typical seprator
+ * This Analyzer wraps a StandardAnalyzer after stripping off typical separator
  * chars used in many ID schemes.
  * The list of removed chars is:
  * {'-', '_',':', '/' , '\'}
@@ -39,28 +34,45 @@ import org.apache.lucene.util.*;
  * @version $Id: SummaNumberAnalyzer.java,v 1.3 2007/10/04 13:28:17 te Exp $
  *
  */
+// TODO: This passes "123 456" as "123 456". Wouldn't it be better to pass "123456"?
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class SummaNumberAnalyzer extends Analyzer {
+//    private static final Log log = LogFactory.getLog(SummaNumberAnalyzer.class);
 
+    public static final Map<String, String> RULES = RuleParser.parse(
+            "'-' > '';"
+            + "'_' > '';"
+            + "':' > '';"
+            + "'/' > '';"
+            + "'\\' > ''"
+        );
+    private static final ReplaceFactory replaceFactory = new ReplaceFactory(RULES);
 
-    private static final Log log = LogFactory.getLog(SummaNumberAnalyzer.class);
-
-    private static final char[] removable = new char[]{'-', '_',':',
-                                                       '/' , '\\'};
+//    private static final char[] removable = new char[]{'-', '_',':', '/' , '\\'};
 
     // Thread local context used for the reusableTokenStream() method
-    private static class TokenStreamContext {
+/*    private static class TokenStreamContext {
         public final StringBuffer buf;
         public final StandardAnalyzer standardAnalyzer;
         public final CharSequenceReader seq;
 
         public TokenStreamContext() {
             buf = new StringBuffer();
-            standardAnalyzer = new StandardAnalyzer(Version.LUCENE_30);
+            standardAnalyzer = new StandardAnalyzer(Version.LUCENE_40);
             seq = new CharSequenceReader(buf);
         }
+    }
+  */
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+        return new TokenStreamComponents(new KeywordTokenizer(reader));
+    }
+
+    @Override
+    protected Reader initReader(Reader reader) {
+        return replaceFactory.getReplacer(reader);
     }
 
     /**
@@ -70,11 +82,11 @@ public class SummaNumberAnalyzer extends Analyzer {
      * @param reader  the reader containing the data.
      * @return  A StandardAnalyser tokenStream.
      */
-    @Override
+/*    @Override
     public final TokenStream tokenStream(String fieldName, Reader reader){
         char c;
         int i;
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         try {
             while ((i = reader.read()) != -1) {
                 c = (char)i;
@@ -92,10 +104,9 @@ public class SummaNumberAnalyzer extends Analyzer {
         } catch (IOException e) {
             log.error("", e);
         }
-        return new StandardAnalyzer(Version.LUCENE_30).tokenStream(fieldName,
-                                            new StringReader(b.toString()));
+        return new StandardAnalyzer(Version.LUCENE_40).tokenStream(fieldName, new StringReader(b.toString()));
     }
-
+  */
     /**
      * A version of {@link #tokenStream(String, java.io.Reader)} that doesn't
      * allocate any new objects
@@ -104,9 +115,7 @@ public class SummaNumberAnalyzer extends Analyzer {
      * @param reader
      * @return a KeywordAnalyzer tokenStream
      */
-    @Override
-    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
-                                                            throws IOException {
+/*    public final TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
         // FIXME: This implementation is basically a big hack
 
         TokenStreamContext ctx = (TokenStreamContext)getPreviousTokenStream();
@@ -137,12 +146,7 @@ public class SummaNumberAnalyzer extends Analyzer {
         } catch (IOException e) {
             log.error("", e);
         }
-        return ctx.standardAnalyzer.reusableTokenStream(fieldName,
-                                                        ctx.seq.reset(ctx.buf));
+        return ctx.standardAnalyzer.reusableTokenStream(fieldName, ctx.seq.reset(ctx.buf));
     }
-
+*/
 }
-
-
-
-

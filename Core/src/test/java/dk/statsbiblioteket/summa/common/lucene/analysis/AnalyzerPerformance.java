@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.*;
-
-import junit.framework.*;
+import junit.framework.TestCase;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.*;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.CharArrayWriter;
+
+import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.getDataReader;
 
 /**
  * Performance tests for the analyzers
@@ -38,8 +38,7 @@ public class AnalyzerPerformance extends TestCase {
         //a = new SummaAnalyzer("", true, "", true, true);
         //a = new WhitespaceAnalyzer();
 
-        System.out.println("Running " + NUM_TESTS + " tests on "
-                           + a.getClass().getSimpleName());
+        System.out.println("Running " + NUM_TESTS + " tests on " + a.getClass().getSimpleName());
 
         CharArrayWriter out = new CharArrayWriter();
         long testTime = 0;
@@ -47,7 +46,7 @@ public class AnalyzerPerformance extends TestCase {
         long dummyInspection = 0; // Prevent sneaky JIT compiling
         for (int i = 0; i < NUM_TESTS; i++) {
             testStart = System.nanoTime();
-            t = a.reusableTokenStream("testField", getDataReader(0));
+            t = a.tokenStream("testField", getDataReader(0));
             dumpTokens(t, out);
             dummyInspection += out.size();
             out.reset();

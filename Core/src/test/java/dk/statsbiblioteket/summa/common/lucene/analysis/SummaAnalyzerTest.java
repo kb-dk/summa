@@ -17,58 +17,16 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 
-import java.io.StringReader;
-
-import junit.framework.TestCase;
-
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.LowerCaseFilter;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-
 /**
  * Unit tests for {@link SummaAnalyzer}.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection", "CallToPrintStackTrace"})
-public class SummaAnalyzerTest extends TestCase {
+public class SummaAnalyzerTest extends AnalyzerTestCase {
     /** Summa analyzer. */
     private SummaAnalyzer a;
 
-    /**
-     * Check tokens.
-     * @param tokenizer The token stream.
-     * @param tokens The token.
-     * @throws Exception If error occurs.
-     */
-    static void assertTokens(TokenStream tokenizer, String... tokens) throws Exception {
-        CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
-        int count = 0;
 
-        while (tokenizer.incrementToken()) {
-            if (count >= tokens.length) {
-                fail("Too many tokens from tokenizer, found " + (count + 1) + ". Expected " + tokens.length + ".");
-            }
 
-            assertEquals("Mismatch in token number " + (count + 1),
-                         tokens[count], term.toString());
-            count++;
-
-        }
-
-        assertEquals("To few tokens from tokenizer, found " + count + ". Expected " + tokens.length + ".",
-                     tokens.length, count);
-    }
-
-    /**
-     * Return a token stream.
-     * @param text Test which should be on the stream.
-     * @return The token stream.
-     */
-    @SuppressWarnings("deprecation")
-    static TokenStream getStream(String text) {
-        return new LowerCaseFilter(org.apache.lucene.util.Version.LUCENE_30,
-                new WhitespaceTokenizer(org.apache.lucene.util.Version.LUCENE_30, new StringReader(text)));
-    }
 
     /**
      * Test char to char array.
@@ -88,220 +46,117 @@ public class SummaAnalyzerTest extends TestCase {
     /**
      * Test foo case fold.
      */
-    public void testFooCaseFold() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Foo"));
-
-            assertTokens(t, "foo");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testFooCaseFold() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), "Foo",
+                       "foo");
     }
 
     /**
      * Test lower case only.
      */
-    public void testLowerCaseOnly() {
-        try {
-            a = new SummaAnalyzer("", false, "", false, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Foo-%4g 123/erW'd;_foo"));
-
-            assertTokens(t, "foo-%4g", "123/erw'd;_foo");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testLowerCaseOnly() throws Exception {
+        assertAnalyzer(new SummaAnalyzer("", false, "", false, true), "Foo-%4g 123/erW'd;_foo",
+                       "foo-%4g", "123/erw'd;_foo");
     }
 
-    public void testSpecialCharHandling() {
-        try {
-            a = new SummaAnalyzer("", true, "", true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Foo-%4g 123/>erW'd;_=foo"));
-
-            assertTokens(t, "foo", "%4g", "123", "erw", "d", "foo");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testSpecialCharHandling() throws Exception {
+        assertAnalyzer(new SummaAnalyzer("", true, "", true, true), "Foo-%4g 123/>erW'd;_=foo",
+                       "foo", "%4g", "123", "erw", "d", "foo");
     }
 
     /**
      * Test foo bar case fold.
      */
-    public void testFooBarCaseFold() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));
-            assertTokens(t, "foo", "bar");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testFooBarCaseFold() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), "Foo baR", "foo", "bar");
     }
 
     /**
      * Test foo bar no case fold.
      */
-    public void testFooBarNoCaseFold() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, false);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));
-            assertTokens(t, "Foo", "baR");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testFooBarNoCaseFold() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, false), "Foo baR", "Foo", "baR");
     }
 
     /**
      * Test white space 1.
      */
-    public void testWhiteSpace1() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader(" white "));
-            assertTokens(t, "white");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testWhiteSpace1() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), " white ", "white");
     }
 
     /**
      * Test long.
      */
-    public void testLong() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader(
-                    "Captain Planet once again saves the world. This time by getting rid of dandruff."));
-
-            assertTokens(t, "captain", "planet", "once", "again", "saves",
-                         "the", "world", "this", "time", "by", "getting", "rid",
-                         "of", "dandruff");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testLong() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true),
+                       "Captain Planet once again saves the world. This time by getting rid of dandruff.",
+                       "captain", "planet", "once", "again", "saves", "the", "world", "this", "time", "by", "getting",
+                       "rid", "of", "dandruff");
     }
 
     /**
      * Test white space 2.
      */
-    public void testWhiteSpace2() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("barry   white "));
-
-            assertTokens(t, "barry", "white");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testWhiteSpace2() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), "barry   white ", "barry", "white");
     }
 
     /**
      * Test white space 3.
      */
-    public void testWhiteSpace3() {
-        try {
-            // This test is case sensitive, just try that combo as well
-            a = new SummaAnalyzer(null, true, null, true, false);
-            TokenStream t = a.reusableTokenStream("", new StringReader(" I  P Jacobsen    "));
-
-            assertTokens(t, "I", "P", "Jacobsen");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testWhiteSpace3() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, false), " I  P Jacobsen    ", "I", "P", "Jacobsen");
     }
 
     /**
      * Test punktucation.
      */
-    public void testPunctuation() {
-        try {
-            a = new SummaAnalyzer("", true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
-
-            assertTokens(t, "barry", "white");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testPunctuation() throws Exception {
+        assertAnalyzer(new SummaAnalyzer("", true, null, true, true), "barry   white.", "barry", "white");
     }
 
     /**
      * Test token replacements.
      */
-    public void testTokenReplacements() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader(".Net vs C* Algebra?"));
-
-            assertTokens(t, "dotnet", "vs", "cstaralgebra");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testTokenReplacements() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), ".Net vs C* Algebra?",
+                       "dotnet", "vs", "cstaralgebra");
     }
 
     /**
      * Test reuse.
      */
-    public void testReuse() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
+    public void testReuse() throws Exception {
+        SummaAnalyzer a = new SummaAnalyzer(null, true, null, true, true);
+        assertAnalyzer(a, "foo", "foo");
+        assertAnalyzer(a, "Fast talking flip-flopper", "fast", "talking", "flip", "flopper");
+    }
 
-            TokenStream t = a.reusableTokenStream("", new StringReader("foo"));
-            assertTokens(t, "foo");
-
-            t = a.reusableTokenStream("", new StringReader("bar"));
-            assertTokens(t, "bar");
-
-            t = a.reusableTokenStream("", new StringReader("Fast talking flip-flopper"));
-            assertTokens(t, "fast", "talking", "flip", "flopper");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
+    public void testReuse2() throws Exception {
+        SummaAnalyzer a = new SummaAnalyzer(null, true, null, true, true);
+        { // run #1
+            assertAnalyzer(a, "FOO BAR", "foo", "bar");
+        }
+        { // run #2
+            assertAnalyzer(a, "FOO BAR", "foo", "bar");
         }
     }
+
 
     /**
      * Test Dashes.
      */
-    public void testDashes() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-
-            TokenStream t = a.reusableTokenStream("", new StringReader("Hr. A. Binde-Streg"));
-
-            assertTokens(t, "hr", "a", "binde", "streg");
-
-            a = new SummaAnalyzer(null, true, null, false, false);
-            t = a.reusableTokenStream("", new StringReader("Hr. A. Binde-Streg"));
-
-            assertTokens(t, "Hr", "A", "Binde", "Streg");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testDashes() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), "Hr. A. Binde-Streg",
+                       "hr", "a", "binde", "streg");
     }
 
     /**
      *Test trans literations.
      */
-    public void testTransliterations() {
-        try {
-            a = new SummaAnalyzer(null, true, null, true, true);
-            TokenStream t = a.reusableTokenStream("", new StringReader("Über Ål!"));
-
-            assertTokens(t, "yber", "aal");
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception thrown");
-        }
+    public void testTransliterations() throws Exception {
+        assertAnalyzer(new SummaAnalyzer(null, true, null, true, true), "Über Ål!",
+                       "yber", "aal");
     }
 }

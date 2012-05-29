@@ -14,27 +14,22 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.util.Vector;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.List;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.MultiPhraseQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.Query;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * This query parser handles expansion of non-qualified query terms and group
@@ -60,20 +55,16 @@ public class DisjunctionQueryParser extends QueryParser {
     public DisjunctionQueryParser(LuceneIndexDescriptor descriptor) {
         // TODO: Handle update of analyzer
         super(Version.LUCENE_30, null, descriptor.getQueryAnalyzer());
-        setDefaultOperator(
-                descriptor.getDefaultOperator() == IndexDescriptor.OPERATOR.and
-                ? Operator.AND : Operator.OR);
+        setDefaultOperator(descriptor.getDefaultOperator() == IndexDescriptor.OPERATOR.and ?
+                           Operator.AND : Operator.OR);
         this.descriptor = descriptor;
     }
 
     @Override
-    protected Query getFieldQuery(String field, final String queryText,
-                                  final int slop)
-                                                         throws ParseException {
+    protected Query getFieldQuery(String field, final String queryText, final int slop) throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
             @Override
-            public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                ParseException {
+            public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
                 return getFieldQuery(fieldOrGroup, queryText, slop);
             }
             @Override
@@ -93,8 +84,7 @@ public class DisjunctionQueryParser extends QueryParser {
      * @return a group- ande fefault-field expanded Query.
      * @throws ParseException if the query could not be parsed.
      */
-    private Query getExpanded(String field, InnerQueryMaker inner) throws
-                                                                ParseException {
+    private Query getExpanded(String field, InnerQueryMaker inner) throws ParseException {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace("getExpanded(" + field + ", " + inner + ") called");
@@ -117,8 +107,7 @@ public class DisjunctionQueryParser extends QueryParser {
             if (log.isTraceEnabled()) {
                 log.trace("Expanding group '" + group.getName() + "'");
             }
-            List<Query> queries =
-                    new ArrayList<Query>(group.getFields().size());
+            List<Query> queries = new ArrayList<Query>(group.getFields().size());
             for (LuceneIndexField groupField: group.getFields()) {
                 Query q = inner.getFinalQuery(groupField.getName());
                 if (q != null) {
@@ -136,21 +125,18 @@ public class DisjunctionQueryParser extends QueryParser {
     }
 
     private abstract interface InnerQueryMaker {
-        public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                 ParseException;
+        public Query getRecursiveQuery(String fieldOrGroup) throws ParseException;
         public Query getFinalQuery(String field) throws ParseException;
     }
 
     // Calls super.getFieldQuery and ensures that slop is set if relevant
-    private Query getFinalFieldQuery(String field, String queryText, int slop)
-                                                         throws ParseException {
+    private Query getFinalFieldQuery(String field, String queryText, int slop) throws ParseException {
         Query query;
         try {
             query = super.getFieldQuery(field, queryText, slop);
         } catch(NullPointerException e) {
             ParseException pe = new ParseException(
-                "Got NullPointerException while calling getFieldQuery('"
-                + field + "', '" + queryText + "')");
+                "Got NullPointerException while calling getFieldQuery('" + field + "', '" + queryText + "')");
             pe.initCause(e);
             throw pe;
         }
@@ -183,8 +169,7 @@ public class DisjunctionQueryParser extends QueryParser {
             return new DisjunctionMaxQuery(queries, tieBreakerMultiplier);
         }
         //noinspection UseOfObsoleteCollectionType
-        Vector<BooleanClause> clauses =
-                                      new Vector<BooleanClause>(queries.size());
+        Vector<BooleanClause> clauses = new Vector<BooleanClause>(queries.size());
         for (Query query: queries) {
             //noinspection unchecked
             clauses.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));
@@ -200,13 +185,10 @@ public class DisjunctionQueryParser extends QueryParser {
   */
 
     @Override
-    protected Query getFuzzyQuery(String field, final String termStr,
-                                  final float minSimilarity) throws
-                                                                ParseException {
+    protected Query getFuzzyQuery(String field, final String termStr, final float minSimilarity) throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
             @Override
-            public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                ParseException {
+            public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
                 return getFuzzyQuery(fieldOrGroup, termStr, minSimilarity);
             }
             @Override
@@ -224,20 +206,17 @@ public class DisjunctionQueryParser extends QueryParser {
         }
         return super.getFuzzyQuery(field, termStr, minSimilarity);*/
     }
-    private Query getSuperFuzzyQuery(String field, final String termStr,
-                                     final float minSimilarity) throws
-                                                                ParseException {
+    private Query getSuperFuzzyQuery(
+        String field, final String termStr, final float minSimilarity) throws ParseException {
         return super.getFuzzyQuery(field, termStr, minSimilarity);
     }
 
     @Override
     protected Query getFieldQuery(
-        final String field, final String queryText, final boolean quoted)
-                                                         throws ParseException {
+        final String field, final String queryText, final boolean quoted) throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
             @Override
-            public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                ParseException {
+            public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
                 return getFieldQuery(fieldOrGroup, queryText, quoted);
             }
             @Override
@@ -247,18 +226,16 @@ public class DisjunctionQueryParser extends QueryParser {
         });
     }
 
-    private Query getSuperFieldQuery(
-        String field, String queryText, boolean quoted) throws ParseException {
+    private Query getSuperFieldQuery(String field, String queryText, boolean quoted) throws ParseException {
+        System.out.println(field + ":" + queryText + ", quoted=" + quoted);
         return super.getFieldQuery(field, queryText, quoted);
     }
 
     @Override
-    protected Query getPrefixQuery(String field, final String termStr) throws
-                                                                ParseException {
+    protected Query getPrefixQuery(String field, final String termStr) throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
             @Override
-            public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                ParseException {
+            public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
                 return getPrefixQuery(fieldOrGroup, termStr);
             }
             @Override
@@ -278,18 +255,15 @@ public class DisjunctionQueryParser extends QueryParser {
         return super.getPrefixQuery(field, termStr);
         */
     }
-    protected Query getSuperPrefixQuery(String field, final String termStr)
-            throws ParseException {
+    protected Query getSuperPrefixQuery(String field, final String termStr) throws ParseException {
         return super.getPrefixQuery(field, termStr);
     }
 
     @Override
-    protected Query getWildcardQuery(String field, final String termStr) throws
-                                                                ParseException {
+    protected Query getWildcardQuery(String field, final String termStr) throws ParseException {
         return getExpanded(field, new InnerQueryMaker() {
             @Override
-            public Query getRecursiveQuery(String fieldOrGroup) throws
-                                                                ParseException {
+            public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
                 return getWildcardQuery(fieldOrGroup, termStr);
             }
             @Override
@@ -307,27 +281,23 @@ public class DisjunctionQueryParser extends QueryParser {
         }
         return super.getWildcardQuery(field, termStr);*/
     }
-    protected Query getSuperWildcardQuery(String field, String termStr) throws
-                                                                ParseException {
+    protected Query getSuperWildcardQuery(String field, String termStr) throws ParseException {
         return super.getWildcardQuery(field, termStr);
     }
 
 
     @Override
-    protected Query getRangeQuery(String field, final String part1,
-                                  final String part2, final boolean inclusive,
-                                  final boolean exclusive) {
+    protected Query getRangeQuery(
+        String field, final String part1, final String part2, final boolean inclusive, final boolean exclusive) {
         try {
             return getExpanded(field, new InnerQueryMaker() {
                 @Override
                 public Query getRecursiveQuery(String fieldOrGroup) {
-                    return getRangeQuery(
-                        fieldOrGroup, part1, part2, inclusive, exclusive);
+                    return getRangeQuery(fieldOrGroup, part1, part2, inclusive, exclusive);
                 }
                 @Override
                 public Query getFinalQuery(String field) throws ParseException {
-                    return getSuperRangeQuery(
-                        field, part1, part2, inclusive, exclusive);
+                    return getSuperRangeQuery(field, part1, part2, inclusive, exclusive);
                 }
             });
         } catch (ParseException e) {
@@ -343,13 +313,8 @@ public class DisjunctionQueryParser extends QueryParser {
         }
         return super.getRangeQuery(field, part1, part2, inclusive);*/
     }
-    protected Query getSuperRangeQuery(String field, final String part1,
-                                  final String part2,
-                                  final boolean startInclusive,
-                                  final boolean endInclusive)
-                                                         throws ParseException {
-        return super.getRangeQuery(
-            field, part1, part2, startInclusive, endInclusive);
+    protected Query getSuperRangeQuery(String field, final String part1, final String part2,
+                                       final boolean startInclusive, final boolean endInclusive) throws ParseException {
+        return super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
     }
-
 }

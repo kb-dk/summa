@@ -21,18 +21,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.ConstantScoreQuery;
-import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.FilteredQuery;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -227,12 +216,13 @@ public class LuceneBooster {
             log.trace("applyBoost: FilteredQuery ignored");
         } else if(query instanceof FuzzyQuery) {
             FuzzyQuery fq = ((FuzzyQuery)query);
-            return doBoost(query, boosts, fq.getField());
+            return doBoost(query, boosts, fq.getTerm().field());
         } else if(query instanceof MatchAllDocsQuery) {
             log.trace("applyBoost: MatchAllDocsQuery ignored");
         } else if (query instanceof PrefixQuery) {
             PrefixQuery pq = ((PrefixQuery)query);
-            return doBoost(query, boosts, pq.getField());
+            return doBoost(query, boosts, pq.getPrefix().field());
+            // TODO: Check if the booster supports "all" queries
         } else if(query instanceof MultiTermQuery) {
             MultiTermQuery mq = ((MultiTermQuery)query);
             return doBoost(query, boosts, mq.getField());

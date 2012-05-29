@@ -33,7 +33,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
@@ -74,8 +76,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         return new TestSuite(LuceneManipulatorTest.class);
     }
 
-    public File location =
-            new File("target/tmp/", "tempindex");
+    public File location = new File("target/tmp/", "tempindex");
 
     private LuceneManipulator openIndex(int buffer) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
@@ -93,8 +94,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
         manipulator.close();
         logIndex();
-        LuceneTestHelper.verifyContent(
-                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
+        LuceneTestHelper.verifyContent(new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
     }
 
     // TODO: Randomized deletions, additions and updated
@@ -115,10 +115,8 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             profiler.beat();
         }
         manipulator.close();
-        LuceneTestHelper.verifyContentNoOrder(
-                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        System.out.println("Spend " + profiler.getSpendTime() + " on "
-                           + docCount + " additions. Mean speed: "
+        LuceneTestHelper.verifyContentNoOrder(new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
+        System.out.println("Spend " + profiler.getSpendTime() + " on " + docCount + " additions. Mean speed: "
                            + profiler.getBps() + " additions/second");
 
         profiler.reset();
@@ -130,10 +128,8 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
             profiler.beat();
         }
         manipulator.close();
-        LuceneTestHelper.verifyContentNoOrder(
-                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
-        System.out.println("Spend " + profiler.getSpendTime() + " on "
-                           + docCount + " updates. Mean speed: "
+        LuceneTestHelper.verifyContentNoOrder(new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
+        System.out.println("Spend " + profiler.getSpendTime() + " on " + docCount + " updates. Mean speed: "
                            + profiler.getBps() + " updates/second");
     }
 
@@ -193,23 +189,19 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator = null;
         logIndex();
         String[] expected = new String[]{"a", "b", "c"};
-        LuceneTestHelper.verifyContent(
-                new File(location, LuceneIndexUtils.LUCENE_FOLDER), expected);
+        LuceneTestHelper.verifyContent(new File(location, LuceneIndexUtils.LUCENE_FOLDER), expected);
     }
 
     @SuppressWarnings({"OverlyBroadCatchBlock"})
     private void logIndex() throws Exception {
         try {
-            IndexReader reader = IndexReader.open(
-                    new NIOFSDirectory(new File(location,
-                                                LuceneIndexUtils.LUCENE_FOLDER)));
+            IndexReader reader = DirectoryReader.open(
+                new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 // TODO: Add check for deleted
 //                if (!reader.getDeletedDocs().get(i)) {
                     try {
-                        log.debug("id(" + i + "): "
-                                  + reader.document(i).getValues(
-                                IndexUtils.RECORD_FIELD)[0]);
+                        log.debug("id(" + i + "): " + reader.document(i).getValues(IndexUtils.RECORD_FIELD)[0]);
                     } catch (Exception e) {
                         log.warn("Could not extract id(" + i + ")", e);
                     }
@@ -246,15 +238,11 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
 
     public void testProperIndexCreation() throws Exception {
         String descLocation =
-                "file://"
-                + Thread.currentThread().getContextClassLoader().getResource(
+                "file://" + Thread.currentThread().getContextClassLoader().getResource(
                         "index/fagref/fagref_IndexDescriptor.xml").getFile();
         File manConfLocation = File.createTempFile("configuration", ".xml");
         manConfLocation.deleteOnExit();
-        Files.saveString(String.format(
-
-                DocumentCreatorTest.CREATOR_SETUP, descLocation),
-                         manConfLocation);
+        Files.saveString(String.format(DocumentCreatorTest.CREATOR_SETUP, descLocation), manConfLocation);
         Configuration conf = new Configuration(new XStorage(manConfLocation));
 
         manipulator = new LuceneManipulator(conf);
@@ -273,17 +261,12 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         log.info("Index created at '" + location + "'. Opening index...");
 
         logIndex();        
-        IndexReader reader = IndexReader.open(new NIOFSDirectory(new File(
-                    location, LuceneIndexUtils.LUCENE_FOLDER)));
-        assertEquals("The number of documents in the index should match",
-                     1, reader.maxDoc());
+        IndexReader reader = IndexReader.open(new NIOFSDirectory(new File(location, LuceneIndexUtils.LUCENE_FOLDER)));
+        assertEquals("The number of documents in the index should match", 1, reader.maxDoc());
         Document readerDoc = reader.document(0);
-        Field readerField = readerDoc.getField(IndexUtils.RECORD_FIELD);
-        assertNotNull(
-            "The field '" + IndexUtils.RECORD_FIELD + "' should exist",
-            readerField);
-        assertEquals("The recordID of the single indexed document should match",
-                     DOC_ID, readerField.stringValue());
+        IndexableField readerField = readerDoc.getField(IndexUtils.RECORD_FIELD);
+        assertNotNull("The field '" + IndexUtils.RECORD_FIELD + "' should exist", readerField);
+        assertEquals("The recordID of the single indexed document should match", DOC_ID, readerField.stringValue());
         reader.close();
         // Check for analyzer
         // Search for Jens with default / different prefixes
@@ -302,17 +285,14 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
         if (jens == null) {
             try {
-                jens = Streams.getUTF8Resource(
-                        "index/fagref/jens.hansen.newstyle.xml");
+                jens = Streams.getUTF8Resource("index/fagref/jens.hansen.newstyle.xml");
             } catch (IOException e) {
-                throw new RuntimeException("Could not load jens hansen data",
-                                           e);
+                throw new RuntimeException("Could not load jens hansen data", e);
             }
         }
         hasMore = false;
         try {
-            return new Payload(new Record(DOC_ID,
-                                       "dummy", jens.getBytes("utf-8")));
+            return new Payload(new Record(DOC_ID, "dummy", jens.getBytes("utf-8")));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("UTF-8 not supported", e);
         }
@@ -332,7 +312,3 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         hasMore = false;
     }
 }
-
-
-
-

@@ -14,18 +14,20 @@
  */
 package dk.statsbiblioteket.summa.common.unittest;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
-
-import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.lucene.store.*;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.util.ReaderUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -37,18 +39,15 @@ public class LuceneTestHelper extends TestCase {
      * @param ids          the ids to verify existence for.
      * @throws IOException if the index could not be accessed.
      */
-    public static void verifyContent(File location,
-                                     String[] ids) throws IOException {
+    public static void verifyContent(File location, String[] ids) throws IOException {
         List<String> actualIDs = getIDs(location);
         assertEquals("There should be the same number of ids",
                      ids.length, actualIDs.size());
         for (int i = 0 ; i < ids.length; i++) {
-            assertEquals("The id '" + ids[i]
-                         + "' should be present in the index",
+            assertEquals("The id '" + ids[i] + "' should be present in the index",
                          ids[i], actualIDs.get(i));
         }
-        assertEquals(String.format(
-                "The number of checked ids in %s should match", location),
+        assertEquals(String.format("The number of checked ids in %s should match", location),
                      ids.length, actualIDs.size());
     }
     /**
@@ -59,36 +58,30 @@ public class LuceneTestHelper extends TestCase {
      * @param ids          the ids to verify existence for.
      * @throws IOException if the index could not be accessed.
      */
-    public static void verifyContentNoOrder(
-        File location, String[] ids) throws IOException {
+    public static void verifyContentNoOrder(File location, String[] ids) throws IOException {
         List<String> actualIDs = getIDs(location);
         Arrays.sort(ids);
         Collections.sort(actualIDs);
         assertEquals("There should be the same number of ids",
                      ids.length, actualIDs.size());
         for (int i = 0 ; i < ids.length; i++) {
-            assertEquals("The id '" + ids[i]
-                         + "' should be present in the index",
+            assertEquals("The id '" + ids[i] + "' should be present in the index",
                          ids[i], actualIDs.get(i));
         }
-        assertEquals(String.format(
-                "The number of checked ids in %s should match", location),
+        assertEquals(String.format("The number of checked ids in %s should match", location),
                      ids.length, actualIDs.size());
     }
 
     public static List<String> getIDs(File location) throws IOException {
         List<String> ids = new ArrayList<String>(100);
-        IndexReader reader = IndexReader.open(new NIOFSDirectory(location));
+        DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(location));
+        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
+        ReaderUtil.gatherSubReaders(readers, reader);
         try {
-            IndexReader[] readers = reader.getSequentialSubReaders() == null ?
-                                    new IndexReader[]{reader} :
-                                    reader.getSequentialSubReaders();
-            for (IndexReader sub: readers) {
+            for (AtomicReader sub: readers) {
                 for (int i = 0 ; i < sub.maxDoc() ; i++) {
-                    if (sub.getLiveDocs() == null ||
-                        sub.getLiveDocs().get(i)) {
-                        ids.add(sub.document(i).getValues(
-                            IndexUtils.RECORD_FIELD)[0]);
+                    if (sub.getLiveDocs() == null || sub.getLiveDocs().get(i)) {
+                        ids.add(sub.document(i).getValues(IndexUtils.RECORD_FIELD)[0]);
                     }
                 }
             }

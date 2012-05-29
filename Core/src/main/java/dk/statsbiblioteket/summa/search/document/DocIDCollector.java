@@ -17,7 +17,7 @@ package dk.statsbiblioteket.summa.search.document;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.util.Bits;
@@ -88,18 +88,27 @@ public class DocIDCollector extends Collector {
     }
 
     @Override
+    public void setNextReader(AtomicReaderContext context) throws IOException {
+        this.docBase = context.docBase;
+        live = context.reader().getLiveDocs();
+    }
+
+    /*  @Override
     public void setNextReader(IndexReader.AtomicReaderContext atomicReaderContext) throws IOException {
         this.docBase = atomicReaderContext.docBase;
         live = atomicReaderContext.reader.getLiveDocs();
-    }
+    }*/
 /*
     @Override
-    public void setNextReader(IndexReader indexReader, int i)
-            throws IOException {
+    public void setNextReader(IndexReader indexReader, int i) throws IOException {
         this.docBase = i;
-        deleted = indexReader.getDeletedDocs();
-    }
-  */
+        if (!(indexReader instanceof AtomicReader)) {
+            throw new UnsupportedOperationException(
+                "This collector only supports AtomicReaders as CompositeReader support would be very slow");
+            live = ((AtomicReader)indexReader).getLiveDocs();
+        }
+    }*/
+
     @Override
     public boolean acceptsDocsOutOfOrder() {
         return false;

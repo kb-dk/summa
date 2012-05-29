@@ -14,17 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import org.apache.lucene.analysis.*;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.util.LinkedList;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.util.Version;
+
+import java.io.Reader;
 
 /**
  * The SummaAnalyzer defines a configurable chain for tokenization.
@@ -46,48 +42,31 @@ public class SummaAnalyzer extends Analyzer {
     private ReplaceFactory transliteratorFactory;
     private ReplaceFactory tokenReplacerFactory;
 
-    /**
-     * Encapsulation of a TokenStream and it data source (a Tokenizer)
-     */
-    private static class TokenStreamContext {
+    @Override
+    protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+        return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_40, reader));
+    }
 
-        /**
-                 * The topmost tokenstream tokens should be read from.
-                 */
-        public TokenStream tokenStream;
-
-        /**
-         * The tokenSource is the bottom most Tokenizer in the chain of
-         * tokenstreams. We need a handle to this to be able to reset the
-         * underlying Reader
-         */
-        public LinkedList<ReplaceReader> filters =
-                new LinkedList<ReplaceReader>();
+    @Override
+    protected Reader initReader(Reader reader) {
+        return wrap(reader);
     }
 
     /**
      * Makes a SummaAnalyzer.
      *
-     * @param transliterationRules       the transliteration rules are parsed to
-     *                                   a {@link RuleParser} and fed to a
+     * @param transliterationRules       the transliteration rules are parsed to a {@link RuleParser} and fed to a
      *                                   {@link ReplaceFactory}.
-     * @param keepDefaultTransliterations if true the transliterationRules are
-     *                                   added to the defined in
+     * @param keepDefaultTransliterations if true the transliterationRules are added to the ones defined in
      *                                   {@link Rules#ALL_TRANSLITERATIONS}
-     * @param tokenRules                 transliteration rules passed to a
-     *                                   {@link RuleParser} and fed to a
+     * @param tokenRules                 transliteration rules passed to a {@link RuleParser} and fed to a
      *                                   {@link ReplaceFactory}
-     * @param keepDefaultTokenRules      if true the tokenRules are added to
-     *                                   the default rules defined in
+     * @param keepDefaultTokenRules      if true the tokenRules are added to the default rules defined in
      *                                   {@link Rules#DEFAULT_REPLACE_RULES}
-     * @param ignoreCase                 if true everything will be converted to
-     *                                   lower case
+     * @param ignoreCase                 if true everything will be converted to lower case
      */
-    public SummaAnalyzer(String transliterationRules,
-                         boolean keepDefaultTransliterations,
-                         String tokenRules,
-                         boolean keepDefaultTokenRules,
-                         boolean ignoreCase){
+    public SummaAnalyzer(String transliterationRules, boolean keepDefaultTransliterations, String tokenRules,
+                         boolean keepDefaultTokenRules, boolean ignoreCase){
         super();
         this.transliterationRules = transliterationRules;
         this.keepDefaultTransliterations = keepDefaultTransliterations;
@@ -95,91 +74,20 @@ public class SummaAnalyzer extends Analyzer {
         this.keepDefaultTokenRules = keepDefaultTokenRules;
         this.ignoreCase = ignoreCase;
 
-        transliteratorFactory =
-                new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
-                        transliterationRules,
-                        keepDefaultTransliterations,
-                        Rules.ALL_TRANSLITERATIONS)));
-        tokenReplacerFactory =
-                new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
-                        tokenRules,
-                        keepDefaultTokenRules,
-                        Rules.DEFAULT_REPLACE_RULES)));
+        transliteratorFactory = new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
+            transliterationRules, keepDefaultTransliterations, Rules.ALL_TRANSLITERATIONS)));
+        tokenReplacerFactory = new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
+            tokenRules, keepDefaultTokenRules, Rules.DEFAULT_REPLACE_RULES)));
     }
 
-    /**
-     * The TokenStream returned is a TransliteratorTokenizer where input have
-     * parsed through the TokenMasker.
-     *
-     * @see org.apache.lucene.analysis.Analyzer#tokenStream(String,java.io.Reader)
-     * @param fieldName - name of the field
-     * @param reader - containin the text
-     * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
-     */
-    public final TokenStream tokenStream(String fieldName, Reader reader) {
-
-        TokenStreamContext ctx = prepareReusableTokenStream(fieldName,
-                reader);
-        return ctx.tokenStream;
-    }
-
-    private TokenStreamContext prepareReusableTokenStream (String fieldName,
-                                                           Reader reader) {
-        TokenStreamContext ctx = new TokenStreamContext();
-
+    private Reader wrap(Reader reader) {
         if (ignoreCase) {
-            ctx.filters.add(new LowerCasingReader(reader));
-            ctx.filters.add(tokenReplacerFactory.getReplacer(
-                    ctx.filters.getLast()));
-        } else {
-            ctx.filters.add(tokenReplacerFactory.getReplacer(reader));
+            reader = new LowerCasingReader(reader);
         }
-
-        ctx.filters.add(transliteratorFactory.getReplacer(
-                ctx.filters.getLast()));
-
-        ctx.tokenStream = new WhitespaceTokenizer(Version.LUCENE_30,
-                                                  ctx.filters.getLast());
-
-        return ctx;
+        reader = tokenReplacerFactory.getReplacer(reader);
+        reader = transliteratorFactory.getReplacer(reader);
+        return reader;
     }
-
-    // TODO: Make reusableTokenStream work again
-
-    
-    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
-    		throws IOException {
-    	return super.reusableTokenStream(fieldName, reader);
-    }
-    
-/*    @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
-            throws IOException {
-        // This method fetches a stored *thread local* TokenStreamContext
-        // this means that we have one unique token stream per thread
-
-        TokenStreamContext ctx = (TokenStreamContext)getPreviousTokenStream();
-        if (ctx == null) {
-            // Create a new tokenStream and add it to the thread local storage
-            ctx = prepareReusableTokenStream(fieldName, reader);
-            setPreviousTokenStream(ctx);
-        } else {
-            // Reset all readers in the filter chain
-            ReplaceReader prev = null;
-            for (ReplaceReader r : ctx.filters) {
-                if (prev == null) {
-                    r.setSource(reader);
-                } else {
-                    r.setSource(prev);
-                }
-
-                prev = r;
-            }
-        }
-
-        return ctx.tokenStream;
-    }
-  */
 
 }
 
