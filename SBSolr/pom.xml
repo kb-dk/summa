@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120502-trunk-SNAPSHOT</version>
+        <version>1.8.0-20120529-trunk-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-sbsolr</artifactId>
@@ -15,16 +15,14 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.apache.lucene</groupId>
+            <groupId>solr</groupId>
             <artifactId>lucene-core</artifactId>
-            <version>4.0-1340933</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-core</artifactId>
-            <version>4.0-1340933</version>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-core</artifactId>
             <type>jar</type>
             <scope>test</scope>
             <exclusions>
@@ -40,9 +38,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-test-framework</artifactId>
-            <version>4.0-1340933</version>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-test-framework</artifactId>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -53,16 +50,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.lucene</groupId>
+            <groupId>solr</groupId>
             <artifactId>lucene-test-framework</artifactId>
-            <version>4.0-1340933</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>4.0-1340933</version>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-solrj</artifactId>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -73,8 +68,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr</artifactId>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr</artifactId>
             <type>war</type>
         </dependency>
 
@@ -173,7 +168,7 @@
                 <configuration>
                     <overlays>
                         <overlay>
-                            <groupId>org.apache.solr</groupId>
+                            <groupId>solr</groupId>
                             <artifactId>solr</artifactId>
                             <excludes>
                                 <exclude>WEB-INF/lib/slf4j-jdk*</exclude>
