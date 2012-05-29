@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120522-exposed-SNAPSHOT</version>
+        <version>1.8.0-20120529-exposed-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -101,8 +101,89 @@
         </dependency>
         -->
 
+        <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
         <dependency>
-            <!-- Must be before solr-core -->
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-test-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-common</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-icu</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-kuromoji</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-morfologik</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-phonetic</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-smartcn</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-stempel</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-analyzers</artifactId>
+            <classifier>lucene-analyzers-uima</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-core</artifactId>
+            <classifier>apache-solr-core</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <classifier>lucene-queries</classifier>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-suggest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>apache-solr-solrj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>solr</groupId>
+            <artifactId>lucene-test-framework</artifactId>
+        </dependency>
+
+        <!-- Must be before solr-core -->
+<!--
+        <dependency>
             <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
             <artifactId>solr-test-framework</artifactId>
             <version>1337113</version>
@@ -162,7 +243,7 @@
             <artifactId>lucene-grouping</artifactId>
             <version>1337113</version>
         </dependency>
-
+        -->
 
         <dependency>
             <groupId>org.apache.tika</groupId>
