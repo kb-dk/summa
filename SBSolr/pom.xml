@@ -168,8 +168,8 @@
                 <configuration>
                     <overlays>
                         <overlay>
-                            <groupId>solr</groupId>
-                            <artifactId>apache-solr</artifactId>
+                            <groupId>org.apache.solr</groupId>
+                            <artifactId>solr</artifactId>
                             <excludes>
                                 <exclude>WEB-INF/lib/slf4j-jdk*</exclude>
                                 <exclude>WEB-INF/lib/slf4j-api*</exclude>
