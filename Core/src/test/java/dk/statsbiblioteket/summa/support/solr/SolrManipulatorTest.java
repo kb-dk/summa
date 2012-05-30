@@ -13,6 +13,7 @@
  */
 package dk.statsbiblioteket.summa.support.solr;
 
+import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -25,14 +26,12 @@ import org.apache.commons.logging.LogFactory;
         author = "te")
 public class SolrManipulatorTest extends TestCase {
     private static Log log = LogFactory.getLog(SolrManipulatorTest.class);
-
-
-    private final String solrWarPath="../SBSolr/target/summa-sbsolr-1.8.0-20120502-trunk-SNAPSHOT.war";
-   	public final String solrHome= "src/test/tomcat/solr"; //data-dir (index) will be created here.
+ 
+   	public final String solrHome = "target/test-classes/support/solr_home1"; //data-dir (index) will be created here.
    	public final String context="/solr";
    	public final int port = 8983;
 
-    //private EmbeddedJettyWithSolrServer server=  new EmbeddedJettyWithSolrServer(solrHome,solrWarPath,context,port);
+    private EmbeddedJettyWithSolrServer server= null;
 
 
     public SolrManipulatorTest(String name) {
@@ -43,7 +42,8 @@ public class SolrManipulatorTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         System.setProperty("basedir", ".");
-
+        server=new EmbeddedJettyWithSolrServer(solrHome,context,port);
+        
     }
 
     @Override

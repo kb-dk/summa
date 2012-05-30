@@ -1,31 +1,46 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
+import java.io.File;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 public class EmbeddedJettyWithSolrServer extends Thread {
 	private Server server;
 	private String serverUrl;
+	private static String default_solrWarPath = "target/test-classes/support/solr.war";
 	
 	/*
 	 *Starts up a Jetty server running the SOLR instance. 
 	 * 
 	 */
-
-	public EmbeddedJettyWithSolrServer (String solr_solr_home_dir, String solr_war_path , String context, int port){
+	public EmbeddedJettyWithSolrServer (String solr_solr_home_dir, String solr_war_path , String context, int port) throws Exception{
 	    this.setDaemon(true);   		  
-		server = new Server(port);    	   
+	    
+	    if (!new File(solr_war_path ).exists()){
+	    	throw new Exception("The Solr war at " + solr_war_path  + " should exist. Run 'mvn clean install -DskipTests' in the core-module");	
+	    }
+	    
+	    System.setProperty("solr.solr.home", solr_solr_home_dir);
+	    
+	    server = new Server(port);    	   
 		WebAppContext webapp = new WebAppContext(solr_war_path,context);                      				                          
-		System.setProperty("solr.solr.home", solr_solr_home_dir);	
-		//På et tidspunkt var det nødvendigt at tilføje denne til jetty-classpath. Slå dem til igen hvis fejlen opstår.
-		//Det er en mockedint classe som fejler med ClassCastException (fordi klassen ikke er på classpath) 
-    	//webapp.setExtraClasspath("test_libs/lucene-test-framework-4.0-SNAPSHOT.jar");
-	   webapp.setExtraClasspath("target/test-classes/support/lucene-test-framework-4.0.jar");
+						
+		//Hvis solr fejler under opstart med "mockedint classcast exception" er det fordi denne jar mangler på jetty's classpath.
+		//Det er uklart hvorfor dette bliver aktiveret når man kører unittest     	
+    	 webapp.setExtraClasspath("target/test-classes/support/lucene-test-framework-4.0.jar");
 		
 		server.setHandler(webapp);			             
 		serverUrl="http://localhost:"+port+context;
 	}
 
+	/*
+	 *Starts up a Jetty server running the SOLR instance with default solr.war location 
+	 * 
+	 */
+	public EmbeddedJettyWithSolrServer (String solr_solr_home_dir, String context, int port) throws Exception{
+	      this(solr_solr_home_dir,default_solrWarPath,context,port);
+	}
+	
 	@Override
 	public void run()  {
 		try{
