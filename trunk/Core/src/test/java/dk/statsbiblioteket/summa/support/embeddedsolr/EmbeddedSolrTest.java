@@ -16,12 +16,11 @@ import static org.junit.Assert.*;
 
 public class EmbeddedSolrTest{
 	
-	
     private SolrServer server;
 	
     @Before    
     public void setUp() throws Exception {             
-		System.setProperty("basedir", ".");
+		System.setProperty("basedir", "."); //for logback
     	System.setProperty("solr.solr.home", "target/test-classes/support/solr_home1");          	
     	System.setProperty("solr.data.dir", "target/test-classes/support/solr_home1");
     	

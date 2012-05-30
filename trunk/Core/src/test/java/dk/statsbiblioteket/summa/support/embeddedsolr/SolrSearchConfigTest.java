@@ -31,47 +31,37 @@ import org.mortbay.jetty.testing.ServletTester;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 public class SolrSearchConfigTest {
-
-    String solrWarPath = "target/test-classes/support/solr.war";
-    String solrHome = "target/test-classes/support/solr_home"; //data-dir (index) will be created here.
+    
+    String solrHome = "target/test-classes/support/solr_home1"; //data-dir (index) will be created here.
     String context = "/solr";
     int port = 8983;
 
     @Before
     public void setUp() throws Exception {
-        System.setProperty("basedir", ".");
+        System.setProperty("basedir", "."); //for logback
     }
-
 
     @Test
     public void testEmbeddedJettyWithSolr() throws Exception {
-        System.out.println("The problem is that IDEA has 'target/test-classes' in the class path and not 'target' "
-                           + "itself where the war resides. We need to generate the war and put it in the classpath "
-                           + "(i.e. target/test-classes or whereever resources are normally copied)");
-        System.out.println(Thread.currentThread().getContextClassLoader().getResource(solrWarPath));
-        assertTrue("The Solr war at " + solrWarPath + " should exist", new File(solrWarPath).exists());
+               
         //Start up webserver
-        EmbeddedJettyWithSolrServer server=  new EmbeddedJettyWithSolrServer(solrHome, solrWarPath, context, port);
+        EmbeddedJettyWithSolrServer server=  new EmbeddedJettyWithSolrServer(solrHome, context, port);
         server.run();
         
-        //Wrap the server with HTTPSolrServer
-        //I think this is the prefered way we should do it.
+        //Wrap the server with HTTPSolrServer      
         String url = server.getServerUrl();
         SolrServer server1 = new HttpSolrServer(url);
-        // Thread.sleep(500000);
-        //This is not found
+         //Thread.sleep(5000000L); //use to test server in browser. Or ingest data etc.
+
+        //This is not found. There is no data in index
         SolrParams params = new SolrQuery("eeerere");
         QueryResponse response = server1.query(params);
         assertEquals(0L, response.getResults().getNumFound());
-        //"video" is found 3 times in my SOLR example index.
-        params = new SolrQuery("*:*");
 
-        response = server1.query(params);
-        assertEquals(3L, response.getResults().getNumFound());
-
-        //  Direct REST call
-        String httpResponse = callURL(url+"/select/?indent=on&q=video&fl=name,id");
-        System.out.print(httpResponse);
+        
+        //  Direct REST call. /edismax is defined to search in all summa-fields with boosts
+        String httpResponse = callURL(url+"/edismax/?q=video");
+        System.out.print(httpResponse);//No data
     }
 
 
