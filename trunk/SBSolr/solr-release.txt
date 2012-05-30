@@ -9,7 +9,7 @@ cd trunk
 ant get-maven-poms
 
 modificer pom.xml, ret version til SVN version.
-<version>4.0-SNAPSHOT</version> ->   <version>4.0-1340933-SNAPSHOT</version>
+<version>4.0-SNAPSHOT</version> ->   <version>4.0-1340933</version>
 
 
 indsæt (f.eks. efter  </properties>): 
@@ -54,7 +54,7 @@ mvn deploy:deploy-file -Dfile=maven-build/lucene/queries/target/lucene-queries-4
 mvn deploy:deploy-file -Dfile=maven-build/lucene/queryparser/target/lucene-queryparser-4.0-1340933-sources.jar -DpomFile=maven-build/lucene/queryparser/pom.xml -DrepositoryId=sbforge-nexus -Durl=https://sbforge.org/nexus/content/repositories/releases/ -Dpackaging=java-source -DgeneratePom=false
   
   
-  se de er kommet rigtigt ind: https://sbforge.org/nexus/index.html#view-repositories;snapshots~browsestorage
+  se de er kommet rigtigt ind:m
   
   
   
