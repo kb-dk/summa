@@ -496,17 +496,17 @@ public class TestExposedFacets extends TestCase {
           "  </groups>\n" +
           "</facetrequest>";
   public static final String GROUP_ABC_EXPECTED = // TODO: Avoid hardcoding
-      "      <tag count=\"3\" term=\"c0\"></tag>\n" +
-          "      <tag count=\"3\" term=\"c1\"></tag>\n" +
-          "      <tag count=\"2\" term=\"b0\"></tag>\n" +
-          "      <tag count=\"2\" term=\"b1\"></tag>\n" +
-          "      <tag count=\"2\" term=\"b2\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a0\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a1\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a2\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a3\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a4\"></tag>\n" +
-          "      <tag count=\"1\" term=\"a5\"></tag>";
+      "      <tag count=\"3\" term=\"c0\" />\n" +
+          "      <tag count=\"3\" term=\"c1\" />\n" +
+          "      <tag count=\"2\" term=\"b0\" />\n" +
+          "      <tag count=\"2\" term=\"b1\" />\n" +
+          "      <tag count=\"2\" term=\"b2\" />\n" +
+          "      <tag count=\"1\" term=\"a0\" />\n" +
+          "      <tag count=\"1\" term=\"a1\" />\n" +
+          "      <tag count=\"1\" term=\"a2\" />\n" +
+          "      <tag count=\"1\" term=\"a3\" />\n" +
+          "      <tag count=\"1\" term=\"a4\" />\n" +
+          "      <tag count=\"1\" term=\"a5\" />";
   public void testMultiFacet() throws Exception {
     final int DOCCOUNT = 6;
     FacetRequest request = FacetRequest.parseXML(GROUP_REQUEST_ABC);
