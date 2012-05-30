@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.lucene.codecs.PostingsFormat;
 import org.apache.lucene.codecs.mockintblock.MockFixedIntBlockPostingsFormat;
 import org.apache.solr.util.AbstractSolrTestCase;
@@ -32,7 +33,7 @@ import org.mortbay.jetty.webapp.WebAppContext;
 
 public class SolrSearchConfigTest {
     
-    String solrHome = "target/test-classes/support/solr_home1"; //data-dir (index) will be created here.
+    String solrHome = "support/solr_home1"; //data-dir (index) will be created here.
     String context = "/solr";
     int port = 8983;
 
@@ -43,9 +44,10 @@ public class SolrSearchConfigTest {
 
     @Test
     public void testEmbeddedJettyWithSolr() throws Exception {
-               
+
         //Start up webserver
-        EmbeddedJettyWithSolrServer server=  new EmbeddedJettyWithSolrServer(solrHome, context, port);
+        EmbeddedJettyWithSolrServer server =  new EmbeddedJettyWithSolrServer(
+            Resolver.getFile(solrHome).toString(), context, port);
         server.run();
         
         //Wrap the server with HTTPSolrServer      
