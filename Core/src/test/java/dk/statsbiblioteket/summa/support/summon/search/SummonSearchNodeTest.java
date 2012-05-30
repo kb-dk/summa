@@ -145,7 +145,11 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testMultiID() throws RemoteException {
-        List<String> IDs = Arrays.asList("FETCH-proquest_dll_11531932811", "FETCH-proquest_dll_6357072911");
+        List<String> IDs = Arrays.asList(
+            "FETCH-proquest_dll_11531932811",
+            "FETCH-proquest_dll_6357072911",
+            "FETCH-proquest_dll_15622214411"
+        );
         SummonSearchNode searcher = SummonTestHelper.createSummonSearchNode(true);
 
         for (String id: IDs) {
@@ -169,7 +173,8 @@ public class SummonSearchNodeTest extends TestCase {
             System.out.println(responses.toXML());
         }
 
-        assertEquals("There should be a result for each id", IDs.size(), returnedIDs.size());
+        assertEquals("There should be a result for each id from search '" + IDS_QUERY + "'",
+                     IDs.size(), returnedIDs.size());
     }
 
     public void testShortFormat() throws RemoteException {
@@ -255,7 +260,8 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
 //        System.out.println(responses.toXML());
-        assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
+        assertTrue("The result should contain at least one record for query '" + query + "'",
+                   responses.toXML().contains("<record score"));
     }
 
     public void testFacetOrder() throws RemoteException {
@@ -675,11 +681,11 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
         
         System.out.println("raw " + (raw.equals(quoted) ? "=" : "!") + "= quoted");
-        System.out.println("raw " + (raw.equals(nonDismaxed) ? "=" : "!") + "= non dismaxed");
-        System.out.println("quoted " + (quoted.equals(nonDismaxed) ? "=" : "!") + "= non dismaxed");
-        System.out.println("raw =          " + raw.replace("\n", ", "));
-        System.out.println("quoted =       " + quoted.replace("\n", ", "));
-        System.out.println("non dismaxed = " + nonDismaxed.replace("\n", ", "));
+        System.out.println("raw " + (raw.equals(nonDismaxed) ? "=" : "!") + "= parenthesized");
+        System.out.println("quoted " + (quoted.equals(nonDismaxed) ? "=" : "!") + "= parenthesized");
+        System.out.println("raw =           " + raw.replace("\n", ", "));
+        System.out.println("quoted =        " + quoted.replace("\n", ", "));
+        System.out.println("parenthesized = " + nonDismaxed.replace("\n", ", "));
         
         assertEquals("The result from the raw (and thus dismaxed) query should match the result from " 
                      + "the quoted terms query",

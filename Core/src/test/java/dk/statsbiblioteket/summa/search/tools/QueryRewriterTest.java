@@ -221,6 +221,19 @@ public class QueryRewriterTest extends TestCase {
                        "\"foo\"^2.2123");
     }
 
+    public void testEscaping() throws ParseException {
+        String[][] TESTS = new String[][]{
+            {"foo", "foo"},
+            {"\"foo\\\"\"", "foo\\\""},
+            {"\"foo!\"", "foo\\!"}
+        };
+        QueryRewriter qr = new QueryRewriter(
+            Configuration.newMemoryBased(QueryRewriter.CONF_QUOTE_TERMS, false), null, new QueryRewriter.Event());
+        for (String[] test: TESTS) {
+            assertEquals("Escaping should work for '" + test[0] + "'", test[1], qr.rewrite(test[0]));
+        }
+    }
+
     public void testTerseMust() throws ParseException {
         final String QUERY = "foo bar";
         String explicit = new QueryRewriter(Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, true), null,
