@@ -107,148 +107,96 @@
         </dependency>
 
         <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
+        
         <dependency>
-            <groupId>solr</groupId>
-            <artifactId>apache-solr-test-framework</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-common</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-icu</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-kuromoji</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-morfologik</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-phonetic</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-smartcn</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-stempel</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <classifier>lucene-analyzers-uima</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-queryparser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>apache-solr-core</artifactId>
-            <classifier>apache-solr-core</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-queries</artifactId>
-            <classifier>lucene-queries</classifier>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-suggest</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-highlighter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>apache-solr-solrj</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>solr</groupId>
-            <artifactId>lucene-test-framework</artifactId>
-        </dependency>
-
-
-        <!-- Must be before solr-core -->
-<!--        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>solr-test-framework</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>solr-core</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-test-framework</artifactId>            
+            <scope>test</scope>
+         </dependency>
+      
+         <dependency>
+           <groupId>org.apache.lucene</groupId>
+           <artifactId>lucene-core</artifactId>       
+         </dependency>
+                    
+          <dependency>
+            <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-common</artifactId>
-            <version>1337113</version>
+         </dependency>
+
+       <dependency>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
+        
+            <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-analyzers-kuromoji</artifactId>
+            </dependency>
+            
+            <dependency>
+               <groupId>org.apache.lucene</groupId>
+               <artifactId>lucene-analyzers-morfologik</artifactId>
+             </dependency>
+                        
+
+           <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-analyzers-phonetic</artifactId>              
+            </dependency>
+
+            <dependency>
+               <groupId>org.apache.lucene</groupId>
+               <artifactId>lucene-analyzers-smartcn</artifactId>
+            </dependency>
+       
+            <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-analyzers-stempel</artifactId>
+            </dependency>
+
+           <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-analyzers-uima</artifactId>              
+           </dependency>
+
+            <dependency>
+               <groupId>org.apache.lucene</groupId>
+               <artifactId>lucene-queryparser</artifactId>
+            </dependency>
+      
+   
+           <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-queries</artifactId>
+           </dependency>
+
+          <dependency>
+             <groupId>org.apache.lucene</groupId>
+             <artifactId>lucene-suggest</artifactId>
+          </dependency>
+
+         <dependency>
+           <groupId>org.apache.lucene</groupId>
+           <artifactId>lucene-highlighter</artifactId>
+         </dependency>
+      
+         <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-core</artifactId>
+         </dependency>
+
+        <dependency>  
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+         </dependency>
+        
         <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-suggest</artifactId>
-            <version>1337113</version>
+           <groupId>org.apache.lucene</groupId>
+           <artifactId>lucene-test-framework</artifactId>        
         </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-highlighter</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-queries</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-queryparser</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-misc</artifactId>
-            <version>1337113</version>
-        </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-grouping</artifactId>
-            <version>1337113</version>
-        </dependency>
-        -->
+
+
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
