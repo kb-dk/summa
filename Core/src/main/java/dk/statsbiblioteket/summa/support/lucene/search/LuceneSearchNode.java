@@ -365,7 +365,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         try {
             log.debug("Opening searcher from '" + urlLocation + "'");
             searcher = new IndexSearcher(getIndexreader(urlLocation));
-            searcher.setDefaultFieldSortScoring(true, false);
+
+            // Removed due to upgrade to Lucene 4 trunk
+            //searcher.setDefaultFieldSortScoring(true, false);
             log.debug("Notifying sortpool of index change");
             sortPool.indexChanged(searcher.getIndexReader());
             log.debug("Opened Lucene searcher for " + urlLocation + " with maxDoc "
