@@ -21,11 +21,17 @@ package dk.statsbiblioteket.summa.search.tools;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import dk.statsbiblioteket.util.reader.ReplaceReader;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
+
+import java.util.HashMap;
+import java.util.Map;
 
 // TODO: Make a pool of parsers instead of using synchronized
 /**
@@ -47,6 +53,14 @@ public class QueryRewriter {
      */
     public static final String CONF_TERSE = "queryrewriter.output.terse";
     public static final boolean DEFAULT_TERSE = true;
+
+    /**
+     * If true, the text part of a TermQuery is quoted. If false, an escape of problematic characters is attempted.
+     * </p><p>
+     * Optional. Default is true (safer, but might clash with custom QueryParsers).
+     */
+    public static final String CONF_QUOTE_TERMS = "queryrewriter.terms.quote";
+    public static final boolean DEFAULT_QUOTE_TERMS = true;
 
     /**
      * A simple callback that fires when the rewriter encounters Queries.
@@ -128,6 +142,7 @@ public class QueryRewriter {
     private Event event;
     private QueryParser queryParser;
     private final boolean terse;
+    private final boolean quoteTerms;
 
     /**
      * Constructs a new QueryRewriter.
@@ -150,6 +165,7 @@ public class QueryRewriter {
         this.event = event;
         this.queryParser = queryParser == null ? createDefaultQueryParser() : queryParser;
         terse = conf == null ? DEFAULT_TERSE : conf.getBoolean(CONF_TERSE, DEFAULT_TERSE);
+        quoteTerms = conf == null ? DEFAULT_QUOTE_TERMS : conf.getBoolean(CONF_QUOTE_TERMS, DEFAULT_QUOTE_TERMS);
     }
 
     public static QueryParser createDefaultQueryParser() {
@@ -258,7 +274,7 @@ public class QueryRewriter {
             // We need to quote a term query because even though certain reserved characters get parsed correctly,
             // boosting this term is incorrect syntax. Example: "- " is OK. "-^1" is not OK. It must be converted to
             // "\"- \"^1".
-            result = convertSubqueryToString(tq.getTerm().field(), tq.getTerm().text(), true);
+            result = convertSubqueryToString(tq.getTerm().field(), tq.getTerm().text(), quoteTerms);
             // It does not hurt if we mistakenly send on 1.0 by bad comparison
             //noinspection FloatingPointEquality
             if (tq.getBoost() != 1.0f) {
@@ -316,11 +332,23 @@ public class QueryRewriter {
         return true;
     }
 
+    private ReplaceReader escaper;
+    {
+        String PROBLEMS = "!*\\'\"";
+        Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
+        for (int i = 0 ; i < PROBLEMS.length() ; i++) {
+            char problem = PROBLEMS.charAt(i);
+            rules.put("" + problem, "\\" + problem);
+        }
+        escaper = ReplaceFactory.getReplacer(rules);
+    }
     private String convertSubqueryToString(String field, String text, boolean quote) {
-        // Lucene removed back slashes
+        // Lucene removes back slashes
         String escapedText = text.replaceAll("([^\\\\]) ", "$1\\\\ ");
         if (quote) {
             escapedText = "\"" + escapedText + "\"";
+        } else {
+            escapedText = escaper.transform(escapedText);
         }
         return (field == null || field.isEmpty()) ? escapedText : field + ":" + escapedText;
     }
