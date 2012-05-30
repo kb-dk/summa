@@ -53,6 +53,45 @@
                     </execution>
                 </executions>
             </plugin>
+        
+            <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+              
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>summa-sbsolr</artifactId>
+                  <version>${project.version}</version>
+                  <type>war</type>                  
+                  <outputDirectory>target/test-classes/support</outputDirectory>
+                  <destFileName>solr.war</destFileName>
+                </artifactItem>
+              
+                <artifactItem>
+                  <groupId>org.apache.lucene</groupId>
+                  <artifactId>lucene-test-framework</artifactId>
+                  <type>jar</type>                  
+                  <outputDirectory>target/test-classes/support</outputDirectory>
+                  <destFileName>lucene-test-framework-4.0.jar</destFileName>
+                </artifactItem>
+              
+              </artifactItems>
+              <!-- other configurations here -->
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+        
         </plugins>
 
     </build>
@@ -144,6 +183,23 @@
                                         -->
         <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
            
+           
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty</artifactId>
+            <version>6.1.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-servlet-tester</artifactId>
+            <version>6.1.12</version>
+            <scope>test</scope>
+        </dependency>
+           
+           
+           
          <dependency>
            <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-test-framework</artifactId>                  
@@ -233,12 +289,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>summa-exposed</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-sbsolr</artifactId>
             <version>${project.version}</version>
         </dependency>
 
