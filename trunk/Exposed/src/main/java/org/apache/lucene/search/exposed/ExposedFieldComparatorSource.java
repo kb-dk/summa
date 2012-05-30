@@ -221,6 +221,12 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
             "IOException while extracting term String", e);
       }
     }
+
+    // TODO: Implement compareDoctoValue
+    @Override
+    public int compareDocToValue(int i, Object o) throws IOException {
+      throw new UnsupportedOperationException("Not supported yet");
+    }
   }
 
 
