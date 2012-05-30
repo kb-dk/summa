@@ -1,5 +1,5 @@
 <doc>
     <field name="recordId">doc1</field>
-    <field name="name">Document 1</field>
-    <field name="description">The first and very simple Solr sample document.</field>
+    <field name="title">Document 1</field>
+    <field name="other">The first and very simple Solr sample document.</field>
 </doc>

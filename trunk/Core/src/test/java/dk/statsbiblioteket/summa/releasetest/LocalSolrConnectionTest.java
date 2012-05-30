@@ -58,6 +58,7 @@ public class LocalSolrConnectionTest extends TestCase {
     @Override
     public void setUp () throws Exception {
         ReleaseTestCommon.setup();
+
         // TODO: set up a local Solr instance
     }
 
@@ -68,6 +69,11 @@ public class LocalSolrConnectionTest extends TestCase {
     }
 
     // Only tests if ingest passes without error
+
+    /**
+     * @deprecated use SolrManipulatorTest instead.
+     * @throws Exception if the test failed.
+     */
     public void testBasicIngest() throws Exception {
         ObjectFilter data = getDataProvider(false);
         ObjectFilter indexer = getIndexer();
@@ -88,7 +94,7 @@ public class LocalSolrConnectionTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score name description"
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title other"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -152,7 +158,8 @@ public class LocalSolrConnectionTest extends TestCase {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
-                "doc" + i, "dummy", Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                "doc" + i, "dummy", Resolver.getUTF8Content(
+                "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }

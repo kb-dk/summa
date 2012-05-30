@@ -229,7 +229,7 @@
 	<field name="html_h6" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="html_content" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	
-	<field name="freetext" type="text_general" indexed="true" stored="true"/>
+	<field name="freetext" type="text_general" indexed="true" stored="false"/>
 	<field name="titel" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="se" type="text_general" indexed="true" stored="true" multiValued="true"/>
               <!--artikelbasen - praksisregler -->
@@ -367,9 +367,11 @@
               <!-- Radio-tv -->
 	<field name="season_id" type="text_general" indexed="true" stored="true" required="false"/>
 	<field name="iso_date" type="date" indexed="true" stored="true" required="false"/>
-              <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
-              <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
-              <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
+     <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
+     <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
+
+     <!-- TODO: RecordID is not text_general. This must be corrected to a non-tokenized type -->
+     <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
 
 <!-- end converted from sb_index_descriptor -->    
       
