@@ -67,11 +67,6 @@
             <version>1.6.4</version>
         </dependency>
         <dependency>
-            <groupId>org.apache</groupId> <!-- Could not be resolved automatically -->
-            <artifactId>zookeeper</artifactId>
-            <version>3.4.3</version>
-        </dependency>
-        <dependency>
             <groupId>com.spatial4j</groupId>
             <artifactId>spatial4j</artifactId>
             <version>0.2</version>
