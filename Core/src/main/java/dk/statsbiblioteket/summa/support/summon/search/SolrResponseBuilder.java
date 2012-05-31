@@ -322,10 +322,19 @@ public class SolrResponseBuilder implements Configurable {
             float score = 0.0f;
             String id = null;
             List<SimplePair<String, String>> fields = new ArrayList<SimplePair<String, String>>(100);
+            String lastArrName = null; // For <arr name="foo"><str>term1</str><str>term1</str></arr> structures
 
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                String name = getAttribute(xml, "name", null);
+                if ("arr".equals(current)) {
+                    lastArrName = getAttribute(xml, "name", null);
+                    return false;
+                }
+                String name = tags.size() > 1 && "arr".equals(tags.get(tags.size()-2)) ?
+                    // We're inside a list of terms for the same multi value field so use the name from the arr
+                    lastArrName :
+                    // Single value field, so the name must be specified
+                    getAttribute(xml, "name", null);
                 if (name == null) {
                     log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
                     return false;

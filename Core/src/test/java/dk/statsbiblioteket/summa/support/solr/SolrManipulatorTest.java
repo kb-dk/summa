@@ -91,7 +91,7 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "description:first",
+            DocumentKeys.SEARCH_QUERY, "other:first",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title other"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
