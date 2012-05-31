@@ -105,7 +105,7 @@ public class SolrManipulator implements IndexManipulator {
     public boolean update(Payload payload) throws IOException {
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
-            send("<delete><query>" + FIELD_ID + ":" + XMLUtil.encode(payload.getId()) + "</query></delete>");
+            send("<delete><query>" + FIELD_ID + ":\"" + XMLUtil.encode(payload.getId()) + "\"</query></delete>");
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         }
