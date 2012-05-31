@@ -1,5 +1,5 @@
 <doc>
     <field name="recordId">doc2</field>
     <field name="title">Document 2</field>
-    <field name="other">The second and just as simple Solr sample document. Now with 100% more pizza!</field>
+    <field name="text">The second and just as simple Solr sample document. Now with 100% more pizza!</field>
 </doc>

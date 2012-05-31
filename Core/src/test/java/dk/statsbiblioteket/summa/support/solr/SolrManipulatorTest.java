@@ -84,15 +84,15 @@ public class SolrManipulatorTest extends TestCase {
         assertFalse("After " + SAMPLES + " nexts, there should be no more Payloads", indexer.hasNext());
         indexer.close(true);
         log.debug("Finished basic ingest");
+        verifyIndex();
     }
 
-    public void testBasicSearch() throws Exception {
-        testBasicIngest();
+    private void verifyIndex() throws Exception {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "other:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title other"
+            DocumentKeys.SEARCH_QUERY, "text:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -103,6 +103,37 @@ public class SolrManipulatorTest extends TestCase {
         searcher.close();
     }
 
+    public void testDelete() throws Exception {
+        testBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "text:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        );
+        searcher.search(request, responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     2, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        ObjectFilter data = getDataProvider(true);
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(data);
+        int delCount = 0;
+        while (indexer.hasNext()) {
+            delCount++;
+            indexer.next();
+        }
+        indexer.close(true);
+        assertEquals("The number of Records send as deleted should match ingested Records", SAMPLES, delCount);
+
+        responses.clear();
+        searcher.search(request, responses);
+        assertTrue("There should be a response after document delete", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits after delete. Response was\n" + responses.toXML(),
+                     0, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        searcher.close();
+    }
 
     final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
