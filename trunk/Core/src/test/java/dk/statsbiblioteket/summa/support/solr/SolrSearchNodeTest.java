@@ -93,18 +93,34 @@ public class SolrSearchNodeTest extends TestCase {
     public void testNonQualifiedSearch() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
+        assertResult(searcher, new Request(
             DocumentKeys.SEARCH_QUERY, "first",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
-        ), responses);
+        ), 1, "Solr sample document");
+        searcher.close();
+    }
+
+    public void testNonQualifiedEdismax() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/edismax"
+        ));
+        assertResult(searcher, new Request(
+            DocumentKeys.SEARCH_QUERY, "first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        ), 1, "Solr sample document");
+        searcher.close();
+    }
+
+    private void assertResult(SearchNode searcher, Request request, int expectedResponses, String expectedContent)
+                                                                                                throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+                     expectedResponses, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
-        String PHRASE = "Solr sample document";
-        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
-        searcher.close();
+        assertTrue("The result should contain '" + expectedContent + "'", responses.toXML().contains(expectedContent));
     }
 
     public void testFacetedSearch() throws Exception {
