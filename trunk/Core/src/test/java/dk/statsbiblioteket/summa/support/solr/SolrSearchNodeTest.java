@@ -1,5 +1,4 @@
-/*
- *  Licensed under the Apache License, Version 2.0 (the "License");
+/**  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
@@ -12,7 +11,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.releasetest;
+package dk.statsbiblioteket.summa.support.solr;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -28,53 +27,106 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.support.solr.SolrManipulator;
-import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
+import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-/**
- * Test connection to a local Solr at port 8983 (default).
- * The local Solr can be a stock Solr 4 trunk, with the extra lines
- * {@code <dynamicField name="*" type="text" multiValued="true" />} and
- * {@code <field name="recordId" type="string" indexed="true" stored="true" required="true" />}
- * also, the attribute {@code multiValued="true"} must be added to the field {@code id} and the uniqueKey must be set
- * to {@code recordId}.
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class LocalSolrConnectionTest extends TestCase {
-    private static Log log = LogFactory.getLog(LocalSolrConnectionTest.class);
+public class SolrSearchNodeTest extends TestCase {
+    private static Log log = LogFactory.getLog(SolrSearchNodeTest.class);
+
+   	public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+
+    private EmbeddedJettyWithSolrServer server = null;
+
+    public SolrSearchNodeTest(String name) {
+        super(name);
+    }
 
     @Override
-    public void setUp () throws Exception {
-        ReleaseTestCommon.setup();
-
-        // TODO: set up a local Solr instance
+    public void setUp() throws Exception {
+        super.setUp();
+        System.setProperty("basedir", ".");
+        // TODO: Clear existing data
+        server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
+        server.run();
     }
 
     @Override
     public void tearDown() throws Exception {
-        ReleaseTestCommon.tearDown();
-        // TODO: Tear down the local Solr instance
+        super.tearDown();
+        server.stopSolr();
     }
 
-    // Only tests if ingest passes without error
+    public static Test suite() {
+        return new TestSuite(SolrSearchNodeTest.class);
+    }
 
-    /**
-     * @deprecated use SolrManipulatorTest instead.
-     * @throws Exception if the test failed.
-     */
-    public void testBasicIngest() throws Exception {
+    public void testBasicSearch() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "text:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        String PHRASE = "Solr sample document";
+        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        searcher.close();
+    }
+
+    public void testNonQualifiedSearch() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        String PHRASE = "Solr sample document";
+        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        searcher.close();
+    }
+
+    public void testFacetedSearch() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+            FacetKeys.SEARCH_FACET_FACETS, "text"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 1",
+                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
+//        System.out.println(responses.toXML());
+    }
+
+
+    private void performBasicIngest() throws Exception {
         ObjectFilter data = getDataProvider(false);
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
@@ -86,71 +138,6 @@ public class LocalSolrConnectionTest extends TestCase {
         assertFalse("After " + SAMPLES + " nexts, there should be no more Payloads", indexer.hasNext());
         indexer.close(true);
         log.debug("Finished basic ingest");
-    }
-
-    public void testBasicSearch() throws Exception {
-        testBasicIngest();
-        SearchNode searcher = getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title other"
-        ), responses);
-        assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
-
-        String PHRASE = "Solr sample document";
-        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
-        searcher.close();
-    }
-    public void testFacetedSearch() throws Exception {
-        testBasicIngest();
-        SearchNode searcher = getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "description:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "id score name description",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            FacetKeys.SEARCH_FACET_FACETS, "description"
-        ), responses);
-        assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     1, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 1",
-                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
-//        System.out.println(responses.toXML());
-    }
-    public void testDelete() throws Exception {
-        testBasicIngest();
-        SearchNode searcher = getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "description:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score name description"
-        );
-        searcher.search(request, responses);
-        assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     2, ((DocumentResponse)responses.iterator().next()).getHitCount());
-
-        ObjectFilter data = getDataProvider(true);
-        ObjectFilter indexer = getIndexer();
-        indexer.setSource(data);
-        int delCount = 0;
-        while (indexer.hasNext()) {
-            delCount++;
-            indexer.next();
-        }
-        indexer.close(true);
-        assertEquals("The number of Records send as deleted should match ingested Records", SAMPLES, delCount);
-
-        responses.clear();
-        searcher.search(request, responses);
-        assertTrue("There should be a response after document delete", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits after delete. Response was\n" + responses.toXML(),
-                     0, ((DocumentResponse)responses.iterator().next()).getHitCount());
-        searcher.close();
     }
 
     final int SAMPLES = 2;
