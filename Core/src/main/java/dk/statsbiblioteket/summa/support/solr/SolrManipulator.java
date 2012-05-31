@@ -107,6 +107,7 @@ public class SolrManipulator implements IndexManipulator {
             orderChanged = true;
             send("<delete><query>" + FIELD_ID + ":\"" + XMLUtil.encode(payload.getId()) + "\"</query></delete>");
             log.trace("Removed " + payload.getId() + " from index");
+            updatesSinceLastCommit++;
             return false;
         }
         send(packAddition(payload.getRecord().getContentAsUTF8()));
