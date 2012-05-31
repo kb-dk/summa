@@ -63,17 +63,7 @@
             <groupId>dk.statsbiblioteket.sbutil</groupId>
             <artifactId>sbutil</artifactId>
         </dependency>
-        <!--<dependency>
-            <groupId>dk.statsbiblioteket.lucene.2369</groupId>
-            <artifactId>lucene-queries</artifactId>
-        </dependency>-->
-
-        <dependency>
-            <groupId>dk.statsbiblioteket.lucene.trunk</groupId>
-            <artifactId>lucene-queries</artifactId>
-            <version>1337113</version>
-        </dependency>
-
+  
 
         <!-- local dependencies -->
         <dependency>
