@@ -141,7 +141,6 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		    File  solrHome_merged_dir = new File(solrHome_merged);			
 			FileUtils.deleteDirectory(solrHome_merged_dir); //Clean up first
 		    FileUtils.copyDirectory(solr_home_default, solrHome_merged_dir);		
-		    FileUtils.copyDirectory(solr_home, solrHome_merged_dir);
-			FileUtils.deleteDirectory(solr_home); //Not used after the copy.			
+		    FileUtils.copyDirectory(solr_home, solrHome_merged_dir);					
 		}	
 }
