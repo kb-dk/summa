@@ -169,7 +169,7 @@ public class SolrResponseBuilder implements Configurable {
                         // Cursor is at end of sub tree after parseHeader
                         return true;
                     }
-                    if ("facet_counts".equals(name)) {
+                    if ("facet_counts".equals(name) || "efacet_counts".equals(name)) {
                         parseFacets(xml, facets, responses);
                         // Cursor is at end of sub tree after parseHeader
                         return true;
@@ -208,7 +208,8 @@ public class SolrResponseBuilder implements Configurable {
         iterateTags(xml, new Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if ("facet_fields".equals(getAttribute(xml, "name", null))) {
+                if ("facet_fields".equals(getAttribute(xml, "name", null))
+                    || "efacet_fields".equals(getAttribute(xml, "name", null))) {
                     xml.next();
                     parseFacets(xml, facetResult);
                     return true;

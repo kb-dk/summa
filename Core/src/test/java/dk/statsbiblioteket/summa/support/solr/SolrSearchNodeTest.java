@@ -141,6 +141,29 @@ public class SolrSearchNodeTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
+    public void testExposedFacetedSearch() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
+        ));
+        ResponseCollection responses = new ResponseCollection();
+            // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
+        searcher.search(new Request(
+            //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+            FacetKeys.SEARCH_FACET_FACETS, "text", // TODO: Remove reliance on this for the SolrResponseBuilder
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "text",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+        ), responses);
+//        System.out.println(responses.toXML());
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     2, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 1",
+                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
+
+    }
+
 
     private void performBasicIngest() throws Exception {
         ObjectFilter data = getDataProvider(false);

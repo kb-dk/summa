@@ -1745,4 +1745,20 @@
     <defaultQuery>*:*</defaultQuery>
   </admin>
 
+
+    <!-- Component developed by Statsbiblioteket for hierarchical faceting and index lookup -->
+    <searchComponent name="exposed" class="org.apache.solr.exposed.ExposedFacetQueryComponent">
+      <lst name="poolfactory">
+        <int name="pools">10</int>
+        <int name="filled">5</int>
+        <int name="fresh">5</int>
+      </lst>
+    </searchComponent>
+
+    <requestHandler name="/exposed" class="org.apache.solr.handler.component.SearchHandler">
+      <arr name="last-components">
+        <str>exposed</str>
+      </arr>
+    </requestHandler>
+
 </config>
