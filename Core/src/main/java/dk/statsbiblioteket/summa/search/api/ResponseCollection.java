@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.io.Serializable;
 import java.io.StringWriter;
 
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
         comment="Better class description needed  ")
 public class ResponseCollection extends TimerImpl
     implements Collection<Response>, Serializable {
-    private static final long serialVersionUID = 13841868526L;
+    private static final long serialVersionUID = 13841868527L;
     private static Log log = LogFactory.getLog(ResponseCollection.class);
 
     private Map<String, Response> responses = new HashMap<String, Response>(5);
@@ -267,5 +268,10 @@ public class ResponseCollection extends TimerImpl
     @Override
     public synchronized void clear() {
         responses.clear();
+    }
+
+    @Override
+    public String toString() {
+        return "ResponseCollection(" + Strings.join(responses.values(), ", ") + ")";
     }
 }
