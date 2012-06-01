@@ -690,6 +690,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         log.trace("close(" + success + ") called");
         if (source == null) {
             log.error("No source defined, cannot close source");
+            return;
         }
         source.close(success);
         if (success) {

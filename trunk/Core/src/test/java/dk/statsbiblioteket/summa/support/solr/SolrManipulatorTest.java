@@ -135,6 +135,37 @@ public class SolrManipulatorTest extends TestCase {
         searcher.close();
     }
 
+    public void testClear() throws Exception {
+        testBasicIngest();
+        SearchNode searcher = getSearcher();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "text:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        );
+
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(request, responses);
+            assertTrue("There should be a response", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                         2, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+
+        // Clear
+        ObjectFilter indexer = getIndexer();
+        ((IndexControllerImpl)indexer).clear();
+        indexer.close(true);
+
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(request, responses);
+            assertTrue("There should be a response after document delete", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits after delete. Response was\n" + responses.toXML(),
+                         0, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        searcher.close();
+    }
+
     final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);

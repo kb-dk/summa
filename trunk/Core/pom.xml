@@ -53,45 +53,45 @@
                     </execution>
                 </executions>
             </plugin>
-        
+
             <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.4</version>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-              
-                <artifactItem>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>summa-sbsolr</artifactId>
-                  <version>${project.version}</version>
-                  <type>war</type>                  
-                  <outputDirectory>target/test-classes/support</outputDirectory>
-                  <destFileName>solr.war</destFileName>
-                </artifactItem>
-              
-                <artifactItem>
-                  <groupId>org.apache.lucene</groupId>
-                  <artifactId>lucene-test-framework</artifactId>
-                  <type>jar</type>                  
-                  <outputDirectory>target/test-classes/support</outputDirectory>
-                  <destFileName>lucene-test-framework-4.0.jar</destFileName>
-                </artifactItem>
-              
-              </artifactItems>
-              <!-- other configurations here -->
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-        
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>summa-sbsolr</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>war</type>
+                                    <outputDirectory>target/test-classes/support</outputDirectory>
+                                    <destFileName>solr.war</destFileName>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.apache.lucene</groupId>
+                                    <artifactId>lucene-test-framework</artifactId>
+                                    <type>jar</type>
+                                    <outputDirectory>target/test-classes/support</outputDirectory>
+                                    <destFileName>lucene-test-framework-4.0.jar</destFileName>
+                                </artifactItem>
+
+                            </artifactItems>
+                            <!-- other configurations here -->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
 
     </build>
@@ -182,8 +182,8 @@
         </dependency>
                                         -->
         <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
-           
-           
+
+
         <dependency>
             <groupId>org.mortbay.jetty</groupId>
             <artifactId>jetty</artifactId>
@@ -197,84 +197,89 @@
             <version>6.1.12</version>
             <scope>test</scope>
         </dependency>
-           
-           
-           
-         <dependency>
-           <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-test-framework</artifactId>                  
-           <scope>test</scope>
-        </dependency>
-      
-       <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-test-framework</artifactId>            
-            <scope>test</scope>
-         </dependency>
-      
-   
+
+
+
         <dependency>
             <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers-common</artifactId>       
-         </dependency>
-
-       <dependency>
-          <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-analyzers-icu</artifactId>
+            <artifactId>lucene-test-framework</artifactId>
+            <scope>test</scope>
         </dependency>
-        
-            <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-kuromoji</artifactId>              
-            </dependency>
-            
-            <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-analyzers-morfologik</artifactId>                         
-             </dependency>
-                        
 
-           <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-phonetic</artifactId>       
-            </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-test-framework</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-            <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-analyzers-smartcn</artifactId>               
-            </dependency>
-            
-            <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-stempel</artifactId>
-            </dependency>
 
-           <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-uima</artifactId>
-           </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+        </dependency>
 
-            <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-queryparser</artifactId>
-            </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-icu</artifactId>
+        </dependency>
 
-           <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-queries</artifactId>              
-           </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-kuromoji</artifactId>
+        </dependency>
 
-          <dependency>
-             <groupId>org.apache.lucene</groupId>
-             <artifactId>lucene-suggest</artifactId>             
-          </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-morfologik</artifactId>
+        </dependency>
 
-         <dependency>
-           <groupId>org.apache.lucene</groupId>
-           <artifactId>lucene-highlighter</artifactId>           
-         </dependency>
-   
-         
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-phonetic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-smartcn</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-stempel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-uima</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-suggest</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-core</artifactId>
+            <classifier>sources</classifier>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
@@ -282,10 +287,10 @@
 
         <dependency>
             <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>            
+            <artifactId>solr-solrj</artifactId>
         </dependency>
-      
-      
+
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>summa-exposed</artifactId>
