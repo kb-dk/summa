@@ -3,33 +3,18 @@ package dk.statsbiblioteket.summa.support.embeddedsolr;
 import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import org.apache.lucene.codecs.PostingsFormat;
-import org.apache.lucene.codecs.mockintblock.MockFixedIntBlockPostingsFormat;
-import org.apache.solr.util.AbstractSolrTestCase;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.core.CoreContainer;
 import org.junit.Before;
 import org.junit.Test;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.testing.HttpTester;
-import org.mortbay.jetty.testing.ServletTester;
-import org.mortbay.jetty.webapp.WebAppContext;
 
 public class SolrSearchConfigTest {
     
