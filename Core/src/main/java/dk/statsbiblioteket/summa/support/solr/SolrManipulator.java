@@ -98,6 +98,7 @@ public class SolrManipulator implements IndexManipulator {
     public synchronized void clear() throws IOException {
         log.debug("Attempting to delete all documents in the Solr index");
         send("<delete><query>*:*</query></delete>");
+        commit();
         log.info("Delete all documents in the Solr index request sent");
     }
 
