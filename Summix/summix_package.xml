@@ -83,6 +83,15 @@
                 <include>summa-web-website.war</include>
             </includes>
         </fileSet>
+         <fileSet>
+            <directory>${basedir}/../SBSolr/target/</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>${project.build.finalName}/web/</outputDirectory>
+            <includes>
+                <include>summa-sbsolr.war</include>
+            </includes>
+        </fileSet>
+     
         <!-- Readme, License, ChangeLog -->
         <fileSet>
             <directory>${basedir}/../</directory>
