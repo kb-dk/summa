@@ -31,15 +31,18 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	private static final String DEFAULT_SOLR_HOME = "support/solr_home_default";
 	public static final String DEFAULT_CONTEXT = "/solr";
 	public static final int DEFAULT_PORT = 8983;
-    public static final String SOLR_HOME_SUFFIX="_merged";//
 	
 	private Server server;
 	private String serverUrl;
 
 	/**
 	 * Starts up a Jetty server running the SOLR instance.
+	 * The SolrHome will be prefixed with "_merged" and can be found under /target/test-classes/support
+	 * 
 	 * @param solrHome a folder with a Solr setup. The data folder in the setup will be modified by this test.
 	 *                 The homeDir may be specified as a file system path or as a folder accessible by the ClassLoader.
+	 *                 Any files missing in this SolrHome directory will be taken from the default SolrHome directory.
+	 *                 
 	 * @param solrWar  the path to the solr WAR file. Either as a file path or a ClassLoader path.
 	 * @param context  the URL-path exposed by the Solr REST interface (normally {@code /solr}).
 	 * @param port     the port for the Jetty server.
@@ -48,18 +51,18 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	public EmbeddedJettyWithSolrServer(String solrHome, String solrWar , String context, int port) throws Exception {
 		this.setDaemon(true);
 
-		solrWar = resolve("WAR", solrWar);
-		solrHome = resolve("Solr home", solrHome);
+		solrWar = SolrServerUnitTestUtil.resolve("WAR", solrWar);
+		solrHome = SolrServerUnitTestUtil.resolve("Solr home", solrHome);
 
-		String solrHomeDefault = resolve("Solr Home default",DEFAULT_SOLR_HOME);
+		String solrHomeDefault = SolrServerUnitTestUtil.resolve("Solr Home default",DEFAULT_SOLR_HOME);
 
 		// throw new Exception("The Solr war at " + solrWar  + " should exist.
 		// Run 'mvn clean install -DskipTests' in the core-module");
 
 		//Copy solrconfig.xml, schema.xml etc. to the solrhome.
-		copyFolder( new File(solrHome), new File(solrHomeDefault));
+		SolrServerUnitTestUtil.populateSolrHome( new File(solrHome), new File(solrHomeDefault));
 
-		System.setProperty("solr.solr.home", solrHome+SOLR_HOME_SUFFIX);
+		System.setProperty("solr.solr.home", solrHome+	SolrServerUnitTestUtil.SOLR_HOME_SUFFIX);
 
 		server = new Server(port);
 		WebAppContext webapp = new WebAppContext(solrWar,context);
@@ -67,7 +70,7 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		// Hvis solr fejler under opstart med "mockedint classcast exception" er det fordi denne jar mangler på jetty's
 		// classpath.
 		// Det er uklart hvorfor dette bliver aktiveret når man kører unittest
-		webapp.setExtraClasspath(resolve("Lucene Test Framework", "support/lucene-test-framework-4.0.jar"));
+		webapp.setExtraClasspath(SolrServerUnitTestUtil.resolve("Lucene Test Framework", "support/lucene-test-framework-4.0.jar"));
 		
 		server.setHandler(webapp);
 		serverUrl = "http://localhost:" + port + context;
@@ -96,16 +99,6 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		this(solrHome, DEFAULT_SOLR_WAR, DEFAULT_CONTEXT, DEFAULT_PORT);
 	}
 
-	private String resolve(String type, String path) throws FileNotFoundException {
-		if (new File(path).exists()) {
-			return path;
-		}
-		File resolved = Resolver.getFile(path);
-		if (resolved == null) {
-			throw new FileNotFoundException("Unable to locate the " + type + " path '" + path + "'");
-		}
-		return resolved.toString();
-	}
 
 	@SuppressWarnings("CallToPrintStackTrace")
 	@Override
@@ -130,17 +123,5 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	public boolean isStarted() {
 		return server.isStarted();
 	}
-
-	/**
-	 * Merge the two directories solrhome and solrhome_default to solrhome_merged. Copy solrhome_default first 
-	 * so the solrhome files are not replaced. 
-	 * 
-	 */
-	private void  copyFolder(File solr_home, File solr_home_default) throws IOException{			
-		   String solrHome_merged=solr_home.getAbsolutePath()+SOLR_HOME_SUFFIX;
-		    File  solrHome_merged_dir = new File(solrHome_merged);			
-			FileUtils.deleteDirectory(solrHome_merged_dir); //Clean up first
-		    FileUtils.copyDirectory(solr_home_default, solrHome_merged_dir);		
-		    FileUtils.copyDirectory(solr_home, solrHome_merged_dir);					
-		}	
+	
 }

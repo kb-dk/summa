@@ -47,39 +47,9 @@ public class SolrSearchConfigTest {
 
         
         //  Direct REST call. /edismax is defined to search in all summa-fields with boosts
-        String httpResponse = callURL(url+"/edismax/?q=video");
+        String httpResponse = SolrServerUnitTestUtil.callURL(url+"/edismax/?q=video");
         System.out.print(httpResponse);//No data
     }
 
-
-
-    /*
-    * Just a simple way to call a HTTP Rest service without Jersey
-    *
-    */
-    private String callURL(String urlPath){
-        StringBuilder response = new StringBuilder();
-        try {
-            URL url = new URL(urlPath);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setReadTimeout(10000); //10 secs, but only called once.
-            connection.setConnectTimeout(10000); //10 secs, but only called once.
-            connection.connect();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response.toString();
-
-    }
-
-
+ 
 }
