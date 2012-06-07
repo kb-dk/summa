@@ -211,6 +211,9 @@
    -->
 
 <!-- begin converted from sb_index_descriptor -->
+             <!-- Fix of SOLR3422 -->
+             <field name="_version_" type="long" indexed="true" stored="true"/>
+        
              <!-- Gruppe enrich -->
              <field name="enrich_editor" type="text_general" indexed="true" stored="true" multiValued="true"/>
              <field name="enrich_isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
