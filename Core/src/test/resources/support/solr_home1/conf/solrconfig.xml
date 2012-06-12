@@ -1156,8 +1156,7 @@
 
     <str name="queryAnalyzerFieldType">textSpell</str>
     
-    <!-- a spellchecker built from a field of the main index -->
-
+    <!-- a spellchecker built from a field of the main index. Use spellcheck.dictionary=summa_spell for this-->
 
     <lst name="spellchecker">    
       <str name="name">summa_spell</str>
@@ -1166,15 +1165,15 @@
       <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>                  
     </lst>
 
-   <!-- uses  spellchecker index above with different distance measure -->
-     <lst name="spellchecker">    
-      <str name="name">jarowinkler</str>
-      <str name="field">summa_spell</str>
-      <str name="distanceMeasure">org.apache.lucene.search.spell.JaroWinklerDistance</str>              
+   <!-- uses  spellchecker index above with different distance measure. use spellcheck.dictionary=jarowinkler for this -->
+     <lst name="spellchecker">           
+       <str name="name">jarowinkler</str>
+       <str name="field">summa_spell</str>
+       <str name="distanceMeasure">org.apache.lucene.search.spell.JaroWinklerDistance</str>              
        <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>
     </lst>
 
-<!-- You can also ad a pure file base spellchecker below-->
+<!-- You can also add a pure file base spellchecker below-->
 
 
   </searchComponent>
