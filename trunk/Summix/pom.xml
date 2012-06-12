@@ -157,7 +157,13 @@
          <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-         </dependency>    
+             <exclusions>
+                 <exclusion>
+                     <groupId>org.slf4j</groupId>
+                     <artifactId>slf4j-jdk14</artifactId>
+                 </exclusion>
+             </exclusions>
+         </dependency>
 
          <dependency>  
             <groupId>org.apache.solr</groupId>
@@ -179,12 +185,13 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>summa-core</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>summa-core</artifactId>
-            <version>${project.version}</version>
             <classifier>api</classifier>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- Local WARS -->
         <!--

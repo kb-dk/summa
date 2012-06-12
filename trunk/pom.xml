@@ -192,6 +192,12 @@
                 <artifactId>solr-core</artifactId>
                 <version>4.0-1340933</version>
                 <classifier>pom</classifier>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-jdk14</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -199,6 +205,12 @@
                 <artifactId>solr-core</artifactId>
                 <version>4.0-1340933</version>
                 <classifier>sources</classifier>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-jdk14</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
