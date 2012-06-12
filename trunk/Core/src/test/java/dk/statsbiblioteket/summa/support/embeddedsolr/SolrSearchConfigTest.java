@@ -38,16 +38,24 @@ public class SolrSearchConfigTest {
         //Wrap the server with HTTPSolrServer      
         String url = server.getServerUrl();
         SolrServer server1 = new HttpSolrServer(url);
-         //Thread.sleep(5000000L); //use to test server in browser. Or ingest data etc.
+        //Thread.sleep(5000000L); //use to test server in browser. Or ingest data etc.
 
         //This is not found. There is no data in index
-        SolrParams params = new SolrQuery("eeerere");
-        QueryResponse response = server1.query(params);
-        assertEquals(0L, response.getResults().getNumFound());
+        SolrQuery query = new SolrQuery("atsun");
+        query.setFacet(true);
+        query.setParam("spellcheck", "true");
+        query.setParam("spellcheck.dictionary", "summa_spell");
+        
+      
+        QueryResponse response = server1.query(query);
+        System.out.println("found:"+response.getResults().getNumFound());
+        System.out.println("found:"+response.getSpellCheckResponse().getSuggestions().size());
+        //   assertEquals(0L, response.getResults().getNumFound());
 
         
         //  Direct REST call. /edismax is defined to search in all summa-fields with boosts
-        String httpResponse = SolrServerUnitTestUtil.callURL(url+"/edismax/?q=video");
+        //String httpResponse = SolrServerUnitTestUtil.callURL(url+"/edismax/?q=datsun&spellcheck=true");
+        String httpResponse = SolrServerUnitTestUtil.callURL(url+"/select/?spellcheck=true&spellcheck.dictionary=summa_spell&spellcheck.extendedResults=true&spellcheck.maxCollationsTries=5&spellcheck.collate=true&spellcheck.collateExtendedResults=true&spellcheck.count=5&q=atsun");
         System.out.print(httpResponse);//No data
     }
 
