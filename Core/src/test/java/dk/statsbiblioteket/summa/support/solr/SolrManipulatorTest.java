@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -85,6 +86,27 @@ public class SolrManipulatorTest extends TestCase {
         indexer.close(true);
         log.debug("Finished basic ingest");
         verifyIndex();
+    }
+
+    public void testFaultyIngest() throws Exception {
+        ObjectFilter data = new PayloadFeederHelper(Arrays.asList(
+            new Payload(new Record("doc1", "dummy", "<doc>Invalid</doc>".getBytes("utf-8")))));
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(data);
+        assertTrue("There should be a next for the indexer", indexer.hasNext());
+        indexer.next();
+        assertFalse("After 1 next, there should be no more Payloads", indexer.hasNext());
+        indexer.close(true);
+        log.debug("Finished basic ingest");
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "text:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     0, ((DocumentResponse)responses.iterator().next()).getHitCount());
     }
 
     private void verifyIndex() throws Exception {

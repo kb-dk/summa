@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.solr;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
@@ -97,7 +98,7 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public synchronized void clear() throws IOException {
         log.debug("Attempting to delete all documents in the Solr index");
-        send("<delete><query>*:*</query></delete>");
+        send(null, "<delete><query>*:*</query></delete>");
         commit();
         log.info("Delete all documents in the Solr index request sent");
     }
@@ -106,12 +107,12 @@ public class SolrManipulator implements IndexManipulator {
     public boolean update(Payload payload) throws IOException {
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
-            send("<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>");
+            send(payload, "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>");
             log.trace("Removed " + payload.getId() + " from index");
             updatesSinceLastCommit++;
             return false;
         }
-        send(packAddition(payload.getRecord().getContentAsUTF8()));
+        send(payload, packAddition(payload.getRecord().getContentAsUTF8()));
         updatesSinceLastCommit++;
         log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
         return false;
@@ -139,7 +140,7 @@ public class SolrManipulator implements IndexManipulator {
     public synchronized void commit() throws IOException {
         orderChanged  = false;
         log.debug("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
-        send("<commit/>");
+        send(null, "<commit/>");
         log.info("Committed " + updatesSinceLastCommit + " updates to Solr");
         updatesSinceLastCommit = 0;
     }
@@ -167,12 +168,7 @@ public class SolrManipulator implements IndexManipulator {
         return orderChanged;
     }
 
-    /**
-     * Opens a connection
-     * @param command
-     * @throws IOException
-     */
-    private void send(String command) throws IOException {
+    private void send(Payload payload, String command) throws IOException {
         URL url = new URL(UPDATE);
         HttpURLConnection conn;
         try {
@@ -194,8 +190,9 @@ public class SolrManipulator implements IndexManipulator {
             int code = conn.getResponseCode();
             if (code != 200) {
                 String message = String.format(
-                    "Unable to perform update of Solr. Error code %d\nRequest (trimmed):\n%s\nResponse:\n%s",
-                    code, trim(command, 100), getResponse(conn));
+                    "Unable to index document '%s' into Solr at %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
+                    payload.getId(), UPDATE, code, trim(command, 100), getResponse(conn));
+                Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, payload);
                 throw new IOException(message);
             }
         } catch (ConnectException e) {
