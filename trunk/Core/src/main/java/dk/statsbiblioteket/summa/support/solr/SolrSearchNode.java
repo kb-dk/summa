@@ -98,6 +98,13 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_SOLR_DEFAULTPAGESIZE = "solr.defaultpagesize";
     public static final int DEFAULT_SOLR_DEFAULTPAGESIZE = 15;
     /**
+     * The minimum number of counts for a single tag to show up in the result list.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String CONF_SOLR_MINCOUNT = "solr.mincount";
+    public static final int DEFAULT_SOLR_MINCOUNT = 1;
+    /**
      * The default facets if none are specified. The syntax is a comma-separated
      * list of facet names, optionally with max tags in paranthesis.
      * This can be overridden with {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
@@ -184,6 +191,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final int readTimeout;
     protected final String idPrefix;
     protected final int defaultPageSize;
+    protected final int minCount;
     protected final int defaultFacetPageSize;
     protected final String defaultFacets;
     protected final String combineMode;
@@ -208,6 +216,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         readTimeout = conf.getInt(CONF_SOLR_READ_TIMEOUT, DEFAULT_SOLR_READ_TIMEOUT);
         idPrefix =   conf.getString(CONF_SOLR_IDPREFIX, DEFAULT_SOLR_IDPREFIX);
         defaultPageSize = conf.getInt(CONF_SOLR_DEFAULTPAGESIZE, DEFAULT_SOLR_DEFAULTPAGESIZE);
+        minCount = conf.getInt(CONF_SOLR_MINCOUNT, DEFAULT_SOLR_MINCOUNT);
         defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
         defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
@@ -315,7 +324,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             facetsDef = null;
         }
         SolrFacetRequest facets = null == facetsDef || "".equals(facetsDef) ? null :
-                                  createFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
+                                  createFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode);
 
         Map<String, List<String>> solrSearchParams = new HashMap<String, List<String>>(solrDefaultParams);
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
@@ -396,8 +405,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     }
 
     // Override this to get search backend specific facet request syntax
-    protected SolrFacetRequest createFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
-        return new SolrFacetRequest(facetsDef, defaultFacetPageSize, combineMode);
+    protected SolrFacetRequest createFacetRequest(
+        String facetsDef, int minCount, int defaultFacetPageSize, String combineMode) {
+        return new SolrFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode);
     }
 
     /**
