@@ -1,0 +1,8 @@
+<doc>
+    <field name="recordId">doc3</field>
+    <field name="title">Katte</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Thomas Egense</field>
+    <field name="year">2012</field>
+    <field name="location_normalised">Statsbiblioteket</field>
+</doc>
