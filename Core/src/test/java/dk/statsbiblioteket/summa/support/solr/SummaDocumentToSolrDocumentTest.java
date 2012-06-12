@@ -60,15 +60,29 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
         String content = transform("support/solr/SummaDocumentSample1.xml");
         assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
         assertTrue("The result should contain the right ID\n" + content,
-                   content.contains("<field name=\"recordId\">mybase:grimme_aellinger</field>"));
+                   // doc1 overrides mybase:grimme_aellinger
+                   content.contains("<field name=\"recordId\">doc1</field>"));
         assertTrue("The result should contain the right base\n" + content,
                    content.contains("<field name=\"recordBase\">dummy</field>"));
+        log.debug("\n" + content);
+    }
+
+    public void testExplicitNamespace() throws IOException {
+        String content = transform("support/solr/SummaDocumentSampleNamespace.xml");
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
+        assertTrue("The result should contain the right ID\n" + content,
+                   // doc1 overrides mybase:grimme_aellinger
+                   content.contains("<field name=\"recordId\">doc1</field>"));
+        assertTrue("The result should contain the right base\n" + content,
+                   content.contains("<field name=\"recordBase\">dummy</field>"));
+        log.debug("\n" + content);
     }
 
     public void testEmptyElimination() throws IOException {
         String content = transform("support/solr/SummaDocumentSampleEmpty.xml");
         assertFalse("The result should not contain the empty field\n" + content,
                     content.contains("<field name=\"empty\""));
+        log.debug("\n" + content);
     }
 
     public void testExtraRecordBase() throws IOException {
@@ -77,11 +91,15 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
                    content.contains("<field name=\"recordBase\">wrong_base</field>"));
         assertTrue("The result should contain the right base\n" + content,
                    content.contains("<field name=\"recordBase\">dummy</field>"));
+        log.debug("\n" + content);
     }
 
     private String transform(String path) throws IOException {
+        return transform(path, "doc1");
+    }
+    private String transform(String path, String recordId) throws IOException {
         Payload summaDoc = new Payload(new Record(
-            "doc1", "dummy", Resolver.getUTF8Content(path).getBytes()));
+            recordId, "dummy", Resolver.getUTF8Content(path).getBytes()));
         ObjectFilter input = new PayloadFeederHelper(Arrays.asList(summaDoc));
 
         XMLTransformer transformer = new XMLTransformer(Configuration.newMemoryBased(

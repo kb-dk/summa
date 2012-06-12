@@ -339,6 +339,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 log.trace("Calling transformer for " + getName() + " for " + record);
             }
             try {
+                transformer.setParameter("recordId", record.getId());
                 transformer.setParameter("recordBase", record.getBase());
                 transformer.transform(source, result);
             } catch (TransformerException e) {
