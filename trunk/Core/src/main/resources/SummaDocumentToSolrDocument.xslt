@@ -13,8 +13,10 @@
             </xsl:text>
             <xsl:element name="field">
                 <xsl:attribute name="name">recordId</xsl:attribute>
-                <xsl:value-of select="@doc:id"/>
+                <xsl:value-of select="@id"/>
             </xsl:element>
+            <xsl:text>
+            </xsl:text>
             <xsl:element name="field">
                 <xsl:attribute name="name">recordBase</xsl:attribute>
                 <xsl:value-of select="$recordBase" />
@@ -23,17 +25,19 @@
                 </xsl:text>
 
             <xsl:for-each select="doc:fields/doc:field">
-                <xsl:element name="field">
-                    <xsl:attribute name="name">
-                        <xsl:value-of select="@doc:name"/>
-                    </xsl:attribute>
-                    <!--                        <xsl:attribute name="boost">
-                        <xsl:value-of select="@doc:boost"/>
-                    </xsl:attribute>-->
-                    <xsl:value-of select="."/>
-                </xsl:element>
+                <xsl:if test=". != '' and @name != 'recordBase' and @name != 'recordId'">
+                    <xsl:element name="field">
+                        <xsl:attribute name="name">
+                            <xsl:value-of select="@name"/>
+                        </xsl:attribute>
+                        <!--                        <xsl:attribute name="boost">
+                            <xsl:value-of select="@doc:boost"/>
+                        </xsl:attribute>-->
+                        <xsl:value-of select="."/>
+                    </xsl:element>
                     <xsl:text>
                     </xsl:text>
+                </xsl:if>
             </xsl:for-each>
             <xsl:text>
             </xsl:text>
