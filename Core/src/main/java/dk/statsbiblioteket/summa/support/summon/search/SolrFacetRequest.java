@@ -37,6 +37,7 @@ public class SolrFacetRequest {
     private static Log log = LogFactory.getLog(SolrFacetRequest.class);
     private String originalRequest;
     private Structure originalStructure;
+    private int minCount;
     private List<Facet> facets;
 
     /**
@@ -46,8 +47,9 @@ public class SolrFacetRequest {
      *                    this page size is used.
      * @param combineMode 'and' or 'or' as per the Solr API.
      */
-    public SolrFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
+    public SolrFacetRequest(String facetsDef, int minCount, int defaultFacetPageSize, String combineMode) {
         originalRequest = facetsDef;
+        this.minCount = minCount;
         originalStructure = new Structure(facetsDef, defaultFacetPageSize);
         facets = new ArrayList<Facet>(originalStructure.getFacetList().size());
         for (FacetStructure fc: originalStructure.getFacetList()) {
@@ -81,7 +83,6 @@ public class SolrFacetRequest {
         return originalRequest;
     }
 
-
     /**
      * @return max tags aka pageSize for each facet.
      */
@@ -94,6 +95,7 @@ public class SolrFacetRequest {
     }
 
     public void addFacetQueries(Map<String, List<String>> queryMap) {
+        append(queryMap, "facet.mincount", Integer.toString(minCount));
         for (Facet facet: facets) {
             addFacetQuery(
                 queryMap, facet.getField(), facet.getCombineMode(), facet.getStartPage(), facet.getPageSize());

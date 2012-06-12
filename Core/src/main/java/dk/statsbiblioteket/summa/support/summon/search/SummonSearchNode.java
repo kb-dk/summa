@@ -303,8 +303,9 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     @Override
-    protected SolrFacetRequest createFacetRequest(String facetsDef, int defaultFacetPageSize, String combineMode) {
-        return new SolrFacetRequest(facetsDef, defaultFacetPageSize, combineMode) {
+    protected SolrFacetRequest createFacetRequest(
+        String facetsDef, int minCount, int defaultFacetPageSize, String combineMode) {
+        return new SolrFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode) {
             @Override
             protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
                                          int startPage, int pageSize) {
