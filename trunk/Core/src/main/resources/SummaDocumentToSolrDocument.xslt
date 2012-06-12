@@ -6,6 +6,7 @@
          ingesting into Solr (remember to wrap i <add>...</add> -->
     <xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
     <xsl:param name="recordBase" select="'Undefined'" />
+    <xsl:param name="recordId" select="'Undefined'" />
 
     <xsl:template match="doc:SummaDocument">
         <doc>
@@ -13,7 +14,9 @@
             </xsl:text>
             <xsl:element name="field">
                 <xsl:attribute name="name">recordId</xsl:attribute>
-                <xsl:value-of select="@id"/>
+                <!--    <xsl:value-of select="@id"/> -->
+                <!-- There is always a recordId != '', guaranteed by Record -->
+                <xsl:value-of select="$recordId"/>
             </xsl:element>
             <xsl:text>
             </xsl:text>
@@ -21,11 +24,11 @@
                 <xsl:attribute name="name">recordBase</xsl:attribute>
                 <xsl:value-of select="$recordBase" />
             </xsl:element>
-                <xsl:text>
-                </xsl:text>
 
             <xsl:for-each select="doc:fields/doc:field">
                 <xsl:if test=". != '' and @name != 'recordBase' and @name != 'recordId'">
+                    <xsl:text>
+                    </xsl:text>
                     <xsl:element name="field">
                         <xsl:attribute name="name">
                             <xsl:value-of select="@name"/>
@@ -35,8 +38,6 @@
                         </xsl:attribute>-->
                         <xsl:value-of select="."/>
                     </xsl:element>
-                    <xsl:text>
-                    </xsl:text>
                 </xsl:if>
             </xsl:for-each>
             <xsl:text>
