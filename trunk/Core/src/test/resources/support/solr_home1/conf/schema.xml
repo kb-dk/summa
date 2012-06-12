@@ -455,8 +455,6 @@
 
    <!--For DidYouMean -->
    <!-- Copy fields to freetext <copyField source="" dest="freetext"/>-->
-   <copyField source="no" dest="summa_spell"/> 
-   <copyField source="author_main" dest="summa_spell"/>
    <copyField source="*" dest="summa_spell"/>
   
 </schema>
