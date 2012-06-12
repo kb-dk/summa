@@ -1,0 +1,8 @@
+<doc>
+    <field name="recordId">doc1</field>
+    <field name="title">Matematik</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Thomas Egense</field>
+    <field name="year">2011</field>
+    <field name="location_normalised">Matematik</field>
+</doc>
