@@ -1,5 +1,6 @@
 <doc>
     <field name="recordId">doc5</field>
+    <field name="recordBase">aleph</field>
     <field name="title">Lucene</field>
     <field name="author_main">Toke Eskildsen</field>
     <field name="author_normalised">Toke Eskildsen</field>

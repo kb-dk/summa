@@ -1,5 +1,6 @@
 <doc>
     <field name="recordId">doc2</field>
+    <field name="recordBase">aleph</field>
     <field name="title">Øl</field>
     <field name="author_main">Thomas Egense</field>
     <field name="author_normalised">Thomas Egense</field>
