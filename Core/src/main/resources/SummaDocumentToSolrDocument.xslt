@@ -5,19 +5,19 @@
     <!-- Simple (and lossy) transformation from SummaDocument to XML ready for
          ingesting into Solr (remember to wrap i <add>...</add> -->
     <xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
+    <xsl:param name="recordBase" select="'Undefined'" />
+
     <xsl:template match="doc:SummaDocument">
         <doc>
             <xsl:text>
             </xsl:text>
             <xsl:element name="field">
-                <xsl:attribute name="name">id</xsl:attribute>
-                <xsl:value-of select="@doc:id"/>
-            </xsl:element>
-                <xsl:text>
-                </xsl:text>
-            <xsl:element name="field">
                 <xsl:attribute name="name">recordId</xsl:attribute>
                 <xsl:value-of select="@doc:id"/>
+            </xsl:element>
+            <xsl:element name="field">
+                <xsl:attribute name="name">recordBase</xsl:attribute>
+                <xsl:value-of select="$recordBase" />
             </xsl:element>
                 <xsl:text>
                 </xsl:text>

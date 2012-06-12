@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa-web</artifactId>
-        <version>1.8.0-20120601-trunk-SNAPSHOT</version>
+        <version>1.8.0-20120612-trunk-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 

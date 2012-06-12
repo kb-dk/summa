@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>1.8.0-20120601-trunk-SNAPSHOT</version>
+        <version>1.8.0-20120612-trunk-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -181,6 +181,11 @@
             <artifactId>tika</artifactId>
         </dependency>
         <!-- Local dependencies -->        
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>summa-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>summa-core</artifactId>

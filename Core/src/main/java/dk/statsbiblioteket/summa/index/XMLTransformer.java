@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.NamespaceRemover;
 import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +42,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,8 +119,7 @@ public class XMLTransformer extends GraphFilter<Object> {
      * </p><p>
      * Optional. Default is "content" ({@link RecordUtil#PART_CONTENT}).
      */
-    public static final String CONF_DESTINATION =
-        "summa.xmltransformer.destination";
+    public static final String CONF_DESTINATION = "summa.xmltransformer.destination";
     public static final String DEFAULT_DESTINATION = RecordUtil.PART_CONTENT;
 
     /**
@@ -132,8 +132,7 @@ public class XMLTransformer extends GraphFilter<Object> {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_STRIP_XML_NAMESPACES =
-            "summa.xmltransformer.ignorexmlnamespaces";
+    public static final String CONF_STRIP_XML_NAMESPACES = "summa.xmltransformer.ignorexmlnamespaces";
     public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
 
     /**
@@ -143,8 +142,7 @@ public class XMLTransformer extends GraphFilter<Object> {
      * Optional.
      * @see dk.statsbiblioteket.summa.common.xml.SummaEntityResolver
      */
-    public static final String CONF_ENTITY_RESOLVER =
-            "summa.xmltransformer.entityresolver";
+    public static final String CONF_ENTITY_RESOLVER = "summa.xmltransformer.entityresolver";
 
     private List<Changeling> changelings = new ArrayList<Changeling>();
 
@@ -166,23 +164,19 @@ public class XMLTransformer extends GraphFilter<Object> {
                     changelings.add(new Changeling(subConf, true));
                 }
             } catch (SubConfigurationsNotSupportedException e) {
-                throw new ConfigurationException(
-                    "Could not extract sub configurations", e);
+                throw new ConfigurationException("Could not extract sub configurations", e);
             }
         }
         if (changelings.size() == 0) {
             throw new ConfigurationException(
-                "Unable to extract any transformation setups from "
-                + "configuration");
+                "Unable to extract any transformation setups from configuration");
         }
-        log.info("XMLTransformer with " + changelings.size()
-                 + " transforming sub-units initialized");
+        log.info("XMLTransformer with " + changelings.size() + " transforming sub-units initialized");
     }
 
 
     @Override
-    public boolean processRecord(Record record, boolean origin, Object o)
-                                                       throws PayloadException {
+    public boolean processRecord(Record record, boolean origin, Object o) throws PayloadException {
         Changeling changeling = getChangeling(record);
         if (changeling == null) {
             Logging.logProcess(
@@ -203,8 +197,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     }
 
     @Override
-    public boolean finish(Payload payload, Object state, boolean success)
-                                                       throws PayloadException {
+    public boolean finish(Payload payload, Object state, boolean success) throws PayloadException {
         if (!success) {
             Logging.logProcess(
                 "XMLTransformer", "Unable to transform. discarding",
@@ -231,8 +224,7 @@ public class XMLTransformer extends GraphFilter<Object> {
 
     @Override
     public String toString() {
-        return "XMLTransformer '" + getName() + "' with " + changelings.size()
-               + " sub transformers";
+        return "XMLTransformer '" + getName() + "' with " + changelings.size() + " sub transformers";
     }
 
     private class Changeling {
@@ -247,59 +239,51 @@ public class XMLTransformer extends GraphFilter<Object> {
 
         public Changeling(Configuration conf, boolean failOnMissing) {
             String xsltLocationString = conf.getString(CONF_XSLT, null);
-            if ((failOnMissing && xsltLocationString == null) ||
-                "".equals(xsltLocationString)) {
-                throw new ConfigurationException(String.format(
-                        "The property %s must be defined", CONF_XSLT));
+            if ((failOnMissing && xsltLocationString == null) || "".equals(xsltLocationString)) {
+                throw new ConfigurationException(String.format("The property %s must be defined", CONF_XSLT));
             }
             matcher = new PayloadMatcher(conf, false);
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Extracted XSLT location '" + xsltLocationString
-                      + "' from properties");
+            log.debug("Extracted XSLT location '" + xsltLocationString + "' from properties");
             xsltLocation = Resolver.getURL(xsltLocationString);
             if (failOnMissing && xsltLocation == null) {
                 throw new ConfigurationException(String.format(
-                        "The xsltLocation '%s' could not be resolved to a URL",
-                        xsltLocationString));
+                    "The xsltLocation '%s' could not be resolved to a URL", xsltLocationString));
             }
             if (failOnMissing && !conf.valueExists(CONF_STRIP_XML_NAMESPACES)) {
                 log.warn(String.format(
-                        "The key %s was not defined. It is highly recommended to"
-                        + " define it as the wrong value typically wrecks the "
-                        + "output. Falling back to default %b",
-                        CONF_STRIP_XML_NAMESPACES,
-                        DEFAULT_STRIP_XML_NAMESPACES));
+                    "The key %s was not defined. It is highly recommended to define it as the wrong value "
+                    + "typically wrecks the output. Falling back to default %b",
+                    CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES));
             }
             source = conf.getString(CONF_SOURCE, DEFAULT_SOURCE);
             destination = conf.getString(CONF_DESTINATION, DEFAULT_DESTINATION);
-            stripXMLNamespaces = conf.getBoolean(
-                    CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES);
-            initTransformer(conf);
-            log.info("initialized Changeling '" + xsltLocation + "'. "
-                     + "Namespaces will " + (stripXMLNamespaces ? "" : "not ")
-                     + "be stripped from input before transformation");
+            stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES);
+            if (xsltLocation != null) {
+                initTransformer(conf);
+            }
+            log.info("initialized Changeling '" + xsltLocation + "'. Namespaces will "
+                     + (stripXMLNamespaces ? "" : "not ") + "be stripped from input before transformation");
         }
 
-        private void initTransformer(Configuration conf) throws
-                                                        ConfigurationException {
-            if (!conf.valueExists(CONF_ENTITY_RESOLVER)) {
-                log.debug("No entity-resolver specified. Using basic"
-                          + " transformation calls");
-                return;
-            }
-            log.debug("Attempting to assign entity resolver "
-                      + conf.get(CONF_ENTITY_RESOLVER));
-            Class<? extends EntityResolver> resolver = conf.getClass(
-                    CONF_ENTITY_RESOLVER, EntityResolver.class,
-                    SummaEntityResolver.class);
-            entityResolver = Configuration.create(resolver, conf);
+        private void initTransformer(Configuration conf) throws ConfigurationException {
             try {
+                // getLocalTransformer would in principle be better, but is it really safe in our context?
+                transformer = XSLT.createTransformer(xsltLocation);
+                if (!conf.valueExists(CONF_ENTITY_RESOLVER)) {
+                    log.debug("No entity-resolver specified. Using basic transformation calls");
+                    return;
+                }
+                log.debug("Attempting to assign entity resolver " + conf.get(CONF_ENTITY_RESOLVER));
+                Class<? extends EntityResolver> resolver = conf.getClass(
+                    CONF_ENTITY_RESOLVER, EntityResolver.class, SummaEntityResolver.class);
+                entityResolver = Configuration.create(resolver, conf);
                 log.debug("Getting transformer");
-                transformer = XSLT.getLocalTransformer(xsltLocation);
+            } catch (NullPointerException e) {
+                throw new ConfigurationException("Unable to construct Transformer for xslt '" + xsltLocation + "'", e);
             } catch (TransformerException e) {
                 throw new ConfigurationException(String.format(
-                        "Unable to create transformer based on '%s'",
-                        xsltLocation));
+                    "Unable to create transformer based on '%s'", xsltLocation));
             }
             if (entityResolver != null && stripXMLNamespaces) {
                 log.warn("entityResolver does not support stripXMLNamespaces");
@@ -316,103 +300,54 @@ public class XMLTransformer extends GraphFilter<Object> {
         private ByteArrayOutputStream out = null;
         public void transform(Record record) throws PayloadException {
             long transformTime = -System.nanoTime();
-            if (transformer != null && entityResolver != null) {
-                entityTransform(record);
-            } else {
-                basicTransform(record);
-            }
+            innerTransform(record);
             transformTime += System.nanoTime();
             Logging.logProcess(
                 "XMLTransformer",
-                "Transform for " + record.getId() + " finished in "
-                + (transformTime / 1000000.0) + "ms",
+                "Transform for " + record.getId() + " finished in " + (transformTime / 1000000.0) + "ms",
                 Logging.LogLevel.TRACE, record.getId());
         }
 
-        private void basicTransform(Record record) throws PayloadException {
+        private synchronized void innerTransform(Record record) throws PayloadException {
+            Reader inner;
             try {
-                ByteArrayOutputStream out = XSLT.transform(
-                        xsltLocation, RecordUtil.getStream(record, source),
-                        null, stripXMLNamespaces);
-                if (out == null) {
-                    throw new PayloadException(String.format(
-                            "null returned from transformation of '%s' with "
-                            + "XSLT '%s' and stripNamespaces %b",
-                            record.getId(), xsltLocation, stripXMLNamespaces));
-                }
-                RecordUtil.setBytes(record, out.toByteArray(), destination);
-            } catch (NullPointerException e) {
-                throw new PayloadException(String.format(
-                        "NPE in transform call for '%s' with XSLT '%s' and "
-                        + "stripNamespaces %b",
-                        record, xsltLocation, stripXMLNamespaces), e);
-            } catch (TransformerException e) {
-                if (log.isTraceEnabled()) {
-                    log.trace("Untransformable " + record + " was:\n"
-                              + record.toString(true)
-                              + " with xslt '" + xsltLocation
-                              + "' and content\n"
-                              + record.getContentAsUTF8());
-                }
-                throw new PayloadException(
-                        "Unable to transform record " + record + " with '"
-                        + xsltLocation + "'", e);
-            }
-        }
-
-        private void entityTransform(Record record) throws PayloadException {
-            if (log.isTraceEnabled()) {
-                log.trace("Transforming using entity resolver " + record);
-            }
-
-            if (stripXMLNamespaces) {
-                log.trace(
-                    "Skipping namespace stripping due to entity transformer");
-/*            try {
-                content = DOM.domToString(DOM.streamToDOM(
-                        new ByteArrayInputStream(content))).getBytes("utf-8");
-            } catch (TransformerException e) {
-                throw new PayloadException(
-                        "Unable to strip name spaces from content", e);
+                inner = new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
             } catch (UnsupportedEncodingException e) {
-                throw new PayloadException(
-                        "Unable to convert name space stripped content to "
-                        + "UTF-8", e);
-            }*/
+                throw new IllegalStateException("utf-8 should be supported", e);
             }
+            Reader reader = stripXMLNamespaces ? new NamespaceRemover(inner) : inner;
 
-            log.trace("Creating reader for " + getName());
-            XMLReader reader;
+            XMLReader xml;
             try {
-                reader = XMLReaderFactory.createXMLReader();
+                xml = XMLReaderFactory.createXMLReader();
             } catch (SAXException e) {
                 throw new PayloadException("Unable to create XMLReader", e);
             }
-            reader.setEntityResolver(entityResolver);
+            if (entityResolver != null) {
+                xml.setEntityResolver(entityResolver);
+            }
             if (out == null) {
                 out = new ByteArrayOutputStream(1000);
             }
+
             out.reset();
             Result result = new StreamResult(out);
-            InputSource is = new InputSource(
-                RecordUtil.getStream(record, source));
-            Source source = new SAXSource(reader, is);
+            InputSource is = new InputSource(reader);
+            Source source = new SAXSource(xml, is);
 
             if (log.isTraceEnabled()) {
-                log.trace("Calling transformer for " + getName() + " for "
-                          + record);
+                log.trace("Calling transformer for " + getName() + " for " + record);
             }
             try {
+                transformer.setParameter("recordBase", record.getBase());
                 transformer.transform(source, result);
             } catch (TransformerException e) {
                 log.debug("Transformation failed for " + record, e);
-                throw new PayloadException(
-                        "Unable to transform content for '" + record + "'", e);
+                throw new PayloadException("Unable to transform content for '" + record + "'", e);
             }
             RecordUtil.setBytes(record, out.toByteArray(), destination);
             if (log.isTraceEnabled()) {
-                log.trace("Finished transforming using entity resolver "
-                          + record);
+                log.trace("Finished transforming " + record);
             }
         }
     }

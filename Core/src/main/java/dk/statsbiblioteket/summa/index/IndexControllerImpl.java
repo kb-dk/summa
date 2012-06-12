@@ -63,8 +63,6 @@ import org.apache.commons.logging.LogFactory;
 public class IndexControllerImpl extends StateThread implements IndexManipulator, IndexController {
     /** Logger for this class. */
     private static Log log = LogFactory.getLog(IndexControllerImpl.class);
-    /** Fail logger for this class. */
-    private static Log failLog = LogFactory.getLog(LOG_FAILED);
 
     /**
      * A list of sub-configurations for the manipulators.
@@ -506,25 +504,18 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
                 requestCommit = requestCommit | manipulator.update(payload);
                 newOrderChanged = newOrderChanged || manipulator.isOrderChangedSinceLastCommit();
             } catch (Exception e) {
+                String message = String.format("IOException for manipulator #%d (%s) while indexing",
+                                               manipulatorPosition + 1, manipulator);
                 Logging.logProcess(
-                    this.getClass().getSimpleName(), "Failed indexing", Logging.LogLevel.WARN, payload, e);
+                    this.getClass().getSimpleName(), message, Logging.LogLevel.WARN, payload, e);
                 if (manipulatorPosition == 0) {
-                    failLog.warn(String.format(
-                            "IOException for the first manipulator (%s) while indexing %s", manipulator, payload), e);
-                    log.debug("Failed to index " + payload + " with message '" +e.getMessage() + ". See the "
-                              + LOG_FAILED + " log for details");
                     updatesSinceLastCommit--;
                     updatesSinceLastConsolidate--;
-                } else {
-                    failLog.error(String.format(
-                            "IOException for manipulator #%d (%s) while indexing %s",
-                            manipulatorPosition + 1, manipulator, payload), e);
-
                 }
-                if (failLog.isDebugEnabled()) {
-                    log.trace(String.format(
-                            "Failed indexing %s with content\n%s", payload,
-                            payload.getRecord() == null ? "NA" : payload.getRecord().getContentAsUTF8()));
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format(
+                        "Failed indexing %s with content\n%s", payload,
+                        payload.getRecord() == null ? "NA" : payload.getRecord().getContentAsUTF8()));
                 }
                 break;
             }
