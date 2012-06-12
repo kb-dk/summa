@@ -394,9 +394,9 @@
      <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
      <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
 
-     <!-- TODO: RecordID is not text_general. This must be corrected to a non-tokenized type -->
+     <!-- TODO: RecordID and recordBase are not text_general. This must be corrected to a non-tokenized type -->
      <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
-     <field name="recordBase" type="text_general" indexed="true" stored="true" required="false" /> <!-- later this should be changed to required="true" -->
+     <field name="recordBase" type="text_general" indexed="true" stored="true" required="true"/>
 
      <!--For DidYouMean -->
     <field name="summa_spell" type="textSpell"/>
