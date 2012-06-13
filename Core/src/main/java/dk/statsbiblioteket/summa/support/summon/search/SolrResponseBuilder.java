@@ -114,7 +114,8 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-//        System.out.println(solrResponse.replace(">", ">\n"));
+        System.out.println("***");
+        System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -170,6 +171,10 @@ public class SolrResponseBuilder implements Configurable {
                         return true;
                     }
                     if ("facet_counts".equals(name) || "efacet_counts".equals(name)) {
+                        if (facets == null) {
+                            skipSubTree(xml);
+                            return true;
+                        }
                         parseFacets(xml, facets, responses);
                         // Cursor is at end of sub tree after parseHeader
                         return true;

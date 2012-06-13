@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.solr;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
@@ -180,7 +181,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * Optional. Default is 'recordID'.
      */
     public static final String CONF_ID_FIELD = "solr.field.id";
-    public static final String DEFAULT_ID_FIELD = "recordID";
+    public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
@@ -376,7 +377,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         long buildResponseTime = -System.currentTimeMillis();
         long hitCount;
         try {
-//            System.out.println(solrResponse.replace(">", ">\n"));
+            //System.out.println(solrResponse.replace(">", ">\n"));
             hitCount = responseBuilder.buildResponses(request, facets, responses, solrResponse, solrTiming);
         } catch (XMLStreamException e) {
             String message = "Unable to transform Solr XML response to Summa response for '" + request + "'";

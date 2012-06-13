@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.support.solr;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -70,7 +71,7 @@ public class SolrManipulator implements IndexManipulator {
     public static final String DEFAULT_SOLR_RESTCALL = "/solr";
 
     public static final String CONF_ID_FIELD = "solr.field.id";
-    public static final String DEFAULT_ID_FIELD = "recordID";
+    public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
     public static final String UPDATE_COMMAND = "/update";
 
