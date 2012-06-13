@@ -93,13 +93,6 @@ public class SolrDidYouMeanTest {
 		String collatedResult = response.getSpellCheckResponse().getCollatedResult();                
 		assertEquals("thomas egense",collatedResult);
 
-
-
-
-		//  Direct REST call. /edismax is defined to search in all summa-fields with boosts        
-		//  String httpResponse = SolrServerUnitTestUtil.callURL(server.getServerUrl()+"/select/?spellcheck=true&spellcheck.dictionary=summa_spell&spellcheck.extendedResults=true&spellcheck.maxCollationsTries=5&spellcheck.collate=true&spellcheck.collateExtendedResults=true&spellcheck.count=5&q=gense");
-		//  System.out.println(httpResponse);
-
 	}
 
 
