@@ -1629,7 +1629,7 @@
   </admin>
 
 
-    <!-- Component developed by Statsbiblioteket for hierarchical faceting and index lookup -->
+    <!-- Component developed by Statsbiblioteket for (hierarchical) faceting -->
     <searchComponent name="exposed" class="org.apache.solr.exposed.ExposedFacetQueryComponent">
       <lst name="poolfactory">
         <int name="pools">10</int>
@@ -1641,6 +1641,21 @@
     <requestHandler name="/exposed" class="org.apache.solr.handler.component.SearchHandler">
       <arr name="last-components">
         <str>exposed</str>
+      </arr>
+    </requestHandler>
+
+    <!-- Component developed by Statsbiblioteket for index lookup -->
+    <searchComponent name="lookup" class="org.apache.solr.exposed.ExposedIndexLookupQueryComponent">
+      <lst name="poolfactory">
+        <int name="pools">6</int>
+        <int name="filled">2</int>
+        <int name="fresh">2</int>
+      </lst>
+    </searchComponent>
+
+    <requestHandler name="/lookup" class="org.apache.solr.handler.component.SearchHandler">
+      <arr name="last-components">
+        <str>lookup</str>
       </arr>
     </requestHandler>
 
