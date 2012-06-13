@@ -88,7 +88,7 @@ public class SolrServerUnitTestUtil {
 	}
 
 	/**
-	 *  Ingest all document specified in the String[].   
+	 *  Index all document specified in the String[].   
 	 * 
 	 */
 	public static void indexFiles(String[] files) throws Exception{
