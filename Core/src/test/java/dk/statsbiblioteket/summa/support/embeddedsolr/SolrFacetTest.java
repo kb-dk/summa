@@ -62,7 +62,7 @@ public class SolrFacetTest {
     			"support/solr_test_documents/doc4.xml",
     			"support/solr_test_documents/doc5.xml",
     	};
-        SolrServerUnitTestUtil.ingestFiles(files);
+        SolrServerUnitTestUtil.indexFiles(files);
              	    	                
         SolrQuery query = new SolrQuery("Egense");
         query.setFacet(true);

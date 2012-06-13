@@ -91,7 +91,7 @@ public class SolrServerUnitTestUtil {
 	 *  Ingest all document specified in the String[].   
 	 * 
 	 */
-	public static void ingestFiles(String[] files) throws Exception{
+	public static void indexFiles(String[] files) throws Exception{
 		  ObjectFilter data = getDataProvider(files);
 	      ObjectFilter indexer = getIndexer();
 	      indexer.setSource(data);
@@ -101,6 +101,7 @@ public class SolrServerUnitTestUtil {
 	      indexer.close(true);       	 
 		 
 	 }
+
     
     private static ObjectFilter getDataProvider(String[] files) throws IOException {
         List<Payload> samples = new ArrayList<Payload>(files.length);
