@@ -46,11 +46,15 @@
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>    
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
