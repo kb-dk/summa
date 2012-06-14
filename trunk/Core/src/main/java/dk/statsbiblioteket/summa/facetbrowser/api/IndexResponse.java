@@ -262,6 +262,7 @@ public class IndexResponse extends ResponseImpl {
 
             xmlOut.writeEndElement(); // indexresponse
             xmlOut.writeCharacters("\n");
+            xmlOut.flush();
 
 //            xmlOut.writeEndDocument();
 //            xmlOut.writeCharacters("\n");

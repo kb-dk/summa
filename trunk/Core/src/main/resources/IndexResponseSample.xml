@@ -3,11 +3,11 @@
                field="author" term="hugo" caseSensitive="false"
                delta="-2" length="5" origo="2">
     <index>
-        <term>birger</term>
-        <term>carsten</term>
-        <term>hugo</term>
-        <term>lars</term>
-        <term>melanie</term>
+        <term count="1">birger</term>
+        <term count="56">carsten</term>
+        <term count="1">hugo</term>
+        <term count="5">lars</term>
+        <term count="1000">melanie</term>
     </index>
 </indexresponse>
 
