@@ -49,8 +49,15 @@
         <env-entry-value>logback-default.xml</env-entry-value>
     </env-entry>
 
-  <!-- Any path (name) registered in solrconfig.xml will be sent to that filter -->
-  <filter>
+    <listener>
+            <listener-class>
+                        dk.statsbiblioteket.summa.summasbsolr.listener.JNDIContextListener
+            </listener-class>
+    </listener>
+
+    <!-- Any path (name) registered in solrconfig.xml will be sent to that filter -->
+    <filter>
+
     <filter-name>SolrRequestFilter</filter-name>
     <filter-class>org.apache.solr.servlet.SolrDispatchFilter</filter-class>
     <!-- If you are wiring Solr into a larger web application which controls
