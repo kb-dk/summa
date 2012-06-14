@@ -17,19 +17,25 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
+import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.solr.exposed.ExposedIndexLookupParams;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -38,7 +44,7 @@ import java.io.StringReader;
 import java.util.*;
 
 /**
- * Takes a Sold response and converts it to a {@link dk.statsbiblioteket.summa.search.api.document.DocumentResponse} and
+ * Takes a Solr response and converts it to a {@link dk.statsbiblioteket.summa.search.api.document.DocumentResponse} and
  * a {@link org.apache.lucene.search.exposed.facet.FacetResponse}.
  * Mapping between field & facet names as well as score adjustments or tag tweaking is not in the scope of this
  * converter.
@@ -90,6 +96,7 @@ public class SolrResponseBuilder implements Configurable {
     protected String searcherID;
     protected Map<String, String> sortRedirect;
     protected Set<String> nonescapedFields = new HashSet<String>(10);
+    protected IndexRequest defaultIndexRequest;
 
     public SolrResponseBuilder(Configuration conf) {
         recordBase = conf.getString(CONF_RECORDBASE, recordBase);
@@ -108,11 +115,12 @@ public class SolrResponseBuilder implements Configurable {
             }
             sortRedirect.put(tokens[0], tokens[1]);
         }
+        defaultIndexRequest = new IndexRequest(conf);
         log.info("Created SolrResponseBuilder " + searcherID + " with base '" + recordBase + "' and sort field "
                  + "redirect rules '" + Strings.join(rules, ", ") + "'");
     }
 
-    public long buildResponses(Request request, final SolrFacetRequest facets, final ResponseCollection responses,
+    public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));
@@ -176,7 +184,12 @@ public class SolrResponseBuilder implements Configurable {
                             return true;
                         }
                         parseFacets(xml, facets, responses);
-                        // Cursor is at end of sub tree after parseHeader
+                        // Cursor is at end of sub tree after parseFacets
+                        return true;
+                    }
+                    if ("elookup".equals(name)) {
+                        parseLookup(xml, request, responses);
+                        // Cursor is at end of sub tree after parseLookup
                         return true;
                     }
                     log.debug("Encountered unsupported name in lst '" + name + "' in Solr response. Skipping element");
@@ -193,6 +206,104 @@ public class SolrResponseBuilder implements Configurable {
         documentResponse.addTiming(solrTiming);
         responses.add(documentResponse);
         return documentResponse.getHitCount();
+    }
+    /*
+    <lst name="elookup"><lst name="fields"><lst name="freetext"><lst name="terms">
+    <int name="deer">1</int>
+    <int name="elephant">2</int>
+    <int name="fox">1</int>
+    ...
+    */
+    private void parseLookup(
+        XMLStreamReader xml, Request request, final ResponseCollection responses) throws XMLStreamException {
+        IndexRequest indexRequest = getLookupRequest(request);
+        if (indexRequest == null) {
+            log.warn("Unable to extract an IndexRequest even though an index lookup structure was found in the result");
+            findTagEnd(xml, "elookup");
+            return;
+        }
+        final IndexResponse lookups = new IndexResponse(indexRequest);
+        if (!findTagStart(xml, "lst") || !"fields".equals(getAttribute(xml, "name", null))) {
+            throw new XMLStreamException("Unable to locate start tag 'lst' with name 'fields' inside 'elookup'");
+        }
+        xml.next();
+        if (!findTagStart(xml, "lst")) { // We only look at the first field
+            throw new XMLStreamException("Unable to locate start tag 'lst' inside 'lst#fields'");
+        }
+        String fieldName = getAttribute(xml, "name", null);
+        xml.next();
+        if (log.isTraceEnabled()) {
+            log.trace("Found lst#" + fieldName + " in lst#fields in lst#elookup");
+        }
+        if (!findTagStart(xml, "lst") || !"terms".equals(getAttribute(xml, "name", null))) {
+            throw new XMLStreamException("Unable to locate start tag 'lst' with name 'terms' inside 'lst#" + fieldName
+                                         + "' in 'lst#fields' in 'lst#elookup''");
+        }
+        xml.next();
+        iterateElements(xml, "terms", "int", new XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                String term = (getAttribute(xml, "name", null));
+                if (term == null) {
+                    throw new XMLStreamException(
+                        "Encountered element 'int' in list 'terms' in 'elookup' without attribute 'name'");
+                }
+                String content = xml.getElementText();
+                try {
+                    int count = Integer.parseInt(content);
+                    lookups.addTerm(new Pair<String, Integer>(term, count));
+                    log.trace("Added lookup " + term + "(" + count + ")");
+                } catch (NumberFormatException e) {
+                    log.warn("Ignoring lookup '" + term + "' with un-parsable count '" + content);
+                }
+            }
+        });
+        findTagEnd(xml, "elookup");
+        responses.add(lookups);
+    }
+
+    protected IndexRequest getLookupRequest(Request request) {
+        final String PRE = SolrSearchNode.CONF_SOLR_PARAM_PREFIX;
+        IndexRequest lookupR = defaultIndexRequest.createRequest(request);
+        if (lookupR != null) {
+            return lookupR;
+        }
+         // Maybe the lookup was specified using params from ExposedIndexLookupParams?
+        if (!request.getBoolean(PRE + ExposedIndexLookupParams.ELOOKUP, false)) {
+            // No such luck, just give up
+            return null;
+        }
+        // Yes, ExposedIndexLookupParams is used. Convert to IndexRequest parameters
+        Request local = new Request();
+        // TODO: What is IndexKeys.SEARCH_INDEX_QUERY used for?
+        if (!putIfExists(request, local, IndexKeys.SEARCH_INDEX_QUERY, IndexKeys.SEARCH_INDEX_QUERY)) {
+            if (!putIfExists(request, local, DocumentKeys.SEARCH_QUERY, IndexKeys.SEARCH_INDEX_QUERY)) {
+                if (!putIfExists(request, local, "q", IndexKeys.SEARCH_INDEX_QUERY)) {
+                    return null;
+                }
+            }
+        }
+        // TODO: Add support for locale in setup
+        putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_DELTA, IndexKeys.SEARCH_INDEX_DELTA);
+        putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_FIELD, IndexKeys.SEARCH_INDEX_FIELD);
+        putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_LENGTH, IndexKeys.SEARCH_INDEX_LENGTH);
+        putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_MINCOUNT, IndexKeys.SEARCH_INDEX_MINCOUNT);
+        putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_TERM, IndexKeys.SEARCH_INDEX_TERM);
+        putIfExists(request, local,
+                    PRE + ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE);
+        lookupR = defaultIndexRequest.createRequest(local);
+        String sort = request.getString(PRE + ExposedIndexLookupParams.ELOOKUP_SORT, null);
+        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_INDEX).equals(sort)) {
+            lookupR.setLocale(new Locale(sort));
+        }
+        return lookupR;
+    }
+    private boolean putIfExists(Request sourceRequest, Request destRequest, String sourceKey, String destKey) {
+        if (sourceRequest.containsKey(sourceKey)) {
+            destRequest.put(destKey, sourceRequest.get(sourceKey));
+            return true;
+        }
+        return false;
     }
 
     private void parseFacets(
@@ -522,6 +633,22 @@ public class SolrResponseBuilder implements Configurable {
                 xml.next();
             } catch (XMLStreamException e) {
                 throw new XMLStreamException("Error seeking to start tag for element '" + startTagName + "'", e);
+            }
+        }
+    }
+
+    protected boolean findTagEnd(XMLStreamReader xml, String endTagName) throws XMLStreamException {
+        while (true)  {
+            if (xml.getEventType() == XMLStreamReader.END_ELEMENT && endTagName.equals(xml.getLocalName())) {
+                return true;
+            }
+            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
+                return false;
+            }
+            try {
+                xml.next();
+            } catch (XMLStreamException e) {
+                throw new XMLStreamException("Error seeking to end tag for element '" + endTagName + "'", e);
             }
         }
     }

@@ -48,6 +48,7 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="term" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+            <!-- TODO: Insert attribute count -->
         </xsd:sequence>
     </xsd:complexType>
 

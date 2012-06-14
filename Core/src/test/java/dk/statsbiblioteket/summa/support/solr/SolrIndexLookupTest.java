@@ -18,10 +18,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
@@ -109,10 +112,12 @@ public class SolrIndexLookupTest extends TestCase {
                    responseStr.contains(expected));
     }
 
-    public void testBasicIndexLookup() throws Exception {
-        ingest(Arrays.asList("aardvark", "bison", "cougar", "deer", "elephant", "fox", "giraffe", "horse"));
+    public void testIndexLookupWithSolrKeys() throws Exception {
+        // Yes, elephant is stated twice. We want to check the count
+        ingest(Arrays.asList("aardvark", "bison", "cougar", "deer", "elephant", "elephant", "fox", "giraffe", "horse"));
 
-        SearchNode searcher = getSearcher();
+        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup")); // TODO: Switch to flexible path
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "recordBase:myBase"
@@ -131,6 +136,21 @@ public class SolrIndexLookupTest extends TestCase {
         ), Arrays.asList("deer", "elephant", "fox"));
     }
 
+    // TODO: Test without query
+    // TODO: Test origo
+    public void testIndexLookupWithSummaKeys() throws Exception {
+        // Yes, elephant is stated twice. We want to check the count
+        ingest(Arrays.asList("aardvark", "bison", "cougar", "deer", "elephant", "elephant", "fox", "giraffe", "horse"));
+
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "freetext",
+            IndexKeys.SEARCH_INDEX_LENGTH, 3,
+            IndexKeys.SEARCH_INDEX_TERM, "ele" // Note: No sort
+        ), Arrays.asList("deer", "elephant", "fox"));
+    }
+
     private void ingest(List<String> terms) throws IOException {
         ObjectFilter data = getDataProvider(terms);
         ObjectFilter indexer = getIndexer();
@@ -146,8 +166,20 @@ public class SolrIndexLookupTest extends TestCase {
         ));
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
-        System.out.println(responses);
         searcher.close();
+
+        for (Response response: responses) {
+            if (response instanceof IndexResponse) {
+                IndexResponse lookup = (IndexResponse)response;
+                String xml = lookup.toXML();
+                for (String term: terms) {
+                    assertTrue("The response should contain the term '" + term + "'\n" + xml,
+                               xml.contains(">" + term + "<"));
+                }
+            }
+        }
+        System.err.println(responses.toXML());
+        fail("Could not locate an IndexResponse in the result");
     }
 
     private ObjectFilter getDataProvider(List<String> terms) throws UnsupportedEncodingException {

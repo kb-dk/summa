@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -32,6 +33,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.solr.exposed.ExposedIndexLookupParams;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
@@ -426,12 +428,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             return;
         }
         String key = entry.getKey().substring(CONF_SOLR_PARAM_PREFIX.length(), entry.getKey().length());
-        if (entry.getValue() instanceof String) {
-            solrParam.put(key, Arrays.asList((String) entry.getValue()));
-            if (log.isTraceEnabled()) {
-                log.trace("convertSolrParam assigning " + key + ":" + entry.getValue());
-            }
-        } else if (entry.getValue() instanceof List) {
+        if (entry.getValue() instanceof List) {
             ArrayList<String> values = new ArrayList<String>();
             for (Object v: (List)entry.getValue()) {
                 if (v instanceof String) {
@@ -455,9 +452,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                           + Strings.join((String[]) entry.getValue(), ", "));
             }
             solrParam.put(key, Arrays.asList((String[]) entry.getValue()));
-        } else {
-            log.warn("convertSolrParam expected String, List<String> or String[] for key " + key
-                     + " but got value of class " + entry.getValue().getClass());
+        } else { // Simple type (String, Integer...)
+            solrParam.put(key, Arrays.asList(entry.getValue().toString()));
+            if (log.isTraceEnabled()) {
+                log.trace("convertSolrParam assigning " + key + ":" + entry.getValue());
+            }
         }
     }
 
@@ -675,9 +674,29 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             facets.addFacetQueries(queryMap);
         }
 
+        // IndexLookup
+        putLookup(
+            request, queryMap, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE);
+        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_DELTA, ExposedIndexLookupParams.ELOOKUP_DELTA);
+        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_FIELD, ExposedIndexLookupParams.ELOOKUP_FIELD);
+        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_LENGTH, ExposedIndexLookupParams.ELOOKUP_LENGTH);
+        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_MINCOUNT, ExposedIndexLookupParams.ELOOKUP_MINCOUNT);
+//        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_QUERY, ExposedIndexLookupParams.ELOOKUP_);
+        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_TERM, ExposedIndexLookupParams.ELOOKUP_TERM);
+
         if (solrParams != null) {
             queryMap.putAll(solrParams);
         }
         return queryMap;
     }
+
+    private boolean putLookup(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {
+        if (source.containsKey(sourceKey)) {
+            dest.put(destKey, Arrays.asList(source.get(sourceKey).toString()));
+            dest.put(ExposedIndexLookupParams.ELOOKUP, Arrays.asList("true"));
+            return true;
+        }
+        return false;
+    }
+
 }
