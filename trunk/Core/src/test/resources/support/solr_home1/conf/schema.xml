@@ -48,6 +48,7 @@
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
+        <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>               
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
       <analyzer type="query">
@@ -55,6 +56,7 @@
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>    
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
