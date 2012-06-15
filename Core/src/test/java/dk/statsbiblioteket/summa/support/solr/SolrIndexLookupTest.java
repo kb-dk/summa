@@ -144,11 +144,12 @@ public class SolrIndexLookupTest extends TestCase {
 
         verifyLookup(new Request(
             DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            //PRE + "qt", "/lookup", // Now added automatically
             IndexKeys.SEARCH_INDEX_DELTA, -1,
             IndexKeys.SEARCH_INDEX_FIELD, "freetext",
             IndexKeys.SEARCH_INDEX_LENGTH, 3,
             IndexKeys.SEARCH_INDEX_TERM, "ele" // Note: No sort
-        ), Arrays.asList("deer", "elephant", "fox"));
+        ), Arrays.asList("deer", "elephant", "fox"), false);
     }
 
     private void ingest(List<String> terms) throws IOException {
@@ -161,9 +162,14 @@ public class SolrIndexLookupTest extends TestCase {
     }
 
     private void verifyLookup(Request request, List<String> terms) throws Exception {
-        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
-        ));
+        verifyLookup(request, terms, true);
+    }
+    private void verifyLookup(Request request, List<String> terms, boolean explicitRest) throws Exception {
+        SearchNode searcher = explicitRest ?
+                              new SolrSearchNode(Configuration.newMemoryBased(
+                                  SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
+                              )) :
+                              getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         searcher.close();
