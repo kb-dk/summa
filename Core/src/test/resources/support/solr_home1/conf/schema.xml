@@ -27,7 +27,7 @@
     </fieldType>
 
 
-<fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" stored="false" multiValued="true">
+<fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="false" multiValued="true">
     <analyzer type="index">
        <tokenizer class="solr.StandardTokenizerFactory"/>
          <filter class="solr.LowerCaseFilterFactory"/>
@@ -61,15 +61,57 @@
       </analyzer>
     </fieldType>
 
-<!-- The order of the chacfilters is important. Filters further down the chain must not replace already replaced tokens -->
- <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
+
+<!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
+<!--NOTICE we still need to do a token concatenation -->
+ <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                
+        <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
+        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                    
+        <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>        
+        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+        <filter class="solr.LowerCaseFilterFactory"/>      
+      </analyzer>
+   </fieldType>
+  
+ <!-- Summa field: SummaStandardAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
+ <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
+ <fieldType name="text" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                
+        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>                             
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                    
+        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+  
+ <!-- Summa field: FreeTextAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
+ <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
+ <fieldType name="freetext" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>        
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>                             
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>                                   
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
       <analyzer type="query">
@@ -78,29 +120,11 @@
         <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
-  
-
-    <fieldType name="alphaOnlySort" class="solr.TextField" sortMissingLast="true" omitNorms="true">
-      <analyzer>
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="solr.LowerCaseFilterFactory" />
-        <filter class="solr.TrimFilterFactory" />
-        <filter class="solr.PatternReplaceFilterFactory"
-                pattern="([^a-z])" replacement="" replace="all"
-        />
-      </analyzer>
-    </fieldType>
-    
-    <fieldtype name="phonetic" stored="false" indexed="true" class="solr.TextField" >
-      <analyzer>
-        <tokenizer class="solr.StandardTokenizerFactory"/>
-        <filter class="solr.DoubleMetaphoneFilterFactory" inject="false"/>
-      </analyzer>
-    </fieldtype>
+   
 
     <fieldtype name="payloads" stored="false" indexed="true" class="solr.TextField" >
       <analyzer>
@@ -191,7 +215,7 @@
 	<field name="html_h5" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="html_h6" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="html_content" type="text" indexed="true" stored="true" multiValued="true"/>	
-	<field name="freetext" type="text" indexed="true" stored="false" multiValued="true"/>
+	<field name="freetext" type="freetext" indexed="true" stored="false" multiValued="true"/>
 	<field name="title" type="text" indexed="true" stored="true" multiValued="true"/>	
 	<field name="se" type="text" indexed="true" stored="true" multiValued="true"/>
               <!--artikelbasen - praksisregler -->
@@ -217,17 +241,17 @@
               <!--artikelbasen - praksisregler -->
 	<field name="sf" type="text" indexed="true" stored="true" multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="lmo" type="text_general" indexed="true" stored="true"/>
+	<field name="lmo" type="keyword" indexed="true" stored="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="lvx" type="text_general" indexed="true" stored="true"/>
+	<field name="lvx" type="keyword" indexed="true" stored="true"/>
               <!--artikelbasen - praksisregler -->
 	<field name="vp" type="text" indexed="true" stored="true" multiValued="true"/>
               <!--Hvorfor har vi defineret dette felt "text"? -->
               <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>	
 	<field name="main_title" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="peri" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="lti" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="lperi" type="text_general" indexed="true" stored="true" multiValued="true"/>	
+	<field name="lti" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="lperi" type="keyword" indexed="true" stored="true" multiValued="true"/>	
 	<field name="class_other" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="ddc_kw" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="dk" type="text" indexed="true" stored="true" multiValued="true"/>
@@ -239,7 +263,7 @@
 	<field name="author_person" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="au_other" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="author_corporation" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="lma_long" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lma_long" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="ma_short" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="issn" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -248,85 +272,84 @@
 	<field name="id" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="fmbl" type="text_general" indexed="true" stored="true" multiValued="true"/>
 	<field name="fubl" type="tint" indexed="true" stored="true" multiValued="true"/>
-	<field name="mesh" type="text_general" indexed="true" stored="true"/>
-	<field name="su_corp" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="su_lc" type="text_general" indexed="true" stored="true" />
-	<field name="su_lc_sol" type="text_general" indexed="true" stored="true" />
-	<field name="su_pe" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_ser_sol" type="text_general" indexed="true" stored="true" multiValued="true" />
-	<field name="lsu_ulrichs" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="lsu_ulrichs_hier" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="su_dk" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="led" type="text_general" indexed="true" stored="true"/>
-	<field name="lsu_oai" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="lsubject" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="mesh" type="keyword" indexed="true" stored="true"/>
+	<field name="su_corp" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="su_lc" type="keyword" indexed="true" stored="true" />	
+	<field name="su_pe" type="keyword" indexed="true" stored="true"/>
+	<field name="lsu_ser_sol" type="keyword" indexed="true" stored="true" multiValued="true" />
+	<field name="lsu_ulrichs" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="lsu_ulrichs_hier" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="su_dk" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="led" type="keyword" indexed="true" stored="true"/>
+	<field name="lsu_oai" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="lsubject" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_dk5" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_serial_solutions" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_ulrichs" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_controlled" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="subject_other" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="lcl_csa" type="text_general" indexed="true" stored="true"/>
-	<field name="lddc" type="text_general" indexed="true" stored="true"/>
-	<field name="lcl_all" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="ldbk" type="text_general" indexed="true" stored="true"/>
-	<field name="ldk5" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lcl_csa" type="keyword" indexed="true" stored="true"/>
+	<field name="lddc" type="keyword" indexed="true" stored="true"/>
+	<field name="lcl_all" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="ldbk" type="keyword" indexed="true" stored="true"/>
+	<field name="ldk5" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="lfn" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="linst" type="text_general" indexed="true" stored="true"/>
-	<field name="lkl" type="text_general" indexed="true" stored="true"/>
-	<field name="llcc" type="text_general" indexed="true" stored="true"/>
-	<field name="lnlm" type="text_general" indexed="true" stored="true"/>
-	<field name="ludk" type="text_general" indexed="true" stored="true"/>
-	<field name="cluster" type="text_general" indexed="true" stored="true"/>
-	<field name="lso" type="text_general" indexed="true" stored="true"/>
+	<field name="linst" type="keyword" indexed="true" stored="true"/>
+	<field name="lkl" type="keyword" indexed="true" stored="true"/>
+	<field name="llcc" type="keyword" indexed="true" stored="true"/>
+	<field name="lnlm" type="keyword" indexed="true" stored="true"/>
+	<field name="ludk" type="keyword" indexed="true" stored="true"/>
+	<field name="cluster" type="keyword" indexed="true" stored="true"/>
+	<field name="lso" type="keyword" indexed="true" stored="true"/>
 	<field name="lvp" type="text_general" indexed="true" stored="true"/>
 	<field name="author_descr" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="barcode" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="barcode_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="barcode_normalised" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="call" type="text" indexed="true" stored="true"/>
 	<field name="collection" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="collection_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="collection_normalised" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="country" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="nv" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="item_status" type="text" indexed="true" stored="true"/>
 	<field name="itype" type="text" indexed="true" stored="true"/>
 	<field name="item_mat" type="text" indexed="true" stored="true"/>
-	<field name="l_call" type="text_general" indexed="true" stored="true"/>
+	<field name="l_call" type="keyword" indexed="true" stored="true"/>
 	<field name="location" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="location_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="location_normalised" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="ma_long" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="op" type="text" indexed="true" stored="true"/>
 	<field name="original_language" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="other" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="place" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="series_normalised" type="text_general" indexed="true" stored="true"/>
+	<field name="series_normalised" type="keyword" indexed="true" stored="true"/>
 	<field name="ww" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="ip" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="lip" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="commercials_subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="author_normalised" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="llfo" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lip" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="commercials_subject" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="author_normalised" type="keyword" indexed="true" stored="true" multiValued="true"/>
+	<field name="llfo" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="format" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="lang" type="text" indexed="true" stored="true" multiValued="true"/>
-	<field name="llang" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="llang" type="keyword" indexed="true" stored="true" multiValued="true"/>
 	<field name="no" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="openUrl" type="text_general" indexed="true" stored="true"/>
 	<field name="publ" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="py" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="rt" type="text" indexed="true" stored="true" multiValued="true"/>
 	<field name="shortformat" type="text_general" indexed="true" stored="true"/>
-	<field name="sort_title" type="text_general" indexed="true" stored="true"/>
-	<field name="sort_year_asc" type="text_general" indexed="true" stored="true"/>
-	<field name="sort_year_desc" type="text_general" indexed="true" stored="true"/>
+	<field name="sort_title" type="keyword" indexed="true" stored="true"/>
+	<field name="sort_year_asc" type="keyword" indexed="true" stored="true"/>
+	<field name="sort_year_desc" type="keyword" indexed="true" stored="true"/>
 	<field name="year" type="tint" indexed="true" stored="true" multiValued="true"/>
-	<field name="ava" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="ava" type="keyword" indexed="true" stored="true" multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
-	<field name="tag" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="tag" type="keyword" indexed="true" stored="true" multiValued="true"/>
               <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
 	<field name="tss_status" type="text" indexed="true" stored="true" multiValued="true"/>
               <!--felt til own-koden som den fremgår af felt OWN i hol-posten -->
 	<field name="own" type="text" indexed="true" stored="true" multiValued="true"/>
               <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
- 	<field name="new" type="text_general" indexed="true" stored="true" multiValued="true"/>
+ 	<field name="new" type="keyword" indexed="true" stored="true" multiValued="true"/>
               <!-- Radio-tv -->
 	<field name="season_id" type="text_general" indexed="true" stored="true" required="false"/>
 	<field name="iso_date" type="date" indexed="true" stored="true" required="false"/>
