@@ -33,10 +33,13 @@ public class SummaKeywordAnalyzerTest extends AnalyzerTestCase {
                 new WhitespaceTokenizer(org.apache.lucene.util.Version.LUCENE_30, new StringReader(text)));
     }
 
-    public void testFoo() throws Exception {
+    
+    
+    // This is actually what the keyword rule does
+    public void testUnderscore() throws Exception {
         a = new SummaKeywordAnalyzer();
-        t = a.tokenStream("testField", new StringReader("foo"));
-        assertTokens(t, "foo");
+        t = a.tokenStream("testField", new StringReader("bar_foo"));
+        assertTokens(t, "bar foo");
 
         t = a.tokenStream("testField", new StringReader("foo"));
         assertTokens(t, "foo");
