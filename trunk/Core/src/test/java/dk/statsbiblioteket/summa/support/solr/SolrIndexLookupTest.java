@@ -176,6 +176,7 @@ public class SolrIndexLookupTest extends TestCase {
                     assertTrue("The response should contain the term '" + term + "'\n" + xml,
                                xml.contains(">" + term + "<"));
                 }
+                return;
             }
         }
         System.err.println(responses.toXML());
