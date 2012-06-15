@@ -61,7 +61,7 @@
       </analyzer>
     </fieldType>
 
-<!-- The order of the chacfilters is important. Filters futher down the chain must not replace already replaced tokens -->
+<!-- The order of the chacfilters is important. Filters further down the chain must not replace already replaced tokens -->
  <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>        
