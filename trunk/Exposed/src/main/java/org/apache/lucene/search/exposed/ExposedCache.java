@@ -10,8 +10,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
-public class ExposedCache {
+public class ExposedCache implements IndexReader.ReaderClosedListener {
 
+  private final Set<IndexReader> readers = new HashSet<IndexReader>();
   private final ArrayList<TermProvider> cache = new ArrayList<TermProvider>(5);
   private final List<PurgeCallback> remoteCaches =
       new ArrayList<PurgeCallback>();
@@ -46,6 +47,9 @@ public class ExposedCache {
       IndexReader reader, String groupName, List<String> fieldNames,
       Comparator<BytesRef> comparator,String comparatorID)
                                                             throws IOException {
+    if (readers.add(reader)) {
+      reader.addReaderClosedListener(this);
+    }
     ExposedRequest.Group groupRequest = FacetRequestGroup.createGroup(
         groupName, fieldNames, comparator, false, comparatorID);
 
@@ -106,6 +110,9 @@ public class ExposedCache {
   FieldTermProvider getProvider(
       IndexReader segmentReader, int docIDBase, ExposedRequest.Field request,
       boolean cacheTables, boolean cacheProvider) throws IOException {
+    if (readers.add(segmentReader)) {
+      segmentReader.addReaderClosedListener(this);
+    }
     for (TermProvider provider: cache) {
       if (provider instanceof FieldTermProvider) {
         if (provider.getRecursiveHash() == segmentReader.hashCode()
@@ -156,6 +163,11 @@ public class ExposedCache {
     }
   }
 
+  @Override
+  public void onClose(IndexReader reader) {
+    purge(reader);
+  }
+
   public static interface PurgeCallback {
     void purgeAllCaches();
     void purge(IndexReader r);
@@ -185,5 +197,4 @@ public class ExposedCache {
       provider.transitiveReleaseCaches(0, keepRoots);
     }
   }
-
 }
