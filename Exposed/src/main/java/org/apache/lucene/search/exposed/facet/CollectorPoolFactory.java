@@ -9,10 +9,8 @@ import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.PrivateKey;
+import java.util.*;
 
 /**
  * Constructs {@link CollectorPool}s based on {@link org.apache.lucene.search.exposed.facet.request.FacetRequest}s. As the
@@ -22,8 +20,11 @@ import java.util.Map;
  * automatically updated (aka cleared) when the index is reloaded and IndexCache
  * is notified about it.
  */
-public class CollectorPoolFactory implements ExposedCache.PurgeCallback {
+public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
+                                             IndexReader.ReaderClosedListener {
   private Map<String, CollectorPool> poolMap;
+  // Readers used by the pools
+  private Set<IndexReader> readers = new HashSet<IndexReader>();
   /**
    * The maximum number of filled collectors to cache for each CollectorPool.
    */
@@ -86,6 +87,9 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback {
    */
   public synchronized CollectorPool acquire(
       IndexReader reader, FacetRequest request) throws IOException {
+    if (readers.add(reader)) {
+      reader.addReaderClosedListener(this);
+    }
     final String key = request.getGroupKey();
     CollectorPool pool = poolMap.get(key);
     if (pool != null) {
@@ -151,5 +155,10 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback {
     }
     sw.append(")");
     return sw.toString();
+  }
+
+  @Override
+  public void onClose(IndexReader reader) {
+    purge(reader);
   }
 }

@@ -1218,6 +1218,95 @@ public class TestExposedFacets extends TestCase {
     System.out.println(sw);
   }
 
+  public static final String UPDATE_REQUEST =
+      "<?xml version='1.0' encoding='utf-8'?>\n" +
+          "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+          "  <query>even:true</query>\n" +
+          "  <groups>\n" +
+          "    <group name=\"id\" order=\"count\">\n" +
+          "      <fields>\n" +
+          "        <field name=\"id\" />\n" +
+          "      </fields>\n" +
+          "    </group>\n" +
+          "  </groups>\n" +
+          "</facetrequest>";
+  public void testIndexUpdate() throws Exception {
+    final int TERM_LENGTH = 20;
+    final int MIN_SEGMENTS = 2;
+    final List<String> FIELDS = Arrays.asList("a", "b");
+    final String ID4 = "00000004";
+
+    helper.createIndex(3, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
+    DirectoryReader reader =
+        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
+    {
+      FacetResponse response = performFaceting(
+        poolFactory, reader, "true", UPDATE_REQUEST);
+      assertFalse("The initial response should not contain the id " + ID4,
+                  response.toXML().contains(
+                    "<tag count=\"1\" term=\"" + ID4 + "\" />"));
+    }
+
+    helper.createIndex(5, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
+    DirectoryReader newReader = DirectoryReader.openIfChanged(reader);
+    if (newReader != null) {
+      reader.close();
+      reader = newReader;
+    }
+    {
+      FacetResponse response = performFaceting(
+        poolFactory, reader, "true", UPDATE_REQUEST);
+      assertTrue("The response after update should contain the id " + ID4,
+                 response.toXML().contains(
+                   "<tag count=\"1\" term=\"" + ID4 + "\" />"));
+    }
+    reader.close();
+  }
+
+  private FacetResponse performFaceting(
+    CollectorPoolFactory poolFactory, IndexReader reader, String query,
+    String requestXML) throws ParseException, IOException, XMLStreamException {
+    IndexSearcher searcher = new IndexSearcher(reader);
+    QueryParser qp = new QueryParser(
+      Version.LUCENE_31, ExposedHelper.EVEN, getAnalyzer());
+    Query q = qp.parse(query);
+    searcher.search(q, TopScoreDocCollector.create(10, false));
+    long preMem = getMem();
+    long facetStructureTime = System.currentTimeMillis();
+
+    FacetRequest request = FacetRequest.parseXML(requestXML);
+    CollectorPool collectorPool = poolFactory.acquire(reader, request);
+    facetStructureTime = System.currentTimeMillis() - facetStructureTime;
+
+    TagCollector collector;
+    FacetResponse response;
+    String sQuery = request.getQuery();
+    collector = collectorPool.acquire(sQuery);
+    long countStart = System.currentTimeMillis();
+    if (collector.getQuery() == null) { // Fresh collector
+      searcher.search(q, collector);
+//        collector.collectAllValid(reader);
+      long countTime = System.currentTimeMillis() - countStart;
+      collector.setCountTime(countTime);
+    }
+    response = collector.extractResult(request);
+    if (collector.getQuery() != null) { // Cached count
+      response.setCountingCached(true);
+    }
+    long totalTime = System.currentTimeMillis() - countStart;
+    response.setTotalTime(totalTime);
+/*      System.out.println("Collection #" + i + " for " + DOCCOUNT
+          + " documents in "
+          + getTime(System.currentTimeMillis()-countStart));*/
+    collectorPool.release(sQuery, collector);
+    System.out.println("Facet startup time = " + getTime(facetStructureTime));
+    System.out.println("Facet count time = "+ getTime(response.getTotalTime()));
+    System.out.println("Mem usage: preFacet=" + preMem
+        + " MB, postFacet=" + getMem() + " MB");
+    return response;
+  }
+
   private void testSortedSearch(IndexSearcher searcher, String field, Query q,
                                 String sQuery, Locale locale,
                                 StringWriter result) throws IOException {
