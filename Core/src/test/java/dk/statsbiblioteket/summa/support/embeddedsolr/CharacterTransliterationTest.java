@@ -40,7 +40,6 @@ public class CharacterTransliterationTest {
 		QueryResponse response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 
-		SolrServerUnitTestUtil.indexFiles(files);
 		query = new SolrQuery("esszph");
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
