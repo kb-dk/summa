@@ -28,84 +28,62 @@
 
 
 <fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="false" multiValued="true">
-    <analyzer type="index">
+    <analyzer>
        <tokenizer class="solr.StandardTokenizerFactory"/>
          <filter class="solr.LowerCaseFilterFactory"/>
          <filter class="solr.StandardFilterFactory"/>
          <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
-    </analyzer>
-    <analyzer type="query">
-         <tokenizer class="solr.StandardTokenizerFactory"/>
-         <filter class="solr.LowerCaseFilterFactory"/>         
-         <filter class="solr.StandardFilterFactory"/>
-         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
-   </analyzer>
+    </analyzer>    
 </fieldType>
 
     <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
-      <analyzer type="index">
+      <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
         <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>               
         <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>    
-        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>
+      </analyzer>      
     </fieldType>
 
+<!-- Summa field: KeyWordAnalyzer, Field.Index.NOT_ANALYZED,,Field.Store.YES,Field.TermVector.NO -->
+<!-- Used by recordID and recordBase -->
+      <fieldType name="key" class="solr.StrField" indexed="true" stored="true" multiValued="false" required="true" termVectors="false"/>
+               
 
 <!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
+ <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
+
+<!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
 <!--NOTICE we still need to do a token concatenation -->
- <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
-      <analyzer type="index">
+ <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
+      <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>                
         <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
         <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                    
-        <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>        
-        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
-        <filter class="solr.LowerCaseFilterFactory"/>      
-      </analyzer>
+      </analyzer>  
    </fieldType>
   
  <!-- Summa field: SummaStandardAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
  <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
- <fieldType name="text" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
-      <analyzer type="index">
+ <fieldType name="text" class="solr.TextField" indexed="true" stored="false" termVectors="true">
+      <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>                
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>                             
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                    
-        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
-        <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>
     </fieldType>
   
  <!-- Summa field: FreeTextAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
  <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
- <fieldType name="freetext" class="solr.TextField" indexed="true" stored="false" positionIncrementGap="100">
-      <analyzer type="index">
+ <fieldType name="freetext" class="solr.TextField" indexed="true" stored="false" termVectors="true">
+      <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>        
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
@@ -114,25 +92,33 @@
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>                                   
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>            
-        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>
     </fieldType>
    
 
-    <fieldtype name="payloads" stored="false" indexed="true" class="solr.TextField" >
+   
+ 
+ <!-- Summa field: SummaStandardAnalyzer, Field.Index.NO,Field.Store.YES,Field.TermVector.NO -->
+ <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
+ <fieldType name="stored" class="solr.TextField" indexed="false" stored="true" termVectors="false">   
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <filter class="solr.DelimitedPayloadTokenFilterFactory" encoder="float"/>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                    
+        <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
+        <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
-    </fieldtype>
-
+    </fieldType>              
+              
+     <!-- Summa field: SummaNumberAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
+     <!-- LowerCaseFilter added for SOLR-->
+    <fieldType name="number" class="solr.TextField"  termVectors="false">
+      <analyzer>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <charFilter class="solr.MappingCharFilterFactory" mapping="number_transliterations.txt"/>
+        <filter class="solr.LowerCaseFilterFactory" />
+      </analyzer>
+    </fieldType>
+                             
     <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -145,15 +131,6 @@
         <tokenizer class="solr.PathHierarchyTokenizerFactory"/>
       </analyzer>
     </fieldType>
-
-    <fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField" />
-
-    <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
-
-    <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
-    <fieldtype name="geohash" class="solr.GeoHashField"/>
-
-    <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" />
              
     <!-- Danish -->
     <fieldType name="text_da" class="solr.TextField" positionIncrementGap="100">
@@ -198,11 +175,15 @@
              <!-- Fix of SOLR3422 -->
              <field name="_version_" type="long" indexed="true" stored="true"/>
          
+         
+             <field name="recordId" type="key"/>
+             <field name="recordBase" type="key"/>
+         
              <!-- Gruppe enrich -->
              <field name="enrich_editor" type="text"  multiValued="true"/>
-             <field name="enrich_isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_isbn" type="number" indexed="true" stored="true" multiValued="true"/>
              <field name="enrich_publisher" type="text"  multiValued="true"/>
-             <field name="enrich_publishdate" type="text_general" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_publishdate" type="number" indexed="true" stored="true" multiValued="true"/>
              <field name="enrich_title" type="text"  multiValued="true"/>
              <field name="enrich_head" type="text"  multiValued="true"/>
              <field name="enrich_freetext" type="text"  multiValued="true"/>
@@ -265,13 +246,13 @@
 	<field name="author_corporation" type="text"  multiValued="true"/>
 	<field name="lma_long" type="keyword"  multiValued="true"/>
 	<field name="ma_short" type="text"  multiValued="true"/>
-	<field name="isbn" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="issn" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="number" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="standard_number" type="text_general" indexed="true" stored="true" multiValued="true"/>	
-	<field name="id" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="fmbl" type="text_general" indexed="true" stored="true" multiValued="true"/>
-	<field name="fubl" type="tint" indexed="true" stored="true" multiValued="true"/>
+	<field name="isbn" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="issn" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="number" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="standard_number" type="number" indexed="true" stored="true" multiValued="true"/>	
+	<field name="id" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="fmbl" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="fubl" type="number" indexed="true" stored="true" multiValued="true"/>
 	<field name="mesh" type="keyword" />
 	<field name="su_corp" type="keyword"  multiValued="true"/>
 	<field name="su_lc" type="keyword"  />	
@@ -340,7 +321,7 @@
 	<field name="sort_title" type="keyword" />
 	<field name="sort_year_asc" type="keyword" />
 	<field name="sort_year_desc" type="keyword" />
-	<field name="year" type="tint" indexed="true" stored="true" multiValued="true"/>
+	<field name="year" type="number" indexed="true" stored="true" multiValued="true"/>
 	<field name="ava" type="keyword"  multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
 	<field name="tag" type="keyword"  multiValued="true"/>
@@ -350,15 +331,12 @@
 	<field name="own" type="text"  multiValued="true"/>
               <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
  	<field name="new" type="keyword"  multiValued="true"/>
-              <!-- Radio-tv -->
-	<field name="season_id" type="text_general" indexed="true" stored="true" required="false"/>
-	<field name="iso_date" type="date" indexed="true" stored="true" required="false"/>
-     <field name="iso_time" type="date" indexed="true" stored="true" required="false"/>
-     <field name="iso_dateTime" type="date" indexed="true" stored="true" required="false"/>
+              <!-- Radio-tv. Only fields of type verbatim -->
+	<field name="season_id" type="verbatim"/>
+	<field name="iso_date" type="verbatim"/>
+              <field name="iso_time" type="verbatim"/>
+              <field name="iso_dateTime" type="verbatim"/>
 
-     <!-- TODO: RecordID and recordBase are not text_general. This must be corrected to a non-tokenized type -->
-     <field name="recordId" type="text_general" indexed="true" stored="true" required="true"/>
-     <field name="recordBase" type="text_general" indexed="true" stored="true" required="true"/>
 
      <!--For DidYouMean -->
     <field name="summa_spell" type="textSpell"/>
