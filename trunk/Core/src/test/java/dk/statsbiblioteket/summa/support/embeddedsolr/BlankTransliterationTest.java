@@ -27,7 +27,7 @@ public class BlankTransliterationTest {
 	}
 
 	@Test
-	public void testVoidTransliteration() throws Exception {
+	public void testBlankTransliteration() throws Exception {
 
 		//the document contains "Thomas-Egense ¼" which is mapped to "Thomas Egense 1 4" 
 		String[] files = new String[]{
