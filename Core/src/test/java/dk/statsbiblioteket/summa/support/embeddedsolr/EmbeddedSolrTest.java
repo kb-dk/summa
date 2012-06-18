@@ -23,6 +23,7 @@ public class EmbeddedSolrTest{
     	SolrInputDocument document = new SolrInputDocument();
     
         document.addField("recordId","x5");
+        document.addField("recordBase","aleph");
         document.addField("author_main","mikis og henning");
         
        
