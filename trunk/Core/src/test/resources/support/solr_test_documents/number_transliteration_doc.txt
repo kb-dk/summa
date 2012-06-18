@@ -1,0 +1,10 @@
+<doc>
+    <field name="recordId">number_transliteration_test</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">number transliteration</field>
+    <field name="author_main">Thomas</field>
+    <field name="author_normalised">Thomas</field>
+    <field name="year">2012</field>
+    <field name="isbn">X978-3-16-148410-0</field>
+    <field name="location_normalised">Statsbiblioteket</field>
+</doc>
