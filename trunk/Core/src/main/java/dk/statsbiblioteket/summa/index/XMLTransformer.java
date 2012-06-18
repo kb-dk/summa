@@ -36,6 +36,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -270,6 +271,8 @@ public class XMLTransformer extends GraphFilter<Object> {
             try {
                 // getLocalTransformer would in principle be better, but is it really safe in our context?
                 transformer = XSLT.createTransformer(xsltLocation);
+                // We want our extensions to work
+                transformer.setParameter(XMLConstants.FEATURE_SECURE_PROCESSING, false);
                 if (!conf.valueExists(CONF_ENTITY_RESOLVER)) {
                     log.debug("No entity-resolver specified. Using basic transformation calls");
                     return;
