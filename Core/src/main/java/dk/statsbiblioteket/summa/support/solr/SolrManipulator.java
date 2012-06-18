@@ -192,7 +192,8 @@ public class SolrManipulator implements IndexManipulator {
             if (code != 200) {
                 String message = String.format(
                     "Unable to index document '%s' into Solr at %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
-                    payload.getId(), UPDATE, code, trim(command, 100), getResponse(conn));
+                    payload == null ? "null Payload" : payload.getId(), UPDATE, code, trim(command, 100),
+                    getResponse(conn));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, payload);
                 throw new IOException(message);
             }
