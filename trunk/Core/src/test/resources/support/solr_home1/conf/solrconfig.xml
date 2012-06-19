@@ -904,6 +904,23 @@
      <str name="facet.field">lperi</str>
      <str name="facet.field">ava</str>
      
+     <!--Virtual fields(summa alias/alias-groups) for query -->
+     <str name="f.titel.qf">title</str>
+     <str name="f.ti.qf">title se main_title</str>
+     <str name="f.cl.qf">class_other ddc_kw dk inst kl lcc_kw nlm_kw</str>
+     <str name="f.au.qf">author_main author_person au_other author_corporation</str>
+     <str name="f.fo.qf">author_main author_person au_other author_corporation</str>
+     <str name="f.lma.qf">lma_long</str>
+     <str name="f.ma.qf">ma_short</str>
+     <str name="f.numbers.qf">isbn issn number standard_number id ww fmlb fubl</str>
+     <str name="f.nr.qf">isbn issn number standard_number id ww fmlb fubl</str>
+     <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+     <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+     <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled subject_other</str>
+     <str name="f.em.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled subject_other</str>
+     <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
+     <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
+     <str name="f.enrich_header.qf">enrich_editor enrich_isbn enrich_publisher enrich_publishdate enrich_title enrich_head enrich_freetext</str>         
    </lst>
    <arr name="last-components">
       <str>spellcheck</str>

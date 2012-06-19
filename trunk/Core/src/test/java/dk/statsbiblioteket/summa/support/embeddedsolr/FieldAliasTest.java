@@ -35,7 +35,7 @@ public class FieldAliasTest {
 				"support/solr_test_documents/field_aliastest_doc.txt",		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-		
+	//Thread.sleep(1000000000L);	
 					
 		SolrQuery query = new SolrQuery("title:\"Sjov med fraktaler\""); //original field
 		QueryResponse response = solrServer.query(query);
@@ -45,16 +45,32 @@ public class FieldAliasTest {
          query = new SolrQuery("location_normalised:\"Sjov med fraktaler\""); //existing field, but not with the content
          response = solrServer.query(query);
 		 assertEquals(0L, response.getResults().getNumFound());
-
+				
+		query = new SolrQuery("titel:\"Sjov med fraktaler\""); //alias field		
+		response = solrServer.query(query);
+		assertEquals(1L, response.getResults().getNumFound());
+		
+		//alias groups. html_header -> (html_h1,html_2)
+		//html_h1=>Recurssion
+		//html_h2=>Gentagelse
 		
 		
-		query = new SolrQuery("titel:\"Sjov med fraktaler\""); //alias field
+		query = new SolrQuery("html_header:Recurssion"); //alias field		
+		response = solrServer.query(query);
+		assertEquals(1L, response.getResults().getNumFound());
 		
+		query = new SolrQuery("html_header:Gentagelse"); //alias field		
+		response = solrServer.query(query);
+		assertEquals(1L, response.getResults().getNumFound());
+		
+		
+		query = new SolrQuery("html_h1:recurssion"); //field		
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
 		//FAILS!
 		//TODO! Fix default SOLR behaviour. Non-existing fields causes SOLR to go into "parse-error" mode and make a fixed query
+		//Only happens if the non-existing field is given a phrase-query
 		query = new SolrQuery("xtitel:\"Sjov med fraktaler\""); //non existing field, also no alias for it.
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound()); //zero results
