@@ -1,51 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <schema name="example" version="1.5">
   <types>
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
-    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
-    <fieldtype name="binary" class="solr.BinaryField"/>
-    <fieldType name="int" class="solr.TrieIntField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="float" class="solr.TrieFloatField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="tint" class="solr.TrieIntField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tfloat" class="solr.TrieFloatField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tlong" class="solr.TrieLongField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tdouble" class="solr.TrieDoubleField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="tdate" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
-    <fieldType name="pint" class="solr.IntField"/>
-    <fieldType name="plong" class="solr.LongField"/>
-    <fieldType name="pfloat" class="solr.FloatField"/>
-    <fieldType name="pdouble" class="solr.DoubleField"/>
-    <fieldType name="pdate" class="solr.DateField" sortMissingLast="true"/>
-    <fieldType name="random" class="solr.RandomSortField" indexed="true" />
-    <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
+  
+   <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
+   <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+  
+   <fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="false" multiValued="true">
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-      </analyzer>
-    </fieldType>
-
-
-<fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" indexed="true" stored="false" multiValued="true">
-    <analyzer>
-       <tokenizer class="solr.StandardTokenizerFactory"/>
-         <filter class="solr.LowerCaseFilterFactory"/>
-         <filter class="solr.StandardFilterFactory"/>
-         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
-    </analyzer>    
-</fieldType>
-
-    <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
-      <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
-        <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>        
-        <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>               
-        <filter class="solr.LowerCaseFilterFactory"/>
-      </analyzer>      
-    </fieldType>
+         <tokenizer class="solr.StandardTokenizerFactory"/>
+           <filter class="solr.LowerCaseFilterFactory"/>
+           <filter class="solr.StandardFilterFactory"/>
+           <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>    
+  </fieldType>
 
 <!-- Summa field: KeyWordAnalyzer, Field.Index.NOT_ANALYZED,,Field.Store.YES,Field.TermVector.NO -->
 <!-- Used by recordID and recordBase -->
@@ -56,10 +23,10 @@
  <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
 
 <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
-<!--NOTICE we still need to do a token concatenation -->
  <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
       <analyzer>
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>                
+        <tokenizer class="solr.KeywordTokenizerFactory"/>                
+        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement="\s"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
@@ -111,7 +78,7 @@
               
      <!-- Summa field: SummaNumberAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
      <!-- LowerCaseFilter added for SOLR-->
-    <fieldType name="number" class="solr.TextField"  termVectors="false">
+    <fieldType name="number" class="solr.TextField" indexed="true" stored="true" termVectors="false">
       <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="number_transliterations.txt"/>
@@ -181,9 +148,9 @@
          
              <!-- Gruppe enrich -->
              <field name="enrich_editor" type="text"  multiValued="true"/>
-             <field name="enrich_isbn" type="number" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_isbn" type="number" multiValued="true"/>
              <field name="enrich_publisher" type="text"  multiValued="true"/>
-             <field name="enrich_publishdate" type="number" indexed="true" stored="true" multiValued="true"/>
+             <field name="enrich_publishdate" type="number" multiValued="true"/>
              <field name="enrich_title" type="text"  multiValued="true"/>
              <field name="enrich_head" type="text"  multiValued="true"/>
              <field name="enrich_freetext" type="text"  multiValued="true"/>
@@ -198,6 +165,7 @@
 	<field name="html_content" type="text"  multiValued="true"/>	
 	<field name="freetext" type="freetext"  multiValued="true"/>
 	<field name="title" type="text"  multiValued="true"/>	
+		
 	<field name="se" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
 	<field name="aj" type="text"  multiValued="true"/>
@@ -227,8 +195,8 @@
 	<field name="lvx" type="keyword" />
               <!--artikelbasen - praksisregler -->
 	<field name="vp" type="text"  multiValued="true"/>
-              <!--Hvorfor har vi defineret dette felt "text"? -->
-              <field name="text" type="text_general" indexed="true" stored="true" multiValued="true"/>	
+              <!--Hvorfor har vi defineret dette felt "text"= SOlr fejler hvis det ikke er her-->
+              <field name="text" type="text" multiValued="true"/>	
 	<field name="main_title" type="text"  multiValued="true"/>
 	<field name="peri" type="text"  multiValued="true"/>
 	<field name="lti" type="keyword"  multiValued="true"/>
@@ -246,13 +214,13 @@
 	<field name="author_corporation" type="text"  multiValued="true"/>
 	<field name="lma_long" type="keyword"  multiValued="true"/>
 	<field name="ma_short" type="text"  multiValued="true"/>
-	<field name="isbn" type="number" indexed="true" stored="true" multiValued="true"/>
-	<field name="issn" type="number" indexed="true" stored="true" multiValued="true"/>
-	<field name="number" type="number" indexed="true" stored="true" multiValued="true"/>
-	<field name="standard_number" type="number" indexed="true" stored="true" multiValued="true"/>	
-	<field name="id" type="number" indexed="true" stored="true" multiValued="true"/>
-	<field name="fmbl" type="number" indexed="true" stored="true" multiValued="true"/>
-	<field name="fubl" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="isbn" type="number"  multiValued="true"/>
+	<field name="issn" type="number"  multiValued="true"/>
+	<field name="number" type="number" multiValued="true"/>
+	<field name="standard_number" type="number" multiValued="true"/>	
+	<field name="id" type="number" multiValued="true"/>
+	<field name="fmbl" type="number" multiValued="true"/>
+	<field name="fubl" type="number" multiValued="true"/>
 	<field name="mesh" type="keyword" />
 	<field name="su_corp" type="keyword"  multiValued="true"/>
 	<field name="su_lc" type="keyword"  />	
@@ -274,7 +242,7 @@
 	<field name="lcl_all" type="keyword"  multiValued="true"/>
 	<field name="ldbk" type="keyword" />
 	<field name="ldk5" type="keyword"  multiValued="true"/>
-	<field name="lfn" type="text_general" indexed="true" stored="true" multiValued="true"/>
+	<field name="lfn" type="keyword" multiValued="true"/>
 	<field name="linst" type="keyword" />
 	<field name="lkl" type="keyword" />
 	<field name="llcc" type="keyword" />
@@ -282,7 +250,6 @@
 	<field name="ludk" type="keyword" />
 	<field name="cluster" type="keyword" />
 	<field name="lso" type="keyword" />
-	<field name="lvp" type="text_general" indexed="true" stored="true"/>
 	<field name="author_descr" type="text"  multiValued="true"/>
 	<field name="barcode" type="text"  multiValued="true"/>
 	<field name="barcode_normalised" type="keyword"  multiValued="true"/>
@@ -313,15 +280,15 @@
 	<field name="lang" type="text"  multiValued="true"/>
 	<field name="llang" type="keyword"  multiValued="true"/>
 	<field name="no" type="text"  multiValued="true"/>
-	<field name="openUrl" type="text_general" indexed="true" stored="true"/>
+	<field name="openUrl" type="stored" />
 	<field name="publ" type="text"  multiValued="true"/>
 	<field name="py" type="text"  multiValued="true"/>
 	<field name="rt" type="text"  multiValued="true"/>
-	<field name="shortformat" type="text_general" indexed="true" stored="true"/>
+	<field name="shortformat" type="stored"/>
 	<field name="sort_title" type="keyword" />
 	<field name="sort_year_asc" type="keyword" />
 	<field name="sort_year_desc" type="keyword" />
-	<field name="year" type="number" indexed="true" stored="true" multiValued="true"/>
+	<field name="year" type="number" multiValued="true"/>
 	<field name="ava" type="keyword"  multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
 	<field name="tag" type="keyword"  multiValued="true"/>
