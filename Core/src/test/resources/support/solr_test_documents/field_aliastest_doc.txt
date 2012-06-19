@@ -1,0 +1,9 @@
+<doc>
+    <field name="recordId">field_alias_test</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">Sjov med fraktaler</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Thomas Egense</field>
+    <field name="year">2012</field>
+    <field name="location_normalised">Matematik</field>
+</doc>
