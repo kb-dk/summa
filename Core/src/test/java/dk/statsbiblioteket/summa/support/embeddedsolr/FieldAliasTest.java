@@ -35,7 +35,7 @@ public class FieldAliasTest {
 				"support/solr_test_documents/field_aliastest_doc.txt",		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-	//Thread.sleep(1000000000L);	
+     	//Thread.sleep(1000000000L);	
 					
 		SolrQuery query = new SolrQuery("title:\"Sjov med fraktaler\""); //original field
 		QueryResponse response = solrServer.query(query);
