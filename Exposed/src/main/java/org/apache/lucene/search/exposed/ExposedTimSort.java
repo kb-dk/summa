@@ -16,6 +16,8 @@
 
 package org.apache.lucene.search.exposed;
 
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+
 import java.util.Arrays;
 
 /**
@@ -82,7 +84,7 @@ public class ExposedTimSort {
     /**
      * The comparator for this sort.
      */
-    private final ExposedComparators.OrdinalComparator c;
+    private final ComparatorFactory.OrdinalComparator c;
 
     /**
      * When we get into galloping mode, we stay there until both runs win less
@@ -131,7 +133,7 @@ public class ExposedTimSort {
      * @param a the array to be sorted
      * @param c the comparator to determine the order of the sort
      */
-    private ExposedTimSort(int[] a, ExposedComparators.OrdinalComparator c) {
+    private ExposedTimSort(int[] a, ComparatorFactory.OrdinalComparator c) {
         this.a = a;
         this.c = c;
 
@@ -163,11 +165,11 @@ public class ExposedTimSort {
      * of the public method with the same signature in java.util.Arrays.
      */
 
-    public static void sort(int[] a, ExposedComparators.OrdinalComparator c) {
+    public static void sort(int[] a, ComparatorFactory.OrdinalComparator c) {
         sort(a, 0, a.length, c);
     }
 
-    public static void sort(int[] a, int lo, int hi, ExposedComparators.OrdinalComparator c) {
+    public static void sort(int[] a, int lo, int hi, ComparatorFactory.OrdinalComparator c) {
         if (c == null) {
             Arrays.sort(a, lo, hi);
             return;
@@ -238,7 +240,7 @@ public class ExposedTimSort {
      */
     @SuppressWarnings("fallthrough")
     private static void binarySort(int[] a, int lo, int hi, int start,
-                                       ExposedComparators.OrdinalComparator c) {
+                                       ComparatorFactory.OrdinalComparator c) {
         assert lo <= start && start <= hi;
         if (start == lo)
             start++;
@@ -308,7 +310,7 @@ public class ExposedTimSort {
      *          the specified array
      */
     private static  int countRunAndMakeAscending(int[] a, int lo, int hi,
-                                                    ExposedComparators.OrdinalComparator c) {
+                                                    ComparatorFactory.OrdinalComparator c) {
         assert lo < hi;
         int runHi = lo + 1;
         if (runHi == hi)
@@ -498,7 +500,7 @@ public class ExposedTimSort {
      *    should follow it.
      */
     private static int gallopLeft(int key, int[] a, int base, int len, int hint,
-                                      ExposedComparators.OrdinalComparator c) {
+                                      ComparatorFactory.OrdinalComparator c) {
         assert len > 0 && hint >= 0 && hint < len;
         int lastOfs = 0;
         int ofs = 1;
@@ -568,7 +570,7 @@ public class ExposedTimSort {
      * @return the int k,  0 <= k <= n such that a[b + k - 1] <= key < a[b + k]
      */
     private static int gallopRight(int key, int[] a, int base, int len,
-                                       int hint, ExposedComparators.OrdinalComparator c) {
+                                       int hint, ComparatorFactory.OrdinalComparator c) {
         assert len > 0 && hint >= 0 && hint < len;
 
         int ofs = 1;
@@ -665,7 +667,7 @@ public class ExposedTimSort {
             return;
         }
 
-        ExposedComparators.OrdinalComparator c = this.c;  // Use local variable for performance
+        ComparatorFactory.OrdinalComparator c = this.c;  // Use local variable for performance
         int minGallop = this.minGallop;    //  "    "       "     "      "
     outer:
         while (true) {
@@ -784,7 +786,7 @@ public class ExposedTimSort {
             return;
         }
 
-        ExposedComparators.OrdinalComparator c = this.c;  // Use local variable for performance
+        ComparatorFactory.OrdinalComparator c = this.c;  // Use local variable for performance
         int minGallop = this.minGallop;    //  "    "       "     "      "
     outer:
         while (true) {

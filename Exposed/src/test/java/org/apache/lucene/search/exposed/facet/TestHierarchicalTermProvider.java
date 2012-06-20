@@ -6,8 +6,11 @@ import junit.framework.TestSuite;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.exposed.*;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.ExposedHelper;
+import org.apache.lucene.search.exposed.ExposedIOFactory;
+import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.File;
@@ -69,8 +72,8 @@ public class TestHierarchicalTermProvider extends TestCase {
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     TermProvider basic = ExposedCache.getInstance().getProvider(
-        reader, "myGroup", Arrays.asList(HIERARCHICAL), null,
-        ExposedRequest.LUCENE_ORDER);
+        reader, "myGroup", Arrays.asList(HIERARCHICAL),
+        new NamedNaturalComparator());
     HierarchicalTermProvider augmented =
         new HierarchicalTermProvider(basic, REGEXP);
     PackedInts.Reader aOrder = augmented.getOrderedOrdinals();
@@ -95,8 +98,8 @@ public class TestHierarchicalTermProvider extends TestCase {
         ExposedCache.getInstance().purgeAllCaches();
         long basicTime = -System.currentTimeMillis();
         TermProvider basic = ExposedCache.getInstance().getProvider(
-            reader, "myGroup", Arrays.asList(HIERARCHICAL), null,
-            ExposedRequest.LUCENE_ORDER);
+            reader, "myGroup", Arrays.asList(HIERARCHICAL),
+            new NamedNaturalComparator());
         basicTime += System.currentTimeMillis();
         long buildTime = -System.currentTimeMillis();
         HierarchicalTermProvider augmented =
@@ -118,7 +121,8 @@ public class TestHierarchicalTermProvider extends TestCase {
     System.out.println("Dumping a maximum of " + tags + " from field " + field);
     int count = 0;
     IndexReader[] readers = reader instanceof AtomicReader ?
-        new IndexReader[]{reader} : ((CompositeReader)reader).getSequentialSubReaders();
+        new IndexReader[]{reader} :
+        ((CompositeReader)reader).getSequentialSubReaders();
     DocsEnum docsEnum = null;
     for (IndexReader inner: readers) {
         AtomicReader r = (AtomicReader)inner;

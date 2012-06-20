@@ -1,14 +1,12 @@
 package org.apache.lucene.search.exposed.facet;
 
-import org.apache.lucene.search.exposed.ExposedComparators;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.util.BytesRef;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import com.ibm.icu.text.Collator;
 import java.util.Comparator;
-import java.util.Locale;
 
 public class ParseHelper {
   public static int getInteger(String request, String attribute, String value)
@@ -34,10 +32,6 @@ public class ParseHelper {
   }
 
   public static Comparator<BytesRef> createComparator(String locale) {
-    if (locale == null || "".equals(locale)) {
-      return ExposedComparators.collatorToBytesRef(null);
-    }
-    return ExposedComparators.collatorToBytesRef(
-        Collator.getInstance(new Locale(locale)));
+    return ComparatorFactory.create(locale);
   }
 }

@@ -33,8 +33,8 @@ import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.solr.exposed.ExposedIndexLookupParams;
 
 import javax.xml.stream.XMLInputFactory;
@@ -122,8 +122,8 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-        System.out.println("***");
-        System.out.println(solrResponse.replace(">", ">\n"));
+//        System.out.println("***");
+//        System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -240,7 +240,7 @@ public class SolrResponseBuilder implements Configurable {
                                          + "' in 'lst#fields' in 'lst#elookup''");
         }
         xml.next();
-        iterateElements(xml, "terms", "int", new XMLCallback() {
+        iterateElements(xml, "lst", "int", new XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 String term = (getAttribute(xml, "name", null));
@@ -293,7 +293,7 @@ public class SolrResponseBuilder implements Configurable {
                     PRE + ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE);
         lookupR = defaultIndexRequest.createRequest(local);
         String sort = request.getString(PRE + ExposedIndexLookupParams.ELOOKUP_SORT, null);
-        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_INDEX).equals(sort)) {
+        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_BYINDEX).equals(sort)) {
             lookupR.setLocale(new Locale(sort));
         }
         return lookupR;

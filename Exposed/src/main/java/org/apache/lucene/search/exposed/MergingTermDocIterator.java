@@ -1,10 +1,12 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
+import com.ibm.icu.text.RawCollationKey;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
-import com.ibm.icu.text.RawCollationKey;
-import com.ibm.icu.text.Collator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -64,9 +66,8 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
 
   /**
    * If this is true and the given comparator is a
-   * {@link ExposedComparators.BytesRefWrappedCollator}, sorting is optimized
-   * by using CollatorKeys. This requires ~1-3 MB extra memory but doubles the
-   * chunk-sort speed.
+   * {@link org.apache.lucene.search.exposed.compare.NamedCollatorComparator}, sorting is optimized by CollatorKeys.
+   * This requires ~1-3 MB extra memory but doubles the chunk-sort speed.
    */
   public static boolean optimizeCollator = true;
 
@@ -81,15 +82,15 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
     backingTuples = new ExposedTuple[sources.size()];
 
     collator = optimizeCollator &&
-        comparator instanceof ExposedComparators.BytesRefWrappedCollator
-        ? ((ExposedComparators.BytesRefWrappedCollator)comparator).getCollator()
-        : null;
+        comparator instanceof NamedCollatorComparator ?
+               ((NamedCollatorComparator)comparator).getCollator()
+                                                      : null;
     backingKeys = new RawCollationKey[sources.size()];
 
-    ExposedComparators.OrdinalComparator wrappedComparator =
+    ComparatorFactory.OrdinalComparator wrappedComparator =
         collator == null ?
-        ExposedComparators.wrapBacking(backingTuples, comparator)
-        : ExposedComparators.wrapBacking(backingKeys);
+        ComparatorFactory.wrapBacking(backingTuples, comparator)
+        : ComparatorFactory.wrapBacking(backingKeys);
     pq = new ExposedPriorityQueue(wrappedComparator, sources.size());
     int index = 0;
     for (TermProvider source: sources) {

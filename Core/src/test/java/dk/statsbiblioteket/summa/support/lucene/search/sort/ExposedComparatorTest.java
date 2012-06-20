@@ -1,7 +1,6 @@
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import com.ibm.icu.text.Collator;
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -11,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -88,7 +88,7 @@ public class ExposedComparatorTest extends TestCase {
             });
         String[] expected = Arrays.copyOf(TERMS, TERMS.length);
         final Collator standardCollator =
-            CollatorFactory.createCollator(new Locale("da"));
+          new NamedCollatorComparator(new Locale("da")).getCollator();
         Arrays.sort(expected, new Comparator<String>(){
             @Override
             public int compare(String o1, String o2) {

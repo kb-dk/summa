@@ -3,8 +3,8 @@ package org.apache.lucene.search.exposed;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -40,18 +40,17 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   public TermProvider getProvider(
       IndexReader reader, ExposedRequest.Group group) throws IOException {
     return getProvider(reader, group.getName(), group.getFieldNames(), 
-        group.getComparator(), group.getComparatorID());
+        group.getComparator());
   }
 
   public TermProvider getProvider(
       IndexReader reader, String groupName, List<String> fieldNames,
-      Comparator<BytesRef> comparator,String comparatorID)
-                                                            throws IOException {
+      NamedComparator comparator) throws IOException {
     if (readers.add(reader)) {
       reader.addReaderClosedListener(this);
     }
     ExposedRequest.Group groupRequest = FacetRequestGroup.createGroup(
-        groupName, fieldNames, comparator, false, comparatorID);
+        groupName, fieldNames, comparator);
 
     for (TermProvider provider: cache) {
       if (provider instanceof GroupTermProvider
@@ -66,7 +65,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
 
      // No cached value. Modify the comparator IDs to LUCENE-order if they were
     // stated as free. Aw we create the query ourselves, this is okay.
-    groupRequest.normalizeComparatorIDs();
+    //groupRequest.normalizeComparatorIDs();
 
     boolean isSingle = true;
     IndexReader[] readers;

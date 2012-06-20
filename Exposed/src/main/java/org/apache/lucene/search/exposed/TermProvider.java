@@ -2,11 +2,11 @@ package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 
 /**
@@ -67,13 +67,7 @@ public interface TermProvider {
    * @return a comparator used for sorting. If this is null, natural BytesRef
    * order is to be used.
    */
-  Comparator<BytesRef> getComparator();
-
-  /**
-   * @return an ID identifying the comparator. If natural BytesRef order is to
-   * be used, the ID should be {@link ExposedRequest#LUCENE_ORDER}.
-   */
-  String getComparatorID();
+  NamedComparator getComparator();
 
   /**
    * @return a short name or description of this provider.

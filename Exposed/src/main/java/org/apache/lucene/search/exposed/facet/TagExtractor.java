@@ -1,9 +1,9 @@
 package org.apache.lucene.search.exposed.facet;
 
-import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedPriorityQueue;
 import org.apache.lucene.search.exposed.TermProvider;
-import org.apache.lucene.search.exposed.facet.request.FacetRequest;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.search.exposed.facet.request.SubtagsConstraints;
 import org.apache.lucene.util.BytesRef;
@@ -50,12 +50,12 @@ public class TagExtractor {
               map, tagCounts, startPos, endPos));
     }
 
-    FacetRequest.GROUP_ORDER order = requestGroup.getOrder();
-    if (FacetRequest.GROUP_ORDER.count == order) {
+    NamedComparator.ORDER order = requestGroup.getOrder();
+    if (NamedComparator.ORDER.count == order) {
       return extractCountResult(
           requestGroup, map, tagCounts, startPos, endPos);
-    } else if (FacetRequest.GROUP_ORDER.index == order
-        || FacetRequest.GROUP_ORDER.locale == order) {
+    } else if (NamedComparator.ORDER.index == order
+        || NamedComparator.ORDER.locale == order) {
       return extractOrderResult(
           groupID, map, tagCounts, startPos, endPos);
     }
@@ -288,7 +288,7 @@ public class TagExtractor {
         endTermPos- startTermPos, requestGroup.getMaxTags());
     final int minCount = requestGroup.getMinCount();
     ExposedPriorityQueue pq = new ExposedPriorityQueue(
-        new ExposedComparators.IndirectComparator(tagCounts), maxSize);
+        new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
     long totalRefs = 0;
     long totalValidTags = 0;
     for (int termPos = startTermPos ; termPos < endTermPos ; termPos++) {

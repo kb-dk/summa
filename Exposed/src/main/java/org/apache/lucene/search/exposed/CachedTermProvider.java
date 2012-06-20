@@ -2,11 +2,11 @@ package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 
 /**
@@ -76,6 +76,7 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
         + source.getDesignation() + "))";
   }
 
+  @Override
   public void transitiveReleaseCaches(int level, boolean keepRoot) {
     clear();
     source.transitiveReleaseCaches(level, keepRoot);
@@ -83,74 +84,88 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
 
   /* Straight delegations */
 
+  @Override
   public int getNearestTermIndirect(BytesRef key) throws IOException {
     return source.getNearestTermIndirect(key);
   }
 
-  public int getNearestTermIndirect(BytesRef key, int startTermPos, int endTermPos) throws IOException {
+  @Override
+  public int getNearestTermIndirect(
+    BytesRef key, int startTermPos, int endTermPos) throws IOException {
     return source.getNearestTermIndirect(key, startTermPos, endTermPos);
   }
 
-  public Comparator<BytesRef> getComparator() {
+  @Override
+  public NamedComparator getComparator() {
     return source.getComparator();
   }
 
-  public String getComparatorID() {
-    return source.getComparatorID();
-  }
-
+  @Override
   public String getField(long ordinal) throws IOException {
     return source.getField(ordinal);
   }
 
+  @Override
   public String getOrderedField(long indirect) throws IOException {
     return source.getOrderedField(indirect);
   }
 
+  @Override
   public BytesRef getOrderedTerm(long indirect) throws IOException {
     return source.getOrderedTerm(indirect);
   }
 
+  @Override
   public long getUniqueTermCount() throws IOException {
     return source.getUniqueTermCount();
   }
 
+  @Override
   public long getOrdinalTermCount() throws IOException {
     return source.getOrdinalTermCount();
   }
 
+  @Override
   public long getMaxDoc() {
     return source.getMaxDoc();
   }
 
+  @Override
   public IndexReader getReader() {
     return source.getReader();
   }
 
+  @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     return source.getDocsEnum(ordinal, reuse);
   }
 
+  @Override
   public PackedInts.Reader getOrderedOrdinals() throws IOException {
     return source.getOrderedOrdinals();
   }
 
+  @Override
   public PackedInts.Reader getDocToSingleIndirect() throws IOException {
     return source.getDocToSingleIndirect();
   }
 
+  @Override
   public int getReaderHash() {
     return source.getReaderHash();
   }
 
+  @Override
   public int getRecursiveHash() {
     return source.getRecursiveHash();
   }
 
+  @Override
   public int getDocIDBase() {
     return source.getDocIDBase();
   }
 
+  @Override
   public void setDocIDBase(int base) {
     source.setDocIDBase(base);
   }

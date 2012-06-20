@@ -1,15 +1,16 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
 import junit.framework.TestCase;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.util.BytesRef;
 
-import java.io.IOException;
-import com.ibm.icu.text.Collator;
-
 import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
 import java.util.*;
 
 // TODO: Change this to LuceneTestCase but ensure Flex
@@ -79,7 +80,7 @@ public class TestFieldTermProvider extends TestCase {
     }
 
     TermProvider segmentProvider = ExposedFactory.createProvider(
-        segment, null, Arrays.asList("a"), null, false, "null");
+        segment, null, Arrays.asList("a"), new NamedNaturalComparator());
     ArrayList<String> exposedOrdinals = new ArrayList<String>(DOCCOUNT);
     for (int i = 0 ; i < segmentProvider.getOrdinalTermCount() ; i++) {
       exposedOrdinals.add(segmentProvider.getTerm(i).utf8ToString());
@@ -113,8 +114,7 @@ public class TestFieldTermProvider extends TestCase {
     Collections.sort(plainExtraction, sorter);
 
     ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", ExposedComparators.collatorToBytesRef(sorter),
-        false, "collator_da");
+        "a", new NamedCollatorComparator(sorter));
     FieldTermProvider segmentProvider =
         new FieldTermProvider(segment, 0, request, true);
 
@@ -144,8 +144,7 @@ public class TestFieldTermProvider extends TestCase {
     Collator sorter = Collator.getInstance(new Locale("da"));
 
     ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", ExposedComparators.collatorToBytesRef(sorter),
-        false, "collator_da");
+        "a", new NamedCollatorComparator(sorter));
     FieldTermProvider segmentProvider =
         new FieldTermProvider(segment, 0, request, true);
     ArrayList<ExposedHelper.Pair> exposed =
@@ -181,8 +180,7 @@ public class TestFieldTermProvider extends TestCase {
     Collections.sort(plain);
 
     ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", ExposedComparators.collatorToBytesRef(sorter),
-        false, "collator_da");
+        "a", new NamedCollatorComparator(sorter));
     FieldTermProvider segmentProvider =
         new FieldTermProvider(segment, 0, request, true);
 
@@ -221,8 +219,7 @@ public class TestFieldTermProvider extends TestCase {
     Collator sorter = Collator.getInstance(new Locale("da"));
 
     ExposedRequest.Field request = new ExposedRequest.Field(
-        ExposedHelper.MULTI, ExposedComparators.collatorToBytesRef(sorter),
-        false, "collator_da");
+        ExposedHelper.MULTI, new NamedCollatorComparator(sorter));
     FieldTermProvider segmentProvider =
         new FieldTermProvider(segment, 0, request, true);
 
@@ -268,7 +265,7 @@ public class TestFieldTermProvider extends TestCase {
 
     for (String field: FIELDS) {
       TermProvider segmentProvider = ExposedFactory.createProvider(
-          segment, null, Arrays.asList(field), null, false, "null");
+          segment, null, Arrays.asList(field), new NamedNaturalComparator());
       Iterator<ExposedTuple> it = segmentProvider.getIterator(true);
       while (it.hasNext()) {
         ExposedTuple tuple = it.next();
@@ -323,7 +320,7 @@ public class TestFieldTermProvider extends TestCase {
     List<TermProvider> providers = new ArrayList<TermProvider>(fields.length);
     for (String field: fields) {
       providers.add(ExposedFactory.createProvider(
-          segment, null, Arrays.asList(field), null, false, "null"));
+          segment, null, Arrays.asList(field), new NamedNaturalComparator()));
     }
     FacetMap map = new FacetMap(1, providers);
     assertEquals(message + ". There should be the correct number of terms for " +

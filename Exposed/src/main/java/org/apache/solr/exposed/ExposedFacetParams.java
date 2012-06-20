@@ -64,6 +64,7 @@ public interface ExposedFacetParams {
    */
   public static final String EFACET_SORT = EFACET + ".sort";
 
+  // Mirror of ComparatorFactory.ORDER
   public static final String EFACET_SORT_COUNT = "count";
   public static final String EFACET_SORT_INDEX = "index";
   public static final String EFACET_SORT_LOCALE = "locale";

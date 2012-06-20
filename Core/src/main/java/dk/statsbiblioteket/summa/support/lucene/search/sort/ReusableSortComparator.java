@@ -14,20 +14,16 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.util.Streams;
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.FieldComparator;
+import org.apache.lucene.search.FieldComparatorSource;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import com.ibm.icu.text.Collator;
 import java.util.Locale;
 
 /**
@@ -105,54 +101,12 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
     }
 
     /**
-     * Attempts to load char statistics and create a
-     * {@link dk.statsbiblioteket.util.CachedCollator} from
-     * that. If no statistics can be loaded, the CachedCollator uses the default
-     * statistics.
      * @param locale The Locale to use for the Collator.
-     * @return > collator, preferably based on char statistics.
+     * @return collator.
      */
+    // TODO: Remove this as it is deprecated by the fast ICUCollator
     protected Collator createCollator(Locale locale) {
-        try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            String first = "charstats." + locale.getLanguage() + ".dat";
-            String second = "charstats.dat";
-
-            URL url = loader.getResource(first);
-            if (url == null) {
-                //noinspection DuplicateStringLiteralInspection
-                log.debug("Could not locate " + first + ", trying " + second);
-                url = loader.getResource(second);
-                if (url == null) {
-                    //noinspection DuplicateStringLiteralInspection
-                    log.debug("Could not locate " + second + ". Defaulting to "
-                              + "hardcoded Summa char statistics");
-                    return CollatorFactory.createCollator(locale, true);
-                }
-            }
-            InputStream is = url.openStream();
-            assert is != null : "The InputStream is should be defined, as we "
-                                + "know the URL '" + url + "'";
-            ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
-            Streams.pipe(is, out);
-            Collator collator = CollatorFactory.createCollator(
-                locale, out.toString("utf-8"), true);
-            log.debug("Created CachedCollator based on stored char statistics "
-                      + "from '" + url + "'");
-            return collator;
-        } catch(UnsupportedEncodingException e) {
-            log.error("Exception converting to UTF-8, defaulting to hardcoded "
-                      + "defaults", e);
-            return CollatorFactory.createCollator(locale, summaChars, true);
-        } catch(IOException e) {
-            log.error("IOException getting statistics for collator, defaulting "
-                      + "to hardcoded defaults", e);
-            return CollatorFactory.createCollator(locale, summaChars, true);
-        } catch(Exception e) {
-            log.error("Exception getting statistics for collator, defaulting to"
-                      + " hardcoded defaults", e);
-            return CollatorFactory.createCollator(locale, summaChars, true);
-        }
+      return new NamedCollatorComparator(locale).getCollator();
     }
 
     // inherit javadocs

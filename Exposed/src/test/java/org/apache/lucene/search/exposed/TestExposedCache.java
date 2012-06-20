@@ -1,20 +1,25 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RawCollationKey;
 import junit.framework.TestCase;
 import org.apache.lucene.analysis.MockAnalyzer;
 import org.apache.lucene.analysis.MockTokenizer;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.CompositeReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.File;
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
 import java.util.*;
 
 // TODO: The whole sorting comparison-thingie is deprecated as search-time
@@ -46,7 +51,7 @@ public class TestExposedCache  extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_31, ExposedHelper.EVEN, new MockAnalyzer(
+        Version.LUCENE_40, ExposedHelper.EVEN, new MockAnalyzer(
         new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse("true");
     Sort aSort = new Sort(new SortField("a", SortField.Type.STRING));
@@ -62,9 +67,7 @@ public class TestExposedCache  extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
 
     TermProvider provider = ExposedCache.getInstance().getProvider(
-        reader, "foo", Arrays.asList("a"),
-        ExposedComparators.collatorToBytesRef(Collator.getInstance(
-            new Locale("da"))), "bar");
+        reader, "foo", Arrays.asList("a"), ComparatorFactory.create("da"));
 
     Iterator<ExposedTuple> iterator = provider.getIterator(false);
     while (iterator.hasNext()) {
@@ -93,8 +96,7 @@ public class TestExposedCache  extends TestCase {
         getSequentialSubReaders()[0];
 
     ExposedRequest.Field fRequest = new ExposedRequest.Field(
-        "a", ExposedComparators.collatorToBytesRef(Collator.getInstance(
-            new Locale("da"))), false, "bar");
+        "a", ComparatorFactory.create("da"));
     TermProvider provider = ExposedCache.getInstance().getProvider(
         reader, 0, fRequest, true, true);
 
@@ -121,9 +123,7 @@ public class TestExposedCache  extends TestCase {
     ExposedCache.getInstance().purgeAllCaches();
 
     TermProvider provider = ExposedCache.getInstance().getProvider(
-        reader, "foo", Arrays.asList("a"),
-        ExposedComparators.collatorToBytesRef(Collator.getInstance(
-            new Locale("da"))), "bar");
+        reader, "foo", Arrays.asList("a"), ComparatorFactory.create("da"));
     assertEquals("The number of documents should be correct",
         reader.maxDoc(), provider.getMaxDoc());
   }
@@ -140,7 +140,7 @@ public class TestExposedCache  extends TestCase {
     DirectoryReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_31, ExposedHelper.ALL, new MockAnalyzer(
+        Version.LUCENE_40, ExposedHelper.ALL, new MockAnalyzer(
         new Random(), MockTokenizer.WHITESPACE, false));
     Query query = qp.parse(ExposedHelper.ALL);
 //    Sort plainSort = new Sort(new SortField("a", new Locale("da")));
@@ -173,8 +173,8 @@ public class TestExposedCache  extends TestCase {
     final int docCount = reader.maxDoc();
     final int MAX_HITS = 100;
     Sort exposedSort = new Sort(new SortField(
-        "a",
-        new ExposedFieldComparatorSource(reader, null)));
+        "a", new ExposedFieldComparatorSource(
+      reader, new NamedNaturalComparator())));
         //new ExposedFieldComparatorSource(reader, new Locale("da"))));
 
     IndexSearcher searcher = new IndexSearcher(reader);
@@ -264,7 +264,7 @@ public class TestExposedCache  extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_31, ExposedHelper.ALL, new MockAnalyzer(
+        Version.LUCENE_40, ExposedHelper.ALL, new MockAnalyzer(
         new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     Sort aPlainSort = new Sort(
@@ -310,8 +310,7 @@ public class TestExposedCache  extends TestCase {
       System.out.println("Created " + size + " random BytesRefs in "
           + (System.currentTimeMillis() - createTime) + "ms");
 
-      Comparator<BytesRef> comparator = ExposedComparators.collatorToBytesRef(
-          Collator.getInstance(new Locale("da")));
+      Comparator<BytesRef> comparator = ComparatorFactory.create("da");
 
       for (int run = 0 ; run < RUNS ; run++) {
         Collections.shuffle(terms);
@@ -406,7 +405,7 @@ public class TestExposedCache  extends TestCase {
           ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION).
           getSequentialSubReaders()[0];
       ExposedRequest.Field request =
-          new ExposedRequest.Field("a", null, false, "foo");
+          new ExposedRequest.Field("a", new NamedNaturalComparator());
       TermProvider provider = ExposedCache.getInstance().getProvider(
           reader, 0, request, true, true);
       long num = provider.getMaxDoc();
@@ -474,9 +473,7 @@ Got 50001 ordered ordinals in 2673ms: ~18 terms/ms
       ExposedCache.getInstance().purgeAllCaches();
 
       TermProvider provider = ExposedCache.getInstance().getProvider(
-          reader, "foo", Arrays.asList("a"),
-          ExposedComparators.collatorToBytesRef(Collator.getInstance(
-              new Locale("da"))), "bar");
+          reader, "foo", Arrays.asList("a"), ComparatorFactory.create("da"));
       assertEquals("The number of ordinal accessible terms should match",
           size, provider.getOrdinalTermCount());
 

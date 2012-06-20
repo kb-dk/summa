@@ -736,6 +736,7 @@
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
       -->
+      <str name="fl">*</str>
      <lst name="defaults">
        <str name="echoParams">explicit</str>
        <int name="rows">10</int>
@@ -1682,6 +1683,20 @@
     <requestHandler name="exprh" class="org.apache.solr.handler.component.SearchHandler">
       <arr name="last-components">
         <str>exposedComponent</str>
+      </arr>
+    </requestHandler>
+
+    <searchComponent name="lookupComponent" class="org.apache.solr.exposed.ExposedIndexLookupQueryComponent">
+    <lst name="poolfactory">
+          <int name="pools">10</int>
+        <int name="filled">5</int>
+        <int name="fresh">5</int>
+      </lst>
+    </searchComponent>
+
+    <requestHandler name="lookup" class="org.apache.solr.handler.component.SearchHandler">
+      <arr name="last-components">
+        <str>lookupComponent</str>
       </arr>
     </requestHandler>
 

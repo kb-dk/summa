@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
@@ -37,20 +36,23 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
+import org.apache.lucene.search.exposed.compare.NamedOrderDummyComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
-import org.apache.lucene.util.BytesRef;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -397,36 +399,23 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         for (Map.Entry<String, FacetStructure> facet:
             oldFacetRequest.getFacets().entrySet()) {
             FacetStructure structure = facet.getValue();
-            Locale locale = structure.getLocale() ==
-                            null ? null : new Locale(structure.getLocale());
-            String comparatorID;
-            Comparator<BytesRef> comparator;
-            org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER facetOrder;
+            NamedComparator comparator;
             if (structure.getSortType().equals(FacetStructure.SORT_ALPHA)) {
-                comparatorID = locale == null ?
-                               ExposedRequest.LUCENE_ORDER :
-                               CollatorFactory.getCollatorKey(locale);
-                facetOrder = locale == null ?
-                             org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.index :
-                             org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.locale;
-                comparator = ExposedComparators.collatorToBytesRef(
-                    CollatorFactory.createCollator(locale));
+                comparator = ComparatorFactory.create(structure.getLocale());
             } else { // Popularity
-                comparatorID = ExposedRequest.LUCENE_ORDER;
-                locale = null;
-                facetOrder = org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.count;
-                comparator = ExposedComparators.localeToBytesRef(locale);
+                comparator = new NamedOrderDummyComparator();
             }
 
             List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
             for (String fieldName: structure.getFields()) {
-                fields.add(new ExposedRequest.Field(fieldName, comparator, false, comparatorID));
+                fields.add(new ExposedRequest.Field(fieldName, comparator));
             }
             // TODO: Add reverse to request and here
             ExposedRequest.Group group = new ExposedRequest.Group(
-                structure.getName(), fields, comparator, false, comparatorID);
+                structure.getName(), fields, comparator);
             FacetRequestGroup facetGroup = new FacetRequestGroup(
-                group, facetOrder, false, structure.getLocale(), 0, structure.getWantedTags(), 1, null);
+                group, comparator.getOrder(), false, structure.getLocale(),
+                0, structure.getWantedTags(), 1, null);
             groups.add(facetGroup);
         }
         return new org.apache.lucene.search.exposed.facet.request.FacetRequest(query, groups);

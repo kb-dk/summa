@@ -1,9 +1,8 @@
 package org.apache.lucene.search.exposed;
 
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -36,21 +35,6 @@ import java.util.List;
  */
 public class ExposedRequest {
   /**
-   * If the comparator key is set to the value "LUCENE", the order of the
-   * terms is Lucene's default order.
-   */
-  public static final String LUCENE_ORDER = "LUCENE";
-  public static final String FREE_ORDER = "FREE";
-
-  /**
-   * This signifies that the order of the terms does not matter to the caller.
-   * The normal use-cache is for count-based faceting. By specifying WHATEVER
-   * as the order, the TermProvider cache is free to return any element that
-   * is based on the right fields. 
-   */
-  public static final String WHATEVER_ORDER = "WHATEVER";
-
-  /**
    * A group is a collections of fields that are to be treated as one.
    * An example could be a group named "title" with the fields "lti",
    * "sort_title" and "subtitle" as fields. The same comparator must be used
@@ -59,23 +43,17 @@ public class ExposedRequest {
   public static class Group {
     private final String name;
     private final List<Field> fields;
-    private final Comparator<BytesRef> comparator;
-    private final boolean reverse;
-    private String comparatorID;
+    private final NamedComparator comparator;
 
-    public Group(String name, List<Field> fields,
-                 Comparator<BytesRef> comparator, boolean reverse,
-                 String comparatorID) {
+    public Group(String name, List<Field> fields, NamedComparator comparator) {
       this.name = name;
       this.fields = fields;
       this.comparator = comparator;
-      this.reverse = reverse;
-      this.comparatorID = comparatorID;
     }
 
     /**
-     * Checks whether the given FacetGroup is equal to . The order of the contained
-     * fields is irrelevant, but the set of fields must be equal.
+     * Checks whether the given FacetGroup is equal to. The order of the
+     * contained fields is irrelevant, but the set of fields must be equal.
      * </p><p>
      * The name of the group is not used while comparing.
      * @param other the group to compare to.
@@ -84,7 +62,7 @@ public class ExposedRequest {
     // TODO: Fix hashcode to fulfill the equals vs. hashcode contract
     public boolean equals(Group other) {
       if (other.getFields().size() != getFields().size() ||
-          !getComparatorID().equals(other.getComparatorID())) {
+          !getComparator().getID().equals(other.getComparator().getID())) {
         return false;
       }
 
@@ -102,16 +80,16 @@ public class ExposedRequest {
 
     /**
      * Similar to {@link #equals(Group)} but if the comparatorID for the other
-     * group is {@link #FREE_ORDER}, it matches any comparatorID this group has.
+     * group is FREE_ORDER, it matches any comparatorID this group has.
      * @param other the group to check with.
      * @return true if this group can deliver data for the other group.
      */
+    // TODO: Re-introduce re-use of structures when count order is requested
     public boolean worksfor(Group other) {
       if (other.getFields().size() != getFields().size()) {
         return false;
       }
-        if (!FREE_ORDER.equals(other.getComparatorID()) &&
-            !getComparatorID().equals(other.getComparatorID())) {
+        if (!getComparator().getID().equals(other.getComparator().getID())) {
         return false;
       }
 
@@ -133,14 +111,8 @@ public class ExposedRequest {
     public List<Field> getFields() {
       return fields;
     }
-    public Comparator<BytesRef> getComparator() {
+    public NamedComparator getComparator() {
       return comparator;
-    }
-    public boolean isReverse() {
-      return reverse;
-    }
-    public String getComparatorID() {
-      return comparatorID;
     }
 
     public List<String> getFieldNames() {
@@ -155,7 +127,7 @@ public class ExposedRequest {
      * If the comparatorID is {@link #FREE_ORDER} we set it to
      * {@link #LUCENE_ORDER};
      */
-    void normalizeComparatorIDs() {
+/*    void normalizeComparatorIDs() {
       if (!FREE_ORDER.equals(getComparatorID())) {
         return;
       }
@@ -163,22 +135,16 @@ public class ExposedRequest {
       for (Field field: fields) {
         field.comparatorID = FREE_ORDER;
       }
-    }
+    }  */
   }
 
   public static class Field {
     private String field;
-    private Comparator<BytesRef> comparator;
-    private boolean reverse;
-    private String comparatorID;
+    private NamedComparator comparator;
 
-    public Field(
-        String field, Comparator<BytesRef> comparator, boolean reverse,
-        String comparatorID) {
+    public Field(String field, NamedComparator comparator) {
       this.field = field;
       this.comparator = comparator;
-      this.reverse = reverse;
-      this.comparatorID = comparatorID;
     }
 
     /**
@@ -193,39 +159,31 @@ public class ExposedRequest {
       }
       Field other = (Field)obj;
       return field.equals(other.field)
-          && comparatorID.equals(other.comparatorID);
+          && comparator.getID().equals(other.comparator.getID());
     }
 
     /**
      * Similar to {@link #equals} but if the comparatorID for the other
-     * field is {@link #FREE_ORDER}, it matches any comparatorID this field has.
+     * field is FREE_ORDER, it matches any comparatorID this field has.
      * @param other the field to check with.
      * @return true if this group can deliver data for the other field.
      **/
+    // TODO: All structures works when count order is requested
     public boolean worksfor(Field other) {
       return field.equals(other.field)
-          && (FREE_ORDER.equals(other.comparatorID)
-          ||comparatorID.equals(other.comparatorID));
+          && comparator.getID().equals(other.comparator.getID());
     }
 
     public String getField() {
       return field;
     }
-    public Comparator<BytesRef> getComparator() {
+    public NamedComparator getComparator() {
       return comparator;
-    }
-
-    public boolean isReverse() {
-      return reverse;
-    }
-
-    public String getComparatorID() {
-      return comparatorID;
     }
 
     public boolean equals(Field otherField) {
       return getField().equals(otherField.getField()) &&
-          getComparatorID().equals(otherField.getComparatorID());
+          getComparator().getID().equals(otherField.getComparator().getID());
     }
 
   }

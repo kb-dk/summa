@@ -1,15 +1,16 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
+import com.ibm.icu.text.RawCollationKey;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import com.ibm.icu.text.RawCollationKey;
-import com.ibm.icu.text.Collator;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.Iterator;
 
 /**
@@ -64,9 +65,8 @@ public class FieldTermProvider extends TermProviderImpl {
 
   /**
    * If this is true and the given comparator is a
-   * {@link ExposedComparators.BytesRefWrappedCollator}, sorting is optimized
-   * by using CollatorKeys. This requires ~1-3 MB extra memory but doubles the
-   * chunk-sort speed. 
+   * {@link org.apache.lucene.search.exposed.compare.NamedCollatorComparator}, sorting is optimized by CollatorKeys.
+   * This requires ~1-3 MB extra memory but doubles the chunk-sort speed.
    */
   public static boolean optimizeCollator = true;
 
@@ -77,7 +77,6 @@ public class FieldTermProvider extends TermProviderImpl {
                            ExposedRequest.Field request,
                            boolean cacheTables) throws IOException {
     super(checkReader(reader), docIDBase, request.getComparator(),
-        request.getComparatorID(),
         "Field " + request.getField(), cacheTables);
     if (!(reader instanceof AtomicReader)) {
       throw new IllegalArgumentException(
@@ -230,8 +229,8 @@ public class FieldTermProvider extends TermProviderImpl {
       return order;
     }
     PackedInts.Reader newOrder;
-    if (ExposedRequest.LUCENE_ORDER.equals(request.getComparatorID())
-        || ExposedRequest.FREE_ORDER.equals(request.getComparatorID())) {
+    if (NamedComparator.ORDER.index == request.getComparator().getOrder()
+        || NamedComparator.ORDER.count == request.getComparator().getOrder()) {
       newOrder = new IdentityReader((int)getUniqueTermCount());
     } else {
       newOrder = sortOrdinals();
@@ -306,8 +305,8 @@ public class FieldTermProvider extends TermProviderImpl {
     // than processing power.
 
     // We sort in chunks so the cache is 100% effective
-    if (optimizeCollator && request.getComparator() instanceof
-        ExposedComparators.BytesRefWrappedCollator) {
+    if (optimizeCollator
+        && request.getComparator() instanceof NamedCollatorComparator) {
 //      System.out.println("Using CollatorKey optimized chunk sort");
       optimizedChunkSort(ordinals, chunkSize);
     } else {
@@ -338,18 +337,19 @@ public class FieldTermProvider extends TermProviderImpl {
     }
     long mergeTime = System.currentTimeMillis();
     CachedProvider cache;
-    ExposedComparators.OrdinalComparator indirectComparator;
-    if (optimizeCollator && request.getComparator() instanceof
-        ExposedComparators.BytesRefWrappedCollator) {
-      Collator collator = ((ExposedComparators.BytesRefWrappedCollator)request.
-                getComparator()).getCollator();
+    ComparatorFactory.OrdinalComparator indirectComparator;
+    if (optimizeCollator
+        && request.getComparator() instanceof NamedCollatorComparator) {
+      Collator collator =
+        ((NamedCollatorComparator)request.getComparator()).getCollator();
+      // TODO: Hanele isReverse & isNullFirst
       CachedCollatorKeyProvider keyCache = new CachedCollatorKeyProvider(
           this, collator, sortCacheSize, chunkSize-1);
       keyCache.setReadAhead(Math.max(100, sortCacheSize / chunkCount /
           mergeChunkFragmentationFactor));
       keyCache.setOnlyReadAheadIfSpace(true);
       keyCache.setStopReadAheadOnExistingValue(true);
-      indirectComparator = ExposedComparators.wrapIndirect(keyCache, ordinals);
+      indirectComparator = ComparatorFactory.wrapIndirect(keyCache, ordinals);
       cache = keyCache;
     } else {
       CachedTermProvider termCache = new CachedTermProvider(
@@ -363,8 +363,8 @@ public class FieldTermProvider extends TermProviderImpl {
       for (int i = 0 ; i < ordinals.length ; i += chunkSize) {
         termCache.getTerm(i); // Warm cache
       }
-      indirectComparator = ExposedComparators.wrapIndirect(
-              termCache, ordinals, request.getComparator());
+      indirectComparator = ComparatorFactory.wrapIndirect(
+        termCache, ordinals, request.getComparator());
       cache = termCache;
     }
 
@@ -412,8 +412,8 @@ public class FieldTermProvider extends TermProviderImpl {
         this, sortCacheSize, chunkSize-1);
     // Sort the chunks individually
     //long startTimeMerge = System.nanoTime();
-    ExposedComparators.OrdinalComparator comparator =
-        ExposedComparators.wrap(cache, request.getComparator());
+    ComparatorFactory.OrdinalComparator comparator =
+        ComparatorFactory.wrap(cache, request.getComparator());
     for (int i = 0 ; i < ordinals.length ; i += chunkSize) {
       long chunkTime = System.currentTimeMillis();
       cache.getTerm(i); // Tim-sort starts at 1 so we init the read-ahead at 0
@@ -435,8 +435,8 @@ public class FieldTermProvider extends TermProviderImpl {
   // Ordinals _must_ be monotonously increasing
   private void optimizedChunkSort(
       int[] ordinals, int chunkSize) throws IOException {
-    Collator collator = ((ExposedComparators.BytesRefWrappedCollator)request.
-              getComparator()).getCollator();
+    Collator collator =
+      ((NamedCollatorComparator)request.getComparator()).getCollator();
     CachedTermProvider cache = new CachedTermProvider(
         this, sortCacheSize, chunkSize-1);
     CollatorPair[] keys = new CollatorPair[chunkSize];
@@ -471,7 +471,7 @@ public class FieldTermProvider extends TermProviderImpl {
     }
   }
   private static final class TimComparator
-                               implements ExposedComparators.OrdinalComparator {
+                               implements ComparatorFactory.OrdinalComparator {
     private int start; // Inclusive
     private CollatorPair[] keys;
 

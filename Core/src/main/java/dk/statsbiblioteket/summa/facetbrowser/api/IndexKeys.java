@@ -80,7 +80,24 @@ public interface IndexKeys {
      * Optional. If no value is specified, the default setup is used.
      */
     public static final String SEARCH_INDEX_CASE_SENSITIVE =
-            "search.index.casesensitive";
+        "search.index.casesensitive";
+
+    // TODO: Reflect these in the LuceneSearchNode
+    /**
+     * Specifies how to sort the result.
+     * Valid values are 'index' and 'locale'. If locale is specified, {@link #SEARCH_INDEX_LOCALE} must be specified.
+     * </p><p>
+     * Optional. The default value is taken from the IndexDescriptor's facet setup. If no IndexDescriptor is present,
+     * the default value is 'index'.
+     */
+    public static final String SEARCH_INDEX_SORT = "search.index.sort";
+    public static final String INDEX_SORTBYINDEX = "index";
+    public static final String INDEX_SORTBYLOCALE = "locale";
+
+    /**
+     * Used for sort if {@link #SEARCH_INDEX_SORT} is specified.
+     */
+    public static final String SEARCH_INDEX_LOCALE = "search.index.sort.locale";
 
     /**
      * The delta, relative to the origo derived from the given term, to the

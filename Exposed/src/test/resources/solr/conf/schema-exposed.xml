@@ -290,7 +290,7 @@ valued. -->
 
    <!-- for testing, a type that does a transform to see if it's correctly done everywhere -->
    <field name="id" type="sfloat" indexed="true" stored="true" required="true" /> 
-   <field name="text" type="text" indexed="true" stored="false" />
+   <field name="text" type="text" indexed="true" stored="true" />
 
    <field name="path" type="string" indexed="true" stored="false" multiValued="true"/>
 

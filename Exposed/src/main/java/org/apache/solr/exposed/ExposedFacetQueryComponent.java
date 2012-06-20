@@ -1,5 +1,6 @@
 package org.apache.solr.exposed;
 
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
@@ -183,6 +184,8 @@ public class ExposedFacetQueryComponent extends QueryComponent {
       throw new IllegalArgumentException(
           "The parameter 'q' must be specified");
     }
+
+
     String[] fieldNames = params.getParams(EFACET_FIELD);
     if (fieldNames == null) {
       throw new IllegalArgumentException(
@@ -197,15 +200,15 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     String sort = params.get(EFACET_SORT, EFACET_SORT_COUNT); // Count is def.
     Boolean reverse = params.getBool(EFACET_REVERSE, false);
     if (EFACET_SORT_INDEX.equals(sort)) {
-      eReq.setOrder(FacetRequest.GROUP_ORDER.index);
+      eReq.setOrder(NamedComparator.ORDER.index);
     } else if (EFACET_SORT_LOCALE.equals(sort)) {
-      eReq.setOrder(FacetRequest.GROUP_ORDER.locale);
+      eReq.setOrder(NamedComparator.ORDER.locale);
       String locale =params.get(EFACET_SORT_LOCALE_VALUE);
       if (locale != null) {
         eReq.setLocale(locale);
       }
     } else { // EFACET_SORT_COUNT.equals(sort)
-        eReq.setOrder(FacetRequest.GROUP_ORDER.count); // default
+        eReq.setOrder(NamedComparator.ORDER.count); // default
     }
     eReq.setHierarchical(params.getBool(EFACET_HIERARCHICAL, false));
     eReq.setDelimiter(params.get(
@@ -223,6 +226,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
       // TODO: Handle field-specific settings
       eReq.createGroup(fieldName);
     }
+//    System.out.println(eReq.toXML());
     return eReq;
   }
 
