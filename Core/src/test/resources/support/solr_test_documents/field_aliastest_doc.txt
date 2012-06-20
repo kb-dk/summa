@@ -6,4 +6,6 @@
     <field name="author_normalised">Thomas Egense</field>
     <field name="year">2012</field>
     <field name="location_normalised">Matematik</field>
+    <field name="html_h1">Recurssion</field>
+    <field name="html_h2">Gentagelse</field>
 </doc>
