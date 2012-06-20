@@ -2,15 +2,15 @@ package org.apache.solr.exposed;
 
 import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RuleBasedCollator;
-import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
-import org.apache.lucene.util.BytesRef;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -71,12 +71,13 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
 
   @Override
   public void prepare(ResponseBuilder rb) throws IOException {
-    if (rb.req.getParams().getBool(ELOOKUP, false)) {
+    if (rb.req.getParams().getBool(ELOOKUP, false)
+        && rb.req.getParams().get("q", null) != null) {
       // && rb.req.getParams().getBool(ELOOKUP_QUERY, false)
 
       // TODO: Check if the query is already cached
       // TODO: Eliminate ELOOKUP_QUERY and use standard query instead?
-      rb.setNeedDocSet( true );
+      rb.setNeedDocSet(true);
       //rb.doFacets = true;
     }
   }
@@ -84,8 +85,9 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
   @Override
   public void process(ResponseBuilder rb) throws IOException {
     if (poolFactory == null) {
-      throw new IllegalStateException("CollectorPoolFactory not initialized. " +
-                                      "Init must be called before process");
+      throw new IllegalStateException(
+        "CollectorPoolFactory not initialized. Init must be called before "
+        + "process");
     }
 
     SolrQueryRequest req = rb.req;
@@ -122,7 +124,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
         throw new RuntimeException(
           "Unable to extract response from TagCollector", e);
       }
-    } finally {
+    } finally {      //***group(name=text_, order=index, locale=null, fields(text), hierarchical=false, delimiter=null)
       collectorPool.release(eReq.getBuildKey(), tagCollector);
     }
     exposedToSolr(lookupResponse, rsp, req);
@@ -152,46 +154,80 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
   }
 
   private FacetRequest createRequest(SolrParams params) {
-    String query = params.get("q");
+/*    String query = params.get("q");
     if (query == null) {
       throw new IllegalArgumentException(
         // TODO: Consider removing this requirements and check
         // for liveDocs is the query is null
         "The parameter 'q' must be specified");
-    }
+    }*/
     String[] fieldNames = params.getParams(ELOOKUP_FIELD);
     if (fieldNames == null) {
       throw new IllegalArgumentException(
         "At least one field must be specified with " + ELOOKUP_FIELD);
     }
 
+    Locale locale = null;
     String sort = params.get(ELOOKUP_SORT, ELOOKUP_DEFAULT_SORT);
-    String comparatorID = ELOOKUP_SORT_INDEX.equals(sort) ? null : sort;
-    Comparator<BytesRef> comparator = ExposedComparators.localeToBytesRef(
-      ELOOKUP_SORT_INDEX.equals(sort) ? null : new Locale(sort));
+    if ("".equals(sort)) {
+      sort = ELOOKUP_DEFAULT_SORT;
+    }
+    if (!ELOOKUP_SORT_BYINDEX.equals(sort)
+        && !ELOOKUP_SORT_BYLOCALE.equals(sort)) {
+      throw new IllegalArgumentException(
+        "Invalid " + ELOOKUP_SORT + " value: '" + sort + "'. Valid values are "
+        + ELOOKUP_SORT_BYINDEX + " and " + ELOOKUP_SORT_BYLOCALE);
+    }
+    NamedComparator.ORDER order = NamedComparator.ORDER.fromString(sort);
+    if (order == NamedComparator.ORDER.locale) {
+      String localeStr = params.get(ELOOKUP_SORT_LOCALE_VALUE, null);
+      if (localeStr == null) {
+        throw new IllegalArgumentException(
+          ELOOKUP_SORT + "=" + ELOOKUP_SORT_BYLOCALE
+          + " specified without corresponding " + ELOOKUP_SORT_LOCALE_VALUE);
+      }
+      locale = new Locale(localeStr);
+    }
+    NamedComparator comparator = ComparatorFactory.create(locale);
 
     List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
     StringWriter groupID = new StringWriter(100);
+    boolean subsequent = false;
     for (String fieldName: fieldNames) {
-      fields.add(new ExposedRequest.Field(
-        fieldName, comparator, false, comparatorID));
-      groupID.append(fieldName).append("_");
+      fields.add(new ExposedRequest.Field(fieldName, comparator));
+      if (subsequent) {
+        groupID.append("_");
+      }
+      subsequent = true;
+      groupID.append(fieldName);
     }
     List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
     ExposedRequest.Group eGroup = new ExposedRequest.Group(
-      groupID.toString(), fields, comparator, false, comparatorID);
-    FacetRequest.GROUP_ORDER facetOrder = ELOOKUP_SORT_INDEX.equals(sort) ?
-                                          FacetRequest.GROUP_ORDER.index :
-                                          FacetRequest.GROUP_ORDER.locale;
+      groupID.toString(), fields, comparator);
+    NamedComparator.ORDER facetOrder = ELOOKUP_SORT_BYINDEX.equals(sort) ?
+                                         NamedComparator.ORDER.index :
+                                         NamedComparator.ORDER.locale;
+    String term = params.get(ELOOKUP_TERM, "");
+    if (!params.getBool(ELOOKUP_CASE_SENSITIVE, ELOOKUP_DEFAULT_CASE_SENSITIVE)) {
+        term = term.toLowerCase();
+    }
     FacetRequestGroup facetGroup = new FacetRequestGroup(
-      eGroup, facetOrder, false, comparatorID,
+      eGroup, facetOrder, false, locale == null ? null : locale.toString(),
       params.getInt(ELOOKUP_DELTA, ELOOKUP_DEFAULT_DELTA),
       params.getInt(ELOOKUP_LENGTH, ELOOKUP_DEFAULT_LENGTH),
       params.getInt(ELOOKUP_MINCOUNT, ELOOKUP_DEFAULT_MINCOUNT),
-      params.get(ELOOKUP_TERM, ""));
+      term);
     groups.add(facetGroup);
-    return new FacetRequest(params.get("q", "*:*"), groups);
-    //return new FacetRequest(params.get(ELOOKUP_QUERY, "*"), groups);
+    FacetRequest facetRequest =
+      new FacetRequest(params.get("q", "*:*"), groups);
+    if (locale != null) {
+      facetRequest.setOrder(NamedComparator.ORDER.locale);
+      facetRequest.setLocale(locale.toString());
+    } else {
+      facetRequest.setOrder(NamedComparator.ORDER.index);
+    }
+//    System.out.println(facetRequest.toXML());
+    return facetRequest;
   }
 
   private class LookupTag implements Comparable<LookupTag> {
@@ -228,7 +264,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
     Boolean sensitive = req.getParams().getBool(
       ELOOKUP_CASE_SENSITIVE, ELOOKUP_DEFAULT_CASE_SENSITIVE);
     Comparator<LookupTag> sorter;
-    Collator collator = ELOOKUP_SORT_INDEX.equals(sort) ?
+    Collator collator = ELOOKUP_SORT_BYINDEX.equals(sort) ?
                         null : createCollator(new Locale(sort));
     sorter = sensitive ? new Sensitive(collator) : new Insensitive(collator);
     int origo = Collections.binarySearch(tags, new LookupTag(term, 0), sorter);

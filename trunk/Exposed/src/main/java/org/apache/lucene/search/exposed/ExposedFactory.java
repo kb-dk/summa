@@ -3,11 +3,10 @@ package org.apache.lucene.search.exposed;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 // TODO: Is this used anymore?
@@ -16,15 +15,14 @@ public class ExposedFactory {
   // TODO: Split this so that group is explicit
   public static TermProvider createProvider(
       IndexReader reader, String groupName, List<String> fieldNames,
-      Comparator<BytesRef> comparator, boolean reverse, String comparatorID)
-                                                            throws IOException {
+      NamedComparator comparator) throws IOException {
     if (fieldNames.size() == 0) {
       throw new IllegalArgumentException("There must be at least 1 field name");
     }
     if (reader instanceof AtomicReader && fieldNames.size() == 1) {
       // Segment-level single field
       ExposedRequest.Field request = new ExposedRequest.Field(
-          fieldNames.get(0), comparator, reverse, comparatorID);
+          fieldNames.get(0), comparator);
       return new FieldTermProvider(reader, 0, request, true);
     }
 
@@ -36,13 +34,13 @@ public class ExposedFactory {
           new ArrayList<ExposedRequest.Field>(fieldNames.size());
       for (String fieldName: fieldNames) {
         ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
-            fieldName, comparator, reverse, comparatorID);
+            fieldName, comparator);
         fieldRequests.add(fieldRequest);
         fieldProviders.add(new FieldTermProvider(
             reader, 0, fieldRequest, false));
       }
       ExposedRequest.Group groupRequest = new ExposedRequest.Group(
-          groupName, fieldRequests, comparator, reverse, comparatorID);
+          groupName, fieldRequests, comparator);
       return new GroupTermProvider(
           reader.hashCode(), fieldProviders, groupRequest, true);
     }
@@ -57,7 +55,7 @@ public class ExposedFactory {
       int docBase = 0;
       for (IndexReader sub: subs) {
         ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
-            fieldNames.get(0), comparator, reverse, comparatorID);
+            fieldNames.get(0), comparator);
         fieldRequests.add(fieldRequest);
         fieldProviders.add(new FieldTermProvider(
             sub, docBase, fieldRequest, false));
@@ -65,7 +63,7 @@ public class ExposedFactory {
         docBase += sub.maxDoc();
       }
       ExposedRequest.Group groupRequest = new ExposedRequest.Group(
-          groupName, fieldRequests, comparator, reverse, comparatorID);
+          groupName, fieldRequests, comparator);
       return new GroupTermProvider(
           reader.hashCode(), fieldProviders, groupRequest, true);
     }
@@ -83,7 +81,7 @@ public class ExposedFactory {
     for (IndexReader sub: subs) {
       for (String fieldName: fieldNames) {
         ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
-            fieldName, comparator, reverse, comparatorID);
+            fieldName, comparator);
         fieldRequests.add(fieldRequest);
         fieldProviders.add(new FieldTermProvider(
             sub, docBase, fieldRequest, false));
@@ -92,7 +90,7 @@ public class ExposedFactory {
       docBase += sub.maxDoc();
     }
     ExposedRequest.Group groupRequest = new ExposedRequest.Group(
-        groupName, fieldRequests, comparator, reverse, comparatorID);
+        groupName, fieldRequests, comparator);
     return new GroupTermProvider(
         reader.hashCode(), fieldProviders, groupRequest, true);
   }

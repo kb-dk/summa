@@ -2,8 +2,8 @@ package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.IntsRef;
 import org.apache.lucene.util.packed.GrowingMutable;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -20,8 +20,7 @@ public abstract class TermProviderImpl implements TermProvider {
 
   private final IndexReader reader;
   private int docIDBase; // Changed on reopen
-  private final Comparator<BytesRef> comparator;
-  private final String comparatorID;
+  private final NamedComparator comparator;
   private final String designation;
 
   /**
@@ -29,24 +28,21 @@ public abstract class TermProviderImpl implements TermProvider {
    * @param docIDBase the base to add to all docIDs returned from this provider.
    * @param comparator the comparator used for sorting. If this is null, the
    * natural BytesRef-order is used.
-   * @param comparatorID an ID for the comparator. If this is natural order,
-   * this should be {@link ExposedRequest#LUCENE_ORDER}.
    * @param designation used for feedback and debugging. No formal requirements.
    * @param cacheTables if true, tables such as orderedOrdinals, docID2indirect
    * and similar should be cached for re-requests after generation.
    */
   protected TermProviderImpl(
-      IndexReader reader, int docIDBase,
-      Comparator<BytesRef> comparator, String comparatorID,
+      IndexReader reader, int docIDBase, NamedComparator comparator,
       String designation, boolean cacheTables) {
     this.reader = reader;
     this.docIDBase = docIDBase;
     this.comparator = comparator;
-    this.comparatorID = comparatorID;
     this.cacheTables = cacheTables;
     this.designation = designation;
   }
 
+  @Override
   public synchronized PackedInts.Reader getDocToSingleIndirect()
                                                             throws IOException {
     if (docToSingle != null) {
@@ -105,33 +101,36 @@ public abstract class TermProviderImpl implements TermProvider {
     return docToSingle;
   }
 
+  @Override
   public String getDesignation() {
     return designation;
   }
 
-  public Comparator<BytesRef> getComparator() {
+  @Override
+  public NamedComparator getComparator() {
     return comparator;
   }
 
-  public String getComparatorID() {
-    return comparatorID;
-  }
-
+  @Override
   public IndexReader getReader() {
     return reader;
   }
 
+  @Override
   public void setDocIDBase(int base) {
     docIDBase = base;
   }
 
+  @Override
   public int getDocIDBase() {
     return docIDBase;
   }
 
+  @Override
   public int getNearestTermIndirect(BytesRef key) throws IOException {
     return getNearestTermIndirect(key, 0, (int)getUniqueTermCount());
   }
+  @Override
   public int getNearestTermIndirect(
       final BytesRef key, int startTermPos, int endTermPos) throws IOException {
     if (getComparator() != null) {
@@ -195,6 +194,7 @@ public abstract class TermProviderImpl implements TermProvider {
         + docToSingle.size() + " mem=" + packedSize(docToSingle) + ")";
   }
 
+  @Override
   public void transitiveReleaseCaches(int level, boolean keepRoot) {
     if (keepRoot && level == 0) {
       return;

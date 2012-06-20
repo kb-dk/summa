@@ -19,12 +19,10 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
@@ -41,11 +39,14 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.solr.exposed.ExposedIndexLookupParams.*;
 
@@ -73,6 +74,7 @@ public class SolrIndexLookupTest extends TestCase {
         server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
         server.run();
         solrServer = new HttpSolrServer(server.getServerUrl());
+        solrServer.deleteByQuery("*:*");
     }
 
     @Override
@@ -89,18 +91,25 @@ public class SolrIndexLookupTest extends TestCase {
         // Yes, elephant is stated twice. We want to check the count
         ingest(Arrays.asList("aardvark", "bison", "cougar", "deer", "elephant", "elephant", "fox", "giraffe", "horse"));
         assertDirect("recordBase:myBase", "ele",
-                     "elookup={fields={freetext={terms={deer=1,elephant=2,fox=1},origo=1}}}");
+                     "elookup={fields={lti={terms={deer=1,elephant=2,fox=1},origo=1}}}");
         assertDirect("*:*", "ele",
-                     "elookup={fields={freetext={terms={deer=1,elephant=2,fox=1},origo=1}}}");
+                     "elookup={fields={lti={terms={deer=1,elephant=2,fox=1},origo=1}}}");
         assertDirect("recordBase:myBase", "efe", // TODO: Shouldn't origo be -1?
-                     "elookup={fields={freetext={terms={deer=1,elephant=2,fox=1},origo=1}}}");
+                     "elookup={fields={lti={terms={deer=1,elephant=2,fox=1},origo=1}}}");
+    }
+
+    public void testDirectSolrIndexLookupCase() throws SolrServerException, IOException, InterruptedException {
+        // Yes, elephant is stated twice. We want to check the count
+        ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
+        assertDirect("recordBase:myBase", "F",
+                     "elookup={fields={lti={terms={e=1,f=1,g=1},origo=1}}}");
     }
 
     private void assertDirect(String queryStr, String term, String expected) throws SolrServerException {
         SolrQuery query = new SolrQuery(queryStr);
         query.set(ELOOKUP, Boolean.toString(true));
         query.set(ELOOKUP_DELTA, Integer.toString(-1));
-        query.set(ELOOKUP_FIELD, "freetext");
+        query.set(ELOOKUP_FIELD, "lti");
         query.set(ELOOKUP_LENGTH, Integer.toString(3));
         query.set(ELOOKUP_TERM, term);
         query.set(ELOOKUP_SORT, "index");
@@ -129,12 +138,80 @@ public class SolrIndexLookupTest extends TestCase {
             DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
             PRE + ELOOKUP, true,
             PRE + ELOOKUP_DELTA, -1,
-            PRE + ELOOKUP_FIELD, "freetext",
+            PRE + ELOOKUP_FIELD, "lti",
             PRE + ELOOKUP_LENGTH, 3,
             PRE + ELOOKUP_TERM, "ele",
             PRE + ELOOKUP_SORT, "index"
-        ), Arrays.asList("deer", "elephant", "fox"));
+        ), "deer(1) elephant(2) fox(1)");
     }
+
+    public void testIndexLookupEnd() throws Exception {
+        ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            //PRE + "qt", "/lookup", // Now added automatically
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_LENGTH, 4,
+            IndexKeys.SEARCH_INDEX_TERM, "g"
+        ), "f(1) g(1) h(1)", false);
+    }
+
+    public void testNoQuery() throws Exception {
+        ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
+        verifyLookup(new Request(
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_LENGTH, 3,
+            IndexKeys.SEARCH_INDEX_TERM, "F"
+        ), "e(1) f(1) g(1)", false);
+    }
+
+    public void testSubsetQuery() throws Exception {
+        ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "lti:E",
+            IndexKeys.SEARCH_INDEX_FIELD, "lti"
+        ), "e(1)", false);
+    }
+
+    public void testCaseSensitive() throws Exception {
+        ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            //PRE + "qt", "/lookup", // Now added automatically
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_LENGTH, 3,
+            IndexKeys.SEARCH_INDEX_TERM, "F"
+        ), "e(1) f(1) g(1)", false);
+    }
+
+  public void testIndexLookupNoLocale() throws Exception {
+      ingest(Arrays.asList("ægir", "åse", "ødis"));
+      verifyLookup(new Request(
+          DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+          //PRE + "qt", "/lookup", // Now added automatically
+          IndexKeys.SEARCH_INDEX_DELTA, -1,
+          IndexKeys.SEARCH_INDEX_FIELD, "lti",
+          IndexKeys.SEARCH_INDEX_LENGTH, 30,
+          IndexKeys.SEARCH_INDEX_TERM, ""
+      ), "åse(1) ægir(1) ødis(1)", false);
+  }
+
+  public void testIndexLookupLocale() throws Exception {
+      ingest(Arrays.asList("ægir", "åse", "ødis"));
+      verifyLookup(new Request(
+          DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+          //PRE + "qt", "/lookup", // Now added automatically
+          IndexKeys.SEARCH_INDEX_SORT, IndexKeys.INDEX_SORTBYLOCALE,
+          IndexKeys.SEARCH_INDEX_LOCALE, "da",
+          IndexKeys.SEARCH_INDEX_DELTA, -1,
+          IndexKeys.SEARCH_INDEX_FIELD, "lti",
+          IndexKeys.SEARCH_INDEX_LENGTH, 30,
+          IndexKeys.SEARCH_INDEX_TERM, ""
+      ), "ægir(1) ødis(1) åse(1)", false);    // TODO: Oder matter so upgrade the testing!
+  }
 
     // TODO: Test without query
     // TODO: Test origo
@@ -146,10 +223,10 @@ public class SolrIndexLookupTest extends TestCase {
             DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
             //PRE + "qt", "/lookup", // Now added automatically
             IndexKeys.SEARCH_INDEX_DELTA, -1,
-            IndexKeys.SEARCH_INDEX_FIELD, "freetext",
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
             IndexKeys.SEARCH_INDEX_LENGTH, 3,
             IndexKeys.SEARCH_INDEX_TERM, "ele" // Note: No sort
-        ), Arrays.asList("deer", "elephant", "fox"), false);
+        ), "deer(1) elephant(2) fox(1)", false);
     }
 
     private void ingest(List<String> terms) throws IOException {
@@ -161,10 +238,10 @@ public class SolrIndexLookupTest extends TestCase {
         indexer.close(true);
     }
 
-    private void verifyLookup(Request request, List<String> terms) throws Exception {
-        verifyLookup(request, terms, true);
+    private void verifyLookup(Request request, String  expectedTerms) throws Exception {
+        verifyLookup(request, expectedTerms, true);
     }
-    private void verifyLookup(Request request, List<String> terms, boolean explicitRest) throws Exception {
+    private void verifyLookup(Request request, String  expectedTerms, boolean explicitRest) throws Exception {
         SearchNode searcher = explicitRest ?
                               new SolrSearchNode(Configuration.newMemoryBased(
                                   SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
@@ -174,20 +251,37 @@ public class SolrIndexLookupTest extends TestCase {
         searcher.search(request, responses);
         searcher.close();
 
-        for (Response response: responses) {
-            if (response instanceof IndexResponse) {
-                IndexResponse lookup = (IndexResponse)response;
-                String xml = lookup.toXML();
-                for (String term: terms) {
-                    assertTrue("The response should contain the term '" + term + "'\n" + xml,
-                               xml.contains(">" + term + "<"));
-                }
-                return;
-            }
-        }
-        System.err.println(responses.toXML());
-        fail("Could not locate an IndexResponse in the result");
+        String actual = getTerms(responses.toXML());
+        assertEquals("The terms should be as expected in\n" + responses.toXML(),
+                     expectedTerms, actual);
     }
+
+    private String getTerms(String response) { // Beware: Not XML parsing at all
+      final Pattern RESPONSE = Pattern.compile(
+        "<indexresponse(.+?)</indexresponse>", Pattern.DOTALL);
+      Matcher reMatch = RESPONSE.matcher(response);
+      if (!reMatch.find()) {
+        return "";
+      }
+      response = reMatch.group(1);
+      //  <int name="å">1</int><int name="æble">1</int>...
+
+      final Pattern TERMS = Pattern.compile(
+        "<term count=\"([^\"]+)\">([^<]+)</term>");
+      StringWriter result = new StringWriter();
+      Matcher matcher = TERMS.matcher(response);
+      boolean subsequent = false;
+      while (matcher.find()) {
+        if (subsequent) {
+          result.append(" ");
+        }
+        subsequent = true;
+        result.append(matcher.group(2));
+        result.append("(").append(matcher.group(1)).append(")");
+      }
+      return result.toString();
+    }
+
 
     private ObjectFilter getDataProvider(List<String> terms) throws UnsupportedEncodingException {
         List<Payload> samples = new ArrayList<Payload>(terms.size());
@@ -196,7 +290,7 @@ public class SolrIndexLookupTest extends TestCase {
                 "doc" + i, "dummy",
                 ("<doc><field name=\"recordId\">doc" + i + "</field>\n"
                  + "   <field name=\"recordBase\">myBase</field>\n"
-                 + "   <field name=\"freetext\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
+                 + "   <field name=\"lti\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
         }
         return new PayloadFeederHelper(samples);
     }

@@ -1,16 +1,18 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
 import junit.framework.TestCase;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.util.BytesRef;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
-
-import javax.xml.stream.XMLStreamException;
 import java.util.*;
 
 // TODO: Change this to LuceneTestCase but ensure Flex
@@ -67,7 +69,8 @@ public class TestGroupTermProvider extends TestCase {
     }
 
     TermProvider groupProvider = ExposedFactory.createProvider(
-        reader, "TestGroup", Arrays.asList(fieldNames), null, false, "null");
+        reader, "TestGroup", Arrays.asList(fieldNames),
+        new NamedNaturalComparator());
 
     ArrayList<String> exposedOrdinals = new ArrayList<String>(DOCCOUNT);
     for (int i = 0 ; i < groupProvider.getOrdinalTermCount() ; i++) {
@@ -120,7 +123,7 @@ public class TestGroupTermProvider extends TestCase {
 
     TermProvider groupProvider = ExposedFactory.createProvider(
         index, "a-group", fieldNames,
-        ExposedComparators.collatorToBytesRef(sorter), false, "da");
+        new NamedCollatorComparator(sorter));
     
     ArrayList<String> exposedExtraction = new ArrayList<String>(DOCCOUNT);
     Iterator<ExposedTuple> ei = groupProvider.getIterator(false);
@@ -154,9 +157,9 @@ public class TestGroupTermProvider extends TestCase {
     }
     Collections.sort(plain);
 
-    TermProvider index =
-        ExposedFactory.createProvider(reader, "docIDGroup", Arrays.asList("a"),
-        ExposedComparators.collatorToBytesRef(sorter), false, "foo");
+    TermProvider index = ExposedFactory.createProvider(
+      reader, "docIDGroup", Arrays.asList("a"),
+      new NamedCollatorComparator(sorter));
 
     ArrayList<ExposedHelper.Pair> exposed =
         new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
@@ -197,7 +200,7 @@ public class TestGroupTermProvider extends TestCase {
     TermProvider index =
         ExposedFactory.createProvider(
             reader, "multiGroup", Arrays.asList("a", "b"),
-        ExposedComparators.collatorToBytesRef(sorter), false, "foo");
+            new NamedCollatorComparator(sorter));
 
     ArrayList<ExposedHelper.Pair> exposed =
         new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
@@ -231,11 +234,11 @@ public class TestGroupTermProvider extends TestCase {
     helper.createIndex(100, Arrays.asList("a"), 20, 2);
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-
+    NamedComparator comp = new NamedNaturalComparator();
     ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
-        ExposedHelper.MULTI, null, false, ExposedRequest.LUCENE_ORDER);
-    ExposedRequest.Group groupRequest = new ExposedRequest.Group("TestGroup",
-        Arrays.asList(fieldRequest), null, false, ExposedRequest.LUCENE_ORDER);
+        ExposedHelper.MULTI, comp);
+    ExposedRequest.Group groupRequest = new ExposedRequest.Group(
+      "TestGroup", Arrays.asList(fieldRequest), comp);
     TermProvider provider = ExposedCache.getInstance().getProvider(
         reader, groupRequest);
     
@@ -333,13 +336,13 @@ public class TestGroupTermProvider extends TestCase {
   private List<TermProvider> createGroupProviders(
       String message, String[] fields, IndexReader reader) throws IOException {
     List<TermProvider> providers = new ArrayList<TermProvider>(fields.length);
+    NamedComparator comp = new NamedNaturalComparator();
     for (String field: fields) {
       List<ExposedRequest.Field> fieldRequests =
           new ArrayList<ExposedRequest.Field>(fields.length);
-      fieldRequests.add(new ExposedRequest.Field(
-          field, null, false, ExposedRequest.LUCENE_ORDER));
-      ExposedRequest.Group groupRequest = new ExposedRequest.Group("TestGroup",
-          fieldRequests, null, false, ExposedRequest.LUCENE_ORDER);
+      fieldRequests.add(new ExposedRequest.Field(field, comp));
+      ExposedRequest.Group groupRequest = new ExposedRequest.Group(
+        "TestGroup", fieldRequests, comp);
       TermProvider provider = ExposedCache.getInstance().getProvider(
           reader, groupRequest);
       assertTrue(message + ". The provider for " + field + " should be a " +

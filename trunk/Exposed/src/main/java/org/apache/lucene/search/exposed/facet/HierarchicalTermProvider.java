@@ -5,12 +5,12 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.GrowingMutable;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -169,12 +169,8 @@ public class HierarchicalTermProvider implements TermProvider {
     return source.getNearestTermIndirect(key, startTermPos, endTermPos);
   }
 
-  public Comparator<BytesRef> getComparator() {
+  public NamedComparator getComparator() {
     return source.getComparator();
-  }
-
-  public String getComparatorID() {
-    return source.getComparatorID();
   }
 
   public String getDesignation() {

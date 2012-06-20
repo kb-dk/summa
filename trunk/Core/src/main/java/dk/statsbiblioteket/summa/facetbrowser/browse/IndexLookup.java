@@ -22,7 +22,6 @@ import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -30,21 +29,24 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.exposed.ExposedComparators;
 import org.apache.lucene.search.exposed.ExposedRequest;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 import org.apache.lucene.search.exposed.facet.TagCollector;
-import org.apache.lucene.search.exposed.facet.request.*;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Utility class that performs IndexLookups on TagHandlers.
@@ -223,36 +225,30 @@ public class IndexLookup {
 
     private org.apache.lucene.search.exposed.facet.request.FacetRequest
                                       createFacetRequest(IndexRequest request) {
-        String comparatorID = ExposedRequest.LUCENE_ORDER;
-        if (descriptor != null) {
-            comparatorID =
-                descriptor.getFacets().get(request.getField()).getLocale();
-            if (comparatorID != null) {
-                request.setLocale(new Locale(comparatorID));
-            }
-        }
-        Locale locale = request.getLocale();
+        String localeStr =
+            descriptor == null ? null :
+            descriptor.getFacets().get(request.getField()).getLocale();
+        Locale locale =
+            localeStr == null ? null :
+            new Locale(localeStr);
+        NamedComparator comparator = ComparatorFactory.create(locale);
 
-        // TODO: Use a factory for collator
-        Comparator<BytesRef> comparator =
-            ExposedComparators.localeToBytesRef(locale);
         List<ExposedRequest.Field> fields =
             new ArrayList<ExposedRequest.Field>();
         // TODO: Add reverse to request and here
-        fields.add(new ExposedRequest.Field(
-            request.getField(), comparator, false, comparatorID));
+        fields.add(new ExposedRequest.Field(request.getField(), comparator));
         List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
         // TODO: Add reverse to request and here
         ExposedRequest.Group eGroup = new ExposedRequest.Group(
-            request.getField(), fields, comparator, false, comparatorID);
-        org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER facetOrder;
-        facetOrder = locale == null ?
-                     org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.index :
-                     org.apache.lucene.search.exposed.facet.request.FacetRequest.GROUP_ORDER.locale;
+            request.getField(), fields, comparator);
+        NamedComparator.ORDER facetOrder = locale == null ?
+                                           NamedComparator.ORDER.index :
+                                           NamedComparator.ORDER.locale;
 
         // TODO: Add reverse to request and here
         FacetRequestGroup facetGroup = new FacetRequestGroup(
-            eGroup, facetOrder, false, locale == null ? null : comparatorID,
+            eGroup, facetOrder, false,
+            locale == null ? null : locale.toString(),
             request.getDelta(), request.getLength(), request.getMinCount(),
             request.getTerm());
         groups.add(facetGroup);

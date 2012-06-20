@@ -24,14 +24,15 @@
                 <xsl:attribute name="name">recordBase</xsl:attribute>
                 <xsl:value-of select="$recordBase" />
             </xsl:element>
-
+            <!-- We need to prefix attributes in order for the XMLTransformer to work in production, but not for
+                 unit-tests to run. Why is that different? XSLTProc also requires prefixed attributes. -->
             <xsl:for-each select="doc:fields/doc:field">
-                <xsl:if test=". != '' and @name != 'recordBase' and @name != 'recordId'">
+                <xsl:if test=". != '' and @doc:name != 'recordBase' and @doc:name != 'recordId'">
                     <xsl:text>
                     </xsl:text>
                     <xsl:element name="field">
                         <xsl:attribute name="name">
-                            <xsl:value-of select="@name"/>
+                            <xsl:value-of select="@doc:name"/>
                         </xsl:attribute>
                         <!--                        <xsl:attribute name="boost">
                             <xsl:value-of select="@doc:boost"/>

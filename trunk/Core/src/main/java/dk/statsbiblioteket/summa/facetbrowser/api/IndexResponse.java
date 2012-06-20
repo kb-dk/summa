@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -22,13 +22,13 @@ import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
-import com.ibm.icu.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -175,8 +175,8 @@ public class IndexResponse extends ResponseImpl {
                          ? new SensitiveComparator()
                          : new InSensitiveComparator();
             } else {
-                Collator collator = CollatorFactory.createCollator(
-                    request.getLocale());
+                Collator collator = new NamedCollatorComparator(
+                    request.getLocale()).getCollator();
                 sorter = request.isCaseSensitive()
                          ? new SensitiveComparator(collator)
                          : new InSensitiveComparator(collator);

@@ -21,11 +21,11 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RuleBasedCollator;
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 
 import java.util.Locale;
 
@@ -69,7 +69,7 @@ public class CollatorTest extends TestCase {
 //        assertTrue("Manual Collator should prioritize space at quaternary",
 //                   manual.compare("a d", "ad") < 0);
 
-        Collator standard = CollatorFactory.createCollator(DA);
+        Collator standard = new NamedCollatorComparator(DA).getCollator();
         assertTrue("Standard Collator should ignore space at tertiary",
                    standard.compare("ab", "a c") > 0); //'a c' is before 'ab' - spaces first. 
 //        assertTrue("Standard Collator should prioritize space at quaternary",

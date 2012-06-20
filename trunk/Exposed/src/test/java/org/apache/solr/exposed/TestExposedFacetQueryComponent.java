@@ -6,6 +6,7 @@ import org.apache.solr.core.SolrCore;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -19,7 +20,13 @@ import static org.apache.solr.exposed.ExposedFacetParams.*;
 public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
   @BeforeClass
   public static void beforeClass() throws Exception {
-    initCore("solrconfig-exposed.xml","schema-exposed.xml");
+    initCore("solrconfig-exposed.xml", "schema-exposed.xml");
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
   }
 
   @After
@@ -81,7 +88,7 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
   }
 
   @Test
-  public void testSorted() throws Exception {
+  public void testIndexSorted() throws Exception {
     addContent(100);
     String response = h.query(req(
         "qt", "exprh",

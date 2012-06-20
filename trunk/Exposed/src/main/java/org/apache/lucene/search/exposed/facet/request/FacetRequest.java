@@ -1,9 +1,11 @@
 package org.apache.lucene.search.exposed.facet.request;
 
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.ParseHelper;
 
 import javax.xml.stream.*;
-import java.io.*;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +15,7 @@ import java.util.List;
  * the concrete user-request. The vocabulary is taken primarily from
  * http://wiki.apache.org/solr/SimpleFacetParameters
  * </p><p>
- * See FacetRequest.xsd and FacetRequest.xml for syntax.
+ *comparatorId See FacetRequest.xsd and FacetRequest.xml for syntax.
  * </p><p>
  * The facet request works with overriding params. FacetRequest is top level,
  * then follows FacetRequestGroups.
@@ -22,24 +24,8 @@ public class FacetRequest {
   public static final String NAMESPACE =
       "http://lucene.apache.org/exposed/facet/request/1.0";
 
-  public enum GROUP_ORDER {count, index, locale;
-    public static GROUP_ORDER fromString(String order) {
-      if (count.toString().equals(order)) {
-        return count;
-      }
-      if (index.toString().equals(order)) {
-        return index;
-      }
-      if (locale.toString().equals(order)) {
-        return locale;
-      }
-      throw new IllegalArgumentException("The order was '" + order
-          + "' where only " + GROUP_ORDER.count+ ", " + GROUP_ORDER.index
-          + " and " + GROUP_ORDER.locale + " is allowed");
-    }
-  }
-
-  public static final GROUP_ORDER DEFAULT_GROUP_ORDER = GROUP_ORDER.count;
+  public static final NamedComparator.ORDER DEFAULT_GROUP_ORDER =
+    NamedComparator.ORDER.count;
   public static final boolean DEFAULT_REVERSE = false;
   public static final int    DEFAULT_MAXTAGS = 20;
   public static final int    DEFAULT_MINCOUNT = 0;
@@ -64,7 +50,7 @@ public class FacetRequest {
   private final List<FacetRequestGroup> groups;
 
   // Defaults
-  private GROUP_ORDER order = DEFAULT_GROUP_ORDER;
+  private NamedComparator.ORDER order = DEFAULT_GROUP_ORDER;
   private boolean reverse = DEFAULT_REVERSE;
   private String locale = null;
   private int maxTags =   DEFAULT_MAXTAGS;
@@ -98,7 +84,7 @@ public class FacetRequest {
     List<FacetRequestGroup> groups = null;
 
     String stringQuery = null;
-    GROUP_ORDER order = DEFAULT_GROUP_ORDER;
+    NamedComparator.ORDER order = DEFAULT_GROUP_ORDER;
     boolean reverse = DEFAULT_REVERSE;
     String locale = null;
     int maxTags =   DEFAULT_MAXTAGS;
@@ -119,7 +105,7 @@ public class FacetRequest {
       String attribute = reader.getAttributeLocalName(i);
       String value = reader.getAttributeValue(i);
       if ("order".equals(attribute)) {
-        order = GROUP_ORDER.fromString(value);
+        order = NamedComparator.ORDER.fromString(value);
       } else if ("reverse".equals(attribute)) {
         reverse = Boolean.parseBoolean(value);
       } else if ("locale".equals(attribute)) {
@@ -173,7 +159,7 @@ public class FacetRequest {
   }
 
   private static List<FacetRequestGroup> resolveGroups(
-      XMLStreamReader reader, String request, GROUP_ORDER order,
+      XMLStreamReader reader, String request, NamedComparator.ORDER order,
       boolean reverse, String locale, int maxTags, int minCount, int offset,
       String prefix, boolean hierarchical, int levels, String delimiter,
       String startPath) throws XMLStreamException {
@@ -310,11 +296,11 @@ public class FacetRequest {
 
   /* Mutators */
 
-  public GROUP_ORDER getOrder() {
+  public NamedComparator.ORDER getOrder() {
     return order;
   }
 
-  public void setOrder(GROUP_ORDER order) {
+  public void setOrder(NamedComparator.ORDER order) {
     this.order = order;
   }
 

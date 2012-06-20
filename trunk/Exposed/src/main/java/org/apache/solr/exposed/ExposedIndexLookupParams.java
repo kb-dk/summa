@@ -25,19 +25,30 @@ public interface ExposedIndexLookupParams {
   public static final String ELOOKUP_FIELD = "elookup.field";
 
   /**
-   * How to sort the terms. Note that specifying a locale will result in
-   * the terms being sorted by a Collator with the provided locale.
-   * Depending on term count for the given field, sorting the terms might
-   * result is a significant delay for the first request. A very rough
-   * time estimate is 1 minute / 1 million terms for current hardware
-   * anno 2012.
+   * How to sort the terms. Note that specifying locale will result in
+   * the terms being sorted by a Collator with the locale provided by
+   * {@link #ELOOKUP_SORT_LOCALE_VALUE}. Depending on term count for the given
+   * field, sorting the terms by locale might result is a significant delay for
+   * the first request. A very rough time estimate is 1 minute / 1 million terms
+   * for current hardware anno 2012.
    * </p><p>
-   * Optional. Default is field index order. Possible value is 'index'
-   * or a named locale such as 'da' or 'en'.
+   * Optional. Default is field index order.
+   * Possible values are 'index' or 'locale'. If locale is specified, the
+   * property {@link #ELOOKUP_SORT_LOCALE_VALUE} must be specified.
+   * Note that 'count' is not valid.
    */
   public static final String ELOOKUP_SORT = "elookup.sort";
-  public static final String ELOOKUP_SORT_INDEX = "index";
-  public static final String ELOOKUP_DEFAULT_SORT = ELOOKUP_SORT_INDEX;
+  // Mirror of ComparatorFactory.ORDER
+  public static final String ELOOKUP_SORT_BYINDEX = "index";
+  // By COUNT makes no sense as index lookup is inherently ordered by terms
+  public static final String ELOOKUP_SORT_BYLOCALE = "locale";
+  public static final String ELOOKUP_DEFAULT_SORT = ELOOKUP_SORT_BYINDEX;
+
+  /**
+   * Used when elookup.sort == locale.
+   */
+  public static final String ELOOKUP_SORT_LOCALE_VALUE = "elookup.sort.locale";
+
 
   /**
    * The term to use for the lookup. The terms in the stated field are

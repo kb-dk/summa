@@ -17,6 +17,8 @@ package org.apache.lucene.search.exposed;
  * limitations under the License.
  */
 
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+
 /**
  * A PriorityQueue maintains a partial ordering of its elements such that the
  * least element can always be found in constant time.  Put()'s and pop()'s
@@ -34,10 +36,10 @@ public class ExposedPriorityQueue {
   private int size;
   private int maxSize;
   protected int[] heap;
-  private ExposedComparators.OrdinalComparator comparator;
+  private ComparatorFactory.OrdinalComparator comparator;
 
   public ExposedPriorityQueue(
-      ExposedComparators.OrdinalComparator comparator, int size) {
+      ComparatorFactory.OrdinalComparator comparator, int size) {
     this.comparator = comparator;
     initialize(size);
   }

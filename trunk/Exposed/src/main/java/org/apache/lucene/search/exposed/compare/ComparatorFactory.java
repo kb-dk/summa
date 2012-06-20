@@ -1,19 +1,20 @@
-package org.apache.lucene.search.exposed;
+package org.apache.lucene.search.exposed.compare;
 
 import com.ibm.icu.text.RawCollationKey;
-import com.ibm.icu.text.RuleBasedCollator;
+import org.apache.lucene.search.exposed.CachedCollatorKeyProvider;
+import org.apache.lucene.search.exposed.ExposedTuple;
+import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
 
 /**
- * Wraps different types of comparators.
+ * Helper class for constructing NamedComparators.
  */
-public class ExposedComparators {
-  
+public class ComparatorFactory {
+
   /**
    * Simple atomic specialization of Comparator<Integer>. Normally used to
    * compare terms by treating the arguments as ordinals and performing lookup
@@ -23,48 +24,32 @@ public class ExposedComparators {
     int compare(int value1, int value2);
   }
 
-  public static Comparator<BytesRef> localeToBytesRef(final Locale locale) {
-    return locale == null ? new NaturalComparator()
-        : collatorToBytesRef(getCollator(locale));
+  /**
+   * Creates a comparator backed by natural order or a Collator, depending on
+   * the given locale.
+   * @param locale if null of empty, natural order is used. If defined, a
+   *               Collator is created based on {@code new Locale(locale)}.
+   * @return either {@link NamedNaturalComparator} or
+   * {@link NamedCollatorComparator}.
+   */
+  public static NamedComparator create(String locale) {
+    return create(locale == null || "".equals(locale) ?
+                  null :
+                  new Locale(locale));
   }
 
   /**
-   * Creates a Collator that ignores punctuation and whitespace, mimicking the
-   * Sun/Oracle default Collator.
-   * @param locale defines the compare-rules.
-   * @return a Collator ready for use.
+   * Creates a comparator backed by natural order or a Collator, depending on
+   * the given locale.
+   * @param locale if null, natural order is used.
+   *               If defined, a Collator is created based on the locale.
+   * @return either {@link NamedNaturalComparator} or
+   * {@link NamedCollatorComparator}.
    */
-  public static Collator getCollator(Locale locale) {
-    Collator collator = Collator.getInstance(locale);
-    if (collator instanceof RuleBasedCollator) {
-      // Treat spaces as normal characters
-      ((RuleBasedCollator)collator).setAlternateHandlingShifted(false);
-    }
-    return collator;
-  }
-
-  public static Comparator<BytesRef> collatorToBytesRef(
-      final Collator collator) {
-    return collator == null ? new NaturalComparator()
-        : new BytesRefWrappedCollator(collator);
-  }
-  public static final class BytesRefWrappedCollator implements
-                                                          Comparator<BytesRef> {
-    private final Collator collator;
-    public BytesRefWrappedCollator(Collator collator) {
-      this.collator = collator;
-    }
-    public int compare(BytesRef o1, BytesRef o2) {
-      return collator.compare(o1.utf8ToString(), o2.utf8ToString());
-    }
-    public Collator getCollator() {
-      return collator;
-    }
-  }
-  public static final class NaturalComparator implements Comparator<BytesRef> {
-    public int compare(BytesRef o1, BytesRef o2) {
-      return o1.compareTo(o2); // TODO: Consider null-case
-    }
+  public static NamedComparator create(Locale locale) {
+    return locale == null ?
+           new NamedNaturalComparator() :
+           new NamedCollatorComparator(locale);
   }
 
   /**
@@ -73,8 +58,8 @@ public class ExposedComparators {
    * @return a comparator that compares ordinals resolvable by provider by
    *         looking up the BytesRefs values and feeding them to the comparator.
    */
-  public static OrdinalComparator wrap(TermProvider provider,
-                                   Comparator<BytesRef> comparator) {
+  public static OrdinalComparator wrap(
+    TermProvider provider, Comparator<BytesRef> comparator) {
     return new BytesRefWrapper(provider, comparator);
   }
 
@@ -121,15 +106,6 @@ public class ExposedComparators {
   }
 
   /**
-   * Compares the given ordinals directly.
-   */
-  public static final class DirectComparator implements OrdinalComparator {
-    public final int compare(final int value1, final int value2) {
-      return value1-value2;
-    }
-  }
-
-  /**
    * Uses the given values as indexes in a backing int[], comparing the values
    * from the int[] directly. If the values are the same, natural integer order
    * for the values are used.
@@ -141,25 +117,9 @@ public class ExposedComparators {
       this.values = values;
     }
 
+    @Override
     public final int compare(final int value1, final int value2) {
       final int diff = values[value1]-values[value2];
-      return diff == 0 ? value2 - value1 : diff;
-    }
-  }
-
-  /**
-   * Like {@link IndirectComparator} but in reverse order.
-   */
-  public static final class ReverseIndirectComparator
-                                                  implements OrdinalComparator {
-    private final int[] values;
-
-    public ReverseIndirectComparator(int[] values) {
-      this.values = values;
-    }
-
-    public final int compare(final int value1, final int value2) {
-      final int diff = values[value2]-values[value1];
       return diff == 0 ? value2 - value1 : diff;
     }
   }
@@ -169,11 +129,12 @@ public class ExposedComparators {
     private final Comparator<BytesRef> comparator;
 
     public BytesRefWrapper(
-        TermProvider provider, Comparator<BytesRef> comparator) {
+      TermProvider provider, Comparator<BytesRef> comparator) {
       this.comparator = comparator;
       this.provider = provider;
     }
 
+    @Override
     public final int compare(final int value1, final int value2) {
       try {
         return comparator == null ?
@@ -200,6 +161,7 @@ public class ExposedComparators {
       this.comparator = comparator;
     }
 
+    @Override
     public final int compare(final int value1, final int value2) {
       try {
         return comparator.compare(
@@ -223,6 +185,7 @@ public class ExposedComparators {
     }
 
     // TODO: Consider null as value
+    @Override
     public final int compare(final int value1, final int value2) {
       try {
         return provider.get(map[value1]).compareTo(provider.get(map[value2]));
@@ -244,6 +207,7 @@ public class ExposedComparators {
       this.comparator = comparator;
     }
 
+    @Override
     public int compare(int v1, int v2) {
       try {
       return comparator == null ?
@@ -263,6 +227,7 @@ public class ExposedComparators {
       this.backingKeys = backingKeys;
     }
 
+    @Override
     public int compare(int v1, int v2) {
       try {
         return backingKeys[v1].compareTo(backingKeys[v2]);

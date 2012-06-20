@@ -21,13 +21,12 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -102,10 +101,20 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
             recordId, "dummy", Resolver.getUTF8Content(path).getBytes()));
         ObjectFilter input = new PayloadFeederHelper(Arrays.asList(summaDoc));
 
-        XMLTransformer transformer = new XMLTransformer(Configuration.newMemoryBased(
+/*        Configuration confTrans = Configuration.newMemoryBased(
             XMLTransformer.CONF_STRIP_XML_NAMESPACES, false,
             XMLTransformer.CONF_XSLT, "SummaDocumentToSolrDocument.xslt"
-        ));
+        );*/
+
+        Configuration confTrans = Configuration.newMemoryBased(
+            XMLTransformer.CONF_VISIT_CHILDREN, false,
+            XMLTransformer.CONF_SUCCESS_REQUIREMENT, XMLTransformer.REQUIREMENT.origin
+        );
+        Configuration sub = confTrans.createSubConfigurations(XMLTransformer.CONF_SETUPS, 1).get(0);
+        sub.set(XMLTransformer.CONF_STRIP_XML_NAMESPACES, false);
+        sub.set(XMLTransformer.CONF_XSLT, "SummaDocumentToSolrDocument.xslt");
+
+        XMLTransformer transformer = new XMLTransformer(confTrans);
         transformer.setSource(input);
         Payload solrDoc = transformer.next();
         return solrDoc.getRecord().getContentAsUTF8();

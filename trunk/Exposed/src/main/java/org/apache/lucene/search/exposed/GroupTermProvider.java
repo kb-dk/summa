@@ -52,8 +52,8 @@ public class GroupTermProvider extends TermProviderImpl {
   public GroupTermProvider(int readerHash,
       List<TermProvider> providers, ExposedRequest.Group request,
                                         boolean cacheTables) throws IOException {
-    super(null, 0, request.getComparator(), request.getComparatorID(),
-        "Group " + request.getName(), cacheTables);
+    super(null, 0, request.getComparator(), "Group " + request.getName(),
+          cacheTables);
     this.readerHash = readerHash;
     this.providers = checkProviders(providers);
     this.request = request;

@@ -23,12 +23,15 @@ import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.FieldComparator;
 import org.apache.lucene.search.FieldComparatorSource;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Custom sorter that uses the Exposed framework. Trade-offs are slow first-time
@@ -37,46 +40,36 @@ import java.util.*;
 // TODO: Add adjustable sortNullFirst
 public class ExposedFieldComparatorSource extends FieldComparatorSource {
   private final IndexReader reader;
-  private final Comparator<BytesRef> comparator;
-  private final String comparatorID;
-  private final boolean sortNullFirst;
+  private final NamedComparator comparator;
 
   // TODO: Figure out how to avoid the need for re-creation upon re-open
 
   /**
    * Creates a field comparator source with the given comparator. It is
    * recommended to use this constructor instead of constructing with a locale
-   * an to provide a fast comparator, such as the ICU Collator.
+   * and to provide a fast comparator, such as the ICU Collator.
    * </p><p>
-   * The class {@link ExposedComparators} provides easy wrapping of Collators
-   * and other comparators.
+   * The class
+   * {@link org.apache.lucene.search.exposed.compare.ComparatorFactory} provides
+   * easy wrapping of Collators and other comparators.
    * @param reader        the reader to sort for.
    * @param comparator    a custom comparator.
-   * @param comparatorID  an id for the comparator.
-   * @param sortNullFirst if true, documents without content in the sort field
-   *                      are sorted first.
    */
   public ExposedFieldComparatorSource(
-      IndexReader reader, Comparator<BytesRef> comparator, String comparatorID,
-      boolean sortNullFirst) {
+    IndexReader reader, NamedComparator comparator) {
     this.reader = reader;
-    this.comparatorID = comparatorID;
     this.comparator = comparator;
-    this.sortNullFirst = sortNullFirst;
   }
 
   /**
    * Creates a field comparator source with a Collator generated from the given
-   * locale using {@link ExposedComparators}. By default this means Java's
-   * build-in Collator, which is rather slow.
+   * locale using
+   * {@link org.apache.lucene.search.exposed.compare.ComparatorFactory}.
    * @param reader the reader to sort for.
    * @param locale the locale to use for constructing the Collator.
    */
   public ExposedFieldComparatorSource(IndexReader reader, Locale locale) {
-    this(reader,
-        ExposedComparators.localeToBytesRef(locale),
-        locale == null ? ExposedRequest.LUCENE_ORDER : locale.toString(),
-        false);
+    this(reader, ComparatorFactory.create(locale));
   }
 
   /**
@@ -124,7 +117,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
       this.groupName = groupName;
       this.fieldNames = fieldNames;
       this.provider = ExposedCache.getInstance().getProvider(
-          reader, groupName, fieldNames, comparator, comparatorID);
+          reader, groupName, fieldNames, comparator);
 
       this.numHits = numHits;
       this.sortPos = sortPos;
@@ -138,7 +131,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
 
     @Override
     public int compare(int slot1, int slot2) {
-      if (!sortNullFirst) {
+      if (!comparator.isNullFirst()) {
         int slot1order = order[slot1];
         int slot2order = order[slot2];
         if (slot1order == undefinedTerm) {
@@ -161,7 +154,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
 
     @Override
     public int compareBottom(final int doc) throws IOException {
-      if (!sortNullFirst) {
+      if (!comparator.isNullFirst()) {
         try {
           final long bottomOrder = bottom;
           final long docOrderR = docOrder.get(doc+docBase);
@@ -228,6 +221,4 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
       throw new UnsupportedOperationException("Not supported yet");
     }
   }
-
-
 }

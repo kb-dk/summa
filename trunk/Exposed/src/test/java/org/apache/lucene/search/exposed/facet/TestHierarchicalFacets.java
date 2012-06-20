@@ -5,7 +5,11 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.ExposedHelper;
+import org.apache.lucene.search.exposed.ExposedIOFactory;
+import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.util.BytesRef;
 
@@ -100,8 +104,7 @@ public class TestHierarchicalFacets extends TestCase {
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     TermProvider basic = ExposedCache.getInstance().getProvider(
-        reader, "myGroup", Arrays.asList("deep"), null,
-        ExposedRequest.LUCENE_ORDER);
+        reader, "myGroup", Arrays.asList("deep"), new NamedNaturalComparator());
     FacetMap map = new FacetMap(reader.maxDoc(), Arrays.asList(basic));
     for (int i = 0 ; i < reader.maxDoc() ; i++) {
       System.out.print("Doc " + i + ":");
@@ -121,8 +124,7 @@ public class TestHierarchicalFacets extends TestCase {
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     TermProvider basic = ExposedCache.getInstance().getProvider(
-        reader, "myGroup", Arrays.asList("deep"), null,
-        ExposedRequest.LUCENE_ORDER);
+        reader, "myGroup", Arrays.asList("deep"), new NamedNaturalComparator());
     FacetMap map = new FacetMap(reader.maxDoc(), Arrays.asList(basic));
     for (int i = 0 ; i < reader.maxDoc() ; i++) {
       System.out.print("Doc " + i + ":");
