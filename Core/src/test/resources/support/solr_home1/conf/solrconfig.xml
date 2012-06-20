@@ -742,6 +742,28 @@
      <str name="defType">edismax</str>
      <str name="rows">10</str>
      <str name="qf">
+       sort_title
+       freetext^0.5
+       author_main^2.0
+       author_person
+       au_other
+       author_corporation
+       title^1.8 
+       se
+       main_title^4.0
+       html_h1
+       html_h2
+       html_h3
+       html_h4
+       html_h5
+       html_h6
+       subject_dk5
+       subject_serial_solutions
+       subject_ulrichs
+       subject_controlled^1.2
+       subject_other
+       lma_long
+       id     
        enrich_editor^0.2
        enrich_isbn^0.2
        enrich_publisher^0.2
@@ -749,134 +771,7 @@
        enrich_title^0.2
        enrich_head^0.2
        enrich_freetext^0.05
-       html_h1
-       html_h2
-       html_h3
-       html_h4
-       html_h5
-       html_h6
-       html_content
-       freetext^0.5        
-       title^1.8        
-       se
-       aj
-       km
-       nm
-       ts
-       bs
-       fg
-       ix
-       ka
-       kg
-       kk
-       sf
-       lmo
-       lvx
-       vp
-       text
-       main_title^4.0
-       peri^4.0
-       lti
-       lperi
-       class_other
-       ddc_kw
-       dk
-       inst
-       kl            
-       lcc_kw
-       nlm_kw
-       author_person
-       author_main^2.0
-       au_other
-       author_corporation
-       lma_long
-       ma_short
-       isbn
-       issn
-       number
-       standard_number
-       vid
-       fmbl
-       fubl
-       mesh          
-       su_corp
-       su_lc
-       su_lc_sol     
-       su_pe         
-       lsu_ser_sol
-       lsu_ulrichs
-       lsu_ulrichs_hier
-       su_dk
-       led
-       lsu_oai
-       lsubject
-       subject_dk5
-       subject_serial_solutions
-       subject_ulrichs
-       subject_controlled^1.2
-       subject_other
-       lcl_csa
-       lddc
-       lcl_all
-       ldbk
-       ldk5
-       linst
-       lkl
-       llcc
-       lnlm
-       ludk
-       cluster
-       lso
-       lvp
-       author_descr
-       barcode
-       barcode_normalised
-       call
-       collection
-       collection_normalised
-       country
-       nv
-       item_status
-       itype
-       item_ma
-       l_call
-       location
-       location_normalised
-       ma_long
-       op
-       original_language^0.4
-       other^0.4
-       place
-       series_normalised
-       ww
-       ip
-       lip
-       commercials_subject
-       author_normalised
-       llfo
-       format
-       lang
-       llang
-       no^0.4
-       openUrl
-       publ
-       py
-       rt
-       shortformat
-       sort_title
-       sort_year_asc
-       sort_year_desc
-       year
-       ava
-       tag
-       tss_status
-       own
-       new
-       season_id
-       iso_date
-       iso_time
-       iso_dateTime
-       recordId
+       lti                                                 
      </str>
      <str name="fl">*,score</str>
 
@@ -905,8 +800,8 @@
      <str name="facet.field">ava</str>
      
      <!--Virtual fields(summa alias/alias-groups) for query -->
-     <str name="f.titel.qf">title</str>
-     <str name="f.ti.qf">title se main_title</str>
+     <str name="f.titel.qf">title^1.8</str>
+     <str name="f.ti.qf">title^1.8 se main_title^4.0</str>
      <str name="f.cl.qf">class_other ddc_kw dk inst kl lcc_kw nlm_kw</str>
      <str name="f.au.qf">author_main author_person au_other author_corporation</str>
      <str name="f.fo.qf">author_main author_person au_other author_corporation</str>
@@ -916,11 +811,11 @@
      <str name="f.nr.qf">isbn issn number standard_number id ww fmlb fubl</str>
      <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
      <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
-     <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled subject_other</str>
-     <str name="f.em.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled subject_other</str>
+     <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
+     <str name="f.em.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
      <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
      <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
-     <str name="f.enrich_header.qf">enrich_editor enrich_isbn enrich_publisher enrich_publishdate enrich_title enrich_head enrich_freetext</str>         
+     <str name="f.enrich_header.qf">enrich_editor^0.2 enrich_isbn^0.2 enrich_publisher^0.2 enrich_publishdate^0.2 enrich_title^0.2 enrich_head^0.2 enrich_freetext^0.05</str>         
    </lst>
    <arr name="last-components">
       <str>spellcheck</str>
