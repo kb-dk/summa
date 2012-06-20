@@ -27,7 +27,7 @@ public class KeywordFieldTest {
 	}
 
 	@Test
-	public void testNumberTransliteration() throws Exception {
+	public void testKeywordField() throws Exception {
 
 		//field lma_long is fieldtype:keyword
 		//"ABC   DEF_GI J" is mapped to abc def gi j
