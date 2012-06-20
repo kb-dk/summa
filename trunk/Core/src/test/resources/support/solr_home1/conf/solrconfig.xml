@@ -733,7 +733,10 @@
     -->
     
     
-  
+<!--
+TODO field boost not working exactly as intended. summa identity alias with boost (lperi etc.) are not boosted
+Also boost are not applied to fields when specifing several fields in query and the default dismax is not used.
+-->  
     
 <requestHandler name="/edismax" default="true" class="solr.SearchHandler">
    <lst name="defaults">
