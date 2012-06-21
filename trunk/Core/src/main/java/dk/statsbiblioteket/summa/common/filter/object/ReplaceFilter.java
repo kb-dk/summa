@@ -23,20 +23,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.CircularCharBuffer;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Replaces characters in streams or content. If possible, streams are
@@ -346,24 +341,17 @@ public class ReplaceFilter extends ObjectFilterImpl {
         if (payload.getStream() != null) {
             log.debug("Wrapping stream in replacer");
             payload.setStream(new ReaderInputStream(
-                    factory.getReplacer(new InputStreamReader(
-                            payload.getStream(), encodingIn)),
-                    encodingOut));
+                    factory.getReplacer(new InputStreamReader(payload.getStream(), encodingIn)), encodingOut));
         }
         if (payload.getRecord() != null &&
             payload.getRecord().getContent(false) != null) {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("ReplaceFilter '" + getName() + "'",
-                               "Performing replace on Record content",
-                               Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Performing replace on Record content", Logging.LogLevel.TRACE, payload);
             // We hack a bit to guess if content is compressed
             byte[] in = payload.getRecord().getContent();
-            boolean compressed =
-                    in.length != payload.getRecord().getContent(false).length;
-            String replaced =
-                    basicReplacer.transform(new String(in, encodingIn));
-            payload.getRecord().setContent(
-                    replaced.getBytes(encodingOut), compressed);
+            boolean compressed = in.length != payload.getRecord().getContent(false).length;
+            String replaced = basicReplacer.transform(new String(in, encodingIn));
+            payload.getRecord().setContent(replaced.getBytes(encodingOut), compressed);
         }
     }
 }

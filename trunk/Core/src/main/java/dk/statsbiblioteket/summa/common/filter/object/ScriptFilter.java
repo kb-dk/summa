@@ -353,12 +353,12 @@ public class ScriptFilter extends ObjectFilterImpl {
             String mes = (time / oneSecond) + "ms" + (message == null ? "" : " (" + message + ")");
             if (result) {
                 String pass = ++passCount + "/" + (passCount + discardCount);
-                Logging.logProcess("ScriptFilter", "Processed " + pass + " in " + mes, Logging.LogLevel.DEBUG, payload);
-                log.debug("Processed " + payload.getId() + " (" + pass + ") in " + mes);
+                Logging.logProcess(getName(), "Processed " + pass + " in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug(getName() + " Processed " + payload.getId() + " (" + pass + ") in " + mes);
             } else {
                 String dis = ++discardCount + "/" + (discardCount + discardCount);
-                Logging.logProcess("ScriptFilter", "Discarded " + dis + " in " + mes, Logging.LogLevel.DEBUG, payload);
-                log.debug("Discarded " + payload.getId() + " (" + dis + ")in " + mes);
+                Logging.logProcess(getName(), "Discarded " + dis + " in " + mes, Logging.LogLevel.DEBUG, payload);
+                log.debug(getName() + "Discarded " + payload.getId() + " (" + dis + ")in " + mes);
             }
 
             return result;

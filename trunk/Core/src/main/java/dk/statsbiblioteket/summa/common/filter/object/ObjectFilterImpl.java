@@ -47,7 +47,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     protected boolean feedback = true;
 
     public ObjectFilterImpl(Configuration conf) {
-        name = conf.getString(CONF_FILTER_NAME, this.getClass().getName());
+        name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
     }
 
     // if hasNext is true, a processed Payload is ready for delivery
