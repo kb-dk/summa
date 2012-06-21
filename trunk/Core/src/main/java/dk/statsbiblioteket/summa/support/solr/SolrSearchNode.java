@@ -697,6 +697,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_SORT, ExposedIndexLookupParams.ELOOKUP_SORT);
         putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_LOCALE, ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE);
 
+        //
+
         if (solrParams != null) {
             queryMap.putAll(solrParams);
         }

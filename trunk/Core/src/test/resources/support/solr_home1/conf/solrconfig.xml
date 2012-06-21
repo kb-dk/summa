@@ -1093,6 +1093,13 @@ Also boost are not applied to fields when specifing several fields in query and 
 
   </searchComponent>
 
+    <requestHandler name="/didyoumean" class="org.apache.solr.handler.component.SearchHandler">
+      <arr name="last-components">
+        <str>spellcheck</str>
+      </arr>
+    </requestHandler>
+
+
   <!-- A request handler for demonstrating the spellcheck component.  
 
        NOTE: This is purely as an example.  The whole purpose of the
