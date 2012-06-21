@@ -78,7 +78,7 @@ public class SolrDidYouMeanTest {
 		assertTrue(suggestion.getAlternatives().contains("hello"));
 
 
-		//Test of a setentence
+		//Test of a sentence
 		// thomas exense -> thomas egense 
 		query = new SolrQuery("thomas exense"); 
 		query.setParam("spellcheck","true");
