@@ -141,8 +141,7 @@
          
              <!-- Fix of SOLR3422 -->
              <field name="_version_" type="long" indexed="true" stored="true"/>
-         
-         
+                  
              <field name="recordId" type="key"/>
              <field name="recordBase" type="key"/>
          
@@ -155,164 +154,164 @@
              <field name="enrich_head" type="text"  multiValued="true"/>
              <field name="enrich_freetext" type="text"  multiValued="true"/>
 
-         <!-- Gruppe html_header-->
-	<field name="html_h1" type="text"  multiValued="true"/>
-	<field name="html_h2" type="text"  multiValued="true"/>
-	<field name="html_h3" type="text"  multiValued="true"/>
-	<field name="html_h4" type="text"  multiValued="true"/>
-	<field name="html_h5" type="text"  multiValued="true"/>
-	<field name="html_h6" type="text"  multiValued="true"/>
-	<field name="html_content" type="text"  multiValued="true"/>	
-	<field name="freetext" type="freetext"  multiValued="true"/>
-	<field name="title" type="text"  multiValued="true"/>	
-		
-	<field name="se" type="text"  multiValued="true"/>
+              <!-- Gruppe html_header-->
+              <field name="html_h1" type="text"  multiValued="true"/>
+              <field name="html_h2" type="text"  multiValued="true"/>
+              <field name="html_h3" type="text"  multiValued="true"/>
+              <field name="html_h4" type="text"  multiValued="true"/>
+              <field name="html_h5" type="text"  multiValued="true"/>
+              <field name="html_h6" type="text"  multiValued="true"/>
+              <field name="html_content" type="text"  multiValued="true"/>          
+              <field name="freetext" type="freetext"  multiValued="true"/>
+              <field name="title" type="text"  multiValued="true"/>   
+                            
+              <field name="se" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="aj" type="text"  multiValued="true"/>
+              <field name="aj" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="km" type="text"  multiValued="true"/>
+              <field name="km" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="nm" type="text"  multiValued="true"/>
+              <field name="nm" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="ts" type="text"  multiValued="true"/>
+              <field name="ts" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="bs" type="text"  multiValued="true"/>
+              <field name="bs" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler; DPB -->
-	<field name="fg" type="text"  multiValued="true"/>
+              <field name="fg" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="ix" type="text"  multiValued="true"/>
+              <field name="ix" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="ka" type="text"  multiValued="true"/>
+              <field name="ka" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="kg" type="text"  multiValued="true"/>
+              <field name="kg" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="kk" type="text"  multiValued="true"/>
+              <field name="kk" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="sf" type="text"  multiValued="true"/>
+              <field name="sf" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-	<field name="lmo" type="keyword" />
+              <field name="lmo" type="keyword" />
               <!--artikelbasen - praksisregler -->
-	<field name="lvx" type="keyword" />
+              <field name="lvx" type="keyword" />
               <!--artikelbasen - praksisregler -->
-	<field name="vp" type="text"  multiValued="true"/>
+              <field name="vp" type="text"  multiValued="true"/>
               <!--Hvorfor har vi defineret dette felt "text"= SOlr fejler hvis det ikke er her-->
-              <field name="text" type="text" multiValued="true"/>	
-	<field name="main_title" type="text"  multiValued="true"/>
-	<field name="peri" type="text"  multiValued="true"/>
-	<field name="lti" type="keyword"  multiValued="true"/>
-	<field name="lperi" type="keyword"  multiValued="true"/>	
-	<field name="class_other" type="text"  multiValued="true"/>
-	<field name="ddc_kw" type="text"  multiValued="true"/>
-	<field name="dk" type="text"  multiValued="true"/>
-	<field name="inst" type="text"  multiValued="true"/>
-	<field name="kl" type="text"  multiValued="true"/>
-	<field name="lcc_kw" type="text"  multiValued="true"/>
-	<field name="nlm_kw" type="text"  multiValued="true"/>
-	<field name="author_main" type="text"  multiValued="true"/>
-	<field name="author_person" type="text"  multiValued="true"/>
-	<field name="au_other" type="text"  multiValued="true"/>
-	<field name="author_corporation" type="text"  multiValued="true"/>
-	<field name="lma_long" type="keyword"  multiValued="true"/>
-	<field name="ma_short" type="text"  multiValued="true"/>
-	<field name="isbn" type="number"  multiValued="true"/>
-	<field name="issn" type="number"  multiValued="true"/>
-	<field name="number" type="number" multiValued="true"/>
-	<field name="standard_number" type="number" multiValued="true"/>	
-	<field name="id" type="number" multiValued="true"/>
-	<field name="fmbl" type="number" multiValued="true"/>
-	<field name="fubl" type="number" multiValued="true"/>
-	<field name="mesh" type="keyword" />
-	<field name="su_corp" type="keyword"  multiValued="true"/>
-	<field name="su_lc" type="keyword"  />	
-	<field name="su_pe" type="keyword" />
-	<field name="lsu_ser_sol" type="keyword"  multiValued="true" />
-	<field name="lsu_ulrichs" type="keyword"  multiValued="true"/>
-	<field name="lsu_ulrichs_hier" type="keyword"  multiValued="true"/>
-	<field name="su_dk" type="keyword"  multiValued="true"/>
-	<field name="led" type="keyword" />
-	<field name="lsu_oai" type="keyword"  multiValued="true"/>
-	<field name="lsubject" type="keyword"  multiValued="true"/>
-	<field name="subject_dk5" type="text"  multiValued="true"/>
-	<field name="subject_serial_solutions" type="text"  multiValued="true"/>
-	<field name="subject_ulrichs" type="text"  multiValued="true"/>
-	<field name="subject_controlled" type="text"  multiValued="true"/>
-	<field name="subject_other" type="text"  multiValued="true"/>
-	<field name="lcl_csa" type="keyword" />
-	<field name="lddc" type="keyword" />
-	<field name="lcl_all" type="keyword"  multiValued="true"/>
-	<field name="ldbk" type="keyword" />
-	<field name="ldk5" type="keyword"  multiValued="true"/>
-	<field name="lfn" type="keyword" multiValued="true"/>
-	<field name="linst" type="keyword" />
-	<field name="lkl" type="keyword" />
-	<field name="llcc" type="keyword" />
-	<field name="lnlm" type="keyword" />
-	<field name="ludk" type="keyword" />
-	<field name="cluster" type="keyword" />
-	<field name="lso" type="keyword" />
-	<field name="author_descr" type="text"  multiValued="true"/>
-	<field name="barcode" type="text"  multiValued="true"/>
-	<field name="barcode_normalised" type="keyword"  multiValued="true"/>
-	<field name="call" type="text" />
-	<field name="collection" type="text"  multiValued="true"/>
-	<field name="collection_normalised" type="keyword"  multiValued="true"/>
-	<field name="country" type="text"  multiValued="true"/>
-	<field name="nv" type="text"  multiValued="true"/>
-	<field name="item_status" type="text" />
-	<field name="itype" type="text" />
-	<field name="item_mat" type="text" />
-	<field name="l_call" type="keyword" />
-	<field name="location" type="text"  multiValued="true"/>
-	<field name="location_normalised" type="keyword"  multiValued="true"/>
-	<field name="ma_long" type="text"  multiValued="true"/>
-	<field name="op" type="text" />
-	<field name="original_language" type="text"  multiValued="true"/>
-	<field name="other" type="text"  multiValued="true"/>
-	<field name="place" type="text"  multiValued="true"/>
-	<field name="series_normalised" type="keyword" />
-	<field name="ww" type="text"  multiValued="true"/>
-	<field name="ip" type="text"  multiValued="true"/>
-	<field name="lip" type="keyword"  multiValued="true"/>
-	<field name="commercials_subject" type="keyword"  multiValued="true"/>
-	<field name="author_normalised" type="keyword"  multiValued="true"/>
-	<field name="llfo" type="keyword"  multiValued="true"/>
-	<field name="format" type="text"  multiValued="true"/>
-	<field name="lang" type="text"  multiValued="true"/>
-	<field name="llang" type="keyword"  multiValued="true"/>
-	<field name="no" type="text"  multiValued="true"/>
-	<field name="openUrl" type="stored" />
-	<field name="publ" type="text"  multiValued="true"/>
-	<field name="py" type="text"  multiValued="true"/>
-	<field name="rt" type="text"  multiValued="true"/>
-	<field name="shortformat" type="stored"/>
-	<field name="sort_title" type="keyword" />
-	<field name="sort_year_asc" type="keyword" />
-	<field name="sort_year_desc" type="keyword" />
-	<field name="year" type="number" multiValued="true"/>
-	<field name="ava" type="keyword"  multiValued="true"/>
+              <field name="text" type="text" multiValued="true"/>     
+              <field name="main_title" type="text"  multiValued="true"/>
+              <field name="peri" type="text"  multiValued="true"/>
+              <field name="lti" type="keyword"  multiValued="true"/>
+              <field name="lperi" type="keyword"  multiValued="true"/>              
+              <field name="class_other" type="text"  multiValued="true"/>
+              <field name="ddc_kw" type="text"  multiValued="true"/>
+              <field name="dk" type="text"  multiValued="true"/>
+              <field name="inst" type="text"  multiValued="true"/>
+              <field name="kl" type="text"  multiValued="true"/>
+              <field name="lcc_kw" type="text"  multiValued="true"/>
+              <field name="nlm_kw" type="text"  multiValued="true"/>
+              <field name="author_main" type="text"  multiValued="true"/>
+              <field name="author_person" type="text"  multiValued="true"/>
+              <field name="au_other" type="text"  multiValued="true"/>
+              <field name="author_corporation" type="text"  multiValued="true"/>
+              <field name="lma_long" type="keyword"  multiValued="true"/>
+              <field name="ma_short" type="text"  multiValued="true"/>
+              <field name="isbn" type="number"  multiValued="true"/>
+              <field name="issn" type="number"  multiValued="true"/>
+              <field name="number" type="number" multiValued="true"/>
+              <field name="standard_number" type="number" multiValued="true"/>      
+              <field name="id" type="number" multiValued="true"/>
+              <field name="fmbl" type="number" multiValued="true"/>
+              <field name="fubl" type="number" multiValued="true"/>
+              <field name="mesh" type="keyword" />
+              <field name="su_corp" type="keyword"  multiValued="true"/>
+              <field name="su_lc" type="keyword"  multiValued="true"/> <!--Toke, er det meningen et keyword er multivalued? -->    
+              <field name="su_pe" type="keyword" />
+              <field name="lsu_ser_sol" type="keyword"  multiValued="true" />
+              <field name="lsu_ulrichs" type="keyword"  multiValued="true"/>
+              <field name="lsu_ulrichs_hier" type="keyword"  multiValued="true"/>
+              <field name="su_dk" type="keyword"  multiValued="true"/>
+              <field name="led" type="keyword" />
+              <field name="lsu_oai" type="keyword"  multiValued="true"/>
+              <field name="lsubject" type="keyword"  multiValued="true"/>
+              <field name="subject_dk5" type="text"  multiValued="true"/>
+              <field name="subject_serial_solutions" type="text"  multiValued="true"/>
+              <field name="subject_ulrichs" type="text"  multiValued="true"/>
+              <field name="subject_controlled" type="text"  multiValued="true"/>
+              <field name="subject_other" type="text"  multiValued="true"/>
+              <field name="lcl_csa" type="keyword" />
+              <field name="lddc" type="keyword" />
+              <field name="lcl_all" type="keyword"  multiValued="true"/>
+              <field name="ldbk" type="keyword" />
+              <field name="ldk5" type="keyword"  multiValued="true"/>
+              <field name="lfn" type="keyword" multiValued="true"/>
+              <field name="linst" type="keyword" />
+              <field name="lkl" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="llcc" type="keyword" />
+              <field name="lnlm" type="keyword" />
+              <field name="ludk" type="keyword" />
+              <field name="cluster" type="keyword" />
+              <field name="lso" type="keyword" />
+              <field name="author_descr" type="text"  multiValued="true"/>
+              <field name="barcode" type="text"  multiValued="true"/>
+              <field name="barcode_normalised" type="keyword"  multiValued="true"/>
+              <field name="call" type="text" multiValued="true"/> <!-- korrekt? -->
+              <field name="collection" type="text"  multiValued="true"/>
+              <field name="collection_normalised" type="keyword"  multiValued="true"/>
+              <field name="country" type="text"  multiValued="true"/>
+              <field name="nv" type="text"  multiValued="true"/>
+              <field name="item_status" type="text" multiValued="true"/> <!-- korrekt? --> 
+              <field name="itype" type="text" />
+              <field name="item_mat" type="text"  multiValued="true"/> <!-- korrekt? -->
+              <field name="ltarget" type="text" multiValued="true"/> <!-- korrekt? -->
+              <field name="l_call" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="location" type="text"  multiValued="true"/>
+              <field name="location_normalised" type="keyword"  multiValued="true"/>
+              <field name="ma_long" type="text"  multiValued="true"/>
+              <field name="op" type="text" />
+              <field name="original_language" type="text"  multiValued="true"/>
+              <field name="other" type="text"  multiValued="true"/>
+              <field name="place" type="text"  multiValued="true"/>
+              <field name="series_normalised" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="ww" type="text"  multiValued="true"/>
+              <field name="ip" type="text"  multiValued="true"/>
+              <field name="lip" type="keyword"  multiValued="true"/>
+              <field name="commercials_subject" type="keyword"  multiValued="true"/>
+              <field name="author_normalised" type="keyword"  multiValued="true"/>
+              <field name="llfo" type="keyword"  multiValued="true"/>
+              <field name="format" type="text"  multiValued="true"/>
+              <field name="lang" type="text"  multiValued="true"/>
+              <field name="llang" type="keyword"  multiValued="true"/>
+              <field name="no" type="text"  multiValued="true"/>
+              <field name="openUrl" type="stored" />
+              <field name="publ" type="text"  multiValued="true"/>
+              <field name="py" type="text"  multiValued="true"/>
+              <field name="rt" type="text"  multiValued="true"/>
+              <field name="shortformat" type="stored"/>
+              <field name="sort_title" type="keyword" />
+              <field name="sort_year_asc" type="keyword" multiValued="true"/> <!-- korrekt? -->/>
+              <field name="sort_year_desc" type="keyword"  multiValued="true"/> <!-- korrekt? -->/>
+              <field name="year" type="number" multiValued="true"/>
+              <field name="ava" type="keyword"  multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
-	<field name="tag" type="keyword"  multiValued="true"/>
+              <field name="tag" type="keyword"  multiValued="true"/>
               <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
-	<field name="tss_status" type="text"  multiValued="true"/>
+              <field name="tss_status" type="text"  multiValued="true"/>
               <!--felt til own-koden som den fremgår af felt OWN i hol-posten -->
-	<field name="own" type="text"  multiValued="true"/>
+              <field name="own" type="text"  multiValued="true"/>
               <!--felt til nyhedslister - ugenummer i felt 099 i hol-posten-->
- 	<field name="new" type="keyword"  multiValued="true"/>
+              <field name="new" type="keyword"  multiValued="true"/>
               <!-- Radio-tv. Only fields of type verbatim -->
-	<field name="season_id" type="verbatim"/>
-	<field name="iso_date" type="verbatim"/>
+              <field name="season_id" type="verbatim"/>
+              <field name="iso_date" type="verbatim"/>
               <field name="iso_time" type="verbatim"/>
               <field name="iso_dateTime" type="verbatim"/>
 
+              <field name="titel" type="text"  multiValued="true"/><!-- MUST BE DELETED AFTER FIX -->/>
+              <field name="lvp" type="text"  multiValued="true"/><!-- is this a real field? -->/>
 
      <!--For DidYouMean -->
     <field name="summa_spell" type="textSpell"/>
 
-<!-- end converted from sb_index_descriptor -->    
+      <!-- end converted from sb_index_descriptor -->    
       
-
-
-   
  </fields>
 
  <!-- Field to use to determine and enforce document uniqueness. 
