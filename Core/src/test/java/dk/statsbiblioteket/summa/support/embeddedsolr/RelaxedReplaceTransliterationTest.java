@@ -28,8 +28,7 @@ public class RelaxedReplaceTransliterationTest {
 
 	@Test
 	public void testVoidTransliteration() throws Exception {
-
-		//the document contains "Thomas-Egense ¼" which is mapped to "Thomas Egense 1 4" 
+		
 		String[] files = new String[]{
 				"support/solr_test_documents/relaxed_replace_transliteration_doc.txt"
 		
