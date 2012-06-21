@@ -68,9 +68,7 @@ public class FieldAliasTest {
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
-		//FAILS!
-		//TODO! Fix default SOLR behaviour. Non-existing fields causes SOLR to go into "parse-error" mode and make a fixed query
-		//Only happens if the non-existing field is given a phrase-query
+        // Default operator is AND. It will fail if default operator is OR
 		query = new SolrQuery("xtitel:\"Sjov med fraktaler\""); //non existing field, also no alias for it.
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound()); //zero results
