@@ -32,10 +32,15 @@ public class SolrDidYouMeanTest {
 	@Test
 	public void testDidYouMean() throws Exception {
 
-		//Data:
-		//3 books by Thomas Egense, 1 located at Matematik, 2 at Statsbiblioteket. 2 from 2011, 1 from 2012
-		//2 books by Toke Eskildsen, 2 located at Statsbiblioteket, 1 from 2012, 1 from 2010
-		//Facets defined for year,location_normalised,author_normalised
+		/* DATA
+		 <field name="recordId">didyoumeantest</field>
+		    <field name="recordBase">aleph</field>
+		    <field name="title">Hello world</field>
+		    <field name="author_main">Thomas Egense</field>
+		    <field name="author_normalised">Thomas Egense, Toke Eskildsen</field>
+		    <field name="year">2012</field>
+		    <field name="location_normalised">Statsbiblioteket</field>
+		*/		
 		String[] files = new String[]{
 				"support/solr_test_documents/didyoumeantest.xml",    		
 		};
