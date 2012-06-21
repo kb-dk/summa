@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Building block for making a filter that discards Payloads based on some
@@ -48,12 +48,10 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
         boolean discard = checkDiscard(payload);
         if (discard) {
             Logging.logProcess(
-                    getName() + "#" + this.getClass().getSimpleName(),
-                    "Discarding", Logging.LogLevel.DEBUG, payload);
+                    getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
         } else {
             Logging.logProcess(
-                    getName() + this.getClass().getSimpleName(),
-                    "Payload not discarded", Logging.LogLevel.TRACE, payload);
+                    getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
         }
         return !discard;
     }

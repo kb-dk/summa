@@ -73,8 +73,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_DISCARD_ON_ERRORS =
-            "record.discardonerrors";
+    public static final String CONF_DISCARD_ON_ERRORS = "record.discardonerrors";
     public static final boolean DEFAULT_DISCARD_ON_ERRORS = true;
 
     /**
@@ -91,8 +90,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is $0 (a direct copy of the match).
      */
-    public static final String CONF_CONTENT_TEMPLATE =
-            "record.content.template";
+    public static final String CONF_CONTENT_TEMPLATE = "record.content.template";
     public static final String DEFAULT_CONTENT_TEMPLATE = "$0";
 
     /**
@@ -134,8 +132,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is 0 (all IDs are hashed).
      */
-    public static final String CONF_ID_HASH_MINLENGTH =
-        "record.id.hash.minlength";
+    public static final String CONF_ID_HASH_MINLENGTH = "record.id.hash.minlength";
     public static final int DEFAULT_ID_HASH_MINLENGTH = 0;
 
     /**
@@ -152,8 +149,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is $0 (a direct copy of the match).
      */
-    public static final String CONF_BASE_TEMPLATE =
-            "record.base.template";
+    public static final String CONF_BASE_TEMPLATE = "record.base.template";
     public static final String DEFAULT_BASE_TEMPLATE = "$0";
 
     /**
@@ -239,8 +235,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is $0 (a direct copy of the match).
      */
-    public static final String CONF_META_TEMPLATE =
-            "record.meta.template";
+    public static final String CONF_META_TEMPLATE = "record.meta.template";
     public static final String DEFAULT_META_TEMPLATE = "$0";
 
     /**
@@ -273,8 +268,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         if (conf.valueExists(CONF_CONTENT_REGEXP)) {
             assignContent = new Pair<Pattern, String>(
                     Pattern.compile(conf.getString(CONF_CONTENT_REGEXP)),
-                    conf.getString(
-                            CONF_CONTENT_TEMPLATE, DEFAULT_CONTENT_TEMPLATE));
+                    conf.getString(CONF_CONTENT_TEMPLATE, DEFAULT_CONTENT_TEMPLATE));
         }
         if (conf.valueExists(CONF_ID_REGEXP)) {
             assignId = new Pair<Pattern, String>(
@@ -297,24 +291,18 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         idHashPrefix = conf.getString(CONF_ID_HASH_PREFIX, idHashPrefix);
         idHashMinLength = conf.getInt(CONF_ID_HASH_MINLENGTH, idHashMinLength);
-        metaRequirement = REQUIREMENT.valueOf(
-            conf.getString(CONF_META_REQUIREMENT, DEFAULT_META_REQUIREMENT));
+        metaRequirement = REQUIREMENT.valueOf(conf.getString(CONF_META_REQUIREMENT, DEFAULT_META_REQUIREMENT));
         if (metaRequirement == null) {
             throw new ConfigurationException(
-                "Unable to resolve " + CONF_META_REQUIREMENT + " value '"
-                + conf.getString(CONF_META_REQUIREMENT) + "' to any known "
-                + "requirement. Valid values are all, none and one");
+                "Unable to resolve " + CONF_META_REQUIREMENT + " value '" + conf.getString(CONF_META_REQUIREMENT)
+                + "' to any known requirement. Valid values are all, none and one");
         }
-        if (metaRequirement == RecordShaperFilter.REQUIREMENT.one
-            && metas.size() == 0) {
+        if (metaRequirement == RecordShaperFilter.REQUIREMENT.one && metas.size() == 0) {
             throw new ConfigurationException(
-                "There were 0 metas specified with a requirement of 1 in order"
-                + " for a Payload to pass. Set requirements to something else "
-                + "or add at least 1 meta");
+                "There were 0 metas specified with a requirement of 1 in order for a Payload to pass. Set requirements "
+                + "to something else or add at least 1 meta");
         }
-        log.info(String.format(
-                "Created an assign meta filter with %d meta extractions",
-                metas.size()));
+        log.info(String.format("Created an assign meta filter with %d meta extractions", metas.size()));
     }
 
     private void parseMetas(Configuration conf) {
@@ -325,12 +313,10 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         try {
             confs = conf.getSubConfigurations(CONF_META);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                "Storage must support sub configurations", e);
+            throw new ConfigurationException("Storage must support sub configurations", e);
         } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
-                "Unable to extract sub configurations with key %s from"
-                + " configuration", CONF_META), e);
+                "Unable to extract sub configurations with key %s from configuration", CONF_META), e);
         }
         for (Configuration metaConf: confs) {
             metas.add(new Shaper(metaConf));
@@ -347,8 +333,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         private Shaper(Configuration conf) {
             if (!conf.valueExists(CONF_META_KEY)) {
                 throw new ConfigurationException(String.format(
-                    "No value for mandatory key '%s' present",
-                    CONF_META_KEY));
+                    "No value for mandatory key '%s' present", CONF_META_KEY));
             }
             if (!conf.valueExists(CONF_META_REGEXP)) {
                 throw new ConfigurationException(String.format(
@@ -365,13 +350,11 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     "Unable to parse pattern '%s'",
                     conf.getString(CONF_META_REGEXP)), e);
             }
-            template = conf.getString(
-                CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
+            template = conf.getString(CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
             limit = conf.getInt(CONF_META_LIMIT, DEFAULT_META_LIMIT);
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
-                    "Shaper created with source='%s', destination='%s', "
-                    + "limit=%d, regexp='%s', template='%s'",
+                    "Shaper created with source='%s', destination='%s', limit=%d, regexp='%s', template='%s'",
                     source, destination, limit, regexp.pattern(), template));
             }
         }
@@ -379,8 +362,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         @Override
         public String toString() {
             return String.format(
-                    "Shaper(source='%s', destination='%s', limit=%d, "
-                    + "regexp='%s', template='%s')",
+                    "Shaper(source='%s', destination='%s', limit=%d, regexp='%s', template='%s')",
                     source, destination, limit, regexp.pattern(), template);
         }
 
@@ -390,31 +372,25 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             if (limit == 0) {
                 sourceString = RecordUtil.getString(record, source);
             } else {
-                log.trace("Extracting with limit " + limit + " from "
-                          + record.getId() + " with source " + source);
+                log.trace("Extracting with limit " + limit + " from " + record.getId() + " with source " + source);
                 sourceString = RecordUtil.getString(record, source, limit);
             }
             if (sourceString == null) {
-                String message = String.format(
-                        "Unable to get String from source '%s'", source);
+                String message = String.format("Unable to get String from source '%s'", source);
                 if (discardOnErrors) {
                     throw new PayloadException(message, payload);
                 }
-                Logging.logProcess("RecordShaperFilter", message,
-                                   Logging.LogLevel.DEBUG, payload);
+                Logging.logProcess(getName(), message, Logging.LogLevel.DEBUG, payload);
                 return;
             }
 
             Matcher matcher = regexp.matcher(sourceString);
             if (!matcher.find()) {
-                String message = String.format(
-                        "Unable to match String with Pattern '%s'",
-                        regexp.pattern());
+                String message = String.format("Unable to match String with Pattern '%s'", regexp.pattern());
                 if (discardOnErrors) {
                     throw new PayloadException(message, payload);
                 }
-                Logging.logProcess("RecordShaperFilter", message,
-                                   Logging.LogLevel.TRACE, payload);
+                Logging.logProcess(getName(), message, Logging.LogLevel.TRACE, payload);
                 return;
             }
             buffer.setLength(0);
@@ -423,14 +399,12 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             String newText = buffer.toString().substring(matchPos);
             if (newText == null || "".equals(newText)) {
                 String message = String.format(
-                        "Match found with Pattern '%s' but no text was "
-                        + "extracted using template '%s'",
+                        "Match found with Pattern '%s' but no text was extracted using template '%s'",
                         regexp.pattern(), template);
                 if (discardOnErrors) {
                     throw new PayloadException(message, payload);
                 }
-                Logging.logProcess("RecordShaperFilter", message,
-                                   Logging.LogLevel.DEBUG, payload);
+                Logging.logProcess(getName(), message, Logging.LogLevel.DEBUG, payload);
                 return;
             }
             if (log.isTraceEnabled()) {
@@ -450,10 +424,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         String content = payload.getRecord().getContentAsUTF8();
         if (copyMeta && payload.getRecord() != null && payload.hasData()) {
             for (Map.Entry entry: payload.getData().entrySet()) {
-                if (entry.getKey() instanceof String &&
-                    entry.getValue() instanceof String) {
-                    payload.getRecord().getMeta().put(
-                        (String)entry.getKey(), (String)entry.getValue());
+                if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
+                    payload.getRecord().getMeta().put((String)entry.getKey(), (String)entry.getValue());
                 }
             }
         }
@@ -472,16 +444,12 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         if (assignContent != null) {
             //noinspection DuplicateStringLiteralInspection
-            String newContent = getMatch(
-                    assignContent, content, payload, "content");
+            String newContent = getMatch(assignContent, content, payload, "content");
             if (newContent != null && !"".equals(newContent)) {
                 try {
-                    payload.getRecord().setContent(
-                        newContent.getBytes("utf-8"), false);
+                    payload.getRecord().setContent(newContent.getBytes("utf-8"), false);
                 } catch (UnsupportedEncodingException e) {
-                    throw new PayloadException(
-                            "Exception while converting content to UTF-8 bytes",
-                            e);
+                    throw new PayloadException("Exception while converting content to UTF-8 bytes", e);
                 }
             }
         }
@@ -494,8 +462,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             } catch (PayloadException e) {
                 if (metaRequirement == RecordShaperFilter.REQUIREMENT.all) {
                     throw new PayloadException(
-                        "The requirement of passed metas was 'all'. "
-                        + "Payload did not pass '" + meta
+                        "The requirement of passed metas was 'all'. Payload did not pass '" + meta
                         + "' and will be discarded", e, payload);
                 }
                 lastException = e;
@@ -503,28 +470,22 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         if (count != metas.size()) {
             if (metaRequirement == REQUIREMENT.one && count == 0) {
-                throw new PayloadException(
-                    "The requirement of passed metas was 'one'. "
-                    + "Payload did not pass any metas", lastException, payload);
+                throw new PayloadException("The requirement of passed metas was 'one'. Payload did not pass any metas",
+                                           lastException, payload);
             }
-            Logging.logProcess(
-                "RecordShaperFilter",
-                "Payload passed " + count + "/" + metas.size() + " metas",
-                Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Payload passed " + count + "/" + metas.size() + " metas",
+                               Logging.LogLevel.TRACE, payload);
         } else {
-            Logging.logProcess("RecordShaperFilter",
-                               "Payload passed all " + metas.size()
-                               + " metas", Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Payload passed all " + metas.size() + " metas",
+                               Logging.LogLevel.TRACE, payload);
         }
         if (idHash != null && payload.getId().length() > idHashMinLength) {
             String oldID = payload.getId();
             if ("md5".equals(idHash)) {
                 payload.setID(idHashPrefix + md5sum(oldID));
             } else {
-                Logging.logProcess(
-                    "RecordShaperFilter",
-                    "ID hash function '" + idHash 
-                    + "' not supported", Logging.LogLevel.WARN, payload);
+                Logging.logProcess(getName(), "ID hash function '" + idHash + "' not supported",
+                                   Logging.LogLevel.WARN, payload);
             }
             log.trace("Hashed id '" + oldID + "' to " + payload.getId());
         }
@@ -568,15 +529,13 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             matcher.appendReplacement(buffer, assignment.getValue());
         } catch (IndexOutOfBoundsException e) {
             throw new PayloadException(
-                "IndexOutOfBounds while processing " + payload + " with "
-                + "regexp '" + assignment.getKey().pattern() + "' and "
-                + "destination '" + assignment.getValue(), e, payload);
+                getName() + " IndexOutOfBounds while processing " + payload + " with regexp '"
+                + assignment.getKey().pattern() + "' and destination '" + assignment.getValue(), e, payload);
         }
         String newText = buffer.toString().substring(matchPos);
         if (newText == null || "".equals(newText)) {
             String message = String.format(
-                    "Match found for %s with Pattern '%s' but no text was "
-                    + "extracted using template '%s'",
+                    getName() + "Match found for %s with Pattern '%s' but no text was extracted using template '%s'",
                     type, assignment.getKey(), assignment.getValue());
             if (discardOnErrors) {
                 throw new PayloadException(message, payload);
@@ -585,8 +544,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             return null;
         }
         if (log.isTraceEnabled()) {
-            log.debug(String.format("Found new '%s' '%s' for %s",
-                                    type, newText, payload));
+            log.debug(String.format("Found new '%s' '%s' for %s", type, newText, payload));
         }
         return newText;
     }

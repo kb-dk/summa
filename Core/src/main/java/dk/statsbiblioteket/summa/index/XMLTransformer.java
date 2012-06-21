@@ -43,7 +43,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -200,9 +203,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     @Override
     public boolean finish(Payload payload, Object state, boolean success) throws PayloadException {
         if (!success) {
-            Logging.logProcess(
-                "XMLTransformer", "Unable to transform. discarding",
-                Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess(getName(), "Unable to transform. discarding", Logging.LogLevel.DEBUG, payload);
         }
         return success;
     }
@@ -245,7 +246,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             }
             matcher = new PayloadMatcher(conf, false);
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Extracted XSLT location '" + xsltLocationString + "' from properties");
+            log.debug(getName() + " extracted XSLT location '" + xsltLocationString + "' from properties");
             xsltLocation = Resolver.getURL(xsltLocationString);
             if (failOnMissing && xsltLocation == null) {
                 throw new ConfigurationException(String.format(
@@ -339,7 +340,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             Source source = new SAXSource(xml, is);
 
             if (log.isTraceEnabled()) {
-                log.trace("Calling transformer for " + getName() + " for " + record);
+                log.trace(getName() + " calling transformer for " + getName() + " for " + record);
             }
             try {
                 transformer.setParameter("recordId", record.getId());
@@ -351,7 +352,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             }
             RecordUtil.setBytes(record, out.toByteArray(), destination);
             if (log.isTraceEnabled()) {
-                log.trace("Finished transforming " + record);
+                log.trace(getName() + " finished transforming " + record);
             }
         }
     }

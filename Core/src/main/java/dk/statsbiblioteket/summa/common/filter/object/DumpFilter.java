@@ -14,12 +14,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.regex.Pattern;
 
 /**
@@ -162,19 +157,15 @@ public class DumpFilter extends ObjectFilterImpl {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        if (resetReceivedDumpsMS != -1
-            && (System.currentTimeMillis() - lastPayloadReceivedTimestamp) >
-               resetReceivedDumpsMS) {
+        if (resetReceivedDumpsMS != -1 &&
+            (System.currentTimeMillis() - lastPayloadReceivedTimestamp) > resetReceivedDumpsMS) {
             payloadsDumpedSinceReset = 0;
         }
         lastPayloadReceivedTimestamp = System.currentTimeMillis();
         if (maxDumps != -1 && payloadsDumpedSinceReset > maxDumps) {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("DumpFilter",
-                               "Not dumping as received payloads since reset "
-                               + payloadsDumpedSinceReset
-                               + " was > than max dumps " + maxDumps,
-                               Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Not dumping as received payloads since reset " + payloadsDumpedSinceReset
+                               + " was > than max dumps " + maxDumps, Logging.LogLevel.TRACE, payload);
             return true;
         }
         if (payload.getRecord() == null && dumpNonRecords) {
@@ -186,8 +177,7 @@ public class DumpFilter extends ObjectFilterImpl {
             dump(payload);
         } else {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("DumpFilter", "Not dumping",
-                               Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Not dumping", Logging.LogLevel.TRACE, payload);
         }
         return true;
     }
