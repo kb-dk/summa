@@ -323,7 +323,7 @@
  <defaultSearchField>text</defaultSearchField>
 
  <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
- <solrQueryParser defaultOperator="OR"/>
+ <solrQueryParser defaultOperator="AND"/>
 
    <!--Freetext,inFreeText="true"  from summa-->
    <copyField source="html_h1" dest="freetext"/>
