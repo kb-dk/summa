@@ -36,15 +36,20 @@ public class KeywordFieldTest {
 		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-		SolrQuery query = new SolrQuery("ABC   DEF_GI J");
+		SolrQuery query = new SolrQuery("lma_long:\"ABC   DEF_GI J\"");
 		QueryResponse response = solrServer.query(query);
-	//	assertEquals(1L, response.getResults().getNumFound());
+	  	assertEquals(1L, response.getResults().getNumFound());
 
-		query = new SolrQuery("abc def gi j");
+        //must not be found(it is tokenized in 'freetext field')
+	  	query = new SolrQuery("lma_long:abc");
+		response = solrServer.query(query);
+		assertEquals(0L, response.getResults().getNumFound()); 
+	  	
+		query = new SolrQuery("lma_long:\"abc def gi j\"");
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());				
 	
-		query = new SolrQuery("abc\\   def\\ gi\\ j");
+		query = new SolrQuery("lma_long:\"abc\\   def\\ gi\\ j\"");
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
