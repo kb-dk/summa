@@ -26,7 +26,7 @@
  <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
       <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>                
-        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement="\s"/>
+        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
