@@ -13,38 +13,25 @@
  */
 package dk.statsbiblioteket.summa.support.solr;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import dk.statsbiblioteket.summa.index.IndexController;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,38 +40,17 @@ import static org.apache.solr.exposed.ExposedIndexLookupParams.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SolrIndexLookupTest extends TestCase {
-    private static Log log = LogFactory.getLog(SolrIndexLookupTest.class);
+public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
+    private static Log log = LogFactory.getLog(SolrIndexLookupTranslationTest.class);
 
-    public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
     private static final String PRE = SolrSearchNode.CONF_SOLR_PARAM_PREFIX;
 
-    private EmbeddedJettyWithSolrServer server = null;
-    private SolrServer solrServer;
-
-    public SolrIndexLookupTest(String name) {
+    public SolrIndexLookupTranslationTest(String name) {
         super(name);
     }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        System.setProperty("basedir", ".");
-        // TODO: Clear existing data
-        server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
-        server.run();
-        solrServer = new HttpSolrServer(server.getServerUrl());
-        solrServer.deleteByQuery("*:*");
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        server.stopSolr();
-    }
-
     public static Test suite() {
-        return new TestSuite(SolrIndexLookupTest.class);
+        return new TestSuite(SolrIndexLookupTranslationTest.class);
     }
 
     public void testDirectSolrIndexLookup() throws SolrServerException, IOException, InterruptedException {
@@ -229,15 +195,6 @@ public class SolrIndexLookupTest extends TestCase {
         ), "deer(1) elephant(2) fox(1)", false);
     }
 
-    private void ingest(List<String> terms) throws IOException {
-        ObjectFilter data = getDataProvider(terms);
-        ObjectFilter indexer = getIndexer();
-        indexer.setSource(data);
-        //noinspection StatementWithEmptyBody
-        while (indexer.pump());
-        indexer.close(true);
-    }
-
     private void verifyLookup(Request request, String  expectedTerms) throws Exception {
         verifyLookup(request, expectedTerms, true);
     }
@@ -282,28 +239,6 @@ public class SolrIndexLookupTest extends TestCase {
       return result.toString();
     }
 
-
-    private ObjectFilter getDataProvider(List<String> terms) throws UnsupportedEncodingException {
-        List<Payload> samples = new ArrayList<Payload>(terms.size());
-        for (int i = 0 ; i < terms.size() ; i++) {
-            samples.add(new Payload(new Record(
-                "doc" + i, "dummy",
-                ("<doc><field name=\"recordId\">doc" + i + "</field>\n"
-                 + "   <field name=\"recordBase\">myBase</field>\n"
-                 + "   <field name=\"lti\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
-        }
-        return new PayloadFeederHelper(samples);
-    }
-
-    private IndexController getIndexer() throws IOException {
-        Configuration controllerConf = Configuration.newMemoryBased(
-            IndexController.CONF_FILTER_NAME, "testcontroller");
-        Configuration manipulatorConf = controllerConf.createSubConfigurations(
-            IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
-        manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
-        return new IndexControllerImpl(controllerConf);
-    }
 
     private SearchNode getSearcher() throws RemoteException {
         return new SolrSearchNode(Configuration.newMemoryBased());
