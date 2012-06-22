@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Copies the latest Summix to the test installation at Mars to avoid SourceForge download
+
+echo -n "MD5 sum: "
+md5sum Summix/target/*.zip
+
+scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/hub/summix-storage
+scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/summon/summix-storage
+scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/sb/summix-storage
+scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/sbsolr/summix-storage
