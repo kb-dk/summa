@@ -27,15 +27,20 @@ import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -131,6 +136,8 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String SEARCH_DISMAX_SABOTAGE = CONF_DISMAX_SABOTAGE;
     public static final boolean DEFAULT_DISMAX_SABOTAGE = false;
 
+    public static final String DEFAULT_SUMMON_ID_FIELD = "id";
+
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
@@ -196,6 +203,9 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         if (!conf.valueExists(CONF_SOLR_FACETS)) {
             conf.set(CONF_SOLR_FACETS, DEFAULT_SUMMON_FACETS);
+        }
+        if (!conf.valueExists(CONF_ID_FIELD)) {
+            conf.set(CONF_ID_FIELD, DEFAULT_SUMMON_ID_FIELD);
         }
         return conf;
     }
