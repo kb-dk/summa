@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">doc4</field>
+    <field name="recordID">doc4</field>
     <field name="recordBase">aleph</field>
     <field name="title">Summa</field>
     <field name="author_main">Toke Eskildsen</field>

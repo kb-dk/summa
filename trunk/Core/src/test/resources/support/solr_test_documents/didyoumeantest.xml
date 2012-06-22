@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">didyoumeantest</field>
+    <field name="recordID">didyoumeantest</field>
     <field name="recordBase">aleph</field>
     <field name="title">Hello world</field>
     <field name="author_main">Thomas Egense</field>

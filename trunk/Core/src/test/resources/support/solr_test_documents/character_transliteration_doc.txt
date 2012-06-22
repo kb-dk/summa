@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">character_transliteration_test</field>
+    <field name="recordID">character_transliteration_test</field>
     <field name="recordBase">aleph</field>
     <field name="title">ëßζϕ</field>
     <field name="author_main">Bjørn</field>
