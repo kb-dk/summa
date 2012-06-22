@@ -6,17 +6,17 @@
          ingesting into Solr (remember to wrap i <add>...</add> -->
     <xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
     <xsl:param name="recordBase" select="'Undefined'" />
-    <xsl:param name="recordId" select="'Undefined'" />
+    <xsl:param name="recordID" select="'Undefined'" />
 
     <xsl:template match="doc:SummaDocument">
         <doc>
             <xsl:text>
             </xsl:text>
             <xsl:element name="field">
-                <xsl:attribute name="name">recordId</xsl:attribute>
+                <xsl:attribute name="name">recordID</xsl:attribute>
                 <!--    <xsl:value-of select="@id"/> -->
                 <!-- There is always a recordId != '', guaranteed by Record -->
-                <xsl:value-of select="$recordId"/>
+                <xsl:value-of select="$recordID"/>
             </xsl:element>
             <xsl:text>
             </xsl:text>
@@ -27,7 +27,7 @@
             <!-- We need to prefix attributes in order for the XMLTransformer to work in production, but not for
                  unit-tests to run. Why is that different? XSLTProc also requires prefixed attributes. -->
             <xsl:for-each select="doc:fields/doc:field">
-                <xsl:if test=". != '' and @doc:name != 'recordBase' and @doc:name != 'recordId'">
+                <xsl:if test=". != '' and @doc:name != 'recordBase' and @doc:name != 'recordID'">
                     <xsl:text>
                     </xsl:text>
                     <xsl:element name="field">
