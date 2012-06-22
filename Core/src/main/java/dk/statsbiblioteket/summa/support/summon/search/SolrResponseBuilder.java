@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
@@ -59,10 +60,10 @@ public class SolrResponseBuilder implements Configurable {
      * recordBase as this makes backtracking easier and allows for optimized
      * lookups.
      * </p><p>
-     * Specifying a recordBase results in the field 'recordBase' being added
-     * to records in DocumentResponses.
+     * Specifying a recordBase results in the field 'recordBase' being added to records in DocumentResponses if there
+     * was no recordBase extracted during document processing.
      * </p><p>
-     * Optional. Default is 'summon'.
+     * Optional. Default is 'solr'. Specifying the empty String means that no recordBase will be assigned.
      */
     public static final String CONF_RECORDBASE = "solrresponsebuilder.recordbase";
     public static final String DEFAULT_RECORDBASE = "solr";
@@ -85,6 +86,24 @@ public class SolrResponseBuilder implements Configurable {
      */
     public static final String CONF_SORT_FIELD_REDIRECT = "solrresponsebuilder.sort.field.redirect";
 
+    /**
+     * The field containing the unique ID in the Solr response.
+     * </p><p>
+     * Optional. Default is recordID. If the field is not present in the Solr response, an error will be logged.
+     */
+    public static final String CONF_ID_FIELD = "solr.field.id";
+    public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
+
+    /**
+     * The field containing the recordBase in the Solr response.
+     * </p><p>
+     * Optional. Default is recordBase. If the field is not present in the Solr response, the generated result will
+     * be assigned the base from {@link #CONF_RECORDBASE}.
+     * </p>
+     */
+    public static final String CONF_BASE_FIELD = "solr.field.base";
+    public static final String DEFAULT_BASE_FIELD = IndexUtils.RECORD_BASE;
+
     protected XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -92,18 +111,20 @@ public class SolrResponseBuilder implements Configurable {
         xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
     }
 
-    protected String recordBase = DEFAULT_RECORDBASE;
-    protected String searcherID;
+    protected final String recordBase;
+    protected final String searcherID;
     protected Map<String, String> sortRedirect;
     protected Set<String> nonescapedFields = new HashSet<String>(10);
     protected IndexRequest defaultIndexRequest;
+    protected final String idField;
+    protected final String baseField;
 
     public SolrResponseBuilder(Configuration conf) {
-        recordBase = conf.getString(CONF_RECORDBASE, recordBase);
+        recordBase = "".equals(conf.getString(CONF_RECORDBASE, DEFAULT_RECORDBASE)) ?
+                     null : conf.getString(CONF_RECORDBASE, DEFAULT_RECORDBASE);
+        idField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
+        baseField = conf.getString(CONF_BASE_FIELD, DEFAULT_BASE_FIELD);
         searcherID = conf.getString(SearchNodeImpl.CONF_ID, recordBase);
-        if ("".equals(recordBase)) {
-            recordBase = null;
-        }
         List<String> rules = conf.getStrings(CONF_SORT_FIELD_REDIRECT, new ArrayList<String>());
         sortRedirect = new HashMap<String, String>(rules.size());
         for (String rule: rules) {
@@ -270,7 +291,7 @@ public class SolrResponseBuilder implements Configurable {
         if (lookupR != null) {
             return lookupR;
         }
-         // Maybe the lookup was specified using params from ExposedIndexLookupParams?
+        // Maybe the lookup was specified using params from ExposedIndexLookupParams?
         if (!request.getBoolean(PRE + ExposedIndexLookupParams.ELOOKUP, false)) {
             // No such luck, just give up
             return null;
@@ -440,6 +461,7 @@ public class SolrResponseBuilder implements Configurable {
         iterateTags(xml, new Callback() {
             float score = 0.0f;
             String id = null;
+            String base = null;
             List<SimplePair<String, String>> fields = new ArrayList<SimplePair<String, String>>(100);
             String lastArrName = null; // For <arr name="foo"><str>term1</str><str>term1</str></arr> structures
 
@@ -450,10 +472,10 @@ public class SolrResponseBuilder implements Configurable {
                     return false;
                 }
                 String name = tags.size() > 1 && "arr".equals(tags.get(tags.size()-2)) ?
-                    // We're inside a list of terms for the same multi value field so use the name from the arr
-                    lastArrName :
-                    // Single value field, so the name must be specified
-                    getAttribute(xml, "name", null);
+                              // We're inside a list of terms for the same multi value field so use the name from the arr
+                              lastArrName :
+                              // Single value field, so the name must be specified
+                              getAttribute(xml, "name", null);
                 if (name == null) {
                     log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
                     return false;
@@ -479,8 +501,10 @@ public class SolrResponseBuilder implements Configurable {
                         log.warn("Unable to parse float score '" + content + "' from "+ current + "#" + name
                                  + " for document " + id + ". Score will be set to " + score);
                     }
-                } else if ("id".equals(name)) {
+                } else if (idField.equals(name)) {
                     id = content;
+                } else if (baseField.equals(name)) {
+                    base = content;
                 }
                 fields.add(new SimplePair<String, String>(name, content));
                 return true;
@@ -489,13 +513,17 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public void end() {
                 if (id == null) {
-                    log.warn("id was undefined after ");
+                    log.warn("No ID field '" + idField + "' found in document from query " + response.getQuery());
+                    id = "not_defined_in" + idField;
                 }
-                fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
+                if (!IndexUtils.RECORD_FIELD.equals(id)) {
+                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
+                }
+                // Add base if it does not exist or was collected using another name
+                if ((base == null && recordBase != null) || base != null && !IndexUtils.RECORD_BASE.equals(baseField)) {
+                        fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, base));
+                }
                 // TODO: Cons
-/*                if (recordBase != null) {
-                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, recordBase));
-                }*/
                 String sortValue = null;
                 if (sortKey == null) {
                     sortValue = Float.toString(score);
@@ -702,7 +730,7 @@ public class SolrResponseBuilder implements Configurable {
      * @return a shortformat conforming to Summa standard.
      */
     protected String createShortformat(ConvenientMap extracted) {
-      // TODO: Incorporate this properly instead of String-hacking
+        // TODO: Incorporate this properly instead of String-hacking
         final StringBuffer shortformat = new StringBuffer(500);
         shortformat.append("  <shortrecord>\n");
         shortformat.append("    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
