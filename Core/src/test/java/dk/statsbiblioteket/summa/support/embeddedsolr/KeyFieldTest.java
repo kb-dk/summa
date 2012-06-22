@@ -37,22 +37,22 @@ public class KeyFieldTest {
 		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-		SolrQuery query = new SolrQuery("recordId:sb_123456789");
+		SolrQuery query = new SolrQuery("recordID:sb_123456789");
 		QueryResponse response = solrServer.query(query);
 	  	assertEquals(1L, response.getResults().getNumFound());
 
 
-	  	query = new SolrQuery("recordId:sb 123456789");
+	  	query = new SolrQuery("recordID:sb 123456789");
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound()); 
 	  	
 		
-		query = new SolrQuery("recordId:sb");
+		query = new SolrQuery("recordID:sb");
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound()); 
 	  	
 		
-		query = new SolrQuery("recordId:123456789");
+		query = new SolrQuery("recordID:123456789");
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound());
 		

@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">number_transliteration_test</field>
+    <field name="recordID">number_transliteration_test</field>
     <field name="recordBase">aleph</field>
     <field name="title">number transliteration</field>
     <field name="author_main">Thomas</field>

@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">void_transliteration_test</field>
+    <field name="recordID">void_transliteration_test</field>
     <field name="recordBase">aleph</field>
     <field name="title">Thomas-Egense ¼</field>
     <field name="author_main">Bjørn</field>

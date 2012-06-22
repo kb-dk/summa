@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordId">field_alias_test</field>
+    <field name="recordID">field_alias_test</field>
     <field name="recordBase">aleph</field>
     <field name="title">Sjov med fraktaler</field>
     <field name="author_main">Thomas Egense</field>
