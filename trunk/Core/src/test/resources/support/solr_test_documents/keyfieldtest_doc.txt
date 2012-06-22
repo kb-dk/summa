@@ -1,0 +1,9 @@
+<doc>
+    <field name="recordId">sb_123456789</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">keyfield_test</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Thomas Egense</field>
+    <field name="year">2012</field>
+    <field name="location_normalised">Statsbiblioteket</field>
+</doc>
