@@ -23,6 +23,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 /**
@@ -156,6 +158,7 @@ public class DidYouMeanResponse extends ResponseImpl {
      */
     @Override
     public String toXML() {
+        sort();
         StringWriter sw = new StringWriter(2000);
         XMLStreamWriter writer;
         try {
@@ -195,6 +198,15 @@ public class DidYouMeanResponse extends ResponseImpl {
                     + "DidYouMeanResponse", e);
         }
         return sw.toString();
+    }
+
+    private void sort() {
+        Collections.sort(resultTuples, new Comparator<ResultTuple>() {
+            @Override
+            public int compare(ResultTuple o1, ResultTuple o2) {
+                return -Double.valueOf(o1.getScore()).compareTo(o2.getScore());
+            }
+        });
     }
 
     /**
