@@ -1,5 +1,5 @@
 <doc>
-    <field name="recordI">void_transliteration_test</field>
+    <field name="recordID">void_transliteration_test</field>
     <field name="recordBase">aleph</field>
     <field name="title">Tho?m:as</field>
     <field name="author_main">Bjørn</field>
