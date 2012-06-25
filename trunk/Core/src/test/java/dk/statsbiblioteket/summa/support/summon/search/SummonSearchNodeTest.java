@@ -977,7 +977,7 @@ public class SummonSearchNodeTest extends TestCase {
             long plainCount =
                 getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
             long sabotagedCount =
-                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "true");
             assertEquals("The number of hits for a DisMax-enabled and DisMax-sabotages query should match",
                          plainCount, sabotagedCount);
 
@@ -991,6 +991,11 @@ public class SummonSearchNodeTest extends TestCase {
             summon.close();
         }
     }
+
+    public void testDismaxDisablingExperiment() throws RemoteException {
+        assertOrder("foo bar", "(foo bar)");
+    }
+
 
     /*
     Tests if quoting of terms influences the scores significantly.
