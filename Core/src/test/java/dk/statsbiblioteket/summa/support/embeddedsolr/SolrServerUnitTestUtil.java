@@ -120,7 +120,7 @@ public class SolrServerUnitTestUtil {
 		Configuration controllerConf = Configuration.newMemoryBased(IndexController.CONF_FILTER_NAME, "testcontroller");
 		Configuration manipulatorConf = controllerConf.createSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
 		manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-		manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
+		manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordID"); // 'id' is the default ID field for Solr
 		return new IndexControllerImpl(controllerConf);
 	}
 
