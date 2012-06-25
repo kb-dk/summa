@@ -158,8 +158,8 @@
               <field name="html_h1" type="text"  multiValued="true"/>
               <field name="html_h2" type="text"  multiValued="true"/>
               <field name="html_h3" type="text"  multiValued="true"/>
-              <field name="html_h4" type="text"  multiValued="true"/>
               <field name="html_h5" type="text"  multiValued="true"/>
+              <field name="html_h4" type="text"  multiValued="true"/>
               <field name="html_h6" type="text"  multiValued="true"/>
               <field name="html_content" type="text"  multiValued="true"/>          
               <field name="freetext" type="freetext"  multiValued="true"/>
@@ -220,15 +220,15 @@
               <field name="id" type="number" multiValued="true"/>
               <field name="fmbl" type="number" multiValued="true"/>
               <field name="fubl" type="number" multiValued="true"/>
-              <field name="mesh" type="keyword" />
+              <field name="mesh" type="keyword" multiValued="true"/>  <!-- korrekt? -->
               <field name="su_corp" type="keyword"  multiValued="true"/>
               <field name="su_lc" type="keyword"  multiValued="true"/> <!--Toke, er det meningen et keyword er multivalued? -->    
-              <field name="su_pe" type="keyword" />
+              <field name="su_pe" type="keyword" multiValued="true" />  <!-- korrekt? -->
               <field name="lsu_ser_sol" type="keyword"  multiValued="true" />
               <field name="lsu_ulrichs" type="keyword"  multiValued="true"/>
               <field name="lsu_ulrichs_hier" type="keyword"  multiValued="true"/>
               <field name="su_dk" type="keyword"  multiValued="true"/>
-              <field name="led" type="keyword" />
+              <field name="led" type="keyword" multiValued="true"/>  <!-- korrekt? -->
               <field name="lsu_oai" type="keyword"  multiValued="true"/>
               <field name="lsubject" type="keyword"  multiValued="true"/>
               <field name="subject_dk5" type="text"  multiValued="true"/>
@@ -237,16 +237,16 @@
               <field name="subject_controlled" type="text"  multiValued="true"/>
               <field name="subject_other" type="text"  multiValued="true"/>
               <field name="lcl_csa" type="keyword" />
-              <field name="lddc" type="keyword" />
+              <field name="lddc" type="keyword" multiValued="true" /> <!-- korrekt? -->
               <field name="lcl_all" type="keyword"  multiValued="true"/>
               <field name="ldbk" type="keyword" />
               <field name="ldk5" type="keyword"  multiValued="true"/>
               <field name="lfn" type="keyword" multiValued="true"/>
               <field name="linst" type="keyword" />
               <field name="lkl" type="keyword" multiValued="true"/> <!-- korrekt? -->
-              <field name="llcc" type="keyword" />
-              <field name="lnlm" type="keyword" />
-              <field name="ludk" type="keyword" />
+              <field name="llcc" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="lnlm" type="keyword" multiValued="true"/>  <!-- korrekt? -->
+              <field name="ludk" type="keyword" multiValued="true"/>  <!-- korrekt? -->
               <field name="cluster" type="keyword" />
               <field name="lso" type="keyword" />
               <field name="author_descr" type="text"  multiValued="true"/>
@@ -261,6 +261,8 @@
               <field name="itype" type="text" />
               <field name="item_mat" type="text"  multiValued="true"/> <!-- korrekt? -->
               <field name="ltarget" type="text" multiValued="true"/> <!-- korrekt? -->
+              <field name="base" type="text" multiValued="true"/> <!-- korrekt? -->
+              <field name="is" type="text" multiValued="true"/> <!-- korrekt? -->
               <field name="l_call" type="keyword" multiValued="true"/> <!-- korrekt? -->
               <field name="location" type="text"  multiValued="true"/>
               <field name="location_normalised" type="keyword"  multiValued="true"/>
@@ -362,7 +364,7 @@
    <copyField source="ww" dest="freetext"/>
    <copyField source="fmbl" dest="freetext"/>
    <copyField source="fubl" dest="freetext"/>
-   <copyField source="mesh" dest="freetext"/>
+   <copyField source="mesh" dest="freetext" /> 
    <copyField source="su_corp" dest="freetext"/>
    <copyField source="su_lc" dest="freetext"/>
    <copyField source="su_pe" dest="freetext"/>
