@@ -27,7 +27,7 @@ public class RelaxedReplaceTransliterationTest {
 	}
 
 	@Test
-	public void testVoidTransliteration() throws Exception {
+	public void testRelacedReplaceTransliteration() throws Exception {
 		
 		String[] files = new String[]{
 				"support/solr_test_documents/relaxed_replace_transliteration_doc.txt"
