@@ -143,10 +143,6 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-        System.out.println("***");
-        System.out.println(request);
-        System.out.println("***");
-        System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
