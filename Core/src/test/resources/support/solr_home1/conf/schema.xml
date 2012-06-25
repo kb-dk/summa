@@ -158,8 +158,8 @@
               <field name="html_h1" type="text"  multiValued="true"/>
               <field name="html_h2" type="text"  multiValued="true"/>
               <field name="html_h3" type="text"  multiValued="true"/>
-              <field name="html_h5" type="text"  multiValued="true"/>
               <field name="html_h4" type="text"  multiValued="true"/>
+              <field name="html_h5" type="text"  multiValued="true"/>   
               <field name="html_h6" type="text"  multiValued="true"/>
               <field name="html_content" type="text"  multiValued="true"/>          
               <field name="freetext" type="freetext"  multiValued="true"/>
