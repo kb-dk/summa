@@ -299,29 +299,6 @@ But this is avery rare situation.
     </lst>
 
   </searchComponent>
-
-    <!-- For collation suggestions to work, this must be paired with the dismax -->
-<!--    <requestHandler name="/didyoumean" class="solr.SearchHandler">
-        <lst name="defaults">
-            <str name="echoParams">explicit</str>
-
-            <str  name="spellcheck.dictionary">summa_spell</str>
-            <bool name="spellcheck.extendedResults">true</bool>
-            <bool name="spellcheck.collate">true</bool>
-            <bool name="spellcheck.collateExtendedResults">true</bool>
-            <int  name="spellcheck.maxCollationTries">5</int>
-            <int  name="spellcheck.count">5</int>
-
-            <str name="defType">edismax</str>
-            <str name="qf">
-              freetext^0.5
-            </str>
-
-        </lst>
-      <arr name="last-components">
-        <str>spellcheck</str>
-      </arr>
-    </requestHandler>-->
  
   <searchComponent name="tvComponent" class="solr.TermVectorComponent"/>
   <searchComponent name="terms" class="solr.TermsComponent"/>
