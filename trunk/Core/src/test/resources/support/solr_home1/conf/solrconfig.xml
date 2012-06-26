@@ -204,6 +204,15 @@ But this is avery rare situation.
      <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
      <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
      <str name="f.enrich_header.qf">enrich_editor^0.2 enrich_isbn^0.2 enrich_publisher^0.2 enrich_publishdate^0.2 enrich_title^0.2 enrich_head^0.2 enrich_freetext^0.05</str>         
+
+       <!-- Spellcheck (DidyouMean) setup -->
+       <str  name="spellcheck.dictionary">summa_spell</str>
+       <bool name="spellcheck.extendedResults">true</bool>
+       <bool name="spellcheck.collate">true</bool>
+       <bool name="spellcheck.collateExtendedResults">true</bool>
+       <int  name="spellcheck.maxCollationTries">5</int>
+       <int  name="spellcheck.count">5</int>
+
    </lst>
    <arr name="last-components">
       <str>spellcheck</str>
@@ -301,11 +310,28 @@ But this is avery rare situation.
 
   </searchComponent>
 
-    <requestHandler name="/didyoumean" class="org.apache.solr.handler.component.SearchHandler">
+    <!-- For collation suggestions to work, this must be paired with the dismax -->
+<!--    <requestHandler name="/didyoumean" class="solr.SearchHandler">
+        <lst name="defaults">
+            <str name="echoParams">explicit</str>
+
+            <str  name="spellcheck.dictionary">summa_spell</str>
+            <bool name="spellcheck.extendedResults">true</bool>
+            <bool name="spellcheck.collate">true</bool>
+            <bool name="spellcheck.collateExtendedResults">true</bool>
+            <int  name="spellcheck.maxCollationTries">5</int>
+            <int  name="spellcheck.count">5</int>
+
+            <str name="defType">edismax</str>
+            <str name="qf">
+              freetext^0.5
+            </str>
+
+        </lst>
       <arr name="last-components">
         <str>spellcheck</str>
       </arr>
-    </requestHandler>
+    </requestHandler>-->
 
 
   <!-- A request handler for demonstrating the spellcheck component.  
