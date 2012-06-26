@@ -146,7 +146,7 @@ public class SolrResponseBuilder implements Configurable {
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
 /*        System.out.println("***");
-        System.out.println(request);
+        System.err.println(request);
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));*/
         long startTime = System.currentTimeMillis();
@@ -218,7 +218,7 @@ public class SolrResponseBuilder implements Configurable {
                         return true;
                     }
                     if ("spellcheck".equals(name)) {
-                        parseSpellcheck(xml, request, responses);
+                        parseSpellCheck(xml, request, responses);
                         // Cursor is at end of sub tree after parseLookup
                         return true;
                     }
@@ -293,21 +293,51 @@ public class SolrResponseBuilder implements Configurable {
         responses.add(lookups);
     }
 
-    /* <lst name="spellcheck">
-         <lst name="suggestions">
-           <lst name="gense">
-             <int name="numFound">2</int>
-             <int name="startOffset">0</int>
-             <int name="endOffset">5</int>
-             <arr name="suggestion">
-               <str>egense</str>
-               <str>hansen</str>
-             </arr>
-           </lst>
-         </lst>
-       </lst>
+    /*
+    <lst name="spellcheck">
+    <lst name="suggestions">
+    <lst*</lst>
+      <int name="numFound">2</int>
+      <int name="startOffset">0</int>
+      <int name="endOffset">5</int>
+      <int name="origFreq">0</int>
+      <arr name="suggestion">
+      <lst>
+        <str name="word">egense</str>
+        <int name="freq">1</int>
+      </lst>
+      <lst>
+        <str name="word">hansen</str>
+        <int name="freq">1</int>
+      </lst>
+      </arr>
+      </lst>
+    <lst name="ekildsen">
+    <int name="numFound">2</int>
+    <int name="startOffset">6</int>
+    <int name="endOffset">14</int>
+    <int name="origFreq">0</int>
+    <arr name="suggestion">
+    <lst>
+    <str name="word">eskildsen</str>
+    <int name="freq">1</int>
+    </lst>
+    <lst>
+    <str name="word">eskilsen</str>
+    <int name="freq">1</int>
+    </lst>
+    </arr>
+    </lst>
+    <bool name="correctlySpelled">false</bool>
+    </lst>
+    </lst>
+   <lst name="collation">
+     <str name="collationQuery">thomas egense</str>
+     <int name="hits">1</int>
+   </lst>
+   </lst>
      */
-    private void parseSpellcheck(
+    private void parseSpellCheck(
         XMLStreamReader xml, Request request, ResponseCollection responses) throws XMLStreamException {
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         // TODO: Add SolrParam fallback
@@ -322,29 +352,39 @@ public class SolrResponseBuilder implements Configurable {
                 "Unable to locate start tag 'lst' with name 'suggestions' inside 'spellcheck'");
         }
         xml.next();
-        if (!findTagStart(xml, "lst")) { // We only look at the first field
-            throw new XMLStreamException("Unable to locate start tag 'lst' inside 'lst#suggestions'");
-        }
-        String sourceTerm = getAttribute(xml, "name", null);
-        xml.next();
-        if (log.isTraceEnabled()) {
-            log.trace("Found lst#" + sourceTerm + " in lst#suggestions in lst#spellcheck");
-        }
-        if (!findTagStart(xml, "arr") || !"suggestion".equals(getAttribute(xml, "name", null))) {
-            throw new XMLStreamException("Unable to locate start tag 'arr' with name 'suggestion' inside 'lst#"
-                                         + sourceTerm + "' in 'lst#suggestions' in 'lst#spellcheck''");
-        }
-        xml.next();
-        iterateElements(xml, "arr", "str", new XMLCallback() {
-            double score = 1.0d;
+        // We iterate until we find a collation
+        iterateTags(xml, new Callback() {
             @Override
-            public void execute(XMLStreamReader xml) throws XMLStreamException {
-                String content = xml.getElementText();
-                dym.addResult(content, score, (int)(1000*score)); // Artificial count
-                score = score * 0.9; // As we get no score from Sols's spellcheck, we need to provide one
-                log.trace("Added suggestion " + content);
+            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                //  <lst name="collation">
+                //    <str name="collationQuery">thomas egense</str>
+                //    <int name="hits">1</int>
+                //  </lst>
+                if (!"lst".equals(current) || !"collation".equals(getAttribute(xml, "name", null))) {
+                    return false;
+                }
+                xml.next();
+
+                if (log.isTraceEnabled()) {
+                    log.trace("Found collation in lst#suggestions in lst#spellcheck");
+                }
+                if (!findTagStart(xml, "str") || !"collationQuery".equals(getAttribute(xml, "name", null))) {
+                    throw new XMLStreamException("Unable to locate collationQuery inside 'lst#collation' in "
+                                                 + "'lst#suggestions' in 'lst#spellcheck''");
+                }
+                String collation = xml.getElementText();
+                xml.next();
+                if (!findTagStart(xml, "int") || !"hits".equals(getAttribute(xml, "name", null))) {
+                    throw new XMLStreamException("Unable to locate 'int#hits' inside 'lst#collation' in "
+                                                 + "'lst#suggestions' in 'lst#spellcheck''");
+                }
+                int hits = Integer.parseInt(xml.getElementText());
+                dym.addResult(collation, 1.0d, hits); // Artificial score
+                xml.next();
+                return true;
             }
         });
+
         findTagEnd(xml, "spellcheck");
         responses.add(dym);
     }

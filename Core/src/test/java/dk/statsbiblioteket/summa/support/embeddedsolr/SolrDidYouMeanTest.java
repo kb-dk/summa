@@ -1,9 +1,6 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import static org.junit.Assert.*;
-
-import java.util.Map;
-
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -12,7 +9,10 @@ import org.apache.solr.client.solrj.response.SpellCheckResponse.Suggestion;
 import org.junit.Before;
 import org.junit.Test;
 
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SolrDidYouMeanTest {
 
@@ -82,7 +82,7 @@ public class SolrDidYouMeanTest {
 		// thomas exense -> thomas egense 
 		query = new SolrQuery("thomas exense"); 
 		query.setParam("spellcheck","true");
-		query.setParam("spellcheck.dictionary","summa_spell");        
+		query.setParam("spellcheck.dictionary","summa_spell");
 		query.setParam("spellcheck.extendedResults","true");
 		query.setParam("spellcheck.collateExtendedResults","true");
 		query.setParam("spellcheck.maxCollationTries","5");

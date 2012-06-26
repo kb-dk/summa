@@ -50,10 +50,10 @@ public class SBSolrSearchNode extends SolrSearchNode {
     /**
      * The spellchecker handler used for explicit DidYouMean requests.
      * </p><p>
-     * Optional. Default is '/didyoumean'.
+     * Optional. Default is '', whick means that the default handler is used.
      */
     public static final String CONF_DIDYOUMEAN_HANDLER = "solr.lookup.handler";
-    public static final String DEFAULT_DIDYOUMEAN_HANDLER = "/didyoumean";
+    public static final String DEFAULT_DIDYOUMEAN_HANDLER = "";
 
 
     protected final String lookupHandlerID;
@@ -110,9 +110,10 @@ public class SBSolrSearchNode extends SolrSearchNode {
     protected boolean putDYM(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {
         if (source.containsKey(sourceKey)) {
             dest.put(destKey, Arrays.asList(source.get(sourceKey).toString()));
-            dest.put("qt", Arrays.asList(didYouMeanHandlerID));
+            if (!"".equals(didYouMeanHandlerID)) {
+                dest.put("qt", Arrays.asList(didYouMeanHandlerID));
+            }
             dest.put("spellcheck", Arrays.asList(Boolean.TRUE.toString()));
-            dest.put("spellcheck.dictionary", Arrays.asList("summa_spell"));
             return true;
         }
         return false;
