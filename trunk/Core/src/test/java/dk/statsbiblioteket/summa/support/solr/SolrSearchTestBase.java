@@ -82,7 +82,7 @@ public class SolrSearchTestBase extends TestCase {
         for (int i = 0 ; i < terms.size() ; i++) {
             samples.add(new Payload(new Record(
                 "doc" + i, "dummy",
-                ("<doc><field name=\"recordId\">doc" + i + "</field>\n"
+                ("<doc><field name=\"recordID\">doc" + i + "</field>\n"
                  + "   <field name=\"recordBase\">myBase</field>\n"
                  + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
         }

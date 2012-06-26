@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -33,7 +32,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.solr.exposed.ExposedIndexLookupParams;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
@@ -185,15 +183,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_ID_FIELD = "solr.field.id";
     public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
-    /**
-     * If the Solr installation supports Exposed Index Lookup (aka the Exposed module in Summa), this controls which
-     * handler to request index lookups from.
-     * </p><p>
-     * Optional. Default is '/lookup'.
-     */
-    public static final String CONF_LOOKUP_HANDLER = "solr.lookup.handler";
-    public static final String DEFAULT_LOOKUP_HANDLER = "/lookup";
-
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -212,7 +201,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final FacetQueryTransformer facetQueryTransformer;
     protected final Set<String> nonescapedFields = new HashSet<String>(10);
     protected final String FIELD_ID;
-    protected final String lookupHandlerID;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -237,7 +225,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         supportsPureNegative = conf.getBoolean(
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
-        lookupHandlerID = conf.getString(CONF_LOOKUP_HANDLER, DEFAULT_LOOKUP_HANDLER);
 
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
@@ -540,7 +527,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         } catch (ParseException e) {
             throw new RemoteException("Unable to build Solr query", e);
         }
-
         String queryString = computeSortedQueryString(queryMap, true);
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
@@ -556,6 +542,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
 
     }
+       // {start=[0], q=[gense], spellcheck.dictionary=[summa_spell], qt=[/didyoumean], rows=[15]}
+    //  {spellcheck=[true], start=[0], q=[gense], spellcheck.dictionary=[summa_spell], spellcheck.count=[5], qt=[/didyoumean], rows=[15]}
 
     private String getData(String command, ResponseCollection responses) throws IOException {
         StringBuilder retval = new StringBuilder();
@@ -685,36 +673,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             facets.addFacetQueries(queryMap);
         }
 
-        // IndexLookup
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_FIELD, ExposedIndexLookupParams.ELOOKUP_FIELD);
-        putLookup(
-            request, queryMap, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_DELTA, ExposedIndexLookupParams.ELOOKUP_DELTA);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_LENGTH, ExposedIndexLookupParams.ELOOKUP_LENGTH);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_MINCOUNT, ExposedIndexLookupParams.ELOOKUP_MINCOUNT);
-//        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_QUERY, ExposedIndexLookupParams.ELOOKUP_);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_TERM, ExposedIndexLookupParams.ELOOKUP_TERM);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_SORT, ExposedIndexLookupParams.ELOOKUP_SORT);
-        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_LOCALE, ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE);
-
-        //
-
         if (solrParams != null) {
             queryMap.putAll(solrParams);
         }
-        if (queryMap.containsKey(ExposedIndexLookupParams.ELOOKUP)) {
-            queryMap.put("qt", Arrays.asList(lookupHandlerID));
-        }
         return queryMap;
     }
-
-    private boolean putLookup(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {
-        if (source.containsKey(sourceKey)) {
-            dest.put(destKey, Arrays.asList(source.get(sourceKey).toString()));
-            dest.put(ExposedIndexLookupParams.ELOOKUP, Arrays.asList("true"));
-            return true;
-        }
-        return false;
-    }
-
 }
