@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -28,6 +29,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.Arrays;
 
 /**
@@ -36,46 +38,69 @@ import java.util.Arrays;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SolrDidYouMeanTranslationTest extends SolrSearchTestBase {
-    private static Log log = LogFactory.getLog(SolrDidYouMeanTranslationTest.class);
+public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
+    private static Log log = LogFactory.getLog(SBSolrDidYouMeanTranslationTest.class);
 
     private static final String PRE = SolrSearchNode.CONF_SOLR_PARAM_PREFIX;
 
-    public SolrDidYouMeanTranslationTest(String name) {
+    public SBSolrDidYouMeanTranslationTest(String name) {
         super(name);
     }
 
     public static Test suite() {
-        return new TestSuite(SolrDidYouMeanTranslationTest.class);
+        return new TestSuite(SBSolrDidYouMeanTranslationTest.class);
     }
 
-    public void testDirectSolrIndexLookup() throws SolrServerException, IOException, InterruptedException {
+    public void testDirectSolrDYM() throws SolrServerException, IOException, InterruptedException {
         ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
         QueryResponse response = assertDirectDIM("gense", "[egense, hansen]");
+//        System.out.println(response.toString().replace("}", "}\n"));
     }
 
+    // TODO: Add test for explicit DYM query
+    // TODO: Add check for multiple terms
     public void testSolrResponseTranslation() throws SolrServerException, IOException, InterruptedException {
         ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
 
         Request request = new Request(
-            PRE + "q", "egense",
+            PRE + "q", "gense",
+            PRE + "qt", "/didyoumean",
             PRE + "spellcheck", Boolean.toString(true),
             PRE + "spellcheck.dictionary", "summa_spell",
             PRE + "spellcheck.count", Integer.toString(5)
         );
 
-        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                                  //SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/didyoumean"
+        String expected = "<didyoumean score=\"1.0\">egense</didyoumean>";
+        assertSummaDYM(request, expected);
+        //System.out.println(responses.toXML().replace(">", ">\n"));
+    }
+
+    public void testSummaRequestParameters() throws SolrServerException, IOException, InterruptedException {
+        ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
+
+        Request request = new Request(
+            DidYouMeanKeys.SEARCH_QUERY, "gense"
+        );
+        String expected = "<didyoumean score=\"1.0\">egense</didyoumean>";
+        assertSummaDYM(request, expected);
+        //System.out.println(responses.toXML().replace(">", ">\n"));
+    }
+
+    private void assertSummaDYM(Request request, String expected) throws RemoteException {
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
+//                                  SBSolrSearchNode.CONF_SOLR_RESTCALL, "/solr/didyoumean"
                               ));
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         searcher.close();
 
-        System.out.println(responses.toXML().replace(">", ">\n"));
+        assertTrue("The response should contain "+ expected + "\n" + responses.toXML().replace(">", ">\n"),
+                   responses.toXML().contains(expected));
     }
 
     private QueryResponse assertDirectDIM(String query, String expected) throws SolrServerException {
         SolrQuery sQuery = new SolrQuery(query);
+        sQuery.set("qt", "/didyoumean");
         sQuery.set("spellcheck", Boolean.toString(true));
         sQuery.set("spellcheck.dictionary", "summa_spell");
         sQuery.set("spellcheck.count", Integer.toString(5));

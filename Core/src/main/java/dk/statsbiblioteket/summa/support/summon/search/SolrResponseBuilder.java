@@ -29,6 +29,8 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
@@ -143,6 +145,10 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
+/*        System.out.println("***");
+        System.out.println(request);
+        System.out.println("***");
+        System.out.println(solrResponse.replace(">", ">\n"));*/
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -211,6 +217,11 @@ public class SolrResponseBuilder implements Configurable {
                         // Cursor is at end of sub tree after parseLookup
                         return true;
                     }
+                    if ("spellcheck".equals(name)) {
+                        parseSpellcheck(xml, request, responses);
+                        // Cursor is at end of sub tree after parseLookup
+                        return true;
+                    }
                     log.debug("Encountered unsupported name in lst '" + name + "' in Solr response. Skipping element");
                     skipSubTree(xml);
                     return true;
@@ -226,6 +237,7 @@ public class SolrResponseBuilder implements Configurable {
         responses.add(documentResponse);
         return documentResponse.getHitCount();
     }
+
     /*
     <lst name="elookup"><lst name="fields"><lst name="freetext"><lst name="terms">
     <int name="deer">1</int>
@@ -279,6 +291,62 @@ public class SolrResponseBuilder implements Configurable {
         });
         findTagEnd(xml, "elookup");
         responses.add(lookups);
+    }
+
+    /* <lst name="spellcheck">
+         <lst name="suggestions">
+           <lst name="gense">
+             <int name="numFound">2</int>
+             <int name="startOffset">0</int>
+             <int name="endOffset">5</int>
+             <arr name="suggestion">
+               <str>egense</str>
+               <str>hansen</str>
+             </arr>
+           </lst>
+         </lst>
+       </lst>
+     */
+    private void parseSpellcheck(
+        XMLStreamReader xml, Request request, ResponseCollection responses) throws XMLStreamException {
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        // TODO: Add SolrParam fallback
+        query = request.getString(DidYouMeanKeys.SEARCH_QUERY, query);
+        if (query == null) {
+            query = "N/A";
+        }
+        final DidYouMeanResponse dym = new DidYouMeanResponse(query);
+
+        if (!findTagStart(xml, "lst") || !"suggestions".equals(getAttribute(xml, "name", null))) {
+            throw new XMLStreamException(
+                "Unable to locate start tag 'lst' with name 'suggestions' inside 'spellcheck'");
+        }
+        xml.next();
+        if (!findTagStart(xml, "lst")) { // We only look at the first field
+            throw new XMLStreamException("Unable to locate start tag 'lst' inside 'lst#suggestions'");
+        }
+        String sourceTerm = getAttribute(xml, "name", null);
+        xml.next();
+        if (log.isTraceEnabled()) {
+            log.trace("Found lst#" + sourceTerm + " in lst#suggestions in lst#spellcheck");
+        }
+        if (!findTagStart(xml, "arr") || !"suggestion".equals(getAttribute(xml, "name", null))) {
+            throw new XMLStreamException("Unable to locate start tag 'arr' with name 'suggestion' inside 'lst#"
+                                         + sourceTerm + "' in 'lst#suggestions' in 'lst#spellcheck''");
+        }
+        xml.next();
+        iterateElements(xml, "arr", "str", new XMLCallback() {
+            double score = 1.0d;
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                String content = xml.getElementText();
+                dym.addResult(content, score, (int)(1000*score)); // Artificial count
+                score = score * 0.9; // As we get no score from Sols's spellcheck, we need to provide one
+                log.trace("Added suggestion " + content);
+            }
+        });
+        findTagEnd(xml, "spellcheck");
+        responses.add(dym);
     }
 
     protected IndexRequest getLookupRequest(Request request) {
