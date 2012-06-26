@@ -53,7 +53,7 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
 
     public void testDirectSolrDYM() throws SolrServerException, IOException, InterruptedException {
         ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
-        QueryResponse response = assertDirectDIM("gense", "[egense, hansen]");
+        QueryResponse response = assertDirectDIM("gense", "collation={collationQuery=egense,");
 //        System.out.println(response.toString().replace("}", "}\n"));
     }
 
@@ -64,7 +64,6 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
 
         Request request = new Request(
             PRE + "q", "gense",
-            PRE + "qt", "/didyoumean",
             PRE + "spellcheck", Boolean.toString(true),
             PRE + "spellcheck.dictionary", "summa_spell",
             PRE + "spellcheck.count", Integer.toString(5)
@@ -86,6 +85,31 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
         //System.out.println(responses.toXML().replace(">", ">\n"));
     }
 
+    public void testMultiWord() throws SolrServerException, IOException, InterruptedException {
+        ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
+
+        Request request = new Request(
+            DidYouMeanKeys.SEARCH_QUERY, "thomas gense"
+        );
+        assertSummaDYM(request, "<didyoumean score=\"1.0\">thomas egense</didyoumean>");
+    }
+
+    public void testExtendedExplicitParam() throws IOException {
+        ingest(Arrays.asList("Thomas Egense", "Toke Eskildsen", "Tore Eskilsen", "Tomas Hansen"));
+        Request request = new Request(
+            PRE + "q", "thomas exense",
+            PRE + "spellcheck", Boolean.toString(true)
+//            PRE + "spellcheck.dictionary", "summa_spell",
+///            PRE + "spellcheck.collate", Boolean.toString(true),
+///            PRE + "spellcheck.extendedResults", Boolean.toString(true),
+//            PRE + "spellcheck.collateExtendedResults", Boolean.toString(true),
+//            PRE + "spellcheck.maxCollationTries", Integer.toString(5),
+//            PRE + "spellcheck.count", Integer.toString(5)
+        );
+        String expected = "<didyoumean score=\"1.0\">thomas egense</didyoumean>";
+        assertSummaDYM(request, expected);
+    }
+
     private void assertSummaDYM(Request request, String expected) throws RemoteException {
         SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
 //                                  SBSolrSearchNode.CONF_SOLR_RESTCALL, "/solr/didyoumean"
@@ -100,14 +124,10 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
 
     private QueryResponse assertDirectDIM(String query, String expected) throws SolrServerException {
         SolrQuery sQuery = new SolrQuery(query);
-        sQuery.set("qt", "/didyoumean");
         sQuery.set("spellcheck", Boolean.toString(true));
-        sQuery.set("spellcheck.dictionary", "summa_spell");
-        sQuery.set("spellcheck.count", Integer.toString(5));
         QueryResponse response = solrServer.query(sQuery);
         assertTrue("The suggestions should be as expected\n" + response, response.toString().contains(expected));
         return response;
     }
-
 
 }
