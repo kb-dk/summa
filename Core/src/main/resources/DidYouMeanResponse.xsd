@@ -46,6 +46,7 @@
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
                 <xsd:attribute name="score" type="xsd:float" use="required"/>
+                <xsd:attribute name="hits" type="xsd:int" use="optional"/>
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>
