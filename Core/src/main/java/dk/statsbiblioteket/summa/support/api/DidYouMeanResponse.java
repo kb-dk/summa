@@ -183,6 +183,7 @@ public class DidYouMeanResponse extends ResponseImpl {
                 writer.writeCharacters("    ");
                 writer.writeStartElement(DIDYOUMEAN);
                 writer.writeAttribute("score", String.valueOf(tuple.getScore()));
+                writer.writeAttribute("hits", String.valueOf(tuple.getCorpusQueryResults()));
                 writer.writeCharacters(tuple.getResult());
                 writer.writeEndElement();
                 writer.writeCharacters("\n");
