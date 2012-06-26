@@ -60,7 +60,7 @@ public class SolrFacetTest {
 		assertEquals("matematik (1)", facetLocation.getValues().get(1).toString()); //can also be done with getFacetField and then get value and count
 
 		FacetField facetAuthor = response.getFacetField("author_normalised");
-		//assertEquals("thomas egense (3)",facetAuthor.getValues().get(0).toString()); Not working before analyzer on field is fixed to lowercasefilter etc.
+		assertEquals("thomas egense (3)",facetAuthor.getValues().get(0).toString());
 
 
 		query = new SolrQuery("toke");
