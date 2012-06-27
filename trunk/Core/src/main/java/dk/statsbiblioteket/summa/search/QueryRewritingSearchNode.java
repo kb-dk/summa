@@ -22,8 +22,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.tools.QueryPhraser;
 import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.rmi.RemoteException;
@@ -114,7 +114,9 @@ public class QueryRewritingSearchNode implements SearchNode {
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
                  conf.getString(CONF_DESIGNATION) + "." : "";
-        log.debug("Created QueryRewritingSearchNode with inner SearchNode " + inner);
+        log.debug(String.format(
+            "Created QueryRewritingSearchNode with inner SearchNode %s, default sanitizeFilters=%b, sanitizeQueries=%b,"
+            + " phraseQueries=%b, prefix='%s'", inner, sanitizeFilters, sanitizeQueries, phrasequeries, prefix));
     }
 
     private Request process(Request request) {
@@ -146,6 +148,11 @@ public class QueryRewritingSearchNode implements SearchNode {
         if (query != null && request.getBoolean(prefix + SEARCH_PHRASE_QUERIES,
                                                 request.getBoolean(SEARCH_PHRASE_QUERIES, phrasequeries))) {
             try {
+                if (log.isDebugEnabled()) {
+                    log.debug(prefix + SEARCH_PHRASE_QUERIES + "="
+                              + request.getBoolean(prefix + SEARCH_PHRASE_QUERIES, null) + ", "
+                              + SEARCH_PHRASE_QUERIES + "=" + request.getBoolean(SEARCH_PHRASE_QUERIES, phrasequeries));
+                }
                 request.put(DocumentKeys.SEARCH_QUERY, queryPhraser.rewrite(request, query));
             } catch (ParseException e) {
                 log.debug("The QueryPhraser threw a ParseException on '" + query
