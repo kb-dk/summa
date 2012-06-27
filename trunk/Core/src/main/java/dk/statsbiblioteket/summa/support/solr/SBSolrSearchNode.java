@@ -87,14 +87,11 @@ public class SBSolrSearchNode extends SolrSearchNode {
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_LENGTH, ExposedIndexLookupParams.ELOOKUP_LENGTH);
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_MINCOUNT, ExposedIndexLookupParams.ELOOKUP_MINCOUNT);
 //        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_QUERY, ExposedIndexLookupParams.ELOOKUP_);
+        // We really should have only one query
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, ExposedIndexLookupParams.ELOOKUP_TERM);
+        putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, "q");
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_SORT, ExposedIndexLookupParams.ELOOKUP_SORT);
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_LOCALE, ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE);
-    }
-
-    private void buildDidYouMean(Request request, Map<String, List<String>> solr) {
-        putDYM(request, solr, DidYouMeanKeys.SEARCH_QUERY, "q");
-        putDYM(request, solr, DidYouMeanKeys.SEARCH_MAX_RESULTS, "spellcheck.count");
     }
 
     protected boolean putLookup(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {
@@ -105,6 +102,11 @@ public class SBSolrSearchNode extends SolrSearchNode {
             return true;
         }
         return false;
+    }
+
+    private void buildDidYouMean(Request request, Map<String, List<String>> solr) {
+        putDYM(request, solr, DidYouMeanKeys.SEARCH_QUERY, "q");
+        putDYM(request, solr, DidYouMeanKeys.SEARCH_MAX_RESULTS, "spellcheck.count");
     }
 
     protected boolean putDYM(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {
