@@ -322,7 +322,7 @@
  <uniqueKey>recordID</uniqueKey>
 
 
- <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
+ <!-- SolrQueryParser configuration: defaultOperator="AND|OR". Will be depricated. Define (q.op=AND) for each searchhandler in solrconf.xml instead-->
  <solrQueryParser defaultOperator="AND"/>
 
    <!--Freetext,inFreeText="true"  from summa-->
