@@ -91,7 +91,7 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
         // Yes, elephant is stated twice. We want to check the count
         ingest(Arrays.asList("aardvark", "bison", "cougar", "deer", "elephant", "elephant", "fox", "giraffe", "horse"));
 
-        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
             SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup")); // TODO: Switch to flexible path
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
@@ -137,7 +137,8 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
         ingest(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "H"));
         verifyLookup(new Request(
             DocumentKeys.SEARCH_QUERY, "lti:E",
-            IndexKeys.SEARCH_INDEX_FIELD, "lti"
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_MINCOUNT, 1
         ), "e(1)", false);
     }
 
@@ -200,8 +201,8 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
     }
     private void verifyLookup(Request request, String  expectedTerms, boolean explicitRest) throws Exception {
         SearchNode searcher = explicitRest ?
-                              new SolrSearchNode(Configuration.newMemoryBased(
-                                  SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
+                              new SBSolrSearchNode(Configuration.newMemoryBased(
+                                  SBSolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
                               )) :
                               getSearcher();
         ResponseCollection responses = new ResponseCollection();
@@ -239,8 +240,7 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
       return result.toString();
     }
 
-
     private SearchNode getSearcher() throws RemoteException {
-        return new SolrSearchNode(Configuration.newMemoryBased());
+        return new SBSolrSearchNode(Configuration.newMemoryBased());
     }
 }

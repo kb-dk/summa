@@ -89,7 +89,7 @@ public class SBSolrSearchNode extends SolrSearchNode {
 //        putLookup(request, queryMap, IndexKeys.SEARCH_INDEX_QUERY, ExposedIndexLookupParams.ELOOKUP_);
         // We really should have only one query
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, ExposedIndexLookupParams.ELOOKUP_TERM);
-        putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, "q");
+//        putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, "q");
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_SORT, ExposedIndexLookupParams.ELOOKUP_SORT);
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_LOCALE, ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE);
     }
