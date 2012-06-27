@@ -397,10 +397,12 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
         buildResponseTime += System.currentTimeMillis();
 
-        log.debug("fullSearch(..., " + filter + ", " + rawQuery + ", " + startIndex + ", " + maxRecords + ", "
-                  + sortKey + ", " + reverseSort + ") with " + hitCount + " hits finished in " + searchTime + " ms ("
-                  + searchTime + " ms for remote search " + "call, " + buildResponseTime + " ms for converting to "
-                  + "Summa response)");
+        if (log.isDebugEnabled()) {
+            log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
+                      + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") with " + hitCount
+                      + " hits finished in " + searchTime + " ms (" + searchTime + " ms for remote search " + "call, "
+                      + buildResponseTime + " ms for converting to Summa response)");
+        }
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
         responses.addTiming(getID() + ".search.total", (System.currentTimeMillis() - startTime));
     }
