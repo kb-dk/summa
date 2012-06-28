@@ -316,6 +316,9 @@
               <field name="iso_time" type="verbatim"/>
               <field name="iso_dateTime" type="verbatim"/>
 
+              <field name="work1" type="keyword" /> <!--første alternativ til værkvisning -->
+              <field name="work2" type="keyword" /> <!--andet alternativ til værkvisning -->
+              <field name="work3" type="keyword" /> <!--tredje alternativ til værkvisning -->
 
      <!--For DidYouMean -->
     <field name="summa_spell" type="textSpell"/>
