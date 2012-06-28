@@ -210,14 +210,27 @@
               <field name="author_main" type="text"  multiValued="true"/>
               <field name="author_person" type="text"  multiValued="true"/>
               <field name="au_other" type="text"  multiValued="true"/>
-              <field name="author_corporation" type="text"  multiValued="true"/>
+               <field name="author_corporation" type="text"  multiValued="true"/>
               <field name="lma_long" type="keyword"  multiValued="true"/>
+
+              <!-- TODO: This field was introduced by cms but not defined -->
+              <field name="ht" type="text"  multiValued="true"/>
+
+              <!-- TODO: This alias for lma_short is used by cms.
+                         Remove it when the XSLT's has been corrected
+                         to use the real field -->
+              <field name="lma" type="keyword"  multiValued="true"/>
               <field name="ma_short" type="text"  multiValued="true"/>
+
+              <!-- TODO: This alias for ma_short is used by cms.
+                         Remove it when the XSLT's has been corrected
+                         to use the real field -->
+              <field name="ma_kort" type="text"  multiValued="true"/>
               <field name="isbn" type="number"  multiValued="true"/>
               <field name="issn" type="number"  multiValued="true"/>
               <field name="number" type="number"/>
               <field name="standard_number" type="number" multiValued="true"/>      
-              <field name="id" type="number" multiValued="true"/>
+              <field name="id" type="number" multiValued="true"/>           
               <field name="fmbl" type="number" multiValued="true"/>
               <field name="fubl" type="number" multiValued="true"/>
               <field name="mesh" type="keyword" multiValued="true"/> 
