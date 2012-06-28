@@ -189,9 +189,9 @@
               <!--artikelbasen - praksisregler -->
               <field name="sf" type="text"  multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-              <field name="lmo" type="keyword" />
+              <field name="lmo" type="keyword" multiValued="true"/>
               <!--artikelbasen - praksisregler -->
-              <field name="lvx" type="keyword" />
+              <field name="lvx" type="keyword" multiValued="true"/> 
               <!--artikelbasen - praksisregler -->
               <field name="vp" type="text"  multiValued="true"/>
               <!--Hvorfor har vi defineret dette felt "text"= SOlr fejler hvis det ikke er her-->
@@ -215,20 +215,20 @@
               <field name="ma_short" type="text"  multiValued="true"/>
               <field name="isbn" type="number"  multiValued="true"/>
               <field name="issn" type="number"  multiValued="true"/>
-              <field name="number" type="number" multiValued="true"/>
+              <field name="number" type="number"/>
               <field name="standard_number" type="number" multiValued="true"/>      
               <field name="id" type="number" multiValued="true"/>
               <field name="fmbl" type="number" multiValued="true"/>
               <field name="fubl" type="number" multiValued="true"/>
-              <field name="mesh" type="keyword" multiValued="true"/>  <!-- korrekt? -->
+              <field name="mesh" type="keyword" multiValued="true"/> 
               <field name="su_corp" type="keyword"  multiValued="true"/>
-              <field name="su_lc" type="keyword"  multiValued="true"/> <!--Toke, er det meningen et keyword er multivalued? -->    
-              <field name="su_pe" type="keyword" multiValued="true" />  <!-- korrekt? -->
+              <field name="su_lc" type="keyword"  multiValued="true"/>     
+              <field name="su_pe" type="keyword" multiValued="true" /> 
               <field name="lsu_ser_sol" type="keyword"  multiValued="true" />
               <field name="lsu_ulrichs" type="keyword"  multiValued="true"/>
               <field name="lsu_ulrichs_hier" type="keyword"  multiValued="true"/>
               <field name="su_dk" type="keyword"  multiValued="true"/>
-              <field name="led" type="keyword" multiValued="true"/>  <!-- korrekt? -->
+              <field name="led" type="keyword" multiValued="true"/> 
               <field name="lsu_oai" type="keyword"  multiValued="true"/>
               <field name="lsubject" type="keyword"  multiValued="true"/>
               <field name="subject_dk5" type="text"  multiValued="true"/>
@@ -236,34 +236,31 @@
               <field name="subject_ulrichs" type="text"  multiValued="true"/>
               <field name="subject_controlled" type="text"  multiValued="true"/>
               <field name="subject_other" type="text"  multiValued="true"/>
-              <field name="lcl_csa" type="keyword" />
-              <field name="lddc" type="keyword" multiValued="true" /> <!-- korrekt? -->
+              <field name="lcl_csa" type="keyword"  multiValued="true"/>
+              <field name="lddc" type="keyword" multiValued="true" /> 
               <field name="lcl_all" type="keyword"  multiValued="true"/>
-              <field name="ldbk" type="keyword" />
+              <field name="ldbk" type="keyword" multiValued="true" />
               <field name="ldk5" type="keyword"  multiValued="true"/>
               <field name="lfn" type="keyword" multiValued="true"/>
-              <field name="linst" type="keyword" />
-              <field name="lkl" type="keyword" multiValued="true"/> <!-- korrekt? -->
-              <field name="llcc" type="keyword" multiValued="true"/> <!-- korrekt? -->
-              <field name="lnlm" type="keyword" multiValued="true"/>  <!-- korrekt? -->
-              <field name="ludk" type="keyword" multiValued="true"/>  <!-- korrekt? -->
+              <field name="linst" type="keyword" multiValued="true" />
+              <field name="lkl" type="keyword" multiValued="true"/> 
+              <field name="llcc" type="keyword" multiValued="true"/>
+              <field name="lnlm" type="keyword" multiValued="true"/>  
+              <field name="ludk" type="keyword" multiValued="true"/>  
               <field name="cluster" type="keyword" />
-              <field name="lso" type="keyword" multiValued="true"/>  <!-- korrekt? -->
+              <field name="lso" type="keyword" multiValued="true"/> 
               <field name="author_descr" type="text"  multiValued="true"/>
               <field name="barcode" type="text"  multiValued="true"/>
               <field name="barcode_normalised" type="keyword"  multiValued="true"/>
-              <field name="call" type="text" multiValued="true"/> <!-- korrekt? -->
+              <field name="call" type="text" multiValued="true"/> 
               <field name="collection" type="text"  multiValued="true"/>
               <field name="collection_normalised" type="keyword"  multiValued="true"/>
               <field name="country" type="text"  multiValued="true"/>
               <field name="nv" type="text"  multiValued="true"/>
-              <field name="item_status" type="text" multiValued="true"/> <!-- korrekt? --> 
-              <field name="itype" type="text" />
-              <field name="item_mat" type="text"  multiValued="true"/> <!-- korrekt? -->
-              <field name="ltarget" type="text" multiValued="true"/> <!-- korrekt? -->
-              <field name="base" type="text" multiValued="true"/> <!-- korrekt? -->
-              <field name="is" type="text" multiValued="true"/> <!-- korrekt? -->
-              <field name="l_call" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="item_status" type="text" multiValued="true"/>  
+              <field name="itype" type="text" multiValued="true"/>
+              <field name="item_mat" type="text"  multiValued="true"/>              
+              <field name="l_call" type="keyword" multiValued="true"/>
               <field name="location" type="text"  multiValued="true"/>
               <field name="location_normalised" type="keyword"  multiValued="true"/>
               <field name="ma_long" type="text"  multiValued="true"/>
@@ -271,7 +268,7 @@
               <field name="original_language" type="text"  multiValued="true"/>
               <field name="other" type="text"  multiValued="true"/>
               <field name="place" type="text"  multiValued="true"/>
-              <field name="series_normalised" type="keyword" multiValued="true"/> <!-- korrekt? -->
+              <field name="series_normalised" type="keyword" multiValued="true"/> 
               <field name="ww" type="text"  multiValued="true"/>
               <field name="ip" type="text"  multiValued="true"/>
               <field name="lip" type="keyword"  multiValued="true"/>
@@ -282,14 +279,14 @@
               <field name="lang" type="text"  multiValued="true"/>
               <field name="llang" type="keyword"  multiValued="true"/>
               <field name="no" type="text"  multiValued="true"/>
-              <field name="openUrl" type="stored" />
+              <field name="openUrl" type="stored" multiValued="true"/>
               <field name="publ" type="text"  multiValued="true"/>
               <field name="py" type="text"  multiValued="true"/>
               <field name="rt" type="text"  multiValued="true"/>
               <field name="shortformat" type="stored"/>
               <field name="sort_title" type="keyword" />
-              <field name="sort_year_asc" type="keyword" multiValued="true"/> <!-- korrekt? -->/>
-              <field name="sort_year_desc" type="keyword"  multiValued="true"/> <!-- korrekt? -->/>
+              <field name="sort_year_asc" type="keyword" /> 
+              <field name="sort_year_desc" type="keyword" />
               <field name="year" type="number" multiValued="true"/>
               <field name="ava" type="keyword"  multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
@@ -306,8 +303,6 @@
               <field name="iso_time" type="verbatim"/>
               <field name="iso_dateTime" type="verbatim"/>
 
-              <field name="titel" type="text"  multiValued="true"/><!-- MUST BE DELETED AFTER FIX -->/>
-              <field name="lvp" type="text"  multiValued="true"/><!-- is this a real field? -->/>
 
      <!--For DidYouMean -->
     <field name="summa_spell" type="textSpell"/>
