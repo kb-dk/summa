@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.support.solr;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -80,6 +81,10 @@ public class SBSolrSearchNode extends SolrSearchNode {
     }
 
     private void buildIndexLookup(Request request, Map<String, List<String>> solr) {
+        if (solr.containsKey(ExposedIndexLookupParams.ELOOKUP)
+            && Boolean.TRUE.toString().equals(solr.get(ExposedIndexLookupParams.ELOOKUP).get(0))) {
+            solr.put("qt", Arrays.asList(lookupHandlerID));
+        }
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_FIELD, ExposedIndexLookupParams.ELOOKUP_FIELD);
         putLookup(request, solr,
                   IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE);
@@ -92,6 +97,10 @@ public class SBSolrSearchNode extends SolrSearchNode {
 //        putLookup(request, solr, IndexKeys.SEARCH_INDEX_TERM, "q");
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_SORT, ExposedIndexLookupParams.ELOOKUP_SORT);
         putLookup(request, solr, IndexKeys.SEARCH_INDEX_LOCALE, ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE);
+        if (!request.containsKey(DocumentKeys.SEARCH_QUERY) && !solr.containsKey("q")) {
+            log.trace("No query specified for index lookup. Defaulting to *:*");
+            solr.put("q", Arrays.asList("*:*"));
+        }
     }
 
     protected boolean putLookup(Request source, Map<String, List<String>> dest, String sourceKey, String destKey) {

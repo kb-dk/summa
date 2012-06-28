@@ -416,6 +416,8 @@ public class SolrResponseBuilder implements Configurable {
         putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_LENGTH, IndexKeys.SEARCH_INDEX_LENGTH);
         putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_MINCOUNT, IndexKeys.SEARCH_INDEX_MINCOUNT);
         putIfExists(request, local, PRE + ExposedIndexLookupParams.ELOOKUP_TERM, IndexKeys.SEARCH_INDEX_TERM);
+        putIfExists(
+            request, local, PRE + ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE, IndexKeys.SEARCH_INDEX_LOCALE);
         putIfExists(request, local,
                     PRE + ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE);
         lookupR = defaultIndexRequest.createRequest(local);

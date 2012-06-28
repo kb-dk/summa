@@ -197,7 +197,7 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
     }
 
     private void verifyLookup(Request request, String  expectedTerms) throws Exception {
-        verifyLookup(request, expectedTerms, true);
+        verifyLookup(request, expectedTerms, false);
     }
     private void verifyLookup(Request request, String  expectedTerms, boolean explicitRest) throws Exception {
         SearchNode searcher = explicitRest ?
@@ -208,6 +208,8 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         searcher.close();
+        // We need to wait a little bit for the Solr thread to shut down.
+        Thread.sleep(500);
 
         String actual = getTerms(responses.toXML());
         assertEquals("The terms should be as expected in\n" + responses.toXML(),
