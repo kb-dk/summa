@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -165,13 +165,17 @@ public class IndexRequest implements Serializable {
             log.trace("No term specified in createRequest, assigning \"\"");
             term = "";
         }
-        return new IndexRequest(
+        IndexRequest ir = new IndexRequest(
                 query, field, term,
                 request.getBoolean(
                         IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, caseSensitive),
                 request.getInt(IndexKeys.SEARCH_INDEX_DELTA, delta),
                 request.getInt(IndexKeys.SEARCH_INDEX_LENGTH, length),
                 request.getInt(IndexKeys.SEARCH_INDEX_MINCOUNT, minCount));
+        if (request.containsKey(IndexKeys.SEARCH_INDEX_LOCALE)) {
+            ir.setLocale(new Locale(request.getString(IndexKeys.SEARCH_INDEX_LOCALE)));
+        }
+        return ir;
     }
 
     private void checkValid() {
