@@ -3,8 +3,8 @@ package dk.statsbiblioteket.summa.search.tools;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -243,6 +243,7 @@ public class QueryRewriterTest extends TestCase {
         if (explicit.equals(implicit)) {
             fail("The rewritten queries should differ, but were both '" + implicit + "'");
         }
+        System.out.println("explicit: " + explicit + "\nimplicit: " + implicit);
     }
 
     public void testTerseParentheses() throws ParseException {
