@@ -53,6 +53,12 @@ public class KeywordFieldTest {
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
+
+		//Spaces must be kept.
+		query = new SolrQuery("lma_long:ABCDEFGIJ");
+		response = solrServer.query(query);
+		assertEquals(0L, response.getResults().getNumFound());
+		
 	}
 
 }
