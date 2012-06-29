@@ -66,6 +66,7 @@ public class QueryRewriterIntegrationTest extends TestCase {
         checkQuery("foo OR (bar AND baz)");
     }
 
+
     private void checkQuery(String query)
             throws RemoteException, ParseException {
         String rewritten = requestRewriter.rewrite(query);

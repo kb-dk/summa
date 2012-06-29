@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.tools.QueryPhraser;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -69,6 +70,16 @@ public class QueryRewritingSearchNode implements SearchNode {
     public static final boolean DEFAULT_PHRASE_QUERIES = false;
 
     /**
+     * If true, queries or filters which has been sanitized are passed through the QueryRewriter in order to normalize
+     * the output. Tweaks to normalizing are specified with the properties from {@link QueryRewriter}.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SANITIZE_NORMALIZE = "rewriter.sanitize.normalize";
+    public static final String SEARCH_SANITIZE_NORMALIZE = CONF_SANITIZE_NORMALIZE;
+    public static final boolean DEFAULT_SANITIZE_NORMALIZE = true;
+
+    /**
      * If specified, the designation can be used as a prefix for the search parameters to ensure that only the
      * specific QueryRewritingSearchNode receives the parameters.
      */
@@ -87,18 +98,24 @@ public class QueryRewritingSearchNode implements SearchNode {
     private final boolean sanitizeQueries;
     private final boolean sanitizeFilters;
     private final boolean phrasequeries;
+    private final boolean normalize;
     private final SearchNode inner;
     private final QuerySanitizer sanitizer;
+    private final QueryRewriter normalizer;
     private final QueryPhraser queryPhraser;
     private final String prefix;
 
     public QueryRewritingSearchNode(Configuration conf) {
+        this(conf, resolveInner(conf));
+    }
+
+    private static SearchNode resolveInner(Configuration conf) {
         if (!conf.valueExists(CONF_INNER_SEARCHNODE)) {
             throw new ConfigurationException(
                 "No inner search node defined. A proper sub-configuration must exist for key " + CONF_INNER_SEARCHNODE);
         }
         try {
-            inner = SearchNodeFactory.createSearchNode(conf.getSubConfiguration(CONF_INNER_SEARCHNODE));
+            return SearchNodeFactory.createSearchNode(conf.getSubConfiguration(CONF_INNER_SEARCHNODE));
         } catch (RemoteException e) {
             throw new ConfigurationException(
                 "Unable to create inner search node, although a value were present for key " + CONF_INNER_SEARCHNODE);
@@ -107,24 +124,35 @@ public class QueryRewritingSearchNode implements SearchNode {
                 "A configuration with support for sub configurations must be provided for the adjuster and must "
                 + "contain a sub configuration with key " + CONF_INNER_SEARCHNODE);
         }
+    }
+
+    QueryRewritingSearchNode(Configuration conf, SearchNode inner) {
+        this.inner = inner;
         sanitizer = new QuerySanitizer(conf);
         sanitizeQueries = conf.getBoolean(CONF_SANITIZE_QUERIES, DEFAULT_SANITIZE_QUERIES);
         sanitizeFilters = conf.getBoolean(CONF_SANITIZE_FILTERS, DEFAULT_SANITIZE_FILTERS);
+        normalize = conf.getBoolean(CONF_SANITIZE_NORMALIZE, DEFAULT_SANITIZE_NORMALIZE);
         queryPhraser = new QueryPhraser(conf);
+        normalizer = new QueryRewriter(conf, QueryRewriter.createDefaultQueryParser(), new QueryRewriter.Event());
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
                  conf.getString(CONF_DESIGNATION) + "." : "";
         log.debug(String.format(
             "Created QueryRewritingSearchNode with inner SearchNode %s, default sanitizeFilters=%b, sanitizeQueries=%b,"
-            + " phraseQueries=%b, prefix='%s'", inner, sanitizeFilters, sanitizeQueries, phrasequeries, prefix));
+            + " phraseQueries=%b, prefix='%s, normalize=%b'",
+            inner, sanitizeFilters, sanitizeQueries, phrasequeries, prefix, normalize));
     }
 
-    private Request process(Request request) {
+    private Request process(Request request) throws ParseException {
         String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
         if (oldQuery != null // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                   request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
             String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
+            if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
+                                   request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
+                newQuery = normalizer.rewrite(newQuery);
+            }
             request.put(DocumentKeys.SEARCH_QUERY, newQuery);
             if (oldQuery.equals(newQuery)) {
                 log.debug("Sanitized query is unchanged: '" + oldQuery + "'");
@@ -137,6 +165,10 @@ public class QueryRewritingSearchNode implements SearchNode {
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
             String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
+            if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
+                                   request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
+                newFilter = normalizer.rewrite(newFilter);
+            }
             request.put(DocumentKeys.SEARCH_FILTER, newFilter);
             if (oldFilter.equals(newFilter)) {
                 log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
@@ -166,7 +198,11 @@ public class QueryRewritingSearchNode implements SearchNode {
 
     @Override
     public void search(Request request, ResponseCollection responses) throws RemoteException {
-        inner.search(process(request), responses);
+        try {
+            inner.search(process(request), responses);
+        } catch (ParseException e) {
+            throw new RemoteException("Exception parsing query or filter from " + request.toString(true), e);
+        }
     }
 
     @Override
