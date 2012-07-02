@@ -23,14 +23,14 @@
  <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
 
 <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
- <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
+ <fieldType name="keyword" class="solr.TextField" indexed="true" stored="true" termVectors="false">
       <analyzer>
-        <tokenizer class="solr.KeywordTokenizerFactory"/>                
-        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>                                
         <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
         <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
         <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>  
    </fieldType>
