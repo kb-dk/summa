@@ -23,7 +23,7 @@
  <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
 
 <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
- <fieldType name="keyword" class="solr.TextField" indexed="true" stored="true" termVectors="false">
+ <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
       <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>                                
         <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>                            
