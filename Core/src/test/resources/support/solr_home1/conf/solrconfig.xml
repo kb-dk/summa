@@ -190,6 +190,9 @@ But this is avery rare situation.
      <str name="facet.field">lperi</str>
      <str name="facet.field">ava</str>
      
+     <!--Facet sort (lex or count). Only lma_long uses lex -->
+     <str name="f.lma_long.facet.sort">lex</str>
+     
      <!--Virtual fields(summa alias/alias-groups) for query -->
      <str name="f.titel.qf">title^1.8</str>   
      <str name="f.ht.qf">main_title^4.0</str>
