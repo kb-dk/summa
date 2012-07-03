@@ -36,13 +36,13 @@ public class DanishCharacterTest {
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
     
-		Thread.sleep(100000000000L);
+		
 		SolrQuery query = new SolrQuery("title:børn æder ål");
 		QueryResponse response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 
 		SolrServerUnitTestUtil.indexFiles(files);
-	    query = new SolrQuery("title:\"børn æder aal\"");
+	    query = new SolrQuery("\"børn æder aal\"");
 	    response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
