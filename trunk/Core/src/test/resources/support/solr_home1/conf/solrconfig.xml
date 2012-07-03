@@ -131,7 +131,7 @@ But this is avery rare situation.
      <str name="rows">10</str>
      <str name="q.op">AND</str>    
      <!-- This we probably have to tune a lot -->         
-     <str name="mm">2&lt;-1 5&lt;90%</str>                        
+     <str name="mm">100%</str>                        
      <str name="qf">
        sort_title
        freetext^0.5
