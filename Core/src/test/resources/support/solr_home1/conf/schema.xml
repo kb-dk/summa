@@ -228,7 +228,7 @@
               <field name="ma_kort" type="text"  multiValued="true"/>
               <field name="isbn" type="number"  multiValued="true"/>
               <field name="issn" type="number"  multiValued="true"/>
-              <field name="number" type="number"/>
+              <field name="number" type="number" multiValued="true"/>
               <field name="standard_number" type="number" multiValued="true"/>      
               <field name="id" type="number" multiValued="true"/>           
               <field name="fmbl" type="number" multiValued="true"/>
