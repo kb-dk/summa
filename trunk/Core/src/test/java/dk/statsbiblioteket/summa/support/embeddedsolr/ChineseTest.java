@@ -29,9 +29,7 @@ public class ChineseTest {
 	public void testChineseCharacters() throws Exception {
 
 		/*
-	    title:Dette er en titel
-	    author_main:Thomas Egense
-	    author_normalised:Thomas Egense (keyword)
+	   title: Her er noget kinesisk 一般論述研究 som skal fremsøges
 	    */
 		String[] files = new String[]{
 				"support/solr_test_documents/chinese_test_doc.txt",
