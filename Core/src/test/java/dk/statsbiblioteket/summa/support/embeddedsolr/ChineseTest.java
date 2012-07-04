@@ -36,7 +36,7 @@ public class ChineseTest {
 		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-		Thread.sleep(1000000000000L);	
+	
 		SolrQuery query = new SolrQuery("一般論述研究");
  		
 		QueryResponse response = solrServer.query(query);
