@@ -26,7 +26,7 @@ public class SpecialCharacterTest {
 	}
 
 	@Test
-	public void testChineseCharacters() throws Exception {
+	public void testSpecialCharacters() throws Exception {
 
 		/*
 	      doc 1: title:"ABCD-EFGH" (notice analyzer will make it abcd efgh)
