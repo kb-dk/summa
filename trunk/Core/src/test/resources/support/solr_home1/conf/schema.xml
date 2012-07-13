@@ -299,7 +299,7 @@
               <field name="shortformat" type="stored"/>
               <field name="sort_title" type="keyword" />
               <field name="sort_year_asc" type="keyword" /> 
-              <field name="sort_year_desc" type="keyword" multiValued="true"/>n <!--IKKE multival, afvent Dorete fixer xslt-->
+              <field name="sort_year_desc" type="keyword" />
               <field name="year" type="number" multiValued="true"/>
               <field name="ava" type="keyword"  multiValued="true"/>
               <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
