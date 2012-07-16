@@ -49,11 +49,6 @@ public class ContentToStreamFilter extends ObjectFilterImpl {
     }
 
     @Override
-    public String getName() {
-        return "ContentToStreamFilter";
-    }
-
-    @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getRecord() == null) {
             Logging.logProcess(
