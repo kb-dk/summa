@@ -47,8 +47,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
      * </p><p>
      * Optional. Default is 100.
      */
-    public static final String CONF_QUEUE_SIZE =
-            "summa.ingest.stream.threadedstreamparser.queue.size";
+    public static final String CONF_QUEUE_SIZE = "summa.ingest.stream.threadedstreamparser.queue.size";
     public static final int DEFAULT_QUEUE_SIZE = 100;
 
     /**
@@ -56,8 +55,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
      * </p><p>
      * Optional. Default is 5 MB.
      */
-    public static final String CONF_QUEUE_BYTESIZE =
-            "summa.ingest.stream.threadedstreamparser.queue.bytesize";
+    public static final String CONF_QUEUE_BYTESIZE = "summa.ingest.stream.threadedstreamparser.queue.bytesize";
     public static final int DEFAULT_QUEUE_BYTESIZE = 5*1000*1000; // 5 MB
 
     /**
@@ -66,14 +64,12 @@ public abstract class ThreadedStreamParser implements StreamParser {
      * </p><p>
      * Optional. Default is Integer.MAX_VALUE.
      */
-    public static final String CONF_QUEUE_TIMEOUT =
-            "summa.ingest.stream.threadedstreamparser.queue.timeout";
+    public static final String CONF_QUEUE_TIMEOUT = "summa.ingest.stream.threadedstreamparser.queue.timeout";
     public static final int DEFAULT_QUEUE_TIMEOUT = Integer.MAX_VALUE;
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
 
     //private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
-    private static final Payload INTERRUPTOR =
-            new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
+    private static final Payload INTERRUPTOR = new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
 
     /*
      * Holds the produced Payloads. Generated Payloads will always be followed
@@ -108,15 +104,14 @@ public abstract class ThreadedStreamParser implements StreamParser {
 
     private Throwable lastError = null;
     private Thread runningThread = null;
+    private long queueCount = 0;
 
     public ThreadedStreamParser(Configuration conf) {
-        queue = new PayloadQueue(
-                conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
-                conf.getInt(CONF_QUEUE_BYTESIZE, DEFAULT_QUEUE_BYTESIZE));
+        queue = new PayloadQueue(conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
+                                 conf.getInt(CONF_QUEUE_BYTESIZE, DEFAULT_QUEUE_BYTESIZE));
         queueTimeout = conf.getInt(CONF_QUEUE_TIMEOUT, queueTimeout);
-        log.debug("Constructed ThreadedStreamParser with queue-size "
-                  + queue.remainingCapacity() + " and queue timeout "
-                  + queueTimeout + " ms");
+        log.debug("Constructed ThreadedStreamParser with queue-size " + queue.remainingCapacity()
+                  + " and queue timeout " + queueTimeout + " ms");
     }
 
     @Override
@@ -130,8 +125,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         }
         queue.clear(); // Clean-up from previous runs
         if (streamPayload.getStream() == null) {
-            log.warn("No stream in received " + streamPayload
-                     + ". No Records will be generated");
+            log.warn("No stream in received " + streamPayload + ". No Records will be generated");
             empty = true;
             return;
         }
@@ -156,11 +150,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     }
                 } catch (Exception e) {
                     log.warn(String.format(
-                            "Exception caught from protectedRun of %s with "
-                          + "origin '%s' in '%s'. Stopping processing",
-                            sourcePayload,
-                            sourcePayload.getData(Payload.ORIGIN), this),
-                            e);
+                        "Exception caught from protectedRun of %s with origin '%s' in '%s'. Stopping processing",
+                        sourcePayload, sourcePayload.getData(Payload.ORIGIN), this),
+                             e);
 
                     // We don't close in a 'finally' clause because we shouldn't
                     // clean up if the JVM raises an Error type throwable
@@ -170,10 +162,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     addToQueue(INTERRUPTOR);
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug("run() finished with " + queue.size()
-                              + " remaining queued Payloads (the last queued "
-                              + "Payload is the interruptor-token-Payload) for "
-                              + this + " with source " + sourcePayload);
+                    log.debug("run() finished with " + queue.size() + " remaining queued Payloads (the last queued "
+                              + "Payload is the interruptor-token-Payload) for " + this + " with source "
+                              + sourcePayload);
                 }
             }
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
@@ -193,8 +184,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     }
 
     private void setError(Throwable e) {
-        log.error(String.format(
-                "Encountered error during processing of %s", sourcePayload), e);
+        log.error(String.format("Encountered error during processing of %s", sourcePayload), e);
         lastError = e;
     }
 
@@ -225,10 +215,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
             }
             if (toDeliver == null) {
                 log.warn(String.format(
-                        "Timed out while waiting for Payload. This is bad as "
-                        + "a thread is probably still processing %s. The queue "
-                        + "is marked as empty in order to accept new Payloads, "
-                        + "but this might lead to missed Payloads",
+                        "Timed out while waiting for Payload. This is bad as a thread is probably still processing %s. "
+                        + "The queue is marked as empty in order to accept new Payloads, but this might lead to missed "
+                        + "Payloads",
                         sourcePayload));
                 empty = true;
                 return false;
@@ -236,9 +225,8 @@ public abstract class ThreadedStreamParser implements StreamParser {
 
             if (toDeliver == INTERRUPTOR) {
                 if (log.isTraceEnabled()) {
-                    log.trace(
-                            "Encountered INTERRUPTOR. This signals that proces"
-                            + "sing has been finished for " + sourcePayload);
+                    log.trace("Encountered INTERRUPTOR. This signals that processing has been finished for "
+                              + sourcePayload);
                 }
                 toDeliver = null;
                 empty = true;
@@ -248,8 +236,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
             try {
                 postProcess(toDeliver);
             } catch (Exception e) {
-                log.warn("Got exception in postProcess, skipping " + toDeliver
-                         + " from " + sourcePayload);
+                log.warn("Got exception in postProcess, skipping " + toDeliver + " from " + sourcePayload);
                 continue;
             }
             return true;
@@ -261,15 +248,12 @@ public abstract class ThreadedStreamParser implements StreamParser {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new NoSuchElementException(
-                    "No more Records for the current stream from "
-                    + sourcePayload);
+            throw new NoSuchElementException("No more Records for the current stream from "  + sourcePayload);
         }
         if (toDeliver == null) {
             throw new NoSuchElementException(
-                    "Failed sanity-check: toDeliver was null, but hasNext() == "
-                    + "true means that it should be something. The offending "
-                    + "source was" + sourcePayload);
+                    "Failed sanity-check: toDeliver was null, but hasNext() == true means that it should be something. "
+                    + "The offending source was" + sourcePayload);
         }
         Payload result = toDeliver;
         toDeliver = null;
@@ -315,6 +299,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         if (log.isTraceEnabled()) {
             log.trace(String.format("Adding %s to queue", payload));
         }
+        queueCount++;
         uninterruptiblePut(payload);
     }
 
@@ -346,7 +331,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     @Override
     public void close() {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("close() called");
+        log.info("close() called after " + queueCount + " queued Payloads");
         // TODO: Check whether this discards any currently processed Payloads
         empty = true;
         stop();
