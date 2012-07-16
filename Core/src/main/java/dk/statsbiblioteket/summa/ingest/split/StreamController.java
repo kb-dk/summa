@@ -20,12 +20,11 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Retrieves payloads from a given source and processes the streams from the
@@ -44,14 +43,14 @@ public class StreamController implements ObjectFilter {
      * </p><p>
      * This property is mandatory.
      */
-    public static final String CONF_PARSER =
-            "summa.ingest.stream.controller.parser";
+    public static final String CONF_PARSER = "summa.ingest.stream.controller.parser";
     /** The payload. */
     private Payload payload = null;
     /** The source filter. */
     private ObjectFilter source;
     /** The stream parser. */
     protected StreamParser parser;
+    private long producedPayloads = 0;
 
     /**
      * Creates a stream controller with a given configuration.
@@ -61,7 +60,7 @@ public class StreamController implements ObjectFilter {
         Class<? extends StreamParser> parserClass =
                 Configuration.getClass(CONF_PARSER, StreamParser.class,
                                        getDefaultStreamParserClass(), conf);
-        log.debug("Creating StreamParser '" + parserClass.getName() + "'");
+        log.info("Creating StreamParser '" + parserClass.getName() + "'");
         parser = Configuration.create(parserClass, conf);
     }
 
@@ -160,6 +159,7 @@ public class StreamController implements ObjectFilter {
             log.debug("hasNext() is false, calling stop on parser");
             parser.stop();
         } */
+        producedPayloads++;
         return newPayload;
     }
 
@@ -190,6 +190,8 @@ public class StreamController implements ObjectFilter {
         } else {
             parser.stop();
             source.close(success);
+            log.info(
+                "close(" + success + ") for " + parser + " called with " + producedPayloads + " produced Payloads");
         }
     }
 
