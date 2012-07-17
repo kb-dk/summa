@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<SummaDocument version="1.0" id="mybase:grimme_aellinger" boost="2.0" xmlns="http://statsbiblioteket.dk/summa/2008/Document">
+<SummaDocument summa:version="1.0" summa:id="mybase:grimme_aellinger" summa:boost="2.0" xmlns:summa="http://statsbiblioteket.dk/summa/2008/Document" xmlns="http://statsbiblioteket.dk/summa/2008/Document">
     <fields>
-        <field name="author" boost="2.0">Jens Hansen</field>
-        <field name="author">Hans Jensen</field>
-        <field name="title" boost="1.5">Grimme ællinger</field>
-        <field name="empty"></field>
-        <field name="freetext">Der var så kedeligt ude på landet. Hvepsene summede og blomsterne støvede...</field>
+        <field summa:name="author" summa:boost="2.0">Jens Hansen</field>
+        <field summa:name="author">Hans Jensen</field>
+        <field summa:name="title" summa:boost="1.5">Grimme ællinger</field>
+        <field summa:name="empty"></field>
+        <field summa:name="freetext">Der var så kedeligt ude på landet. Hvepsene summede og blomsterne støvede...</field>
     </fields>
 </SummaDocument>

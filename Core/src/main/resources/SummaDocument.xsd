@@ -25,8 +25,8 @@
                     </xsd:complexType>
                 </xsd:element>
             </xsd:sequence>
-            <xsd:attribute name="version" type="xsd:string" use="optional"/>
-            <xsd:attribute name="id" type="xsd:string" use="optional">
+            <xsd:attribute name="version" type="xsd:string" use="optional" form="qualified"/>
+            <xsd:attribute name="id" type="xsd:string" use="optional" form="qualified">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">
                         The id-attribute is highly recommended for ease of
@@ -35,15 +35,15 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-            <xsd:attribute name="boost" type="xsd:float" use="optional"/>
+            <xsd:attribute name="boost" type="xsd:float" use="optional" form="qualified"/>
         </xsd:complexType>
     </xsd:element>
 
     <xsd:complexType name="Fieldtype">
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
-                <xsd:attribute name="name" type="xsd:string" use="required"/>
-                <xsd:attribute name="boost" type="xsd:float" use="optional"/>
+                <xsd:attribute name="name" type="xsd:string" use="required" form="qualified"/>
+                <xsd:attribute name="boost" type="xsd:float" use="optional" form="qualified"/>
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>

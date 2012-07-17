@@ -60,9 +60,19 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
         assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
         assertTrue("The result should contain the right ID\n" + content,
                    // doc1 overrides mybase:grimme_aellinger
-                   content.contains("<field name=\"recordId\">doc1</field>"));
+                   content.contains("<field name=\"recordID\">doc1</field>"));
         assertTrue("The result should contain the right base\n" + content,
                    content.contains("<field name=\"recordBase\">dummy</field>"));
+        assertTrue("The result should contain the right author\n" + content,
+                   content.contains("<field name=\"author\">Hans Jensen</field>"));
+        log.debug("\n" + content);
+    }
+
+    public void testFieldBoost() throws IOException {
+        String content = transform("support/solr/SummaDocumentSample1.xml");
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
+        assertTrue("The result should contain the right boost\n" + content,
+                   content.contains("<field name=\"author\" boost=\"2.0\">Jens Hansen</field>"));
         log.debug("\n" + content);
     }
 
@@ -71,7 +81,7 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
         assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
         assertTrue("The result should contain the right ID\n" + content,
                    // doc1 overrides mybase:grimme_aellinger
-                   content.contains("<field name=\"recordId\">doc1</field>"));
+                   content.contains("<field name=\"recordID\">doc1</field>"));
         assertTrue("The result should contain the right base\n" + content,
                    content.contains("<field name=\"recordBase\">dummy</field>"));
         log.debug("\n" + content);

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<sum:SummaDocument version="1.0" id="mybase:grimme_aellinger" xmlns:sum="http://statsbiblioteket.dk/summa/2008/Document">
+<sum:SummaDocument sum:version="1.0" sum:id="mybase:grimme_aellinger" xmlns:sum="http://statsbiblioteket.dk/summa/2008/Document">
     <sum:fields>
-        <sum:field name="author">Jens Hansen</sum:field>
-        <sum:field name="author">Hans Jensen</sum:field>
-        <sum:field name="title">Grimme ællinger</sum:field>
-        <sum:field name="freetext">Der var så kedeligt ude på landet. Hvepsene summede og blomsterne støvede...</sum:field>
+        <sum:field sum:name="author">Jens Hansen</sum:field>
+        <sum:field sum:name="author">Hans Jensen</sum:field>
+        <sum:field sum:name="title">Grimme ællinger</sum:field>
+        <sum:field sum:name="freetext">Der var så kedeligt ude på landet. Hvepsene summede og blomsterne støvede...</sum:field>
     </sum:fields>
 </sum:SummaDocument>
