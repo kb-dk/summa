@@ -59,8 +59,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * Example: //localhost:27000/summa-storage;
      * Deprecated: use {@link ConnectionConsumer#CONF_RPC_TARGET} instead.
      */
-    private static final String DEPRECATED_CONF_STORAGE =
-            "summa.storage.recordwriter.storage";
+    private static final String DEPRECATED_CONF_STORAGE = "summa.storage.recordwriter.storage";
 
     /**
      * The writer groups records into chunks before commiting them to storage
@@ -74,8 +73,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * </p><p>
      * @see #CONF_BATCH_MAXMEMORY
      */
-    public static final String CONF_BATCH_SIZE =
-            "summa.storage.recordwriter.batchsize";
+    public static final String CONF_BATCH_SIZE = "summa.storage.recordwriter.batchsize";
 
     /**
      * Default value for the {@link #CONF_BATCH_SIZE} property
@@ -93,8 +91,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * Optional. Default is 2000000 (~2MB).
      * @see #CONF_BATCH_SIZE
      */
-    public static final String CONF_BATCH_MAXMEMORY =
-            "summa.storage.recordwriter.batchmaxmemory";
+    public static final String CONF_BATCH_MAXMEMORY = "summa.storage.recordwriter.batchmaxmemory";
     public static final int DEFAULT_BATCH_MAXMEMORY = 2 * 1000 * 1000;
 
     /**
@@ -103,8 +100,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * is 1000ms (that would be 1s)
      * @see #CONF_BATCH_SIZE
      */
-    public static final String CONF_BATCH_TIMEOUT =
-                                      "summa.storage.recordwriter.batchtimeout";
+    public static final String CONF_BATCH_TIMEOUT = "summa.storage.recordwriter.batchtimeout";
 
     /**
      * Default value for the {@link #CONF_BATCH_TIMEOUT} property
@@ -122,8 +118,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * combined effect is that all records for the base that are not changed
      * during ingest will be marked as deleted when the ingest has completed. 
      */
-    public static final String CONF_TRY_UPDATE =
-                                      "summa.storage.recordwriter.tryupdate";
+    public static final String CONF_TRY_UPDATE = "summa.storage.recordwriter.tryupdate";
 
     public static final boolean DEFAULT_TRY_UPDATE = false;
 
@@ -145,8 +140,8 @@ public class RecordWriter extends ObjectFilterImpl {
 
         private long byteSize = 0;
 
-        public Batcher (int batchSize, int batchMaxMemory, int batchTimeout,
-                        WritableStorage storage, QueryOptions qOptions) {
+        public Batcher (
+            int batchSize, int batchMaxMemory, int batchTimeout, WritableStorage storage, QueryOptions qOptions) {
             mayRun = true;
             records = new ArrayList<Record>(batchSize);
             this.batchSize = batchSize;
@@ -206,8 +201,7 @@ public class RecordWriter extends ObjectFilterImpl {
         private boolean checkCommit() {
             if (!shouldCommit()) {
                 if (log.isTraceEnabled()) {
-                    log.trace("Batch not ready for commit yet. Current size: "
-                              + records.size());
+                    log.trace("Batch not ready for commit yet. Current size: " + records.size());
                 }
                 return false;
             }
@@ -228,22 +222,18 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             try {
-                String stats = records.size() + " records of total"
-                         + " size " + byteSize/1024 + "KB";
+                String stats = records.size() + " records of total size " + byteSize/1024 + "KB";
                 log.debug(String.format("Committing %s.", stats));
                 long start = System.nanoTime();
                 totalCommits += records.size();
                 storage.flushAll(records, qOptions);
                 log.info(String.format(
-                        "Committed %s in %sms. Total commits: %d. "
-                        + "Last commit was %sms ago",
+                        "Committed %s in %sms. Total commits: %d. Last commit was %sms ago",
                         stats, (System.nanoTime() - start)/1000000D,
-                        totalCommits,
-                         (System.nanoTime() - lastCommit)/1000000D));
+                        totalCommits, (System.nanoTime() - lastCommit)/1000000D));
                 lastCommit = System.nanoTime();
             } catch (Exception e) {
-                log.error("Dropped " + records.size() + " records in commit: "
-                          + e.getMessage(), e);
+                log.error("Dropped " + records.size() + " records in commit", e);
                 for (Record r: records) {
                     log.warn("Dropped: " + r.getId());
                 }
@@ -268,8 +258,7 @@ public class RecordWriter extends ObjectFilterImpl {
             try {
                 watcher.join();
             } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for record "
-                         + "batching thread");
+                log.warn("Interrupted while waiting for record batching thread");
             }
         }
 
@@ -312,10 +301,8 @@ public class RecordWriter extends ObjectFilterImpl {
         log.trace("Constructing RecordWriter");
         if (conf.valueExists(DEPRECATED_CONF_STORAGE)) {
             log.warn(String.format(
-                    "Old Storage address configuration detected."
-                    + " The key %s has been replaced by %s",
-                    DEPRECATED_CONF_STORAGE,
-                    ConnectionConsumer.CONF_RPC_TARGET));
+                    "Old Storage address configuration detected. The key %s has been replaced by %s",
+                    DEPRECATED_CONF_STORAGE, ConnectionConsumer.CONF_RPC_TARGET));
         }
 
         QueryOptions qOptions;
@@ -328,29 +315,24 @@ public class RecordWriter extends ObjectFilterImpl {
 
         storage = new StorageWriterClient(conf);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
-        batchMaxMemory = conf.getInt(
-                CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
+        batchMaxMemory = conf.getInt(CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
-        batcher = new Batcher(
-                    batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
+        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
 
         // TODO: Perform a check to see if the Storage is alive
     }
 
-    public RecordWriter(WritableStorage storage,
-                        int batchSize, int batchTimeout) {
+    public RecordWriter(WritableStorage storage, int batchSize, int batchTimeout) {
         this(storage, batchSize, DEFAULT_BATCH_MAXMEMORY, batchTimeout);
     }
 
-    public RecordWriter(WritableStorage storage,
-                        int batchSize, int batchMaxMemory, int batchTimeout) {
+    public RecordWriter(WritableStorage storage, int batchSize, int batchMaxMemory, int batchTimeout) {
         super (Configuration.newMemoryBased());
         this.storage = storage;
         this.batchSize = batchSize;
         this.batchMaxMemory = batchMaxMemory;
         this.batchTimeout = batchTimeout;
-        batcher = new Batcher(
-                        batchSize, batchMaxMemory, batchTimeout, storage, null);
+        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage, null);
     }
 
     /**
@@ -362,8 +344,7 @@ public class RecordWriter extends ObjectFilterImpl {
         Record record = payload.getRecord();
 
         if (record == null) {
-            throw new PayloadException("null received in Payload in next()"
-                                       + ". This should not happen");
+            throw new PayloadException("null received in Payload in next(). This should not happen");
         }
 
         batcher.add(record);
@@ -387,8 +368,8 @@ public class RecordWriter extends ObjectFilterImpl {
                                 success, eofReached));
         boolean initialEofReached = eofReached;
         if (initialEofReached && success) {
-            log.debug("close(true) with eofReached == true: Flushing and "
-                      + "closing batcher before calling close on source");
+            log.debug(
+                "close(true) with eofReached == true: Flushing and closing batcher before calling close on source");
             try {
                 batcher.stop();
 
@@ -397,15 +378,13 @@ public class RecordWriter extends ObjectFilterImpl {
             }
         }
         try {
-            log.debug(String.format(
-                    "close(%s): Closing super (which closes source)", success));
+            log.debug(String.format("close(%s): Closing super (which closes source)", success));
             super.close(success);
         } finally {
             if (!(initialEofReached && success)) {
                 log.info("Waiting for batch jobs to be committed");
                 batcher.stop();
-                log.info("Closed down RecordWriter. " + getProcessStats()
-                         + ". Total time: " + profiler.getSpendTime());
+                log.info("Closed down RecordWriter. " + getProcessStats() + ". Total time: " + profiler.getSpendTime());
             }
         }
     }

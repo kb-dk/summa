@@ -17,31 +17,32 @@ package dk.statsbiblioteket.summa.support.solr;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.PayloadBatcher;
+import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Receives Records containing Solr Documents intended for indexing in Solr and delivers them to an external Solr using
  * HTTP.
  * </p><p>
- * The current version flushes received documents one at a time as soon as they are received. This is not very efficient
- * but has the upside of being simple and solid.
- * For later versions a batching model should be considered.
- * See {@link dk.statsbiblioteket.summa.storage.api.filter.RecordWriter}
- * and {@link dk.statsbiblioteket.summa.common.filter.PayloadQueue} for
- * inspiration as they maintain a byte-size-controlled queue for batching.
- *
- * Streaming could also be examined, but transmission errors would leave the overall state as unknown with regard to
+ * The manipulator uses {@link PayloadBatcher} for queueing Payloads. This is necessary as a high amount of separate
+ * commits depletes the system of available ports, due to ports not being freed immediately upon disconnect. See the
+ * JavaDoc for PayloadBatcher for queueing options.
+ * </p><p>
+ * Streaming could be examined, but transmission errors would leave the overall state as unknown with regard to
  * the amount of documents passed to Solr. Speed-wise  this is vulnerable to errors and has little gain over batching as documents
  * are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states that it is
  * not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
@@ -80,6 +81,7 @@ public class SolrManipulator implements IndexManipulator {
     protected final String FIELD_ID;
     private final String UPDATE;
 
+    private final PayloadBatcher batcher;
     private int updatesSinceLastCommit = 0;
 
     // TODO: Guarantee recordID and recordBase
@@ -88,6 +90,14 @@ public class SolrManipulator implements IndexManipulator {
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
         UPDATE = "http://" + host + restCall + UPDATE_COMMAND;
         FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
+        batcher = new PayloadBatcher(conf) {
+            @Override
+            protected void flush(PayloadQueue queue) {
+                List<Payload> payloads = new ArrayList<Payload>(queue.size());
+                queue.drainTo(payloads);
+                send(payloads);
+            }
+        };
         log.info("Created SolrManipulator(" + UPDATE + ")");
     }
 
@@ -108,37 +118,55 @@ public class SolrManipulator implements IndexManipulator {
     public boolean update(Payload payload) throws IOException {
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
-            send(payload, "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>");
+            batcher.flush();
+            String command = "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>";
+            send(command, command);
             log.trace("Removed " + payload.getId() + " from index");
-            updatesSinceLastCommit++;
             return false;
         }
-        send(payload, packAddition(payload.getRecord().getContentAsUTF8()));
+        batcher.add(payload);
         updatesSinceLastCommit++;
         log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
         return false;
     }
 
+    private void send(List<Payload> payloads) {
+        StringWriter command = new StringWriter(payloads.size() * 1000);
+        command.append("<add>");
+        for (Payload payload: payloads) {
+            command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
+        }
+        command.append("</add>");
+        try {
+            send(payloads.size() + " Payloads", command.toString());
+        } catch (IOException e) {
+            String error = "IOException sending " + payloads.size() + " additions to " + this
+                           + ". Payloads: " + Strings.join(payloads, ", ") + ". First part of command:\n"
+                           + trim(command.toString(), 1000);
+            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.WARN, "", e);
+            log.warn(error, e);
+        }
+    }
+
     private int ok = 0;
     private int fail = 0;
-    private String packAddition(String solrDocument) {
+    private String removeHeader(String solrDocument) {
         if (solrDocument.contains("<")) {
             ok++;
         } else {
             fail++;
         }
-        log.info("packAddition(ok=" + ok + ", fail=" + fail + "): "
+        log.info("removeHeader(ok=" + ok + ", fail=" + fail + "): "
                  + (solrDocument.length() < 20 ? solrDocument : solrDocument.substring(0, 20).replace("\n", "")));
         final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
-        return "<add>" + (
-            solrDocument.startsWith(XML_HEADER) ?
-            solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
-            solrDocument)
-               + "</add>";
+        return solrDocument.startsWith(XML_HEADER) ?
+               solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
+               solrDocument;
     }
 
     @Override
     public synchronized void commit() throws IOException {
+        batcher.flush();
         orderChanged  = false;
         log.debug("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
         send(null, "<commit/>");
@@ -156,6 +184,7 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public synchronized void close() throws IOException {
         log.info("Closing down SolrManipulator");
+        batcher.close();
         commit();
     }
 
@@ -169,7 +198,7 @@ public class SolrManipulator implements IndexManipulator {
         return orderChanged;
     }
 
-    private void send(Payload payload, String command) throws IOException {
+    private void send(String designation, String command) throws IOException {
         URL url = new URL(UPDATE);
         HttpURLConnection conn;
         try {
@@ -191,10 +220,10 @@ public class SolrManipulator implements IndexManipulator {
             int code = conn.getResponseCode();
             if (code != 200) {
                 String message = String.format(
-                    "Unable to index document '%s' into Solr at %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
-                    payload == null ? "null Payload" : payload.getId(), UPDATE, code, trim(command, 100),
+                    "Unable to send '%s' to Solr at %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
+                    designation, UPDATE, code, trim(command, 100),
                     getResponse(conn));
-                Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, payload);
+                Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
                 throw new IOException(message);
             }
         } catch (ConnectException e) {
@@ -214,5 +243,10 @@ public class SolrManipulator implements IndexManipulator {
         return conn.getResponseCode() == 200 ?
                Strings.flush(new InputStreamReader(conn.getInputStream())) :
                Strings.flush(new InputStreamReader(conn.getErrorStream()));
+    }
+
+    @Override
+    public String toString() {
+        return "SolrManipulator(" + host + restCall + ")";
     }
 }

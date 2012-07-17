@@ -131,8 +131,10 @@ But this is avery rare situation.
      <str name="rows">10</str>
      <str name="q.op">AND</str>    
      <!-- This we probably have to tune a lot -->         
-     <str name="mm">100%</str>                        
+     <str name="mm">100%</str>
+       <!-- fulltext is for testing only (for now) -->
      <str name="qf">
+       fulltext
        sort_title
        freetext^0.5
        author_main^2.0
@@ -391,7 +393,44 @@ But this is avery rare situation.
       </lst>
     </searchComponent>
 
-    <requestHandler name="/exposed" class="org.apache.solr.handler.component.SearchHandler">
+    <requestHandler name="/exposed" class="solr.SearchHandler">
+        <lst name="defaults">
+        <!-- TODO: We need to mirror the whole setup from the edismax handler -->
+        <str name="defType">edismax</str>
+        <str name="qf">
+          fulltext
+          sort_title
+          freetext^0.5
+          author_main^2.0
+          author_person
+          au_other
+          author_corporation
+          title^1.8
+          se
+          main_title^4.0
+          html_h1
+          html_h2
+          html_h3
+          html_h4
+          html_h5
+          html_h6
+          subject_dk5
+          subject_serial_solutions
+          subject_ulrichs
+          subject_controlled^1.2
+          subject_other
+          lma_long
+          id
+          enrich_editor^0.2
+          enrich_isbn^0.2
+          enrich_publisher^0.2
+          enrich_publishdate^0.2
+          enrich_title^0.2
+          enrich_head^0.2
+          enrich_freetext^0.05
+          lti
+        </str>
+        </lst>
       <arr name="last-components">
         <str>exposed</str>
       </arr>

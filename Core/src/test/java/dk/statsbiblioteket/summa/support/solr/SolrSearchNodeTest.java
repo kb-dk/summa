@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.index.IndexController;
@@ -78,8 +79,8 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "text:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            DocumentKeys.SEARCH_QUERY, "fulltext:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -95,7 +96,7 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = getSearcher();
         assertResult(searcher, new Request(
             DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
         ), 1, "Solr sample document");
         searcher.close();
     }
@@ -107,7 +108,7 @@ public class SolrSearchNodeTest extends TestCase {
         ));
         assertResult(searcher, new Request(
             DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
         ), 1, "Solr sample document");
         searcher.close();
     }
@@ -129,9 +130,9 @@ public class SolrSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
             DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            FacetKeys.SEARCH_FACET_FACETS, "text"
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -151,8 +152,8 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.search(new Request(
             //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-            FacetKeys.SEARCH_FACET_FACETS, "text", // TODO: Remove reliance on this for the SolrResponseBuilder
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "text",
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
         ), responses);
 //        System.out.println(responses.toXML());
@@ -161,7 +162,6 @@ public class SolrSearchNodeTest extends TestCase {
                      2, ((DocumentResponse) responses.iterator().next()).getHitCount());
         assertTrue("The result should contain tag 'solr' with count 1",
                    responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
-
     }
 
 
@@ -198,7 +198,7 @@ public class SolrSearchNodeTest extends TestCase {
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
 

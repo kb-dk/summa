@@ -137,13 +137,16 @@
        when adding a document.
    -->
 
+              <!-- Intended for testing highlighting and similar text retrieval -->
+              <field name="fulltext" type="text"  multiValued="true" stored="true"/>
+
 <!-- begin converted from sb_index_descriptor -->
          
              <!-- Fix of SOLR3422 -->
              <field name="_version_" type="long" indexed="true" stored="true"/>
                   
-             <field name="recordID" type="key"/>                  
-             <field name="recordBase" type="key"/>
+             <field name="recordID" type="key" unique="true"/>
+             <field name="recordBase" type="key" unique="true"/>
          
              <!-- Gruppe enrich -->
              <field name="enrich_editor" type="text"  multiValued="true"/>

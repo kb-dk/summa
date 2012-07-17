@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search.api.document;
 
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -156,7 +157,7 @@ public interface DocumentKeys {
      * {@link dk.statsbiblioteket.summa.common.Record#getId()}.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String RECORD_ID = "recordID";
+    public static final String RECORD_ID = IndexUtils.RECORD_FIELD;
 
     /**
      * Every Document is guaranteed to have the field "recordBase", which will

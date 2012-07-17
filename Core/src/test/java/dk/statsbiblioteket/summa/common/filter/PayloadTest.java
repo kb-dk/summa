@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
-import java.util.Random;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+
+import java.util.Random;
 
 /**
  * Payload Tester.
@@ -120,7 +120,7 @@ public class PayloadTest extends TestCase {
             String[] idTokens = id.split("_", 2);
             String newID = idTokens[0] + "_" + subCSA + "_" + idTokens[1];
             payload.getRecord().setId(newID);
-            payload.getData().put("recordID", newID);
+            payload.getData().put(IndexUtils.RECORD_FIELD, newID);
 
             String content = payload.getRecord().getContentAsUTF8();
             content = content.replace("<an>", "<an>" + subCSA + "_");

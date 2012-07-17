@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
@@ -101,8 +102,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "text:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            DocumentKeys.SEARCH_QUERY, "fulltext:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -113,15 +114,16 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "text:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            DocumentKeys.SEARCH_QUERY, "fulltext:first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
         String PHRASE = "Solr sample document";
-        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        assertTrue("The result should contain the phrase '" + PHRASE + "'\n" + responses.toXML(),
+                   responses.toXML().contains(PHRASE));
         searcher.close();
     }
 
@@ -130,8 +132,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "text:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         );
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -161,8 +163,8 @@ public class SolrManipulatorTest extends TestCase {
         testBasicIngest();
         SearchNode searcher = getSearcher();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "text:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title text"
+            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         );
 
         {
@@ -207,7 +209,7 @@ public class SolrManipulatorTest extends TestCase {
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
 
