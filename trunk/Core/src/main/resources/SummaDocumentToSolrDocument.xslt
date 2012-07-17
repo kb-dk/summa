@@ -34,6 +34,11 @@
                         <xsl:attribute name="name">
                             <xsl:value-of select="@doc:name"/>
                         </xsl:attribute>
+                        <xsl:if test="@doc:boost != ''">
+                            <xsl:attribute name="boost">
+                                <xsl:value-of select="@doc:boost"/>
+                            </xsl:attribute>
+                        </xsl:if>
                         <!--                        <xsl:attribute name="boost">
                             <xsl:value-of select="@doc:boost"/>
                         </xsl:attribute>-->
