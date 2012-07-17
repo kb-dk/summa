@@ -620,9 +620,9 @@ public class SolrResponseBuilder implements Configurable {
             public void end() {
                 if (id == null) {
                     log.warn("No ID field '" + idField + "' found in document from query " + response.getQuery());
-                    id = "not_defined_in" + idField;
+                    id = "not_defined_in_" + idField;
                 }
-                if (!IndexUtils.RECORD_FIELD.equals(id)) {
+                if (!IndexUtils.RECORD_FIELD.equals(idField)) {
                     fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
                 }
                 // Add base if it does not exist or was collected using another name
