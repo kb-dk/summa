@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
@@ -343,7 +344,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 log.trace(getName() + " calling transformer for " + getName() + " for " + record);
             }
             try {
-                transformer.setParameter("recordID", record.getId());
+                transformer.setParameter(IndexUtils.RECORD_FIELD, record.getId());
                 transformer.setParameter("recordBase", record.getBase());
                 transformer.transform(source, result);
             } catch (TransformerException e) {

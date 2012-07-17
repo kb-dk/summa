@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
@@ -95,7 +96,7 @@ public class SolrSearchTestBase extends TestCase {
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, "recordId"); // 'id' is the default ID field for Solr
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
 }

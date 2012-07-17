@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
@@ -25,8 +26,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -75,7 +76,7 @@ public class SearchStorage implements ReadableStorage {
      * Optional. Default is recordID.
      */
     public static final String CONF_ID_FIELD = "searchstorage.id";
-    public static final String DEFAULT_ID_FIELD = "recordID";
+    public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
     /**
      * The recordBase to assign to returned Records.

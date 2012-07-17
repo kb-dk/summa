@@ -16,14 +16,13 @@ package dk.statsbiblioteket.summa.common.filter;
 
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A queue tailored for Payloads, where the maximum queue size can be defined
@@ -33,15 +32,16 @@ import org.apache.commons.logging.LogFactory;
  * </p><p>
  * Note: remainingCapacity is a maximum, as the sizes of Payloads are not known
  * before they are added.
+ * </p><p>
+ * Note: Regardless of maxSize, there is always room for 1 Payload in the queue.
  */
 @QAInfo(level = QAInfo.Level.PEDANTIC,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
-        comment = "The hard part about this is to ensure that totalSize is"
-                  + "true under all conditions")
+        comment = "The hard part about this is to ensure that totalSize is true under all conditions")
 public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     /** Serial version UID. */
-    private static final long serialVersionUID = 354681383613L;
+    private static final long serialVersionUID = 354681383614L;
     /** Logger. */
     private static Log log = LogFactory.getLog(PayloadQueue.class);
 
@@ -60,14 +60,13 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public PayloadQueue(int maxCount, long maxSize) {
         super(maxCount, true);
         this.maxSize = maxSize;
-        log.debug("Constructed PayloadQueue with max Payloads " + maxCount
-                  + " and max bytes " + maxSize);
+        log.debug("Constructed PayloadQueue with max Payloads " + maxCount + " and max bytes " + maxSize);
     }
 
     @Override
     public boolean offer(Payload payload) {
         long payloadSize = calculateSize(payload);
-        if (payloadSize + totalSize.get() > maxSize) {
+        if (payloadSize + totalSize.get() > maxSize && size() > 0) {
             return false;
         }
         if (super.offer(payload)) {
@@ -91,8 +90,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                 return;
             } catch (InterruptedException e) {
                 log.warn(String.format(
-                        "Interrupted while calling put(%s) from "
-                        + "uninterruptiblePut. Retrying", payload), e);
+                    "Interrupted while calling put(%s) from uninterruptiblePut. Retrying", payload), e);
             }
         }
     }
@@ -111,13 +109,12 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
     // TODO: Change implementation of waitforRoom to support timeouts
     @Override
-    public boolean offer(Payload payload, long timeout, TimeUnit unit)
-                                                   throws InterruptedException {
+    public boolean offer(Payload payload, long timeout, TimeUnit unit) throws InterruptedException {
         long payloadSize = waitForRoom(payload);
         if (super.offer(payload, timeout, unit)) {
             totalSize.addAndGet(payloadSize);
             synchronized (flag) {
-                 flag.notifyAll();
+                flag.notifyAll();
                 return true;
              }
         }
@@ -165,8 +162,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                     return result;
                  }
             } catch (InterruptedException e) {
-                log.warn("Got InterruptedException while taking in "
-                         + "uninterruptibleTake. Retrying", e);
+                log.warn("Got InterruptedException while taking in uninterruptibleTake. Retrying", e);
             }
         }
     }
@@ -193,8 +189,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     }
 
     @Override
-    public Payload poll(long timeout, TimeUnit unit)
-                                                   throws InterruptedException {
+    public Payload poll(long timeout, TimeUnit unit) throws InterruptedException {
         Payload result = super.poll(timeout, unit);
         if (result != null) {
             totalSize.addAndGet(-1 * calculateSize(result));
@@ -217,8 +212,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
     @Override
     public int drainTo(Collection<? super Payload> c, int maxElements) {
-        throw new UnsupportedOperationException(
-                "drainTo with max not supported yet");
+        throw new UnsupportedOperationException("drainTo with max not supported yet");
 /*        int count = super.drainTo(c, maxElements);    // TODO: Implement this
         flag.notifyAll();
         return count;*/
@@ -239,8 +233,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                     flag.wait();
                 } catch (InterruptedException e) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.debug("Was interrupted while waiting for flag."
-                              + " Retrying", e);
+                    log.debug("Was interrupted while waiting for flag. Retrying", e);
                 }
             }
         }
@@ -268,8 +261,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                 try {
                     flag.wait();
                 } catch (InterruptedException e) {
-                    log.trace("uninterruptibleWaitForEntry caught interrupt. "
-                              + "Continuing");
+                    log.trace("uninterruptibleWaitForEntry caught interrupt. Continuing");
                 }
             }
         }
@@ -281,8 +273,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
      * @return The size of the payload.
      */
     private long calculateSize(Payload payload) {
-        return payload.getRecord() == null ? 200
-               : RecordUtil.calculateRecordSize(payload.getRecord(), true);
+        return payload.getRecord() == null ? 200 : RecordUtil.calculateRecordSize(payload.getRecord(), true);
     }
 }
 

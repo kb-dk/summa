@@ -134,12 +134,16 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
     /**
      * Request an explicit flush.
      */
-    public void flush() {
+    public synchronized void flush() {
         log.debug("Explicit flush called");
         performFlush();
     }
 
     private synchronized void performFlush() {
+        if (queue.size() == 0) {
+            log.trace("performFlush() called on empty queue");
+            return;
+        }
         log.debug("Flushing " + queue.size() + " records");
         flushTime -= System.currentTimeMillis();
         flush(queue);
@@ -183,6 +187,20 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         }
         log.info(String.format("Closed batcher with %d processed Payloads, delivered in %d ms (%s Payloads/s)",
                                received, flushTime, flushTime == 0 ? "N/A" : (received * 1000 / flushTime)));
+    }
+
+    /**
+     * @return the number of queues Payloads.
+     */
+    public int size() {
+        return queue.size();
+    }
+
+    /**
+     * @return the number of added Payloads.
+     */
+    public int getAdded() {
+        return received;
     }
 
     public String toString() {
