@@ -620,7 +620,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected Map<String, List<String>> buildSolrQuery(
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
-        int startPage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords);
+        int startPage = Math.max(0, maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords));
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
 
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
