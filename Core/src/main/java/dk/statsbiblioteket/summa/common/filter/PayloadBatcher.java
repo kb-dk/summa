@@ -94,12 +94,12 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
             throw new IllegalStateException("Unable to add " + payload + " after close() has been called");
         }
         received++;
-        if (queue.add(payload)) {
+        if (queue.offer(payload)) {
             notifyAll();
             return;
         }
         performFlush();
-        if (!queue.add(payload)) {
+        if (!queue.offer(payload)) {
             throw new IllegalStateException("Unable to add " + payload + " to empty queue");
         }
         notifyAll();
