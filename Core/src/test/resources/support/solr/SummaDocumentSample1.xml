@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<SummaDocument summa:version="1.0" summa:id="mybase:grimme_aellinger" summa:boost="2.0" xmlns:summa="http://statsbiblioteket.dk/summa/2008/Document" xmlns="http://statsbiblioteket.dk/summa/2008/Document">
+<SummaDocument summa:version="1.0" summa:id="mybase:grimme_aellinger" summa:boost="5.0" xmlns:summa="http://statsbiblioteket.dk/summa/2008/Document" xmlns="http://statsbiblioteket.dk/summa/2008/Document">
     <fields>
         <field summa:name="author" summa:boost="2.0">Jens Hansen</field>
         <field summa:name="author">Hans Jensen</field>

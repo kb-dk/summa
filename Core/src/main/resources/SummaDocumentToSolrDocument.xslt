@@ -10,6 +10,11 @@
 
     <xsl:template match="doc:SummaDocument">
         <doc>
+            <xsl:if test="@doc:boost != ''">
+                <xsl:attribute name="boost">
+                    <xsl:value-of select="@doc:boost"/>
+                </xsl:attribute>
+            </xsl:if>
             <xsl:text>
             </xsl:text>
             <xsl:element name="field">

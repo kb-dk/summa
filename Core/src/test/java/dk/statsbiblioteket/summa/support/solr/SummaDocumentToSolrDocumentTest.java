@@ -57,7 +57,7 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
 
     public void testBasicTransform() throws IOException {
         String content = transform("support/solr/SummaDocumentSample1.xml");
-        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc"));
         assertTrue("The result should contain the right ID\n" + content,
                    // doc1 overrides mybase:grimme_aellinger
                    content.contains("<field name=\"recordID\">doc1</field>"));
@@ -70,15 +70,23 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
 
     public void testFieldBoost() throws IOException {
         String content = transform("support/solr/SummaDocumentSample1.xml");
-        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc"));
         assertTrue("The result should contain the right boost\n" + content,
                    content.contains("<field name=\"author\" boost=\"2.0\">Jens Hansen</field>"));
         log.debug("\n" + content);
     }
 
+    public void testDocumentBoost() throws IOException {
+        String content = transform("support/solr/SummaDocumentSample1.xml");
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc"));
+        assertTrue("The result should contain the right boost\n" + content,
+                   content.contains("<doc boost=\"5.0\">"));
+        log.debug("\n" + content);
+    }
+
     public void testExplicitNamespace() throws IOException {
         String content = transform("support/solr/SummaDocumentSampleNamespace.xml");
-        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc>"));
+        assertTrue("The result should be a Solr doc\n" + content, content.contains("<doc"));
         assertTrue("The result should contain the right ID\n" + content,
                    // doc1 overrides mybase:grimme_aellinger
                    content.contains("<field name=\"recordID\">doc1</field>"));
