@@ -156,8 +156,10 @@ public class SolrManipulator implements IndexManipulator {
         } else {
             fail++;
         }
-        log.info("removeHeader(ok=" + ok + ", fail=" + fail + "): "
-                 + (solrDocument.length() < 20 ? solrDocument : solrDocument.substring(0, 20).replace("\n", "")));
+        if (log.isTraceEnabled()) {
+            log.trace("removeHeader(ok=" + ok + ", fail=" + fail + "): "
+                      + (solrDocument.length() < 20 ? solrDocument : solrDocument.substring(0, 20).replace("\n", "")));
+        }
         final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
         return solrDocument.startsWith(XML_HEADER) ?
                solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
@@ -176,8 +178,8 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public synchronized void consolidate() throws IOException {
-        log.info("Consolidate called. Currently there is no implementation of this functionality. Note that consolidate"
-                 + " is becoming increasingly less important as Lucene/Solr develops");
+        log.info("Consolidate called. Currently there is no implementation of this functionality besides requesting a "
+                 + "commit. Note that consolidate is becoming increasingly less important as Lucene/Solr develops");
         commit(); // Just to make sure
     }
 
