@@ -101,6 +101,28 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.close();
     }
 
+    public void testParentheses() throws Exception {
+        performBasicIngest();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "(+fulltext:first)",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+        );
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_COMPENSATE_FOR_PARENTHESIS_BUG, false
+            ));
+            assertResult(searcher, request, 0, null);
+            searcher.close();
+        }
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_COMPENSATE_FOR_PARENTHESIS_BUG, true // Default
+            ));
+            assertResult(searcher, request, 1, "Solr sample document");
+            searcher.close();
+        }
+    }
+
     public void testNonQualifiedEdismax() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
@@ -120,13 +142,20 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      expectedResponses, ((DocumentResponse)responses.iterator().next()).getHitCount());
-
-        assertTrue("The result should contain '" + expectedContent + "'", responses.toXML().contains(expectedContent));
+        if (expectedContent != null) {
+            assertTrue("The result should contain '" + expectedContent + "'",
+                       responses.toXML().contains(expectedContent));
+        }
     }
 
     public void testFacetedSearch() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
+        testFacetedSearch(searcher);
+        testFacetedSearchFilter(searcher);
+    }
+
+    private void testFacetedSearch(SearchNode searcher) throws Exception {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "first",
@@ -137,18 +166,68 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 1",
+        assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
                    responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
 //        System.out.println(responses.toXML());
     }
 
-    public void testExposedFacetedSearch() throws Exception {
+    private void testFacetedSearchFilter(SearchNode searcher) throws Exception {
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_FILTER, "recordBase:dummy",
+            DocumentKeys.SEARCH_QUERY, "first",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+        ), responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
+                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
+//        System.out.println(responses.toXML());
+    }
+
+    public void testExposedFacetedSearchAuto() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
+            SBSolrSearchNode.CONF_USE_EFACET, "true"
+        ));
+        testFacetedSearch(searcher);
+        testFacetedSearchFilter(searcher);
+    }
+
+    public void testExposedFacetedSearchRest() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
             SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
         ));
-        ResponseCollection responses = new ResponseCollection();
             // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
+        assertExposed(searcher, new Request(
+            //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+        ));
+    }
+
+    public void testExposedFacetedSearchHandler() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+        ));
+            // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
+        assertExposed(searcher, new Request(
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exposed",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+        ));
+    }
+
+    private void assertExposed(SearchNode searcher, Request request) throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
@@ -163,7 +242,6 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("The result should contain tag 'solr' with count 1",
                    responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
     }
-
 
     private void performBasicIngest() throws Exception {
         ObjectFilter data = getDataProvider(false);
