@@ -18,21 +18,15 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import com.ibm.icu.text.Collator;
-
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
+
+import java.io.StringWriter;
+import java.util.*;
 
 /**
  * This facet structure representation is suitable for serializing and other
@@ -71,15 +65,14 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     @Override
     protected String getQueryString(String facet, String tag) {
-        if (fields.get(facet) == null) {
-            throw new IllegalStateException(String.format(
-                    "No fields specified in facet '%s'", facet));
+        String[] fields = this.fields.get(facet);
+        if (fields == null) { // We can get facets back without explicitly asking for them
+            fields = new String[]{facet};
         }
 
         // TODO: Should # be excaped too?
         String cleanTag = getTagString(facet, tag);
         StringWriter sw = new StringWriter(100);
-        String[] fields = this.fields.get(facet);
         if (fields.length > 1) {
             sw.append("(");
         }

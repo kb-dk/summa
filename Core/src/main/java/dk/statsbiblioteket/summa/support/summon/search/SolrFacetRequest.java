@@ -22,8 +22,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
 
@@ -53,10 +53,11 @@ public class SolrFacetRequest {
         originalStructure = new Structure(facetsDef, defaultFacetPageSize);
         facets = new ArrayList<Facet>(originalStructure.getFacetList().size());
         for (FacetStructure fc: originalStructure.getFacetList()) {
-            if (!FacetStructure.SORT_POPULARITY.equals(fc.getSortType())) {
-                log.warn("The facet request '" + facetsDef + "' defines sort order that is not '"
-                         + FacetStructure.SORT_POPULARITY + "'. This is not supported by this faceter");
-            }
+/*            if (FacetStructure.SORT_ALPHA.equals(fc.getSortType()) && fc.getLocale() != null) {
+                log.warn("The facet request '" + facetsDef + "' defines sort order ALPHA with locale " + fc.getLocale()
+                         + ". Locale based order is not '" + FacetStructure.SORT_POPULARITY
+                         + "'. This is not supported by this faceter");
+            }*/
             if (fc.getFields().length > 1 && !fieldWarningFired) {
                 log.warn("The facet request '" + facetsDef + "' defines more than on field for facet '" + fc.getName()
                          + ". This is not supported by this faceter. Only the first field will be used. This warning "

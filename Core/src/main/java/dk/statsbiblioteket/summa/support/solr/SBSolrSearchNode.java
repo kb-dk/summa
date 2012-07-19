@@ -56,14 +56,30 @@ public class SBSolrSearchNode extends SolrSearchNode {
     public static final String CONF_DIDYOUMEAN_HANDLER = "solr.lookup.handler";
     public static final String DEFAULT_DIDYOUMEAN_HANDLER = "";
 
+    /**
+     * If true, Facet-requests will be handled by the Exposed facet system.
+     */
+    public static final String CONF_USE_EFACET = "solr.efacet";
+    public static final boolean DEFAULT_USE_EFACET = false;
+
+    /**
+     * If {@link #CONF_USE_EFACET} is true, this handler will be used.
+     */
+    public static final String CONF_EFACET_HANDLER = "solr.efacet.handler";
+    public static final String DEFAULT_EFACET_HANDLER = "exposed";
 
     protected final String lookupHandlerID;
+    protected final boolean useEfacet;
+    protected final String efacetHandlerID;
     protected final String didYouMeanHandlerID;
 
     public SBSolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         lookupHandlerID = conf.getString(CONF_LOOKUP_HANDLER, DEFAULT_LOOKUP_HANDLER);
+        useEfacet = conf.getBoolean(CONF_USE_EFACET, DEFAULT_USE_EFACET);
+        efacetHandlerID = conf.getString(CONF_EFACET_HANDLER, DEFAULT_EFACET_HANDLER);
         didYouMeanHandlerID = conf.getString(CONF_DIDYOUMEAN_HANDLER, DEFAULT_DIDYOUMEAN_HANDLER);
+
         log.info("Created SBSolrSearchNode");
     }
 
@@ -78,6 +94,28 @@ public class SBSolrSearchNode extends SolrSearchNode {
         buildIndexLookup(request, solr);
         buildDidYouMean(request, solr);
         return solr;
+    }
+
+    @Override
+    protected SolrFacetRequest createFacetRequest(
+        String facetsDef, int minCount, int defaultFacetPageSize, String combineMode) {
+        if (!useEfacet) {
+            return super.createFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode);
+        }
+        return new SolrFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode) {
+            @Override
+            public void addFacetQueries(Map<String, List<String>> queryMap) {
+                queryMap.put(CONF_SOLR_PARAM_PREFIX + "qt", Arrays.asList(efacetHandlerID));
+                queryMap.put(CONF_SOLR_PARAM_PREFIX + "efacet", Arrays.asList(Boolean.TRUE.toString()));
+                super.addFacetQueries(queryMap);
+            }
+
+            @Override
+            protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
+                                         int startPage, int pageSize) {
+                append(queryMap, "s.ff", field + "," + combineMode + ",1," + pageSize);
+            }
+        };
     }
 
     private void buildIndexLookup(Request request, Map<String, List<String>> solr) {
