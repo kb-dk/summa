@@ -74,12 +74,27 @@ public class SolrManipulator implements IndexManipulator {
     public static final String CONF_ID_FIELD = "solr.field.id";
     public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
+    /**
+     * If true, a flush of queued updates is called when a delete is encountered. In a setup where the order of updates
+     * is irrelevant (standard setup at Statsbiblioteket, where updates are performed in limited batches where no
+     * duplicate record ID's are encountered), this should be true.
+     * </p><p>
+     * If there are a lot of updates intermixed with deletes, setting this to false diminishes the effect of the queue
+     * and the system might run out of available ports.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    // TODO: Add sleep if flushOnDelete is true to avoid running out of ports.
+    public static final String CONF_FLUSH_ON_DELETE = "solr.flush_on_delete";
+    public static final boolean DEFAULT_FLUSH_ON_DELETE = false;
+
     public static final String UPDATE_COMMAND = "/update";
 
     protected final String host;
     protected final String restCall;
     protected final String FIELD_ID;
     private final String UPDATE;
+    private final boolean flushOnDelete;
 
     private final PayloadBatcher batcher;
     private int updatesSinceLastCommit = 0;
@@ -90,6 +105,7 @@ public class SolrManipulator implements IndexManipulator {
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
         UPDATE = "http://" + host + restCall + UPDATE_COMMAND;
         FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
+        flushOnDelete = conf.getBoolean(CONF_FLUSH_ON_DELETE, DEFAULT_FLUSH_ON_DELETE);
         batcher = new PayloadBatcher(conf) {
             @Override
             protected void flush(PayloadQueue queue) {
@@ -119,7 +135,9 @@ public class SolrManipulator implements IndexManipulator {
         updatesSinceLastCommit++;
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
-            batcher.flush();
+            if (flushOnDelete) {
+                batcher.flush();
+            }
             String command = "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>";
             send(command, command);
             log.trace("Removed " + payload.getId() + " from index");
