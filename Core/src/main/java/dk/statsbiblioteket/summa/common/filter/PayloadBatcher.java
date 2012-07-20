@@ -37,15 +37,15 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
      * Optional. Default is 1000.
      */
     public static final String CONF_MAX_COUNT = "batch.max.count";
-    public static final int DEFAULT_MAX_COUNT = 1000;
+    public static final int DEFAULT_MAX_COUNT = 2000;
 
     /**
      * The maximum sum of Payload byte sizes before flushing.
      * </p><p>
-     * Optional. Default is 2000000 bytes (~2MB).
+     * Optional. Default is 5000000 bytes (~5 MB).
      */
     public static final String CONF_MAX_BYTES = "batch.max.bytes";
-    public static final long DEFAULT_MAX_BYTES = 2 * 1000 * 1000;
+    public static final long DEFAULT_MAX_BYTES = 5 * 1000 * 1000;
 
     /**
      * The maximum amount of time with inactivity before flushing.
