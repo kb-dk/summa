@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -163,7 +163,8 @@ public class FacetQueryTransformer {
      */
     protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String value, boolean negated) {
         // TODO: Test whether foo:bar NOT moo:zoo works when split into multiple facet queries
-        append(queryMap, "facet.query", (negated ? "NOT " : "") + field + ":\"" + value + "\"");
+        //append(queryMap, "facet.query", (negated ? "NOT " : "") + field + ":\"" + value + "\"");
+        append(queryMap, "facet.query", (negated ? "NOT " : "") + field + ":\"" + value.replace(" ", "\\ ") + "\"");
     }
 
     private void convertTermQuery(

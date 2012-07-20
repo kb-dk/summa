@@ -15,19 +15,12 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -38,6 +31,11 @@ import javax.naming.NamingException;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * A class containing methods meant to be exposed as a web service.
@@ -95,7 +93,7 @@ public class StorageWS {
             if (mergers != null) {
                 return;
             }
-            log.info("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
+            log.debug("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
             mergers =
                new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
             for (int i = 0; i < NUMBER_OF_MERGERS; i++) {
@@ -107,6 +105,7 @@ public class StorageWS {
                         + " to the queue", e);
                 }
             }
+            log.info("StorageWS ready");
        }
     }
 

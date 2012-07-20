@@ -135,8 +135,8 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.close();
     }
 
-    private void assertResult(SearchNode searcher, Request request, int expectedResponses, String expectedContent)
-                                                                                                throws RemoteException {
+    private void assertResult(
+        SearchNode searcher, Request request, int expectedResponses, String expectedContent) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
