@@ -144,7 +144,10 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
             log.trace("performFlush() called on empty queue");
             return;
         }
-        log.debug("Flushing " + queue.size() + " records");
+        if (log.isDebugEnabled()) {
+            log.debug("Flushing " + queue.size() + " records with a total size of " + queue.byteSize() / 1024
+                      + " KB. Last flush was " + (System.currentTimeMillis() - lastAction) + " ms ago");
+        }
         flushTime -= System.currentTimeMillis();
         flush(queue);
         flushTime += System.currentTimeMillis();

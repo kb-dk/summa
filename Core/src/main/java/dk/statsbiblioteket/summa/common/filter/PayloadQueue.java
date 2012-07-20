@@ -275,5 +275,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     private long calculateSize(Payload payload) {
         return payload.getRecord() == null ? 200 : RecordUtil.calculateRecordSize(payload.getRecord(), true);
     }
+
+    public long byteSize() {
+        return totalSize.longValue();
+    }
 }
 
