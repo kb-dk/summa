@@ -44,7 +44,7 @@ import java.util.NoSuchElementException;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "mke, hbk")
+        author = "te, mke, hbk")
 public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
                                  implements Configurable, ReadableStorage {
 
@@ -77,8 +77,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecordsModifiedAfter(" + time + ", "
-                                  + base + ") failed: " + t.getMessage(), t);
+            throw new IOException("getRecordsModifiedAfter(" + time + ", " + base + ") failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -133,7 +132,8 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecord(id, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecord(" + id + ", options=" + options + ") failed: " + t.getMessage(), t);
+            throw new IOException("getRecord(" + id + ", options=" + options + ") with vendor=" + getVendorId()
+                                  + " failed: " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
