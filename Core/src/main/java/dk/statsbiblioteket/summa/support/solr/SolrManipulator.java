@@ -116,6 +116,7 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public boolean update(Payload payload) throws IOException {
+        updatesSinceLastCommit++;
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
             batcher.flush();
@@ -125,7 +126,6 @@ public class SolrManipulator implements IndexManipulator {
             return false;
         }
         batcher.add(payload);
-        updatesSinceLastCommit++;
         log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
         return false;
     }
