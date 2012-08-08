@@ -309,6 +309,7 @@ public class RecordUtil {
 
         out.writeCharacters("\n");
         out.writeEndElement(); // record
+        out.flush();
     }
 
     /*
