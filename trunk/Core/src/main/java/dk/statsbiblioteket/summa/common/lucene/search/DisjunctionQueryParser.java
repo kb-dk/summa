@@ -227,7 +227,7 @@ public class DisjunctionQueryParser extends QueryParser {
     }
 
     private Query getSuperFieldQuery(String field, String queryText, boolean quoted) throws ParseException {
-        System.out.println(field + ":" + queryText + ", quoted=" + quoted);
+//        System.out.println(field + ":" + queryText + ", quoted=" + quoted);
         return super.getFieldQuery(field, queryText, quoted);
     }
 
