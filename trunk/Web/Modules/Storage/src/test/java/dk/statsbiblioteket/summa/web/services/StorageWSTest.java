@@ -41,13 +41,13 @@ public class StorageWSTest extends TestCase {
     }
 
     public void testGetRecord() {
-        final String ID = "sb_3130410";
+        final String ID = "doms:dda_paper_vol2_paper14-8";
 //        final String ID = "oai:doaj-articles:3a087332fac5eed3a0e5a4c1bba3c8ac";
         StorageWS.conf =  Configuration.newMemoryBased(
-            ConnectionConsumer.CONF_RPC_TARGET, "//mars.sb.statsbiblioteket.dk:57000/sb-storage",
+            ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-storage",
             RecordUtil.CONF_ESCAPE_CONTENT, false
         );
         StorageWS storage = new StorageWS();
-        System.out.println(storage.getRecord(ID));
+        System.out.println(storage.getRecord(ID).replace(">", ">\n"));
     }
 }
