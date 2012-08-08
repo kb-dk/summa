@@ -22,11 +22,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
 import java.io.*;
 import java.text.ParseException;
@@ -309,6 +305,7 @@ public class RecordUtil {
 
         out.writeCharacters("\n");
         out.writeEndElement(); // record
+        out.flush();
     }
 
     /*
