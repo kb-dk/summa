@@ -61,6 +61,22 @@ public class SummaQueryParserTest extends TestCase {
             "php^2");
     }
 
+    public void testNonExpansion() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals(
+            "The parsed query should be contained to the given field", qp,
+            "(+title:php[1.0] +title:xml[1.0])[1.0]",
+            "title:(php xml)"); // Field grouping
+    }
+
+    public void testNonExistingNonExpansion() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals(
+            "The parsed query should be contained to the given field", qp,
+            "(+zzz:php[1.0] +zzz:xml[1.0])[1.0]",
+            "zzz:(php xml)"); // Field grouping
+    }
+
     public void testGroupExpansion() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should expand default groups", qp,

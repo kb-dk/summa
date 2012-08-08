@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
@@ -106,7 +106,8 @@ public class QueryPhraser implements Configurable {
         StringWriter sw = new StringWriter(50);
         int counter = 0;
         for (BooleanClause bc: bq.getClauses()) {
-            if (!bc.isRequired() || !(bc.getQuery() instanceof TermQuery)) {
+            if (!bc.isRequired() || !(bc.getQuery() instanceof TermQuery)
+                || !"".equals(((TermQuery) bc.getQuery()).getTerm().field())) {
                 return null;
             }
             if (counter > 0) {
