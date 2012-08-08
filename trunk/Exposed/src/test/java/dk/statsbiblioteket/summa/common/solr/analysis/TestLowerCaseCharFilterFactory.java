@@ -56,6 +56,8 @@ public class TestLowerCaseCharFilterFactory extends TestCase {
         assertEquals("123", analyze("123"));
         assertEquals("ö", analyze("Ö"));
         assertEquals("κ", analyze("Κ")); // Greek
+        assertEquals("𐅄", analyze("𐅄")); // Above 65K
+        assertEquals("?f?", analyze("?F?")); // Above 65K
     }
 
     private String analyze(CharSequence in) throws IOException {
