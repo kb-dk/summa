@@ -106,7 +106,8 @@ public class QueryPhraser implements Configurable {
         StringWriter sw = new StringWriter(50);
         int counter = 0;
         for (BooleanClause bc: bq.getClauses()) {
-            if (!bc.isRequired() || !(bc.getQuery() instanceof TermQuery)) {
+            if (!bc.isRequired() || !(bc.getQuery() instanceof TermQuery)
+                || !"".equals(((TermQuery)bc.getQuery()).getTerm().field())) {
                 return null;
             }
             if (counter > 0) {

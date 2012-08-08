@@ -42,6 +42,14 @@ public class QueryPhraserTest extends TestCase {
         assertPhrase("foo (bar moo)", "foo (bar moo)");
     }
 
+    public void testFieldGrouping() throws Exception {
+        assertPhrase("title:(php xml)", "title:(php xml)");
+    }
+
+    public void testQualified() throws Exception {
+        assertPhrase("(foo:bar moo row)", "(foo:bar moo row)");
+    }
+
     public void testConfigSlope() throws ParseException {
         final String QUERY = "foo bar";
         QueryPhraser qp = new QueryPhraser(Configuration.newMemoryBased(QueryPhraser.CONF_SLOP, 0));
