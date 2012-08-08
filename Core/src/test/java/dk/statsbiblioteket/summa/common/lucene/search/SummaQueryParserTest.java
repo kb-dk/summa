@@ -53,7 +53,13 @@ public class SummaQueryParserTest extends TestCase {
               "freetext:foo[1.0]", "freetext:foo");
     }
 
-
+    public void testNonExpansion() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals(
+            "The parsed query should be contained to the given field", qp,
+            "(+title:php[1.0] +title:xml[1.0])[1.0]",
+            "title:(php xml)");
+    }
 
     public void testDefaultExpansionWithBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
