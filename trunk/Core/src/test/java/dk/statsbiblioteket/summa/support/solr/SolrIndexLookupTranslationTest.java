@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.exposed.ExposedIndexLookupParams;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -166,19 +167,34 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
       ), "åse(1) ægir(1) ødis(1)", false);
   }
 
-  public void testIndexLookupLocale() throws Exception {
-      ingest(Arrays.asList("ægir", "åse", "ødis"));
-      verifyLookup(new Request(
-          DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
-          //PRE + "qt", "/lookup", // Now added automatically
-          IndexKeys.SEARCH_INDEX_SORT, IndexKeys.INDEX_SORTBYLOCALE,
-          IndexKeys.SEARCH_INDEX_LOCALE, "da",
-          IndexKeys.SEARCH_INDEX_DELTA, -1,
-          IndexKeys.SEARCH_INDEX_FIELD, "lti",
-          IndexKeys.SEARCH_INDEX_LENGTH, 30,
-          IndexKeys.SEARCH_INDEX_TERM, ""
-      ), "ægir(1) ødis(1) åse(1)", false);    // TODO: Oder matter so upgrade the testing!
-  }
+    public void testIndexLookupLocaleSumma() throws Exception {
+        ingest(Arrays.asList("ægir", "åse", "ødis"));
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            //PRE + "qt", "/lookup", // Now added automatically
+            IndexKeys.SEARCH_INDEX_SORT, IndexKeys.INDEX_SORTBYLOCALE,
+            IndexKeys.SEARCH_INDEX_LOCALE, "da",
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_LENGTH, 30,
+            IndexKeys.SEARCH_INDEX_TERM, ""
+        ), "ægir(1) ødis(1) åse(1)", false);    // TODO: Oder matter so upgrade the testing!
+    }
+
+    public void testIndexLookupLocaleSolr() throws Exception {
+        ingest(Arrays.asList("ægir", "åse", "ødis"));
+        verifyLookup(new Request(
+            DocumentKeys.SEARCH_QUERY, "recordBase:myBase",
+            //PRE + "qt", "/lookup", // Now added automatically
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + ExposedIndexLookupParams.ELOOKUP_SORT,
+            ExposedIndexLookupParams.ELOOKUP_SORT_BYLOCALE,
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE, "da",
+            IndexKeys.SEARCH_INDEX_DELTA, -1,
+            IndexKeys.SEARCH_INDEX_FIELD, "lti",
+            IndexKeys.SEARCH_INDEX_LENGTH, 30,
+            IndexKeys.SEARCH_INDEX_TERM, ""
+        ), "ægir(1) ødis(1) åse(1)", false);    // TODO: Oder matter so upgrade the testing!
+    }
 
     // TODO: Test without query
     // TODO: Test origo
@@ -205,9 +221,13 @@ public class SolrIndexLookupTranslationTest extends SolrSearchTestBase {
                                   SBSolrSearchNode.CONF_SOLR_RESTCALL, "/solr/lookup"
                               )) :
                               getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(request, responses);
-        searcher.close();
+        ResponseCollection responses;
+        try {
+            responses = new ResponseCollection();
+            searcher.search(request, responses);
+        } finally {
+            searcher.close();
+        }
         // We need to wait a little bit for the Solr thread to shut down.
         Thread.sleep(500);
 
