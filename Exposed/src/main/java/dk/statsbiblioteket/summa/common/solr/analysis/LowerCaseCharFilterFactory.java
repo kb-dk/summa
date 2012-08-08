@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.solr.analysis;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.CharStream;
 import org.apache.lucene.analysis.util.CharFilterFactory;
 import org.apache.lucene.util.Version;
@@ -22,9 +21,6 @@ import org.apache.lucene.util.Version;
 /**
  * Trivial factory for {@link LowerCaseCharFilter}.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class LowerCaseCharFilterFactory extends CharFilterFactory {
 
     @Override

@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.solr.analysis;
 
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -23,13 +21,11 @@ import org.apache.lucene.analysis.CharReader;
 import org.apache.lucene.analysis.CharStream;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public class LowerCaseCharFilterFactoryTest extends TestCase {
-    public LowerCaseCharFilterFactoryTest(String name) {
+public class TestLowerCaseCharFilterFactory extends TestCase {
+    public TestLowerCaseCharFilterFactory(String name) {
         super(name);
     }
     private LowerCaseCharFilterFactory factory;
@@ -43,6 +39,10 @@ public class LowerCaseCharFilterFactoryTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+    }
+
+    public static Test suite() {
+        return new TestSuite(TestLowerCaseCharFilterFactory.class);
     }
 
     public void testTrivial() throws IOException {
@@ -60,11 +60,23 @@ public class LowerCaseCharFilterFactoryTest extends TestCase {
 
     private String analyze(CharSequence in) throws IOException {
         CharStream stream = factory.create(CharReader.get(new StringReader(in.toString())));
-        return Strings.flush(stream);
+        return flush(stream);
     }
 
-    public static Test suite() {
-        return new TestSuite(LowerCaseCharFilterFactoryTest.class);
+    public static String flush(Reader r) throws IOException {
+        int numRead;
+        char[] buf = new char[1024];
+        StringBuilder b = new StringBuilder(1024);
+
+        try {
+            while ((numRead = r.read(buf)) != -1) {
+                b.append(buf, 0, numRead);
+            }
+        } finally {
+            r.close();
+        }
+
+        return b.toString();
     }
 }
 
