@@ -3,8 +3,8 @@ package dk.statsbiblioteket.summa.search.tools;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
@@ -40,6 +40,14 @@ public class QueryPhraserTest extends TestCase {
         assertPhrase("foo -bar", "foo -bar");
         assertPhrase("\"foo bar\"", "\"foo bar\"");
         assertPhrase("foo (bar moo)", "foo (bar moo)");
+    }
+
+    public void testFieldGrouping() throws Exception {
+        assertPhrase("title:(php xml)", "title:(php xml)");
+    }
+
+    public void testQualified() throws Exception {
+        assertPhrase("(foo:bar moo row)", "(foo:bar moo row)");
     }
 
     public void testConfigSlope() throws ParseException {
