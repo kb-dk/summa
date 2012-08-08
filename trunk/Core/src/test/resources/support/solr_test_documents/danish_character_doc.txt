@@ -1,7 +1,7 @@
 <doc>
     <field name="recordID">recordId</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Børn æder ål</field>
+    <field name="title">BØRN ÆDER ÅL</field>
     <field name="author_main">Thomas Egense</field>
     <field name="author_normalised">Thomas Egense</field>
     <field name="year">2012</field>
