@@ -73,9 +73,22 @@ public class WildCardTest {
 	    response = solrServer.query(query);
 	  	assertEquals(1L, response.getResults().getNumFound());
 	  	
-	  	//test recordbase
+		SolrServerUnitTestUtil.indexFiles(files);
+		query = new SolrQuery("title:abc?efg"); //? replaces d
+	    response = solrServer.query(query);
+	  	assertEquals(1L, response.getResults().getNumFound());
+	  	
+	  	SolrServerUnitTestUtil.indexFiles(files);
+		query = new SolrQuery("title:abc??fg"); //? replaces d and e
+	    response = solrServer.query(query);
+	  	assertEquals(1L, response.getResults().getNumFound());
 	  	
 	  	
+	 	SolrServerUnitTestUtil.indexFiles(files);
+	    query = new SolrQuery("title:ab?fg"); //? can not replace both c and d
+        response = solrServer.query(query);
+	 	assertEquals(0L, response.getResults().getNumFound());
+	  		  		  	
 		
 	}
 
