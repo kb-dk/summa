@@ -40,7 +40,11 @@ public class DanishCharacterTest {
 		SolrQuery query = new SolrQuery("title:børn æder ål");
 		QueryResponse response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
-
+		
+	    query = new SolrQuery("title:bØrn Æder Ål");
+	    response = solrServer.query(query);
+		assertEquals(1L, response.getResults().getNumFound());
+		
 		SolrServerUnitTestUtil.indexFiles(files);
 	    query = new SolrQuery("\"børn æder aal\"");
 	    response = solrServer.query(query);
