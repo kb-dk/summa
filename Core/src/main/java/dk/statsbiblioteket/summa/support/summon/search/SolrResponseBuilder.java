@@ -391,23 +391,20 @@ public class SolrResponseBuilder implements Configurable {
 
     protected IndexRequest getLookupRequest(Request request) {
         final String PRE = SolrSearchNode.CONF_SOLR_PARAM_PREFIX;
-        IndexRequest lookupR = defaultIndexRequest.createRequest(request);
-        if (lookupR != null) {
-            return lookupR;
-        }
-        // Maybe the lookup was specified using params from ExposedIndexLookupParams?
-        if (!request.getBoolean(PRE + ExposedIndexLookupParams.ELOOKUP, false)) {
+        // Did we even request an index lookup?
+        if (!request.containsKey(IndexKeys.SEARCH_INDEX_FIELD)
+            && !request.getBoolean(PRE + ExposedIndexLookupParams.ELOOKUP, false)) {
             // No such luck, just give up
             return null;
         }
-        // Yes, ExposedIndexLookupParams is used. Convert to IndexRequest parameters
+
+        // ExposedIndexLookupParams takes precedence over Summa params. Convert to IndexRequest parameters
         Request local = new Request();
+        local.putAll(request);
         // TODO: What is IndexKeys.SEARCH_INDEX_QUERY used for?
         if (!putIfExists(request, local, IndexKeys.SEARCH_INDEX_QUERY, IndexKeys.SEARCH_INDEX_QUERY)) {
             if (!putIfExists(request, local, DocumentKeys.SEARCH_QUERY, IndexKeys.SEARCH_INDEX_QUERY)) {
-                if (!putIfExists(request, local, "q", IndexKeys.SEARCH_INDEX_QUERY)) {
-                    return null;
-                }
+                putIfExists(request, local, "q", IndexKeys.SEARCH_INDEX_QUERY);
             }
         }
         // TODO: Add support for locale in setup
@@ -420,11 +417,11 @@ public class SolrResponseBuilder implements Configurable {
             request, local, PRE + ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE, IndexKeys.SEARCH_INDEX_LOCALE);
         putIfExists(request, local,
                     PRE + ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE);
-        lookupR = defaultIndexRequest.createRequest(local);
+        IndexRequest lookupR = defaultIndexRequest.createRequest(local);
         String sort = request.getString(PRE + ExposedIndexLookupParams.ELOOKUP_SORT, null);
-        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_BYINDEX).equals(sort)) {
-            lookupR.setLocale(new Locale(sort));
-        }
+//        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_BYINDEX).equals(sort)) {
+//            lookupR.setLocale(new Locale(sort));
+//        }
         return lookupR;
     }
     private boolean putIfExists(Request sourceRequest, Request destRequest, String sourceKey, String destKey) {
