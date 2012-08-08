@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.solr.analysis;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.CharStream;
 import org.apache.lucene.analysis.charfilter.CharFilter;
 import org.apache.lucene.analysis.util.CharacterUtils;
@@ -27,9 +26,6 @@ import java.io.IOException;
  * {@link org.apache.lucene.analysis.charfilter.CharFilter} so that it can be applied before
  * {@link org.apache.lucene.analysis.charfilter.MappingCharFilter}s and similar.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class LowerCaseCharFilter extends CharFilter {
     private final CharacterUtils charUtils;
 
