@@ -26,7 +26,19 @@
 
         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
-            <analyzer>
+             <analyzer type="index">
+                <tokenizer class="solr.KeywordTokenizerFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+             <analyzer type="query">
                 <tokenizer class="solr.KeywordTokenizerFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
@@ -37,12 +49,23 @@
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
+
         </fieldType>
 
         <!-- Summa field: SummaStandardAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
         <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
         <fieldType name="text" class="solr.TextField" indexed="true" stored="false" termVectors="true">
-            <analyzer>
+             <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+             <analyzer type="query">
                 <tokenizer class="solr.WhitespaceTokenizerFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
@@ -51,12 +74,25 @@
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
+
         </fieldType>
 
         <!-- Summa field: FreeTextAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.WITH_POSITIONS_OFFSETS -->
         <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
         <fieldType name="freetext" class="solr.TextField" indexed="true" stored="false" termVectors="true">
-            <analyzer>
+             <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="character_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+             <analyzer type="query">
                 <tokenizer class="solr.WhitespaceTokenizerFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="relaxed_replace_transliterations.txt"/>
@@ -67,6 +103,7 @@
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
+
         </fieldType>
 
 
@@ -75,7 +112,17 @@
         <!-- Summa field: SummaStandardAnalyzer, Field.Index.NO,Field.Store.YES,Field.TermVector.NO -->
         <!-- The order of the charfilters is important. Filters further down the chain must not replace already replaced tokens -->
         <fieldType name="stored" class="solr.TextField" indexed="false" stored="true" termVectors="false">
-            <analyzer>
+             <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+             <analyzer type="query">
                 <tokenizer class="solr.WhitespaceTokenizerFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
@@ -84,6 +131,7 @@
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
+
         </fieldType>
 
         <!-- Summa field: SummaNumberAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
