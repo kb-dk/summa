@@ -24,7 +24,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -47,7 +46,8 @@ public class QueryRewriter {
      * and explicit must ('+) on clauses. Summon DisMax does not like parentheses and explicit '+' and falls back to
      * standard query parsing.
      * </p><p>
-     * Sample: "(+foo +(+bar +zoo))" -> "foo (bar zoo)".
+     * Sample: terse=true:  "(+foo +(+bar +zoo))" -> "foo (bar zoo)".
+     *         terse=false: "(+foo (bar zoo))" -> "(+foo (bar zoo))".
      * </p><p>
      * Optional. Default is true.
      */
@@ -307,11 +307,15 @@ public class QueryRewriter {
                 case SHOULD:
                     inner += convertQueryToString(currentClause.getQuery(), false);
                     if (i != booleanQuery.getClauses().length - 1) {
-                        inner += " OR ";
+                        inner += " ";
+                        if (booleanQuery.getClauses()[i+1].getOccur() == BooleanClause.Occur.SHOULD) {
+                            inner += "OR ";
+                        }
                     }
                     break;
                 case MUST:
-                    inner += (onlyMust ? "" : "+") + convertQueryToString(currentClause.getQuery(), false) + " ";
+                    inner += (onlyMust && terse ? "" : "+") + convertQueryToString(currentClause.getQuery(), false)
+                             + " ";
                     break;
                 case MUST_NOT:
                     inner += "-" + convertQueryToString(currentClause.getQuery(), false) + " ";

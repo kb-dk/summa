@@ -37,6 +37,27 @@ public class QueryRewriterTest extends TestCase {
             "\"foo\" OR (\"bar\" AND \"baz\")");
     }
 
+    // The OR binds stronger than the implied AND
+    public void testNonTerseImplicitAnd() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" \"bar\" OR \"zoo\")",
+            "foo bar OR zoo", false);
+    }
+
+    // The OR binds stronger than the explicit AND
+    public void testNonTerseExplicitAnd() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" \"bar\" OR \"zoo\")",
+            "foo AND bar OR zoo", false);
+    }
+
+    // The OR binds stronger than the explicit AND
+    public void testNonTerseImplicitAnds() throws ParseException {
+        assertIdentity(
+            "(+\"foo\" \"bar\" OR \"zoo\" +\"goo\")",
+            "foo bar OR zoo goo", false);
+    }
+
     public void testParenthesized3() throws ParseException {
         assertIdentity(
             "\"foo\" (\"bar\" \"baz\")",
@@ -259,5 +280,11 @@ public class QueryRewriterTest extends TestCase {
     private void assertIdentity(String expected, String input) throws ParseException {
         assertEquals("Rewrite should be correct",
                      expected, new QueryRewriter(new QueryRewriter.Event()).rewrite(input));
+    }
+    private void assertIdentity(String expected, String input, boolean terse) throws ParseException {
+        assertEquals("Rewrite should be correct",
+                     expected, new QueryRewriter(
+            Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, terse),
+            null, new QueryRewriter.Event()).rewrite(input));
     }
 }
