@@ -430,6 +430,40 @@ But this is avery rare situation.
           enrich_freetext^0.05
           lti
         </str>
+        <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
+        <str name="pf">
+          fulltext^0.5
+          sort_title^0.5
+          freetext^0.25
+          author_main^1.0
+          author_person^0.5
+          au_other^0.5
+          author_corporation^0.5
+          title^0.9
+          se^0.5
+          main_title^2.0
+          html_h1^0.5
+          html_h2^0.5
+          html_h3^0.5
+          html_h4^0.5
+          html_h5^0.5
+          html_h6^0.5
+          subject_dk5^0.5
+          subject_serial_solutions^0.5
+          subject_ulrichs^0.5
+          subject_controlled^0.6
+          subject_other^0.5
+          lma_long^0.5
+          <!--  id  Single term field,  no need to include in phrase -->
+          enrich_editor^0.1
+          enrich_isbn^0.1
+          enrich_publisher^0.1
+          enrich_publishdate^0.1
+          enrich_title^0.1
+          enrich_head^0.1
+          enrich_freetext^0.025
+          lti
+        </str>
         </lst>
       <arr name="last-components">
         <str>exposed</str>
