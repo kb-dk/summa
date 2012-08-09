@@ -24,7 +24,7 @@ import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,7 +53,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchStorage implements ReadableStorage {
+public class SearchStorage implements Storage {
     private static Log log = LogFactory.getLog(SearchStorage.class);
 
     private final SearchNode searchNode;
@@ -196,7 +196,7 @@ public class SearchStorage implements ReadableStorage {
     }
 
     private String makeQuery(String id) {
-        return idField + "\"" + id + "\"";
+        return idField + ":\"" + id + "\"";
     }
 
     @Override
@@ -216,6 +216,42 @@ public class SearchStorage implements ReadableStorage {
 
     @Override
     public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public void flush(Record record, QueryOptions options) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public void flush(Record record) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public void flushAll(List<Record> records, QueryOptions options) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public void flushAll(List<Record> records) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public void close() throws IOException {
+        // Do nothing
+    }
+
+    @Override
+    public void clearBase(String base) throws IOException {
+        throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
+    }
+
+    @Override
+    public String batchJob(
+        String jobName, String base, long minMtime, long maxMtime, QueryOptions options) throws IOException {
         throw new UnsupportedOperationException("The SearchStorage only supports getRecord(s)");
     }
 }
