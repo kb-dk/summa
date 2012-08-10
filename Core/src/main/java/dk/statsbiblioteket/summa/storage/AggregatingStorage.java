@@ -19,26 +19,17 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
-import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * A {@link Storage} proxying requests onto a collection of sub-storages. The
@@ -52,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "mke, hbk")
+        author = "te, mke, hbk")
 public class AggregatingStorage extends StorageBase {
 
     /**
@@ -78,9 +69,22 @@ public class AggregatingStorage extends StorageBase {
     /**
      * Configuration property defining a list of base names that a given sub
      * storage is responsible for.
+     * <p></p>
+     * Mandatory.
      */
-    public static final String CONF_SUB_STORAGE_BASES =
-                                                "summa.storage.substorage.base";
+    public static final String CONF_SUB_STORAGE_BASES = "summa.storage.substorage.base";
+
+    /**
+     * Configuration property defining a pattern for a regexp that is run against ID's in the getRecord-methods.
+     * If the regexp matches, the record will be requested from the given sub storage.
+     * If no sub storage patterns matches, all sub storages will be queries for the record.
+     * </p><p>
+     * It is highly advisable to define ID-patterns if possible, to avoid unnecessary requests to sub storages.
+     * </p><p>
+     * Optional. If no pattern is present, the sub storage will only be queried if none of the patterns from the other
+     * sub storages matches.
+     */
+    public static final String CONF_SUB_STORAGE_ID_PATTERN = "summa.storage.substorage.id.pattern";
 
     /**
      * Configuration property containing a sub configuration that, if present,
@@ -88,8 +92,7 @@ public class AggregatingStorage extends StorageBase {
      * using {@link StorageFactory#createStorage(Configuration)} with this
      * sub configuration.
      */
-    public static final String CONF_SUB_STORAGE_CONFIG =
-                                              "summa.storage.substorage.config";
+    public static final String CONF_SUB_STORAGE_CONFIG = "summa.storage.substorage.config";
     /** ID for unknown base keys. */
     public static final long UNKNOWN_BASE_KEY = -1;
 
@@ -99,6 +102,8 @@ public class AggregatingStorage extends StorageBase {
     public static final long ITERATOR_TIMEOUT = 86400000; // 24h
     /** Map containing all readers. */
     private HashMap<String, StorageReaderClient> readers;
+    /** List of all record getters. Note that the pattern can be null */
+    private List<SimplePair<Pattern, StorageReaderClient>> recordGetters;
     /** Map containing all writers. */
     private HashMap<String, StorageWriterClient> writers;
     /** Map of iterator keys. */
@@ -492,6 +497,7 @@ public class AggregatingStorage extends StorageBase {
         }
 
         readers = new HashMap<String, StorageReaderClient>();
+        recordGetters = new ArrayList<SimplePair<Pattern, StorageReaderClient>>();
         writers = new HashMap<String, StorageWriterClient>();
         iterators = new HashMap<Long, IteratorContext>();
         toClose = new ArrayList<StorageWriterClient>();
@@ -511,33 +517,33 @@ public class AggregatingStorage extends StorageBase {
                 }
             } catch (NullPointerException e) {
                 throw new Configurable.ConfigurationException(
-                                    CONF_SUB_STORAGE_BASES
-                                    + " must be defined for each sub storage");
+                    CONF_SUB_STORAGE_BASES + " must be defined for each sub storage");
             }
 
             StorageReaderClient reader = new StorageReaderClient(subConf);
             StorageWriterClient writer = new StorageWriterClient(subConf);
 
+            Pattern pattern = subConf.valueExists(CONF_SUB_STORAGE_ID_PATTERN)
+                              ? Pattern.compile(subConf.getString(CONF_SUB_STORAGE_ID_PATTERN))
+                              : null;
+            log.debug("Adding recordGetter for pattern '" + pattern + "'");
+            recordGetters.add(new SimplePair<Pattern, StorageReaderClient>(pattern, reader));
             for (String base : bases) {
-                log.info("Sub storage base map: " + writer.getVendorId()
-                                                  + " -> " + base);
+                log.info("Sub storage base map: " + writer.getVendorId() + " -> " + base);
                 readers.put(base, reader);
                 writers.put(base, writer);
             }
 
             try {
-                storageConf = subConf.getSubConfiguration(
-                                                       CONF_SUB_STORAGE_CONFIG);
+                storageConf = subConf.getSubConfiguration(CONF_SUB_STORAGE_CONFIG);
             } catch (SubConfigurationsNotSupportedException e) {
                 log.warn("Storage doesn't support sub configurations");
             } catch (NullPointerException e) {
-                log.warn("No sub-sub-config for aggregated storage for bases '"
-                          + Strings.join(bases, ", ") + "'");
+                log.warn("No sub-sub-config for aggregated storage for bases '" + Strings.join(bases, ", ") + "'");
             }
 
             if (storageConf != null) {
-                log.info("Configuring aggregated storage: "
-                          + writer.getVendorId());
+                log.info("Configuring aggregated storage: " + writer.getVendorId());
                 StorageFactory.createStorage(storageConf);
 
                 /* Schedule this internally managed storage for closing when
@@ -556,8 +562,7 @@ public class AggregatingStorage extends StorageBase {
      * @throws IOException If error occur while communicating with storage.
      */
     @Override
-    public long getRecordsModifiedAfter(long time, String base,
-                                      QueryOptions options) throws IOException {
+    public long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("AggregatingStorage.getRecordsModifiedAfter(" + time + ", '" + base + "')");
         }
@@ -614,8 +619,7 @@ public class AggregatingStorage extends StorageBase {
          * sub storages */
         if (base == null) {
             long mtime = 0;
-            for (Map.Entry<String, StorageReaderClient> entry
-                    : readers.entrySet()) {
+            for (Map.Entry<String, StorageReaderClient> entry: readers.entrySet()) {
                 StorageReaderClient reader = entry.getValue();
                 String readerBase = entry.getKey();
                 mtime = Math.max(mtime, reader.getModificationTime(readerBase));
@@ -637,31 +641,67 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns a list of records.
-     * @param ids A list of ID's on the records wanted.
+     * @param ids A list of IDs on the records wanted.
      * @param options The query options to select records from.
      * @return A list of records.
      * @throws IOException If error occur while communicating with storage.
      */
     @Override
-    public List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                            throws IOException {
+    public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         final int logExpands = 5;
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
-            log.trace("getRecords(" + Logs.expand(ids, logExpands)
-                                  + ", " + options + ")");
+            log.trace("getRecords(" + Logs.expand(ids, logExpands) + ", " + options + ")");
         }
 
-        // FIXME: This should be parallized
         List<Record> result = new ArrayList<Record>(ids.size());
-        for (StorageReaderClient reader : readers.values()) {
-            List<Record> recs = reader.getRecords(ids, options);
-            result.addAll(recs);
+        List<SimplePair<StorageReaderClient, List<String>>> batches =
+            new ArrayList<SimplePair<StorageReaderClient, List<String>>>(recordGetters.size());
+        List<String> unassigned = new ArrayList<String>(ids);
+        for (SimplePair<Pattern, StorageReaderClient> getter: recordGetters) {
+            List<String> assigned = new ArrayList<String>();
+            if (getter.getKey() != null) {
+                for (int i = unassigned.size()-1 ; i >= 0 ; i--) {
+                    String id = unassigned.get(i);
+                    if (getter.getKey().matcher(id).matches()) {
+                        log.trace("getRecords: ID '" + id + "' matched a StorageReaderClient");
+                        assigned.add(id);
+                        unassigned.remove(i);
+                    }
+                }
+            }
+            batches.add(new SimplePair<StorageReaderClient, List<String>>(getter.getValue(), assigned));
         }
+        // Records in unassigned never found a fitting StorageReaderClient, so we assign to all SRCs without a pattern
+        boolean nullFound = false;
+        for (int i = 0 ; i < recordGetters.size() ; i++) {
+            if (recordGetters.get(i).getKey() == null) {
+                batches.get(i).getValue().addAll(unassigned);
+                nullFound = true;
+            }
+        }
+        if (!nullFound) {
+            log.warn("Unable to find any Storages to query for " + unassigned.size() + " Records with IDs "
+                     + Strings.join(unassigned, ", "));
+        }
+        // FIXME: This should be parallized
+        log.trace("getRecords: Resolved all StorageReaderClients (" + unassigned.size() + " IDs did not have explicit "
+                  + "pattern match). Executing sequential requests for records");
+        for (SimplePair<StorageReaderClient, List<String>> batch: batches) {
+            if (batch.getValue().size() != 0) {
+                List<Record> recs = batch.getKey().getRecords(batch.getValue(), options);
+                result.addAll(recs);
+            }
+        }
+
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> "
-                  + result.size() + "records in "
-                  + (System.currentTimeMillis() - startTime));
+        if (ids.size() == 1) {
+            log.debug("Finished getRecords(" + ids.get(0)+ ", ...) -> " + result.size() + " records in "
+                      + (System.currentTimeMillis() - startTime));
+        } else {
+            log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in "
+                      + (System.currentTimeMillis() - startTime));
+        }
         return result;
     }
 
@@ -673,29 +713,20 @@ public class AggregatingStorage extends StorageBase {
      * @throws IOException If error occur while communication with storage.
      */
     @Override
-    public Record getRecord(String id, QueryOptions options)
-                                                            throws IOException {
-        long startTime = System.currentTimeMillis();
+    public Record getRecord(String id, QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("getRecord('" + id + "', " + options + ")");
         }
-
-        // FIXME: This should be parallized
-        Record r;
-        for (StorageReaderClient reader : readers.values()) {
-            r = reader.getRecord(id, options);
-            if (r != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Finished getRecord(" + id + ",...) -> " + r
-                              +  " in "
-                              + (System.currentTimeMillis() - startTime));
-                }
-                return r;
-            }
+        List<Record> records = getRecords(Arrays.asList(id), options);
+        if (records.size() == 0) {
+            log.debug("No such record '" + id + "'");
+            return null;
         }
-
-        log.debug("No such record '" + id + "'");
-        return null;
+        if (records.size() > 1) {
+            log.debug("Expected a single Record with ID '" + id + "' but got " + records.size()
+                      + ". Returning the first");
+        }
+        return records.get(0);
     }
 
     /**
@@ -713,8 +744,7 @@ public class AggregatingStorage extends StorageBase {
         IteratorContext iter = iterators.get(iteratorKey);
 
         if (iter == null) {
-            throw new IllegalArgumentException("No such iterator: "
-                                               + iteratorKey);
+            throw new IllegalArgumentException("No such iterator: " + iteratorKey);
         }
 
         Record r = iter.next();
@@ -736,22 +766,19 @@ public class AggregatingStorage extends StorageBase {
      * @throws IOException if error occurred when fetching elements.
      */
     @Override
-    public List<Record> next(long iteratorKey, int maxRecords)
-                                                            throws IOException {
+    public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
         if (iteratorKey == UNKNOWN_BASE_KEY) {
             throw new NoSuchElementException("Empty iterator " + iteratorKey);
         }
 
         if (log.isTraceEnabled()) {
-            log.trace("AggregratingStorage.next(" + iteratorKey + ", "
-                    + maxRecords + ") entered.");
+            log.trace("AggregratingStorage.next(" + iteratorKey + ", " + maxRecords + ") entered.");
         }
 
         IteratorContext iter = iterators.get(iteratorKey);
 
         if (iter == null) {
-            throw new IllegalArgumentException("No such iterator: "
-                                               + iteratorKey);
+            throw new IllegalArgumentException("No such iterator: " + iteratorKey);
         }
 
         List<Record> recs = iter.next(maxRecords);
@@ -779,16 +806,14 @@ public class AggregatingStorage extends StorageBase {
         StorageWriterClient writer = getSubStorageWriter(record.getBase());
 
         if (writer == null) {
-            log.warn("No sub storage configured for base '"
-                     + record.getBase() + "'");
+            log.warn("No sub storage configured for base '" + record.getBase() + "'");
             return;
         }
 
         writer.flush(record, options);
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Flushed " + record + " in "
-                      + (System.currentTimeMillis() - startTime) + "ms");
+            log.debug("Flushed " + record + " in " + (System.currentTimeMillis() - startTime) + "ms");
         }
     }
 
@@ -824,8 +849,7 @@ public class AggregatingStorage extends StorageBase {
         reaper.stop();
 
         for (StorageWriterClient writer : toClose) {
-            log.info("Closing internally configured sub storage: "
-                     + writer.getVendorId());
+            log.info("Closing internally configured sub storage: " + writer.getVendorId());
             writer.close();
         }
 
@@ -846,8 +870,7 @@ public class AggregatingStorage extends StorageBase {
         StorageWriterClient writer = getSubStorageWriter(base);
 
         if (writer == null) {
-            log.warn("No sub storage configured for base '"
-                     + base + "'");
+            log.warn("No sub storage configured for base '" + base + "'");
             return;
         }
         writer.clearBase(base);
@@ -866,8 +889,7 @@ public class AggregatingStorage extends StorageBase {
      * @throws IOException If error occur while communication with storage.
      */
     @Override
-    public String batchJob(String jobName, String base, long minMtime,
-                           long maxMtime, QueryOptions options)
+    public String batchJob(String jobName, String base, long minMtime, long maxMtime, QueryOptions options)
                                                             throws IOException {
         log.debug(String.format("Batch job '%s' on '%s", jobName, base));
 
@@ -875,8 +897,7 @@ public class AggregatingStorage extends StorageBase {
             StorageWriterClient writer = getSubStorageWriter(base);
 
             if (writer == null) {
-                log.warn("No sub storage configured for base '"
-                         + base + "'");
+                log.warn("No sub storage configured for base '" + base + "'");
                 return "";
             }
 
@@ -886,11 +907,9 @@ public class AggregatingStorage extends StorageBase {
             for (StorageWriterClient sub : writers.values()) {
                 String result;
                 try {
-                    result = sub.batchJob(
-                            jobName, base, minMtime, maxMtime, options);
+                    result = sub.batchJob(jobName, base, minMtime, maxMtime, options);
                 } catch (Throwable t) {
-                    result = String.format(
-                            "ERROR(%s): %s", sub.getVendorId(), t.getMessage());
+                    result = String.format("ERROR(%s): %s", sub.getVendorId(), t.getMessage());
                 }
                 results.add(result);
             }
