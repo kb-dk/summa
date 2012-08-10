@@ -149,7 +149,11 @@ public class SearchStorage implements Storage {
                 result = convertDocuments(documents);
             }
         }
-        log.debug("Returning " + result.size() + " Records from " + ids.size() + " IDs");
+        if (ids.size() == 1) {
+            log.debug("Returning 1 record with ID " + ids.get(0));
+        } else {
+            log.debug("Returning " + result.size() + " records from " + ids.size() + " IDs");
+        }
         return result;
     }
 
