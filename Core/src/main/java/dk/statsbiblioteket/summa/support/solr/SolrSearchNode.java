@@ -45,7 +45,9 @@ import java.util.*;
 /**
  * A wrapper for Solr web calls, transforming requests and responses from and to Summa equivalents.
  * </p><p>
- * Besides the keys stated below, it is highly advisable to specify
+ * Besides the keys stated below, it is highly advisable to specify {@link SolrResponseBuilder#CONF_RECORDBASE}.
+ * If 'recordBase' is requested as a facet and the response has no tags in that facet, a tag with the given ID as
+ * content will be added with a count equal to the number of found documents.
  **/
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

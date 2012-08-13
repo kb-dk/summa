@@ -29,9 +29,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
 
 import javax.xml.stream.XMLStreamException;
@@ -178,6 +177,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         for (DocumentResponse.Record record: records) {
             documentResponse.addRecord(record);
         }
+        addRecordBase(responses, documentResponse.getHitCount());
         documentResponse.addTiming(solrTiming);
         documentResponse.addTiming("buildresponses.documents", System.currentTimeMillis() - startTime);
         responses.add(documentResponse);

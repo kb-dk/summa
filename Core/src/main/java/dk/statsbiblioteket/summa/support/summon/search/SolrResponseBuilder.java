@@ -20,12 +20,11 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
+import dk.statsbiblioteket.summa.facetbrowser.api.*;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -231,11 +230,36 @@ public class SolrResponseBuilder implements Configurable {
             }
         });
 
+        addRecordBase(responses, documentResponse.getHitCount());
         documentResponse.addTiming("reportedtime", documentResponse.getSearchTime());
         documentResponse.addTiming("buildresponses.total", System.currentTimeMillis() - startTime);
         documentResponse.addTiming(solrTiming);
         responses.add(documentResponse);
         return documentResponse.getHitCount();
+    }
+
+    /* If responses containg a FacetResponse without recordBase, add the facet recordBase and assign
+     * {@link #CONF_RECORDBASE} as tag with hitCount as count..
+     */
+    protected void addRecordBase(ResponseCollection responses, long hitCount) {
+        final String RECORD_BASE = "recordBase";
+        for (Response response: responses) {
+            if (response instanceof FacetResultExternal) {
+                FacetResultExternal fr = (FacetResultExternal)response;
+                for (Map.Entry<String, List<FacetResultImpl.Tag<String>>> entry: fr.getMap().entrySet()) {
+                    if (RECORD_BASE.equals(entry.getKey())) {
+                        if (entry.getValue() != null && entry.getValue().size() == 0) {
+                            fr.addTag(RECORD_BASE, recordBase, (int)hitCount, FacetResult.Reliability.PRECISE);
+                            return;
+                        }
+                    }
+                }
+                // No recordBase, add it!
+                fr.addTag(RECORD_BASE, recordBase, (int)hitCount, FacetResult.Reliability.PRECISE);
+                return;
+            }
+        }
+        log.debug("No FacetResultExternal found in response. Skipping recordBase addition");
     }
 
     /*
