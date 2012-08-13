@@ -18,7 +18,11 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
@@ -33,12 +37,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Utility class foor remote invocation.
@@ -128,8 +126,8 @@ public class RemoteHelper {
         log.debug ("Found registry localhost:" + registryPort);
 
         if (reg == null) {
-            log.error ("Can not unbind service '" + serviceName + "'. No "
-                       + "registry running on port " + registryPort);
+            log.warn("Can not unbind service '" + serviceName + "'. No "
+                     + "registry running on port " + registryPort);
             return;
         }
 
@@ -139,9 +137,9 @@ public class RemoteHelper {
             log.info("Unexported service '" + serviceName + "' on port "
                       + registryPort);
         } catch (NotBoundException e) {
-            log.error(String.format(
-                    "Service '%s' not bound in registry on port %d",
-                    serviceName, registryPort));
+            log.warn(String.format(
+                "Service '%s' not bound in registry on port %d",
+                serviceName, registryPort));
         }
     }
 
@@ -215,7 +213,7 @@ public class RemoteHelper {
                     java.net.InetAddress.getLocalHost();
             return localMachine.getHostName();
         } catch (UnknownHostException e) {
-            log.error ("Failed to get host name. Returning 'localhost'", e);
+            log.warn("Failed to get host name. Returning 'localhost'", e);
             return "localhost";
         }
     }
@@ -474,9 +472,9 @@ public class RemoteHelper {
                     try {
                         unExportRemoteInterface(serviceName,registryPort);
                     } catch (IOException e) {
-                        log.error(String.format(
-                                "Failed to unexport remote interface '%s' on "
-                                + "port %d", serviceName, registryPort));
+                        log.warn(String.format(
+                            "Failed to unexport remote interface '%s' on "
+                            + "port %d", serviceName, registryPort));
                     }
                 }
             }
