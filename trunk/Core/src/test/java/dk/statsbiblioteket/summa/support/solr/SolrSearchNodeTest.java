@@ -167,7 +167,7 @@ public class SolrSearchNodeTest extends TestCase {
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse) responses.iterator().next()).getHitCount());
         assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
+                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"1\" reliability=\"PRECISE\">"));
 //        System.out.println(responses.toXML());
     }
 
@@ -184,7 +184,7 @@ public class SolrSearchNodeTest extends TestCase {
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse) responses.iterator().next()).getHitCount());
         assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"simple\" addedobjects=\"1\""));
+                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"1\" reliability=\"PRECISE\">"));
 //        System.out.println(responses.toXML());
     }
 
@@ -193,8 +193,12 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
             SBSolrSearchNode.CONF_USE_EFACET, "true"
         ));
-        testFacetedSearch(searcher);
-        testFacetedSearchFilter(searcher);
+        try {
+            testFacetedSearch(searcher);
+            testFacetedSearchFilter(searcher);
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testExposedFacetedSearchRest() throws Exception {
@@ -202,14 +206,18 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
             SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
         ));
+        try {
             // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
-        assertExposed(searcher, new Request(
-            //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
-        ));
+            assertExposed(searcher, new Request(
+                //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+            ));
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testExposedFacetedSearchHandler() throws Exception {
@@ -217,13 +225,17 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
         ));
             // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
-        assertExposed(searcher, new Request(
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exposed",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
-        ));
+        try {
+            assertExposed(searcher, new Request(
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exposed",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+            ));
+        } finally {
+            searcher.close();
+        }
     }
 
     private void assertExposed(SearchNode searcher, Request request) throws RemoteException {
