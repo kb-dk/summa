@@ -170,7 +170,7 @@ public class SummonSearchNodeTest extends TestCase {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(req, responses);
             System.out.println("Returned IDs: " + Strings.join(returnedIDs, ", "));
-            System.out.println(responses.toXML());
+//            System.out.println(responses.toXML());
         }
 
         assertEquals("There should be a result for each id from search '" + IDS_QUERY + "'",
@@ -281,6 +281,7 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Finished searching");
         List<String> facets = getFacetNames(responses);
         List<String> expected = new ArrayList<String>(Arrays.asList(SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
+        expected.add("recordBase"); // We always add this when we're doing faceting
         for (int i = expected.size()-1 ; i >= 0 ; i--) {
             if (!facets.contains(expected.get(i))) {
                 expected.remove(i);
@@ -308,7 +309,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> facets = getFacetNames(responses);
-        assertEquals("The number of facets should be correct", 1, facets.size());
+        assertEquals("The number of facets should be correct", 2, facets.size()); // 2 because of recordBase
         assertEquals("The returned facet should be correct",
                      "SubjectTerms", Strings.join(facets, ", "));
     }
@@ -446,6 +447,48 @@ public class SummonSearchNodeTest extends TestCase {
             lastValue = sortValue;
         }
         log.debug("Test passed with field values\n" + Strings.join(fields, "\n"));
+    }
+
+    public void testFacetedSearchNoFaceting() throws Exception {
+        assertSomeHits(new Request(
+            DocumentKeys.SEARCH_QUERY, "first"
+        ));
+    }
+
+    public void testFacetedSearchNoHits() throws Exception {
+        Request request = new Request(
+            DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
+            DocumentKeys.SEARCH_QUERY, "first"
+        );
+        ResponseCollection responses = search(request);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be no hits. Response was\n" + responses.toXML(),
+                     0, ((DocumentResponse) responses.iterator().next()).getHitCount());
+    }
+
+    public void testFacetedSearchSomeHits() throws Exception {
+        assertSomeHits(new Request(
+            DocumentKeys.SEARCH_FILTER, "recordBase:summon",
+            DocumentKeys.SEARCH_QUERY, "first"
+        ));
+    }
+
+    private void assertSomeHits(Request request) throws RemoteException {
+        ResponseCollection responses = search(request);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertTrue("There should be some hits. Response was\n" + responses.toXML(),
+                   ((DocumentResponse) responses.iterator().next()).getHitCount() > 0);
+    }
+
+    private ResponseCollection search(Request request) throws RemoteException {
+        SearchNode searcher = SummonTestHelper.createSummonSearchNode();
+        try {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(request, responses);
+            return responses;
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testSortedSearchRelevance() throws RemoteException {

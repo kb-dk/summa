@@ -151,8 +151,12 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFacetedSearch() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
-        testFacetedSearch(searcher);
-        testFacetedSearchFilter(searcher);
+        try {
+            testFacetedSearch(searcher);
+            testFacetedSearchFilter(searcher);
+        } finally {
+            searcher.close();
+        }
     }
 
     private void testFacetedSearch(SearchNode searcher) throws Exception {
@@ -186,6 +190,26 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
                    responses.toXML().contains("<tag name=\"solr\" addedobjects=\"1\" reliability=\"PRECISE\">"));
 //        System.out.println(responses.toXML());
+    }
+
+    public void testFacetedSearchWrongBase() throws Exception {
+        SearchNode searcher = getSearcher();
+        try {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+            ), responses);
+            assertTrue("There should be a response", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                         0, ((DocumentResponse) responses.iterator().next()).getHitCount());
+//        System.out.println(responses.toXML());
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testExposedFacetedSearchAuto() throws Exception {

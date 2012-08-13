@@ -711,6 +711,10 @@ public class SolrResponseBuilder implements Configurable {
         }
     }
 
+    public String getRecordBase() {
+        return recordBase;
+    }
+
     private abstract static class Callback {
         /**
          * Called for each encountered START_ELEMENT in the part of the xml that is within scope. If the implementation

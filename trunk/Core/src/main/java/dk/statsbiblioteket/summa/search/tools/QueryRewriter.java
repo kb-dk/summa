@@ -137,6 +137,16 @@ public class QueryRewriter {
         public Query onQuery(Query query) {
             return query;
         }
+
+        /**
+         * Create a BooleanClause.
+         * @param query the clause.
+         * @param occur the state for the clause.
+         * @return a standard BooleanClause or null if it is to be ignored.
+         */
+        public BooleanClause createBooleanClause(Query query, BooleanClause.Occur occur) {
+            return new BooleanClause(query, occur);
+        }
     }
 
     private Event event;
@@ -239,9 +249,11 @@ public class QueryRewriter {
             for (BooleanClause clause : booleanQuery.getClauses()) {
                 Query walked = walkQuery(clause.getQuery(), false);
                 if (walked != null) {
-                    BooleanClause clauseResult = new BooleanClause(walked, clause.getOccur());
-                    result.add(clauseResult);
-                    foundSome = true;
+                    BooleanClause clauseResult = event.createBooleanClause(walked, clause.getOccur());
+                    if (clauseResult != null) {
+                        result.add(clauseResult);
+                        foundSome = true;
+                    }
                 }
             }
             return foundSome ? result : null;

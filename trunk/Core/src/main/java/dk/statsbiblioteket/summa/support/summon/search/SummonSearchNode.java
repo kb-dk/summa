@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
@@ -251,8 +252,25 @@ public class SummonSearchNode extends SolrSearchNode {
                         TermQuery tq = new TermQuery(new Term("ID", text));
                         tq.setBoost(query.getBoost());
                         return tq;
+                    } else if ("recordBase".equals(query.getTerm().field()) &&
+                               responseBuilder.getRecordBase().equals(query.getTerm().text())) {
+                        return null; // The same as matching (in a klugdy hacky way)
                     }
                     return query;
+                }
+
+                @Override
+                public BooleanClause createBooleanClause(Query query, BooleanClause.Occur occur) {
+                    if (query instanceof TermQuery) {
+                        TermQuery tq = (TermQuery)query;
+                        if ("recordBase".equals(tq.getTerm().field())) {
+                            if (occur == BooleanClause.Occur.MUST &&
+                                responseBuilder.getRecordBase().equals(tq.getTerm().text())) {
+                                return null; // The same as matching (in a klugdy hacky way)
+                            }
+                        }
+                    }
+                    return super.createBooleanClause(query, occur);    // TODO: Implement this
                 }
             }).rewrite(query);
         } catch (ParseException e) {
