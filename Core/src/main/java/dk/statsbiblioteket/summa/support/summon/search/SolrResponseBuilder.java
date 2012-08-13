@@ -242,6 +242,9 @@ public class SolrResponseBuilder implements Configurable {
      * {@link #CONF_RECORDBASE} as tag with hitCount as count..
      */
     protected void addRecordBase(ResponseCollection responses, long hitCount) {
+        if (hitCount == 0) {
+            return;
+        }
         final String RECORD_BASE = "recordBase";
         for (Response response: responses) {
             if (response instanceof FacetResultExternal) {
