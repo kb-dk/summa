@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
+import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -88,6 +90,53 @@ public class SolrSearchNodeTest extends TestCase {
 
         String PHRASE = "Solr sample document";
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        searcher.close();
+    }
+
+    public void testFilterFacets() throws Exception {
+        performBasicIngest();
+        final String QUERY = "recordID:doc1";
+        final String FACET = "title:Document";
+        SearchNode searcher = getSearcher();
+        assertEquals("There should be at least one hit for standard positive faceting",
+                     1, getHits(searcher,
+                                DocumentKeys.SEARCH_QUERY, QUERY,
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                DocumentKeys.SEARCH_FILTER, FACET));
+        assertEquals("There should be at least one hit for facet filter positive faceting",
+                     1, getHits(searcher,
+                                DocumentKeys.SEARCH_QUERY, QUERY,
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                DocumentKeys.SEARCH_FILTER, FACET,
+                                SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
+        searcher.close();
+    }
+
+    public void testFilterFacetsNoHits() throws Exception {
+        performBasicIngest();
+        final String QUERY = "recordID:doc1";
+        final String FACET = "title:nonexisting";
+        SearchNode searcher = getSearcher();
+        assertEquals("There should be at least one hit for search with no filter",
+                     1, getHits(searcher,
+                                DocumentKeys.SEARCH_QUERY, QUERY,
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                FacetKeys.SEARCH_FACET_FACETS, "fulltext"));
+        assertEquals("There should be zero hits for basic filter search",
+                     0, getHits(searcher,
+                                DocumentKeys.SEARCH_QUERY, QUERY,
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                DocumentKeys.SEARCH_FILTER, FACET));
+        assertEquals("There should be zero hits for facet-is-filter faceting",
+                     0, getHits(searcher,
+                                DocumentKeys.SEARCH_QUERY, QUERY,
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                DocumentKeys.SEARCH_FILTER, FACET,
+                                SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
         searcher.close();
     }
 
@@ -141,7 +190,7 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     expectedResponses, ((DocumentResponse)responses.iterator().next()).getHitCount());
+                     expectedResponses, ((DocumentResponse) responses.iterator().next()).getHitCount());
         if (expectedContent != null) {
             assertTrue("The result should contain '" + expectedContent + "'",
                        responses.toXML().contains(expectedContent));
@@ -318,5 +367,24 @@ public class SolrSearchNodeTest extends TestCase {
 
     private SearchNode getSearcher() throws RemoteException {
         return new SolrSearchNode(Configuration.newMemoryBased());
+    }
+
+    protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {
+        String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(arguments), responses);
+        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
+            matches()) {
+            return 0;
+        }
+        String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
+        return "".equals(hitsS) ? 0L : Long.parseLong(hitsS);
+    }
+
+    protected void assertHits(
+        String message, SearchNode searcher, String... queries)
+                                                        throws RemoteException {
+        long hits = getHits(searcher, queries);
+        assertTrue(message + ". Hits == " + hits, hits > 0);
     }
 }

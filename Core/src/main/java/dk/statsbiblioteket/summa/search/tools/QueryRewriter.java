@@ -68,8 +68,19 @@ public class QueryRewriter {
      */
     public static class Event {
         /**
-         * Optionally change the given Query or construct a new Query in
-         * its place.
+         * Optionally change the given Query or construct a new Query in its place. If the returned Query is a
+         * BooleanQuery, its sub-queries will be walked through and a callback will be executed for each clause.
+         *
+         * @param query the query to be processed.
+         * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
+         *         inserted into the Query tree at the originating position.
+         */
+        public Query onQuery(BooleanQuery query) {
+            return query;
+        }
+
+        /**
+         * Optionally change the given Query or construct a new Query in its place.
          *
          * @param query the query to be processed.
          * @return the processed query. This can be the given query (optionally modified) or a new Query, which will be
@@ -243,7 +254,11 @@ public class QueryRewriter {
 
     private Query walkQuery(Query query, boolean top) {
         if (query instanceof BooleanQuery) {
-            BooleanQuery booleanQuery = (BooleanQuery) query;
+            Query updated = event.onQuery((BooleanQuery)query);
+            if (!(updated instanceof BooleanQuery)) {
+                return updated;
+            }
+            BooleanQuery booleanQuery = (BooleanQuery)updated;
             BooleanQuery result = new BooleanQuery();
             boolean foundSome = false;
             for (BooleanClause clause : booleanQuery.getClauses()) {

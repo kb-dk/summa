@@ -193,6 +193,15 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_COMPENSATE_FOR_PARENTHESIS_BUG = "solr.solr3377.hack";
     public static final boolean DEFAULT_COMPENSATE_FOR_PARENTHESIS_BUG = true;
 
+    /**
+     * If true, faceting is handled with the facet.filter parameter. This works well for the facet pars but also means
+     * that the document results will be invalid.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_EXPLICIT_FACET_FILTERING = "solr.facet.explicit.filter";
+    public static final boolean DEFAULT_EXPLICIT_FACET_FILTERING = false;
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -212,6 +221,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final Set<String> nonescapedFields = new HashSet<String>(10);
     protected final String FIELD_ID;
     protected final boolean hackSolr3377;
+    protected final boolean explicitFacetFilter;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -237,7 +247,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
         hackSolr3377 = conf.getBoolean(CONF_COMPENSATE_FOR_PARENTHESIS_BUG, DEFAULT_COMPENSATE_FOR_PARENTHESIS_BUG);
-
+        explicitFacetFilter = conf.getBoolean(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_EXPLICIT_FACET_FILTERING);
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
     }
@@ -640,7 +650,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
         if (filter != null) { // We allow missing filter
             boolean facetsHandled = false;
-            if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
+            if (explicitFacetFilter && request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
                 Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueryToFacet(filter);
                 if (facetRequest == null) {
                     log.debug("Unable to convert facet filter '" + filter + "' to Solr facet request. Switching to "

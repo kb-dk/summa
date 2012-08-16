@@ -99,4 +99,5 @@ public class SolrSearchTestBase extends TestCase {
         manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
     }
+
 }

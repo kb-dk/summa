@@ -253,8 +253,8 @@ public class SolrResponseBuilder implements Configurable {
                     if (RECORD_BASE.equals(entry.getKey())) {
                         if (entry.getValue() != null && entry.getValue().size() == 0) {
                             fr.addTag(RECORD_BASE, recordBase, (int)hitCount, FacetResult.Reliability.PRECISE);
-                            return;
                         }
+                        return;
                     }
                 }
                 // No recordBase, add it!
