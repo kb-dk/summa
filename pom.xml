@@ -178,19 +178,19 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
 <!--            <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
     -->
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
                 <classifier>pom</classifier>
                 <exclusions>
                     <exclusion>
@@ -203,7 +203,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
                 <classifier>sources</classifier>
                 <exclusions>
                     <exclusion>
@@ -216,105 +216,105 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-icu</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-kuromoji</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-morfologik</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-phonetic</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-smartcn</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-stempel</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-uima</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queryparser</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-suggest</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-highlighter</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-test-framework</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
                 <type>war</type>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-test-framework</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
-                <version>4.0-1340933</version>
+                <version>4.0.0-BETA</version>
             </dependency>
 
 
