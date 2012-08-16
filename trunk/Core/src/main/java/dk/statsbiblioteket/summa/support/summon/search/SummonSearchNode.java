@@ -31,10 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.search.*;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -93,6 +90,10 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String DEFAULT_SUMMON_RESTCALL = "/2.0.0/search";
 
     /**
+     * Summon requires filtering on facets to be in summon-format and not as standard filters.
+     */
+    private static final boolean DEFAULT_SUMMON_EXPLICIT_FACET_FILTERING = true;
+    /**
      * The access ID for Summon. Serial Solutions controls this and in order to use this filter, a valid access ID must
      * be provided.
      * </p><p>
@@ -139,10 +140,30 @@ public class SummonSearchNode extends SolrSearchNode {
 
     public static final String DEFAULT_SUMMON_ID_FIELD = "id";
 
+    /**
+     * Used for emulating recordBase:notsummon in facet requests.
+     * The facet must be specified as "existingfacet:nonexistingvalue".
+     * </p><p>
+     * Optional. Default is 'Author:nonexisting34538'.
+     */
+    public static final String CONF_NONMATCHING_FACET = "summon.facet.nonmatching";
+    public static final String DEFAULT_NONMATCHING_FACET = "Author:nonexisting34538";
+
+    /**
+     * Used for emulating recordBase:notsummon in query and filter requests.
+     * The query must be specified as "existingfield:nonexistingvalue".
+     * </p><p>
+     * Optional. Default is 'Author:nonexisting34538'.
+     */
+    public static final String CONF_NONMATCHING_QUERY = "summon.query.nonmatching";
+    public static final String DEFAULT_NONMATCHING_QUERY = "Author:nonexisting34538";
+
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
     private final boolean sabotageDismax;
+    private final String nonMatchingFacet;
+    private final TermQuery nonMatchingQuery;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -154,6 +175,9 @@ public class SummonSearchNode extends SolrSearchNode {
             convertSolrParam(solrDefaultParams, entry);
         }
         sabotageDismax = conf.getBoolean(CONF_DISMAX_SABOTAGE, DEFAULT_DISMAX_SABOTAGE);
+        nonMatchingFacet = conf.getString(CONF_NONMATCHING_FACET, DEFAULT_NONMATCHING_FACET);
+        String[] qt = conf.getString(CONF_NONMATCHING_QUERY, DEFAULT_NONMATCHING_QUERY).split(":");
+        nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -166,10 +190,21 @@ public class SummonSearchNode extends SolrSearchNode {
     @Override
     protected FacetQueryTransformer createFacetQueryTransformer(final Configuration conf) {
         return new FacetQueryTransformer(conf) {
+            String NONMATCHING;
             @Override
             protected void addFacetQuery(
                 Map<String, List<String>> queryMap, String field, String value, boolean negated) {
-                append(queryMap, "s.fvf", field + "," + value + "," + negated);
+                if (NONMATCHING == null) { // Ugly, but initialization order dictates it
+                    NONMATCHING = nonMatchingFacet.replace(":", ",") + ",false";
+                }
+                if ("recordBase".equals(field)) {
+                    if ((negated && responseBuilder.getRecordBase().equals(value))
+                    || (!negated && !responseBuilder.getRecordBase().equals(value))) {
+                        append(queryMap, "s.fvf", NONMATCHING);
+                    }
+                } else {
+                    append(queryMap, "s.fvf", field + "," + value + "," + negated);
+                }
             }
         };
     }
@@ -208,6 +243,9 @@ public class SummonSearchNode extends SolrSearchNode {
         if (!conf.valueExists(CONF_ID_FIELD)) {
             conf.set(CONF_ID_FIELD, DEFAULT_SUMMON_ID_FIELD);
         }
+        if (!conf.valueExists(CONF_EXPLICIT_FACET_FILTERING)) {
+            conf.set(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_SUMMON_EXPLICIT_FACET_FILTERING);
+        }
         return conf;
     }
 
@@ -226,10 +264,65 @@ public class SummonSearchNode extends SolrSearchNode {
     public String convertQuery(final String query, final Map<String, List<String>> summonSearchParams) {
         // TODO: Perform legacy conversion "summonparam.*" -> "solrparam.*"
         final String RF = "s.rf"; // RangeField
+        final String BASE = "recordBase";
         try {
             return new QueryRewriter(conf, null, new QueryRewriter.Event() {
                 @Override
+                public Query onQuery(BooleanQuery query) {
+                    // Rule: At least 1 clause must match
+                    boolean noMatches = true;
+                    boolean match = false;
+                    List<BooleanClause> reduced = new ArrayList<BooleanClause>(query.clauses().size());
+                    for (BooleanClause clause: query.clauses()) {
+                        if (clause.getQuery() instanceof TermQuery
+                            && BASE.equals(((TermQuery)clause.getQuery()).getTerm().field())) {
+                            TermQuery tq = (TermQuery)clause.getQuery();
+                            boolean baseMatch = responseBuilder.getRecordBase().equals(tq.getTerm().text());
+
+                            if (BooleanClause.Occur.MUST == clause.getOccur()) {
+                                if (baseMatch) {
+                                    noMatches = false; // Match encountered
+                                    match = true;
+                                } else {
+                                    return nonMatchingQuery;
+                                }
+                            } else if (BooleanClause.Occur.MUST_NOT == clause.getOccur()) {
+                                if (baseMatch) {
+                                    return nonMatchingQuery;
+                                }
+                                // MUST_NOT unfulfilled queries does not affect the evaluation as Lucene does not
+                                // support all negative clauses
+                            } else { // SHOULD
+                                if (baseMatch) {
+                                    noMatches = false; // Match encountered
+                                    match = true;
+                                }
+                                // SHOULD unfulfilled queries does not affect the evaluation
+                            }
+                        } else {
+                            noMatches = false;
+                            reduced.add(clause);
+                        }
+                    }
+                    if (noMatches) {
+                        // There are no matches
+                        return nonMatchingQuery;
+                    }
+                    if (reduced.size() == 0 && match) {
+                        // No queries left, but we encountered at least 1 match
+                        return null; // As we do not have match-all
+                    }
+                    // There may be matches
+                    query.clauses().clear();
+                    query.clauses().addAll(reduced);
+                    return query;
+                }
+
+                @Override
                 public Query onQuery(TermRangeQuery query) {
+                    if (summonSearchParams == null ) {
+                        return query;
+                    }
                     List<String> sq = summonSearchParams.get(RF);
                     if (sq == null) {
                         sq = new ArrayList<String>();
@@ -252,14 +345,17 @@ public class SummonSearchNode extends SolrSearchNode {
                         TermQuery tq = new TermQuery(new Term("ID", text));
                         tq.setBoost(query.getBoost());
                         return tq;
-                    } else if ("recordBase".equals(query.getTerm().field()) &&
-                               responseBuilder.getRecordBase().equals(query.getTerm().text())) {
-                        return null; // The same as matching (in a klugdy hacky way)
+                    } else if ("recordBase".equals(query.getTerm().field())) {
+                        if (responseBuilder.getRecordBase().equals(query.getTerm().text())) {
+                            return null; // The same as matching (in a klugdy hacky way)
+                        } else {
+                            return nonMatchingQuery;
+                        }
                     }
                     return query;
                 }
 
-                @Override
+/*                @Override
                 public BooleanClause createBooleanClause(Query query, BooleanClause.Occur occur) {
                     if (query instanceof TermQuery) {
                         TermQuery tq = (TermQuery)query;
@@ -268,10 +364,15 @@ public class SummonSearchNode extends SolrSearchNode {
                                 responseBuilder.getRecordBase().equals(tq.getTerm().text())) {
                                 return null; // The same as matching (in a klugdy hacky way)
                             }
+                            if (occur == BooleanClause.Occur.MUST_NOT &&
+                                !responseBuilder.getRecordBase().equals(tq.getTerm().text())) {
+                                // Guaranteed non matching
+                                return super.createBooleanClause(nonMatchingQuery, BooleanClause.Occur.MUST);
+                            }
                         }
                     }
-                    return super.createBooleanClause(query, occur);    // TODO: Implement this
-                }
+                    return super.createBooleanClause(query, occur);
+                }*/
             }).rewrite(query);
         } catch (ParseException e) {
             throw new IllegalArgumentException("Error parsing '" + query + "'", e);
@@ -368,7 +469,10 @@ public class SummonSearchNode extends SolrSearchNode {
             }
             if (!facetsHandled) {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                    queryMap.put("s.fq", Arrays.asList(filter)); // FilterQuery
+                    String reducedFilter = convertQuery(filter, null);
+                    if (reducedFilter != null) {
+                        queryMap.put("s.fq", Arrays.asList(filter)); // FilterQuery
+                    }
                 } else {
                     if (query == null) {
                         throw new IllegalArgumentException(

@@ -93,6 +93,23 @@ public class SummonSearchNodeTest extends TestCase {
         fail("Search with large page number was expected to fail. Received response:\n" + responses.toXML());
     }
 
+    public void testRecordBaseQueryRewrite() {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        assertNull("Queries for recordBase:summon should be reduced to null (~match all)",
+                   summon.convertQuery("recordBase:summon", null));
+        assertEquals("recordBase:summon should be removed with implicit AND",
+                     "\"foo\"", summon.convertQuery("recordBase:summon foo", null));
+        assertEquals("recordBase:summon should be removed with explicit AND",
+                     "\"foo\"", summon.convertQuery("recordBase:summon AND foo", null));
+        assertEquals("OR with recordBase:summon and another recordBase should match",
+                     null, summon.convertQuery("recordBase:summon OR recordBase:blah", null));
+        assertEquals("OR with recordBase:summon should leave the rest of the query",
+                     "\"foo\"", summon.convertQuery("recordBase:summon OR foo", null));
+        assertEquals("recordBase:summon AND recordBase:nonexisting should not match anything",
+                     SummonSearchNode.DEFAULT_NONMATCHING_QUERY.replace(":", ":\"") + "\"",
+                     summon.convertQuery("recordBase:summon AND recordBase:nonexisting", null));
+    }
+
     public void testIDResponse() throws IOException, TransformerException {
         String QUERY = "gene and protein evolution";
 
@@ -125,6 +142,36 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         assertFalse("The response should not have Newspaper Article as facet. total response was\n" + responses.toXML(),
                     responses.toXML().contains("<tag name=\"Newspaper Article\""));
+        summon.close();
+    }
+
+    public void testRecordBaseFacet() throws RemoteException {
+        final String JSON =
+            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+            + "\"search.document.filter\":\" recordBase:summon\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        assertTrue("The response should contain a summon tag from faceting\n" + responses.toXML(),
+                   responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
+        summon.close();
+    }
+
+    public void testRecordBaseFacetWithOR() throws RemoteException {
+        final String JSON =
+            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+            + "\"search.document.filter\":\" recordBase:summon OR recordBase:sb_aleph\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        assertTrue("The response should contain a summon tag from faceting\n" + responses.toXML(),
+                   responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
         summon.close();
     }
 
@@ -311,7 +358,7 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> facets = getFacetNames(responses);
         assertEquals("The number of facets should be correct", 2, facets.size()); // 2 because of recordBase
         assertEquals("The returned facet should be correct",
-                     "SubjectTerms", Strings.join(facets, ", "));
+                     "SubjectTerms, recordBase", Strings.join(facets, ", "));
     }
 
     public void testNegativeFacets() throws RemoteException {
@@ -388,13 +435,6 @@ public class SummonSearchNodeTest extends TestCase {
                    DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, Boolean.TRUE.toString(),
                    DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
         summon.close();
-    }
-
-    private void assertHits(
-        String message, SearchNode searcher, String... queries)
-                                                        throws RemoteException {
-        long hits = getHits(searcher, queries);
-        assertTrue(message + ". Hits == " + hits, hits > 0);
     }
 
     public void testSortedSearch() throws RemoteException {
@@ -755,18 +795,6 @@ public class SummonSearchNodeTest extends TestCase {
                    + " by less than 100. Combined hit count for query is "
                    + qCombinedHitCount,
                    Math.abs(fHitCount - qHitCount) < 100);
-    }
-
-    private long getHits(SearchNode searcher, String... arguments) throws RemoteException {
-        String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(arguments), responses);
-        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
-            matches()) {
-            return 0;
-        }
-        String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
-        return "".equals(hitsS) ? 0L : Long.parseLong(hitsS);
     }
 
     public void testCustomParams() throws RemoteException {
@@ -1345,5 +1373,24 @@ public class SummonSearchNodeTest extends TestCase {
             assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
                        queryCount > 0);
         }
+    }
+
+    protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {
+        String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(arguments), responses);
+        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
+            matches()) {
+            return 0;
+        }
+        String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
+        return "".equals(hitsS) ? 0L : Long.parseLong(hitsS);
+    }
+
+    protected void assertHits(
+        String message, SearchNode searcher, String... queries)
+                                                        throws RemoteException {
+        long hits = getHits(searcher, queries);
+        assertTrue(message + ". Hits == " + hits, hits > 0);
     }
 }
