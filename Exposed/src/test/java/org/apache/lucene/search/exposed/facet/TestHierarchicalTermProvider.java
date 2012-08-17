@@ -16,6 +16,7 @@ import org.apache.lucene.util.packed.PackedInts;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -120,8 +121,8 @@ public class TestHierarchicalTermProvider extends TestCase {
       throws IOException {
     System.out.println("Dumping a maximum of " + tags + " from field " + field);
     int count = 0;
-    IndexReader[] readers = reader instanceof AtomicReader ?
-        new IndexReader[]{reader} :
+    List<? extends IndexReader> readers = reader instanceof AtomicReader ?
+        Arrays.asList(reader) :
         ((CompositeReader)reader).getSequentialSubReaders();
     DocsEnum docsEnum = null;
     for (IndexReader inner: readers) {
@@ -134,7 +135,7 @@ public class TestHierarchicalTermProvider extends TestCase {
       TermsEnum terms = mTerms.iterator(null);
       while (terms.next() != null) {
         System.out.print(terms.term().utf8ToString() + ":");
-        docsEnum = terms.docs(r.getLiveDocs(), docsEnum, false);
+        docsEnum = terms.docs(r.getLiveDocs(), docsEnum);
         while (docsEnum.nextDoc() != DocsEnum.NO_MORE_DOCS) {
           System.out.print(" " + docsEnum.docID());
         }

@@ -20,7 +20,6 @@ import junit.framework.TestCase;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.util.ReaderUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,8 +74,7 @@ public class LuceneTestHelper extends TestCase {
     public static List<String> getIDs(File location) throws IOException {
         List<String> ids = new ArrayList<String>(100);
         DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(location));
-        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(readers, reader);
+        List<? extends AtomicReader> readers = reader.getSequentialSubReaders();
         try {
             for (AtomicReader sub: readers) {
                 for (int i = 0 ; i < sub.maxDoc() ; i++) {

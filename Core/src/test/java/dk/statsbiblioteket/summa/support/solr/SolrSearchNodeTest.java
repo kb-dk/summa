@@ -150,23 +150,22 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.close();
     }
 
+    // This test was for an old bug where queries with parenthesis had to be written with spaces after start parenthesis
     public void testParentheses() throws Exception {
         performBasicIngest();
         Request request = new Request(
             DocumentKeys.SEARCH_QUERY, "(+fulltext:first)",
             SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
         );
-        {
+/*        {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
                 SolrSearchNode.CONF_COMPENSATE_FOR_PARENTHESIS_BUG, false
             ));
             assertResult(searcher, request, 0, null);
             searcher.close();
-        }
+        }*/
         {
-            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_COMPENSATE_FOR_PARENTHESIS_BUG, true // Default
-            ));
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased());
             assertResult(searcher, request, 1, "Solr sample document");
             searcher.close();
         }
@@ -324,7 +323,7 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      2, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 1",
+        assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
                    responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
     }
 

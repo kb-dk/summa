@@ -132,7 +132,7 @@ public class HierarchicalTermProvider implements TermProvider {
 
   private PackedInts.Reader reduce(GrowingMutable grower) {
     PackedInts.Mutable reduced = PackedInts.getMutable(
-        grower.size(), grower.getBitsPerValue());
+        grower.size(), grower.getBitsPerValue(), PackedInts.COMPACT);
     for (int i = 0 ; i < grower.size() ; i++) {
       reduced.set(i, grower.get(i));
     }

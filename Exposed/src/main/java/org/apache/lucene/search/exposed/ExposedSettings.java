@@ -46,13 +46,12 @@ public class ExposedSettings {
   public static PackedInts.Mutable getMutable(int valueCount, long maxValue) {
     int bitsRequired = PackedInts.bitsRequired(maxValue);
     switch (priority) {
-      case memory: return PackedInts.getMutable(valueCount, bitsRequired);
+      case memory: return PackedInts.getMutable(valueCount, bitsRequired, PackedInts.COMPACT);
       case speed: if (bitsRequired <= 4 ||
           (bitsRequired > 32 && bitsRequired < 40)) { // TODO: Consider the 40
-        return PackedInts.getMutable(valueCount, bitsRequired);
+        return PackedInts.getMutable(valueCount, bitsRequired, PackedInts.COMPACT);
       } else {
-        return PackedInts.getMutable(
-            valueCount, PackedInts.getNextFixedSize(bitsRequired));
+        return PackedInts.getMutable(valueCount, bitsRequired, PackedInts.FASTEST);
       }
       default: throw new IllegalArgumentException(
           "The priority " + priority + " is unknown");

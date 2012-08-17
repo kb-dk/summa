@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.summa.common.util.Triple;
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -27,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.ReaderUtil;
 
 import java.io.Closeable;
 import java.io.File;
@@ -66,8 +66,7 @@ public class TermStatSource implements Closeable {
     }
 
     public Iterator<Triple<BytesRef, Long, Long>> getTerms(String field) throws IOException {
-        List<AtomicReader> irs = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(irs, ir);
+        List<AtomicReader> irs = LuceneUtil.gatherSubReaders(ir);
         log.debug("getTerms(" + field + ") creating single field iterator " + " with " + irs.size()+ " readers");
         List<Iterator<Triple<BytesRef, Long, Long>>> providers = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(irs.size());
         for (AtomicReader reader: irs) {
@@ -227,7 +226,7 @@ public class TermStatSource implements Closeable {
                 // Extracting stats
                 long tf = 0;
                 long df = 0;
-                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum, false);
+                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum);
                 while (docsEnum.nextDoc() != DocsEnum.NO_MORE_DOCS) {
                     tf += docsEnum.freq();
                     df++;

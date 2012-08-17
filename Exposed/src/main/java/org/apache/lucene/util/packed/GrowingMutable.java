@@ -17,6 +17,10 @@ package org.apache.lucene.util.packed;
  * limitations under the License.
  */
 
+import org.apache.lucene.store.DataOutput;
+
+import java.io.IOException;
+
 /**
  * A PackedInts that grows to accommodate any legal data that is added.
  * Deltas for both array length and values are used so memory-representation
@@ -60,7 +64,7 @@ public class GrowingMutable implements PackedInts.Mutable {
    * {@link #GrowingMutable(int,int,long,long,boolean)} instead.
    */
   public GrowingMutable() {
-    values = PackedInts.getMutable(0, 1);
+    values = PackedInts.getMutable(0, 1, PackedInts.COMPACT);
   }
 
   /**
@@ -97,13 +101,13 @@ public class GrowingMutable implements PackedInts.Mutable {
 
   private PackedInts.Mutable getMutable(int valueCount, int bitsPerValue) {
     if (!optimizeSpeed) {
-      return PackedInts.getMutable(valueCount, bitsPerValue);
+      return PackedInts.getMutable(valueCount, bitsPerValue, PackedInts.COMPACT);
     }
     if (bitsPerValue <= 4 ||
           (bitsPerValue > 32 && bitsPerValue < 40)) { // TODO: Consider the 40
-        return PackedInts.getMutable(valueCount, bitsPerValue);
+        return PackedInts.getMutable(valueCount, bitsPerValue, PackedInts.COMPACT);
     }
-    return PackedInts.getMutable(valueCount, bitsPerValue);
+    return PackedInts.getMutable(valueCount, bitsPerValue, PackedInts.COMPACT);
   }
 
   // Make sure that there is room. Note: This might adjust the boundaries.
@@ -154,7 +158,17 @@ public class GrowingMutable implements PackedInts.Mutable {
     values.set(index - indexMin, value - valueMin);
   }
 
-  @Override
+    @Override
+    public int set(int index, long[] arr, int off, int len) {
+        return values.set(index, arr, off, len);
+    }
+
+    @Override
+    public void fill(int fromIndex, int toIndex, long val) {
+        values.fill(fromIndex, toIndex, val);
+    }
+
+    @Override
   public String toString() {
     final int DUMP_SIZE = 10;
     StringBuffer sb = new StringBuffer(DUMP_SIZE * 10);
@@ -180,16 +194,34 @@ public class GrowingMutable implements PackedInts.Mutable {
     values.clear();
   }
 
-  public long get(int index) {
+    @Override
+    public void save(DataOutput out) throws IOException {
+        values.save(out);
+    }
+
+    @Override
+    public long get(int index) {
     return values.get(index - indexMin) + valueMin;
   }
 
+  @Override
   public int getBitsPerValue() {
     return values.getBitsPerValue();
   }
 
+  @Override
   public int size() {
     return size;
+  }
+
+  @Override
+  public int get(int index, long[] arr, int off, int len) {
+    return values.get(index, arr, off, len);
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    return values.ramBytesUsed();
   }
 
     @Override
@@ -217,4 +249,5 @@ public class GrowingMutable implements PackedInts.Mutable {
   public long getValueMax() {
     return valueMax;
   }
+
 }

@@ -16,7 +16,15 @@ public class IdentityReader implements PackedInts.Reader {
     return index;
   }
 
-  @Override
+    @Override
+    public int get(int index, long[] arr, int off, int len) {
+        for (int i = 0 ; i < len ; i++) {
+            arr[off+i] = index+i;
+        }
+        return len;
+    }
+
+    @Override
   public int getBitsPerValue() {
     return 0;
   }
@@ -25,6 +33,11 @@ public class IdentityReader implements PackedInts.Reader {
   public int size() {
     return size;
   }
+
+    @Override
+    public long ramBytesUsed() {
+        return 0;
+    }
 
     @Override
     public Object getArray() {

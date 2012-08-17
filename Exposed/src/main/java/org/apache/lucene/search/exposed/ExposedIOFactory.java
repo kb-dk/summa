@@ -20,7 +20,10 @@
 package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -48,7 +51,7 @@ public class ExposedIOFactory {
     // Used mainly for testing. Returns the first AtomicReader based on the
     // index at the given location
     public static AtomicReader getAtomicReader(File location) throws IOException {
-      return DirectoryReader.open(FSDirectory.open(location)).getSequentialSubReaders()[0];
+      return DirectoryReader.open(FSDirectory.open(location)).getSequentialSubReaders().get(0);
     }
 
   public static IndexWriter getWriter(File location) throws IOException {

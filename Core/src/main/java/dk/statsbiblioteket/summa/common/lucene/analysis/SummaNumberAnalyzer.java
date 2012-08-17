@@ -71,7 +71,7 @@ public class SummaNumberAnalyzer extends Analyzer {
     }
 
     @Override
-    protected Reader initReader(Reader reader) {
+    protected Reader initReader(String fieldName, Reader reader) {
         return replaceFactory.getReplacer(reader);
     }
 

@@ -17,12 +17,10 @@ package dk.statsbiblioteket.summa.common.solr.analysis;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.analysis.CharReader;
-import org.apache.lucene.analysis.CharStream;
+import org.apache.commons.io.input.CharSequenceReader;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 
 public class TestLowerCaseCharFilterFactory extends TestCase {
     public TestLowerCaseCharFilterFactory(String name) {
@@ -61,8 +59,7 @@ public class TestLowerCaseCharFilterFactory extends TestCase {
     }
 
     private String analyze(CharSequence in) throws IOException {
-        CharStream stream = factory.create(CharReader.get(new StringReader(in.toString())));
-        return flush(stream);
+        return flush(factory.create(new CharSequenceReader(in)));
     }
 
     public static String flush(Reader r) throws IOException {
