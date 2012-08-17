@@ -48,7 +48,7 @@ public class SummaAnalyzer extends Analyzer {
     }
 
     @Override
-    protected Reader initReader(Reader reader) {
+    protected Reader initReader(String field, Reader reader) {
         return wrap(reader);
     }
 

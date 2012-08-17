@@ -47,7 +47,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
     }
 
     @Override
-    protected synchronized Reader initReader(Reader input) {
+    protected Reader initReader(String fieldName, Reader input) {
         Reader reader = replaceFactory.getReplacer(input);
 
         TokenStream ts;

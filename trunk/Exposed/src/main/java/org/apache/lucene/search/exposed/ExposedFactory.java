@@ -46,12 +46,12 @@ public class ExposedFactory {
     }
     if (reader instanceof CompositeReader && fieldNames.size() == 1) {
       // Index-level single field
-      IndexReader[] subs = ((CompositeReader)reader).getSequentialSubReaders();
+      List<? extends IndexReader> subs = ((CompositeReader)reader).getSequentialSubReaders();
         // TODO: Consider using ReaderUtil.gathersubReaders
       List<TermProvider> fieldProviders =
-          new ArrayList<TermProvider>(subs.length);
+          new ArrayList<TermProvider>(subs.size());
       List<ExposedRequest.Field> fieldRequests =
-          new ArrayList<ExposedRequest.Field>(subs.length);
+          new ArrayList<ExposedRequest.Field>(subs.size());
       int docBase = 0;
       for (IndexReader sub: subs) {
         ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
@@ -72,11 +72,11 @@ public class ExposedFactory {
       throw new IllegalStateException(
           "Code logic error: Expected CompositeReader, got " + reader.getClass());
     }
-    IndexReader[] subs = ((CompositeReader)reader).getSequentialSubReaders();
+    List<? extends IndexReader> subs = ((CompositeReader)reader).getSequentialSubReaders();
     List<TermProvider> fieldProviders =
-        new ArrayList<TermProvider>(subs.length * fieldNames.size());
+        new ArrayList<TermProvider>(subs.size() * fieldNames.size());
     List<ExposedRequest.Field> fieldRequests =
-        new ArrayList<ExposedRequest.Field>(subs.length * fieldNames.size());
+        new ArrayList<ExposedRequest.Field>(subs.size() * fieldNames.size());
     int docBase = 0;
     for (IndexReader sub: subs) {
       for (String fieldName: fieldNames) {

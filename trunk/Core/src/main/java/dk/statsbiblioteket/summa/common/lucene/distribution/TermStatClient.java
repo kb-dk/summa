@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common.lucene.distribution;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Triple;
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -28,7 +29,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.ReaderUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -295,8 +295,8 @@ public class TermStatClient implements Configurable {
     private Set<String> getFields(IndexReader ir, List<String> fieldRegexps,
                                   File index) throws IOException {
         Set<String> fields = new HashSet<String>(20);
-        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(readers, ir);
+
+        List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader sub: readers) {
             FieldsEnum fieldsEnum = sub.fields().iterator();
             String fieldName;
@@ -330,8 +330,7 @@ public class TermStatClient implements Configurable {
             return count;
         }
         long count = 0;
-        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(readers, ir);
+        List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader i: readers) {
             count += getDocCount(i);
         }

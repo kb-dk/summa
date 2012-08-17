@@ -18,6 +18,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.document.Document;
@@ -26,12 +27,10 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.ReaderUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -108,8 +107,7 @@ public class Inspect {
     private void cache(String field) throws IOException {
         System.out.println("Populating cache for field '" + field + "'");
         Profiler profiler = new Profiler();
-        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(readers, ir);
+        List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
 
         long size = 0;
         int defined = 0;

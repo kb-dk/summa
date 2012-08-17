@@ -14,22 +14,22 @@
  */
 package dk.statsbiblioteket.summa.common.solr.analysis;
 
-import org.apache.lucene.analysis.CharStream;
-import org.apache.lucene.analysis.charfilter.CharFilter;
+import org.apache.lucene.analysis.CharFilter;
 import org.apache.lucene.analysis.util.CharacterUtils;
 import org.apache.lucene.util.Version;
 
 import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Solr's {@link org.apache.lucene.analysis.core.LowerCaseFilter} converted to a
- * {@link org.apache.lucene.analysis.charfilter.CharFilter} so that it can be applied before
+ * {@link org.apache.lucene.analysis.CharFilter} so that it can be applied before
  * {@link org.apache.lucene.analysis.charfilter.MappingCharFilter}s and similar.
  */
 public class LowerCaseCharFilter extends CharFilter {
     private final CharacterUtils charUtils;
 
-    protected LowerCaseCharFilter(Version matchVersion, CharStream in) {
+    protected LowerCaseCharFilter(Version matchVersion, Reader in) {
         super(in);
         charUtils = CharacterUtils.getInstance(matchVersion);
     }
@@ -45,5 +45,10 @@ public class LowerCaseCharFilter extends CharFilter {
                         charUtils.codePointAt(cbuf, i)), cbuf, i);
         }
         return read;
+    }
+
+    @Override
+    protected int correct(int i) {
+        return i; // TODO: Check what the correct behaviour is here
     }
 }

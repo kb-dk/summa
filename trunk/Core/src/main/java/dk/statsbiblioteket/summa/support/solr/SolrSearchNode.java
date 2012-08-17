@@ -186,12 +186,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String DEFAULT_ID_FIELD = IndexUtils.RECORD_FIELD;
 
     /**
-     * Temporary hack that rewrites all queries so that there is a space after all parentheses in order to compensate
+     * Old hack that rewrote all queries so that there was a space after all parentheses in order to compensate
      * for the bug fixed by https://issues.apache.org/jira/browse/SOLR-3377
-     * TODO: Remove this after upgrading to Lucene 4 trunk post 2012-07-13
      */
-    public static final String CONF_COMPENSATE_FOR_PARENTHESIS_BUG = "solr.solr3377.hack";
-    public static final boolean DEFAULT_COMPENSATE_FOR_PARENTHESIS_BUG = true;
+    public static final String DEPRECATED_COMPENSATE_FOR_PARENTHESIS_BUG = "solr.solr3377.hack";
 
     /**
      * If true, faceting is handled with the facet.filter parameter. This works well for the facet pars but also means
@@ -220,7 +218,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final FacetQueryTransformer facetQueryTransformer;
     protected final Set<String> nonescapedFields = new HashSet<String>(10);
     protected final String FIELD_ID;
-    protected final boolean hackSolr3377;
     protected final boolean explicitFacetFilter;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
@@ -246,7 +243,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         supportsPureNegative = conf.getBoolean(
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
-        hackSolr3377 = conf.getBoolean(CONF_COMPENSATE_FOR_PARENTHESIS_BUG, DEFAULT_COMPENSATE_FOR_PARENTHESIS_BUG);
+        if (conf.valueExists(DEPRECATED_COMPENSATE_FOR_PARENTHESIS_BUG)) {
+            log.warn("The property " + DEPRECATED_COMPENSATE_FOR_PARENTHESIS_BUG
+                     + " serves no purpose in Solr 4 BETA+ and should be removed");
+        }
         explicitFacetFilter = conf.getBoolean(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_EXPLICIT_FACET_FILTERING);
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
@@ -663,7 +663,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
             if (!facetsHandled) {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                    queryMap.put("fq", fixSolr3377(filter)); // FilterQuery
+                    queryMap.put("fq", Arrays.asList(filter)); // FilterQuery
                 } else {
                     if (query == null) {
                         throw new IllegalArgumentException(
@@ -678,7 +678,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
         }
         if (query != null) { // We allow missing query
-            queryMap.put("q", fixSolr3377(query));
+            queryMap.put("q", Arrays.asList(query));
         }
 
         queryMap.put("start", Arrays.asList(Integer.toString(startPage)));
@@ -703,12 +703,4 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         return queryMap;
     }
 
-    // TODO: Remove this temporary hack after upgrade to Lucene 4 trunk post 20120713
-    private List<String> fixSolr3377(String query) {
-        if (!hackSolr3377) {
-            return Arrays.asList(query);
-        }
-        // Yes, it does not care about quotes. It is an ugly hack
-        return Arrays.asList(query.replace("(", "( "));
-    }
 }

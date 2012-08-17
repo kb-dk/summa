@@ -43,7 +43,7 @@ public class TestFieldTermProvider extends TestCase {
     helper.createIndex(DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-    int subCount = reader instanceof AtomicReader ? 1 : ((CompositeReader)reader).getSequentialSubReaders().length;
+    int subCount = reader instanceof AtomicReader ? 1 : ((CompositeReader)reader).getSequentialSubReaders().size();
     assertTrue("The number of segments should be >= 2 but was " + subCount,
         subCount >= 2);
     reader.close();

@@ -205,16 +205,15 @@ public class OrdinalTermsEnum extends TermsEnum {
   }
 
   @Override
-  public DocsEnum docs(Bits skipDocs, DocsEnum reuse, boolean needFreqs)
-      throws IOException {
-    return inner.docs(skipDocs, reuse, needFreqs);
+  public DocsEnum docs(Bits liveDocs, DocsEnum reuse, int flags) throws IOException {
+    return inner.docs(liveDocs, reuse, flags);
   }
 
   @Override
   public DocsAndPositionsEnum docsAndPositions(
-      Bits skipDocs, DocsAndPositionsEnum reuse, boolean needFreqs)
+      Bits skipDocs, DocsAndPositionsEnum reuse, int flags)
       throws IOException {
-    return inner.docsAndPositions(skipDocs, reuse, needFreqs);
+    return inner.docsAndPositions(skipDocs, reuse, flags);
   }
 
   @Override

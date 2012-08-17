@@ -68,17 +68,16 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     //groupRequest.normalizeComparatorIDs();
 
     boolean isSingle = true;
-    IndexReader[] readers;
+    List<? extends IndexReader> readers;
     if (reader instanceof AtomicReader) {
-      readers = new IndexReader[1];
-      readers[0] = reader;
+      readers = Arrays.asList(reader);
     } else {
       readers = ((CompositeReader)reader).getSequentialSubReaders();
       isSingle = false;
     }
 
     List<TermProvider> fieldProviders =
-        new ArrayList<TermProvider>(readers.length * fieldNames.size());
+        new ArrayList<TermProvider>(readers.size() * fieldNames.size());
 
     long fieldProviderConstruction = -System.currentTimeMillis();
     int docBase = 0;

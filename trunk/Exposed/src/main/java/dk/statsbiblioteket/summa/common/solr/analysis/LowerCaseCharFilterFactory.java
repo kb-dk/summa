@@ -14,9 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.solr.analysis;
 
-import org.apache.lucene.analysis.CharStream;
 import org.apache.lucene.analysis.util.CharFilterFactory;
 import org.apache.lucene.util.Version;
+
+import java.io.Reader;
 
 /**
  * Trivial factory for {@link LowerCaseCharFilter}.
@@ -24,8 +25,7 @@ import org.apache.lucene.util.Version;
 public class LowerCaseCharFilterFactory extends CharFilterFactory {
 
     @Override
-    public CharStream create(CharStream charStream) {
-        return new LowerCaseCharFilter(Version.LUCENE_40, charStream);
+    public Reader create(Reader input) {
+        return new LowerCaseCharFilter(Version.LUCENE_40, input);
     }
-
 }

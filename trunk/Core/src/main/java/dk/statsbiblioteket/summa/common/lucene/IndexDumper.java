@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.AtomicReader;
@@ -21,12 +22,14 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FieldsEnum;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.util.ReaderUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Simple dump of stored fields in the index.
@@ -60,8 +63,7 @@ public class IndexDumper {
     public static void listFields(File location) throws IOException {
         DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
         Set<String> fieldNames = new HashSet<String>(100);
-        List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-        ReaderUtil.gatherSubReaders(readers, ir);
+        List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader ar: readers) {
             String field;
             FieldsEnum fe = ar.fields().iterator();

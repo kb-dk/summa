@@ -93,7 +93,7 @@ public class TestExposedCache  extends TestCase {
     helper.createIndex(DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION).
-        getSequentialSubReaders()[0];
+        getSequentialSubReaders().get(0);
 
     ExposedRequest.Field fRequest = new ExposedRequest.Field(
         "a", ComparatorFactory.create("da"));
@@ -112,7 +112,7 @@ public class TestExposedCache  extends TestCase {
 
   private AtomicReader getFirstAtomic(IndexReader reader) {
       return reader instanceof AtomicReader ? (AtomicReader)reader :
-             (AtomicReader)((CompositeReader)reader).getSequentialSubReaders()[0];
+             (AtomicReader)((CompositeReader)reader).getSequentialSubReaders().get(0);
   }
 
   public void testDocCount() throws IOException {
@@ -403,7 +403,7 @@ public class TestExposedCache  extends TestCase {
       helper.createIndex(size, Arrays.asList("a", "b"), 20, 2);
       IndexReader reader =
           ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION).
-          getSequentialSubReaders()[0];
+          getSequentialSubReaders().get(0);
       ExposedRequest.Field request =
           new ExposedRequest.Field("a", new NamedNaturalComparator());
       TermProvider provider = ExposedCache.getInstance().getProvider(

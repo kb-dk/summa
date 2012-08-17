@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortFactory;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -51,7 +52,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -959,8 +963,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         }
         if ("*".equals(query) || "*".equals(filter)) {
             log.trace("getHitCount for * (match all) called");
-            List<AtomicReader> readers = new ArrayList<AtomicReader>(10);
-            ReaderUtil.gatherSubReaders(readers, searcher.getIndexReader());
+            List<AtomicReader> readers = LuceneUtil.gatherSubReaders(searcher.getIndexReader());
 
             long count = 0;
             for (AtomicReader reader: readers) {
@@ -1020,7 +1023,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         Filter amalgamFilter = new QueryWrapperFilter(amalgam);
         log.trace("getHitcount(): Created filter, performing hit count");
         IndexReaderContext top = searcher.getIndexReader().getTopReaderContext();
-        AtomicReaderContext[] contexts = top.leaves();
+        List<AtomicReaderContext> contexts = top.leaves();
 //        AtomicReaderContext[] contexts = top.children() == null || top.children().length == 0 ?
 //            new AtomicReaderContext[]{(AtomicReaderContext)top} :
 //            top.leaves();

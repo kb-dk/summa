@@ -81,7 +81,7 @@ public class FieldTermProvider extends TermProviderImpl {
     if (!(reader instanceof AtomicReader)) {
       throw new IllegalArgumentException(
           "The IndexReader should be a leaf (no sub readers). It contained "
-              + ((CompositeReader)reader).getSequentialSubReaders().length
+              + ((CompositeReader)reader).getSequentialSubReaders().size()
               + " sub readers");
     }
     this.request = request;
@@ -170,7 +170,7 @@ public class FieldTermProvider extends TermProviderImpl {
 
     lastOrdinalRequest = ordinal;
     //
-    return termsEnum.docs(getReader().getLiveDocs(), reuse, false);
+    return termsEnum.docs(getReader().getLiveDocs(), reuse);
   }
 
   @Override

@@ -15,7 +15,6 @@
 package org.apache.lucene.analysis;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.index.IndexableField;
 
 import java.io.Reader;
 
@@ -38,8 +37,8 @@ public class FieldSeparatingAnalyzer extends Analyzer {
     }
 
     @Override
-    public Reader initReader(Reader reader) {
-        return underlyingAnalyzer.initReader(reader);
+    public Reader initReader(String field, Reader reader) {
+        return underlyingAnalyzer.initReader(field, reader);
     }
 
     @Override
@@ -48,7 +47,7 @@ public class FieldSeparatingAnalyzer extends Analyzer {
     }
 
     @Override
-    public int getOffsetGap(IndexableField field) {
+    public int getOffsetGap(String field) {
         return underlyingAnalyzer.getOffsetGap(field);
     }
 
