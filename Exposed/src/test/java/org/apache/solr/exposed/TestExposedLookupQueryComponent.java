@@ -24,6 +24,8 @@ public class TestExposedLookupQueryComponent extends SolrTestCaseJ4 {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    clearIndex();
+    commit();
   }
 
   @After
@@ -35,18 +37,19 @@ public class TestExposedLookupQueryComponent extends SolrTestCaseJ4 {
   @Test
   public void testSimpleLookup() throws Exception {
     addContent(Arrays.asList(
-      "a", "a", "c", "c", "c", "b", "b", "b", "b", "d", "e"));
+      "c", "c", "c", "b", "b", "b", "b", "d", "e", "f", "f", "g"));
     String response = h.query(req(
         "qt", "lookup",
         "q", "*:*",
         ELOOKUP, "true",
         ELOOKUP_SORT, ELOOKUP_SORT_BYINDEX,
         ELOOKUP_DELTA, Integer.toString(-2),
+        ELOOKUP_LENGTH, Integer.toString(5),
         ELOOKUP_FIELD, "text"));
 //    System.out.println(response.replace(">", ">\n"));
 
     assertEquals("The extracted terms should be as expected for\n" + response,
-                 "a(1) b(1) c(1) d(1)", getTerms(response));
+                 "b(4) c(3) d(1) e(1) f(2)", getTerms(response));
 //    System.out.println(response.replace("><", ">\n<"));
   }
 
@@ -73,7 +76,8 @@ public class TestExposedLookupQueryComponent extends SolrTestCaseJ4 {
         "q", "*:*",
         ELOOKUP, "true",
         ELOOKUP_DELTA, Integer.toString(0),
-        ELOOKUP_SORT, "da",
+        ELOOKUP_SORT, "locale",
+        ELOOKUP_SORT_LOCALE_VALUE, "da",
         ELOOKUP_FIELD, "text"));
 //    System.out.println(response.replace(">", ">\n"));
 
