@@ -158,12 +158,22 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String CONF_NONMATCHING_QUERY = "summon.query.nonmatching";
     public static final String DEFAULT_NONMATCHING_QUERY = "Author:nonexisting34538";
 
+    /**
+     * If true, range queries of the type {@code PublicationYear:[YYYY TO yyyy]} are treated as
+     * {@code PublicationYear:[YYYY TO yyyy-12-31]}.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FIX_RANGE_PUBLICATION = "summon.range.publication.fix";
+    public static final boolean DEFAULT_FIX_RANGE_PUBLICATION = true;
+
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
     private final boolean sabotageDismax;
     private final String nonMatchingFacet;
     private final TermQuery nonMatchingQuery;
+    private final boolean fixPublication;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -178,6 +188,7 @@ public class SummonSearchNode extends SolrSearchNode {
         nonMatchingFacet = conf.getString(CONF_NONMATCHING_FACET, DEFAULT_NONMATCHING_FACET);
         String[] qt = conf.getString(CONF_NONMATCHING_QUERY, DEFAULT_NONMATCHING_QUERY).split(":");
         nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
+        fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -328,8 +339,14 @@ public class SummonSearchNode extends SolrSearchNode {
                         sq = new ArrayList<String>();
                         summonSearchParams.put(RF, sq);
                     }
-                    sq.add(query.getField() + "," + query.getLowerTerm().utf8ToString() + ":"
-                           + query.getUpperTerm().utf8ToString());
+                    if ("PublicationYear".equals(query.getField())
+                        && query.getUpperTerm().utf8ToString().length() == 4) {
+                        sq.add("PublicationDate" + "," + query.getLowerTerm().utf8ToString() + ":"
+                               + query.getUpperTerm().utf8ToString() + "-12-31");
+                    } else {
+                        sq.add(query.getField() + "," + query.getLowerTerm().utf8ToString() + ":"
+                               + query.getUpperTerm().utf8ToString());
+                    }
                     return null;
                 }
 
@@ -436,8 +453,8 @@ public class SummonSearchNode extends SolrSearchNode {
         String facetsDef, int minCount, int defaultFacetPageSize, String combineMode) {
         return new SolrFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode) {
             @Override
-            protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
-                                         int startPage, int pageSize) {
+            protected void addFacetQuery(
+                Map<String, List<String>> queryMap, String field, String combineMode, int startPage, int pageSize) {
                 append(queryMap, "s.ff", field + "," + combineMode + ",1," + pageSize);
             }
         };
@@ -661,5 +678,4 @@ public class SummonSearchNode extends SolrSearchNode {
 
         return retval.toString();
     }
-
 }
