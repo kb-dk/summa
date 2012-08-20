@@ -340,6 +340,7 @@ public class SummonSearchNode extends SolrSearchNode {
                         summonSearchParams.put(RF, sq);
                     }
                     if ("PublicationYear".equals(query.getField())
+                        && query.getLowerTerm().utf8ToString().length() == 4
                         && query.getUpperTerm().utf8ToString().length() == 4) {
                         sq.add("PublicationDate" + "," + query.getLowerTerm().utf8ToString() + ":"
                                + query.getUpperTerm().utf8ToString() + "-12-31");
