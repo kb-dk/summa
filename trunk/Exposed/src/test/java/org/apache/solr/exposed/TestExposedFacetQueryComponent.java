@@ -20,7 +20,7 @@ import static org.apache.solr.exposed.ExposedFacetParams.*;
 public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
   @BeforeClass
   public static void beforeClass() throws Exception {
-    initCore("solrconfig-exposed.xml", "schema-exposed.xml");
+    initCore("solrconfig-exposed.xml", "schema-exposed.xml", "solr");
   }
 
   @Override
