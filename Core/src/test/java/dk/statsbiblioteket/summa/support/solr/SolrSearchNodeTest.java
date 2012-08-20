@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 public class SolrSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SolrSearchNodeTest.class);
 
-   	public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+    public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
 
     private EmbeddedJettyWithSolrServer server = null;
 
@@ -79,18 +79,21 @@ public class SolrSearchNodeTest extends TestCase {
     public void testBasicSearch() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
-        ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
-        ), responses);
-        assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        try {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+            ), responses);
+            assertTrue("There should be a response", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                         1, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
-        String PHRASE = "Solr sample document";
-        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
-        searcher.close();
+            String PHRASE = "Solr sample document";
+            assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testFilterFacets() throws Exception {
@@ -98,20 +101,23 @@ public class SolrSearchNodeTest extends TestCase {
         final String QUERY = "recordID:doc1";
         final String FACET = "title:Document";
         SearchNode searcher = getSearcher();
-        assertEquals("There should be at least one hit for standard positive faceting",
-                     1, getHits(searcher,
-                                DocumentKeys.SEARCH_QUERY, QUERY,
-                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
-                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
-                                DocumentKeys.SEARCH_FILTER, FACET));
-        assertEquals("There should be at least one hit for facet filter positive faceting",
-                     1, getHits(searcher,
-                                DocumentKeys.SEARCH_QUERY, QUERY,
-                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
-                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
-                                DocumentKeys.SEARCH_FILTER, FACET,
-                                SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
-        searcher.close();
+        try {
+            assertEquals("There should be at least one hit for standard positive faceting",
+                         1, getHits(searcher,
+                                    DocumentKeys.SEARCH_QUERY, QUERY,
+                                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                    FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                    DocumentKeys.SEARCH_FILTER, FACET));
+            assertEquals("There should be at least one hit for facet filter positive faceting",
+                         1, getHits(searcher,
+                                    DocumentKeys.SEARCH_QUERY, QUERY,
+                                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                    FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                    DocumentKeys.SEARCH_FILTER, FACET,
+                                    SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testFilterFacetsNoHits() throws Exception {
@@ -119,35 +125,41 @@ public class SolrSearchNodeTest extends TestCase {
         final String QUERY = "recordID:doc1";
         final String FACET = "title:nonexisting";
         SearchNode searcher = getSearcher();
-        assertEquals("There should be at least one hit for search with no filter",
-                     1, getHits(searcher,
-                                DocumentKeys.SEARCH_QUERY, QUERY,
-                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
-                                FacetKeys.SEARCH_FACET_FACETS, "fulltext"));
-        assertEquals("There should be zero hits for basic filter search",
-                     0, getHits(searcher,
-                                DocumentKeys.SEARCH_QUERY, QUERY,
-                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
-                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
-                                DocumentKeys.SEARCH_FILTER, FACET));
-        assertEquals("There should be zero hits for facet-is-filter faceting",
-                     0, getHits(searcher,
-                                DocumentKeys.SEARCH_QUERY, QUERY,
-                                DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
-                                FacetKeys.SEARCH_FACET_FACETS, "fulltext",
-                                DocumentKeys.SEARCH_FILTER, FACET,
-                                SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
-        searcher.close();
+        try {
+            assertEquals("There should be at least one hit for search with no filter",
+                         1, getHits(searcher,
+                                    DocumentKeys.SEARCH_QUERY, QUERY,
+                                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                    FacetKeys.SEARCH_FACET_FACETS, "fulltext"));
+            assertEquals("There should be zero hits for basic filter search",
+                         0, getHits(searcher,
+                                    DocumentKeys.SEARCH_QUERY, QUERY,
+                                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                    FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                    DocumentKeys.SEARCH_FILTER, FACET));
+            assertEquals("There should be zero hits for facet-is-filter faceting",
+                         0, getHits(searcher,
+                                    DocumentKeys.SEARCH_QUERY, QUERY,
+                                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "true",
+                                    FacetKeys.SEARCH_FACET_FACETS, "fulltext",
+                                    DocumentKeys.SEARCH_FILTER, FACET,
+                                    SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true"));
+        } finally {
+            searcher.close();
+        }
     }
 
     public void testNonQualifiedSearch() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
-        assertResult(searcher, new Request(
-            DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
-        ), 1, "Solr sample document");
-        searcher.close();
+        try {
+            assertResult(searcher, new Request(
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+            ), 1, "Solr sample document");
+        } finally {
+            searcher.close();
+        }
     }
 
     // This test was for an old bug where queries with parenthesis had to be written with spaces after start parenthesis
@@ -166,8 +178,11 @@ public class SolrSearchNodeTest extends TestCase {
         }*/
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased());
-            assertResult(searcher, request, 1, "Solr sample document");
-            searcher.close();
+            try {
+                assertResult(searcher, request, 1, "Solr sample document");
+            } finally {
+                searcher.close();
+            }
         }
     }
 
@@ -176,11 +191,14 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
             SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/edismax"
         ));
-        assertResult(searcher, new Request(
-            DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
-        ), 1, "Solr sample document");
-        searcher.close();
+        try {
+            assertResult(searcher, new Request(
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+            ), 1, "Solr sample document");
+        } finally {
+            searcher.close();
+        }
     }
 
     private void assertResult(
@@ -211,10 +229,11 @@ public class SolrSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
             DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
             DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
             FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
+
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse) responses.iterator().next()).getHitCount());
@@ -232,10 +251,10 @@ public class SolrSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
             FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
-        assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+        assertTrue("There should be a response with filter", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits with filter. Response was\n" + responses.toXML(),
                      1, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
+        assertTrue("The result should contain tag 'solr' with count 1 with filter\n" + responses.toXML(),
                    responses.toXML().contains("<tag name=\"solr\" addedobjects=\"1\" reliability=\"PRECISE\">"));
 //        System.out.println(responses.toXML());
     }
@@ -294,12 +313,13 @@ public class SolrSearchNodeTest extends TestCase {
 
     public void testExposedFacetedSearchHandler() throws Exception {
         performBasicIngest();
-        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
+//            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
         ));
-            // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
+        // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
         try {
             assertExposed(searcher, new Request(
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exposed",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "/exposed",
                 SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
                 FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
                 SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
@@ -312,13 +332,7 @@ public class SolrSearchNodeTest extends TestCase {
 
     private void assertExposed(SearchNode searcher, Request request) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
-        searcher.search(new Request(
-            //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
-        ), responses);
+        searcher.search(request, responses);
 //        System.out.println(responses.toXML());
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -382,7 +396,7 @@ public class SolrSearchNodeTest extends TestCase {
 
     protected void assertHits(
         String message, SearchNode searcher, String... queries)
-                                                        throws RemoteException {
+        throws RemoteException {
         long hits = getHits(searcher, queries);
         assertTrue(message + ". Hits == " + hits, hits > 0);
     }

@@ -52,6 +52,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: Always request the recordID field
 public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements DocumentSearcher
     private static Log log = LogFactory.getLog(SolrSearchNode.class);
 
@@ -441,13 +442,14 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * </p><p>
      * If the key is not prefixed by "solrparam.", it is ignored.
      * </p>
-     * @param solrParam the map where the key/value is stored.
+     * @param solrParam the map where the converted key/value will be stored.
      * @param entry the source for the key/value pair.
+     * @return true if the entry was added to solrParam, else false.
      */
-    protected void convertSolrParam(Map<String, List<String>> solrParam, Map.Entry<String, Serializable> entry) {
+    protected boolean convertSolrParam(Map<String, List<String>> solrParam, Map.Entry<String, Serializable> entry) {
         if (!entry.getKey().startsWith(CONF_SOLR_PARAM_PREFIX)) {
             log.trace("convertSolrParam got unsupported key " + entry.getKey() + ". Ignoring entry");
-            return;
+            return false;
         }
         String key = entry.getKey().substring(CONF_SOLR_PARAM_PREFIX.length(), entry.getKey().length());
         if (entry.getValue() instanceof List) {
@@ -480,6 +482,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 log.trace("convertSolrParam assigning " + key + ":" + entry.getValue());
             }
         }
+        return true;
     }
 
     private String getEmptyIsNull(Request request, String key) {
