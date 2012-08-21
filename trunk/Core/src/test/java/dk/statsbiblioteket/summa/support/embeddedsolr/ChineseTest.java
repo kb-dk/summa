@@ -29,7 +29,9 @@ public class ChineseTest {
 	public void testChineseCharacters() throws Exception {
 
 		/*
-	   title: Her er noget kinesisk 一般論述研究 som skal fremsøges
+	   title: Her er noget kinesisk kinesisk一般論述研究／The som skal fremsøges. De sidste tegn '／' (ikke standard-slash!)
+	   er det tegn som betyder fremmedsprog start/slut. Dette tegn bliver lavet om til whitespace i blank_transliterations
+	   
 	    */
 		String[] files = new String[]{
 				"support/solr_test_documents/chinese_test_doc.txt",
@@ -37,7 +39,7 @@ public class ChineseTest {
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
 	
-		SolrQuery query = new SolrQuery("一般論述研究");
+		SolrQuery query = new SolrQuery("一般論述研究／The");
  		
 		QueryResponse response = solrServer.query(query);
 	  	assertEquals(1L, response.getResults().getNumFound());
