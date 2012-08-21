@@ -52,8 +52,7 @@ import java.text.ParseException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te")
-public class StreamingDocumentCreator
-              extends DocumentCreatorBase<org.apache.lucene.document.Document> {
+public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.lucene.document.Document> {
     private static Log log = LogFactory.getLog(StreamingDocumentCreator.class);
 
     // TODO: Entity-encode fields
@@ -109,16 +108,13 @@ public class StreamingDocumentCreator
     public boolean finish(Payload payload, org.apache.lucene.document.Document state, boolean success)
                                                                                                throws PayloadException {
         if (!success) {
-            Logging.logProcess(
-                "StreamingDocumentCreator", "Unable to create Lucene document",
-                Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("StreamingDocumentCreator", "Unable to create Lucene document",
+                               Logging.LogLevel.DEBUG, payload);
             throw new PayloadException("Unable to create Lucene document", payload);
         }
         payload.getObjectData().put(Payload.LUCENE_DOCUMENT, state);
-        Logging.logProcess(
-            "StreamingDocumentCreator",
-            "Added Lucene document as meta " + Payload.LUCENE_DOCUMENT,
-            Logging.LogLevel.DEBUG, payload);
+        Logging.logProcess("StreamingDocumentCreator", "Added Lucene document as meta " + Payload.LUCENE_DOCUMENT,
+                           Logging.LogLevel.DEBUG, payload);
         return true;
     }
 
@@ -178,9 +174,8 @@ public class StreamingDocumentCreator
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ParseException(String.format(
-                    "The first element was not start, it was %s",
-                    XMLUtil.eventID2String(eventType)), 0);
+            throw new ParseException(String.format("The first element was not start, it was %s",
+                                                   XMLUtil.eventID2String(eventType)), 0);
         }
 
         if (!reader.hasNext()) {
@@ -192,11 +187,16 @@ public class StreamingDocumentCreator
         if (!(eventType == XMLEvent.START_ELEMENT
             && SUMMA_DOCUMENT.equals(reader.getLocalName())
             && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
-            throw new ParseException(String.format(
-                    "The start element should be %s:%s, but was %s:%s",
-                    SUMMA_NAMESPACE, SUMMA_DOCUMENT,
-                    reader.getName().getNamespaceURI(), reader.getLocalName()),
-                                     reader.getLocation().getCharacterOffset());
+            try {
+                throw new ParseException(String.format(
+                    "processHeader: The start element should be %s:%s, but was %s:%s",
+                    SUMMA_NAMESPACE, SUMMA_DOCUMENT, reader.getName().getNamespaceURI(), reader.getLocalName()),
+                                         reader.getLocation().getCharacterOffset());
+            } catch (IllegalStateException e) {
+                throw new IllegalStateException(String.format(
+                    "processHeader: Unable to construct ParseException. Expected StartElement %s:%s, got %s",
+                    SUMMA_NAMESPACE, SUMMA_DOCUMENT, XMLUtil.eventID2String(eventType)), e);
+            }
         }
         try {
             //noinspection DuplicateStringLiteralInspection
@@ -226,9 +226,8 @@ public class StreamingDocumentCreator
     }
     private static boolean boostWarn = false;
 
-    private void skipComments(XMLStreamReader reader) throws
-                                                            XMLStreamException {
-        while (reader.getEventType() == XMLStreamReader.COMMENT) {
+    private void skipComments(XMLStreamReader reader) throws XMLStreamException {
+        while (reader.getEventType() == XMLStreamReader.COMMENT || reader.getEventType() == XMLStreamReader.SPACE) {
             if (!reader.hasNext()) {
                 return;
             }
@@ -243,9 +242,8 @@ public class StreamingDocumentCreator
 
         // Fields
         if (!reader.hasNext()) {
-            throw new ParseException(String.format(
-                    "Expected content in %s", record),
-                    reader.getLocation().getCharacterOffset());
+            throw new ParseException(String.format("Expected content in %s", record),
+                                     reader.getLocation().getCharacterOffset());
         }
         while(reader.hasNext()) {
             reader.next();
@@ -288,9 +286,8 @@ public class StreamingDocumentCreator
             // <field name="author" boost="2.0">Jens Hansen</field>
             String fieldName = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_NAME);
             if (fieldName == null) {
-                throw new ParseException(String.format(
-                        "Field without name-attribute in %s", record),
-                        reader.getLocation().getCharacterOffset());
+                throw new ParseException(String.format("Field without name-attribute in %s", record),
+                                         reader.getLocation().getCharacterOffset());
             }
 
             Float boost = null;
