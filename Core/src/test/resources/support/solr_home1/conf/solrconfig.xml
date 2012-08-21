@@ -479,7 +479,11 @@ But this is avery rare situation.
       </lst>
     </searchComponent>
 
-    <requestHandler name="/lookup" class="org.apache.solr.handler.component.SearchHandler">
+     <requestHandler name="/lookup" class="org.apache.solr.handler.component.SearchHandler">
+      <lst name="defaults">
+        <str name="elookup.sort">locale</str>
+        <str name="elookup.sort.locale">da</str>
+      </lst>
       <arr name="last-components">
         <str>lookup</str>
       </arr>
