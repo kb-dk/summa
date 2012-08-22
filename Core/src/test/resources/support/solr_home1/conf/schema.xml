@@ -24,6 +24,35 @@
         <!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
 
+        <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
+        <fieldType name="keyword_sorted" class="solr.TextField" indexed="true" stored="true" termVectors="false">
+             <analyzer type="index">
+                <tokenizer class="solr.KeywordTokenizerFactory"/>
+                <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                                
+                <filter class="solr.CollationKeyFilterFactory"  language="da" strength="primary" />
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+             <analyzer type="query">
+                <tokenizer class="solr.KeywordTokenizerFactory"/>
+                <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
+                <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                                
+                <filter class="solr.CollationKeyFilterFactory"  language="da" strength="primary" />
+                <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+            </analyzer>
+        </fieldType>
+
         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="keyword" class="solr.TextField" indexed="true" stored="false" termVectors="false">
              <analyzer type="index">
@@ -103,10 +132,7 @@
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
-
         </fieldType>
-
-
 
 
         <!-- Summa field: SummaStandardAnalyzer, Field.Index.NO,Field.Store.YES,Field.TermVector.NO -->
@@ -367,7 +393,7 @@
         <field name="py" type="text"  multiValued="true"/>
         <field name="rt" type="text"  multiValued="true"/>
         <field name="shortformat" type="stored"/>
-        <field name="sort_title" type="keyword" />
+        <field name="sort_title" type="keyword_sorted" />
         <field name="sort_year_asc" type="keyword" />
         <field name="sort_year_desc" type="keyword" />
         <field name="year" type="number" multiValued="true"/>
