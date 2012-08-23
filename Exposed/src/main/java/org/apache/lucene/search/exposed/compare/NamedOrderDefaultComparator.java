@@ -17,9 +17,10 @@ package org.apache.lucene.search.exposed.compare;
 import org.apache.lucene.util.BytesRef;
 
 /**
- * Hack: Placeholder for ordered sort.
+ * Hack: This class is a placeholder for popularity ordering. When building the structures, the BytesRef.compare-order
+ * is used and when requesting, the tag count should be used (handled outside of the comparator).
  */
-public class NamedOrderDummyComparator implements NamedComparator {
+public class NamedOrderDefaultComparator implements NamedComparator {
   private boolean isReverse = DEFAULT_REVERSE;
   private boolean isNullFirst = DEFAULT_NULL_FIRST;
 
@@ -56,8 +57,9 @@ public class NamedOrderDummyComparator implements NamedComparator {
   @SuppressWarnings("ComparatorMethodParameterNotUsed")
   @Override
   public int compare(BytesRef o1, BytesRef o2) {
-    throw new UnsupportedOperationException(
+      return o1.compareTo(o2);
+/*    throw new UnsupportedOperationException(
       "The " + getClass().getSimpleName()
-      + " comparator cannot be used directly");
+      + " comparator cannot be used directly");*/
   }
 }

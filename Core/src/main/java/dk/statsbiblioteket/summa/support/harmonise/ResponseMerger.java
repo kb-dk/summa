@@ -192,25 +192,20 @@ public class ResponseMerger implements Configurable {
     private final long maxRecords;
 
     public ResponseMerger(Configuration conf) {
-        defaultMode = MODE.valueOf(
-            conf.getString(CONF_MODE, defaultMode.toString()));
-        defaultPost = POST.valueOf(
-            conf.getString(CONF_POST, defaultPost.toString()));
+        defaultMode = MODE.valueOf(conf.getString(CONF_MODE, defaultMode.toString()));
+        defaultPost = POST.valueOf(conf.getString(CONF_POST, defaultPost.toString()));
         defaultOrder = conf.getStrings(CONF_ORDER, defaultOrder);
         defaultForceTopX = conf.getInt(CONF_FORCE_TOPX, defaultForceTopX);
         if (conf.valueExists(CONF_FORCE_RULES)) {
-            defaultForceRules =
-                parseForceRules(conf.getString(CONF_FORCE_RULES));
+            defaultForceRules = parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
         sequential = conf.getBoolean(CONF_SEQUENTIAL, sequential);
-        maxRecords = conf.getLong(
-            DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
+        maxRecords = conf.getLong(DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
         log.debug("Created response merger");
     }
 
     private static class AdjustWrapper {
-        /* Contains everything besides DocumentResponse until externalize is
-           called.
+        /* Contains everything besides DocumentResponse until externalize is called.
          */
         private final ResponseCollection merged = new ResponseCollection();
         /* Merged hitcount and time. The only DocumentResponse in the wrapper */
@@ -231,14 +226,12 @@ public class ResponseMerger implements Configurable {
             if (base == null) {
                 log.trace("No DocumentResponse to externalize");
                 if (records != null && records.size() > 0) {
-                    log.warn("Internal inconsistency: No DocumentResponse "
-                             + "present, but " + records.size()
+                    log.warn("Internal inconsistency: No DocumentResponse present, but " + records.size()
                              + " Records exist");
                 }
                 return merged;
             }
-            ArrayList<DocumentResponse.Record> docR =
-                new ArrayList<DocumentResponse.Record>(records.size());
+            ArrayList<DocumentResponse.Record> docR = new ArrayList<DocumentResponse.Record>(records.size());
             for (AdjustRecord adjR: records) {
                 docR.add(adjR.getRecord());
             }
@@ -296,28 +289,23 @@ public class ResponseMerger implements Configurable {
      * @param responses a collection of ResponseCollections to merge.
      * @return a merge of the given ResponseCollections.
      */
-    public ResponseCollection merge(
-        Request request,
-        List<SummaSearcherAggregator.ResponseHolder> responses) {
+    public ResponseCollection merge(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
         long startTime = System.currentTimeMillis();
         AdjustWrapper aw = deconstruct(request, responses);
         if (aw.getBase() == null) {
-            log.debug(
-                "No DocumentResponses present in responses, skipping merge");
+            log.debug("No DocumentResponses present in responses, skipping merge");
             return aw.externalize();
         }
         merge(request, aw);
         postProcess(request, aw);
         trim(request, aw);
         ResponseCollection result = aw.externalize();
-        result.addTiming("responsemerger.total",
-                         System.currentTimeMillis() - startTime);
+        result.addTiming("responsemerger.total", System.currentTimeMillis() - startTime);
         return result;
     }
 
     private void trim(Request request, AdjustWrapper aw) {
-        long maxRecords = request.getLong(
-            DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
+        long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
         log.trace("trim called with maxRecords " + maxRecords);
         if (aw.getRecords().size() > maxRecords) {
             aw.setRecords(aw.getRecords().subList(0, (int)maxRecords));
@@ -327,8 +315,7 @@ public class ResponseMerger implements Configurable {
     private void merge(Request request, AdjustWrapper aw) {
         log.trace("merge called");
         long startTime = System.currentTimeMillis();
-        MODE mode = MODE.valueOf(
-            request.getString(SEARCH_MODE, defaultMode.toString()));
+        MODE mode = MODE.valueOf(request.getString(SEARCH_MODE, defaultMode.toString()));
         List<String> order = request.getStrings(SEARCH_ORDER, defaultOrder);
         log.debug("Merging DocumentResponses with mode " + mode);
         switch (mode) {
@@ -348,11 +335,9 @@ public class ResponseMerger implements Configurable {
                 interleave(aw, order);
                 break;
             }
-            default: throw new UnsupportedOperationException(
-                "Merge mode " + mode + " not supported yet");
+            default: throw new UnsupportedOperationException("Merge mode " + mode + " not supported yet");
         }
-        aw.getMerged().addTiming("responsemerger.merge",
-                                 System.currentTimeMillis() - startTime);
+        aw.getMerged().addTiming("responsemerger.merge", System.currentTimeMillis() - startTime);
     }
 
     private void interleave(AdjustWrapper aw, List<String> order) {
@@ -365,14 +350,12 @@ public class ResponseMerger implements Configurable {
         }
         for (AdjustWrapper.AdjustRecord ar: aw.getRecords()) {
             if (!providers.containsKey(ar.getSearcherID())) {
-                providers.put(ar.getSearcherID(),
-                              new ArrayList<AdjustWrapper.AdjustRecord>());
+                providers.put(ar.getSearcherID(), new ArrayList<AdjustWrapper.AdjustRecord>());
             }
             providers.get(ar.getSearcherID()).add(ar);
         }
         // providers now contains ordered lists of records split by search ID
-        List<AdjustWrapper.AdjustRecord> interleaved =
-            new ArrayList<AdjustWrapper.AdjustRecord>();
+        List<AdjustWrapper.AdjustRecord> interleaved = new ArrayList<AdjustWrapper.AdjustRecord>();
         boolean any = true;
         while (any) {
             any = false;
@@ -393,8 +376,7 @@ public class ResponseMerger implements Configurable {
             log.debug("sortByStandard(...): No base in AdjustWrapper. Exiting");
             return;
         }
-        final Comparator<DocumentResponse.Record> comparator =
-            aw.getBase().getComparator();
+        final Comparator<DocumentResponse.Record> comparator = aw.getBase().getComparator();
         Collections.sort(
             aw.getRecords(),
             new Comparator<AdjustWrapper.AdjustRecord>() {
@@ -431,22 +413,17 @@ public class ResponseMerger implements Configurable {
                     order1 = order1 == -1 ? Integer.MAX_VALUE : order1;
                     int order2 = order.indexOf(o2.getSearcherID());
                     order2 = order2 == -1 ? Integer.MAX_VALUE : order2;
-                    return order1 != order2 ? order1 - order2 :
-                           -Float.compare(o1.getScore(), o2.getScore());
+                    return order1 != order2 ? order1 - order2 : -Float.compare(o1.getScore(), o2.getScore());
                 }
             });
     }
 
-    private AdjustWrapper deconstruct(
-        Request request,
-        List<SummaSearcherAggregator.ResponseHolder> responses) {
+    private AdjustWrapper deconstruct(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
         AdjustWrapper aw = new AdjustWrapper(request);
-        List<AdjustWrapper.AdjustRecord> adjustRecords =
-            new ArrayList<AdjustWrapper.AdjustRecord>();
+        List<AdjustWrapper.AdjustRecord> adjustRecords = new ArrayList<AdjustWrapper.AdjustRecord>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {
             if (!"".equals(response.getResponses().getTopLevelTiming())) {
-                aw.getMerged().addTiming(response.getResponses().
-                    getTopLevelTiming());
+                aw.getMerged().addTiming(response.getResponses(). getTopLevelTiming());
             }
             for (Response r: response.getResponses()) {
                 if (!(r instanceof DocumentResponse)) {
@@ -455,19 +432,15 @@ public class ResponseMerger implements Configurable {
                 }
                 DocumentResponse dr = (DocumentResponse)r;
                 for (DocumentResponse.Record record: dr.getRecords()) {
-                    adjustRecords.add(new AdjustWrapper.AdjustRecord(
-                        response.getSearcherID(), record));
+                    adjustRecords.add(new AdjustWrapper.AdjustRecord(response.getSearcherID(), record));
                 }
                 if (aw.getBase() == null) {
                     aw.setBase(dr);
                 } else { // Merge hit and time
-                    aw.getBase().setHitCount(
-                        aw.getBase().getHitCount() + dr.getHitCount());
-                    aw.getBase().setSearchTime(
-                        sequential ?
-                        aw.getBase().getSearchTime() + dr.getSearchTime() :
-                        Math.max(aw.getBase().getSearchTime(),
-                                 dr.getSearchTime()));
+                    aw.getBase().setHitCount(aw.getBase().getHitCount() + dr.getHitCount());
+                    aw.getBase().setSearchTime(sequential ?
+                                               aw.getBase().getSearchTime() + dr.getSearchTime() :
+                                               Math.max(aw.getBase().getSearchTime(), dr.getSearchTime()));
                     aw.getMerged().addTiming(dr.getTiming());
                 }
             }
@@ -478,8 +451,7 @@ public class ResponseMerger implements Configurable {
 
     private void postProcess(Request request, AdjustWrapper aw) {
         long startTime = System.currentTimeMillis();
-        POST post = POST.valueOf(
-            request.getString(SEARCH_POST, defaultPost.toString()));
+        POST post = POST.valueOf(request.getString(SEARCH_POST, defaultPost.toString()));
         if (post == POST.none) {
             return;
         }
@@ -499,8 +471,7 @@ public class ResponseMerger implements Configurable {
             default: throw new UnsupportedOperationException(
                 "Post merge processing does not yet support '" + post + "'");
         }
-        aw.getMerged().addTiming("responsemerger.post",
-                                 System.currentTimeMillis() - startTime);
+        aw.getMerged().addTiming("responsemerger.post", System.currentTimeMillis() - startTime);
     }
 
     private void postProcessIfNone(

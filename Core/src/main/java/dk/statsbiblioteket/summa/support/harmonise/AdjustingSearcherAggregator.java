@@ -57,8 +57,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_SEARCH_ADJUSTING =
-        "search.aggregator.searcher.adjusting";
+    public static final String CONF_SEARCH_ADJUSTING = "search.aggregator.searcher.adjusting";
     public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
 
     private final ResponseMerger responseMerger;
@@ -85,17 +84,14 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         SearchClient searcher;
         if (searcherConf.getBoolean(
             CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
-            log.debug("Creating adjusting search client with term stat based "
-                      + "rewriter " + rewriter);
+            log.debug("Creating adjusting search client with term stat based rewriter " + rewriter);
             searcher = new AdjustingSearchClient(searcherConf, rewriter);
-            String searcherName = searcherConf.getString(
-                CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
+            String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             String adjustID = ((AdjustingSearchClient)searcher).
                 getAdjuster().getId();
             if (!adjustID.equals(searcherName)) {
                 throw new ConfigurationException(
-                    "An AdjustingSearchClient was created with ID '"
-                    + adjustID + "' with an inner searcherID of '"
+                    "An AdjustingSearchClient was created with ID '" + adjustID + "' with an inner searcherID of '"
                     + searcherName + "'. Equal designations are required");
             }
             return searcher;
@@ -105,8 +101,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     }
 
     @Override
-    protected ResponseCollection merge(Request request,
-        List<ResponseHolder> responses) {
+    protected ResponseCollection merge(Request request, List<ResponseHolder> responses) {
         log.debug("Merging " + responses.size() + " responses");
         return responseMerger.merge(request, responses);
     }
