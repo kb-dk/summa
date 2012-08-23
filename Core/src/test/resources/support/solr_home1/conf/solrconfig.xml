@@ -201,7 +201,7 @@ But this is avery rare situation.
        lti
      </str>     
      <str name="fl">*,score</str>
-
+     <str name="lowercaseOperators">false</str>
      <str name="facet">on</str>
      <str name="facet.mincount">1</str>
      <str name="facet.limit">75</str>
