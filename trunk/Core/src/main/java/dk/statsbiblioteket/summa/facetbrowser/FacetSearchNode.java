@@ -39,7 +39,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.exposed.ExposedRequest;
 import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
-import org.apache.lucene.search.exposed.compare.NamedOrderDummyComparator;
+import org.apache.lucene.search.exposed.compare.NamedOrderDefaultComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
@@ -403,7 +403,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             if (structure.getSortType().equals(FacetStructure.SORT_ALPHA)) {
                 comparator = ComparatorFactory.create(structure.getLocale());
             } else { // Popularity
-                comparator = new NamedOrderDummyComparator();
+                comparator = new NamedOrderDefaultComparator();
             }
 
             List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();

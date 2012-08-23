@@ -52,8 +52,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
      * </p><p>
      * Mandatory.
      */
-    public static final String CONF_SEARCHERS =
-            "search.aggregator.searchers";
+    public static final String CONF_SEARCHERS = "search.aggregator.searchers";
 
     /**
      * The designation for a remote SummaSearcher.
@@ -62,8 +61,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
      * {@link dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer#CONF_RPC_TARGET}
      * for the given SummaSearcher.
      */
-    public static final String CONF_SEARCHER_DESIGNATION =
-            "search.aggregator.searcher.designation";
+    public static final String CONF_SEARCHER_DESIGNATION = "search.aggregator.searcher.designation";
 
     /**
      * The maximum number of threads. A fixed list is created, so don't set
@@ -71,8 +69,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
      * </p><p>
      * Optional. Default is the number of remote searchers times 3.
      */
-    public static final String CONF_SEARCHER_THREADS =
-            "search.aggregator.threads";
+    public static final String CONF_SEARCHER_THREADS = "search.aggregator.threads";
     public static final int DEFAULT_SEARCHER_THREADS_FACTOR = 3;
 
     /**
@@ -93,27 +90,19 @@ public class SummaSearcherAggregator implements SummaSearcher {
         try {
              searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
-            throw new ConfigurationException(
-                    "Unable to extract sub-configurations for "
-                    + CONF_SEARCHERS, e);
+            throw new ConfigurationException("Unable to extract sub-configurations for " + CONF_SEARCHERS, e);
         }
-        log.debug("Constructing SummaSearcherAggregator with "
-                  + searcherConfs.size() + " remote SummaSearchers");
-        searchers = new ArrayList<Pair<String, SearchClient>>(
-                searcherConfs.size());
+        log.debug("Constructing SummaSearcherAggregator with " + searcherConfs.size() + " remote SummaSearchers");
+        searchers = new ArrayList<Pair<String, SearchClient>>(searcherConfs.size());
         List<String> created = new ArrayList<String>(searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
             SearchClient searcher = createClient(searcherConf);
-            String searcherName = searcherConf.getString(
-                    CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
+            String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             created.add(searcherName);
-            searchers.add(new Pair<String, SearchClient>(
-                    searcherName, searcher));
-            log.debug("Connected to " + searcherName + " at "
-                      + searcher.getVendorId());
+            searchers.add(new Pair<String, SearchClient>(searcherName, searcher));
+            log.debug("Connected to " + searcherName + " at " + searcher.getVendorId());
         }
         this.defaultSearchers = conf.getStrings(CONF_ACTIVE, created);
         int threadCount = searchers.size() * DEFAULT_SEARCHER_THREADS_FACTOR;
@@ -124,8 +113,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         log.debug("Creating Executor with " + threadCount + " threads");
         executor = Executors.newFixedThreadPool(threadCount);
 
-        log.debug("Finished connecting to " + searchers.size()
-                  + ". Ready for use");
+        log.debug("Finished connecting to " + searchers.size() + ". Ready for use");
     }
 
     protected void preConstruction(Configuration conf) {
@@ -150,9 +138,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
      * @return a merge of the responses.
      */
     @SuppressWarnings({"UnusedDeclaration"})
-    protected ResponseCollection merge(
-        Request request,
-        List<ResponseHolder> responses) {
+    protected ResponseCollection merge(Request request, List<ResponseHolder> responses) {
         ResponseCollection merged = new ResponseCollection();
         for (ResponseHolder holder: responses) {
             merged.addAll(holder.getResponses());
@@ -179,62 +165,45 @@ public class SummaSearcherAggregator implements SummaSearcher {
         if (startIndex > 0) {
             if (log.isTraceEnabled()) {
                 log.debug(
-                    "Start index is " + startIndex + " and maxRecords is "
-                    + maxRecords + ". Setting startIndex=0 and maxRecords="
-                    + (startIndex + maxRecords) + " for " + request);
+                    "Start index is " + startIndex + " and maxRecords is " + maxRecords
+                    + ". Setting startIndex=0 and maxRecords=" + (startIndex + maxRecords) + " for " + request);
             }
             request.put(DocumentKeys.SEARCH_START_INDEX, 0);
-            request.put(
-                DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
         }
 
-        List<String> selected = request.getStrings(
-            SEARCH_ACTIVE, defaultSearchers);
+        List<String> selected = request.getStrings(SEARCH_ACTIVE, defaultSearchers);
         List<Pair<String, Future<ResponseCollection>>> searchFutures =
-                new ArrayList<Pair<String, Future<ResponseCollection>>>(
-                        selected.size());
+            new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
         for (Pair<String, SearchClient> searcher: searchers) {
             if (selected.contains(searcher.getKey())) {
                 searchFutures.add(new Pair<String, Future<ResponseCollection>>(
                     searcher.getKey(),
-                    executor.submit(new SearcherCallable(
-                        searcher.getKey(), searcher.getValue(), request))));
+                    executor.submit(new SearcherCallable(searcher.getKey(), searcher.getValue(), request))));
             } else {
-                log.trace("search(...) skipping searcher " + searcher.getKey()
-                          + " as it is not asked for");
+                log.trace("search(...) skipping searcher " + searcher.getKey() + " as it is not asked for");
             }
         }
         log.trace("All searchers started, collecting and waiting");
 
 
-        List<ResponseHolder> responses =
-            new ArrayList<ResponseHolder>(searchFutures.size());
-        for (Pair<String, Future<ResponseCollection>> searchFuture:
-                searchFutures) {
+        List<ResponseHolder> responses = new ArrayList<ResponseHolder>(searchFutures.size());
+        for (Pair<String, Future<ResponseCollection>> searchFuture: searchFutures) {
             try {
-                responses.add(new ResponseHolder(
-                    searchFuture.getKey(), request,
-                    searchFuture.getValue().get()));
+                responses.add(new ResponseHolder(searchFuture.getKey(), request, searchFuture.getValue().get()));
             } catch (InterruptedException e) {
-                throw new IOException(
-                        "Interrupted while waiting for searcher result from "
-                        + searchFuture.getKey(), e);
+                throw new IOException("Interrupted while waiting for searcher result from " + searchFuture.getKey(), e);
             } catch (ExecutionException e) {
-                throw new IOException(
-                        "ExecutionException while requesting search result "
-                        + "from " + searchFuture.getKey(), e);
+                throw new IOException("ExecutionException while requesting search result from " + searchFuture.getKey(),
+                                      e);
             } catch (Exception e) {
-                throw new IOException(
-                        "Exception while requesting search result from "
-                        + searchFuture.getKey(), e);
+                throw new IOException("Exception while requesting search result from " + searchFuture.getKey(), e);
             }
         }
         ResponseCollection merged = merge(request, responses);
         postProcessPaging(merged, startIndex, maxRecords);
-        log.debug("Finished search in " + (System.nanoTime() - startTime)
-                  + " ns");
-        merged.addTiming("aggregator.searchandmergeall",
-                         (System.nanoTime() - startTime) / 1000000);
+        log.debug("Finished search in " + (System.nanoTime() - startTime) + " ns");
+        merged.addTiming("aggregator.searchandmergeall", (System.nanoTime() - startTime) / 1000000);
         return merged;
     }
 
@@ -267,8 +236,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.trace("No paging fix needed");
             return;
         }
-        log.trace("Fixing paging with startIndex=" + startIndex
-                  + " and maxRecords=" + maxRecords);
+        log.trace("Fixing paging with startIndex=" + startIndex + " and maxRecords=" + maxRecords);
         for (Response response: merged) {
             if (!(response instanceof DocumentResponse)) {
                 continue;
@@ -281,9 +249,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 records.clear();
             } else {
                 records = new ArrayList<DocumentResponse.Record>(
-                    records.subList(
-                        (int)startIndex,
-                        (int)Math.min(records.size(), startIndex+maxRecords)));
+                    records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
             }
             docResponse.setRecords(records);
         }
@@ -291,19 +257,16 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
     @Override
     public void close() throws IOException {
-        log.info("Close called for aggregator. Remote SummaSearchers will be "
-                 + "disconnected but not closed");
+        log.info("Close called for aggregator. Remote SummaSearchers will be disconnected but not closed");
         searchers.clear();
     }
 
-    private static class SearcherCallable implements
-                                          Callable<ResponseCollection> {
+    private static class SearcherCallable implements Callable<ResponseCollection> {
         private String designation;
         private SearchClient client;
         private Request request;
 
-        private SearcherCallable(String designation, SearchClient client,
-                                 Request request) {
+        private SearcherCallable(String designation, SearchClient client, Request request) {
             //noinspection DuplicateStringLiteralInspection
             log.trace("Creating " + designation + " Future");
             this.designation = designation;
@@ -315,8 +278,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         public ResponseCollection call() throws Exception {
             long searchStart = System.currentTimeMillis();
             ResponseCollection result = client.search(request);
-            result.addTiming("aggregator.searchcall." + designation,
-                             System.currentTimeMillis() - searchStart);
+            result.addTiming("aggregator.searchcall." + designation, System.currentTimeMillis() - searchStart);
             return result;
         }
 
@@ -325,4 +287,3 @@ public class SummaSearcherAggregator implements SummaSearcher {
         }
     }
 }
-
