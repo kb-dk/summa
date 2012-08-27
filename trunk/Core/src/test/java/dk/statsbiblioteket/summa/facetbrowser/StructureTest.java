@@ -142,38 +142,6 @@ public class StructureTest extends TestCase {
                      2, structure.getFacet("a").getFields().length);
     }
 
-    public void testGetFacets() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetFields() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetLocale() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetMaxTags() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetName() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetSortType() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetWantedTags() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetRequestFacet() throws Exception {
-        //TODO: Test goes here...
-    }
-
     public static Test suite() {
         return new TestSuite(StructureTest.class);
     }

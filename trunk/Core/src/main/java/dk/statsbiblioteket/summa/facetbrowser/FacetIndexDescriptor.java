@@ -53,16 +53,13 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
        by the parse-method. Setting to null will override this assignment.
      */
     private Map<String, FacetStructure> facets;
-    public static final String FACET_NAMESPACE = 
-            "http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor";
+    public static final String FACET_NAMESPACE = "http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor";
     public static final String FACET_NAMESPACE_PREFIX = "fa";
 
     /*private final static String FACET_NODE_EXPR =
             "/" + DESCRIPTOR_NAMESPACE_PREFIX + ":IndexDescriptor/"
             + FACET_NAMESPACE_PREFIX + ":facets";*/
-    private final static String FACET_NODE_EXPR =
-            "/" + "IndexDescriptor/"
-            + "facets";
+    private final static String FACET_NODE_EXPR = "/" + "IndexDescriptor/" + "facets";
     //private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
     private final static String FACET_EXPR = "facet";
 
@@ -106,58 +103,46 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         // TODO: Guard against changing facets (subsequent calls to parse)
         Document dom = super.parse(xml);
         if (dom == null) {
-            throw new ParseException(String.format(
-                    "The DOM from IndexDescriptor.parse(%s) was null", xml),
-                                     -1);
+            throw new ParseException(String.format("The DOM from IndexDescriptor.parse(%s) was null", xml), -1);
         }
         NodeList facetNodes;
         try {
-            Node facetNode = (Node)getXPath().evaluate(
-                    FACET_NODE_EXPR, dom, XPathConstants.NODE);
+            Node facetNode = (Node)getXPath().evaluate(FACET_NODE_EXPR, dom, XPathConstants.NODE);
             if (facetNode == null) {
                 throw new ParseException(String.format(
-                        "The XPath expression '%s' gave null. Apparently there " 
-                        + "are no facets defined in the IndexDescriptor",
+                        "The XPath expression '%s' gave null. Apparently there are no facets defined in the "
+                        + "IndexDescriptor",
                         FACET_NODE_EXPR), -1);
             }
-            facetNodes = (NodeList)getXPath().evaluate(
-                    FACET_EXPR, facetNode, XPathConstants.NODESET);
+            facetNodes = (NodeList)getXPath().evaluate(FACET_EXPR, facetNode, XPathConstants.NODESET);
         } catch (final XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expressions '%s' and '%s' were  invalid",
-                    FACET_NODE_EXPR, FACET_EXPR), -1) {
+            throw new ParseException(String.format("Expressions '%s' and '%s' were  invalid",
+                                                   FACET_NODE_EXPR, FACET_EXPR), -1) {
                 private static final long serialVersionUID = 89785489484L;
                 { initCause(e); } };
         } catch (final NullPointerException e) {
             log.warn(String.format(
-                    "Unable to extracts facets with expressions '%s' and '%s' "
-                    + " with name spaces '%s' and '%s' from xml:\n%s",
+                    "Unable to extracts facets with expressions '%s' and '%s'  with name spaces '%s' and '%s' "
+                    + "from xml:\n%s",
                     FACET_NODE_EXPR, FACET_EXPR,
                     DESCRIPTOR_NAMESPACE_PREFIX + ":"
-                    + getXPath().getNamespaceContext().getNamespaceURI(
-                            DESCRIPTOR_NAMESPACE_PREFIX),
+                    + getXPath().getNamespaceContext().getNamespaceURI(DESCRIPTOR_NAMESPACE_PREFIX),
                     FACET_NAMESPACE_PREFIX + ":"
-                    + getXPath().getNamespaceContext().getNamespaceURI(
-                            FACET_NAMESPACE_PREFIX),
+                    + getXPath().getNamespaceContext().getNamespaceURI(FACET_NAMESPACE_PREFIX),
                     xml), e);
             throw new ParseException(String.format(
-                    "Got NullPointerException while evaluating node with "
-                    + "expressions '%s' and '%s' and dom '%s'",
+                    "Got NullPointerException while evaluating node with expressions '%s' and '%s' and dom '%s'",
                     FACET_NODE_EXPR, FACET_EXPR, dom), -1) {
                 private static final long serialVersionUID = 79877384469L;
                 { initCause(e); }};
         }
-        log.trace(String.format("Located %d facet nodes",
-                                facetNodes.getLength()));
-        Map<String, FacetStructure> facets =
-                new LinkedHashMap<String, FacetStructure>(
-                        facetNodes.getLength());
+        log.trace(String.format("Located %d facet nodes", facetNodes.getLength()));
+        Map<String, FacetStructure> facets = new LinkedHashMap<String, FacetStructure>(facetNodes.getLength());
         for (int id = 0 ; id < facetNodes.getLength(); id++) {
             FacetStructure facet = parseFacet(facetNodes.item(id), id);
             facets.put(facet.getName(), facet);
             if (log.isDebugEnabled()) {
-                log.debug("Extracted facet-structure from IndexDescriptor: " 
-                          + facet);
+                log.debug("Extracted facet-structure from IndexDescriptor: " + facet);
             }
         }
         this.facets = facets;
@@ -187,24 +172,20 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                 if (!sort.equals(FacetStructure.SORT_ALPHA)
                     && !sort.equals(FacetStructure.SORT_POPULARITY)) {
                     log.warn(String.format(
-                            "Encountered unknown SORT value '%s' while parsing "
-                            + "the node for Facet '%s' for field/group '%s'. "
-                            + "Expected %s or %s",
-                            sort, name, ref, FacetStructure.SORT_ALPHA,
-                            FacetStructure.SORT_POPULARITY));
+                            "Encountered unknown SORT value '%s' while parsing the node for Facet '%s' for field/group "
+                            + "'%s'. Expected %s or %s",
+                            sort, name, ref, FacetStructure.SORT_ALPHA, FacetStructure.SORT_POPULARITY));
                 }
             } else //noinspection DuplicateStringLiteralInspection
                 if (attribute.getNodeName().equals("sortLocale")) {
                 sortLocale = attribute.getNodeValue();
             } else {
-                    log.info(String.format(
-                            "Unknown attribute '%s' in facet definition '%s'",
-                            attribute.getNodeName(), name));
+                    log.info(String.format("Unknown attribute '%s' in facet definition '%s'",
+                                           attribute.getNodeName(), name));
                 }
         }
         if (ref == null || "".equals(ref)) {
-            throw new ConfigurationException(String.format(
-                    "No ref specified in facet '%s'", name));
+            throw new ConfigurationException(String.format("No ref specified in facet '%s'", name));
         }
         if (name == null || "".equals(name)) {
             name = ref;
@@ -212,19 +193,17 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         IndexField field = getField(ref);
         IndexGroup<IndexField> group = getGroup(ref);
         if (field == null && group == null) {
-            throw new ConfigurationException(String.format(
-                    "No field or group defined for ref '%s' in facet '%s'",
-                    ref, name));
+            throw new ConfigurationException(String.format("No field or group defined for ref '%s' in facet '%s'",
+                                                           ref, name));
         }
-        List<IndexField> fieldRefs =
-                group == null ? Arrays.asList(field) :
-                new ArrayList<IndexField>(group.getFields());
+        List<IndexField> fieldRefs = group == null ? Arrays.asList(field) :
+                                     new ArrayList<IndexField>(group.getFields());
         List<String> fieldNames = new ArrayList<String>(fieldRefs.size());
         for (IndexField fieldRef : fieldRefs) {
             fieldNames.add(fieldRef.getName());
         }
-        return new FacetStructure(name, facetID, fieldNames.toArray(new String[
-                fieldNames.size()]), defaultTags, maxTags, sortLocale, sort);
+        return new FacetStructure(name, facetID, fieldNames.toArray(new String[fieldNames.size()]), defaultTags,
+                                  maxTags, sortLocale, sort);
     }
 
     /**
@@ -241,14 +220,11 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         if (facetXPath == null) {
             log.trace("Creating XPath for FacetIndexDescriptor");
             DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
-            nsCon.setNameSpace(DESCRIPTOR_NAMESPACE,
-                               DESCRIPTOR_NAMESPACE_PREFIX);
-            nsCon.setNameSpace(FACET_NAMESPACE,
-                               FACET_NAMESPACE_PREFIX);
+            nsCon.setNameSpace(DESCRIPTOR_NAMESPACE, DESCRIPTOR_NAMESPACE_PREFIX);
+            nsCon.setNameSpace(FACET_NAMESPACE, FACET_NAMESPACE_PREFIX);
             XPathFactory factory = XPathFactory.newInstance();
             facetXPath = factory.newXPath();
             facetXPath.setNamespaceContext(nsCon);
-
         }
         return facetXPath;
     }
