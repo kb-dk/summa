@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.summa.facetbrowser.api.*;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
@@ -156,28 +157,28 @@ public class SolrResponseBuilder implements Configurable {
         } catch (XMLStreamException e) {
             throw new IllegalArgumentException("Unable to construct a reader from input for request " + request, e);
         }
-        if (!findTagStart(xml, "response")) {
+        if (!XMLStepper.findTagStart(xml, "response")) {
             log.warn("Could not locate start tag 'response', exiting parsing of response for " + request);
             return 0;
         }
         xml.next();
         final DocumentResponse documentResponse = createBasicDocumentResponse(request);
         final boolean mlt = request.getBoolean(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null) != null;
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if (mlt && "lst".equals(current) && "moreLikeThis".equals(getAttribute(xml, "name", null))) {
+                if (mlt && "lst".equals(current) && "moreLikeThis".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     log.debug("Parsing MoreLikeThis response");
                     parseResponse(xml, documentResponse);
                     // TODO: Remove query-id
                     return true;
                 }
                 if (!mlt && "result".equals(current)) {
-                    String name = getAttribute(xml, "name", null);
+                    String name = XMLStepper.getAttribute(xml, "name", null);
                     if (name == null) {
                         log.warn("Expected attribute 'name' in tag result. Skipping content for result");
-                        skipSubTree(xml);
+                        XMLStepper.skipSubTree(xml);
                         return true;
                     }
                     if ("response".equals(name)) {
@@ -186,15 +187,15 @@ public class SolrResponseBuilder implements Configurable {
                         return true;
                     }
                     log.debug("Encountered unsupported name in response '" + name + "'. Skipping element");
-                    skipSubTree(xml);
+                    XMLStepper.skipSubTree(xml);
                     return true;
                 }
                 if ("lst".equals(current)) {
-                    String name = getAttribute(xml, "name", null);
+                    String name = XMLStepper.getAttribute(xml, "name", null);
                     xml.next();
                     if (name == null) {
                         log.warn("Expected attribute 'name' in tag lst. Skipping content for lst");
-                        skipSubTree(xml);
+                        XMLStepper.skipSubTree(xml);
                         return true;
                     }
                     if ("responseHeader".equals(name)) {
@@ -204,7 +205,7 @@ public class SolrResponseBuilder implements Configurable {
                     }
                     if ("facet_counts".equals(name) || "efacet_counts".equals(name)) {
                         if (facets == null) {
-                            skipSubTree(xml);
+                            XMLStepper.skipSubTree(xml);
                             return true;
                         }
                         parseFacets(xml, facets, responses);
@@ -222,7 +223,7 @@ public class SolrResponseBuilder implements Configurable {
                         return true;
                     }
                     log.debug("Encountered unsupported name in lst '" + name + "' in Solr response. Skipping element");
-                    skipSubTree(xml);
+                    XMLStepper.skipSubTree(xml);
                     return true;
                 }
                 log.warn("Encountered unexpected tag '" + current + "' in Solr response. Skipping element");
@@ -277,31 +278,31 @@ public class SolrResponseBuilder implements Configurable {
         IndexRequest indexRequest = getLookupRequest(request);
         if (indexRequest == null) {
             log.warn("Unable to extract an IndexRequest even though an index lookup structure was found in the result");
-            findTagEnd(xml, "elookup");
+            XMLStepper.findTagEnd(xml, "elookup");
             return;
         }
         final IndexResponse lookups = new IndexResponse(indexRequest);
-        if (!findTagStart(xml, "lst") || !"fields".equals(getAttribute(xml, "name", null))) {
+        if (!XMLStepper.findTagStart(xml, "lst") || !"fields".equals(XMLStepper.getAttribute(xml, "name", null))) {
             throw new XMLStreamException("Unable to locate start tag 'lst' with name 'fields' inside 'elookup'");
         }
         xml.next();
-        if (!findTagStart(xml, "lst")) { // We only look at the first field
+        if (!XMLStepper.findTagStart(xml, "lst")) { // We only look at the first field
             throw new XMLStreamException("Unable to locate start tag 'lst' inside 'lst#fields'");
         }
-        String fieldName = getAttribute(xml, "name", null);
+        String fieldName = XMLStepper.getAttribute(xml, "name", null);
         xml.next();
         if (log.isTraceEnabled()) {
             log.trace("Found lst#" + fieldName + " in lst#fields in lst#elookup");
         }
-        if (!findTagStart(xml, "lst") || !"terms".equals(getAttribute(xml, "name", null))) {
+        if (!XMLStepper.findTagStart(xml, "lst") || !"terms".equals(XMLStepper.getAttribute(xml, "name", null))) {
             throw new XMLStreamException("Unable to locate start tag 'lst' with name 'terms' inside 'lst#" + fieldName
                                          + "' in 'lst#fields' in 'lst#elookup''");
         }
         xml.next();
-        iterateElements(xml, "lst", "int", new XMLCallback() {
+        XMLStepper.iterateElements(xml, "lst", "int", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                String term = (getAttribute(xml, "name", null));
+                String term = (XMLStepper.getAttribute(xml, "name", null));
                 if (term == null) {
                     throw new XMLStreamException(
                         "Encountered element 'int' in list 'terms' in 'elookup' without attribute 'name'");
@@ -316,7 +317,7 @@ public class SolrResponseBuilder implements Configurable {
                 }
             }
         });
-        findTagEnd(xml, "elookup");
+        XMLStepper.findTagEnd(xml, "elookup");
         responses.add(lookups);
     }
 
@@ -374,20 +375,20 @@ public class SolrResponseBuilder implements Configurable {
         }
         final DidYouMeanResponse dym = new DidYouMeanResponse(query);
 
-        if (!findTagStart(xml, "lst") || !"suggestions".equals(getAttribute(xml, "name", null))) {
+        if (!XMLStepper.findTagStart(xml, "lst") || !"suggestions".equals(XMLStepper.getAttribute(xml, "name", null))) {
             throw new XMLStreamException(
                 "Unable to locate start tag 'lst' with name 'suggestions' inside 'spellcheck'");
         }
         xml.next();
         // We iterate until we find a collation
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 //  <lst name="collation">
                 //    <str name="collationQuery">thomas egense</str>
                 //    <int name="hits">1</int>
                 //  </lst>
-                if (!"lst".equals(current) || !"collation".equals(getAttribute(xml, "name", null))) {
+                if (!"lst".equals(current) || !"collation".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     return false;
                 }
                 xml.next();
@@ -395,13 +396,15 @@ public class SolrResponseBuilder implements Configurable {
                 if (log.isTraceEnabled()) {
                     log.trace("Found collation in lst#suggestions in lst#spellcheck");
                 }
-                if (!findTagStart(xml, "str") || !"collationQuery".equals(getAttribute(xml, "name", null))) {
+                if (!XMLStepper.findTagStart(xml, "str")
+                    || !"collationQuery".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     throw new XMLStreamException("Unable to locate collationQuery inside 'lst#collation' in "
                                                  + "'lst#suggestions' in 'lst#spellcheck''");
                 }
                 String collation = xml.getElementText();
                 xml.next();
-                if (!findTagStart(xml, "int") || !"hits".equals(getAttribute(xml, "name", null))) {
+                if (!XMLStepper.findTagStart(xml, "int")
+                    || !"hits".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     throw new XMLStreamException("Unable to locate 'int#hits' inside 'lst#collation' in "
                                                  + "'lst#suggestions' in 'lst#spellcheck''");
                 }
@@ -412,7 +415,7 @@ public class SolrResponseBuilder implements Configurable {
             }
         });
 
-        findTagEnd(xml, "spellcheck");
+        XMLStepper.findTagEnd(xml, "spellcheck");
         responses.add(dym);
     }
 
@@ -474,11 +477,11 @@ public class SolrResponseBuilder implements Configurable {
         final FacetResultExternal facetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
         facetResult.setPrefix(searcherID + ".");
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if ("facet_fields".equals(getAttribute(xml, "name", null))
-                    || "efacet_fields".equals(getAttribute(xml, "name", null))) {
+                if ("facet_fields".equals(XMLStepper.getAttribute(xml, "name", null))
+                    || "efacet_fields".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     xml.next();
                     parseFacets(xml, facetResult);
                     return true;
@@ -493,14 +496,14 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     private void parseFacets(XMLStreamReader xml, final FacetResultExternal facets) throws XMLStreamException {
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if (!"lst".equals(current)) {
                     log.warn("Encountered tag '" + current + "' in facet_fields. Expected 'lst'. Ignoring element");
                     return false;
                 }
-                final String facetName = getAttribute(xml, "name", null);
+                final String facetName = XMLStepper.getAttribute(xml, "name", null);
                 if (facetName == null) {
                     log.warn("Encountered tag 'lst' inside facet_fields without attribute name. Ignoring element");
                     return false;
@@ -514,10 +517,10 @@ public class SolrResponseBuilder implements Configurable {
 
     private void parseFacet(
         XMLStreamReader xml, final FacetResultExternal facets, final String facetName) throws XMLStreamException {
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                final String tagName = getAttribute(xml, "name", null);
+                final String tagName = XMLStepper.getAttribute(xml, "name", null);
                 if (tagName == null) {
                     log.warn("Encountered tag type '" + current + "' inside facet '" + facetName
                              + "' without attribute name. Ignoring element");
@@ -537,22 +540,12 @@ public class SolrResponseBuilder implements Configurable {
         });
     }
 
-    private void skipSubTree(XMLStreamReader xml) throws XMLStreamException {
-        iterateTags(xml, new Callback() {
-            @Override
-            public boolean tagStart(
-                XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                return false; // Ignore everything until end of sub tree
-            }
-        });
-    }
-
     private void parseHeader(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
         log.trace("parseHeader(...) called");
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if ("int".equals(current) && "QTime".equals(getAttribute(xml, "name", null))) {
+                if ("int".equals(current) && "QTime".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     String content = xml.getElementText();
                     try {
                         response.setSearchTime(Long.parseLong(content));
@@ -568,9 +561,9 @@ public class SolrResponseBuilder implements Configurable {
 
     private void parseResponse(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
         log.trace("parseResponse(...) called");
-        response.setHitCount(Long.parseLong(getAttribute(xml, "numFound", "-1")));
+        response.setHitCount(Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1")));
         xml.next();
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("doc".equals(current)) {
@@ -588,7 +581,7 @@ public class SolrResponseBuilder implements Configurable {
                                ? null : response.getSortKey();
 
         log.trace("parseDoc(...) called");
-        iterateTags(xml, new Callback() {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             float score = 0.0f;
             String id = null;
             String base = null;
@@ -598,14 +591,14 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("arr".equals(current)) {
-                    lastArrName = getAttribute(xml, "name", null);
+                    lastArrName = XMLStepper.getAttribute(xml, "name", null);
                     return false;
                 }
-                String name = tags.size() > 1 && "arr".equals(tags.get(tags.size()-2)) ?
+                String name = tags.size() > 1 && "arr".equals(tags.get(tags.size() - 2)) ?
                               // We're inside a list of terms for the same multi value field so use the name from the arr
                               lastArrName :
                               // Single value field, so the name must be specified
-                              getAttribute(xml, "name", null);
+                              XMLStepper.getAttribute(xml, "name", null);
                 if (name == null) {
                     log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
                     return false;
@@ -628,7 +621,7 @@ public class SolrResponseBuilder implements Configurable {
                     try {
                         score = Float.parseFloat(content);
                     } catch (NumberFormatException e) {
-                        log.warn("Unable to parse float score '" + content + "' from "+ current + "#" + name
+                        log.warn("Unable to parse float score '" + content + "' from " + current + "#" + name
                                  + " for document " + id + ". Score will be set to " + score);
                     }
                 } else if (idField.equals(name)) {
@@ -651,14 +644,14 @@ public class SolrResponseBuilder implements Configurable {
                 }
                 // Add base if it does not exist or was collected using another name
                 if ((base == null && recordBase != null) || base != null && !IndexUtils.RECORD_BASE.equals(baseField)) {
-                        fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, base));
+                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, base));
                 }
                 // TODO: Cons
                 String sortValue = null;
                 if (sortKey == null) {
                     sortValue = Float.toString(score);
                 } else {
-                    for (SimplePair<String, String> field: fields) {
+                    for (SimplePair<String, String> field : fields) {
                         if (sortKey.equals(field.getKey())) {
                             sortValue = field.getValue();
                             break;
@@ -669,7 +662,7 @@ public class SolrResponseBuilder implements Configurable {
                     }
                 }
                 DocumentResponse.Record record = new DocumentResponse.Record(id, searcherID, score, sortValue);
-                for (SimplePair<String, String> field: fields) {
+                for (SimplePair<String, String> field : fields) {
                     record.addField(new DocumentResponse.Field(
                         field.getKey(), field.getValue(), !nonescapedFields.contains(field.getKey())));
                 }
@@ -681,166 +674,8 @@ public class SolrResponseBuilder implements Configurable {
         });
     }
 
-    // Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
-    // Leaves the cursor after END_ELEMENT
-    protected void iterateTags(XMLStreamReader xml, Callback callback) throws XMLStreamException {
-        List<String> tagStack = new ArrayList<String>(10);
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-                String currentTag = xml.getLocalName();
-                tagStack.add(currentTag);
-                if (!callback.tagStart(xml, tagStack, currentTag)) {
-                    xml.next();
-                }
-                continue;
-            }
-            if (xml.getEventType() == XMLStreamReader.END_ELEMENT) {
-                String currentTag = xml.getLocalName();
-                if (tagStack.size() == 0) {
-                    callback.end();
-                    return;
-                }
-                if (!currentTag.equals(tagStack.get(tagStack.size()-1))) {
-                    throw new IllegalStateException(String.format(
-                        "Encountered end tag '%s' where '%s' from the stack %s were expected",
-                        currentTag, tagStack.get(tagStack.size()-1), Strings.join(tagStack, ", ")));
-                }
-                tagStack.remove(tagStack.size()-1);
-            } else if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                callback.end();
-                return;
-            }
-            xml.next();
-        }
-    }
-
     public String getRecordBase() {
         return recordBase;
-    }
-
-    private abstract static class Callback {
-        /**
-         * Called for each encountered START_ELEMENT in the part of the xml that is within scope. If the implementation
-         * calls {@code xml.next()} or otherwise advances the position in the stream, it must ensure that the list of
-         * tags is consistent with the position in the DOM.
-         *
-         * @param xml        the Stream.
-         * @param tags       the start tags encountered in the current sub tree.
-         * @param current    the local name of the current tag.
-         * @return true if the implementation called {@code xml.next()} one or more times, else false.
-         */
-        public abstract boolean tagStart(
-            XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException;
-
-        /**
-         * Called when the last END_ELEMENT is encountered.
-         */
-        public void end() { }
-    }
-
-    /**
-     * Skips everything until a start tag is reacted or the readers is depleted.
-     * @param xml the stream to iterate over.
-     * @return the name of the start tag or null if EOD.
-     * @throws javax.xml.stream.XMLStreamException if there was an error
-     * accessing the xml stream.
-     */
-    protected String jumpToNextTagStart(XMLStreamReader xml)
-        throws XMLStreamException {
-        if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-            xml.next(); // Skip if already located at a start
-        }
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
-                return xml.getLocalName();
-            }
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                return null;
-            }
-            xml.next();
-        }
-    }
-
-    /**
-     *
-     * @param xml stream positioned at a start tag.
-     * @param attributeName the wanted attribute
-     * @param defaultValue the value to return if the attributes is not present.
-     * @return the attribute content og the default value.
-     */
-    protected String getAttribute(XMLStreamReader xml, String attributeName, String defaultValue) {
-        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
-            if (xml.getAttributeLocalName(i).equals(attributeName)) {
-                return xml.getAttributeValue(i);
-            }
-        }
-        return defaultValue;
-    }
-
-    /**
-     * Iterates over the xml until a start tag with startTagName is reached.
-     * @param xml          the stream to iterate over.
-     * @param startTagName the name of the tag to locate.
-     * @return true if the tag was found, else false.
-     * @throws javax.xml.stream.XMLStreamException if there were an error
-     * seeking the xml stream.
-     */
-    protected boolean findTagStart(XMLStreamReader xml, String startTagName) throws XMLStreamException {
-        while (true)  {
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT && startTagName.equals(xml.getLocalName())) {
-                return true;
-            }
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                return false;
-            }
-            try {
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new XMLStreamException("Error seeking to start tag for element '" + startTagName + "'", e);
-            }
-        }
-    }
-
-    protected boolean findTagEnd(XMLStreamReader xml, String endTagName) throws XMLStreamException {
-        while (true)  {
-            if (xml.getEventType() == XMLStreamReader.END_ELEMENT && endTagName.equals(xml.getLocalName())) {
-                return true;
-            }
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
-                return false;
-            }
-            try {
-                xml.next();
-            } catch (XMLStreamException e) {
-                throw new XMLStreamException("Error seeking to end tag for element '" + endTagName + "'", e);
-            }
-        }
-    }
-
-    /**
-     * Iterates over elements in the stream until end element is encountered
-     * or end of document is reached. For each element matching actionElement,
-     * callback is called.
-     * @param xml        the stream to iterate.
-     * @param endElement the stopping element.
-     * @param actionElement callback is activated when encountering elements
-     *                   with this name.
-     * @param callback   called for each encountered element.
-     * @throws javax.xml.stream.XMLStreamException if the stream could not
-     * be iterated or an error occured during callback.
-     */
-    protected void iterateElements(XMLStreamReader xml, String endElement, String actionElement, XMLCallback callback)
-        throws XMLStreamException {
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
-                (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
-                break;
-            }
-            if (xml.getEventType() == XMLStreamReader.START_ELEMENT && xml.getLocalName().equals(actionElement)) {
-                callback.execute(xml);
-            }
-            xml.next();
-        }
     }
 
     protected DocumentResponse createBasicDocumentResponse(Request request) {
@@ -900,11 +735,6 @@ public class SolrResponseBuilder implements Configurable {
                 shortformat.append(String.format("%s<%s>%s</%s>\n", indent, tag, XMLUtil.encode(element), tag));
             }
         }
-    }
-
-    protected abstract static class XMLCallback {
-        public abstract void execute(XMLStreamReader xml) throws XMLStreamException;
-        public void close() { } // Called when iteration has finished
     }
 
     public void setNonescapedFields(Set<String> nonescapedFields) {
