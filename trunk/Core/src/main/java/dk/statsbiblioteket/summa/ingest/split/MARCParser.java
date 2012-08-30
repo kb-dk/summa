@@ -80,8 +80,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * </p><p>
      * This property is optional. Default is "".
      */
-    public static final String CONF_ID_PREFIX =
-            "summa.ingest.marcparser.id.prefix";
+    public static final String CONF_ID_PREFIX = "summa.ingest.marcparser.id.prefix";
     public static final String DEFAULT_ID_PREFIX = "";
 
     /**
@@ -90,12 +89,10 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * </p><p>
      * This property is optional. Default is "".
      */
-    public static final String CONF_ID_POSTFIX =
-            "summa.ingest.marcparser.id.postfix";
+    public static final String CONF_ID_POSTFIX = "summa.ingest.marcparser.id.postfix";
     public static final String DEFAULT_ID_POSTFIX = "";
 
-    public static final String XML_HEADER =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    public static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String MARC_TAG_RECORD = "record";
@@ -137,13 +134,11 @@ public abstract class MARCParser extends ThreadedStreamParser {
         inputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
         base = conf.getString(CONF_BASE, null);
         if (base == null) {
-            throw new ConfigurationException(String.format(
-                    "A base must be specified with key %s", CONF_BASE));
+            throw new ConfigurationException(String.format("A base must be specified with key %s", CONF_BASE));
         }
         id_prefix = conf.getString(CONF_ID_PREFIX, id_prefix);
         id_postfix = conf.getString(CONF_ID_POSTFIX, id_postfix);
-        log.debug(String.format("Created MARC parser with base '%s', "
-                                + "id prefix '%s', id postfix '%s'",
+        log.debug(String.format("Created MARC parser with base '%s', id prefix '%s', id postfix '%s'",
                                 base, id_prefix, id_postfix));
     }
 
@@ -154,21 +149,18 @@ public abstract class MARCParser extends ThreadedStreamParser {
     @Override
     protected void protectedRun(Payload source) throws Exception {
         this.source = source;
-        XMLStreamReader reader = inputFactory.createXMLStreamReader(
-                source.getStream(), "utf-8");
+        XMLStreamReader reader = inputFactory.createXMLStreamReader(source.getStream(), "utf-8");
         // Positioned at startDocument
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
-            throw new ParseException(String.format(
-                    "The first element should be start, it was %s",
-                    XMLUtil.eventID2String(eventType)), 0);
+            throw new ParseException(String.format("The first element should be start, it was %s",
+                                                   XMLUtil.eventID2String(eventType)), 0);
         }
 
         while (running && reader.hasNext()) {
             eventType = reader.next();
             //noinspection DuplicateStringLiteralInspection
-            if (eventType == XMLEvent.START_ELEMENT
-                && MARC_TAG_RECORD.equals(reader.getLocalName())) {
+            if (eventType == XMLEvent.START_ELEMENT && MARC_TAG_RECORD.equals(reader.getLocalName())) {
                 processInRecord(reader);
             }
         }
@@ -182,8 +174,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @throws InterruptedException if the process was interrupted while adding
      *                              to the queue.
      */
-    private void processInRecord(XMLStreamReader reader)
-                               throws XMLStreamException, InterruptedException {
+    private void processInRecord(XMLStreamReader reader) throws XMLStreamException, InterruptedException {
         initializeNewParse();
         StringWriter content = new StringWriter(2000); // Full MARC content
 
@@ -199,8 +190,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     if (MARC_TAG_DATAFIELD.equals(reader.getLocalName())) {
                         content.append(beginTagToString(reader));
                         processDataField(reader, content);
-                    } else if (MARC_TAG_CONTROLFIELD.equals(
-                            reader.getLocalName())) {
+                    } else if (MARC_TAG_CONTROLFIELD.equals(reader.getLocalName())) {
                         processControlField(reader, content);
                     } else if (MARC_TAG_LEADER.equals(reader.getLocalName())) {
                         content.append(beginTagToString(reader));
@@ -210,16 +200,12 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         if (!encounteredUnexpectedStart) {
                             encounteredUnexpectedStart = true;
                             log.warn(String.format(
-                                    "Unexpected start-tag '%s' while parsing "
-                                    + "MARC for %s. This is the first time this"
-                                    + " has been encountered. Further "
-                                    + "encounters will be logged on debug",
+                                    "Unexpected start-tag '%s' while parsing MARC for %s. This is the first time this"
+                                    + " has been encountered. Further encounters will be logged on debug",
                                     reader.getLocalName(), source));
                         } else {
-                            log.debug("Unexpected start-tag '"
-                                      + reader.getLocalName()
-                                      + "' while parsing MARC for "
-                                      + source);
+                            log.debug("Unexpected start-tag '" + reader.getLocalName()
+                                      + "' while parsing MARC for " + source);
                         }
                     }
                     break;
@@ -234,29 +220,25 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         }
                         return;
                     }
-                    log.warn(String.format(
-                            "Unexpected end-tag '%s' while parsing MARC for %s",
-                            reader.getLocalName(), source));
+                    log.warn(String.format("Unexpected end-tag '%s' while parsing MARC for %s",
+                                           reader.getLocalName(), source));
                     break;
                 case XMLEvent.CHARACTERS :
                     if (!isBlank(reader.getText())) {
-                        log.warn(String.format(
-                                "Unexpected text '%s' while parsing MARC in %s",
-                                reader.getText(), source));
+                        log.warn(String.format("Unexpected text '%s' while parsing MARC in %s",
+                                               reader.getText(), source));
                     }
                     // TODO: Test for "foo &lt;bar"
                     content.append(XMLUtil.encode(reader.getText()));
                     break;
                 case XMLEvent.COMMENT:
                     log.trace("Encountered comment");
-                    content.append("<!--").append(reader.getText()).
-                            append("-->");
+                    content.append("<!--").append(reader.getText()).append("-->");
                     break;
                 default:
-                    log.warn(String.format(
-                            "Unexpended event %s while processing %s",
-                            XMLUtil.eventID2String(eventType),
-                            source));
+                    log.warn(String.format("Unexpended event %s while processing %s",
+                                           XMLUtil.eventID2String(eventType),
+                                           source));
             }
         }
         if (!running) {
@@ -285,7 +267,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      *                              to the queue.
      */
     private void processLeader(XMLStreamReader reader, StringWriter content)
-            throws XMLStreamException, InterruptedException {
+        throws XMLStreamException, InterruptedException {
         log.trace("Reached leader start-tag");
         String leaderContent = "";
         while (running && reader.hasNext()) {
@@ -296,8 +278,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     content.append(beginTagToString(reader));
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
-                            "processLeader: Reached unexpected start-tag "
-                            + "<%s> for %s. Expected none",
+                            "processLeader: Reached unexpected start-tag <%s> for %s. Expected none",
                             reader.getLocalName(), source));
                     break;
                 case XMLEvent.END_ELEMENT :
@@ -310,11 +291,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         return;
                     }
                     //noinspection DuplicateStringLiteralInspection
-                    log.warn(String.format(
-                            "processLeader: Reached unexpected end-tag </%s> "
-                            + "for %s. Expected </%s>",
-                            reader.getLocalName(), source,
-                            MARC_TAG_LEADER));
+                    log.warn(String.format("processLeader: Reached unexpected end-tag </%s> for %s. Expected </%s>",
+                                           reader.getLocalName(), source, MARC_TAG_LEADER));
                     break;
                 case XMLEvent.CHARACTERS :
                     // TODO: Test for "foo &lt;bar"
@@ -323,11 +301,9 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     break;
                 default:
                     //noinspection DuplicateStringLiteralInspection
-                    log.warn(String.format(
-                            "processLeader: Unexpended event %s while "
-                            + "processing %s",
-                            XMLUtil.eventID2String(eventType),
-                            source));
+                    log.warn(String.format("processLeader: Unexpended event %s while processing %s",
+                                           XMLUtil.eventID2String(eventType),
+                                           source));
             }
         }
     }
@@ -351,20 +327,16 @@ public abstract class MARCParser extends ThreadedStreamParser {
         String ind1 = null;
         String ind2 = null;
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
-            if (reader.getAttributeLocalName(i).equals(
-                    MARC_TAG_DATAFIELD_ATTRIBUTE_TAG)) {
+            if (reader.getAttributeLocalName(i).equals(MARC_TAG_DATAFIELD_ATTRIBUTE_TAG)) {
                 tag = reader.getAttributeValue(i);
-            } else if (reader.getAttributeLocalName(i).equals(
-                    MARC_TAG_DATAFIELD_ATTRIBUTE_IND1)) {
+            } else if (reader.getAttributeLocalName(i).equals(MARC_TAG_DATAFIELD_ATTRIBUTE_IND1)) {
                 ind1 = reader.getAttributeValue(i);
-            } else if (reader.getAttributeLocalName(i).equals(
-                    MARC_TAG_DATAFIELD_ATTRIBUTE_IND2)) {
+            } else if (reader.getAttributeLocalName(i).equals(MARC_TAG_DATAFIELD_ATTRIBUTE_IND2)) {
                 ind2 = reader.getAttributeValue(i);
             } else {
                 if (log.isTraceEnabled()) {
                     log.trace(String.format(
-                            "processDatafield: Unexpected attribute %s with "
-                            + "value '%s' for tag %s",
+                            "processDatafield: Unexpected attribute %s with value '%s' for tag %s",
                             reader.getAttributeLocalName(i),
                             reader.getAttributeValue(i), MARC_TAG_DATAFIELD));
                 }
@@ -382,10 +354,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     } else {
                         content.append(beginTagToString(reader));
                         log.warn(String.format(
-                                "processDataField: Reached unexpected start-tag"
-                                + " <%s> for %s. Expected %s",
-                                reader.getLocalName(), source,
-                                MARC_TAG_SUBFIELD));
+                                "processDataField: Reached unexpected start-tag <%s> for %s. Expected %s",
+                                reader.getLocalName(), source, MARC_TAG_SUBFIELD));
                     }
                     break;
                 case XMLEvent.END_ELEMENT :
@@ -395,16 +365,13 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         return;
                     }
                     log.warn(String.format(
-                            "processDataField: Reached unexpected end-tag </%s>"
-                            + " for %s. Expected </%s>",
-                            reader.getLocalName(), source,
-                            MARC_TAG_DATAFIELD));
+                            "processDataField: Reached unexpected end-tag </%s> for %s. Expected </%s>",
+                            reader.getLocalName(), source, MARC_TAG_DATAFIELD));
                     break;
                 case XMLEvent.CHARACTERS :
                     if (!isBlank(reader.getText())) {
                         log.warn(String.format(
-                                "processDatafield: Unexpected text '%s' while "
-                                + "parsing MARC for %s",
+                                "processDatafield: Unexpected text '%s' while parsing MARC for %s",
                                 reader.getText(), source));
                     }
                     content.append(XMLUtil.encode(reader.getText()));
@@ -412,17 +379,14 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 default:
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
-                            "processDataField: Unexpended event %s while "
-                            + "processing %s",
-                            XMLUtil.eventID2String(eventType),
-                            source));
+                            "processDataField: Unexpended event %s while processing %s",
+                            XMLUtil.eventID2String(eventType), source));
             }
         }
     }
 
-    protected void processSubField(XMLStreamReader reader, StringWriter content,
-                                   String tag, String ind1, String ind2) throws
-                                                                         XMLStreamException {
+    protected void processSubField(XMLStreamReader reader, StringWriter content, String tag, String ind1,
+                                   String ind2) throws XMLStreamException {
         log.trace("Reached subfield start-tag");
 
         String code = null;
@@ -432,10 +396,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 code = reader.getAttributeValue(i);
             } else {
                 log.warn(String.format(
-                        "processSubfield: Unexpected attribute %s with value '"
-                        + "%s' for tag %s",
-                        reader.getAttributeLocalName(i),
-                        reader.getAttributeValue(i), MARC_TAG_SUBFIELD));
+                        "processSubfield: Unexpected attribute %s with value '%s' for tag %s",
+                        reader.getAttributeLocalName(i), reader.getAttributeValue(i), MARC_TAG_SUBFIELD));
             }
         }
         content.append(beginSubFieldTagToString(reader, tag, ind1, ind2, code));
@@ -449,27 +411,23 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     content.append(beginTagToString(reader));
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
-                            "processSubField: Reached unexpected start-tag "
-                            + "<%s> for %s. Expected none",
+                            "processSubField: Reached unexpected start-tag <%s> for %s. Expected none",
                             reader.getLocalName(), source));
                     break;
                 case XMLEvent.END_ELEMENT :
                     content.append(endTagToString(reader));
                     if (MARC_TAG_SUBFIELD.equals(reader.getLocalName())) {
                         if ("".equals(subfieldcontent) && log.isTraceEnabled()){
-                            log.trace("No subfield content for "
-                                      + source + " in datafield " + tag
-                                      + ", subfield " + code);
+                            log.trace("No subfield content for " + source + " in datafield " + tag + ", subfield "
+                                      + code);
                         }
                         setSubField(tag, ind1, ind2, code, subfieldcontent);
                         return;
                     }
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
-                            "processsubField: Reached unexpected end-tag </%s> "
-                            + "for %s. Expected </%s>",
-                            reader.getLocalName(), source,
-                            MARC_TAG_SUBFIELD));
+                            "processsubField: Reached unexpected end-tag </%s> for %s. Expected </%s>",
+                            reader.getLocalName(), source, MARC_TAG_SUBFIELD));
                     break;
                 case XMLEvent.CHARACTERS :
                     subfieldcontent = reader.getText();
@@ -478,10 +436,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 default:
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
-                            "processSubField: Unexpended event %s while "
-                            + "processing %s",
-                            XMLUtil.eventID2String(eventType),
-                            source));
+                            "processSubField: Unexpended event %s while processing %s",
+                            XMLUtil.eventID2String(eventType), source));
             }
         }
     }
@@ -497,13 +453,10 @@ public abstract class MARCParser extends ThreadedStreamParser {
      *                the method call.
      * @throws XMLStreamException if a parse error occured.
      */
-    protected void processControlField(
-            XMLStreamReader reader, StringWriter content)
-            throws XMLStreamException {
+    protected void processControlField(XMLStreamReader reader, StringWriter content) throws XMLStreamException {
         String tag = null;
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
-            if (MARC_TAG_CONTROLFIELD_ATTRIBUTE_TAG.equals(
-                    reader.getAttributeLocalName(i))) {
+            if (MARC_TAG_CONTROLFIELD_ATTRIBUTE_TAG.equals(reader.getAttributeLocalName(i))) {
                 tag = reader.getAttributeValue(i);
             }
         }
@@ -511,9 +464,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
 
         if (tag == null && !noControlTagEncountered) {
             log.warn(String.format(
-                    "There is not attribute tag for the controlelement with "
-                    + "content '%s'. Futher errors of this kind will be "
-                    + "ignored", fieldContent));
+                    "There is not attribute tag for the controlelement with content '%s'. Futher errors of this kind "
+                    + "will be ignored", fieldContent));
             noControlTagEncountered = true;
         }
 
@@ -559,11 +511,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @param subFieldCode  the code for the subfield.
      * @param subFieldContent the content of the subfield.
      */
-    protected abstract void setSubField(String dataFieldTag,
-                                        String dataFieldInd1,
-                                        String dataFieldInd2,
-                                        String subFieldCode,
-                                        String subFieldContent);
+    protected abstract void setSubField(String dataFieldTag, String dataFieldInd1,String dataFieldInd2,
+                                        String subFieldCode, String subFieldContent);
 
     /**
      * Set a controlfield. Note that this method is optional. The default
@@ -576,17 +525,13 @@ public abstract class MARCParser extends ThreadedStreamParser {
     protected String setControlField(String tag, String content) {
         if (!setControlFieldCalled) {
             log.info(String.format(
-                    "setControlField(%s, '%s') called, although there is no "
-                    + "explicit handler for controlfields. The controlfield is "
-                    + "written back directly. Subsequent calls will not be "
-                    + "logged",
+                    "setControlField(%s, '%s') called, although there is no explicit handler for controlfields. "
+                    + "The controlfield is written back directly. Subsequent calls will not be logged",
                     tag, content));
             setControlFieldCalled = true;
         }
 
-        return String.format(
-                "<controlfield tag=\"%s\">%s</controlfield>\n",
-                tag, content);
+        return String.format("<controlfield tag=\"%s\">%s</controlfield>\n", tag, content);
     }
     private boolean setControlFieldCalled = false;
 
@@ -627,8 +572,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @return the begin-tag as text.
      */
     @SuppressWarnings({"UnusedDeclaration"})
-    protected String beginSubFieldTagToString(XMLStreamReader reader,
-                                              String tag, String ind1,
+    protected String beginSubFieldTagToString(XMLStreamReader reader, String tag, String ind1,
                                               String ind2, String code) {
         return beginTagToString(reader, false);
     }
@@ -651,8 +595,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
             addNamespaceDeclarations(reader, tag);
         }
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
-            addAttribute(tag, reader.getAttributeLocalName(i),
-                         reader.getAttributeValue(i));
+            addAttribute(tag, reader.getAttributeLocalName(i), reader.getAttributeValue(i));
         }
         tag.append(">");
         return tag.toString();
@@ -689,10 +632,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @param localName the SAX-derived attribute local name.
      * @param value the value of the attribute.
      */
-    protected void addAttribute(
-            StringWriter writer, String localName, String value) {
-        writer.append(" ").append(localName).append("=\"").
-                append(XMLUtil.encode(value)).append("\"");
+    protected void addAttribute(StringWriter writer, String localName, String value) {
+        writer.append(" ").append(localName).append("=\"").append(XMLUtil.encode(value)).append("\"");
     }
 
     /**
@@ -717,8 +658,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
 
     @Override
     public String toString() {
-        return "MARCParser(base='" + base + "', idPrefix='" + id_prefix
-               + "', idPostfix='" + id_postfix
+        return "MARCParser(base='" + base + "', idPrefix='" + id_prefix + "', idPostfix='" + id_postfix
                + "' (" + super.toString() + "))";
     }
 }

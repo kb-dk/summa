@@ -166,7 +166,7 @@ public class SolrResponseBuilder implements Configurable {
         final boolean mlt = request.getBoolean(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null) != null;
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(
+            public boolean elementStart(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if (mlt && "lst".equals(current) && "moreLikeThis".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     log.debug("Parsing MoreLikeThis response");
@@ -383,7 +383,7 @@ public class SolrResponseBuilder implements Configurable {
         // We iterate until we find a collation
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 //  <lst name="collation">
                 //    <str name="collationQuery">thomas egense</str>
                 //    <int name="hits">1</int>
@@ -479,7 +479,7 @@ public class SolrResponseBuilder implements Configurable {
         facetResult.setPrefix(searcherID + ".");
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("facet_fields".equals(XMLStepper.getAttribute(xml, "name", null))
                     || "efacet_fields".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     xml.next();
@@ -498,7 +498,7 @@ public class SolrResponseBuilder implements Configurable {
     private void parseFacets(XMLStreamReader xml, final FacetResultExternal facets) throws XMLStreamException {
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if (!"lst".equals(current)) {
                     log.warn("Encountered tag '" + current + "' in facet_fields. Expected 'lst'. Ignoring element");
                     return false;
@@ -519,7 +519,7 @@ public class SolrResponseBuilder implements Configurable {
         XMLStreamReader xml, final FacetResultExternal facets, final String facetName) throws XMLStreamException {
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 final String tagName = XMLStepper.getAttribute(xml, "name", null);
                 if (tagName == null) {
                     log.warn("Encountered tag type '" + current + "' inside facet '" + facetName
@@ -544,7 +544,7 @@ public class SolrResponseBuilder implements Configurable {
         log.trace("parseHeader(...) called");
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("int".equals(current) && "QTime".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     String content = xml.getElementText();
                     try {
@@ -565,7 +565,7 @@ public class SolrResponseBuilder implements Configurable {
         xml.next();
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("doc".equals(current)) {
                     xml.next();
                     parseDoc(xml, response);
@@ -589,7 +589,7 @@ public class SolrResponseBuilder implements Configurable {
             String lastArrName = null; // For <arr name="foo"><str>term1</str><str>term1</str></arr> structures
 
             @Override
-            public boolean tagStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 if ("arr".equals(current)) {
                     lastArrName = XMLStepper.getAttribute(xml, "name", null);
                     return false;

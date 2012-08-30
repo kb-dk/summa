@@ -29,15 +29,19 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XMLStepper {
-    // Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
-    // Leaves the cursor after END_ELEMENT
+    /**
+     * Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
+     * Leaves the cursor after END_ELEMENT.
+     * @param xml the stream to iterate.
+     * @param callback called for each start element.
+     */
     public static void iterateTags(XMLStreamReader xml, Callback callback) throws XMLStreamException {
         List<String> tagStack = new ArrayList<String>(10);
         while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
                 String currentTag = xml.getLocalName();
                 tagStack.add(currentTag);
-                if (!callback.tagStart(xml, tagStack, currentTag)) {
+                if (!callback.elementStart(xml, tagStack, currentTag)) {
                     xml.next();
                 }
                 continue;
@@ -53,7 +57,7 @@ public class XMLStepper {
                         "Encountered end tag '%s' where '%s' from the stack %s were expected",
                         currentTag, tagStack.get(tagStack.size()-1), Strings.join(tagStack, ", ")));
                 }
-                tagStack.remove(tagStack.size()-1);
+                callback.elementEnd(tagStack.remove(tagStack.size()-1));
             } else if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
                 callback.end();
                 return;
@@ -170,7 +174,7 @@ public class XMLStepper {
     public static void skipSubTree(XMLStreamReader xml) throws XMLStreamException {
         iterateTags(xml, new Callback() {
             @Override
-            public boolean tagStart(
+            public boolean elementStart(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 return false; // Ignore everything until end of sub tree
             }
@@ -188,13 +192,20 @@ public class XMLStepper {
          * @param current    the local name of the current tag.
          * @return true if the implementation called {@code xml.next()} one or more times, else false.
          */
-        public abstract boolean tagStart(
+        public abstract boolean elementStart(
             XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException;
+
+        /**
+         * Called for each encountered ELEMENT_END in the part of the XML that is within scope.
+         * @param element the name of the element that ends.
+         */
+        public void elementEnd(String element) { }
 
         /**
          * Called when the last END_ELEMENT is encountered.
          */
         public void end() { }
+
     }
 
     public abstract static class XMLCallback {

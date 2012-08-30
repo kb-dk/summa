@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record>
+  <leader>.....nope 12.....7  45432</leader>
+  <datafield tag="001" ind1="0" ind2="0">
+    <subfield code="a">0040-5671</subfield>
+  </datafield>
+  <datafield tag="856" ind1="0" ind2="0">
+    <subfield code="z">Full text available from MooHouse: 02/01/2005 to present</subfield>
+    <subfield code="u">http://ez.statsbiblioteket.dk:2048/login?url=http://example.com/login.asp?XSID=PLUMBUM</subfield>
+  </datafield>
+  <datafield tag="980" ind1="0" ind2="0">
+    <subfield code="d">02/01/2005</subfield>
+    <subfield code="e">present</subfield>
+    <subfield code="g">theologischeliteraturzeitung</subfield>
+  </datafield>
+</record>
