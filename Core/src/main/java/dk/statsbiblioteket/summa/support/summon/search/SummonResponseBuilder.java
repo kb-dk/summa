@@ -21,6 +21,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -122,22 +123,22 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             throw new IllegalArgumentException("Unable to construct a reader from input for request " + request, e);
         }
 
-        if (!findTagStart(xml, "response")) {
+        if (!XMLStepper.findTagStart(xml, "response")) {
             log.warn("Could not locate start tag 'response', exiting parsing of response for " + request);
             return 0;
         }
-        long searchTime = Long.parseLong(getAttribute(xml, "totalRequestTime", "0"));
-        long hitCount = Long.parseLong(getAttribute(xml, "recordCount", "0"));
+        long searchTime = Long.parseLong(XMLStepper.getAttribute(xml, "totalRequestTime", "0"));
+        long hitCount = Long.parseLong(XMLStepper.getAttribute(xml, "recordCount", "0"));
         String summonQueryString = "N/A";
         int maxRecords = -1;
         List<DocumentResponse.Record> records = null;
         // Seek to queries, facets or documents
         String currentTag;
 //        long recordTime = 0;
-        while ((currentTag = jumpToNextTagStart(xml)) != null) {
+        while ((currentTag = XMLStepper.jumpToNextTagStart(xml)) != null) {
             if ("query".equals(currentTag)) {
-                maxRecords = Integer.parseInt(getAttribute(xml, "pageSize", Integer.toString(maxRecords)));
-                summonQueryString = getAttribute(xml, "queryString", summonQueryString);
+                maxRecords = Integer.parseInt(XMLStepper.getAttribute(xml, "pageSize", Integer.toString(maxRecords)));
+                summonQueryString = XMLStepper.getAttribute(xml, "queryString", summonQueryString);
                 continue;
             }
             if ("rangeFacetFields".equals(currentTag) && facetingEnabled && !rangeWarned) {
@@ -188,13 +189,13 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private RecommendationResponse extractRecommendations(XMLStreamReader xml) throws XMLStreamException {
         long startTime = System.currentTimeMillis();
         final RecommendationResponse response = new RecommendationResponse();
-        iterateElements(xml, "recommendationLists", "recommendationList",
-            new XMLCallback() {
-                @Override
-                public void execute(XMLStreamReader xml) throws XMLStreamException {
-                    extractRecommendationList(xml, response);
-                }
-            });
+        XMLStepper.iterateElements(xml, "recommendationLists", "recommendationList",
+                                   new XMLStepper.XMLCallback() {
+                                       @Override
+                                       public void execute(XMLStreamReader xml) throws XMLStreamException {
+                                           extractRecommendationList(xml, response);
+                                       }
+                                   });
         if (response.isEmpty()) {
             return null;
         }
@@ -204,26 +205,26 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
     private void extractRecommendationList(
         XMLStreamReader xml, RecommendationResponse response) throws XMLStreamException {
-        String type = getAttribute(xml, "type", null);
+        String type = XMLStepper.getAttribute(xml, "type", null);
         if (type == null) {
             throw new IllegalArgumentException("Type required for recommendationList");
         }
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         final RecommendationResponse.RecommendationList recList = response.newList(type);
-        iterateElements(xml, "recommendationList", "recommendation",
-            new XMLCallback() {
-                @Override
-                public void execute(XMLStreamReader xml)
-                                                     throws XMLStreamException {
-                    String title = getAttribute(xml, "title", null);
-                    if (title == null) {
-                        throw new IllegalArgumentException("Title required for recommendationList");
-                    }
-                    String description = getAttribute(xml, "description", "");
-                    String link = getAttribute(xml, "link", "");
-                    recList.addResponse(title, description, link);
-                }
-            });
+        XMLStepper.iterateElements(xml, "recommendationList", "recommendation",
+                                   new XMLStepper.XMLCallback() {
+                                       @Override
+                                       public void execute(XMLStreamReader xml)
+                                           throws XMLStreamException {
+                                           String title = XMLStepper.getAttribute(xml, "title", null);
+                                           if (title == null) {
+                                               throw new IllegalArgumentException("Title required for recommendationList");
+                                           }
+                                           String description = XMLStepper.getAttribute(xml, "description", "");
+                                           String link = XMLStepper.getAttribute(xml, "link", "");
+                                           recList.addResponse(title, description, link);
+                                       }
+                                   });
     }
 
     /**
@@ -249,7 +250,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
         summaFacetResult.setPrefix(searcherID + ".");
-        iterateElements(xml, "facetFields", "facetField", new XMLCallback() {
+        XMLStepper.iterateElements(xml, "facetFields", "facetField", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 extractFacet(xml, summaFacetResult);
@@ -271,18 +272,18 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private void extractFacet(XMLStreamReader xml, final FacetResultExternal summaFacetResult)
         throws XMLStreamException {
          // TODO: Consider fieldname and other attributes?
-        final String facetName = getAttribute(xml, "displayName", null);
-        iterateElements(xml, "facetField", "facetCount", new XMLCallback() {
+        final String facetName = XMLStepper.getAttribute(xml, "displayName", null);
+        XMLStepper.iterateElements(xml, "facetField", "facetCount", new XMLStepper.XMLCallback() {
             @Override
-            public void execute(XMLStreamReader xml)  {
-                String tagName = getAttribute(xml, "value", null);
-                Integer tagCount = Integer.parseInt(getAttribute(xml, "count", "0"));
+            public void execute(XMLStreamReader xml) {
+                String tagName = XMLStepper.getAttribute(xml, "value", null);
+                Integer tagCount = Integer.parseInt(XMLStepper.getAttribute(xml, "count", "0"));
                 // <facetCount value="Newspaper Article" count="27" isApplied="true" isNegated="true"
                 // isFurtherLimiting="false" removeCommand="removeFacetValueFilter(ContentType,Newspaper Article)"
                 // negateCommand="negateFacetValueFilter(ContentType,Newspaper Article)"/>
 
-                boolean isApplied = Boolean.parseBoolean(getAttribute(xml, "isApplied", "false"));
-                boolean isNegated = Boolean.parseBoolean(getAttribute(xml, "isNegated", "false"));
+                boolean isApplied = Boolean.parseBoolean(XMLStepper.getAttribute(xml, "isApplied", "false"));
+                boolean isNegated = Boolean.parseBoolean(XMLStepper.getAttribute(xml, "isNegated", "false"));
                 if (!(isApplied && isNegated)) { // Signifies negative facet value filter
                     summaFacetResult.addTag(facetName, tagName, tagCount);
                 }
@@ -306,8 +307,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records = new ArrayList<DocumentResponse.Record>(50);
-        iterateElements(xml, "documents", "document", new XMLCallback() {
+        XMLStepper.iterateElements(xml, "documents", "document", new XMLStepper.XMLCallback() {
             float lastScore = 0f;
+
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 DocumentResponse.Record record = extractRecord(xml, sortKey, lastScore);
@@ -352,14 +354,14 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private DocumentResponse.Record extractRecord(XMLStreamReader xml, String sortKey, float lastScore)
         throws XMLStreamException {
     // http://api.summon.serialssolutions.com/help/api/search/response/documents
-        String openUrl = getAttribute(xml, "openUrl", null);
+        String openUrl = XMLStepper.getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
             log.warn("Encountered a document without openUrl. Discarding");
             return null;
         }
-        String availibilityToken = getAttribute(xml, "availabilityToken", null);
-        String hasFullText =       getAttribute(xml, "hasFullText", "false");
-        String inHoldings =        getAttribute(xml, "inHoldings", "false");
+        String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
+        String hasFullText =       XMLStepper.getAttribute(xml, "hasFullText", "false");
+        String inHoldings =        XMLStepper.getAttribute(xml, "inHoldings", "false");
 
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
             "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml"));
@@ -370,11 +372,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final String sortField = sortRedirect.containsKey(sortKey) ?
                                  sortRedirect.get(sortKey) : sortKey;
 
-        iterateElements(xml, "document", "field", new XMLCallback() {
+        XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 DocumentResponse.Field field = extractField(xml);
-                if (field!= null) {
+                if (field != null) {
                     if (wanted.contains(field.getName())) {
                         extracted.put(field.getName(), field.getContent());
                         if ("PublicationDate_xml".equals(field.getName())) {
@@ -472,7 +474,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * accessing the xml stream.
      */
     private DocumentResponse.Field extractField(XMLStreamReader xml) throws XMLStreamException {
-        String name = getAttribute(xml, "name", null);
+        String name = XMLStepper.getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
             return null;
@@ -485,13 +487,13 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     <datetime text="20081215" month="12" year="2008" day="15"/>
                   </field>
                  */
-                findTagStart(xml, "datetime");
-                String year = getAttribute(xml, "year", null);
+                XMLStepper.findTagStart(xml, "datetime");
+                String year = XMLStepper.getAttribute(xml, "year", null);
                 if (year == null) {
                     return null;
                 }
-                String month = getAttribute(xml, "month", null);
-                String day = getAttribute(xml, "day", null);
+                String month = XMLStepper.getAttribute(xml, "month", null);
+                String day = XMLStepper.getAttribute(xml, "day", null);
                 return new DocumentResponse.Field(
                     name, year + (month == null ? "" : month + (day == null ? "" : day)), false);
             }
@@ -505,11 +507,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                   </field>
                  */
                 final StringBuffer value = new StringBuffer(50);
-                iterateElements(xml, "field", "contributor", new XMLCallback() {
+                XMLStepper.iterateElements(xml, "field", "contributor", new XMLStepper.XMLCallback() {
                     @Override
                     public void execute(XMLStreamReader xml) throws XMLStreamException {
                         boolean found = false;
-                        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+                        for (int i = 0; i < xml.getAttributeCount(); i++) {
                             if ("fullname".equals(xml.getAttributeLocalName(i))) {
                                 if (value.length() != 0) {
                                     value.append("\n");
@@ -543,7 +545,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
         final StringBuffer value = new StringBuffer(50);
-        iterateElements(xml, "field", "value", new XMLCallback() {
+        XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 value.append(value.length() == 0 ? xml.getElementText() : "\n" + xml.getElementText());
