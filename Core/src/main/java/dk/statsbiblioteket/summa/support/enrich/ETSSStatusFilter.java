@@ -25,7 +25,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -33,15 +32,17 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Highly specific filter that takes Records with MARC21Slim XML, performs an external lookup for whether a password
  * is required to access the article described by the MARC and adjusts the XML to reflect this requirement.
  * </p><p>
- * The values added are true|false|unresolved as fields 856p. unresolved is only possible if the external password
- * service could not be queried and {@link #CONF_HALT_ON_EXTERNAL_ERROR} is false.
+ * Field 856*p will be updated if a password is required.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -58,12 +59,14 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final boolean DEFAULT_HALT_ON_EXTERNAL_ERROR = false;
 
     /**
-     * The REST call to perform. In the call, $ID will be replaced by the ID of the MARC record, $PROVIDER will be
-     * replaced by the normalised provider from the MARC record.
+     * The REST call to perform. In the call, $ID_AND_PROVIDER will be replaced by the ID of the MARC record merged with
+     * the provider, both normalised.
      * </p><p>
      * Mandatory. Example:
-     * "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER".
-     */
+     * "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER".
+     * @see {@link #normaliseID(String)}.
+     * @see {@link #normaliseProvider(String)}.
+     *      */
     public static final String CONF_REST = "etss.service.rest";
 
     /**
@@ -173,6 +176,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         return parseResponse(response);
     }
 
+    // TODO: Where to store the generated provider-ID?
+    // http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_0040-5671_theologischeliteraturzeitung
     private String getETSSURI(String recordID, MARCObject.DataField dataField) {
         MARCObject.SubField subField = dataField.getFirstSubField("g");
         if (subField == null) {
@@ -180,12 +185,35 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 "ETSSStatusFilter.getETTSURI", "No content provider (subfield g)", Logging.LogLevel.WARN, recordID);
             return null;
         }
-        String provider = normalise(subField.getContent());
-        return rest.replace("$ID", recordID).replace("$PROVIDER", provider);
+        return rest.replace("$ID_AND_PROVIDER", normalise(recordID, normaliseProvider(subField.getContent())));
     }
 
-    private String normalise(String content) {
-        return content;  // TODO: Normalise the provider (ask Hans & Mads about the standard for this)
+    String normalise(String id, String provider) {
+        return normaliseID(id) + "_" + normaliseProvider(provider);
+    }
+
+    // ssib002555195 -> 0025-55195
+    private Pattern ID_PATTERN = Pattern.compile("(....)([0-9]{4})([0-9]{4})");
+    String normaliseID(String id) {
+        Matcher matcher = ID_PATTERN.matcher(id);
+        if (!matcher.matches()) {
+            Logging.logProcess("ETSSStatusfilter.normaliseID",
+                               "Expected an ID with the pattern " + ID_PATTERN.pattern() + ", but got '" + id
+                               + "'. Unable to normalise ID", Logging.LogLevel.WARN, id);
+            return id;
+        }
+        return matcher.group(2) + "-" + matcher.group(3);
+    }
+
+    // Retrodigitized Journals -> retrodigitizedjournals
+    String normaliseProvider(String content) {
+        StringWriter sw = new StringWriter(content.length());
+        content = content.toLowerCase(new Locale("en"));
+        for (int i = 0 ; i < content.length() ; i++) {
+            char c = content.charAt(i);
+            sw.append(c >= '0' && c <= 'z' ? Character.toString(c) : "");
+        }
+        return sw.toString();
     }
 
     /*

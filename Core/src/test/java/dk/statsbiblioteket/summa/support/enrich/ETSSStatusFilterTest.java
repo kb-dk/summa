@@ -62,13 +62,40 @@ public class ETSSStatusFilterTest extends TestCase {
         assertStatus("common/marc/single_marc.xml", false);
     }
 
+    public void testIDNormaliser() {
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST,
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER"
+        ));
+        String CORRECT = "etss12345678";
+        String CORRECT_N = "1234-5678";
+
+        String INCORRECT1 = "ets12345678";
+        String INCORRECT2 = "etss1234a678";
+        assertEquals("The proper ID " + CORRECT + " should be parsed ", CORRECT_N, statusFilter.normaliseID(CORRECT));
+        assertEquals("The faulty ID " + INCORRECT1 + " should be returned verbatim ",
+                     INCORRECT1, statusFilter.normaliseID(INCORRECT1));
+        assertEquals("The faulty ID " + INCORRECT2 + " should be returned verbatim ",
+                     INCORRECT2, statusFilter.normaliseID(INCORRECT2));
+    }
+
+    public void testProviderNormaliser() {
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST,
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER"
+        ));
+        assertEquals("foobar", statusFilter.normaliseProvider("Foo Bar"));
+        assertEquals("foobar", statusFilter.normaliseProvider("Foo Bæar"));
+        assertEquals("foobar87", statusFilter.normaliseProvider("Foo Bæar87"));
+    }
+
     public void assertStatus(String input, boolean hasPassword) throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
             new Payload(new FileInputStream(Resolver.getFile(input)))
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER"
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
         ));
         statusFilter.setSource(feeder);
         assertTrue("There should be at least one Payload", statusFilter.hasNext());
