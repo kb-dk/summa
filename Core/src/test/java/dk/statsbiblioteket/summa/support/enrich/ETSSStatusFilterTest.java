@@ -28,6 +28,7 @@ import junit.framework.TestSuite;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -60,6 +61,22 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testNonExisting() throws IOException, XMLStreamException, ParseException {
         assertStatus("common/marc/single_marc.xml", false);
+    }
+
+    public void testIDAddition() throws IOException, XMLStreamException, ParseException {
+        String EXPECTED = "0040-5671_theologischeliteraturzeitung";
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+            new Payload(new FileInputStream(Resolver.getFile("common/marc/existing_marc.xml")))
+        ));
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST,
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+        ));
+        statusFilter.setSource(feeder);
+        Payload processed = statusFilter.next();
+        MARCObject marc = MARCObjectFactory.generate(RecordUtil.getStream(processed)).get(0);
+        assertEquals("The generated ID should be correct", EXPECTED, marc.getFirstSubField("856", "w").getContent());
+        statusFilter.close(true);
     }
 
     public void testIDNormaliser() {
