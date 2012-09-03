@@ -86,6 +86,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     public static final String PASSWORD_SUBFIELD = "k";
     public static final String PASSWORD_CONTENT = "password required";
+    public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
 
     protected final int connectionTimeout;
     protected final int readTimeout;
@@ -123,6 +124,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             try {
                 if (needsPassword(idSub.getContent(), providers.get(i))) {
                     urls.get(i).getSubFields().add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
+                    String providerAndID = getProviderAndId(idSub.getContent(), providers.get(i));
+                    if (providerAndID != null) {
+                        urls.get(i).getSubFields().add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerAndID));
+                    }
                 }
             } catch (Exception e) {
                 log.warn("Unable to request password requirement for " + payload, e);
@@ -185,7 +190,15 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 "ETSSStatusFilter.getETTSURI", "No content provider (subfield g)", Logging.LogLevel.WARN, recordID);
             return null;
         }
-        return rest.replace("$ID_AND_PROVIDER", normalise(recordID, normaliseProvider(subField.getContent())));
+        return rest.replace("$ID_AND_PROVIDER", normalise(recordID, subField.getContent()));
+    }
+
+    private String getProviderAndId(String recordID, MARCObject.DataField dataField) {
+        MARCObject.SubField subField = dataField.getFirstSubField("g");
+        if (subField == null) {
+            return null;
+        }
+        return normalise(recordID, subField.getContent());
     }
 
     String normalise(String id, String provider) {
