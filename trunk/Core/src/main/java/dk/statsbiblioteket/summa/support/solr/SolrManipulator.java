@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadBatcher;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -236,20 +237,45 @@ public class SolrManipulator implements IndexManipulator {
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
             wr.write(command);
             wr.flush();
+            conn.getOutputStream().flush(); // wr apparently does not perform an inner flush
             wr.close();
             int code = conn.getResponseCode();
-            if (code != 200) {
+            if (code == 400) { // Bad Request: Solr did not like the input - non-fatal
                 String message = String.format(
-                    "Unable to send '%s' to Solr at %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
-                    designation, UPDATE, code, trim(command, 100),
-                    getResponse(conn));
+                    "Error 400 (Bad Request): Solr did not accept the document '%s' at %s. "
+                    + "Trimmed request:\n%s\nResponse:\n%s",
+                    designation, UPDATE, trim(command, 100), getResponse(conn));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
+                throw new IOException(message);
+            } else if (code != 200) {
+                String message = String.format(
+                    "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s. Error code %d. "
+                    + "Trimmed request:\n%s\nResponse:\n%s",
+                    designation, UPDATE, code, trim(command, 100), getResponse(conn));
+                Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
+                log.fatal(message);
+                new DeferredSystemExit(1);
                 throw new IOException(message);
             }
         } catch (ConnectException e) {
             String snippet = command.length() > 40 ? command.substring(0, 40) : command;
-            throw (IOException)new IOException(
-                "ConnectException for '" + UPDATE + "' with '" + snippet + "'").initCause(e);
+            String message = String.format(
+                "Fatal error, JVM will be shut down: ConnectException while attempting '%s' with '%s' to %s",
+                UPDATE, snippet, designation);
+            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation, e);
+            log.fatal(message, e);
+            new DeferredSystemExit(1);
+            throw new IOException(message, e);
+        } catch (Exception e) {
+            String snippet = command.length() > 40 ? command.substring(0, 40) : command;
+            String message = String.format(
+                "Fatal error, JVM will be shut down: Non-explicitely handled Exception while attempting '%s' with"
+                + " '%s' to %s",
+                UPDATE, snippet, designation);
+            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation, e);
+            log.fatal(message, e);
+            new DeferredSystemExit(1);
+            throw new IOException(message, e);
         } finally {
             conn.disconnect();
         }
