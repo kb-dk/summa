@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * Highly specific filter that takes Records with MARC21Slim XML, performs an external lookup for whether a password
  * is required to access the article described by the MARC and adjusts the XML to reflect this requirement.
  * </p><p>
- * Field 856*p will be updated if a password is required.
+ * Fields 856*p will be updated with the generated IDs.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -64,7 +64,6 @@ public class ETSSStatusFilter extends MARCObjectFilter {
      * </p><p>
      * Mandatory. Example:
      * "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER".
-     * @see {@link #normaliseID(String)}.
      * @see {@link #normaliseProvider(String)}.
      *      */
     public static final String CONF_REST = "etss.service.rest";
@@ -105,10 +104,11 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     @Override
     protected MARCObject adjust(Payload payload, MARCObject marc) {
         long checkTime = -System.currentTimeMillis();
-        MARCObject.SubField idSub = marc.getFirstSubField("001", "a");
-        if (idSub == null) {
+        String recordID = getID(marc);
+        if (recordID == null) {
             Logging.logProcess(
-                "ETSSStatusFilter", "No ID-field (001a) defined for MARC record. No adjustment performed",
+                "ETSSStatusFilter",
+                "Unable to extract ID from fields 022*a, 022*l, 022*x or 245*a. No adjustment performed",
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
@@ -125,13 +125,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         int needs = 0;
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
-                if (needsPassword(idSub.getContent(), providers.get(i))) {
+                if (needsPassword(recordID, providers.get(i))) {
                     urls.get(i).getSubFields().add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
-                    String providerAndID = getProviderAndId(idSub.getContent(), providers.get(i));
                     needs++;
-                    if (providerAndID != null) {
-                        urls.get(i).getSubFields().add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerAndID));
-                    }
+                }
+                String providerPlusID = getProviderPlusId(recordID, providers.get(i));
+                if (providerPlusID != null) {
+                    urls.get(i).getSubFields().add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
                 }
             } catch (Exception e) {
                 log.warn("Unable to request password requirement for " + payload, e);
@@ -153,7 +153,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (Logging.processLog.isDebugEnabled()) {
             Logging.logProcess("ETSSStatusFilter",
                                "Checked password requirement for " + urls.size() + " providers for record "
-                               + idSub.getContent() + " in " + checkTime + " ms. " + needs
+                               + recordID + " in " + checkTime + " ms. " + needs
                                + " providers explicitly needs password",
                                Logging.LogLevel.DEBUG, payload);
         }
@@ -196,42 +196,38 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     // TODO: Where to store the generated provider-ID?
     // http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_0040-5671_theologischeliteraturzeitung
     private String getETSSURI(String recordID, MARCObject.DataField dataField) {
-        MARCObject.SubField subField = dataField.getFirstSubField("g");
-        if (subField == null) {
+        String fullID = getProviderPlusId(recordID, dataField);
+        if (fullID == null) {
             Logging.logProcess(
-                "ETSSStatusFilter.getETTSURI", "No content provider (subfield g)", Logging.LogLevel.WARN, recordID);
+                "ETSSStatusFilter.getETTSURI", "Unable to resolve id from dataField)", Logging.LogLevel.WARN, recordID);
             return null;
         }
-        return rest.replace("$ID_AND_PROVIDER", normalise(recordID, subField.getContent()));
+        return rest.replace("$ID_AND_PROVIDER", fullID);
     }
 
-    private String getProviderAndId(String recordID, MARCObject.DataField dataField) {
+    private String getProviderPlusId(String id, MARCObject.DataField dataField) {
         MARCObject.SubField subField = dataField.getFirstSubField("g");
         if (subField == null) {
             return null;
         }
-        return normalise(recordID, subField.getContent());
+        return id + "_" + normaliseProvider(subField.getContent());
     }
 
-    String normalise(String id, String provider) {
-        return normaliseID(id) + "_" + normaliseProvider(provider);
-    }
-
-    // ssib002555195 -> 0025-55195
-    private Pattern ID_PATTERN = Pattern.compile("(....)([0-9]{4})([0-9]{4})");
-    String normaliseID(String id) {
-        Matcher matcher = ID_PATTERN.matcher(id);
-        if (!matcher.matches()) {
-            Logging.logProcess("ETSSStatusfilter.normaliseID",
-                               "Expected an ID with the pattern " + ID_PATTERN.pattern() + ", but got '" + id
-                               + "'. Unable to normalise ID", Logging.LogLevel.WARN, id);
-            return id;
+    // Priority: 022*a, 022*l, 022*x, 245*a, null
+    private String getID(MARCObject marc) {
+        final String[] SUBS = new String[]{"a", "l", "x"};
+        for (String sub: SUBS) {
+            MARCObject.SubField subField = marc.getFirstSubField("022", sub);
+            if (subField != null) {
+                return subField.getContent();
+            }
         }
-        return matcher.group(2) + "-" + matcher.group(3);
+        MARCObject.SubField subField = marc.getFirstSubField("245", "a");
+        return subField == null ? null : flatten(subField.getContent());
     }
 
     // Retrodigitized Journals -> retrodigitizedjournals
-    String normaliseProvider(String content) {
+    private String flatten(String content) {
         StringWriter sw = new StringWriter(content.length());
         content = content.toLowerCase(new Locale("en"));
         for (int i = 0 ; i < content.length() ; i++) {
@@ -239,6 +235,11 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             sw.append(c >= '0' && c <= 'z' ? Character.toString(c) : "");
         }
         return sw.toString();
+    }
+
+    // Retrodigitized Journals -> retrodigitizedjournals
+    String normaliseProvider(String content) {
+        return flatten(content);
     }
 
     /*

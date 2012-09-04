@@ -56,11 +56,19 @@ public class ETSSStatusFilterTest extends TestCase {
     }
 
     public void testExisting() throws IOException, XMLStreamException, ParseException {
-        assertStatus("common/marc/existing_marc.xml", true);
+        String[] existing = new String[] {
+            "common/marc/existing_022a.xml",
+            "common/marc/existing_022x.xml",
+            "common/marc/existing_022l.xml"
+        };
+        for (String e: existing) {
+            assertStatus(e, true);
+        }
     }
 
     public void testNonExisting() throws IOException, XMLStreamException, ParseException {
         assertStatus("common/marc/single_marc.xml", false);
+        assertStatus("common/marc/existing_245a.xml", false); // Due to collapse of '-' in 245*a
     }
 
     public void testIDAddition() throws IOException, XMLStreamException, ParseException {
@@ -79,21 +87,20 @@ public class ETSSStatusFilterTest extends TestCase {
         statusFilter.close(true);
     }
 
-    public void testIDNormaliser() {
+    public void testNormaliseID() throws IOException, XMLStreamException, ParseException {
+        String EXPECTED = "sometitle_theologischeliteraturzeitung";
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+            new Payload(new FileInputStream(Resolver.getFile("common/marc/normalisetest_245a.xml")))
+        ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER"
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
         ));
-        String CORRECT = "etss12345678";
-        String CORRECT_N = "1234-5678";
-
-        String INCORRECT1 = "ets12345678";
-        String INCORRECT2 = "etss1234a678";
-        assertEquals("The proper ID " + CORRECT + " should be parsed ", CORRECT_N, statusFilter.normaliseID(CORRECT));
-        assertEquals("The faulty ID " + INCORRECT1 + " should be returned verbatim ",
-                     INCORRECT1, statusFilter.normaliseID(INCORRECT1));
-        assertEquals("The faulty ID " + INCORRECT2 + " should be returned verbatim ",
-                     INCORRECT2, statusFilter.normaliseID(INCORRECT2));
+        statusFilter.setSource(feeder);
+        Payload processed = statusFilter.next();
+        MARCObject marc = MARCObjectFactory.generate(RecordUtil.getStream(processed)).get(0);
+        assertEquals("The generated ID should be correct", EXPECTED, marc.getFirstSubField("856", "w").getContent());
+        statusFilter.close(true);
     }
 
     public void testProviderNormaliser() {
@@ -106,9 +113,10 @@ public class ETSSStatusFilterTest extends TestCase {
         assertEquals("foobar87", statusFilter.normaliseProvider("Foo Bæar87"));
     }
 
-    public void assertStatus(String input, boolean hasPassword) throws IOException, XMLStreamException, ParseException {
+    public void assertStatus(String marcFile, boolean hasPassword)
+        throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new FileInputStream(Resolver.getFile(input)))
+            new Payload(new FileInputStream(Resolver.getFile(marcFile)))
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
@@ -119,14 +127,18 @@ public class ETSSStatusFilterTest extends TestCase {
         Payload processed = statusFilter.next();
         assertFalse("There should be no more Payloads", statusFilter.hasNext());
         MARCObject marc = MARCObjectFactory.generate(RecordUtil.getStream(processed)).get(0);
+        assertNotNull("The ID should be present in field 856*k from input " + marcFile,
+                      marc.getFirstSubField("856", "w"));
         if (hasPassword) {
-            assertEquals("MARC object '" + input + "' should be marked as requiring password",
+            assertNotNull("MARC object '" + marcFile + "' should contain a password marker",
+                         marc.getFirstSubField("856", ETSSStatusFilter.PASSWORD_SUBFIELD));
+            assertEquals("MARC object '" + marcFile + "' should be marked as requiring password",
                          ETSSStatusFilter.PASSWORD_CONTENT,
                          marc.getFirstSubField("856", ETSSStatusFilter.PASSWORD_SUBFIELD).getContent());
         } else if (marc.getFirstSubField("856", ETSSStatusFilter.PASSWORD_SUBFIELD) != null
                    && ETSSStatusFilter.PASSWORD_CONTENT.equals(
             marc.getFirstSubField("856", ETSSStatusFilter.PASSWORD_SUBFIELD).getContent())) {
-            fail("MARC object '" + input + "' should not be marked as requiring password but was");
+            fail("MARC object '" + marcFile + "' should not be marked as requiring password but was");
         }
         statusFilter.close(true);
     }
