@@ -94,6 +94,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final String rest;
     public ETSSStatusFilter(Configuration conf) {
         super(conf);
+        feedback = false;
         rest = conf.getString(CONF_REST);
         connectionTimeout = conf.getInt(CONF_ETSS_CONNECTION_TIMEOUT, DEFAULT_ETSS_CONNECTION_TIMEOUT);
         readTimeout = conf.getInt(CONF_ETSS_READ_TIMEOUT, DEFAULT_ETSS_READ_TIMEOUT);
@@ -103,6 +104,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     @Override
     protected MARCObject adjust(Payload payload, MARCObject marc) {
+        long checkTime = -System.currentTimeMillis();
         MARCObject.SubField idSub = marc.getFirstSubField("001", "a");
         if (idSub == null) {
             Logging.logProcess(
@@ -120,11 +122,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
+        int needs = 0;
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
                 if (needsPassword(idSub.getContent(), providers.get(i))) {
                     urls.get(i).getSubFields().add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
                     String providerAndID = getProviderAndId(idSub.getContent(), providers.get(i));
+                    needs++;
                     if (providerAndID != null) {
                         urls.get(i).getSubFields().add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerAndID));
                     }
@@ -144,6 +148,14 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                     throw new RuntimeException(message, e);
                 }
             }
+        }
+        checkTime += System.currentTimeMillis();
+        if (Logging.processLog.isDebugEnabled()) {
+            Logging.logProcess("ETSSStatusFilter",
+                               "Checked password requirement for " + urls.size() + " providers for record "
+                               + idSub.getContent() + " in " + checkTime + " ms. " + needs
+                               + " providers explicitly needs password",
+                               Logging.LogLevel.DEBUG, payload);
         }
         return marc;
     }
