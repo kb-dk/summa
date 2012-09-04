@@ -46,6 +46,7 @@ public class ContentToStreamFilter extends ObjectFilterImpl {
 
     public ContentToStreamFilter(Configuration conf) {
         super(conf);
+        feedback = false;
     }
 
     @Override
