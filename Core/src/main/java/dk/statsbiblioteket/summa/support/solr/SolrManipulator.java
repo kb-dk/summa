@@ -27,11 +27,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.*;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,9 +46,9 @@ import java.util.List;
  * JavaDoc for PayloadBatcher for queueing options.
  * </p><p>
  * Streaming could be examined, but transmission errors would leave the overall state as unknown with regard to
- * the amount of documents passed to Solr. Speed-wise  this is vulnerable to errors and has little gain over batching as documents
- * are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states that it is
- * not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
+ * the amount of documents passed to Solr. Furthermore this is vulnerable to errors and has little gain over batching
+ * as documents are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states
+ * hat it is not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -99,6 +101,8 @@ public class SolrManipulator implements IndexManipulator {
 
     private final PayloadBatcher batcher;
     private int updatesSinceLastCommit = 0;
+    // Not thread safe, but as we need to process updates sequentially, this is not an issue
+    private HttpClient http = new DefaultHttpClient();
 
     // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {
@@ -220,52 +224,32 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private void send(String designation, String command) throws IOException {
-        URL url = new URL(UPDATE);
-        HttpURLConnection conn;
+        HttpPost post = new HttpPost(UPDATE);
+        post.addHeader("Content-Type", "application/xml");
+        post.addHeader("Accept", "application/xml");
+        post.addHeader("Accept-Charset", "utf-8");
+        post.setEntity(new StringEntity(command));
+        HttpResponse httpResponse;
         try {
-            conn = (HttpURLConnection)url.openConnection();
-        } catch (IOException e) {
-            throw new IOException("Unable to establish connection to '" + UPDATE + "'", e);
-        }
-        try {
-            conn.setUseCaches(false);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestProperty("Content-Type", "application/xml");
-            conn.setRequestProperty("Accept", "application/xml");
-            conn.setRequestProperty("Accept-Charset", "utf-8");
-            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            wr.write(command);
-            wr.flush();
-            conn.getOutputStream().flush(); // wr apparently does not perform an inner flush
-            wr.close();
-            int code = conn.getResponseCode();
-            if (code == 400) { // Bad Request: Solr did not like the input - non-fatal
+            httpResponse = http.execute(post);
+            int code = httpResponse.getStatusLine().getStatusCode();
+            if (code == 400) { // Bad Request: Solr did not like the input
                 String message = String.format(
                     "Error 400 (Bad Request): Solr did not accept the document '%s' at %s. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, UPDATE, trim(command, 100), getResponse(conn));
+                    designation, UPDATE, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
                 throw new IOException(message);
             } else if (code != 200) {
                 String message = String.format(
                     "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s. Error code %d. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, UPDATE, code, trim(command, 100), getResponse(conn));
+                    designation, UPDATE, code, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
                 log.fatal(message);
                 new DeferredSystemExit(1);
                 throw new IOException(message);
             }
-        } catch (ConnectException e) {
-            String snippet = command.length() > 40 ? command.substring(0, 40) : command;
-            String message = String.format(
-                "Fatal error, JVM will be shut down: ConnectException while attempting '%s' with '%s' to %s",
-                UPDATE, snippet, designation);
-            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation, e);
-            log.fatal(message, e);
-            new DeferredSystemExit(1);
-            throw new IOException(message, e);
         } catch (Exception e) {
             String snippet = command.length() > 40 ? command.substring(0, 40) : command;
             String message = String.format(
@@ -277,7 +261,7 @@ public class SolrManipulator implements IndexManipulator {
             new DeferredSystemExit(1);
             throw new IOException(message, e);
         } finally {
-            conn.disconnect();
+            post.reset();
         }
     }
 
@@ -285,10 +269,8 @@ public class SolrManipulator implements IndexManipulator {
         return text.length() <= maxLength ? text : text.substring(0, maxLength);
     }
 
-    private String getResponse(HttpURLConnection conn) throws IOException {
-        return conn.getResponseCode() == 200 ?
-               Strings.flush(new InputStreamReader(conn.getInputStream())) :
-               Strings.flush(new InputStreamReader(conn.getErrorStream()));
+    private String getResponse(HttpResponse response) throws IOException {
+        return Strings.flush(response.getEntity().getContent());
     }
 
     @Override
