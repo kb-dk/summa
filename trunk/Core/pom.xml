@@ -128,10 +128,6 @@
             <artifactId>fastutil</artifactId>
         </dependency>
         <!-- commons-httpclient is deprecated -->
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
