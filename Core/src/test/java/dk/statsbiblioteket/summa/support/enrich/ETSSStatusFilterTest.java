@@ -88,9 +88,17 @@ public class ETSSStatusFilterTest extends TestCase {
     }
 
     public void testNormaliseID() throws IOException, XMLStreamException, ParseException {
-        String EXPECTED = "sometitle_theologischeliteraturzeitung";
+        testNormaliseID("common/marc/normalisetest_245a.xml", "sometitle_theologischeliteraturzeitung");
+    }
+
+    public void testExtractID() throws IOException, XMLStreamException, ParseException {
+        testNormaliseID("common/marc/existing_022a.xml", "0040-5671_theologischeliteraturzeitung");
+    }
+
+    public void testNormaliseID(String marcFile, String expected)
+        throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new FileInputStream(Resolver.getFile("common/marc/normalisetest_245a.xml")))
+            new Payload(new FileInputStream(Resolver.getFile(marcFile)))
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
@@ -99,7 +107,7 @@ public class ETSSStatusFilterTest extends TestCase {
         statusFilter.setSource(feeder);
         Payload processed = statusFilter.next();
         MARCObject marc = MARCObjectFactory.generate(RecordUtil.getStream(processed)).get(0);
-        assertEquals("The generated ID should be correct", EXPECTED, marc.getFirstSubField("856", "w").getContent());
+        assertEquals("The generated ID should be correct", expected, marc.getFirstSubField("856", "w").getContent());
         statusFilter.close(true);
     }
 
