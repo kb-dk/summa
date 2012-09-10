@@ -228,7 +228,7 @@ public class SolrManipulator implements IndexManipulator {
         post.addHeader("Content-Type", "application/xml");
         post.addHeader("Accept", "application/xml");
         post.addHeader("Accept-Charset", "utf-8");
-        post.setEntity(new StringEntity(command));
+        post.setEntity(new StringEntity(command, "utf-8"));
         HttpResponse httpResponse;
         try {
             httpResponse = http.execute(post);
