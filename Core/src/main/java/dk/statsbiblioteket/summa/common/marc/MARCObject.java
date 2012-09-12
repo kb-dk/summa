@@ -21,7 +21,6 @@ import org.apache.commons.logging.Log;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +34,8 @@ import java.util.List;
         author = "te")
 public class MARCObject {
     private static Log log = LogFactory.getLog(MARCObject.class);
+
+    public static final String MARC21_NAMESPACE = "http://www.loc.gov/MARC21/slim";
 
     private static XMLOutputFactory factory = null;
 
@@ -73,6 +74,7 @@ public class MARCObject {
      */
     public void toXML(XMLStreamWriter xml) throws XMLStreamException {
         xml.writeStartElement(MARC.TAG_RECORD);
+        xml.writeNamespace("", MARC21_NAMESPACE);
         attribute(xml, MARC.ATTRIBUTE_ID, id);
         attribute(xml, MARC.TAG_RECORD_ATTRIBUTE_TYPE, type);
         if (leader != null) {
