@@ -55,7 +55,17 @@ public class ETSSStatusFilterTest extends TestCase {
         return new TestSuite(ETSSStatusFilterTest.class);
     }
 
-    public void testExisting() throws IOException, XMLStreamException, ParseException {
+    public void testExistingFromID() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "0040-5671_theologischeliteraturzeitung",
+            "1902-3545_stateanduniversitylibraryejournalholdings"
+        };
+        for (String e: existing) {
+            assertStatusFromID(e, true);
+        }
+    }
+
+    public void testExistingFromMarc() throws IOException, XMLStreamException, ParseException {
         String[] existing = new String[] {
             "common/marc/existing_022a.xml",
             "common/marc/existing_022x.xml",
@@ -119,6 +129,15 @@ public class ETSSStatusFilterTest extends TestCase {
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bar"));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bæar"));
         assertEquals("foobar87", statusFilter.normaliseProvider("Foo Bæar87"));
+    }
+
+    private void assertStatusFromID(String id, boolean hasPassword) throws IOException {
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST,
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+        ));
+        assertEquals("The password status for " + id + " should be correct",
+                     hasPassword, statusFilter.needsPassword(id));
     }
 
     public void assertStatus(String marcFile, boolean hasPassword)
