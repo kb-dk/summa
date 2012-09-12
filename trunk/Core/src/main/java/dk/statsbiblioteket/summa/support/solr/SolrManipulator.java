@@ -223,7 +223,7 @@ public class SolrManipulator implements IndexManipulator {
         return orderChanged;
     }
 
-    private void send(String designation, String command) throws IOException {
+    private synchronized void send(String designation, String command) throws IOException {
         HttpPost post = new HttpPost(UPDATE);
         post.addHeader("Content-Type", "application/xml");
         post.addHeader("Accept", "application/xml");

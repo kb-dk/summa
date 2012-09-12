@@ -163,6 +163,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     private HttpClient http = new DefaultHttpClient();
     private boolean needsPassword(String recordID, MARCObject.DataField dataField) throws IOException {
         String uri = getETSSURI(recordID, dataField);
+        return needsPassword(uri, recordID);
+    }
+
+    private boolean needsPassword(String uri, String recordID) throws IOException {
         if (uri == null) {
             return false;
         }
@@ -191,6 +195,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             throw new IOException("Unable to connect to remote ETSS service with URI '" + uri + "'", e);
         }
         return parseResponse(response);
+    }
+
+    boolean needsPassword(String recordAndProviderID) throws IOException {
+        return needsPassword(rest.replace("$ID_AND_PROVIDER", recordAndProviderID), recordAndProviderID);
     }
 
     // TODO: Where to store the generated provider-ID?
