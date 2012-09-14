@@ -159,6 +159,38 @@ public class SolrManipulatorTest extends TestCase {
         searcher.close();
     }
 
+    // At one point in time, many sub sequent deletes depleted the pool of available ingoing ports
+    // If the HTTPPost in SolrManipulator is not re-used, this unit test should trigger said depletion
+    public void testDeleteHammering() throws Exception {
+        final int DELETES = 50000;
+        testBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+        );
+        searcher.search(request, responses);
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     2, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        ObjectFilter data = getSizeDefinedProvider(DELETES, true);
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(data);
+        while (indexer.hasNext()) {
+            indexer.next();
+        }
+        indexer.close(true);
+
+        responses.clear();
+        searcher.search(request, responses);
+        assertTrue("There should be a response after document delete", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits after delete. Response was\n" + responses.toXML(),
+                     0, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        searcher.close();
+    }
+
     public void testClear() throws Exception {
         testBasicIngest();
         SearchNode searcher = getSearcher();
@@ -195,8 +227,25 @@ public class SolrManipulatorTest extends TestCase {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
-                "doc" + i, "dummy", Resolver.getUTF8Content(
-                "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                "doc" + i, "dummy",
+                Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+            payload.getRecord().setDeleted(deleted);
+            samples.add(payload);
+        }
+        return new PayloadFeederHelper(samples);
+    }
+
+    private ObjectFilter getSizeDefinedProvider(int sampleCount, boolean deleted) throws IOException {
+        List<Payload> samples = new ArrayList<Payload>(sampleCount);
+        for (int i = 1 ; i <= sampleCount ; i++) {
+            Payload payload = new Payload(new Record(
+                "doc" + i, "dummy",
+                ("<doc>\n"
+                 + "    <field name=\"recordID\">doc" + i + "</field>\n"
+                 + "    <field name=\"recordBase\">dummy</field>\n"
+                 + "    <field name=\"title\">Document " + i + "</field>\n"
+                 + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
+                 + "</doc>").getBytes("utf-8")));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }

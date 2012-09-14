@@ -96,19 +96,21 @@ public class SolrManipulator implements IndexManipulator {
     protected final String host;
     protected final String restCall;
     protected final String FIELD_ID;
-    private final String UPDATE;
+    private final String updateCommand;
     private final boolean flushOnDelete;
 
     private final PayloadBatcher batcher;
     private int updatesSinceLastCommit = 0;
+    private int deletesSinceLastCommit = 0;
     // Not thread safe, but as we need to process updates sequentially, this is not an issue
     private HttpClient http = new DefaultHttpClient();
+    private HttpPost post;
 
     // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {
         host = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
-        UPDATE = "http://" + host + restCall + UPDATE_COMMAND;
+        updateCommand = "http://" + host + restCall + UPDATE_COMMAND;
         FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         flushOnDelete = conf.getBoolean(CONF_FLUSH_ON_DELETE, DEFAULT_FLUSH_ON_DELETE);
         batcher = new PayloadBatcher(conf) {
@@ -119,7 +121,11 @@ public class SolrManipulator implements IndexManipulator {
                 send(payloads);
             }
         };
-        log.info("Created SolrManipulator(" + UPDATE + ")");
+        post = new HttpPost(updateCommand);
+        post.addHeader("Content-Type", "application/xml");
+        post.addHeader("Accept", "application/xml");
+        post.addHeader("Accept-Charset", "utf-8");
+        log.info("Created SolrManipulator(" + updateCommand + ")");
     }
 
     @Override
@@ -145,6 +151,7 @@ public class SolrManipulator implements IndexManipulator {
             }
             String command = "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>";
             send(command, command);
+            deletesSinceLastCommit++;
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         }
@@ -195,8 +202,11 @@ public class SolrManipulator implements IndexManipulator {
         orderChanged  = false;
         log.debug("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
         send(null, "<commit/>");
-        log.info("Committed " + updatesSinceLastCommit + " updates to Solr");
+        log.info("Committed " + updatesSinceLastCommit + " updates ("
+                 + (updatesSinceLastCommit - deletesSinceLastCommit)
+                 + " adds, " + deletesSinceLastCommit + " deletes) to Solr");
         updatesSinceLastCommit = 0;
+        deletesSinceLastCommit = 0;
     }
 
     @Override
@@ -224,10 +234,6 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private synchronized void send(String designation, String command) throws IOException {
-        HttpPost post = new HttpPost(UPDATE);
-        post.addHeader("Content-Type", "application/xml");
-        post.addHeader("Accept", "application/xml");
-        post.addHeader("Accept-Charset", "utf-8");
         post.setEntity(new StringEntity(command, "utf-8"));
         HttpResponse httpResponse;
         try {
@@ -237,14 +243,14 @@ public class SolrManipulator implements IndexManipulator {
                 String message = String.format(
                     "Error 400 (Bad Request): Solr did not accept the document '%s' at %s. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, UPDATE, trim(command, 100), getResponse(httpResponse));
+                    designation, updateCommand, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
                 throw new IOException(message);
             } else if (code != 200) {
                 String message = String.format(
                     "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s. Error code %d. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, UPDATE, code, trim(command, 100), getResponse(httpResponse));
+                    designation, updateCommand, code, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
                 log.fatal(message);
                 new DeferredSystemExit(1);
@@ -255,7 +261,7 @@ public class SolrManipulator implements IndexManipulator {
             String message = String.format(
                 "Fatal error, JVM will be shut down: Non-explicitely handled Exception while attempting '%s' with"
                 + " '%s' to %s",
-                UPDATE, snippet, designation);
+                updateCommand, snippet, designation);
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation, e);
             log.fatal(message, e);
             new DeferredSystemExit(1);

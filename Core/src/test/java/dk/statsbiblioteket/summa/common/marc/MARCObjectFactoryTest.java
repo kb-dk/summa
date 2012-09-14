@@ -65,6 +65,7 @@ public class MARCObjectFactoryTest extends TestCase {
         assertEquals("The number of fields should match", 10, marc.getDataFields().size());
         assertEquals("The content of 240a should be as expected",
                      "Melange", marc.getFirstDataField("240").getFirstSubField("a").getContent());
+        System.out.println(marc.toXML());
     }
 
     public void test2Marc() throws IOException, XMLStreamException, ParseException {

@@ -22,14 +22,14 @@
 
 
     <logger name="process">
-        <level value="debug" />
+        <level value="INFO" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
 
 
     <root>
-        <level value="DEBUG" />
+        <level value="INFO" />
         <appender-ref ref="CONSOLE" />
     </root>
 
