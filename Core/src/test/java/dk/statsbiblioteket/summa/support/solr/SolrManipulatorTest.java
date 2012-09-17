@@ -167,6 +167,7 @@ public class SolrManipulatorTest extends TestCase {
     // Note: The result must be inspected manually
     public void testLog() {
         log.fatal("Logging on fatal");
+        log.error("Logging on error");
         log.warn("Logging on warn");
         log.info("Logging on info");
         log.debug("Logging on debug");
