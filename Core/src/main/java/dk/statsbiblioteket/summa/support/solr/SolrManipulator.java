@@ -101,7 +101,9 @@ public class SolrManipulator implements IndexManipulator {
 
     private final PayloadBatcher batcher;
     private int updatesSinceLastCommit = 0;
+    private int updates = 0;
     private int deletesSinceLastCommit = 0;
+    private int deletes = 0;
     // Not thread safe, but as we need to process updates sequentially, this is not an issue
     private HttpClient http = new DefaultHttpClient();
     private HttpPost post;
@@ -144,6 +146,7 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public boolean update(Payload payload) throws IOException {
         updatesSinceLastCommit++;
+        updates++;
         if (payload.getRecord().isDeleted()) {
             orderChanged = true;
             if (flushOnDelete) {
@@ -152,6 +155,7 @@ public class SolrManipulator implements IndexManipulator {
             String command = "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>";
             send(command, command);
             deletesSinceLastCommit++;
+            deletes++;
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         }
@@ -218,7 +222,7 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public synchronized void close() throws IOException {
-        log.info("Closing down SolrManipulator");
+        log.info("Closing down " + this);
         batcher.close();
         commit();
     }
@@ -248,9 +252,9 @@ public class SolrManipulator implements IndexManipulator {
                 throw new IOException(message);
             } else if (code != 200) {
                 String message = String.format(
-                    "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s. Error code %d. "
+                    "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, updateCommand, code, trim(command, 100), getResponse(httpResponse));
+                    designation, updateCommand, this, code, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
                 log.fatal(message);
                 new DeferredSystemExit(1);
@@ -260,8 +264,8 @@ public class SolrManipulator implements IndexManipulator {
             String snippet = command.length() > 40 ? command.substring(0, 40) : command;
             String message = String.format(
                 "Fatal error, JVM will be shut down: Non-explicitely handled Exception while attempting '%s' with"
-                + " '%s' to %s",
-                updateCommand, snippet, designation);
+                + " '%s' to %s from %s",
+                updateCommand, snippet, designation, this);
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation, e);
             log.fatal(message, e);
             new DeferredSystemExit(1);
@@ -281,6 +285,7 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public String toString() {
-        return "SolrManipulator(" + host + restCall + ")";
+        return "SolrManipulator(" + host + restCall + "). Processed " + updates + " updates including " + deletes
+               + " deletes";
     }
 }

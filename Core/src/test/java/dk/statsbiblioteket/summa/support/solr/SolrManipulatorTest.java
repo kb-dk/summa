@@ -16,8 +16,11 @@ package dk.statsbiblioteket.summa.support.solr;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
@@ -36,10 +39,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -159,10 +164,19 @@ public class SolrManipulatorTest extends TestCase {
         searcher.close();
     }
 
+    // Note: The result must be inspected manually
+    public void testLog() {
+        log.fatal("Logging on fatal");
+        log.warn("Logging on warn");
+        log.info("Logging on info");
+        log.debug("Logging on debug");
+        log.trace("Logging on trace");
+    }
+
     // At one point in time, many sub sequent deletes depleted the pool of available ingoing ports
     // If the HTTPPost in SolrManipulator is not re-used, this unit test should trigger said depletion
     public void testDeleteHammering() throws Exception {
-        final int DELETES = 50000;
+        final int DELETES = 500000;
         testBasicIngest();
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
@@ -235,21 +249,50 @@ public class SolrManipulatorTest extends TestCase {
         return new PayloadFeederHelper(samples);
     }
 
-    private ObjectFilter getSizeDefinedProvider(int sampleCount, boolean deleted) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(sampleCount);
-        for (int i = 1 ; i <= sampleCount ; i++) {
-            Payload payload = new Payload(new Record(
-                "doc" + i, "dummy",
-                ("<doc>\n"
-                 + "    <field name=\"recordID\">doc" + i + "</field>\n"
-                 + "    <field name=\"recordBase\">dummy</field>\n"
-                 + "    <field name=\"title\">Document " + i + "</field>\n"
-                 + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
-                 + "</doc>").getBytes("utf-8")));
-            payload.getRecord().setDeleted(deleted);
-            samples.add(payload);
-        }
-        return new PayloadFeederHelper(samples);
+    private ObjectFilter getSizeDefinedProvider(final int sampleCount, final boolean deleted) throws IOException {
+        final AtomicInteger count = new AtomicInteger(0);
+        return new ObjectFilter() {
+            @Override
+            public boolean hasNext() {
+                return count.get() < sampleCount;
+            }
+
+            @Override
+            public void setSource(Filter filter) { }
+
+            @Override
+            public boolean pump() throws IOException {
+                if (hasNext()) {
+                    next();
+                }
+                return hasNext();
+            }
+
+            @Override
+            public void close(boolean success) { }
+
+            @Override
+            public Payload next() {
+                int i = count.getAndIncrement() + 1;
+                try {
+                    Payload p = new Payload(new Record(
+                        "doc" + i, "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc" + i + "</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">Document " + i + "</field>\n"
+                         + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
+                         + "</doc>").getBytes("utf-8")));
+                    p.getRecord().setDeleted(deleted);
+                    return p;
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException("UTF-8 not supported", e);
+                }
+            }
+
+            @Override
+            public void remove() { }
+        };
     }
 
     private IndexController getIndexer() throws IOException {
