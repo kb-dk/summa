@@ -65,15 +65,13 @@ public class ProgressTracker {
     private File progressFile;
 
 
-    public ProgressTracker (File progressFile,
-                            long batchSize, long graceTime) {
+    public ProgressTracker (File progressFile, long batchSize, long graceTime) {
         this.batchSize = batchSize;
         this.graceTime = graceTime;
         this.progressFile = progressFile;
 
         log.debug(String.format(
-                "Created ProgressTracker with batchSize(%d), graceTime(%d),"
-                + " and progressFile(%s)",
+                "Created ProgressTracker with batchSize(%d), graceTime(%d), and progressFile(%s)",
                 batchSize, graceTime, progressFile));
     }
 
@@ -115,17 +113,13 @@ public class ProgressTracker {
 
         if (log.isDebugEnabled()) {
             log.debug(String.format(
-                "Storing progress in '%s' (%d records has been extracted so "
-                + "far, last timestamp: %s)", progressFile, numUpdates-1,
-                String.format(ISO_TIME, lastExternalUpdate)));
+                "Storing progress in '%s' (%d records has been extracted so far, last timestamp: %s)",
+                progressFile, numUpdates-1, String.format(ISO_TIME, lastExternalUpdate)));
         }
         try {
-            Files.saveString(
-                    String.format(TIMESTAMP_FORMAT,
-                                  lastExternalUpdate), progressFile);
+            Files.saveString(String.format(TIMESTAMP_FORMAT, lastExternalUpdate), progressFile);
         } catch (IOException e) {
-            log.error("close(true): Unable to store progress in file '"
-                      + progressFile + "': " + e.getMessage(), e);
+            log.error("close(true): Unable to store progress in file '" + progressFile + "': " + e.getMessage(), e);
 
         }
         numUpdatesLastFlush = numUpdates;
@@ -135,32 +129,25 @@ public class ProgressTracker {
      * Read the last modification time in from the progress file
      */
     public void loadProgress () {
-        log.debug("Attempting to get previous progress stored in file "
-                  + progressFile);
+        log.debug("Attempting to get previous progress stored in file " + progressFile);
 
-        if (progressFile.exists() && progressFile.isFile() &&
-            progressFile.canRead()) {
+        if (progressFile.exists() && progressFile.isFile() && progressFile.canRead()) {
             log.trace("getStartTime has persistence file");
             try {
-                long startTime = getTimestamp(progressFile,
-                                              Files.loadString(progressFile));
+                long startTime = getTimestamp(progressFile, Files.loadString(progressFile));
                 if (log.isDebugEnabled()) {
                     try {
                         log.debug(String.format(
-                                "Extracted timestamp "
-                                + ISO_TIME
-                                + " from '%2$s'", startTime, progressFile));
+                                "Extracted timestamp " + ISO_TIME + " from '%2$s'", startTime, progressFile));
                     } catch (Exception e) {
-                        log.warn("Could not output properly formatted timestamp"
-                                 + " for " + startTime + " ms");
+                        log.warn("Could not output properly formatted timestamp for " + startTime + " ms");
                     }
                 }
                 lastExternalUpdate = startTime;
                 lastInternalUpdate = System.currentTimeMillis();
             } catch (IOException e) {
                 //noinspection DuplicateStringLiteralInspection
-                log.error("getStartTime: Unable to open existing file '"
-                          + progressFile + "'. Returning 0");
+                log.error("getStartTime: Unable to open existing file '" + progressFile + "'. Returning 0");
             }
         } else {
             log.warn("Unable to read progress file " + progressFile);
@@ -181,8 +168,7 @@ public class ProgressTracker {
         Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
         if (!matcher.matches() || matcher.groupCount() != 1) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("getTimestamp: Could not locate timestamp in "
-                      + "file '" + progressFile + "' containing '"
+            log.error("getTimestamp: Could not locate timestamp in file '" + progressFile + "' containing '"
                       + xml + "'. Returning 0");
             return 0;
         }

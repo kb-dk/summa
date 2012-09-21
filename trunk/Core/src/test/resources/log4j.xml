@@ -26,6 +26,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.storage.api.filter.ProgressTracker">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
 
 
     <root>
