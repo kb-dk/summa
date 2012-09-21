@@ -75,9 +75,7 @@ public class RecordReaderTest extends TestCase {
     }
 
     public static Storage createStorage() throws Exception {
-        Configuration conf = Configuration.newMemoryBased(
-                                             DatabaseStorage.CONF_LOCATION,
-                                             db.getAbsolutePath());
+        Configuration conf = Configuration.newMemoryBased(DatabaseStorage.CONF_LOCATION, db.getAbsolutePath());
 
         return StorageFactory.createStorage(conf);
     }
@@ -85,8 +83,7 @@ public class RecordReaderTest extends TestCase {
     public void testTimestampFormatting() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         Assert.assertEquals("The timestamp should be properly formatted",
-                     expected,
-                     String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
+                     expected, String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
     }
 
     public void waitForHasNext(RecordReader r, long timeout) throws Exception{
@@ -198,6 +195,56 @@ public class RecordReaderTest extends TestCase {
         assertEquals(orig3, rec);
         r.close(true);
         sto.close();
+    }
+
+    public void testUpdateDefault() throws Exception {
+        testUpdate(Configuration.newMemoryBased());
+    }
+
+    public void testUpdateCustomProgress() throws Exception {
+        testUpdate(Configuration.newMemoryBased(
+            RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml"
+        ));
+    }
+
+    public void testUpdate(Configuration readerConf) throws Exception {
+        Storage sto = createStorage();
+
+        try {
+            Record orig1 = new Record("test1", "base", "Hello".getBytes());
+            Record orig2 = new Record("test2", "base", "Hello".getBytes());
+            Record orig3 = new Record("test3", "base", "Hello".getBytes());
+
+            sto.flushAll(Arrays.asList(orig1, orig2));
+            {
+                RecordReader reader = new RecordReader(readerConf);
+                waitForHasNext(reader, timeout);
+                Payload p = reader.next();
+                Record rec = p.getRecord();
+                assertEquals(orig1, rec);
+
+                p = reader.next();
+                rec = p.getRecord();
+                assertEquals(orig2, rec);
+
+                assertFalse("There should be no more Records after 2 initial", reader.hasNext());
+                reader.close(true);
+            }
+
+            sto.flush(orig3);
+            {
+                RecordReader reader = new RecordReader(readerConf);
+                waitForHasNext(reader, timeout);
+                Payload p = reader.next();
+                Record rec = p.getRecord();
+                assertEquals(orig3, rec);
+
+                assertFalse("There should be no more Records after 1 update", reader.hasNext());
+                reader.close(true);
+            }
+        } finally {
+            sto.close();
+        }
     }
 
     public void testDelete() throws Exception {
