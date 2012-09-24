@@ -17,6 +17,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -359,6 +361,70 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("The number of facets should be correct", 2, facets.size()); // 2 because of recordBase
         assertEquals("The returned facet should be correct",
                      "SubjectTerms, recordBase", Strings.join(facets, ", "));
+    }
+
+    public void testFacetSortingCount() throws RemoteException {
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        conf.set(SummonSearchNode.CONF_SOLR_FACETS, "SubjectTerms");
+        assertFacetOrder(conf, false);
+    }
+
+    // Summon does not support index ordering of facets so we must cheat by over-requesting and post-processing
+    public void testFacetSortingAlpha() throws RemoteException {
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        conf.set(SummonSearchNode.CONF_SOLR_FACETS, "SubjectTerms(ALPHA)");
+        assertFacetOrder(conf, true);
+    }
+
+    private void assertFacetOrder(Configuration summonConf, boolean alpha) throws RemoteException {
+        log.debug("Creating SummonSearchNode");
+        SummonSearchNode summon = new SummonSearchNode(summonConf);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        List<String> tags = getTags(responses, "SubjectTerms");
+        List<String> tagsAlpha = new ArrayList<String>(tags);
+        Collections.sort(tagsAlpha);
+        if (alpha) {
+            ExtraAsserts.assertEquals(
+                "The order should be alphanumeric\nExp: "
+                + Strings.join(tagsAlpha, " ") + "\nAct: " + Strings.join(tags, " "),
+                tagsAlpha, tags);
+        } else {
+            boolean misMatch = false;
+            for (int i = 0 ; i < tags.size() ; i++) {
+                if (!tags.get(i).equals(tagsAlpha.get(i))) {
+                    misMatch = true;
+                    break;
+                }
+            }
+            if (!misMatch) {
+                fail("The order should not be alphanumeric but it was");
+            }
+        }
+        log.debug("Received facets with alpha=" + alpha + ": " + Strings.join(tags, ", "));
+    }
+
+    private List<String> getTags(ResponseCollection responses, String facet) {
+        List<String> result = new ArrayList<String>();
+        for (Response response: responses) {
+            if (response instanceof FacetResultExternal) {
+                FacetResultExternal facetResult = (FacetResultExternal)response;
+                List<FacetResultImpl.Tag<String>> tags = facetResult.getMap().get(facet);
+                for (FacetResultImpl.Tag<String> tag: tags) {
+                    result.add(tag.getKey() + "(" + tag.getCount() + ")");
+                }
+                return result;
+            }
+        }
+        fail("Unable to locate a FacetResponse in the ResponseCollection");
+        return null;
     }
 
     public void testNegativeFacets() throws RemoteException {
