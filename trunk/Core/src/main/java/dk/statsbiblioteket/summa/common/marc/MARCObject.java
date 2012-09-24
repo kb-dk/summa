@@ -52,7 +52,7 @@ public class MARCObject {
 
     private synchronized XMLOutputFactory getFactory() {
         if (factory == null) {
-            factory = XMLOutputFactory.newFactory();
+            factory = XMLOutputFactory.newInstance();
         }
         return factory;
     }
