@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -225,6 +226,67 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testFacetedSearchSort() throws Exception {
+        int DOC_COUNT= 100;
+        String[][] EXPECTED_ALPHA = new String[][] {
+            {"01 quart", Integer.toString(DOC_COUNT/4)},
+            {"02 half", Integer.toString(DOC_COUNT/2)},
+            {"03 all", Integer.toString(DOC_COUNT)},
+            {"solr", Integer.toString(DOC_COUNT)}
+        };
+        String[][] EXPECTED_COUNT = new String[][] {
+            {"03 all", Integer.toString(DOC_COUNT)},
+            {"02 half", Integer.toString(DOC_COUNT/2)},
+            {"01 quart", Integer.toString(DOC_COUNT/4)},
+            {"solr", Integer.toString(DOC_COUNT)}
+        };
+
+        ingestFacets(DOC_COUNT);
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(ALPHA)"
+            ));
+            try {
+                assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
+            } finally {
+                searcher.close();
+            }
+        }
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(COUNT)"
+            ));
+            try {
+                assertFacetOrder("COUNT", searcher, EXPECTED_COUNT);
+            } finally {
+                searcher.close();
+            }
+        }
+    }
+
+    private void assertFacetOrder(String designation, SearchNode searcher, String[][] expected) throws RemoteException {
+        Pattern TAGS = Pattern.compile("<tag name=\"([^\"]+)\" addedobjects=\"([^\"]+)\"[^>]*>", Pattern.DOTALL);
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "*:*",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true
+        ), responses);
+
+        int count = 0;
+        Matcher matcher = TAGS.matcher(responses.toXML());
+        while (matcher.find()) {
+            if (count >= expected.length) {
+                fail("Did not expect pattern match #" + count + ". Tag designation '" + matcher.group(1)
+                     + "', count '" + matcher.group(2) + "'");
+            }
+            assertEquals(designation + ": The tag designation should match at position " + count,
+                         expected[count][0], matcher.group(1));
+            assertEquals(designation + ": The tag count should match at position " + count,
+                         expected[count][1], matcher.group(2));
+            count++;
+        }
+    }
+
     private void testFacetedSearch(SearchNode searcher) throws Exception {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
@@ -355,6 +417,20 @@ public class SolrSearchNodeTest extends TestCase {
         log.debug("Finished basic ingest");
     }
 
+    private void ingestFacets(int docCount) throws IOException {
+        ObjectFilter data = getFacetSamples(docCount);
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(data);
+        for (int i = 0 ; i < docCount ; i++) {
+            assertTrue("Check " + (i) + "/" + docCount + ". There should be a next for the indexer",
+                       indexer.hasNext());
+            indexer.next();
+        }
+        assertFalse("After " + docCount + " nexts, there should be no more Payloads", indexer.hasNext());
+        indexer.close(true);
+        log.debug("Finished basic ingest");
+    }
+
     final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
@@ -364,6 +440,29 @@ public class SolrSearchNodeTest extends TestCase {
                 "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
+        }
+        return new PayloadFeederHelper(samples);
+    }
+
+    private ObjectFilter getFacetSamples(int docCount) throws IOException {
+        List<Payload> samples = new ArrayList<Payload>(docCount);
+        StringBuilder sb = new StringBuilder(1000);
+        for (int i = 0 ; i < docCount ; i++) {
+            sb.setLength(0);
+            sb.append("<doc>\n");
+            sb.append("<field name=\"recordID\">doc").append(i).append("</field>\n");
+            sb.append("<field name=\"recordBase\">dummy</field>\n");
+            sb.append("<field name=\"title\">Document ").append(i).append("</field>\n");
+            sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
+            sb.append("<field name=\"lma_long\">03_all</field>\n");
+            if ((i & 0x01) == 0) {
+                sb.append("<field name=\"lma_long\">02_half</field>\n");
+            }
+            if ((i & 0x03) == 0) {
+                sb.append("<field name=\"lma_long\">01_quart</field>\n");
+            }
+            sb.append("</doc>\n");
+            samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes("utf-8"))));
         }
         return new PayloadFeederHelper(samples);
     }
