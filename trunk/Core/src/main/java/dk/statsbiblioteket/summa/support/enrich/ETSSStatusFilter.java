@@ -33,6 +33,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -122,12 +123,16 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
-        int needs = 0;
+        List<String> needs = new ArrayList<String>(providers.size());
+        List<String> noneeds = new ArrayList<String>(providers.size());
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
-                if (needsPassword(recordID, providers.get(i))) {
+                String uri = getETSSURI(recordID, providers.get(i));
+                if (needsPassword(uri, recordID)) {
                     urls.get(i).getSubFields().add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
-                    needs++;
+                    needs.add(uri);
+                } else {
+                    noneeds.add(uri);
                 }
                 String providerPlusID = getProviderPlusId(recordID, providers.get(i));
                 if (providerPlusID != null) {
@@ -153,8 +158,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (Logging.processLog.isDebugEnabled()) {
             Logging.logProcess("ETSSStatusFilter",
                                "Checked password requirement for " + urls.size() + " providers for record "
-                               + recordID + " in " + checkTime + " ms. " + needs
-                               + " providers explicitly needs password",
+                               + recordID + " in " + checkTime + " ms. " + needs.size()
+                               + " providers explicitly needs password (" + Strings.join(needs, ", ") + "). "
+                               + noneeds + " providers might not need passwords (" + Strings.join(noneeds, ", ") + ")",
                                Logging.LogLevel.DEBUG, payload);
         }
         return marc;
