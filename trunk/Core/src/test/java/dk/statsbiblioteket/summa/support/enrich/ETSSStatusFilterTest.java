@@ -129,6 +129,7 @@ public class ETSSStatusFilterTest extends TestCase {
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bar"));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bæar"));
         assertEquals("foobar87", statusFilter.normaliseProvider("Foo Bæar87"));
+        assertEquals("annlasejatr", statusFilter.normaliseProvider("annl`ase=jat_r"));
     }
 
     private void assertStatusFromID(String id, boolean hasPassword) throws IOException {

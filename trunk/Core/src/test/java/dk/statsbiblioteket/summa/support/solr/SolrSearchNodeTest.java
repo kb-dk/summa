@@ -226,7 +226,7 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
-    public void testFacetedSearchSort() throws Exception {
+    public void testFacetedSearchSummaDefinedSort() throws Exception {
         int DOC_COUNT= 100;
         String[][] EXPECTED_ALPHA = new String[][] {
             {"01 quart", Integer.toString(DOC_COUNT/4)},
