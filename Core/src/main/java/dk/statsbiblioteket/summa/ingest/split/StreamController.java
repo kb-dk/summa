@@ -27,9 +27,8 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
- * Retrieves payloads from a given source and processes the streams from the
- * payloads with a Configuration-specified StreamParser. The StreamParser
- * splits the given streams into Records, wrapped in new Payloads.
+ * Retrieves payloads from a given source and processes the streams from the payloads with a Configuration-specified
+ * StreamParser. The StreamParser splits the given streams into Records, wrapped in new Payloads.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -58,20 +57,17 @@ public class StreamController implements ObjectFilter {
      */
     public StreamController(Configuration conf) {
         Class<? extends StreamParser> parserClass =
-                Configuration.getClass(CONF_PARSER, StreamParser.class,
-                                       getDefaultStreamParserClass(), conf);
+                Configuration.getClass(CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
         log.info("Creating StreamParser '" + parserClass.getName() + "'");
         parser = Configuration.create(parserClass, conf);
     }
 
     /**
-     * If {@link #payload} is not already assigned, this method tries to
-     * generate the next payload, based on data from the source. If payload
-     * is already assigned, this method does nothing.
+     * If {@link #payload} is not already assigned, this method tries to generate the next payload, based on data from
+     * the source. If payload is already assigned, this method does nothing.
      * </p><p>
-     * Newly created payloads will have a reference to the stream and the
-     * meta-info from the source, will have a newly created Record and will
-     * have no Document assigned.
+     * Newly created payloads will have a reference to the stream and the meta-info from the source, will have a newly
+     * created Record and will have no Document assigned.
      */
     private void makePayload() {
         log.trace("makePayload() called");
@@ -96,22 +92,18 @@ public class StreamController implements ObjectFilter {
                         log.trace("makePayload(): parser.hasNext() == false");
                     }
                 } catch (Exception e) {
-                    log.warn("Exception requesting payload from parser, "
-                             + "skipping to next stream payload", e);
+                    log.warn("Exception requesting payload from parser, skipping to next stream payload", e);
                     parser.stop();
                 }
 
                 if (source.hasNext()) {
-                    log.trace("makePayload(): Source hasNext, "
-                              + "calling source.next()");
+                    log.trace("makePayload(): Source hasNext, calling source.next()");
                     Payload streamPayload = source.next();
                     if (streamPayload == null) {
                         log.warn(String.format(
-                               "Got null Payload from source %s after hasNext()"
-                               + " == true", source));
+                               "Got null Payload from source %s after hasNext() == true", source));
                     }
-                    log.debug("makePayload: Opening source stream payload "
-                              + streamPayload);
+                    log.debug("makePayload: Opening source stream payload " + streamPayload);
                     parser.open(streamPayload);
                 } else {
                     log.debug("makePayload: No more stream payloads available");
@@ -120,8 +112,7 @@ public class StreamController implements ObjectFilter {
             }
         } finally {
             if (log.isTraceEnabled()) {
-                log.trace("Requested payload from parser in "
-                          + (System.nanoTime() - startTime) + " ns");
+                log.trace("Requested payload from parser in " + (System.nanoTime() - startTime) + " ns");
             }
         }
     }
@@ -148,8 +139,8 @@ public class StreamController implements ObjectFilter {
         payload = null;
         if (log.isTraceEnabled()) {
             try {
-                log.trace("next() produced " + newPayload + " with content\n"
-                          + newPayload.getRecord().getContentAsUTF8());
+                log.trace(
+                    "next() produced " + newPayload + " with content\n" + newPayload.getRecord().getContentAsUTF8());
             } catch (NullPointerException e) {
                 log.warn("NPE while dumping content of " + newPayload, e);
             }
@@ -174,8 +165,7 @@ public class StreamController implements ObjectFilter {
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
-        Logging.logProcess("StreamController",
-                           "Calling close for Payload as part of pump()",
+        Logging.logProcess("StreamController", "Calling close for Payload as part of pump()",
                            Logging.LogLevel.TRACE, payload);
         next.close();
         return true;

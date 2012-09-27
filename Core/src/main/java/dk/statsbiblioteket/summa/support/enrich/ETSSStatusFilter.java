@@ -240,7 +240,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         content = content.toLowerCase(new Locale("en"));
         for (int i = 0 ; i < content.length() ; i++) {
             char c = content.charAt(i);
-            sw.append(c >= '0' && c <= 'z' ? Character.toString(c) : "");
+            sw.append((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ? Character.toString(c) : "");
         }
         return sw.toString();
     }
