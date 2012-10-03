@@ -160,7 +160,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                                "Checked password requirement for " + urls.size() + " providers for record "
                                + recordID + " in " + checkTime + " ms. " + needs.size()
                                + " providers explicitly needs password (" + Strings.join(needs, ", ") + "). "
-                               + noneeds + " providers might not need passwords (" + Strings.join(noneeds, ", ") + ")",
+                               + noneeds.size()
+                               + " providers might not need passwords (" + Strings.join(noneeds, ", ") + ")",
                                Logging.LogLevel.DEBUG, payload);
         }
         return marc;
