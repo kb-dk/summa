@@ -13,8 +13,9 @@ import java.security.PrivateKey;
 import java.util.*;
 
 /**
- * Constructs {@link CollectorPool}s based on {@link org.apache.lucene.search.exposed.facet.request.FacetRequest}s. As the
- * construction of a pool is costly, pools are kept in a LRU-cache.
+ * Constructs {@link CollectorPool}s based on
+ * {@link org.apache.lucene.search.exposed.facet.request.FacetRequest}s.
+ * As the construction of a pool is costly, pools are kept in a LRU-cache.
  * </p><p>
  * The factory connects to the {@link ExposedCache} and the cache is
  * automatically updated (aka cleared) when the index is reloaded and IndexCache
@@ -44,14 +45,14 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
    * freshCollectors and filledCollectors so that maxSize is never reached.
    * </p><p>
    * A new CollectorPool is constructed every time the group in the
-   * {@link org.apache.lucene.search.exposed.facet.request.FacetRequest} is modified. A new collector is constructed when
-   * a facet request is made and all current collectors for the given pool
-   * are active. 
+   * {@link org.apache.lucene.search.exposed.facet.request.FacetRequest} is
+   * modified. A new collector is constructed when a facet request is made and
+   * all current collectors for the given pool are active.
    * @param maxSize       the maximum number of CollectorPools to keep cached.
    * @param filledCollectors the maximum number of fresh collectors in each
    *                      pool.
    * @param freshCollectors the maximum number of fresh collectors in each pool.
-   * @see {@link CollectorPool(FacetMap, int, int)}.
+   * see {@link CollectorPool}.
    */
   public CollectorPoolFactory(
       final int maxSize, int filledCollectors, int freshCollectors) {

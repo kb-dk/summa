@@ -1,10 +1,8 @@
 package org.apache.lucene.search.exposed.poc;
 
-import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedFieldComparatorSource;
 import org.apache.lucene.search.exposed.ExposedIOFactory;
@@ -20,7 +18,6 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
-import java.util.Random;
 
 public class ExposedPOC {
   private static final double MAX_HITS = 20;
@@ -126,7 +123,7 @@ public class ExposedPOC {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     org.apache.lucene.queryparser.classic.QueryParser qp =
         new org.apache.lucene.queryparser.classic.QueryParser(
-            Version.LUCENE_40, defaultField, new MockAnalyzer(new Random()));
+            Version.LUCENE_40, defaultField, new WhitespaceAnalyzer(Version.LUCENE_40));
 
     boolean first = true;
     while (true) {

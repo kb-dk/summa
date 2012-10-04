@@ -19,7 +19,7 @@
  */
 package org.apache.lucene.search.exposed;
 
-import org.apache.lucene.analysis.MockAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
@@ -30,7 +30,6 @@ import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
 
 /**
  * We need to use fixed Gap to get support for ordinals so we provide a factory
@@ -63,7 +62,7 @@ public class ExposedIOFactory {
     Directory dir = FSDirectory.open(location);
     IndexWriter writer  = new IndexWriter(
         dir, new IndexWriterConfig(Version.LUCENE_40,
-            new MockAnalyzer(new Random())));
+            new WhitespaceAnalyzer(Version.LUCENE_40)));
 
     writer.getConfig().setRAMBufferSizeMB(16.0);
 

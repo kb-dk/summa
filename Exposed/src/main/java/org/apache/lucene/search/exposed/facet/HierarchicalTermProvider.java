@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
  * "A/B/C" and "D/E" has no previous match at any level).
  * </p><p>
  * The augmentation is used when doing hierarchical faceting. The memory
- * overhead is {@code 2 * log2(maxdepht+1) bits}. Examples:
- * 10 million tags with a maximum depth of 7 takes up 7 MB of heap.
- * 50 million tags with a maximum depth of 30 takes up 60 MB of heap
- * @see <a href="http://sbdevel.wordpress.com/2010/10/05/fast-hierarchical-faceting/">Fast, light, n-level hierarchical faceting</a>.
+ * overhead is {@code 2 * log2(maxdepht+1) bits}. Examples:<br/>
+ * 10 million tags with a maximum depth of 7 takes up 7 MB of heap.<br/>
+ * 50 million tags with a maximum depth of 30 takes up 60 MB of heap<br/>
+ * @see <a href="http://sbdevel.wordpress.com/2010/10/05/fast-hierarchical-faceting/">Fast, light, n-level hierarchical faceting</a>
  */
 // TODO: Consider optimizing the cases where log2(maxlevel+1) <= 4 and <= 8
 // by backing with byte[] and [short] instead pf PackedInts.
