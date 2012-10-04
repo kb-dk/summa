@@ -79,8 +79,8 @@ public class ExposedRequest {
     }
 
     /**
-     * Similar to {@link #equals(Group)} but if the comparatorID for the other
-     * group is FREE_ORDER, it matches any comparatorID this group has.
+     * Similar to {@link #equals(org.apache.lucene.search.exposed.ExposedRequest.Group)} but if the comparatorID for
+     * the other group is FREE_ORDER, it matches any comparatorID this group has.
      * @param other the group to check with.
      * @return true if this group can deliver data for the other group.
      */

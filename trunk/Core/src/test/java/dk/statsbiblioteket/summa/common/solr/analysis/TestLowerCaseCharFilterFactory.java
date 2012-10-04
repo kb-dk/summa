@@ -17,10 +17,10 @@ package dk.statsbiblioteket.summa.common.solr.analysis;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.io.input.CharSequenceReader;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 
 public class TestLowerCaseCharFilterFactory extends TestCase {
     public TestLowerCaseCharFilterFactory(String name) {
@@ -59,7 +59,7 @@ public class TestLowerCaseCharFilterFactory extends TestCase {
     }
 
     private String analyze(CharSequence in) throws IOException {
-        return flush(factory.create(new CharSequenceReader(in)));
+        return flush(factory.create(new StringReader(in.toString())));
     }
 
     public static String flush(Reader r) throws IOException {

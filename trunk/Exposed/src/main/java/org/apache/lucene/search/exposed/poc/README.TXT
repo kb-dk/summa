@@ -1,3 +1,17 @@
+
+
+
+************* Deprecated as of 20121001
+
+
+
+
+
+
+
+
+
+
 The while poc-folder is just for testing. The Mock-classes are copied from the
 test-folder in order to be accessible in the Lucene JAR.
 
