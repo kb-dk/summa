@@ -128,15 +128,16 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
                 String uri = getETSSURI(recordID, providers.get(i));
+                List<MARCObject.SubField> subFields = urls.get(i).getSubFields();
                 if (needsPassword(uri, recordID)) {
-                    urls.get(i).getSubFields().add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
+                    subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
                     needs.add(uri);
                 } else {
                     noneeds.add(uri);
                 }
                 String providerPlusID = getProviderPlusId(recordID, providers.get(i));
                 if (providerPlusID != null) {
-                    urls.get(i).getSubFields().add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
+                    subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
                 }
             } catch (Exception e) {
                 log.warn("Unable to request password requirement for " + payload, e);
