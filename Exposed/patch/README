@@ -9,15 +9,31 @@ Usage:
   Copies files from the Summa Exposed module to the relevant folders 
   in the Lucene/Solr checkout.
 
-# SVN add
-
 ./patch_build.sh
   Builds the Lucene & Solr Exposed contribs.
 
 ./patch_poc.sh
-  Lucene/Exposed Proof Of Concept manual sort test.
+  Lucene Proof Of Concept interactive sort test for Exposed.
   Not terribly interesting as the ICU CollationKey-approach favored by Lucene 4 
   is really good for most purposes.
+
+
+Testing requires tclsh and curl (both Open Source & freeware, available for many platforms)
+
+Start a Solr-server:
+  cd lucene_4/solr/example
+  java -jar start.jar
+Create sample data
+  tclsh ./facet_samples.tcl 100000 2 2 4 > 100000.csv
+Index the sample data with curl:
+  curl "http://localhost:8983/solr/update?commit=true" --data-binary @100000.csv -H 'Content-type:text/csv; charset=utf-8'
+Verify that the data is indexed with Solr's standard non-hierarchical faceting
+  http://localhost:8983/solr/select/?facet=true&facet.field=path_ss&q=*%3A*&fl=id&indent=on
+Verify that exposed faceting works without hierarchical
+  http://localhost:8983/solr/exposed?efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&indent=on
+Verify that exposed faceting works with hierarchical:
+  http://localhost:8983/solr/exposed?efacet=true&efacet.field=path_ss&efacet.hierarchical=true&q=*%3A*&fl=id&indent=on
+
 
 ./patch_test.sh
   Starts a Solr server, indexes sample content and issues a test query.

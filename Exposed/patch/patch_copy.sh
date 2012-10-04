@@ -19,9 +19,7 @@ mv resources ../test-files
 rm -r java
 rm -rf org/apache/solr/
 popd > /dev/null
-
-
-# TODO: svn add to get patch
+svn add --depth infinity $LUCENE
 
 echo "Copying and moving Solr files"
 SOLR=lucene_4/solr/contrib/exposed
@@ -38,8 +36,17 @@ mv java/* .
 mv resources ../test-files
 rm -r java
 popd > /dev/null
+svn add --depth infinity $SOLR
 
-cp -r -f build_files/* lucene_4/
+# We need to prune .svn
+TMP=tmp_delete
+rm -rf $TMP
+mkdir $TMP
+cp -r -f build_files/* $TMP/
+find $TMP/ -name ".svn" -exec rm -rf {} \;  2> /dev/null
+cp -r -f $TMP/* lucene_4/
+rm -rf $TMP
+
 cp ../scripts/facet_samples.tcl lucene_4/solr/example/
 cp ../README_EXPOSED_SOLR.txt lucene_4/solr/contrib/exposed/README.txt
 
@@ -59,4 +66,5 @@ patch -N build.xml patch_build
 
 echo "Patching Solr example solrconfig file"
 cd example/solr/collection1/conf
+pwd
 patch -N solrconfig.xml patch_solrconfig
