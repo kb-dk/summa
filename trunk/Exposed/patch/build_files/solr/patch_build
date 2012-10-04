@@ -1,0 +1,20 @@
+Index: build.xml
+===================================================================
+--- build.xml	(revision 1392277)
++++ build.xml	(working copy)
+@@ -517,6 +517,7 @@
+           <packageset dir="solrj/src/java" />
+           <packageset dir="contrib/analysis-extras/src/java"/>
+           <packageset dir="contrib/clustering/src/java"/>
++          <packageset dir="contrib/exposed/src/java"/>
+           <packageset dir="contrib/dataimporthandler/src/java"/>
+           <packageset dir="contrib/dataimporthandler-extras/src/java"/>
+           <packageset dir="contrib/extraction/src/java"/>
+@@ -525,6 +526,7 @@
+           <group title="Core" packages="org.apache.*" />
+           <group title="SolrJ" packages="org.apache.solr.common.*,org.apache.solr.client.solrj.*,org.apache.zookeeper.*" />
+           <group title="contrib: Clustering" packages="org.apache.solr.handler.clustering*" />
++          <group title="contrib: Exposed" packages="org.apache.solr.exposed*" />
+           <group title="contrib: DataImportHandler" packages="org.apache.solr.handler.dataimport*" />
+           <group title="contrib: Solr Cell" packages="org.apache.solr.handler.extraction*" />
+           <group title="contrib: Solr LangId" packages="org.apache.solr.update.processor.LanguageIdentifier*,org.apache.solr.update.processor.LangIdParams*,org.apache.solr.update.processor.DetectedLanguage*" />

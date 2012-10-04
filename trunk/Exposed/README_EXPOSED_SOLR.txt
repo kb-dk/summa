@@ -10,39 +10,38 @@ The Exposed faceting system can be tested with the standard Solr example the fol
 
 
 3. Use the Tcl script facet_samples.tcl from contrib/exposed to create sample data:
-tcl ./facet_samples.tcl 100000 true 2 2 4 > 100000.csv
+tcl ./facet_samples.tcl 100000 2 2 4 > 100000.csv
 
 
 4. Index the sample data with curl:
-
-curl "http://localhost:8983/solr/update/csv?commit=true&optimize=true" --data-binary @100000.csv -H 'Content-type:text/plain; charset=utf-8'
-
-
-5. Verify that exposed faceting works without hierarchical
-
-http://localhost:8983/solr/select/?qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
+curl "http://localhost:8983/solr/update/csv?commit=true&optimize=true" --data-binary @100000.csv -H 'Content-type:text/csv; charset=utf-8'
 
 
-10. Verify that exposed faceting works with hierarchical:
+5. Verify that the data is indexed with Solr's standard non-hierarchical faceting
+http://localhost:8983/solr/select/?facet=true&facet.field=path_ss&q=*%3A*&fl=id&indent=on
+A large facet output for path_sss hould be present.
 
-http://localhost:8983/solr/select/?qt=exprh&efacet=true&efacet.field=path_ss&efacet.hierarchical=true&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
 
-11. Play around, but note the show stopper described below.
+6. Verify that exposed faceting works without hierarchical
+http://localhost:8983/solr/exposed?efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&indent=on
+A large efacet output for path_sss hould be present.
+
+
+7. Verify that exposed faceting works with hierarchical:
+http://localhost:8983/solr/exposed?efacet=true&efacet.field=path_ss&efacet.hierarchical=true&q=*%3A*&fl=id&indent=on
+A large hierarchical efacet output for path_sss hould be present.
+
+
 
 -----------------------------------------
 TODO
 -----------------------------------------
 
-This patch is extremely rough around the edges and is more a proof of concept than a real
-Solr plugin. While the Lucene-part seems fairly solid, all the Solr-parts are hacked together.
+This patch is slowly getting into shape, but should still be seen primarily as a proof of
+concept.
 
-Proper integration with Solr is ongoing. The show stopper as of march 2011 is
-* No detection of index changes: Updating the index means that everything fails.
-  Relevant wiki pages seems to be
-  http://wiki.apache.org/solr/SolrCaching and http://wiki.apache.org/solr/SolrPlugins#CacheRegenerator
-
-Other problems are
+Proper integration with Solr is ongoing. Known problems are
 * No field-specific parameters, even though the JavaDoc says that they work.
-* Multiple hacks to the build scripts to force the plugin into the war.
+
 
 - Toke Eskildsen, te@statsbiblioteket.dk
