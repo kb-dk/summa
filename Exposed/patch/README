@@ -1,0 +1,27 @@
+Generates a JIRA-compliant patch of the Exposed contrib for Lucene/Solr 4.0.
+
+Usage:
+
+./patch_setup.sh
+  Checks out Lucene/Solr 4.0.
+
+./patch_copy.sh
+  Copies files from the Summa Exposed module to the relevant folders 
+  in the Lucene/Solr checkout.
+
+# SVN add
+
+./patch_build.sh
+  Builds the Lucene & Solr Exposed contribs.
+
+./patch_poc.sh
+  Lucene/Exposed Proof Of Concept manual sort test.
+  Not terribly interesting as the ICU CollationKey-approach favored by Lucene 4 
+  is really good for most purposes.
+
+./patch_test.sh
+  Starts a Solr server, indexes sample content and issues a test query.
+
+./patch_create.sh
+  Creates a JIRA-compliant patch.
+

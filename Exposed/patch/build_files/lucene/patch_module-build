@@ -1,0 +1,33 @@
+Index: module-build.xml
+===================================================================
+--- module-build.xml	(revision 1392277)
++++ module-build.xml	(working copy)
+@@ -178,6 +178,28 @@
+     <property name="facet-javadocs.uptodate" value="true"/>
+   </target>
+  
++  <property name="exposed.jar" value="${common.dir}/build/exposed/lucene-exposed-${version}.jar"/>
++  <target name="check-exposed-uptodate" unless="exposed.uptodate">
++    <module-uptodate name="exposed" jarfile="${exposed.jar}" property="exposed.uptodate"/>
++  </target>
++  <target name="jar-exposed" unless="exposed.uptodate" depends="check-exposed-uptodate">
++    <ant dir="${common.dir}/exposed" target="jar-core" inheritall="false">
++      <propertyset refid="uptodate.and.compiled.properties"/>
++    </ant>
++    <property name="exposed.uptodate" value="true"/>
++  </target>
++
++  <property name="exposed-javadoc.jar" value="${common.dir}/build/exposed/lucene-exposed-${version}-javadoc.jar"/>
++  <target name="check-exposed-javadocs-uptodate" unless="exposed-javadocs.uptodate">
++    <module-uptodate name="exposed" jarfile="${exposed-javadoc.jar}" property="exposed-javadocs.uptodate"/>
++  </target>
++  <target name="javadocs-exposed" unless="exposed-javadocs.uptodate" depends="check-exposed-javadocs-uptodate">
++    <ant dir="${common.dir}/exposed" target="javadocs" inheritAll="false">
++      <propertyset refid="uptodate.and.compiled.properties"/>
++    </ant>
++    <property name="exposed-javadocs.uptodate" value="true"/>
++  </target>
++ 
+   <property name="analyzers-icu.jar" value="${common.dir}/build/analysis/icu/lucene-analyzers-icu-${version}.jar"/>
+   <target name="check-analyzers-icu-uptodate" unless="analyzers-icu.uptodate">
+     <module-uptodate name="analysis/icu" jarfile="${analyzers-icu.jar}" property="analyzers-icu.uptodate"/>
