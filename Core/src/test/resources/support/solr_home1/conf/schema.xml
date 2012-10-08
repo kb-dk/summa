@@ -35,7 +35,7 @@
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
                 <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                                
-                <filter class="solr.CollationKeyFilterFactory"  language="da" strength="primary" />
+                <filter class="solr.ICUCollationKeyFilterFactory" locale="da" strength="primary" alternate="non-ignorable"/>
                 <filter class="solr.TrimFilterFactory"/>
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
