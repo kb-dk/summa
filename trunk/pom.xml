@@ -271,6 +271,12 @@
                 <version>4.0.0-BETA</version>
             </dependency>
 
+           <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-analysis-extras</artifactId>
+                <version>4.0.0-BETA</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queryparser</artifactId>
@@ -324,7 +330,8 @@
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
                 <version>4.0.0-BETA</version>
-            </dependency>
+            </dependency>                    
+            
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
