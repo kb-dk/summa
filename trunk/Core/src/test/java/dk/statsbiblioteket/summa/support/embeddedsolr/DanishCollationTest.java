@@ -38,7 +38,9 @@ public class DanishCollationTest {
 				"support/solr_test_documents/doc2_sort.xml",
 				"support/solr_test_documents/doc3_sort.xml",
 				"support/solr_test_documents/doc4_sort.xml",
-				"support/solr_test_documents/doc5_sort.xml"
+				"support/solr_test_documents/doc5_sort.xml",
+				"support/solr_test_documents/doc6_sort.xml",
+				
 				
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
@@ -50,16 +52,19 @@ public class DanishCollationTest {
 		String doc3Text="Æbler er sunde";
 		String doc4Text="Østers smager ikke godt";
 		String doc5Text="Zebraer smager også godt";
+		String doc6Text="A efterfulgt af whitespace skal stå før abe";
 				
 		
 		SolrQuery query = new SolrQuery("*:*");
  		query.setSortField("sort_title", ORDER.asc);
 		QueryResponse response = solrServer.query(query);
-	  	assertEquals(5L, response.getResults().getNumFound());
+	  	assertEquals(6L, response.getResults().getNumFound());
 	    Iterator<SolrDocument> iterator = response.getResults().iterator();
 	    	    
-	    //Correct order: Aber, Zebraer , Æbler, Østers , Ål
+	    //Correct order: A alene.., Aber, Zebraer , Æbler, Østers , Ål
+	    assertEquals(doc6Text, iterator.next().getFieldValue("shortformat"));
 	    assertEquals(doc1Text, iterator.next().getFieldValue("shortformat"));
+	    
 	    assertEquals(doc5Text, iterator.next().getFieldValue("shortformat"));
 	    assertEquals(doc3Text, iterator.next().getFieldValue("shortformat"));
 	    assertEquals(doc4Text, iterator.next().getFieldValue("shortformat"));
