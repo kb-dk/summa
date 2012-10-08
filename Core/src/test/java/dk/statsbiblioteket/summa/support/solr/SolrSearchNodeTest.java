@@ -264,6 +264,71 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testFacetLimit() throws Exception {
+        int DOC_COUNT= 100;
+        String[][] EXPECTED_ALPHA = new String[][] {
+            {"01 quart", Integer.toString(DOC_COUNT/4)},
+            {"02 half", Integer.toString(DOC_COUNT/2)},
+//            {"03 all", Integer.toString(DOC_COUNT)},
+            {"solr", Integer.toString(DOC_COUNT)} // Added explicit
+        };
+
+        ingestFacets(DOC_COUNT);
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(2 ALPHA)"
+            ));
+            try {
+                assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
+            } finally {
+                searcher.close();
+            }
+        }
+    }
+
+    public void testFacetLimitMedium() throws Exception {
+        testFacetLimit(60);
+    }
+
+    public void testFacetLimitHigher() throws Exception {
+        testFacetLimit(80);
+    }
+
+    public void testFacetLimitHigh() throws Exception {
+        testFacetLimit(199);
+    }
+
+    public void testFacetLimitExtraHigh() throws Exception {
+        testFacetLimit(501);
+    }
+
+    public void testFacetLimit(int docCount) throws Exception {
+        String[][] EXPECTED_ALPHA = new String[docCount+1][2];
+        for (int i = 0 ; i < docCount ; i++) {
+            EXPECTED_ALPHA[i][0] = "document" + String.format("%07d", i);
+            EXPECTED_ALPHA[i][1] = "1";
+        }
+        EXPECTED_ALPHA[docCount][0] = "solr";
+        EXPECTED_ALPHA[docCount][1] = Integer.toString(docCount);
+
+        ingestFacets(docCount);
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)"
+            ));
+            try {
+                for (int i = 0 ; i < docCount ; i++) {
+                    String docID = "Document_" + String.format("%07d", i);
+                    assertHits("There should be a hit for 'title:" + docID + "'",
+                               searcher, DocumentKeys.SEARCH_QUERY, "title:" + docID);
+                }
+                assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
+            } finally {
+                searcher.close();
+            }
+        }
+    }
+
     private void assertFacetOrder(String designation, SearchNode searcher, String[][] expected) throws RemoteException {
         Pattern TAGS = Pattern.compile("<tag name=\"([^\"]+)\" addedobjects=\"([^\"]+)\"[^>]*>", Pattern.DOTALL);
         ResponseCollection responses = new ResponseCollection();
@@ -452,7 +517,7 @@ public class SolrSearchNodeTest extends TestCase {
             sb.append("<doc>\n");
             sb.append("<field name=\"recordID\">doc").append(i).append("</field>\n");
             sb.append("<field name=\"recordBase\">dummy</field>\n");
-            sb.append("<field name=\"title\">Document ").append(i).append("</field>\n");
+            sb.append("<field name=\"title\">Document_").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
             sb.append("<field name=\"lma_long\">03_all</field>\n");
             if ((i & 0x01) == 0) {

@@ -64,7 +64,7 @@ public class SolrFacetRequest {
                          + "will not be repeated");
                 fieldWarningFired = true;
             }
-            facets.add(new Facet(fc.getFields()[0], combineMode, 1, fc.getWantedTags()));
+            facets.add(new Facet(fc.getFields()[0], combineMode, 0, fc.getWantedTags())); // Start at 0?
         }
         log.trace("Constructed facet request from '" + facetsDef + "' with defaultFacetPageSize=" + defaultFacetPageSize
                   + " and combineMode=" + combineMode);
@@ -119,7 +119,7 @@ public class SolrFacetRequest {
     protected void addFacetQuery(Map<String, List<String>> queryMap, String field, String combineMode,
                                  int startPage, int pageSize) {
         append(queryMap, "facet.field", field);
-        String prefix = "facet." + field + ".";
+        String prefix = "f." + field + ".facet.";
         // TODO: Check if startPage is counted from 0 or 1
         queryMap.put(prefix + "offset", Arrays.asList(Integer.toString(startPage * pageSize)));
         queryMap.put(prefix + "limit",  Arrays.asList(Integer.toString(pageSize)));

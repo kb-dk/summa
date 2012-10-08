@@ -622,7 +622,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             throw new IOException(error, e);
         }
         // TODO: Should we disconnect?
-
+        //System.out.println(retval.toString());
         return retval.toString();
     }
 

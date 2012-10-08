@@ -150,13 +150,16 @@ public class FacetStructure implements Serializable {
                 sortType = FacetStructure.SORT_ALPHA;
             } else {
                 try {
-                    maxTags = Integer.parseInt(facetArg);
+                    wantedTags = Integer.parseInt(facetArg);
                 } catch (NumberFormatException e) {
                     log.warn(String.format(
                         "Argument '%s' in FacetDef '%s'",
                         facetArg, facetDef));
                 }
             }
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("Created " + this);
         }
     }
 
