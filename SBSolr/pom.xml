@@ -20,6 +20,34 @@
             <type>war</type>
         </dependency>
 
+         <dependency>
+              <groupId>org.apache.solr</groupId>
+              <artifactId>solr-analysis-extras</artifactId>
+       
+          <exclusions>
+                <exclusion>
+                    <groupId>org.apache.solr</groupId>
+                    <artifactId>solr-core</artifactId>
+                </exclusion>
+                     
+                 <exclusion>
+                  <groupId>org.apache.lucene</groupId>
+                  <artifactId>lucene-analyzers-icu</artifactId>                                  
+                </exclusion>   
+                
+                 <exclusion>
+                 <groupId>org.apache.lucene</groupId>
+                  <artifactId>lucene-analyzers-smartcn</artifactId>
+                </exclusion>
+                
+                 <exclusion>
+                 <groupId>org.apache.lucene</groupId>
+                  <artifactId>lucene-analyzers-stempel</artifactId>
+                </exclusion>
+                     
+            </exclusions>
+         </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
