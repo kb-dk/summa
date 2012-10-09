@@ -170,6 +170,24 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
+    public void testFacetSizeQuery() throws RemoteException {
+        int tagCount = 3;
+        final String JSON = "{\"search.document.query\":\"thinking\","
+                            + "\"search.document.collectdocids\":\"true\","
+                            + "\"search.facet.facets\":\"ContentType (" + tagCount + " ALPHA)\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
+        assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
+                     + Strings.join(tags, "\n"),
+                     tagCount+1, tags.size());
+        summon.close();
+    }
+
     public void testRecordBaseFacet() throws RemoteException {
         final String JSON =
             "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","

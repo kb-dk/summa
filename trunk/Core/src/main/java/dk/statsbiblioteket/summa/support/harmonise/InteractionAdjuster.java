@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -604,12 +605,27 @@ public class InteractionAdjuster implements Configurable {
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
             List<String> facets = request.getStrings(FacetKeys.SEARCH_FACET_FACETS);
             List<String> adjusted = new ArrayList<String>(facets.size() * 2);
-            for (String facet: facets) {
-                if (facetFieldMap.getForward().containsKey(facet)) {
-                    Set<String> alts = facetFieldMap.getForward().get(facet);
-                    adjusted.addAll(alts);
-                } else {
-                    adjusted.add(facet);
+            for (String facetString: facets) {
+                FacetStructure facet = new FacetStructure(facetString, -1, -1);
+                if (facet.getFields().length == 1 && facetFieldMap.getForward().containsKey(facet.getFields()[0])) {
+                    Set<String> alts = facetFieldMap.getForward().get(facet.getFields()[0]);
+                    for (String alt: alts) {
+                        if (FacetStructure.DEFAULT_FACET_SORT_TYPE.equals(facet.getSortType())) {
+                            if (facet.getWantedTags() == -1) { // Plain
+                                adjusted.add(alt);
+                            } else { // Wanted Tags
+                                adjusted.add(alt + "(" + facet.getWantedTags() + ")");
+                            }
+                        } else {
+                            if (facet.getWantedTags() == -1) { // Only order change
+                                adjusted.add(alt + "(" + facet.getSortType() + ")");
+                            } else { // Wanted Tags and order change
+                                adjusted.add(alt + "(" + facet.getWantedTags() + " " + facet.getSortType() + ")");
+                            }
+                        }
+                    }
+                } else { // No change at all
+                    adjusted.add(facetString);
                 }
             }
             request.put(FacetKeys.SEARCH_FACET_FACETS, Strings.join(adjusted, ", "));

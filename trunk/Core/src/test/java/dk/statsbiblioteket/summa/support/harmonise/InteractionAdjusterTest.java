@@ -54,6 +54,28 @@ public class InteractionAdjusterTest extends TestCase {
                      Strings.join(rewritten.getStrings(FacetKeys.SEARCH_FACET_FACETS), ", "));
     }
 
+    public void testFacetFieldSize() {
+        InteractionAdjuster adjuster = createAdjuster();
+        Request request = new Request(
+            FacetKeys.SEARCH_FACET_FACETS, "llang, lma_long(12)"
+        );
+        Request rewritten = adjuster.rewrite(request);
+        assertEquals("The rewritten facet fields should be as expected",
+                     "Language, ContentType(12)",
+                     Strings.join(rewritten.getStrings(FacetKeys.SEARCH_FACET_FACETS), ", "));
+    }
+
+    public void testFacetFieldSizeAndOrder() {
+        InteractionAdjuster adjuster = createAdjuster();
+        Request request = new Request(
+            FacetKeys.SEARCH_FACET_FACETS, "llang, lma_long(12 ALPHA)"
+        );
+        Request rewritten = adjuster.rewrite(request);
+        assertEquals("The rewritten facet fields should be as expected",
+                     "Language, ContentType(12 ALPHA)",
+                     Strings.join(rewritten.getStrings(FacetKeys.SEARCH_FACET_FACETS), ", "));
+    }
+
     public void testSortQueryRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
         Request request = new Request(
