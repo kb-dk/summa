@@ -17,6 +17,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.common.util.StringExtraction;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
@@ -144,6 +145,28 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         assertFalse("The response should not have Newspaper Article as facet. total response was\n" + responses.toXML(),
                     responses.toXML().contains("<tag name=\"Newspaper Article\""));
+        summon.close();
+    }
+
+    public void testFacetSizeSmall() throws RemoteException {
+        assertFacetSize(3);
+        assertFacetSize(25);
+    }
+
+    private void assertFacetSize(int tagCount) throws RemoteException {
+        final String JSON = "{\"search.document.query\":\"thinking\",\"search.document.collectdocids\":\"true\"}";
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SummonSearchNode.CONF_SOLR_FACETS, "ContentType (" + tagCount + " ALPHA)");
+        SearchNode summon = new SummonSearchNode(conf);
+
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
+        assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
+                     + Strings.join(tags, "\n"),
+                     tagCount+1, tags.size());
         summon.close();
     }
 
