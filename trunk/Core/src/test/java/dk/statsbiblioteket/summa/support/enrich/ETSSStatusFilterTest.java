@@ -138,7 +138,27 @@ public class ETSSStatusFilterTest extends TestCase {
             "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
         ));
         assertEquals("The password status for " + id + " should be correct",
-                     hasPassword, statusFilter.needsPassword(id));
+                     hasPassword,
+                     statusFilter.needsPassword(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
+    }
+
+    // Has comment etssssib_00728-3931    new     etss_ssib002505447
+    public void testCommentID() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "1397-3290_freeaarhusuniversitylibrariesejournalholdings"
+        };
+        for (String e: existing) {
+            assertCommentID(e, "Dette er en kommentar");
+        }
+    }
+
+    private void assertCommentID(String id, String comment) throws IOException {
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST,
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+        ));
+        assertEquals("The comment for " + id + " should be correct",
+                     comment, statusFilter.getComment(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
     }
 
     public void assertStatus(String marcFile, boolean hasPassword)

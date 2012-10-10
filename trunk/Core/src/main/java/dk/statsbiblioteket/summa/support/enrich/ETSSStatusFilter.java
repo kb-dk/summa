@@ -84,9 +84,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final String CONF_ETSS_READ_TIMEOUT = "etss.read.timeout";
     public static final int DEFAULT_ETSS_READ_TIMEOUT = 8000;
 
-    public static final String PASSWORD_SUBFIELD = "k";
+    public static final String PASSWORD_SUBFIELD = "k"; // In 856
     public static final String PASSWORD_CONTENT = "password required";
     public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
+    public static final String COMMENT_SUBFIELD = "l"; // In 856
 
     protected final int connectionTimeout;
     protected final int readTimeout;
@@ -118,7 +119,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (urls.size() != providers.size()) {
             Logging.logProcess(
                 "ETSSStatusFilter",
-                "There was " + urls.size() + " fields with tag 856 and " + providers.size()
+                "There were " + urls.size() + " fields with tag 856 and " + providers.size()
                 + " fields with tag 980. There should be the same number. The status is left unadjusted",
                 Logging.LogLevel.WARN, payload);
             return marc;
@@ -127,18 +128,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         List<String> noneeds = new ArrayList<String>(providers.size());
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
-                String uri = getETSSURI(recordID, providers.get(i));
-                List<MARCObject.SubField> subFields = urls.get(i).getSubFields();
-                if (needsPassword(uri, recordID)) {
-                    subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
-                    needs.add(uri);
-                } else {
-                    noneeds.add(uri);
-                }
-                String providerPlusID = getProviderPlusId(recordID, providers.get(i));
-                if (providerPlusID != null) {
-                    subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
-                }
+                enrich(recordID, urls.get(i), providers.get(i), needs, noneeds);
             } catch (Exception e) {
                 log.warn("Unable to request password requirement for " + payload, e);
                 Logging.logProcess("ETSSStatusFilter", "Unable to request password requirement",
@@ -168,17 +158,46 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         return marc;
     }
 
-    private HttpClient http = new DefaultHttpClient();
-    private boolean needsPassword(String recordID, MARCObject.DataField dataField) throws IOException {
-        String uri = getETSSURI(recordID, dataField);
-        return needsPassword(uri, recordID);
+    /**
+     * Enriches the url-field with data derived from the provider-field. Enrichments include lookup-ID, password
+     * requirement and comment from the password service response.
+     * @param recordID            used for logging messages.
+     * @param url                 the field containing the URL of the provider, to be extended.
+     * @param provider            the field containing provider information such as ID.
+     * @param needsPassword       if a password is needed, the lookup-URI is stored here.
+     * @param doesNotNeedPassword if a password is not needed, the lookup-URI is stored here.
+     * @throws IOException in case of network errors.
+     */
+    private void enrich(String recordID, MARCObject.DataField url, MARCObject.DataField provider,
+                        List<String> needsPassword, List<String> doesNotNeedPassword) throws IOException {
+        String providerPlusID = getProviderPlusId(recordID, provider);
+        String lookupURI = getLookupURI(recordID, providerPlusID);
+        if (lookupURI == null) {
+            doesNotNeedPassword.add("Unresolved(" + recordID + ")");
+            return;
+        }
+        String response = lookup(recordID, lookupURI);
+        List<MARCObject.SubField> subFields = url.getSubFields();
+        if (needsPassword(response)) {
+            subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
+            needsPassword.add(lookupURI);
+        } else {
+            doesNotNeedPassword.add(lookupURI);
+        }
+        String comment = getComment(response);
+        if (comment != null) {
+            subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
+        }
+        if (providerPlusID != null) {
+            subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
+        }
     }
 
-    private boolean needsPassword(String uri, String recordID) throws IOException {
-        if (uri == null) {
-            return false;
-        }
-        HttpGet method = new HttpGet(uri);
+    private HttpClient http = new DefaultHttpClient();
+
+    // Returns remote service response for the given recordID. Null is a valid response
+    protected String lookup(String recordID, String lookupURI) throws IOException {
+        HttpGet method = new HttpGet(lookupURI);
         String response;
         try {
             Long readTime = -System.currentTimeMillis();
@@ -186,39 +205,34 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw new IOException(
                     "Expected return code " + HttpStatus.SC_OK + ", got "+ httpResponse.getStatusLine().getStatusCode()
-                    + " for '" + recordID + "' with call " + uri);
+                    + " for '" + recordID + "' with call " + lookupURI);
             }
             readTime += System.currentTimeMillis();
-            log.trace("Completed ETSS call to '" + uri + "' in " + readTime + "ms");
+            log.trace("Completed ETSS call to '" + lookupURI + "' in " + readTime + "ms");
 
             HttpEntity entity = httpResponse.getEntity();
             if (entity == null) {
-                Logging.logProcess("ETSSStatusFilter.needsPassword",
-                                   "No response from request " + uri, Logging.LogLevel.WARN, recordID);
-                return false;
+                Logging.logProcess("ETSSStatusFilter.lookup",
+                                   "No response from request " + lookupURI, Logging.LogLevel.WARN, recordID);
+                return null;
             }
             response = Strings.flush(entity.getContent());
             entity.getContent().close();
         } catch (IOException e) {
-            throw new IOException("Unable to connect to remote ETSS service with URI '" + uri + "'", e);
+            throw new IOException("Unable to connect to remote ETSS service with URI '" + lookupURI + "'", e);
         }
-        return parseResponse(response);
-    }
-
-    boolean needsPassword(String recordAndProviderID) throws IOException {
-        return needsPassword(rest.replace("$ID_AND_PROVIDER", recordAndProviderID), recordAndProviderID);
+        return response;
     }
 
     // TODO: Where to store the generated provider-ID?
     // http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_0040-5671_theologischeliteraturzeitung
-    private String getETSSURI(String recordID, MARCObject.DataField dataField) {
-        String fullID = getProviderPlusId(recordID, dataField);
-        if (fullID == null) {
-            Logging.logProcess(
-                "ETSSStatusFilter.getETTSURI", "Unable to resolve id from dataField)", Logging.LogLevel.WARN, recordID);
+    protected String getLookupURI(String recordID, String providerPlusID) {
+        if (providerPlusID == null) {
+            Logging.logProcess("ETSSStatusFilter.getETTSURI", "Unable to resolve id from dataField)",
+                               Logging.LogLevel.WARN, recordID);
             return null;
         }
-        return rest.replace("$ID_AND_PROVIDER", fullID);
+        return rest.replace("$ID_AND_PROVIDER", providerPlusID);
     }
 
     private String getProviderPlusId(String id, MARCObject.DataField dataField) {
@@ -276,10 +290,21 @@ public class ETSSStatusFilter extends MARCObjectFilter {
      </soapenv:Envelope>
 
      */
-    // Yes it is a hack, yes we should do a proper XML parse
+    // TODO: Yes it is a hack, yes we should do a proper XML parse
     private static final Pattern PASSWORD = Pattern.compile(".*&lt;password&gt;.+&lt;/password&gt;.*", Pattern.DOTALL);
-    private boolean parseResponse(String response) {
+    protected boolean needsPassword(String response) {
         return PASSWORD.matcher(response).matches();
+    }
+
+    // Also a hack
+    private static final Pattern COMMENT = Pattern.compile(".*&lt;comment&gt;(.+)&lt;/comment&gt;.*", Pattern.DOTALL);
+    protected String getComment(String response) {
+        Matcher matcher = COMMENT.matcher(response);
+        if (!matcher.matches()) {
+            return null;
+        }
+        String match = matcher.group(1).replace("\n", "").replace("\t", "").trim();
+        return "".equals(match) ? null : match;
     }
 
     @Override
