@@ -317,7 +317,8 @@ public class SolrSearchNodeTest extends TestCase {
         ingestFacets(docCount);
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)"
+                SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)",
+                SolrSearchNode.CONF_SOLR_FACETS_DEFAULTPAGESIZE, "1" // To ensure that overriding works
             ));
             try {
                 for (int i = 0 ; i < docCount ; i++) {
@@ -553,8 +554,7 @@ public class SolrSearchNodeTest extends TestCase {
         String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
-        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
-            matches()) {
+        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).matches()) {
             return 0;
         }
         String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");

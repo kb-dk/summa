@@ -59,7 +59,7 @@ public class SolrFacetRequest {
                          + "'. This is not supported by this faceter");
             }*/
             if (fc.getFields().length > 1 && !fieldWarningFired) {
-                log.warn("The facet request '" + facetsDef + "' defines more than on field for facet '" + fc.getName()
+                log.warn("The facet request '" + facetsDef + "' defines more than one field for facet '" + fc.getName()
                          + ". This is not supported by this faceter. Only the first field will be used. This warning "
                          + "will not be repeated");
                 fieldWarningFired = true;
