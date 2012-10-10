@@ -28,7 +28,6 @@ import junit.framework.TestSuite;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -142,7 +141,6 @@ public class ETSSStatusFilterTest extends TestCase {
                      statusFilter.needsPassword(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
     }
 
-    // Has comment etssssib_00728-3931    new     etss_ssib002505447
     public void testCommentID() throws IOException, XMLStreamException, ParseException {
         String[] existing = new String[] {
             "1397-3290_freeaarhusuniversitylibrariesejournalholdings"
@@ -190,5 +188,4 @@ public class ETSSStatusFilterTest extends TestCase {
         }
         statusFilter.close(true);
     }
-
 }
