@@ -332,7 +332,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
         boolean reverseSort = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
         int startIndex = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
-        int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, defaultFacetPageSize);
+        int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, (int)DocumentSearcher.DEFAULT_RECORDS);
         boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
 
