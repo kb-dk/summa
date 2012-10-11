@@ -10,11 +10,18 @@ The Exposed faceting system can be tested with the standard Solr example the fol
 
 
 3. Use the Tcl script facet_samples.tcl from contrib/exposed to create sample data:
-tcl ./facet_samples.tcl 100000 2 2 4 > 100000.csv
+tclsh ./facet_samples.tcl 100000 2 2 4 > 100000.csv
+If tcl is not available, a sample must be created by other means. 
+The csv-format is very simple. Below there it 2 documents, named 1 and 2.
+Each document has 4 paths of 3 levels each:
+
+ id,path_ss,path_ss,path_ss,path_ss
+ 1,L0_T1/L1_T1/L2_T1,L0_T1/L1_T1/L2_T2,L0_T1/L1_T1/L2_T3,L0_T1/L1_T1/L2_T4
+ 2,L0_T3/L1_T5/L2_T17,L0_T3/L1_T5/L2_T18,L0_T3/L1_T5/L2_T19,L0_T3/L1_T5/L2_T20
 
 
 4. Index the sample data with curl:
-curl "http://localhost:8983/solr/update/csv?commit=true&optimize=true" --data-binary @100000.csv -H 'Content-type:text/csv; charset=utf-8'
+curl "http://localhost:8983/solr/update?commit=true" --data-binary @100000.csv -H 'Content-type:text/csv; charset=utf-8'
 
 
 5. Verify that the data is indexed with Solr's standard non-hierarchical faceting
