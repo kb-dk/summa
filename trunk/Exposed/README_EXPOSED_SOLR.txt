@@ -6,7 +6,7 @@ The Exposed faceting system can be tested with the standard Solr example the fol
 
 
 2. Start Solr from the example folder with
-   java -jar -start.jar
+   java -jar start.jar
 
 
 3. Use the Tcl script facet_samples.tcl from contrib/exposed to create sample data:
