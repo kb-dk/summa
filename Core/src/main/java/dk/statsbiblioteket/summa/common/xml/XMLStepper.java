@@ -14,11 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.io.input.CharSequenceReader;
 
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +70,29 @@ public class XMLStepper {
             }
             xml.next();
         }
+    }
+
+    private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    /**
+     * Steps through the provided XML and returns the text content of the first element with the given tag.
+     * @param xml the XML to extract text from.
+     * @param tag the designation of the element to extract text from.
+     * @return the text of the element with the given tag or null if the tag could not be found. If the tag is empty,
+     *         the empty String will be returned.
+     */
+    public static String getFirstElementText(CharSequence xml, String tag) throws XMLStreamException {
+        final Pair<Boolean, String> result = new Pair<Boolean, String>(false, null);
+        XMLStepper.iterateElements(xmlFactory.createXMLStreamReader(new CharSequenceReader(xml)),
+                                   "", tag, new XMLStepper.XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                if (result.getKey().equals(false)) { // We only want the first one
+                    result.setKey(true);
+                    result.setValue(xml.getElementText());
+                }
+            }
+        });
+        return result.getValue();
     }
 
     /**

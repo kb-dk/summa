@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.MARCObjectFilter;
 import dk.statsbiblioteket.summa.common.marc.MARCObject;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
@@ -30,8 +31,13 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.solr.logging.LoggerInfo;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +201,20 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     private HttpClient http = new DefaultHttpClient();
 
+    /*
+    <?xml version="1.0" encoding="UTF-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soapenv:Body>
+    <getFromDBResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <getFromDBReturn xsi:type="soapenc:string" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+    &lt;info&gt;&lt;username&gt;lsa@statsbiblioteket.dk&lt;/username&gt;&lt;password&gt;dame7896&lt;/password&gt;&lt;group&gt;&lt;/group&gt;&lt;comment&gt;Dette er en kommentar&lt;/comment&gt;&lt;/info&gt;</getFromDBReturn>
+    </getFromDBResponse>
+    </soapenv:Body>
+    </soapenv:Envelope>
+
+     */
     // Returns remote service response for the given recordID. Null is a valid response
+    // This methods unpacks the content from SOAP
     protected String lookup(String recordID, String lookupURI) throws IOException {
         HttpGet method = new HttpGet(lookupURI);
         String response;
@@ -221,7 +240,17 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         } catch (IOException e) {
             throw new IOException("Unable to connect to remote ETSS service with URI '" + lookupURI + "'", e);
         }
-        return response;
+        if (response == null) {
+            return null;
+        }
+        try {
+            return XMLStepper.getFirstElementText(response, "getFromDBReturn");
+        } catch (XMLStreamException e) {
+            Logging.logProcess("ETSSStatusFilter.lookup",
+                               "Unable to extract content from SOAP 'getFromDBReturn' from XML '" + response + "'",
+                               Logging.LogLevel.WARN, recordID, e);
+            return null;
+        }
     }
 
     // TODO: Where to store the generated provider-ID?
@@ -273,38 +302,49 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     }
 
     /*
-     <soapenv:Envelope><soapenv:Body>
-     <getFromDBResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-     <getFromDBReturn xsi:type="soapenc:string">
-     <info>
-     <username>2801694</username>
-     <password>04.13.13.02.12</password>
-     <group>
-     </group>
-     <comment>
-     </comment>
-     </info>
-     </getFromDBReturn>
-     </getFromDBResponse>
-     </soapenv:Body>
-     </soapenv:Envelope>
-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soapenv:Body>
+    <getFromDBResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <getFromDBReturn xsi:type="soapenc:string" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+    &lt;info&gt;&lt;username&gt;lsa@statsbiblioteket.dk&lt;/username&gt;&lt;password&gt;dame7896&lt;/password&gt;&lt;group&gt;&lt;/group&gt;&lt;comment&gt;Dette er en kommentar&lt;/comment&gt;&lt;/info&gt;</getFromDBReturn>
+    </getFromDBResponse>
+    </soapenv:Body>
+    </soapenv:Envelope>
      */
+    private final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     // TODO: Yes it is a hack, yes we should do a proper XML parse
     private static final Pattern PASSWORD = Pattern.compile(".*&lt;password&gt;.+&lt;/password&gt;.*", Pattern.DOTALL);
     protected boolean needsPassword(String response) {
-        return PASSWORD.matcher(response).matches();
+        try {
+            return XMLStepper.getFirstElementText(response, "password") != null;
+        } catch (XMLStreamException e) {
+            Logging.logProcess("ETSSStatusFilter.needsPassword",
+                               "XMLException while extracting element 'password' from XML '" + response + "'",
+                               Logging.LogLevel.WARN, "ID N/A", e);
+            return false;
+        }
+//        return PASSWORD.matcher(response).matches();
     }
+
 
     // Also a hack
     private static final Pattern COMMENT = Pattern.compile(".*&lt;comment&gt;(.+)&lt;/comment&gt;.*", Pattern.DOTALL);
     protected String getComment(String response) {
-        Matcher matcher = COMMENT.matcher(response);
+        try {
+            return XMLStepper.getFirstElementText(response, "comment");
+        } catch (XMLStreamException e) {
+            Logging.logProcess("ETSSStatusFilter.needsPassword",
+                               "XMLException while extracting element 'comment' from XML '" + response + "'",
+                               Logging.LogLevel.WARN, "ID N/A", e);
+            return null;
+        }
+/*        Matcher matcher = COMMENT.matcher(response);
         if (!matcher.matches()) {
             return null;
         }
         String match = matcher.group(1).replace("\n", "").replace("\t", "").trim();
-        return "".equals(match) ? null : match;
+        return "".equals(match) ? null : match;*/
     }
 
     @Override
