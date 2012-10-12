@@ -142,11 +142,14 @@ public class ETSSStatusFilterTest extends TestCase {
     }
 
     public void testCommentID() throws IOException, XMLStreamException, ParseException {
-        String[] existing = new String[] {
-            "1397-3290_freeaarhusuniversitylibrariesejournalholdings"
+        String[][] TESTS = new String[][] {
+            // Hand held by Hans
+            {"1397-3290_freeaarhusuniversitylibrariesejournalholdings", "Dette er en kommentar"},
+            //
+            {"1602-7930_aarhusuniversitylibrariesejournalholdings", "Klik på gæstelogin under den enkelte artikel"}
         };
-        for (String e: existing) {
-            assertCommentID(e, "Dette er en kommentar");
+        for (String[] test: TESTS) {
+            assertCommentID(test[0], test[1]);
         }
     }
 
