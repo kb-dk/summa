@@ -52,6 +52,9 @@ public class Logging {
     public static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
     private static final int MAX_CONTENT = 1000;
 
+    public static final String FATAL_LOG_NAME = "fatal";
+    public static final Log fatalLog = LogFactory.getLog(FATAL_LOG_NAME);
+
     /**
      * Special logging for process-related messages. Process-related messages
      * differ from normal messages by being related to specific Payloads or
@@ -268,8 +271,55 @@ public class Logging {
                 log.info ("[Unknown log level " + level +"]", cause);
         }
     }
+
+    /**
+     * All fatal logging should be done through a fatal method as they ensures that the right logger is used ("fatal").
+     * @param origin  the sender of the message. This is normally "Class.method".
+     * @param message the message to log.
+     */
+    public static void fatal(String origin, String message) {
+        fatal(null, origin, message, null);
+    }
+
+    /**
+     * All fatal logging should be done through a fatal method as they ensures that the right logger is used ("fatal").
+     * @param copy    the message is also logged to this logger.
+     * @param origin  the sender of the message. This is normally "Class.method".
+     * @param message the message to log.
+     */
+    public static void fatal(Log copy, String origin, String message) {
+        fatal(copy, origin, message, null);
+    }
+
+    /**
+     * All fatal logging should be done through a fatal method as they ensures that the right logger is used ("fatal").
+     * @param origin  the sender of the message. This is normally "Class.method".
+     * @param message the message to log.
+     * @param cause   the cause of the problem.
+     */
+    public static void fatal(String origin, String message, Throwable cause) {
+        fatal(null, origin, message, cause);
+    }
+
+    /**
+     * All fatal logging should be done through a fatal method as they ensures that the right logger is used ("fatal").
+     * @param copy    the message is also logged to this logger.
+     * @param origin  the sender of the message. This is normally "Class.method".
+     * @param message the message to log.
+     * @param cause   the cause of the problem.
+     */
+    public static void fatal(Log copy, String origin, String message, Throwable cause) {
+        String problem = (origin == null ? "" : origin + ": ") + message;
+        if (cause == null) {
+            fatalLog.fatal(problem);
+            if (copy != null) {
+                copy.fatal(problem);
+            }
+        } else {
+            fatalLog.fatal(problem, cause);
+            if (copy != null) {
+                copy.fatal(problem, cause);
+            }
+        }
+    }
 }
-
-
-
-

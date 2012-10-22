@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.tools;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.MachineStats;
@@ -68,7 +69,7 @@ public class StorageRunner {
                 }
             }
         } catch (Throwable t) {
-            log.fatal("Caught toplevel exception: " + t.getMessage(), t);
+            Logging.fatal(log, "StorageRunner-main", "Caught toplevel exception", t);
             System.err.println(t.getMessage());
             t.printStackTrace();
             System.exit(1);

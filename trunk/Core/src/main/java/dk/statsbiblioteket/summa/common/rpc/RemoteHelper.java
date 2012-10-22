@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.rpc;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.Files;
@@ -334,7 +335,7 @@ public class RemoteHelper {
                 + "problems in the JVM. Please note that this is an unclean "
                 + "shutdown and that file-based locks on databases and similar"
                 + " might persist in the environment and need manual cleanup";
-        log.fatal(message, e);
+        Logging.fatal(log, "RemoteHelper.fatality", message, e);
         System.err.println(message);
         e.printStackTrace(System.err);
         new DeferredSystemExit(1);

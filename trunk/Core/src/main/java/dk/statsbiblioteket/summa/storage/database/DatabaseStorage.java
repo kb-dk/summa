@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -3174,7 +3175,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             doCreateSchema();
         } catch (Exception e) {
-            log.fatal("Error creating or checking database tables", e);
+            Logging.fatal(log, "DatabaseStorage.createSchema", "Error creating or checking database tables", e);
             throw new IOException("Error creating or checking database tables", e);
         }
     }

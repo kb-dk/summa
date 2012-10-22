@@ -103,7 +103,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 } else {
                     msg += ", no enclosed record";
                 }
-                log.fatal(msg + content, t);
+                Logging.fatal(log, "ObjectFilterImpl.hasNext", msg + content, t);
                 throw new Error(msg, t);
             }
 
