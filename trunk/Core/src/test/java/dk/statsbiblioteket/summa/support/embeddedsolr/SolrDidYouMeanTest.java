@@ -42,7 +42,7 @@ public class SolrDidYouMeanTest {
 		    <field name="location_normalised">Statsbiblioteket</field>
 		*/		
 		String[] files = new String[]{
-				"support/solr_test_documents/didyoumeantest.xml",    		
+				"support/solr_test_documents/didyoumeantest.xml",    					    	
 		};
 
 		SolrServerUnitTestUtil.indexFiles(files);
@@ -98,6 +98,38 @@ public class SolrDidYouMeanTest {
 		String collatedResult = response.getSpellCheckResponse().getCollatedResult();                
 		assertEquals("thomas egense",collatedResult);
 
+	
+	
+	    //Make an update
+		files = new String[]{
+				"support/solr_test_documents/didyoumeantest2.xml",    		
+		};
+		
+		solrServer.optimize();// this is testing spellcheck is not called until optimize is called (Except first time for new index)
+
+		SolrServerUnitTestUtil.indexFiles(files);
+		// detxe -> dette 
+		query = new SolrQuery("detxe");
+		query.setParam("spellcheck","true");
+		query.setParam("spellcheck.dictionary","summa_spell");         
+		query.setParam("spellcheck.count","5");
+
+		response = solrServer.query(query);
+		suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
+		assertTrue(suggestionMap.size() == 1);                
+
+		suggestion = response.getSpellCheckResponse().getSuggestions().get(0);
+		assertEquals("detxe", suggestion.getToken());
+		assertTrue(suggestion.getAlternatives().contains("dette"));
+
+	
+	
+	
+	
+	
+	
+	
+	
 	}
 
 

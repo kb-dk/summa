@@ -382,7 +382,7 @@ But this is avery rare situation.
     <lst name="spellchecker">    
       <str name="name">summa_spell</str>
       <str name="field">summa_spell</str>
-      <str name="buildOnCommit">true</str>
+      <str name="buildOnOptimize">true</str>
       <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>                  
     </lst>
 
