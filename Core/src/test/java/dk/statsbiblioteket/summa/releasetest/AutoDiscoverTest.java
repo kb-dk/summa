@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -157,7 +158,7 @@ public class AutoDiscoverTest extends NoExitTestCase {
         try {
             reader.getModificationTime(null);
         } catch (Exception e) {
-            log.fatal("Unable to communicate with Storage", e);
+            Logging.fatal(log, "AutodiscoverTest.testStorage", "Unable to communicate with Storage", e);
             fail("It should be possible to communicate with the Storage");
         }
         reader.releaseConnection();

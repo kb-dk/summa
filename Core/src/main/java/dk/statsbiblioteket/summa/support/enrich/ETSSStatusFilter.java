@@ -143,7 +143,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                     String message =
                         "IOException when requesting password requirements for " + payload + ". "
                         + CONF_HALT_ON_EXTERNAL_ERROR + " is true so the JVM will be shut down in 5 seconds";
-                    log.fatal(message, e);
+                    Logging.fatal(log, "ETSSStatusFilter.adjust", message, e);
                     System.err.println(message);
                     e.printStackTrace(System.err);
                     new DeferredSystemExit(1, 5000);

@@ -94,7 +94,7 @@ public class WriterCallable implements Callable<Long> {
                     + "to index. The index "
                     + "location was '%s'. JVM shutdown in %d seconds",
                     e.getMessage(), payload, writer.getDirectory(), 5);
-            log.fatal(message, e);
+            Logging.fatal(log, "WriterCallable.call", message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
             new DeferredSystemExit(1, 5);

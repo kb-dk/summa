@@ -168,7 +168,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             String msg = "Client id and working directory mismatch. Id is "
                          + clientId + " and working directory is "
                          + new File(basePath);
-            log.fatal(msg);
+            Logging.fatal(log, "Client.constructor", msg);
             throw new ConfigurationException(msg);
         }
 
@@ -320,13 +320,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         try {
             return conf.getInt(ClientConnection.CONF_CLIENT_PORT, ClientConnection.DEFAULT_CLIENT_PORT);
         } catch (Exception e) {
-            log.fatal("Unable to read " + ClientConnection.CONF_CLIENT_PORT
-                      + "from configuration", e);
-            throw new ConfigurationException("Unable to read "
-                                             + ClientConnection.CONF_CLIENT_PORT
-                                             + "from configuration", e);
+            Logging.fatal(log, "Client.getServicePort",
+                          "Unable to read " + ClientConnection.CONF_CLIENT_PORT+ " from configuration", e);
+            throw new ConfigurationException(
+                "Unable to read " + ClientConnection.CONF_CLIENT_PORT + "from configuration", e);
         }
-
     }
 
     /**
@@ -338,8 +336,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public void stop() {
         ConnectionContext<Service> connCtx = null;
 
-        setStatus(Status.CODE.stopping, "Killing all services",
-                  Logging.LogLevel.INFO);
+        setStatus(Status.CODE.stopping, "Killing all services", Logging.LogLevel.INFO);
         for (String serviceId : serviceMan) {
             try {
                 log.debug("Trying to kill service '" + serviceId + "'");
@@ -347,8 +344,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 connCtx.getConnection().kill();
                 log.info("Service '" + serviceId + "' killed");
             } catch (Exception e) {
-                log.error("Could not kill service '" + serviceId + "': "
-                          + e.getMessage(), e);
+                log.error("Could not kill service '" + serviceId + "': " + e.getMessage(), e);
             } finally {
                 if (connCtx != null) {
                     connCtx.unref();
@@ -366,8 +362,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         try {
             RemoteHelper.unExportMBean(this);
         } catch (Exception e) {
-            String msg = "Failed to unregister MBean. Going on anyway. "
-                         + "Error was: " + e.getMessage();
+            String msg = "Failed to unregister MBean. Going on anyway. Error was: " + e.getMessage();
             if (log.isTraceEnabled()) {
                 log.warn (msg, e);
             } else {
@@ -376,8 +371,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
 
-        setStatus(Status.CODE.stopped, "All services down. Stopping JVM in "
-                  + DeferredSystemExit.DEFAULT_DELAY/1000 + "s",
+        setStatus(Status.CODE.stopped,
+                  "All services down. Stopping JVM in " + DeferredSystemExit.DEFAULT_DELAY/1000 + "s",
                   Logging.LogLevel.WARN);
         new DeferredSystemExit(0);
     }
@@ -412,13 +407,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                 String configLocation) {
 
         if (serviceMan.knows(instanceId)) {
-            throw new ServiceDeploymentException("A service with instance id "
-                                                  + "'" + instanceId + "' "
-                                                  + "already exists");
+            throw new ServiceDeploymentException("A service with instance id '" + instanceId + "' already exists");
         }
 
-        setStatusRunning("Deploying service '" + bundleId + "' with config "
-                        + configLocation + ", and instanceId '"
+        setStatusRunning("Deploying service '" + bundleId + "' with config " + configLocation + ", and instanceId '"
                         + instanceId + "'");
         File tmpBundleFile;
 
@@ -426,9 +418,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             tmpBundleFile = repository.get(bundleId);
         } catch (IOException e) {
             setStatusIdle ();
-            throw new BundleLoadingException("Failed to retrieve '" + bundleId
-                                             + "' from repository: "
-                                             + e.getMessage (), e);
+            throw new BundleLoadingException(
+                "Failed to retrieve '" + bundleId + "' from repository: " + e.getMessage (), e);
         }
 
         deployServiceFromLocalFile(instanceId, tmpBundleFile, configLocation);
@@ -454,15 +445,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                            String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
-            throw new BundleLoadingException("Trying to deploy " + localFile
-                                             + " which is already"
-                                             + " in the service directory "
-                                             + servicePath +"."
-                                             + " Aborting deploy.");
+            throw new BundleLoadingException(
+                "Trying to deploy " + localFile + " which is already in the service directory "
+                + servicePath +". Aborting deploy.");
         } else if (!localFile.exists()) {
-            throw new BundleLoadingException("Trying to deploy non-existing"
-                                             + " file " + localFile  + ", "
-                                             + "aborting deploy.");
+            throw new BundleLoadingException("Trying to deploy non-existing file " + localFile  + ", aborting deploy.");
         }
 
         setStatusRunning ("Deploying '" + instanceId + "' from " + localFile);
@@ -476,10 +463,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                          + " collisions");
                 Files.delete (tmpPkg);
             } catch (IOException e) {
-                throw new BundleLoadingException("Failed to delete temporary "
-                                                 + "file '" + tmpPkg + "'"
-                                                 + "' blocking the way. "
-                                                 + "Bailing out on deploy.", e);
+                throw new BundleLoadingException(
+                    "Failed to delete temporary file '" + tmpPkg + "' blocking the way. Bailing out on deploy.", e);
             }
         }
 
@@ -499,15 +484,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } catch (IOException e) {
             try {
                 Files.delete(tmpPkg);
-                throw new BundleLoadingException("Error deploying "
-                                                 + localFile + ". "
-                                                 + "Purged " + tmpPkg
-                                                 + " from tmp dir", e);
+                throw new BundleLoadingException(
+                    "Error deploying " + localFile + ". Purged " + tmpPkg + " from tmp dir", e);
             } catch (IOException ee) {
                 log.error ("Failed to clean up after buggy deploy", ee);
-                throw new BundleLoadingException("Error deleting file '"
-                                                 + tmpPkg + "' when cleaning "
-                                                 + "up buggy deploy", e);
+                throw new BundleLoadingException(
+                    "Error deleting file '" + tmpPkg + "' when cleaning up buggy deploy", e);
             }
         }
 
@@ -1308,9 +1290,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             new Client(conf);
             // The spawned server thread for RMI will cause the JVM to not exit
         } catch (Throwable e) {
-            log.fatal("Caught toplevel exception, bailing out.", e);
-            System.err.println ("Client caught toplevel exception. "
-                                + "Bailing out: " + e.getMessage());
+            Logging.fatal(log, "Client.main", "Caught toplevel exception, bailing out.", e);
             System.exit(1);
         }
     }

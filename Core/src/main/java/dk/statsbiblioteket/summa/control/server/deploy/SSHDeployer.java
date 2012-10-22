@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.control.server.deploy;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
@@ -440,7 +441,7 @@ public class SSHDeployer implements ClientDeployer {
         String value = configuration.getString(key);
         if (key == null) {
             String error = "Could not get the property " + key;
-            log.fatal(error);
+            Logging.fatal(log, "SSHDeployer", error);
             throw new IllegalArgumentException(error);
         }
         return value;

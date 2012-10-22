@@ -385,7 +385,7 @@ public class LuceneManipulator implements IndexManipulator {
                     "Encountered IOException '%s' during addition of document '%s' to index. Offending payload was %s. "
                     + "The index location was '%s'. JVM shutdown in %d seconds",
                     e.getMessage(), id, indexDirectory.getDirectory(), payload, 5);
-            log.fatal(message, e);
+            Logging.fatal(log, "LuceneManipulator.updateAddition", message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
             new DeferredSystemExit(1, 5);
@@ -426,7 +426,7 @@ public class LuceneManipulator implements IndexManipulator {
                      "Encountered IOException '%s' during deletion of document '%s' to index. Offending payload was %s."
                      + " The index location was '%s'. JVM shutdown in %d seconds",
                      e.getMessage(), id, indexDirectory.getDirectory(), payload, 5);
-                log.fatal(message, e);
+                Logging.fatal(log, "LuceneManipulator.updatedeletion", message, e);
                 System.err.println(message);
                 e.printStackTrace(System.err);
                 new DeferredSystemExit(1, 5);

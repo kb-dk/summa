@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,7 +61,7 @@ public class LoggingExceptionHandler
                 "Uncaught exception in thread '%s'. Processing is unstable "
                 + "and as a result, the JVM will be terminated in 5 seconds", 
                 thread);
-        log.fatal(message, e);
+        Logging.fatal(log, "LoggingExceptionHandler.uncaughtException", message, e);
         System.err.println(message);
         e.printStackTrace(System.err);
         new DeferredSystemExit(1, delay);

@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search.tools;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
@@ -75,7 +76,7 @@ public class SummaSearcherRunner {
             String message = String.format(
                     "Caught toplevel throwable in SummaSearcherRunner.main " 
                     + "with arguments %s", Strings.join(args, ", "));
-            log.fatal(message, t);
+            Logging.fatal(log, "SummaSearcherRunner.main", message, t);
             System.err.println(message);
             t.printStackTrace(System.err);
             new DeferredSystemExit(1, 5);

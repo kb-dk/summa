@@ -390,7 +390,7 @@ public class SolrManipulator implements IndexManipulator {
                 + "Trimmed request:\n%s\nResponse:\n%s",
                 designation, updateCommand, this, code, trim(command, 100), getResponse(response));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
-            log.fatal(message);
+            Logging.fatal(log, "SolrManipulator.send", message);
             new DeferredSystemExit(1);
             throw new IOException(message);
         }

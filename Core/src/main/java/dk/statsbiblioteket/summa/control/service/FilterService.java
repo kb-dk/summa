@@ -185,8 +185,8 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
                         try {
                             kill();
                         } catch (RemoteException e) {
-                            log.fatal("Caught exception from kill command." +
-                                      "Scheduling hard JVM shutdown in 5s");
+                            Logging.fatal(log, "FilterService.createFiltercontrol",
+                                          "Caught exception from kill command. Scheduling hard JVM shutdown in 5s");
                             new DeferredSystemExit(2);
                         }
 

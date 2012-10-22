@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.performance;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,7 +60,7 @@ public class SearchPerformanceThread extends Thread {
             System.err.println(message);
             //noinspection CallToPrintStackTrace
             e.printStackTrace();
-            log.fatal(message, e);
+            Logging.fatal(log, "SearchPerformanceThread.run", message, e);
         }
     }
 

@@ -13,6 +13,7 @@
  */
 package dk.statsbiblioteket.summa.support.solr;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -166,6 +167,7 @@ public class SolrManipulatorTest extends TestCase {
 
     // Note: The result must be inspected manually
     public void testLog() {
+        Logging.fatal(log, "SolrManipulatorTest.testLog", "Logging on fatal through Logging.fatal");
         log.fatal("Logging on fatal");
         log.error("Logging on error");
         log.warn("Logging on warn");

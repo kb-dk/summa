@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
@@ -55,8 +56,7 @@ public class StorageValidationFilter extends ObjectFilterImpl {
             log.debug("Storage returns from getModifcationTime(null) value: "
                       + time);
         } catch (IOException e) {
-            log.fatal("Connection to storage failed with message: "
-                      + e.getMessage());
+            Logging.fatal(log, "StorageValidatorFilter.constructor", "Connection to storage failed with message: ", e);
             throw new IOException("Connection to storage failed", e);
         }
     }

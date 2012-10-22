@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
@@ -225,8 +226,7 @@ public class FilterControl extends StateThread implements Configurable,
      * @param args ignored
      */
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler(
-                                              new LoggingExceptionHandler(log));
+        Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(log));
 
         Configuration conf = Configuration.getSystemConfiguration(true);
 
@@ -236,17 +236,15 @@ public class FilterControl extends StateThread implements Configurable,
             protected void finishedCallback() {
                 switch (getStatus()) {
                 case error:
-                    log.fatal("Crashed");
+                    Logging.fatal(log, "FilterControl.main", "Filter finished with status 'error'");
                     break;
                 case ready:
                 case stopping:
                 case stopped:
-                    log.info("Stopped with status "
-                            + getStatus());
+                    log.info("Stopped with status " + getStatus());
                     break;
                 default:
-                    log.warn("Stopped with unknown state "
-                            + getStatus());
+                    log.warn("Stopped with unknown state " + getStatus());
                 }
             }
         };
@@ -256,7 +254,7 @@ public class FilterControl extends StateThread implements Configurable,
             filterControl.waitForFinish();
             log.info("Filter chain completed");
         } catch (Throwable t) {
-            log.fatal("Caught toplevel exception: " + t.getMessage(), t);
+            Logging.fatal(log, "FilterControl.main", "Caught top level exception", t);
             System.err.println(t.getMessage());
             t.printStackTrace();
             System.exit(1);

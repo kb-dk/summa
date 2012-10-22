@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.MachineStats;
@@ -69,7 +70,7 @@ public class Launcher {
                 serviceClass = Configuration.getClass(
                         CONF_SERVICE_CLASS, DEFAULT_SERVICE_CLASS, conf);
             } catch (NullPointerException e) {
-                log.fatal(String.format(
+                Logging.fatal(log, "Launcher.main", String.format(
                         "Property '%s' not defined in configuration. Config "
                       + "was:\n\n%s", CONF_SERVICE_CLASS, conf.dumpString()));
                 System.exit(2);
@@ -91,7 +92,7 @@ public class Launcher {
             String message = "Service launcher caught top level exception. "
                                + "Bailing out: " + t.getMessage();
             log.fatal(message, t);
-            System.err.println(message);
+            Logging.fatal(log, "Launcher.main", message);
             System.exit (1);
         }
     }

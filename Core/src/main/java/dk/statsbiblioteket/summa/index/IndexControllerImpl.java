@@ -688,7 +688,8 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             try {
                 close();
             } catch (IOException e) {
-                log.fatal("IOException while calling close() from close(true)", e);
+                Logging.fatal(log, "IndexControllerImpl.close",
+                              "IOException while calling close() from close(true)", e);
             }
         }
     }
