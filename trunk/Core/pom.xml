@@ -239,7 +239,7 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
-<!--
+
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-kuromoji</artifactId>
@@ -250,7 +250,7 @@
             <artifactId>lucene-analyzers-morfologik</artifactId>
         </dependency>
 
--->
+
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-phonetic</artifactId>

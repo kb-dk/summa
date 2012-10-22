@@ -126,7 +126,7 @@
           <groupId>org.apache.lucene</groupId>
           <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
-<!--        
+        
             <dependency>
               <groupId>org.apache.lucene</groupId>
               <artifactId>lucene-analyzers-kuromoji</artifactId>
@@ -136,7 +136,7 @@
                <groupId>org.apache.lucene</groupId>
                <artifactId>lucene-analyzers-morfologik</artifactId>
              </dependency>
-    -->                    
+                    
 
            <dependency>
               <groupId>org.apache.lucene</groupId>
