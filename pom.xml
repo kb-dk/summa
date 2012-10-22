@@ -219,10 +219,7 @@
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-jdk14</artifactId>
                     </exclusion>
-                    <exclusion>
-                      <groupId>org.apache.lucene</groupId>
-                      <artifactId>lucene-analyzers-morfologik</artifactId>
-                    </exclusion>
+                 
                 </exclusions>
             </dependency>
 
@@ -237,22 +234,20 @@
                 <artifactId>lucene-analyzers-icu</artifactId>
                 <version>4.0.0</version>
             </dependency>
-<!--
+
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-kuromoji</artifactId>
                 <version>4.0.0</version>
             </dependency>
--->
 
             <!-- We do not need this and it breaks the Orcale Java 1.6.0_24 compiler -->
-<!--
+
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-morfologik</artifactId>
                 <version>4.0.0</version>
             </dependency>
--->
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
