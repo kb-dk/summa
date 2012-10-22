@@ -36,13 +36,23 @@ public class LowerCaseCharFilter extends CharFilter {
 
     @Override
     public int read(char[] cbuf, int off, int len) throws IOException {
-        int read = super.read(cbuf, off, len);
+        int read = directRead(cbuf, off, len);
         for (int i = off ; i < read ; ) {
             // This assumes that the number of chars is always equal for upper- and lower-case codepoints.
             // The Solr code makes this assumption, but it would be nice to verify if it is true.
             i += Character.toChars(
                     Character.toLowerCase(
                         charUtils.codePointAt(cbuf, i)), cbuf, i);
+        }
+        return read;
+    }
+
+    private int directRead(char[] cbuf, int off, int len) throws IOException {
+        int read = 0;
+        int c;
+        while (read < len && (c = super.read()) != -1) {
+            cbuf[off + read] = (char)c;
+            read++;
         }
         return read;
     }

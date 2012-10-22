@@ -20,8 +20,7 @@ package org.apache.lucene.search.exposed.facet;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.analysis.MockTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -252,7 +251,8 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
         Version.LUCENE_40, ExposedHelper.ALL,
-        new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
+        new WhitespaceAnalyzer(Version.LUCENE_40));
+      //MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     TopScoreDocCollector sanityCollector =
         TopScoreDocCollector.create(10, false);

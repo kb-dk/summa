@@ -1,10 +1,10 @@
 package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.index.AtomicReader;
-import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
+import org.apache.lucene.util.IndexUtil;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -72,7 +72,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     if (reader instanceof AtomicReader) {
       readers = Arrays.asList(reader);
     } else {
-      readers = ((CompositeReader)reader).getSequentialSubReaders();
+      readers = IndexUtil.flatten(reader);
       isSingle = false;
     }
 
@@ -80,6 +80,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
         new ArrayList<TermProvider>(readers.size() * fieldNames.size());
 
     long fieldProviderConstruction = -System.currentTimeMillis();
+    // TODO: Switch to using context with docBase
     int docBase = 0;
     for (IndexReader sub: readers) {
       // TODO: Why is the docBase always 0?

@@ -11,6 +11,7 @@ import org.apache.lucene.search.exposed.ExposedHelper;
 import org.apache.lucene.search.exposed.ExposedIOFactory;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
+import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.File;
@@ -121,9 +122,7 @@ public class TestHierarchicalTermProvider extends TestCase {
       throws IOException {
     System.out.println("Dumping a maximum of " + tags + " from field " + field);
     int count = 0;
-    List<? extends IndexReader> readers = reader instanceof AtomicReader ?
-        Arrays.asList(reader) :
-        ((CompositeReader)reader).getSequentialSubReaders();
+    List<? extends IndexReader> readers = IndexUtil.flatten(reader);
     DocsEnum docsEnum = null;
     for (IndexReader inner: readers) {
         AtomicReader r = (AtomicReader)inner;
@@ -159,6 +158,7 @@ public class TestHierarchicalTermProvider extends TestCase {
     IndexWriter writer = ExposedIOFactory.getWriter(location);
 
     int every = docCount > 100 ? docCount / 100 : 1;
+
     int next = every;
     for (int docID = 0 ; docID < docCount ; docID++) {
       if (docID == next) {

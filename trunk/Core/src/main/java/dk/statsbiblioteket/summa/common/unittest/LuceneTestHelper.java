@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.unittest;
 
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.lucene.index.AtomicReader;
@@ -74,7 +75,7 @@ public class LuceneTestHelper extends TestCase {
     public static List<String> getIDs(File location) throws IOException {
         List<String> ids = new ArrayList<String>(100);
         DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(location));
-        List<? extends AtomicReader> readers = reader.getSequentialSubReaders();
+        List<AtomicReader> readers = LuceneUtil.gatherSubReaders(reader);
         try {
             for (AtomicReader sub: readers) {
                 for (int i = 0 ; i < sub.maxDoc() ; i++) {

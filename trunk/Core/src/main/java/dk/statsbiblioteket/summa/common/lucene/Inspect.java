@@ -289,10 +289,10 @@ public class Inspect {
         long totalTermCount = 0;
         while ((field = fields.next()) != null) {
             long termCount = 0;
-            if (ir.getSequentialSubReaders() == null) {
+            if (ir.flatten() == null) {
                 termCount = ir.terms(field).getUniqueTermCount();
             } else {
-                for (IndexReader sub: ir.getSequentialSubReaders()) {
+                for (IndexReader sub: ir.flatten()) {
                     termCount += sub.terms(field).getUniqueTermCount();
                 }
             }
