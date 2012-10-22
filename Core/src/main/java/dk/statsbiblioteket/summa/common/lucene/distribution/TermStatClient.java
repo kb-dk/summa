@@ -24,7 +24,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.AtomicReader;
-import org.apache.lucene.index.FieldsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
@@ -255,8 +254,7 @@ public class TermStatClient implements Configurable {
 
         TermStatSource factory = new TermStatSource(index);
         // TODO: docCount
-        Iterator<Triple<BytesRef, Long, Long>> source =
-            factory.getTerms(fields);
+        Iterator<Triple<BytesRef, Long, Long>> source = factory.getTerms(fields);
         final long[] cache = new long[2];
         while (source.hasNext()) {
             Triple<BytesRef, Long, Long> triple = source.next();
@@ -269,8 +267,7 @@ public class TermStatClient implements Configurable {
                 }
                 String term = triple.getValue1().utf8ToString();
                 if ("".equals(term)) {
-                    log.warn("Received empty term, which should not happen. "
-                             + "Skipping " + triple);
+                    log.warn("Received empty term, which should not happen. Skipping " + triple);
                     continue;
                 }
                 if (skipSpace && term.contains(" ")) {
@@ -278,8 +275,7 @@ public class TermStatClient implements Configurable {
                     continue;
                 }
                 if (term.length() > mtl) {
-                    log.trace("Skipping '" + term + "' as it is longer than "
-                              + mtl);
+                    log.trace("Skipping '" + term + "' as it is longer than " + mtl);
                     continue;
                 }
                 termStat.add(new TermEntry(term, cache, columns));
@@ -297,10 +293,8 @@ public class TermStatClient implements Configurable {
         Set<String> fields = new HashSet<String>(20);
 
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
-        for (AtomicReader sub: readers) {
-            FieldsEnum fieldsEnum = sub.fields().iterator();
-            String fieldName;
-            while ((fieldName = fieldsEnum.next()) != null) {
+        for (AtomicReader ar: readers) {
+            for (String fieldName : ar.fields()) {
                 for (String regexp: fieldRegexps) {
                     if (Pattern.compile(regexp).matcher(fieldName).matches()) {
                         fields.add(fieldName);
@@ -309,8 +303,7 @@ public class TermStatClient implements Configurable {
             }
         }
         if (fields.size() == 0) {
-            log.warn("Unable to expand " + Strings.join(fieldRegexps, ", ")
-                     + " to any fields in " + index);
+            log.warn("Unable to expand " + Strings.join(fieldRegexps, ", ") + " to any fields in " + index);
         }
         return fields;
     }
@@ -340,8 +333,7 @@ public class TermStatClient implements Configurable {
     public void merge(
         List<File> inputs, List<String> columns, String destination, int mdf) {
         if (inputs.size() == 0) {
-            throw new IllegalArgumentException(
-                "One or more inputs must be specified");
+            throw new IllegalArgumentException("One or more inputs must be specified");
         }
         if (destination == null) {
             throw new IllegalArgumentException("No destination specified");
@@ -350,10 +342,8 @@ public class TermStatClient implements Configurable {
             log.info("No columns specified. Merging all columns");
             columns.add(".*");
         }
-        log.info(String.format(
-            "Merging columns %s from inputs %s with mdf %d to %s",
-            Strings.join(columns, ", "), Strings.join(inputs, ", "), mdf,
-            destination));
+        log.info(String.format("Merging columns %s from inputs %s with mdf %d to %s",
+                               Strings.join(columns, ", "), Strings.join(inputs, ", "), mdf, destination));
         Profiler profiler = new Profiler();
 
         // TODO: Implement this. Remember docCount
@@ -389,16 +379,14 @@ public class TermStatClient implements Configurable {
      * @param destination where to store the result of the merge.
      * @throws IOException if the destination could not be updated.
      */
-    public void mergeStats(List<File> sources, File destination) throws
-                                                                   IOException {
+    public void mergeStats(List<File> sources, File destination) throws IOException {
 
         // TODO: Split on maxOpenSources or the merger will die on ~500 sources
         doMerge(sources, destination);
     }
 
     // TODO: Make the merger more robust with regard to errors in the sources
-    private void doMerge(List<File> fileSources, File destinationFile)
-                                                            throws IOException {
+    private void doMerge(List<File> fileSources, File destinationFile) throws IOException {
 /*        Profiler profiler = new Profiler();
         TermStat destination = new TermStat(termStatConf);
         destination.create(destinationFile);

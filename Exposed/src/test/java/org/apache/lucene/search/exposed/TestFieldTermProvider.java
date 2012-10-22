@@ -8,6 +8,7 @@ import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.IndexUtil;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class TestFieldTermProvider extends TestCase {
     helper.createIndex(DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
     IndexReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-    int subCount = reader instanceof AtomicReader ? 1 : ((CompositeReader)reader).getSequentialSubReaders().size();
+    int subCount = IndexUtil.flatten(reader).size();
     assertTrue("The number of segments should be >= 2 but was " + subCount,
         subCount >= 2);
     reader.close();

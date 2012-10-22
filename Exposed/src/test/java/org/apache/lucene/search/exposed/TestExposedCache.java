@@ -3,10 +3,8 @@ package org.apache.lucene.search.exposed;
 import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RawCollationKey;
 import junit.framework.TestCase;
-import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.analysis.MockTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.AtomicReader;
-import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -15,8 +13,10 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.packed.PackedInts;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,8 +51,9 @@ public class TestExposedCache  extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN, new MockAnalyzer(
-        new Random(), MockTokenizer.WHITESPACE, false));
+        Version.LUCENE_40, ExposedHelper.EVEN,
+        new WhitespaceAnalyzer(Version.LUCENE_40));
+        //new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse("true");
     Sort aSort = new Sort(new SortField("a", SortField.Type.STRING));
 
@@ -91,9 +92,8 @@ public class TestExposedCache  extends TestCase {
 
   public void testIndirectSegment() throws IOException {
     helper.createIndex(DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION).
-        getSequentialSubReaders().get(0);
+    IndexReader reader = getFirstAtomic(ExposedIOFactory.getReader(
+        ExposedHelper.INDEX_LOCATION));
 
     ExposedRequest.Field fRequest = new ExposedRequest.Field(
         "a", ComparatorFactory.create("da"));
@@ -111,8 +111,7 @@ public class TestExposedCache  extends TestCase {
   }
 
   private AtomicReader getFirstAtomic(IndexReader reader) {
-      return reader instanceof AtomicReader ? (AtomicReader)reader :
-             (AtomicReader)((CompositeReader)reader).getSequentialSubReaders().get(0);
+      return (AtomicReader)IndexUtil.flatten(reader).get(0);
   }
 
   public void testDocCount() throws IOException {
@@ -198,6 +197,7 @@ public class TestExposedCache  extends TestCase {
     return exposedTime;
   }
 
+  @Test
   public void testExposedSortWithNullValues() throws Exception {
     testExposedSort(ExposedHelper.EVEN_NULL, DOCCOUNT, false);
   }
@@ -264,8 +264,9 @@ public class TestExposedCache  extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.ALL, new MockAnalyzer(
-        new Random(), MockTokenizer.WHITESPACE, false));
+        Version.LUCENE_40, ExposedHelper.ALL,
+        new WhitespaceAnalyzer(Version.LUCENE_40));
+        //new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     Sort aPlainSort = new Sort(
         new SortField(sortField, SortField.Type.STRING, reversed));
@@ -401,9 +402,8 @@ public class TestExposedCache  extends TestCase {
       helper.close();
       helper = new ExposedHelper();
       helper.createIndex(size, Arrays.asList("a", "b"), 20, 2);
-      IndexReader reader =
-          ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION).
-          getSequentialSubReaders().get(0);
+      IndexReader reader = getFirstAtomic(ExposedIOFactory.getReader(
+          ExposedHelper.INDEX_LOCATION));
       ExposedRequest.Field request =
           new ExposedRequest.Field("a", new NamedNaturalComparator());
       TermProvider provider = ExposedCache.getInstance().getProvider(

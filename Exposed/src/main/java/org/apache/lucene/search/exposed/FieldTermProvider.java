@@ -7,6 +7,7 @@ import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -81,8 +82,7 @@ public class FieldTermProvider extends TermProviderImpl {
     if (!(reader instanceof AtomicReader)) {
       throw new IllegalArgumentException(
           "The IndexReader should be a leaf (no sub readers). It contained "
-              + ((CompositeReader)reader).getSequentialSubReaders().size()
-              + " sub readers");
+              + IndexUtil.flatten(reader).size() + " sub readers");
     }
     this.request = request;
 

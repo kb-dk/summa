@@ -4,6 +4,7 @@ import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
+import org.apache.lucene.util.IndexUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class ExposedFactory {
     }
     if (reader instanceof CompositeReader && fieldNames.size() == 1) {
       // Index-level single field
-      List<? extends IndexReader> subs = ((CompositeReader)reader).getSequentialSubReaders();
+      List<? extends IndexReader> subs = IndexUtil.flatten(reader);
         // TODO: Consider using ReaderUtil.gathersubReaders
       List<TermProvider> fieldProviders =
           new ArrayList<TermProvider>(subs.size());
@@ -72,7 +73,7 @@ public class ExposedFactory {
       throw new IllegalStateException(
           "Code logic error: Expected CompositeReader, got " + reader.getClass());
     }
-    List<? extends IndexReader> subs = ((CompositeReader)reader).getSequentialSubReaders();
+    List<? extends IndexReader> subs = IndexUtil.flatten(reader);
     List<TermProvider> fieldProviders =
         new ArrayList<TermProvider>(subs.size() * fieldNames.size());
     List<ExposedRequest.Field> fieldRequests =

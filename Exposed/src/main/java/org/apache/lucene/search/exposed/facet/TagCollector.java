@@ -10,6 +10,7 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.util.Bits;
+import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.OpenBitSet;
 
 import java.io.IOException;
@@ -135,8 +136,8 @@ public class TagCollector extends Collector {
     // CompositeReader
 
     int docBase = 0;
-    for (IndexReader sub: ((CompositeReader)reader).getSequentialSubReaders()) {
-      // TODO: Should we perform a recursive descend instead of assuming atomicity here?
+    List<? extends IndexReader> subs = IndexUtil.flatten(reader);
+    for (IndexReader sub: subs) {
       AtomicReader atomic = (AtomicReader)sub;
       remove(bits, docBase, atomic.getLiveDocs());
       //    sub.getTopReaderContext().docBaseInParent

@@ -145,7 +145,7 @@ public class ETSSStatusFilterTest extends TestCase {
         String[][] TESTS = new String[][] {
             // Hand held by Hans
             {"1397-3290_freeaarhusuniversitylibrariesejournalholdings", "Dette er en kommentar"},
-            //
+            // æ is entity-escaped
             {"1602-7930_aarhusuniversitylibrariesejournalholdings", "Klik på gæstelogin under den enkelte artikel"}
         };
         for (String[] test: TESTS) {

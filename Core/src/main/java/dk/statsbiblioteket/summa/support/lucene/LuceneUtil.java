@@ -18,6 +18,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
 
@@ -35,17 +36,16 @@ public class LuceneUtil {
     private static Log log = LogFactory.getLog(LuceneUtil.class);
 
 
-    public static List<AtomicReader> gatherSubReaders(IndexReader root) {
-        if (root instanceof AtomicReader) {
-            return Arrays.asList((AtomicReader)root);
-        }
-        if (!(root instanceof CompositeReader)) {
-            throw new UnsupportedOperationException(
-                "Expected either AtomicReader or Composite reader. Unknown reader encountered: " + root.getClass());
-        }
+    /**
+     * Flattens the given reader down to AtomicReaders.
+     * A simple wrapper for {@link org.apache.lucene.index.IndexReader#leaves()}.
+     * @param reader the IndexReader to flatten.
+     * @return a list of AtomicReaders
+     */
+    public static List<AtomicReader> gatherSubReaders(IndexReader reader) {
         List<AtomicReader> readers = new ArrayList<AtomicReader>();
-        for (IndexReader ir: ((CompositeReader)root).getSequentialSubReaders()) {
-            readers.addAll(gatherSubReaders(ir));
+        for (AtomicReaderContext context: reader.leaves()) {
+            readers.add(context.reader());
         }
         return readers;
     }

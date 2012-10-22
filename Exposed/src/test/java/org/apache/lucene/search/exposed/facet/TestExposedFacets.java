@@ -3,8 +3,8 @@ package org.apache.lucene.search.exposed.facet;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.analysis.MockTokenizer;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -16,6 +16,7 @@ import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
+import org.junit.runner.RunWith;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
+@RunWith(com.carrotsearch.randomizedtesting.RandomizedRunner.class)
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
   private ExposedCache cache;
@@ -479,8 +481,9 @@ public class TestExposedFacets extends TestCase {
     return response;
   }
 
-  private MockAnalyzer getAnalyzer() {
-    return new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false);
+  private Analyzer getAnalyzer() {
+    return new WhitespaceAnalyzer(Version.LUCENE_40);
+//    return new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false);
   }
   
   public static final String GROUP_REQUEST_ABC =

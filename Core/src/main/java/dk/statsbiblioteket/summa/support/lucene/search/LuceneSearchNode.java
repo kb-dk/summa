@@ -1022,8 +1022,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         }
         Filter amalgamFilter = new QueryWrapperFilter(amalgam);
         log.trace("getHitcount(): Created filter, performing hit count");
-        IndexReaderContext top = searcher.getIndexReader().getTopReaderContext();
-        List<AtomicReaderContext> contexts = top.leaves();
+//        IndexReaderContext top = searcher.getIndexReader().getTopReaderContext();
+        List<AtomicReaderContext> contexts = searcher.getIndexReader().leaves();
 //        AtomicReaderContext[] contexts = top.children() == null || top.children().length == 0 ?
 //            new AtomicReaderContext[]{(AtomicReaderContext)top} :
 //            top.leaves();

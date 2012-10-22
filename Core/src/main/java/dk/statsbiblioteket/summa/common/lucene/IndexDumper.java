@@ -19,17 +19,13 @@ import dk.statsbiblioteket.util.Strings;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.FieldsEnum;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple dump of stored fields in the index.
@@ -40,8 +36,7 @@ public class IndexDumper {
         if (args.length == 0) {
             System.out.println(
                     "Usage: IndexDumper indexLocation [delimiter field*]");
-            System.out.println("If only the indexLocation is given, a list of "
-                               + "fields in the index is dumped");
+            System.out.println("If only the indexLocation is given, a list of fields in the index is dumped");
             return;
         }
         File location = new File(args[0]);
@@ -65,9 +60,7 @@ public class IndexDumper {
         Set<String> fieldNames = new HashSet<String>(100);
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader ar: readers) {
-            String field;
-            FieldsEnum fe = ar.fields().iterator();
-            while ((field = fe.next()) != null) {
+            for (String field : ar.fields()) {
                 fieldNames.add(field);
             }
         }
