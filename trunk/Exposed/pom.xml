@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.0.0-20121012-trunk-SNAPSHOT</version>
+        <version>2.0.0-20121022-trunk-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-exposed</artifactId>
@@ -86,11 +86,14 @@
             <artifactId>junit-dep</artifactId>
             <version>4.9</version>
         </dependency>
+<!--
         <dependency>
             <groupId>com.carrotsearch.randomizedtesting</groupId>
             <artifactId>randomizedtesting-runner</artifactId>
             <version>1.5.0</version>
         </dependency>
+-->
+
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant-junit</artifactId>
@@ -123,7 +126,7 @@
           <groupId>org.apache.lucene</groupId>
           <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
-        
+<!--        
             <dependency>
               <groupId>org.apache.lucene</groupId>
               <artifactId>lucene-analyzers-kuromoji</artifactId>
@@ -133,7 +136,7 @@
                <groupId>org.apache.lucene</groupId>
                <artifactId>lucene-analyzers-morfologik</artifactId>
              </dependency>
-                        
+    -->                    
 
            <dependency>
               <groupId>org.apache.lucene</groupId>
@@ -184,6 +187,10 @@
                      <groupId>org.slf4j</groupId>
                      <artifactId>slf4j-jdk14</artifactId>
                  </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-morfologik</artifactId>
+                </exclusion>
              </exclusions>
          </dependency>
 
