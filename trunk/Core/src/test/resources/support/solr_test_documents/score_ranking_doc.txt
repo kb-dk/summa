@@ -1,0 +1,21 @@
+<doc boost="100">
+    <field name="recordID">score_ranking_test</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="author_main">Bjørn</field>
+    <field name="author_normalised">Bjørn</field>
+    <field name="year">2012</field>
+    <field name="location_normalised">Bjørn</field>
+    
+</doc>
