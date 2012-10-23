@@ -35,16 +35,14 @@ public class ScoreRankingTest {
 		
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
-		SolrQuery query = new SolrQuery("\"Thomas og Toke\"");
-		QueryResponse response = solrServer.query(query);
-		assertEquals(1L, response.getResults().getNumFound());
 
-	    query = new SolrQuery("\"Thomas & Toke\"");
-		response = solrServer.query(query);
+	    SolrQuery query = new SolrQuery("\"Thomas og Toke\"");
+		QueryResponse response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		SolrDocument solrDocument = response.getResults().get(0);
 		Float score= (Float) solrDocument.getFieldValue("score");
 		assertTrue("Insane boost bug not fixed, score="+score, score < 10000000);
+        System.out.println("Got score: " + score);
 		
 		
 		
