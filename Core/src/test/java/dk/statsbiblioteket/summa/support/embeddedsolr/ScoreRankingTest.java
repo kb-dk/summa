@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
+import java.util.Random;
+
 public class ScoreRankingTest {
 
     String solrHome = "support/solr_home1"; //data-dir (index) will be created here.
@@ -27,35 +29,56 @@ public class ScoreRankingTest {
         solrServer = new HttpSolrServer(server.getServerUrl());
     }
 
+    /**
+     * Solr 4.0.0 contains a bug where multiple unique fields that are copied to the same field (via the copyField
+     * directive), results in the destination field having the boost assigned multiple times.
+     * See https://issues.apache.org/jira/browse/SOLR-3875 for details.
+     * @throws Exception if the test failed.
+     */
     @Test
     public void testScoreRanking() throws Exception {
 
         String[] files = new String[]{
-            "support/solr_test_documents/score_ranking_doc.txt",
-            "support/solr_test_documents/doc1.xml",
-            "support/solr_test_documents/doc1_sort.xml",
-            "support/solr_test_documents/doc2.xml",
-            "support/solr_test_documents/doc2_sort.xml",
-            "support/solr_test_documents/doc3.xml",
-            "support/solr_test_documents/doc3_sort.xml",
-            "support/solr_test_documents/doc4.xml",
-            "support/solr_test_documents/doc5.xml",
-            "support/solr_test_documents/doc6_sort.xml"
+            "support/solr_test_documents/score_ranking_doc.txt"
         };
         SolrServerUnitTestUtil.indexFiles(files);
+        SolrServerUnitTestUtil.indexDocuments(generateSamples(10, 87));
 
         SolrQuery query = new SolrQuery("\"Thomas og Toke\"");
         QueryResponse response = solrServer.query(query);
         assertEquals(1L, response.getResults().getNumFound());
         SolrDocument solrDocument = response.getResults().get(0);
         Float score= (Float) solrDocument.getFieldValue("score");
-        assertTrue("Insane boost bug not fixed, score="+score, score < 10000000);
-        System.out.println("Got score: " + score);
+        assertTrue("Insane boost bug not fixed, score=" + score, score < 1000);
 
+       //Thread.sleep(1000000000000000L);
+    }
 
+    public String[] generateSamples(int numSamples, int seed) {
+        Random random = new Random(seed);
+        String[] docs = new String[numSamples];
+        for (int i = 0 ; i < numSamples ; i++) {
+            docs[i] =
+                "<doc>\n"
+                + "    <field name=\"recordID\">doc" + i + "</field>\n"
+                + "    <field name=\"recordBase\">aleph</field>\n"
+                + "    <field name=\"title\">Matematik " + randomString(random) + "</field>\n"
+                + "    <field name=\"author_main\">" + randomString(random) + " " + randomString(random) + "</field>\n"
+                + "    <field name=\"author_normalised\">Thomas Egense</field>\n"
+                + "    <field name=\"year\">" + (1990 + i) + "</field>\n"
+                + "    <field name=\"location_normalised\">" + randomString(random) + "</field>\n"
+                + "</doc>";
+        }
+        return docs;
+    }
 
-        //Thread.sleep(1000000000000000L);
-
+    private String randomString(Random random) {
+        int size = random.nextInt(20);
+        String str = "";
+        for (int i = 0 ; i < size ; i++) {
+            str += (char)(97 + random.nextInt(27));
+        }
+        return str;
     }
 
 }
