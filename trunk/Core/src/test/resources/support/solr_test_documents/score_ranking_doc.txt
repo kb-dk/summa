@@ -1,6 +1,8 @@
-<doc boost="100">
+<doc boost="5">
     <field name="recordID">score_ranking_test</field>
     <field name="recordBase">aleph</field>
+    <field name="title">Thomas og Toke</field>
+    <field name="title">Thomas og Toke</field>
     <field name="title">Thomas og Toke</field>
     <field name="title">Thomas og Toke</field>
     <field name="title">Thomas og Toke</field>
