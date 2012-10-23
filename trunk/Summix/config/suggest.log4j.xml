@@ -17,7 +17,7 @@
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
-        <param name="Threshold" value="FATAL"/>
+        <param name="Threshold" value="ERROR"/>
         <param name="File" value="log/suggest.fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
@@ -30,6 +30,13 @@
     <logger name="dk.statsbiblioteket.summa">
         <level value="debug" />
         <appender-ref ref="FILE" />
+    </logger>
+
+    <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here. 
+         However, due to slf4j, the highest level is ERROR and thus we need to set that as our level -->
+    <logger name="fatal">
+        <level value="ERROR" />
+        <appender-ref ref="FULL_LOG" />
     </logger>
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
