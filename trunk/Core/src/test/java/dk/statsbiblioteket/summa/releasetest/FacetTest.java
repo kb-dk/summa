@@ -260,6 +260,35 @@ public class FacetTest extends NoExitTestCase {
         }
     }
 
+    public void testScoreExtraction() throws Exception {
+        final String STORAGE = "score_test_storage";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        try {
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+            SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
+            Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+            assertNotNull("The fagref Hans should exist in storage", hansRecord);
+            assertEquals("The Records-count should be correct after first ingest",
+                         3, countRecords(storage, "fagref"));
+
+            updateIndex(STORAGE);
+            log.debug("Index updated. Creating searcher");
+            SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
+            log.debug("Searcher created. Verifying existence of Hans Jensen data");
+            SearchTest.verifySearch(searcher, "Hans", 1);
+            Request request = new Request();
+            request.put(DocumentKeys.SEARCH_QUERY, "hans");
+            request.put(DocumentKeys.SEARCH_SORTKEY, "author_person");
+
+            String xml = searcher.search(request).toXML();
+            final String SNIPPET = "<record score=\"0.0067765927\"";
+            assertTrue("The result should contain the string '" + SNIPPET + "'\n" + xml, xml.contains(SNIPPET));
+            searcher.close();
+        } finally {
+            storage.close();
+        }
+    }
+
     public void testSortValues() throws Exception {
         final String STORAGE = "sortvalues_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);

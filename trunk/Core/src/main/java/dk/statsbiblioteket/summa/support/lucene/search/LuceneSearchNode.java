@@ -691,7 +691,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter, (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
                     mlt_request || sortKey == null || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ?
-                    Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort));
+                    Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort), true, false);
             rawSearch += System.currentTimeMillis();
             if (log.isTraceEnabled()) {
                 log.trace(
@@ -722,6 +722,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id
+                System.out.println("Score: " + scoreDoc.score);
                 DocumentResponse.Record record =
                         new DocumentResponse.Record(Integer.toString(scoreDoc.doc), "NA", scoreDoc.score, null);
                 Document doc = searcher.getIndexReader().document(scoreDoc.doc, selector);
