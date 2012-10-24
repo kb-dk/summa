@@ -722,7 +722,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id
-                System.out.println("Score: " + scoreDoc.score);
                 DocumentResponse.Record record =
                         new DocumentResponse.Record(Integer.toString(scoreDoc.doc), "NA", scoreDoc.score, null);
                 Document doc = searcher.getIndexReader().document(scoreDoc.doc, selector);
