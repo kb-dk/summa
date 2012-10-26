@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.0.0-20121024-trunk-SNAPSHOT</version>
+        <version>2.0.0-20121026-trunk-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-exposed</artifactId>
