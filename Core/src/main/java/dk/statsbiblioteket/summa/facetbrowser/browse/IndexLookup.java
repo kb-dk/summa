@@ -225,12 +225,13 @@ public class IndexLookup {
 
     private org.apache.lucene.search.exposed.facet.request.FacetRequest
                                       createFacetRequest(IndexRequest request) {
-        String localeStr =
-            descriptor == null ? null :
-            descriptor.getFacets().get(request.getField()).getLocale();
-        Locale locale =
-            localeStr == null ? null :
-            new Locale(localeStr);
+        Locale locale = null;
+        if (request.getLocale() != null) {
+            locale = request.getLocale();
+        } else if (descriptor != null && descriptor.getFacets() != null
+                   && descriptor.getFacets().get(request.getField()) != null) {
+            locale = new Locale(descriptor.getFacets().get(request.getField()).getLocale());
+        }
         NamedComparator comparator = ComparatorFactory.create(locale);
 
         List<ExposedRequest.Field> fields =

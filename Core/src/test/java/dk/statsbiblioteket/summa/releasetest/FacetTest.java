@@ -455,6 +455,48 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testIndexLookupNonFacetField() throws Exception {
+        final String STORAGE = "index_lookup_storage2";
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+        assertNotNull("The fagref Hans should exist in storage", hansRecord);
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
+
+        updateIndex(STORAGE);
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+
+        { // Query, minCount 1
+            Request request = new Request();
+            request.put(IndexKeys.SEARCH_INDEX_QUERY,    "jensen");
+            request.put(IndexKeys.SEARCH_INDEX_FIELD,    "stilling");
+            request.put(IndexKeys.SEARCH_INDEX_SORT,     IndexKeys.INDEX_SORTBYLOCALE);
+            request.put(IndexKeys.SEARCH_INDEX_LOCALE,    "da");
+/*            request.put(IndexKeys.SEARCH_INDEX_TERM,     "H");
+            request.put(IndexKeys.SEARCH_INDEX_DELTA,    0);
+            request.put(IndexKeys.SEARCH_INDEX_MINCOUNT, 1);
+            */
+            ResponseCollection responses = searcher.search(request);
+            System.out.println(responses.toXML());
+            assertFalse("The index lookup should have no Jens Hansen entry but"
+                        + " had\n" + responses.toXML(),
+                        responses.toXML().contains(
+                            "<term count=\"0\">Jens Hansen</term>"));
+            assertTrue("The index lookup should return 1 for 'omnilogi' but "
+                       + "got\n" + responses.toXML(),
+                       responses.toXML().contains(
+                           "<term count=\"0\">omnilogi</term>"));
+        }
+        // TODO: IndexDescriptor-load?
+        searcher.close();
+        storage.close();
+    }
+
 
     public static  void verifyFacetResult(
         SummaSearcher searcher, String query) throws IOException {
