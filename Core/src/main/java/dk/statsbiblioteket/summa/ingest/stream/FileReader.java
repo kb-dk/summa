@@ -272,7 +272,7 @@ public class FileReader extends FileSystemReader {
         log.info("Opening file '" + current + "'");
         try {
             RenamingFileStream in = new RenamingFileStream(current, postfix);
-            Payload payload = new Payload(in);
+            Payload payload = new Payload(in, current.toString());
             payload.getData().put(Payload.ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
             synchronized (delivered) {

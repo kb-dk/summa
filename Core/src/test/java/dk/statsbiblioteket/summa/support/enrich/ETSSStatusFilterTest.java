@@ -82,8 +82,9 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testIDAddition() throws IOException, XMLStreamException, ParseException {
         String EXPECTED = "0040-5671_theologischeliteraturzeitung";
+        String SOURCE = "common/marc/existing_marc.xml";
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new FileInputStream(Resolver.getFile("common/marc/existing_marc.xml")))
+            new Payload(new FileInputStream(Resolver.getFile(SOURCE)), SOURCE)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
@@ -107,7 +108,7 @@ public class ETSSStatusFilterTest extends TestCase {
     public void testNormaliseID(String marcFile, String expected)
         throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new FileInputStream(Resolver.getFile(marcFile)))
+            new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
@@ -165,7 +166,7 @@ public class ETSSStatusFilterTest extends TestCase {
     public void assertStatus(String marcFile, boolean hasPassword)
         throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new FileInputStream(Resolver.getFile(marcFile)))
+            new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
