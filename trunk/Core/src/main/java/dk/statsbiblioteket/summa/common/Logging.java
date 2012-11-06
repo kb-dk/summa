@@ -158,9 +158,18 @@ public class Logging {
     }
 
     private static String getContentSnippet(Record record) {
-        String content = record.getContentAsUTF8();
-        return content.length() > MAX_CONTENT ?
-        content.substring(0, MAX_CONTENT) : content;
+        return record == null ? "[No Record]" : getSnippet(record.getContentAsUTF8());
+    }
+
+    public static String getSnippet(String content) {
+        return getSnippet(content, MAX_CONTENT);
+    }
+
+    public static String getSnippet(String content, int maxLength) {
+        if (content == null) {
+            return "[null]";
+        }
+        return content.length() > maxLength ? content.substring(0, maxLength) : content;
     }
 
     public static void logProcess(String origin, String message, LogLevel level, String id) {

@@ -65,7 +65,7 @@ public class PullParser extends ThreadedStreamParser {
             }
             Payload payload = null;
             try {
-                payload = new Payload(url.openStream());
+                payload = new Payload(url.openStream(), url.toString());
                 payload.getData().put(Payload.ORIGIN, url);
                 log.debug(String.format("Created Payload with Stream to '%s'",
                                         url));

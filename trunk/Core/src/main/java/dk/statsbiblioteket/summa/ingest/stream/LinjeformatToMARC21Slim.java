@@ -149,7 +149,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         PipedOutputStream payloadPipe = new PipedOutputStream();
         payloadPipe.connect(payloadIn);
 
-        Payload payload = new Payload(payloadIn);
+        Payload payload = new Payload(payloadIn, "Copied from " + source.getId());
 
         // TODO: Consider transferring all metadata
         payload.getData().put(

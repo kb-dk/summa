@@ -81,11 +81,22 @@ public class Payload {
 
     /* Constructors */
 
+    /**
+     * Create a Payload based on the given stream.
+     * @param stream the content.
+     * @deprecated use
+     */
     public Payload(InputStream stream) {
         assignIfValid(stream, record);
         Logging.logProcess(this.getClass().getSimpleName(),
                            "Created based on InputStream",
                            Logging.LogLevel.DEBUG, this);
+    }
+    public Payload(InputStream stream, String source) {
+        assignIfValid(stream, record);
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Created based on InputStream with specified source",
+                           Logging.LogLevel.DEBUG, source);
     }
     public Payload(Record record) {
         assignIfValid(stream, record);

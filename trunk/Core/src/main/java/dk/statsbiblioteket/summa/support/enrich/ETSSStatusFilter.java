@@ -183,6 +183,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             return;
         }
         String response = lookup(recordID, lookupURI);
+        if (response == null || "".equals(response)) {
+            Logging.logProcess("ETSSStatusFilter.enrich", String.format(
+                "Unable to get response with lookupURI '%s'. Marking Record as not needing password", lookupURI),
+                               Logging.LogLevel.WARN, recordID);
+            doesNotNeedPassword.add(lookupURI);
+            return;
+        }
         List<MARCObject.SubField> subFields = url.getSubFields();
         if (needsPassword(response)) {
             subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
@@ -222,17 +229,19 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             Long readTime = -System.currentTimeMillis();
             HttpResponse httpResponse = http.execute(method);
             if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new IOException(
-                    "Expected return code " + HttpStatus.SC_OK + ", got "+ httpResponse.getStatusLine().getStatusCode()
-                    + " for '" + recordID + "' with call " + lookupURI);
+                throw new IOException(String.format(
+                    "Expected return code %d, got %d for '%s' with call %s",
+                    HttpStatus.SC_OK, httpResponse.getStatusLine().getStatusCode(), recordID, lookupURI));
             }
             readTime += System.currentTimeMillis();
-            log.trace("Completed ETSS call to '" + lookupURI + "' in " + readTime + "ms");
+            if (log.isTraceEnabled()) {
+                log.trace("Completed ETSS call to '" + lookupURI + "' in " + readTime + "ms");
+            }
 
             HttpEntity entity = httpResponse.getEntity();
             if (entity == null) {
-                Logging.logProcess("ETSSStatusFilter.lookup",
-                                   "No response from request " + lookupURI, Logging.LogLevel.WARN, recordID);
+                Logging.logProcess("ETSSStatusFilter.lookup", "No response from request " + lookupURI,
+                                   Logging.LogLevel.WARN, recordID);
                 return null;
             }
             response = Strings.flush(entity.getContent());
@@ -247,7 +256,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             return XMLStepper.getFirstElementText(response, "getFromDBReturn");
         } catch (XMLStreamException e) {
             Logging.logProcess("ETSSStatusFilter.lookup",
-                               "Unable to extract content from SOAP 'getFromDBReturn' from XML '" + response + "'",
+                               "Unable to extract content from SOAP 'getFromDBReturn' from XML '" +
+                               Logging.getSnippet(response) + "'",
                                Logging.LogLevel.WARN, recordID, e);
             return null;
         }
@@ -312,15 +322,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     </soapenv:Body>
     </soapenv:Envelope>
      */
-    private final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
-    // TODO: Yes it is a hack, yes we should do a proper XML parse
-    private static final Pattern PASSWORD = Pattern.compile(".*&lt;password&gt;.+&lt;/password&gt;.*", Pattern.DOTALL);
     protected boolean needsPassword(String response) {
         try {
             return XMLStepper.getFirstElementText(response, "password") != null;
         } catch (XMLStreamException e) {
             Logging.logProcess("ETSSStatusFilter.needsPassword",
-                               "XMLException while extracting element 'password' from XML '" + response + "'",
+                               "XMLException while extracting element 'password' from XML '"
+                               + Logging.getSnippet(response) + "'",
                                Logging.LogLevel.WARN, "ID N/A", e);
             return false;
         }
@@ -328,14 +336,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     }
 
 
-    // Also a hack
-    private static final Pattern COMMENT = Pattern.compile(".*&lt;comment&gt;(.+)&lt;/comment&gt;.*", Pattern.DOTALL);
     protected String getComment(String response) {
         try {
             return XMLStepper.getFirstElementText(response, "comment");
         } catch (XMLStreamException e) {
             Logging.logProcess("ETSSStatusFilter.needsPassword",
-                               "XMLException while extracting element 'comment' from XML '" + response + "'",
+                               "XMLException while extracting element 'comment' from XML '"
+                               + Logging.getSnippet(response) + "'",
                                Logging.LogLevel.WARN, "ID N/A", e);
             return null;
         }

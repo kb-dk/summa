@@ -159,7 +159,7 @@ public class ARCParser extends ThreadedStreamParser {
             ArchiveRecordHeader header = ar.getHeader();
             LineInputStream lis = new LineInputStream(ar);
             FutureInputStream arStream = new FutureInputStream(lis);
-            Payload payload = new Payload(arStream);
+            Payload payload = new Payload(arStream, "Copied from " + source.getId());
             fillPayloadFromHeader(payload, header, archiveReader.getFileName());
 /*            for (Object field: ar.getHeader().getHeaderFields().entrySet().toArray()) {
                 System.out.println(field);
