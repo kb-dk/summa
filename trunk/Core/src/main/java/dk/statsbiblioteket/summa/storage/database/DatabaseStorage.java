@@ -1483,8 +1483,9 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException("Error preparing connection for cursoring", e);
         }
 
-        if (timestampGenerator.systemTime(mtimeTimestamp) > getModificationTime(base)) {
-            log.debug("Storage not flushed after " + mtimeTimestamp + " for base '" + base
+        
+        if (timestampGenerator.systemTime(mtimeTimestamp) > getModificationTime(base)) {            
+        	log.info("Storage not flushed after " + mtimeTimestamp + " for base '" + base
                       + ". Returning empty iterator");
             try {
                 stmt.close();
@@ -1931,13 +1932,12 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IllegalArgumentException("No result cursor with key " + iteratorKey);
         }
 
-        if (!cursor.hasNext()) {
+        Record r;
+        if (!cursor.hasNext() || ((r = cursor.next()) == null)) {
             cursor.close();
             iterators.remove(cursor.getKey());
             throw new NoSuchElementException("Iterator " + iteratorKey + " depleted");
         }
-
-        Record r = cursor.next();
 
         try {
             return expandRelations(r, cursor.getQueryOptions());
