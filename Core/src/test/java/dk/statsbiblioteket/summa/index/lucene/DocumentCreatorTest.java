@@ -269,6 +269,33 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 //                     1.5f, doc.getBoost());
     }
 
+    public void testBoost() throws Exception {
+        Payload payload = new Payload(new Record("dummy", "dummy", NAMESPACED_RECORD.getBytes("utf-8")));
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(payload));
+        Configuration conf = getCreatorConf();
+        ObjectFilter creator = new StreamingDocumentCreator(conf);
+        creator.setSource(feeder);
+
+        Payload processed = creator.next();
+        Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
+        assertNotNull("A document should be created", doc);
+
+        {
+            IndexableField plain = doc.getField("nonexisting");
+            assertTrue("The boost for the plain field 'nonexisting' should be the docBoost of 1.5 but was "
+                       + plain.boost(),
+                       1.5f - plain.boost() < 0.1);
+        }
+
+        {
+        IndexableField boosted = doc.getField("mystored");
+            assertTrue("The boost for the boosted field 'mystored' should be the docBoost of 1.5 * the field boost "
+                       + "of 2.0 but was " + boosted.boost(),
+                       (1.5f * 2.0f) - boosted.boost() < 0.1);
+        }
+
+    }
+
     public void testEnrichedRecord() throws Exception {
         Record parent = new Record("parent", "foo", NAMESPACED_RECORD.getBytes("utf-8"));
         Record child = new Record("child", "foo", CHILD_RECORD.getBytes("utf-8"));
@@ -289,7 +316,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
         Payload processed = creator.next();
         Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
-        assertNotNull("A document should be created");
+        assertNotNull("A document should be created", doc);
 
         Set<String> expected = new HashSet<String>(Arrays.asList(EXPECTED));
         for (IndexableField field: doc.getFields("mystored")) {
