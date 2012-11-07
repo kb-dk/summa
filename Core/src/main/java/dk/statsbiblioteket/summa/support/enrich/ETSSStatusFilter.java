@@ -185,10 +185,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         String response = lookup(recordID, lookupURI);
         if (response == null || "".equals(response)) {
             Logging.logProcess("ETSSStatusFilter.enrich", String.format(
-                "Unable to get response with lookupURI '%s'. Marking Record as not needing password", lookupURI),
-                               Logging.LogLevel.WARN, recordID);
+                "No requirements for lookupURI '%s'. Marking sub field as not needing password", lookupURI),
+                               Logging.LogLevel.DEBUG, recordID);
             doesNotNeedPassword.add(lookupURI);
-            return;
         }
         List<MARCObject.SubField> subFields = url.getSubFields();
         if (needsPassword(response)) {
