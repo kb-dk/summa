@@ -36,6 +36,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Stream-based converter from SummaDocumentXML to Lucene Documents.
@@ -133,12 +135,12 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
         try {
             if (origin) {
                 log.trace("Processing top-level " + record.getId());
-                processHeader(reader, doc, record, true);
-                processBody(reader, doc, record, true);
+                float docBoost = processHeader(reader, doc, record, origin);
+                processBody(reader, doc, docBoost, record, origin);
             } else {
-                log.trace("Skipping headers for " + record.getId());
+                log.trace("Skipping headers for non-toplevel " + record.getId());
                 processHeader(reader, doc, record, false);
-                processBody(reader, doc, record, false);
+                processBody(reader, doc, NEUTRAL_BOOST, record, false);
             }
         } catch (ParseException e) {
             String message = "Unable to parse XMLStream from " + record;
@@ -166,8 +168,10 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
         return true;
     }
 
-    private void processHeader(XMLStreamReader reader, Document doc, Record record, boolean origin)
+    private static final float NEUTRAL_BOOST = 1.0f;
+    private float processHeader(XMLStreamReader reader, Document doc, Record record, boolean origin)
                                                                              throws ParseException, XMLStreamException {
+        float boost = NEUTRAL_BOOST;
         long startTime = System.nanoTime();
         log.trace("Parsing header-information for " + record.getId());
         skipComments(reader);
@@ -202,29 +206,24 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
             //noinspection DuplicateStringLiteralInspection
             String boostString = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_BOOST);
             if (boostString != null) {
-                float boost = Float.parseFloat(boostString);
                 if (origin) {
-                    if (!boostWarn) {
-                        log.warn("Attempting to assign " + boost + " to document for " + record.getId()
-                                 + " but document level boosts are not currently possible for Lucene trunk (20120515). "
-                                 + "This warning will not be displayed again for the run duration");
-                        //doc.setBoost(boost);
-                        boostWarn = true;
-                    }
+                    boost = Float.parseFloat(boostString);
                 } else {
-                    log.trace("Skipping boost " + boost + " to document for " + record.getId()
-                              + " as it is not origin");
+                    Logging.log(log, Logging.LogLevel.TRACE,
+                                "Skipping boost %s to document for %s as it is not origin",
+                                boost, record.getId());
                 }
             } else {
                 log.trace("No explicit boost for document for " + record.getId());
             }
         } catch (Exception e) {
-            log.debug("Exception extracting and setting boost for " + record.getId(), e);
+            Logging.log(log, Logging.LogLevel.DEBUG, e,
+                        "Exception extracting and setting boost for %s", record.getId());
         }
-        log.trace("Extracted header-information for " + record.getId() + " in " + (System.nanoTime() - startTime)
-                  + " ns");
+        Logging.log(log, Logging.LogLevel.TRACE,
+                    "Extracted header-information for %s in %d ns", record.getId(), System.nanoTime() - startTime);
+        return boost;
     }
-    private static boolean boostWarn = false;
 
     private void skipComments(XMLStreamReader reader) throws XMLStreamException {
         while (reader.getEventType() == XMLStreamReader.COMMENT || reader.getEventType() == XMLStreamReader.SPACE) {
@@ -236,8 +235,11 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
     }
 
     @SuppressWarnings({"UnusedParameters"})
-    private void processBody(XMLStreamReader reader, Document luceneDoc, Record record, boolean origin)
+    private void processBody(XMLStreamReader reader, Document luceneDoc, float docBoost, Record record, boolean origin)
                                                       throws ParseException, XMLStreamException, IndexServiceException {
+        /* As the boost for multiple instances of the same field gets multiplied, we only assign field boosts once. */
+        Set<String> boostedFields = null;
+
         long startTime = System.nanoTime();
 
         // Fields
@@ -290,17 +292,16 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
                                          reader.getLocation().getCharacterOffset());
             }
 
-            Float boost = null;
+            Float boost = docBoost;
             try {
                 //noinspection DuplicateStringLiteralInspection
                 String boostString = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_BOOST);
                 if (boostString != null) {
-                    boost = Float.valueOf(boostString);
+                    boost *= Float.valueOf(boostString);
                 }
             } catch (Exception e) {
-                log.debug("Exception extracting boost for field " + fieldName, e);
+                log.debug("Exception extracting boost for field " + fieldName + " from Record " + record.getId(), e);
             }
-
             // TODO: Verify how we handle embedded HTML
             String content = reader.getElementText();
             if (content != null) {
@@ -309,6 +310,18 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
                 if ("".equals(content)) {
                     continue; // We do not want to store empty content
                 }
+
+                // As we explicitly assign to NEUTRAL_BOOST and as a false negative is okay, it is safe to compare directly
+                //noinspection FloatingPointEquality
+                if (boost == NEUTRAL_BOOST || (boostedFields != null && boostedFields.contains(fieldName))) {
+                    boost = null;
+                } else { // We have a boost and the field is not previously boosted
+                    if (boostedFields == null) {
+                        boostedFields = new HashSet<String>();
+                    }
+                    boostedFields.add(fieldName);
+                }
+
                 LuceneIndexField indexField = addFieldToDocument(descriptor, luceneDoc, fieldName, content, boost);
                 if (indexField.isInFreetext()) {
                     addToFreetext(descriptor, luceneDoc, fieldName, content);
