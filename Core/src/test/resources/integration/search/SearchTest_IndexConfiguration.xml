@@ -10,6 +10,10 @@
         </entry>
 
         <entry>
+            <key>summa.control.service.id</key>
+            <value class="string">fagref searcher</value>
+        </entry>
+        <entry>
             <key>filter.name</key>
             <value class="string">Simple fagref index</value>
         </entry>

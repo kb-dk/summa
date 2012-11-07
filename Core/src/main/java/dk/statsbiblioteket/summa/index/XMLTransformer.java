@@ -174,7 +174,8 @@ public class XMLTransformer extends GraphFilter<Object> {
         }
         if (changelings.size() == 0) {
             throw new ConfigurationException(
-                "Unable to extract any transformation setups from configuration");
+                "Unable to extract any transformation setups (key: " + CONF_SETUPS + ") or a XSLT location (key: "
+                + CONF_XSLT + ") from configuration");
         }
         log.info("XMLTransformer with " + changelings.size() + " transforming sub-units initialized");
     }
@@ -295,6 +296,10 @@ public class XMLTransformer extends GraphFilter<Object> {
             }
         }
 
+        /**
+         * A Changeling is valid if is has an xsltLocation.
+         * @return if the Changeling can be used.
+         */
         public boolean isValid() {
             return xsltLocation != null;
         }

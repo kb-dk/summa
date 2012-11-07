@@ -156,14 +156,16 @@ public class ReleaseHelper {
         ));
     }
 
-    public static int ingest(
-        String storage, String source, ObjectFilter processor) {
-        log.debug("Ingesting from " + source);
-        Filter reader = new ArchiveReader(getArchiveReaderConfiguration(source));
-        processor.setSource(reader);
+    /**
+     * Ingests the Records from the given source into the Storage.
+     * @param storage destination for the Records.
+     * @param source  source for the Records.
+     * @return the number of ingested Records.
+     */
+    public static int ingest(String storage, ObjectFilter source) {
         StorageWriterClient writableStorage = new StorageWriterClient(getStorageClientConfiguration(storage));
         RecordWriter writer = new RecordWriter(writableStorage, 10, 10000);
-        writer.setSource(processor);
+        writer.setSource(source);
         int count = 0;
         Record last = null;
         while (writer.hasNext()) {
@@ -190,6 +192,13 @@ public class ReleaseHelper {
             throw new RuntimeException("Interrupted while waiting to ensure flush", e);
         }
         return count;
+    }
+
+    public static int ingest(String storage, String source, ObjectFilter processor) {
+        log.debug("Ingesting from " + source);
+        Filter reader = new ArchiveReader(getArchiveReaderConfiguration(source));
+        processor.setSource(reader);
+        return ingest(storage, processor);
     }
 
     /**
