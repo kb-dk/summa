@@ -348,8 +348,7 @@ public class SBMARCParser extends MARCParser {
     @Override
     protected Record makeRecord(String xml) {       
         if (id == null) {
-            log.warn("makerecord called but no ID was extracted from MARC "
-                     + "record from " + source);
+            log.warn("makerecord called but no ID was extracted from MARC " + "record from " + source);
             return null;
         }
         Record record;
@@ -359,20 +358,15 @@ public class SBMARCParser extends MARCParser {
             //noinspection DuplicateStringLiteralInspection
             throw new RuntimeException("utf-8 not supported", e);
         }
-        log.trace("Setting deleted-status for Record " + id + " to "
-                  + isDeleted);
+        log.trace("Setting deleted-status for Record " + id + " to " + isDeleted);
         record.setDeleted(isDeleted);
 
-        if (type == MarcAnnotations.MultiVolumeType.HOVEDPOST
-                && parent != null) {
-            log.debug("Changed type from hovedpost to sektion for '" + id
-                      + "' as a parent existed");
+        if (type == MarcAnnotations.MultiVolumeType.HOVEDPOST && parent != null) {
+            log.debug("Changed type from hovedpost to sektion for '" + id + "' as a parent existed");
             type = MarcAnnotations.MultiVolumeType.SEKTION;
         }
-        if (type == MarcAnnotations.MultiVolumeType.SEKTION
-                && parent == null) {
-            log.debug("Changed type from sektion to notmulti for '" + id 
-                      + "' as a parent did not exist");
+        if (type == MarcAnnotations.MultiVolumeType.SEKTION && parent == null) {
+            log.debug("Changed type from sektion to notmulti for '" + id + "' as a parent did not exist");
             type = MarcAnnotations.MultiVolumeType.NOTMULTI;
         }
         if (type != MarcAnnotations.MultiVolumeType.NOTMULTI) {
@@ -380,9 +374,7 @@ public class SBMARCParser extends MARCParser {
             log.debug("Marking '" + id + "' as " + type + " with "
                       + (parent == null ? "no parent" : "parent " + parent)
                       + " and " + children.size() + " children");
-            record.getMeta().put(
-                    MarcAnnotations.META_MULTI_VOLUME_TYPE,
-                    type.toString());
+            record.getMeta().put(MarcAnnotations.META_MULTI_VOLUME_TYPE, type.toString());
         }
 
         if (parent != null) {
@@ -391,16 +383,14 @@ public class SBMARCParser extends MARCParser {
 
         if (children.size() != 0) {
             Collections.sort(children);
-            ArrayList<String> childrenIDs =
-                    new ArrayList<String>(children.size());
+            ArrayList<String> childrenIDs = new ArrayList<String>(children.size());
             for (Child child: children) {
                 childrenIDs.add(child.id);
             }
             record.setChildIds(childrenIDs);
         }
         if (log.isTraceEnabled()) {
-            Logs.log(log, Logs.Level.TRACE, "Children for Record " + id + ": ",
-                     children);
+            Logs.log(log, Logs.Level.TRACE, "Children for Record " + id + ": ", children);
         }
         return record;
     }
@@ -421,10 +411,9 @@ public class SBMARCParser extends MARCParser {
 
     private void unsupported(String dataFieldTag, String subFieldCode) {
         // TODO: More severe warning for Payload-log
-        log.debug(String.format(
-                "Received unsupported subfield code '%s' in field %s "
-                + "for record '%s' in %s. Ignoring subfield",
-                subFieldCode, dataFieldTag, id, source));
+        Logging.log(log, Logging.LogLevel.DEBUG,
+                    "Received unsupported subfield code '%s' in field %s for record '%s' in %s. Ignoring subfield",
+                    subFieldCode, dataFieldTag, id, source);
     }
 
     @Override
@@ -437,13 +426,10 @@ public class SBMARCParser extends MARCParser {
         if (!CONTROL_DELETE_TAG.equals(tag)) {
             return null;
         }
-        Logging.logProcess(
-                "SBMARCParser", "Marking as deleted with message '" + content
-                                + "'", Logging.LogLevel.DEBUG, id);
+        Logging.logProcess("SBMARCParser", "Marking as deleted with message '" + content + "'",
+                           Logging.LogLevel.DEBUG, id);
         isDeleted = true;
-        return String.format(
-                "<controlfield tag=\"%s\">%s</controlfield>\n",
-                tag, content);
+        return String.format("<controlfield tag=\"%s\">%s</controlfield>\n", tag, content);
     }
 }
 

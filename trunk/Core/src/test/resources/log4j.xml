@@ -22,11 +22,11 @@
 
 
     <logger name="process">
-        <level value="INFO" />
+        <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.storage.api.filter.ProgressTracker">
+    <logger name="dk.statsbiblioteket.summa.support.enrich.ETSSStatusFilter">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>

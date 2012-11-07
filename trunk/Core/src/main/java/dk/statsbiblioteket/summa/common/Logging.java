@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common;
 
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -39,7 +40,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        author = "te, mke")
 public class Logging {
 
     /**
@@ -54,6 +55,17 @@ public class Logging {
 
     public static final String FATAL_LOG_NAME = "fatal";
     public static final Log fatalLog = LogFactory.getLog(FATAL_LOG_NAME);
+
+    public static enum LogLevel {
+        FATAL(6), ERROR(5), WARN(4), INFO(3), DEBUG(2), TRACE(1);
+        private final int level;
+        private LogLevel(int level) {
+            this.level = level;
+        }
+        public int getLevel() {
+            return level;
+        }
+    }
 
     /**
      * Special logging for process-related messages. Process-related messages
@@ -202,10 +214,6 @@ public class Logging {
         }
     }
 
-    public static enum LogLevel {
-        FATAL, ERROR, WARN, INFO, DEBUG, TRACE
-    }
-
     public static void log (String message, Log log, LogLevel level) {
         switch (level) {
             case FATAL:
@@ -328,6 +336,57 @@ public class Logging {
             fatalLog.fatal(problem, cause);
             if (copy != null) {
                 copy.fatal(problem, cause);
+            }
+        }
+    }
+
+    /**
+     * Helper for doing conditional logging with format Strings. The level of the given logger is compared to the wanted
+     * logLevel and a String.format is called on message with the given values iff the resulting message String will be
+     * logged by the logger.
+     * </p><p>
+     * As long as the resolving of the values is computationally cheap, this method is recommended for logging.
+     * @param logger   where to log.
+     * @param logLevel the level to log on.
+     * @param message  a {@link String#format}-syntax compatible format String.
+     * @param values   will be passed as {@code }String.format(message, values)}.
+     */
+    public static void log(Log logger, LogLevel logLevel, String message, Object... values) {
+        log(logger, logLevel, null, message, values);
+    }
+
+    /**
+     * Helper for doing conditional logging with format Strings. The level of the given logger is compared to the wanted
+     * logLevel and a String.format is called on message with the given values iff the resulting message String will be
+     * logged by the logger.
+     * </p><p>
+     * As long as the resolving of the values is computationally cheap, this method is recommended for logging.
+     * @param logger   where to log.
+     * @param logLevel the level to log on.
+     * @param cause    passed on to logger.
+     * @param message  a {@link String#format}-syntax compatible format String.
+     * @param values   will be passed as {@code }String.format(message, values)}.
+     */
+    public static void log(Log logger, LogLevel logLevel, Throwable cause, String message, Object... values) {
+        if (logger.isTraceEnabled()
+            || (logger.isDebugEnabled() && logLevel.getLevel() >= LogLevel.DEBUG.getLevel())
+            || (logger.isInfoEnabled() && logLevel.getLevel() >= LogLevel.INFO.getLevel())
+            || (logger.isWarnEnabled() && logLevel.getLevel() >= LogLevel.WARN.getLevel())
+            || (logger.isErrorEnabled() && logLevel.getLevel() >= LogLevel.ERROR.getLevel())
+            || (logger.isFatalEnabled() && logLevel.getLevel() >= LogLevel.FATAL.getLevel())) {
+            String mes;
+            try {
+                mes = values == null || values.length == 0 ? message : String.format(message, values);
+            } catch (Exception e) {
+                logger.warn("Logging.log: Unable to use format String '" + message + "' with values ["
+                            + (values == null ? "null" : Strings.join(values, ", ")) + "]. "
+                            + "Using unformatted message", e);
+                mes = message;
+            }
+            if (cause == null) {
+                log(mes, logger, logLevel);
+            } else {
+                log(mes, logger, logLevel, cause);
             }
         }
     }
