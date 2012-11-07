@@ -125,6 +125,9 @@ public class PagingCursor implements Cursor {
 
         // update next record.
         nextRecord = nextValidRecord();
+        if (nextRecord == null) {
+            throw new NoSuchElementException();
+        }
         pageRecords++;
         totalRecords++;
 
@@ -158,6 +161,12 @@ public class PagingCursor implements Cursor {
         try {
             page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp, getBase(), getQueryOptions());
 
+            if (page == null){
+               log.info("No futher pages, unclear why this happens");
+               logDepletedStats();
+               return null;	
+            }
+            
             if (log.isDebugEnabled()) {
                 log.trace("Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp + " for "
                           + this + ": " + page);
