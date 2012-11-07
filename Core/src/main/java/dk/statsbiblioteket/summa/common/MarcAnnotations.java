@@ -51,8 +51,7 @@ public class MarcAnnotations {
                 return BIND;
             }
             if (!"notmulti".equals(str)) {
-                log.warn("Unable to recognize '" + str
-                         + "'. Returning NOTMULTI");
+                log.warn("Unable to recognize '" + str + "'. Returning NOTMULTI");
             }
             return NOTMULTI;
         }

@@ -67,10 +67,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * This property is optional. Default is LegacyMultiVolumeConverter.xslt
      * that handles Marc-records from Statsbiblioteket.
      */
-    public static final String CONF_MERGE_XSLT =
-            "summa.ingest.marcmultivolume.xslt";
-    public static final String DEFAULT_MERGE_XSLT =
-            "LegacyMultiVolumeConverter.xslt";
+    public static final String CONF_MERGE_XSLT = "summa.ingest.marcmultivolume.xslt";
+    public static final String DEFAULT_MERGE_XSLT = "LegacyMultiVolumeConverter.xslt";
 
     /**
      * If true, all namespaces in the XML is stripped prior to transformation.
@@ -82,8 +80,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_STRIP_XML_NAMESPACES =
-            "summa.ingest.marcmultivolume.ignorexmlnamespaces";
+    public static final String CONF_STRIP_XML_NAMESPACES = "summa.ingest.marcmultivolume.ignorexmlnamespaces";
     public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
 
     /**
@@ -93,8 +90,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * </p><p>
      * Optional. If not defined, all sub Records are merged.
      */
-    public static final String CONF_MERGE_RECORDS =
-        "summa.ingest.marcmultivolume.mergerecords";
+    public static final String CONF_MERGE_RECORDS = "summa.ingest.marcmultivolume.mergerecords";
 
     private URL xsltLocation;
     @SuppressWarnings({"FieldCanBeLocal"})
@@ -103,32 +99,26 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
-        xsltLocation = Resolver.getURL(conf.getString(
-                CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT));
+        xsltLocation = Resolver.getURL(conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT));
         if (xsltLocation == null) {
             throw new ConfigurationException(String.format(
                     "Unable to get URL for property %s with content '%s",
-                    CONF_MERGE_XSLT,
-                    conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
+                    CONF_MERGE_XSLT, conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
-        stripXMLNamespaces = conf.getBoolean(
-            CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces);
+        stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces);
         if (conf.valueExists(CONF_MERGE_RECORDS)) {
             log.debug("Creating ignore matcher");
             try {
                 keep = new PayloadMatcher(
                     conf.getSubConfiguration(CONF_MERGE_RECORDS));
             } catch (SubConfigurationsNotSupportedException e) {
-                throw new ConfigurationException(
-                    "Sub configuration not supported", e);
+                throw new ConfigurationException("Sub configuration not supported", e);
             }
         } else {
             keep = null;
         }
-        log.info("MarcMultiVolumeMerger for '" + xsltLocation
-                 + "' ready for use.  Namespaces will "
-                 + (stripXMLNamespaces ? "" : "not ")
-                 + "be stripped from input before merging");
+        log.info("MarcMultiVolumeMerger for '" + xsltLocation + "' ready for use.  Namespaces will "
+                 + (stripXMLNamespaces ? "" : "not ") + "be stripped from input before merging");
     }
 
     @Override
@@ -152,10 +142,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     }
 
     /**
-     * @param record the Record whose content to transform to legacy merged
-     *               format.
-     * @return the content of the Record and its children, represented as
-     *         merged MARC.
+     * @param record the Record whose content to transform to legacy merged format.
+     * @return the content of the Record and its children, represented as merged MARC.
      */
     public String getLegacyMergedXML(Record record) {
         String result = getMergedOrNull(record);
@@ -163,31 +151,26 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     }
 
     private static final String NO_RELATIVES =
-            "%s was marked as having %s, but none were resolved. Make sure"
-            + " that RecordReader (or whatever else provides the Records) "
-            + "expands children";
+            "%s was marked as having %s, but none were resolved. Make sure that RecordReader (or whatever else "
+            + "provides the Records) expands children";
     private String getMergedOrNull(Record record) {
         if (!record.hasChildren()) {
             log.trace("No children for " + record.getId());
             return null;
         } else if (record.getChildren() == null) {
-            log.debug("Can not expand unresolved children of "
-                      + record.toString(true));
+            log.debug("Can not expand unresolved children of " + record.toString(true));
             return null;
         } else if (record.hasChildren() && record.getChildren() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(
-                        NO_RELATIVES, record.getId(), "children"));
+            log.debug(String.format(NO_RELATIVES, record.getId(), "children"));
                 return null;
         } else if (record.hasParents() && record.getParents() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(
-                        NO_RELATIVES, record.getId(), "parents"));
+            log.debug(String.format(NO_RELATIVES, record.getId(), "parents"));
                 return null;
         } else {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Processing " + record.getChildren().size()
-                      + " children of " + record.getId());
+            log.debug("Processing " + record.getChildren().size() + " children of " + record.getId());
         }
 
         //noinspection DuplicateStringLiteralInspection
@@ -196,8 +179,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             addProcessedContent(output, record.getParents() != null, record, 0);
             log.trace("Finished processing content for " + record);
         } catch (Exception e) {
-            log.warn("Exception transforming " + record
-                     + ". The content will not be updated", e);
+            log.warn("Exception transforming " + record + ". The content will not be updated", e);
             return null;
         }
         return output.toString();
@@ -230,8 +212,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         //noinspection DuplicateStringLiteralInspection
         int endPos = content.indexOf("record", content.lastIndexOf("</"));
         if (endPos == -1) {
-            String message = "The Record " + record
-                             + " did not end in </record>";
+            String message = "The Record " + record + " did not end in </record>";
             if (log.isDebugEnabled()) {
                 log.debug(message + ". The Record content was\n" + content);
             }
@@ -250,8 +231,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             byte[] transformed = out.toByteArray();
             BufferedReader read;
             try {
-                read = new BufferedReader(new InputStreamReader(
-                        new ByteArrayInputStream(transformed), "utf-8"));
+                read = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(transformed), "utf-8"));
             } catch (UnsupportedEncodingException e) {
                 throw new TransformerException(
                         "utf-8 not supported while transforming " + record, e);
@@ -263,22 +243,19 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                         line = line.substring(line.indexOf("?>") + 2);
                     }
                     line = handleTag24x(record, line, hasParent);
-                    line = line.replace(
-                            "xmlns=\"http://www.loc.gov/MARC21/slim\"", "");
+                    line = line.replace("xmlns=\"http://www.loc.gov/MARC21/slim\"", "");
 
                     output.append(line).append("\n");
                 }
             } catch (IOException e) {
-                throw new TransformerException(
-                        "IOException reading content from " + record, e);
+                throw new TransformerException("IOException reading content from " + record, e);
             }
         }
 
         if (record.getChildren() != null) {
             for (Record child: record.getChildren()) {
                 if (keep != null && !keep.isMatch(child)) {
-                    log.debug("Ignoring sub Record as it matches the ignore "
-                              + "setup. Ignored is " + record);
+                    log.debug("Ignoring sub Record as it matches the ignore setup. Ignored is " + record);
                 } else {
                     addProcessedContent(output, true, child, level+1);
                 }
@@ -293,55 +270,45 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         if (!line.contains("tag=\"24x\"")) {
             return line;
         }
-        String ERROR_NOTMULTI =
-                "MarcAnnotation was NOTMULTI but the Record had ";
+        String ERROR_NOTMULTI = "MarcAnnotation was NOTMULTI but the Record had ";
         if (log.isTraceEnabled()) {
-            log.trace("Entering handleTag24x(" + record + ", " + line + ", "
-                      + hasParent + ")");
+            log.trace("Entering handleTag24x(" + record + ", " + line + ", " + hasParent + ")");
         }
         hasParent = hasParent || record.getParents() != null;
-        MarcAnnotations.MultiVolumeType type =
-                MarcAnnotations.MultiVolumeType.fromString(
-                        record.getMeta(MarcAnnotations.
-                                META_MULTI_VOLUME_TYPE));
+        MarcAnnotations.MultiVolumeType type = MarcAnnotations.MultiVolumeType.fromString(
+            record.getMeta(MarcAnnotations.META_MULTI_VOLUME_TYPE));
         if (type == MarcAnnotations.MultiVolumeType.NOTMULTI) {
             if (hasParent && record.getChildren() != null) {
                 Logging.logProcess(
                         this.getClass().getSimpleName(),
-                        ERROR_NOTMULTI + "parents and children. We set it to "
-                        + MarcAnnotations.MultiVolumeType.SEKTION + " for "
-                        + record, Logging.LogLevel.DEBUG, record.getId());
+                        ERROR_NOTMULTI + "parents and children. We set it to " + MarcAnnotations.MultiVolumeType.SEKTION
+                        + " for " + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.SEKTION;
             } else if (hasParent) {
                 Logging.logProcess(
                         this.getClass().getSimpleName(),
-                        ERROR_NOTMULTI + "parents. We set it to "
-                        + MarcAnnotations.MultiVolumeType.BIND + " for "
+                        ERROR_NOTMULTI + "parents. We set it to " + MarcAnnotations.MultiVolumeType.BIND + " for "
                         + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.BIND;
             } else if (record.getChildren() != null) {
                 Logging.logProcess(
                         this.getClass().getSimpleName(),
-                        ERROR_NOTMULTI + "children. We set it to "
-                        + MarcAnnotations.MultiVolumeType.HOVEDPOST + " for "
+                        ERROR_NOTMULTI + "children. We set it to " + MarcAnnotations.MultiVolumeType.HOVEDPOST + " for "
                         + record, Logging.LogLevel.DEBUG, record.getId());
                 type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
             }
         }
         if (type.equals(MarcAnnotations.MultiVolumeType.BIND)) {
             line = line.replace("tag=\"24x\"", "tag=\"248\"");
-        } else if (type.equals(
-                MarcAnnotations.MultiVolumeType.SEKTION)) {
+        } else if (type.equals(MarcAnnotations.MultiVolumeType.SEKTION)) {
             line = line.replace("tag=\"24x\"", "tag=\"247\"");
         } else {
             Logging.logProcess(this.getClass().getSimpleName(),
-                    "Found 24x in " + record + ", but type was " + type
-                    + " so no replacement was done. The content will probably "
-                    + "not be processed", Logging.LogLevel.DEBUG, 
-                    record.getId());
+                    "Found 24x in " + record + ", but type was " + type + " so no replacement was done. "
+                    + "The content will probably not be processed",
+                    Logging.LogLevel.DEBUG, record.getId());
         }
         return line;
     }
 
 }
-
