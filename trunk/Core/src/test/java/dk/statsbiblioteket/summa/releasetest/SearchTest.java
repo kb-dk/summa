@@ -20,32 +20,44 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.Security;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
+import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
-import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,13 +111,11 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public static File root = new File(Resolver.getURL(
-            "integration/search/SearchTest_IngestConfiguration.xml").
-            getFile()).getParentFile();
+        "integration/search/SearchTest_IngestConfiguration.xml").getFile()).getParentFile();
     public static String BASE = "fagref";
 
     public void testResourceCopying() {
-        assertTrue("Source '" + fagref_hj + "' should exist",
-                   Resolver.getFile(fagref_hj).exists());
+        assertTrue("Source '" + fagref_hj + "' should exist", Resolver.getFile(fagref_hj).exists());
     }
 
     /* ingest the data in the given folder to Storage, assuming that Storage
@@ -170,6 +180,116 @@ public class SearchTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testSortValue() throws Exception {
+        final int AMOUNT = 100;
+        final String INDEX = INDEX_ROOT.toString();
+
+        createFagrefIndex(INDEX, AMOUNT);
+        SummaSearcher searcher = new SummaSearcherImpl(getSearcherConfiguration());
+        verifySearch(searcher, "*:*", AMOUNT);
+
+        DocumentResponse docs = getRecords(searcher, new Request(
+            DocumentKeys.SEARCH_QUERY, "*:*", DocumentKeys.SEARCH_SORTKEY, "recordID"));
+        List<String> sortValues = extractSortValue(docs);
+        List<String> resorted = new ArrayList<String>(sortValues);
+        Collections.sort(resorted);
+        ExtraAsserts.assertEquals(
+            "The explicit sorted values should match order of the directly returned\n" + Strings.join(sortValues, "\n"),
+            resorted, sortValues);
+
+        //noinspection ConstantConditions
+        File[] luceneFiles = new File(INDEX).listFiles()[0].listFiles()[0].listFiles();
+//        System.out.println(Strings.join(luceneFiles, "\n"));
+        assertTrue("The number of files in the Lucene index folder should exceed 20 but was " + luceneFiles.length,
+                   luceneFiles.length > 20);
+    }
+
+    private List<String> extractSortValue(DocumentResponse docs) {
+        List<String> sortValues = new ArrayList<String>(docs.size());
+        for (DocumentResponse.Record record: docs.getRecords()) {
+            assertNotNull("There should be a sortValue for record " + record.getId(), record.getSortValue());
+            sortValues.add(record.getSortValue());
+        }
+        return sortValues;
+    }
+
+    private DocumentResponse getRecords(SummaSearcher searcher, Request request) throws IOException {
+        ResponseCollection responses = searcher.search(request);
+        return (DocumentResponse) responses.iterator().next();
+    }
+
+    private void createFagrefIndex(String indexLocation, int amount) throws IOException {
+        ObjectFilter producer = getSortdocuments(amount);
+
+        ObjectFilter transformer = new XMLTransformer(Configuration.newMemoryBased(
+            XMLTransformer.CONF_XSLT, Resolver.getFile("integration/search/fagref_xslt/fagref_index.xsl")
+        ));
+        transformer.setSource(producer);
+
+        ObjectFilter legacy = new XMLTransformer(Configuration.newMemoryBased(
+            XMLTransformer.CONF_XSLT, Resolver.getFile("LegacyToSummaDocumentXML.xslt")
+        ));
+        legacy.setSource(transformer);
+
+        Configuration docConf = Configuration.newMemoryBased();
+        Configuration descConf = docConf.createSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
+        descConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, "integration/search/SearchTest_IndexDescriptor.xml");
+        ObjectFilter documentCreator = new StreamingDocumentCreator(docConf);
+        documentCreator.setSource(legacy);
+
+        Configuration indexConf = Configuration.newMemoryBased(
+            IndexControllerImpl.CONF_CREATE_NEW_INDEX, "true",
+            IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, indexLocation,
+            IndexControllerImpl.CONF_COMMIT_MAX_DOCUMENTS, amount < 10 ? 2 : amount / 5
+        );
+        Configuration luceneConf = indexConf.createSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
+        luceneConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, LuceneManipulator.class);
+        Configuration luceneDescConf = luceneConf.createSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
+        luceneDescConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, "integration/search/SearchTest_IndexDescriptor.xml");
+        ObjectFilter manipulator = new IndexControllerImpl(indexConf);
+        manipulator.setSource(documentCreator);
+
+        for (int i = 0 ; i < amount ; i++) {
+            assertTrue("There should be a next Payload for request #" + (i + 1), manipulator.hasNext());
+            manipulator.next();
+        }
+        assertFalse("The chain should be depleted", manipulator.hasNext());
+        manipulator.close(true);
+    }
+
+    private ObjectFilter getSortdocuments(int amount) throws UnsupportedEncodingException {
+        List<Payload> payloads = new ArrayList<Payload>(amount);
+
+        StringBuilder sb = new StringBuilder(1000);
+        for (int i = 0 ; i < amount ; i++) {
+            String id = "fagref:hj@example.com" + i;
+            String sortValue = "Jensen Hans " + i;
+            sb.setLength(0);
+
+            sb.append("<fagref>\n");
+            sb.append("    <navn>Hans Jensen</navn>\n");
+            sb.append("    <navn_sort>").append(sortValue).append("</navn_sort>\n");
+            sb.append("    <stilling>Fagekspert i Datalogi</stilling>\n");
+            sb.append("    <titel>IT-udvikler</titel>\n");
+            sb.append("    <email>hj@example.com").append(id).append("</email>\n");
+            sb.append("    <emneLink>http://www.example.com/emneguide/science/fysik/</emneLink>\n");
+            sb.append("    <beskrivelse>\n");
+            sb.append("        Ansvarlig for at vejlede indenfor alle datalogi-relaterede områder,\n");
+            sb.append("        såsom programmering, hardware og pizzaspisning.\n");
+            sb.append("        Er specielt vidende om sprogene Javakaffe og Pythonslanger.\n");
+            sb.append("    </beskrivelse>\n");
+            sb.append("    <emner>\n");
+            sb.append("        <emne>Coca Cola</emne>\n");
+            sb.append("        <emne>Pizza</emne>\n");
+            sb.append("    </emner>\n");
+            sb.append("</fagref>\n");
+            payloads.add(new Payload(new Record(id, "fagref", sb.toString().getBytes("utf-8"))));
+        }
+        return new PayloadFeederHelper(payloads);
+    }
+
+
+
     private static void verifyStorage(
         String storage, String feedback, String recordID) throws IOException {
         assertNotNull("A Record for " + feedback + " should be present",
@@ -177,12 +297,10 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public static void ingestFagref(String storage, String source) {
-        ReleaseHelper.ingest(
-            storage, source, "fagref", "fagref:", "fagref", "email");
+        ReleaseHelper.ingest(storage, source, "fagref", "fagref:", "fagref", "email");
     }
 
-    public final static File INDEX_ROOT =
-            new File(System.getProperty("java.io.tmpdir"), "testindex");
+    public final static File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"), "testindex");
 
     private SummaSearcher createSearchService() throws Exception {
         return SummaSearcherFactory.createSearcher(getSearcherConfiguration());
@@ -227,8 +345,7 @@ public class SearchTest extends NoExitTestCase {
         SummaSearcher searcher = createSearchService();
         try {
             searcher.search(simpleRequest("hans"));
-            fail("An IndexException should be thrown as no index data are"
-                 + " present yet");
+            fail("An IndexException should be thrown as no index data are present yet");
         } catch (IndexException e) {
             // Expected
         }
@@ -268,10 +385,8 @@ public class SearchTest extends NoExitTestCase {
 
     public static void verifySearch(SummaSearcher searcher, String query,
                               int results) throws Exception {
-        log.debug("Verifying existence of " + results
-                  + " documents with query '" + query + "'");
-        assertEquals("The result for query '" + query
-                     + "' should match the expected count",
+        log.debug("Verifying existence of " + results + " documents with query '" + query + "'");
+        assertEquals("The result for query '" + query + "' should match the expected count",
                      results, getHits(searcher, query));
     }
 
@@ -299,10 +414,8 @@ public class SearchTest extends NoExitTestCase {
     public void testHitPattern() throws Exception {
         String TEST = " searchTime=\"42\" hitCount=\"3\">\n";
         Matcher matcher = hitPattern.matcher(TEST);
-        assertTrue("hitPattern should match",
-                   matcher.matches());
-        assertEquals("hitPattern should match 3",
-                     "3", matcher.group(1));
+        assertTrue("hitPattern should match", matcher.matches());
+        assertEquals("hitPattern should match 3", "3", matcher.group(1));
     }
 
 
@@ -379,6 +492,4 @@ public class SearchTest extends NoExitTestCase {
         }
         storage.close();
     }
-
 }
-
