@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.releasetest;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
@@ -44,6 +45,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -180,7 +182,7 @@ public class SearchTest extends NoExitTestCase {
 
     @SuppressWarnings("ConstantConditions")
     public void testSortValue() throws Exception {
-        final int AMOUNT = 10000;
+        final int AMOUNT = 1000;
         final String INDEX = INDEX_ROOT.toString();
 
         createFagrefIndex(INDEX, AMOUNT);
@@ -189,7 +191,7 @@ public class SearchTest extends NoExitTestCase {
 
         DocumentResponse docs = getRecords(searcher, new Request(
             DocumentKeys.SEARCH_QUERY, "*:*",
-            DocumentKeys.SEARCH_MAX_RECORDS, AMOUNT,
+            DocumentKeys.SEARCH_MAX_RECORDS, Math.min(AMOUNT, 10000),
             DocumentKeys.SEARCH_SORTKEY, "sort_title"
             ));
         List<String> sortValues = extractSortValue(docs);
@@ -198,7 +200,6 @@ public class SearchTest extends NoExitTestCase {
         ExtraAsserts.assertEquals(
             "The explicit sorted values should match order of the directly returned\n" + Strings.join(sortValues, "\n"),
             resorted, sortValues);
-//        System.out.println(Strings.join(sortValues, "\n"));
 
         File[] luceneFiles = new File(INDEX).listFiles()[0].listFiles()[0].listFiles();
         assertTrue("The number of files in the Lucene index folder should exceed 20 but was " + luceneFiles.length,
@@ -250,44 +251,80 @@ public class SearchTest extends NoExitTestCase {
         ObjectFilter manipulator = new IndexControllerImpl(indexConf);
         manipulator.setSource(documentCreator);
 
+        log.info("Generating index with " + amount + " sample documents");
+        final Profiler profiler = new Profiler(amount, 10000);
         for (int i = 0 ; i < amount ; i++) {
             assertTrue("There should be a next Payload for request #" + (i + 1), manipulator.hasNext());
             manipulator.next();
+            profiler.beat();
+            if (i % 10000 == 0) {
+                log.info("Indexed " + i + " documents at rate " + (int)profiler.getBps(true)
+                         + " Payloads/second. ETS: " + profiler.getETAAsString(true));
+            }
         }
         assertFalse("The chain should be depleted", manipulator.hasNext());
         manipulator.close(true);
     }
 
-    private ObjectFilter getSortdocuments(int amount) throws UnsupportedEncodingException {
-        Random random = new Random();
-        List<Payload> payloads = new ArrayList<Payload>(amount);
+    private ObjectFilter getSortdocuments(final int amount) throws UnsupportedEncodingException {
+        final Random random = new Random();
 
-        StringBuilder sb = new StringBuilder(1000);
-        for (int i = 0 ; i < amount ; i++) {
-            String id = "fagref:hj@example.com" + i;
-            String sortValue = "Jensen Hans " + i;
-            sb.setLength(0);
+        return new ObjectFilter() {
+            private int delivered = 0;
+            private StringBuilder sb = new StringBuilder(1000);
+            @Override
+            public boolean hasNext() {
+                return delivered < amount;
+            }
 
-            sb.append("<fagref>\n");
-            sb.append("    <navn>Hans Jensen</navn>\n");
-            sb.append("    <navn_sort>").append(sortValue).append("</navn_sort>\n");
-            sb.append("    <stilling>Fagekspert i Datalogi</stilling>\n");
-            sb.append("    <titel>IT-").append(getRandomWord(random)).append("</titel>\n");
-            sb.append("    <email>hj@example.com").append(id).append("</email>\n");
-            sb.append("    <emneLink>http://www.example.com/emneguide/science/fysik/</emneLink>\n");
-            sb.append("    <beskrivelse>\n");
-            sb.append("        Ansvarlig for at vejlede indenfor alle datalogi-relaterede områder,\n");
-            sb.append("        såsom programmering, hardware og pizzaspisning.\n");
-            sb.append("        Er specielt vidende om sprogene Javakaffe og Pythonslanger.\n");
-            sb.append("    </beskrivelse>\n");
-            sb.append("    <emner>\n");
-            sb.append("        <emne>Coca Cola</emne>\n");
-            sb.append("        <emne>Pizza</emne>\n");
-            sb.append("    </emner>\n");
-            sb.append("</fagref>\n");
-            payloads.add(new Payload(new Record(id, "fagref", sb.toString().getBytes("utf-8"))));
-        }
-        return new PayloadFeederHelper(payloads);
+            @Override
+            public void setSource(Filter filter) { }
+
+            @Override
+            public boolean pump() throws IOException {
+                if (hasNext()) {
+                    next();
+                }
+                return hasNext();
+            }
+
+            @Override
+            public void close(boolean success) { }
+
+            @Override
+            public Payload next() {
+                String id = "fagref:hj@example.com" + delivered;
+                String sortValue = "Jensen Hans " + delivered;
+                sb.setLength(0);
+
+                sb.append("<fagref>\n");
+                sb.append("    <navn>Hans Jensen</navn>\n");
+                sb.append("    <navn_sort>").append(sortValue).append("</navn_sort>\n");
+                sb.append("    <stilling>Fagekspert i Datalogi</stilling>\n");
+                sb.append("    <titel>IT-").append(getRandomWord(random)).append("</titel>\n");
+                sb.append("    <email>hj@example.com").append(id).append("</email>\n");
+                sb.append("    <emneLink>http://www.example.com/emneguide/science/fysik/</emneLink>\n");
+                sb.append("    <beskrivelse>\n");
+                sb.append("        Ansvarlig for at vejlede indenfor alle datalogi-relaterede områder,\n");
+                sb.append("        såsom programmering, hardware og pizzaspisning.\n");
+                sb.append("        Er specielt vidende om sprogene Javakaffe og Pythonslanger.\n");
+                sb.append("    </beskrivelse>\n");
+                sb.append("    <emner>\n");
+                sb.append("        <emne>Coca Cola</emne>\n");
+                sb.append("        <emne>Pizza</emne>\n");
+                sb.append("    </emner>\n");
+                sb.append("</fagref>\n");
+                delivered++;
+                try {
+                    return new Payload(new Record(id, "fagref", sb.toString().getBytes("utf-8")));
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException("UTF-8 should be supported", e);
+                }
+            }
+
+            @Override
+            public void remove() { }
+        };
     }
 
     private String getRandomWord(Random random) {
