@@ -183,22 +183,23 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             return;
         }
         String response = lookup(recordID, lookupURI);
+        List<MARCObject.SubField> subFields = url.getSubFields();
         if (response == null || "".equals(response)) {
             Logging.logProcess("ETSSStatusFilter.enrich", String.format(
                 "No requirements for lookupURI '%s'. Marking sub field as not needing password", lookupURI),
                                Logging.LogLevel.DEBUG, recordID);
             doesNotNeedPassword.add(lookupURI);
-        }
-        List<MARCObject.SubField> subFields = url.getSubFields();
-        if (needsPassword(response)) {
-            subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
-            needsPassword.add(lookupURI);
         } else {
-            doesNotNeedPassword.add(lookupURI);
-        }
-        String comment = getComment(response);
-        if (comment != null) {
-            subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
+            if (needsPassword(response)) {
+                subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
+                needsPassword.add(lookupURI);
+            } else {
+                doesNotNeedPassword.add(lookupURI);
+            }
+            String comment = getComment(response);
+            if (comment != null) {
+                subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
+            }
         }
         if (providerPlusID != null) {
             subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
