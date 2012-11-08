@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -216,9 +217,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     public static final int DEFAULT_SORT_BUFFER = SortFactory.DEFAULT_BUFFER;
 
     /**
-     * When {@link DocumentKeys#SEARCH_FILTER_PURE_NEGATIVE} is true, the
-     * filter is rewritten with the given matchall-query to
-     * "(matchall) original_filter".
+     * When {@link DocumentKeys#SEARCH_FILTER_PURE_NEGATIVE} is true, the filter is rewritten with the given
+     * match all-query to "(matchall) original_filter".
      */
     public static final String CONF_FILTER_MATCHALL = "summa.support.lucene.filter.matchall";
     public static final String DEFAULT_FILTER_MATCHALL = "recordBase:sb*";
@@ -303,8 +303,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 return;
             }
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations", e);
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             log.error(String.format(
                     "The key '%s' existed, but did not resolve to a sub configuration. The configuration for "
@@ -324,14 +323,12 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         if (stopWords != null) {
             mlt_stopWords = new HashSet<String>(stopWords);
         }
-        log.debug(String.format(
-                "Finished setting up MoreLikeThis with enabled=%s, "
-                + "minTermFreq=%s, minDocFreq=%s, minWordLength=%s, "
-                + "maxWordLength=%s, maxQueryTerms=%s, maxNumTokensParsed=%s, "
-                + "stopWords-count=%s",
-                mlt_enabled, mlt_minTermFreq, mlt_minDocFrew, mlt_minWordLength,
-                mlt_minWordLength, mlt_maxQueryTerms, mlt_maxNumTokensParsed,
-                mlt_stopWords == null ? "[None]" : mlt_stopWords.size()));
+        Logging.log(log, Logging.LogLevel.DEBUG,
+                    "Finished setting up MoreLikeThis with enabled=%s, minTermFreq=%s, minDocFreq=%s, minWordLength=%s,"
+                    + " maxWordLength=%s, maxQueryTerms=%s, maxNumTokensParsed=%s, stopWords-count=%s",
+                    mlt_enabled, mlt_minTermFreq, mlt_minDocFrew, mlt_minWordLength,
+                    mlt_minWordLength, mlt_maxQueryTerms, mlt_maxNumTokensParsed,
+                    mlt_stopWords == null ? "[None]" : mlt_stopWords.size());
     }
 
     private Integer getIntOrNull(Configuration conf, String key) {
@@ -458,8 +455,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 searcher.getIndexReader().close();
             } catch (IOException e) {
                 log.warn(String.format(
-                        "Could not close index-connection to location '%s'. "
-                        + "This will probably result in a resource-leak",
+                        "Could not close index-connection to '%s'. This will probably result in a resource-leak",
                         location), e);
             }
             //noinspection AssignmentToNull
@@ -717,8 +713,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             boolean sortWarned = false;
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;
-                 i < topDocs.scoreDocs.length
-                 && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0));
+                 i < topDocs.scoreDocs.length && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)) ;
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id
@@ -864,20 +859,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         }
         if (startIndex > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(
-                    "The Lucene search node does not support start indexes "
-                    + "above Integer.MAX_VALUE. startIndex was " + startIndex);
+                    "The Lucene search node does not support start indexes above Integer.MAX_VALUE. startIndex was "
+                    + startIndex);
         }
         if (maxRecords > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(
-                    "The Lucene search node does not support max records "
-                    + "above Integer.MAX_VALUE. max records was " + maxRecords);
+                    "The Lucene search node does not support max records above Integer.MAX_VALUE. max records was "
+                    + maxRecords);
         }
         if (startIndex + maxRecords > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(
-                    "The Lucene search node does not support that start index +"
-                    + " max records is above Integer.MAX_VALUE. "
-                    + "start index was" + startIndex + " and max records was "
-                    + maxRecords);
+                    "The Lucene search node does not support that start index max records is above Integer.MAX_VALUE. "
+                    + "start index was" + startIndex + " and max records was " + maxRecords);
         }
     }
 

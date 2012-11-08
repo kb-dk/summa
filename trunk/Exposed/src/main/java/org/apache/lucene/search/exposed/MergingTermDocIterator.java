@@ -112,6 +112,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
   }
 
   // Ensure that we can deliver an id
+  @Override
   public boolean hasNext() {
     while (true) {
       if (pending) {
@@ -130,6 +131,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
     }
   }
 
+  @Override
   public ExposedTuple next() {
 //    System.out.println("next " + tuple.term.utf8ToString());
     if (!hasNext()) {
@@ -211,14 +213,23 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
       backingTuples[currentIndex] = newTuple;
       if (collator != null) {
         RawCollationKey key = new RawCollationKey();
-        backingKeys[currentIndex] =
-            collator.getRawCollationKey(newTuple.term.utf8ToString(), key);
+        try {
+          backingKeys[currentIndex] = collator.getRawCollationKey(
+            newTuple.term.utf8ToString(), key);
+        } catch (StringIndexOutOfBoundsException e) {
+            throw (StringIndexOutOfBoundsException)
+              new StringIndexOutOfBoundsException(
+                "StringIndexOutOfBoundsException calling collator.getRawCollationKey("
+                + newTuple.term.utf8ToString() + ") with collator "
+                + collator.toString()).initCause(e);
+        }
       }
       pq.add(currentIndex);
     }
     return foundTuple;
   }
 
+  @Override
   public void remove() {
     throw new UnsupportedOperationException("Not a valid operation");
   }
@@ -226,5 +237,4 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
   public void setReuseTuple(boolean reuseTuple) {
     this.reuseTuple = reuseTuple;
   }
-
 }
