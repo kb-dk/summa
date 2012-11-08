@@ -54,10 +54,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.text.Collator;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -180,8 +178,9 @@ public class SearchTest extends NoExitTestCase {
         storage.close();
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void testSortValue() throws Exception {
-        final int AMOUNT = 100;
+        final int AMOUNT = 10000;
         final String INDEX = INDEX_ROOT.toString();
 
         createFagrefIndex(INDEX, AMOUNT);
@@ -189,17 +188,19 @@ public class SearchTest extends NoExitTestCase {
         verifySearch(searcher, "*:*", AMOUNT);
 
         DocumentResponse docs = getRecords(searcher, new Request(
-            DocumentKeys.SEARCH_QUERY, "*:*", DocumentKeys.SEARCH_SORTKEY, "recordID"));
+            DocumentKeys.SEARCH_QUERY, "*:*",
+            DocumentKeys.SEARCH_MAX_RECORDS, AMOUNT,
+            DocumentKeys.SEARCH_SORTKEY, "sort_title"
+            ));
         List<String> sortValues = extractSortValue(docs);
         List<String> resorted = new ArrayList<String>(sortValues);
-        Collections.sort(resorted);
+        Collections.sort(resorted, Collator.getInstance(new Locale("da")));
         ExtraAsserts.assertEquals(
             "The explicit sorted values should match order of the directly returned\n" + Strings.join(sortValues, "\n"),
             resorted, sortValues);
+//        System.out.println(Strings.join(sortValues, "\n"));
 
-        //noinspection ConstantConditions
         File[] luceneFiles = new File(INDEX).listFiles()[0].listFiles()[0].listFiles();
-//        System.out.println(Strings.join(luceneFiles, "\n"));
         assertTrue("The number of files in the Lucene index folder should exceed 20 but was " + luceneFiles.length,
                    luceneFiles.length > 20);
     }
@@ -258,6 +259,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private ObjectFilter getSortdocuments(int amount) throws UnsupportedEncodingException {
+        Random random = new Random();
         List<Payload> payloads = new ArrayList<Payload>(amount);
 
         StringBuilder sb = new StringBuilder(1000);
@@ -270,7 +272,7 @@ public class SearchTest extends NoExitTestCase {
             sb.append("    <navn>Hans Jensen</navn>\n");
             sb.append("    <navn_sort>").append(sortValue).append("</navn_sort>\n");
             sb.append("    <stilling>Fagekspert i Datalogi</stilling>\n");
-            sb.append("    <titel>IT-udvikler</titel>\n");
+            sb.append("    <titel>IT-").append(getRandomWord(random)).append("</titel>\n");
             sb.append("    <email>hj@example.com").append(id).append("</email>\n");
             sb.append("    <emneLink>http://www.example.com/emneguide/science/fysik/</emneLink>\n");
             sb.append("    <beskrivelse>\n");
@@ -288,6 +290,20 @@ public class SearchTest extends NoExitTestCase {
         return new PayloadFeederHelper(payloads);
     }
 
+    private String getRandomWord(Random random) {
+        int length = random.nextInt(10)+1;
+        String result = "";
+        for (int i = 0 ; i < length ; i++) {
+            result += (char)(random.nextInt(25)+97);
+        }
+        switch (random.nextInt(3)) {
+            case 0: result += "æ"; break;
+            case 1: result += "ø"; break;
+            case 2: result += "å"; break;
+            default: throw new IllegalStateException("Only æ, ø or å should be selected");
+        }
+        return result;
+    }
 
 
     private static void verifyStorage(
