@@ -78,20 +78,16 @@ public class FilterPump extends StateThread implements Configurable {
                 if (!sequence.hasNext()) {
                     profiler.beat();
                     log.info(String.format(
-                            "Finished pumping '%s' %d times in %s, overall "
-                            + "average speed was %s pumps/sec",
-                            chainName, profiler.getBeats(),
-                            profiler.getSpendTime(), profiler.getBps(false)));
+                            "Finished pumping '%s' %d times in %s, overall average speed was %s pumps/sec",
+                            chainName, profiler.getBeats(), profiler.getSpendTime(), profiler.getBps(false)));
                     break;
                 }
                 pumped = sequence.next();
                 if (log.isTraceEnabled()) {
-                    log.trace("Pump received  "
-                              + (pumped.getRecord() == null ?
-                                 pumped : pumped.getRecord()));
+                    log.trace("Pump received  " + (pumped.getRecord() == null ? pumped : pumped.getRecord()));
                 }
                 profiler.beat();
-                logStatistics(profiler, startTime);
+                logStatistics(profiler, startTime, pumped);
             }
         } catch (Throwable t) {
             String error = "Throwable caught running FilterPump";
@@ -100,8 +96,7 @@ public class FilterPump extends StateThread implements Configurable {
         }
         log.debug("Finished run with status " + getStatus());
         if (STATUS.error.equals(getStatus())) {
-            log.warn("The run was finished with error '" + getErrorMessage(),
-                     getErrorCause());
+            log.warn("The run was finished with error '" + getErrorMessage(), getErrorCause());
         } else {
             log.debug("No error in run, calling close(true)");
         }
@@ -109,23 +104,19 @@ public class FilterPump extends StateThread implements Configurable {
         close(true);
     }
 
-    private void logStatistics(Profiler profiler, long startTime) {
+    private void logStatistics(Profiler profiler, long startTime, Payload last) {
         if (!(log.isTraceEnabled()
-              || (log.isDebugEnabled()
-                  && profiler.getBeats() % DEBUG_FEEDBACK == 0)
-              || (log.isInfoEnabled()
-                  && profiler.getBeats() % INFO_FEEDBACK == 0))) {
+              || (log.isDebugEnabled() && profiler.getBeats() % DEBUG_FEEDBACK == 0)
+              || (log.isInfoEnabled() && profiler.getBeats() % INFO_FEEDBACK == 0))) {
             return;
         }
         String ms =
                 Double.toString((System.nanoTime() - startTime) / 1000000.0);
         String message = String.format(
-                "%d pumps performed in %s, average speed for the last %d pumps"
-                + " was %s pumps/sec, overall average was %s pumps/sec, last"
-                + " pump took %s ms",
-                profiler.getBeats(), profiler.getSpendTime(),
-                profiler.getBpsSpan(), profiler.getBps(true),
-                profiler.getBps(false), ms);
+                "%d pumps performed in %s, average speed for the last %d pumps was %s pumps/sec, overall average was "
+                + "%s pumps/sec, last pump took %s ms and delivered %s",
+                profiler.getBeats(), profiler.getSpendTime(), profiler.getBpsSpan(), profiler.getBps(true),
+                profiler.getBps(false), ms, last == null ? "no Payload" : last.getId());
         if (profiler.getBeats() % INFO_FEEDBACK == 0) {
             log.info(message);
         } else if (profiler.getBeats() % DEBUG_FEEDBACK == 0) {
