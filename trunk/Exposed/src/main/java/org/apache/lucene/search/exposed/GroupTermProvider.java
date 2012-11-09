@@ -213,28 +213,27 @@ public class GroupTermProvider extends TermProviderImpl {
   }
 
   public PackedInts.Reader getOrderedOrdinals() throws IOException {
-    if (order != null) {
-      return order;
-    }
-    PackedInts.Reader newOrder;
-/*    if (ExposedRequest.LUCENE_ORDER.equals(request.getComparatorID())) {
-      // TODO: This produces duplicates! We need to sort
-      newOrder = new IdentityReader((int)getOrdinalTermCount());
-    } else {*/
-    long sortTime = -System.currentTimeMillis();
-    newOrder = sortOrdinals();
-    sortTime += System.currentTimeMillis();
-/*    if (ExposedSettings.debug) {
-      System.out.println("Merge sorted group " + getDesignation()
-          + " with " + ExposedUtil.time("ordinals", newOrder.size(), sortTime));
-    }*/
-    if (cacheTables) {
-      order = newOrder;
-    }
-    return newOrder;
+    return getOrderedOrdinals(null);
   }
 
-  private PackedInts.Reader sortOrdinals() throws IOException {
+    @Override
+    public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
+      if (order != null) {
+        if (decorator != null) {
+          for (int indirect = 0 ; indirect < order.size() ; indirect++) {
+            decorator.decorate(getOrderedTerm(indirect), indirect);
+          }
+        }
+        return order;
+      }
+      PackedInts.Reader newOrder = sortOrdinals(decorator);
+      if (cacheTables) {
+        order = newOrder;
+      }
+      return newOrder;
+    }
+
+    private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator) throws IOException {
 //    System.out.println("FacetGroup sorting ordinals from " + providers.size()
 //        + " providers");
     int maxTermCount = (int)termOrdinalStarts[termOrdinalStarts.length-1];
@@ -256,8 +255,12 @@ public class GroupTermProvider extends TermProviderImpl {
 
     int uniqueTermCount = 0;
     long extractionTime = -System.currentTimeMillis();
+    long lastIndirect = -1;
     while (iterator.hasNext()) {
       ExposedTuple tuple = iterator.next();
+      if (decorator != null && tuple.indirect != lastIndirect) {
+        decorator.decorate(tuple.term, tuple.indirect);
+      }
 //      System.out.println("sortOrdinals " + tuple + " term = " + tuple.term.utf8ToString() + " lookup term " + getTerm(tuple.ordinal).utf8ToString());
       collector.set((int)tuple.indirect, tuple.ordinal);
       uniqueTermCount++;

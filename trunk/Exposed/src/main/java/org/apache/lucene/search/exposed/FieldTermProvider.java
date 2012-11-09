@@ -243,6 +243,15 @@ public class FieldTermProvider extends TermProviderImpl {
   }
 
   @Override
+  public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
+    PackedInts.Reader ordered = getOrderedOrdinals();
+    for (int indirect = 0 ; indirect < ordered.size() ; indirect++) {
+      decorator.decorate(getOrderedTerm(indirect), indirect);
+    }
+    return ordered;
+  }
+
+  @Override
   public Iterator<ExposedTuple> getIterator(
       boolean collectDocIDs) throws IOException {
     PackedInts.Reader order = getOrderedOrdinals();

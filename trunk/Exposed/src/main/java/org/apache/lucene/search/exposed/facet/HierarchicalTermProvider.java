@@ -11,7 +11,9 @@ import org.apache.lucene.util.packed.GrowingMutable;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -33,7 +35,11 @@ public class HierarchicalTermProvider implements TermProvider {
   private final TermProvider source;
   private final PackedInts.Reader levels;
   private final PackedInts.Reader pLevels;
+
+  private enum SPLIT_TYPE {regexp, byteEntry}
+  private final SPLIT_TYPE splitType;
   private final String splitRegexp;
+  private final int splitByte;
   private final Pattern splitPattern;
 
   /**
@@ -52,6 +58,8 @@ public class HierarchicalTermProvider implements TermProvider {
                                                             throws IOException {
     long buildTime = -System.currentTimeMillis();
     this.source = source;
+    splitType = SPLIT_TYPE.regexp;
+    splitByte = -1;
     this.splitRegexp = splitRegexp;
     splitPattern = Pattern.compile(splitRegexp);
     Pair<PackedInts.Reader, PackedInts.Reader> lInfo = getLevels();
@@ -60,8 +68,46 @@ public class HierarchicalTermProvider implements TermProvider {
     buildTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println("Extracted Hierarchical information from source with "
-          + source.getUniqueTermCount() + " unique terms in "
-          + buildTime + "ms");
+                         + source.getUniqueTermCount() + " unique terms in "
+                         + buildTime + "ms using regexp '" + splitRegexp + "'");
+    }
+  }
+
+  /**
+   * Calculates levels and previous level match for all ordered terms in the
+   * given provider. The HierarchicalTermProvider is ready for use after
+   * construction.
+   * Note that the caller is responsible for any escaping mechanism and for
+   * ensuring that the splitRegexp works consistently with character escaping.
+   * @param source    a plain TermProvider containing hierarchical tags.
+   * @param splitByte the byte to split on when dividing in path parts.
+   *                  If the tags is of the form A/B/C, the regexp would be
+   *                  {@code '/'}.
+   * @throws java.io.IOException if the source could not be accessed.
+   */
+  // TODO: Remove the decorate parameter
+  public HierarchicalTermProvider(TermProvider source, int splitByte, boolean decorate)
+    throws IOException {
+    if (splitByte < 0 || splitByte > 255) {
+      throw new IllegalArgumentException(
+        "The splitByte must be between 0 and 255, inclusive. It was "
+        + splitByte);
+    }
+    long buildTime = -System.currentTimeMillis();
+    this.source = source;
+    splitRegexp = null;
+    splitType = SPLIT_TYPE.byteEntry;
+    this.splitByte = splitByte;
+    splitPattern = null;
+    Pair<PackedInts.Reader, PackedInts.Reader> lInfo =
+        decorate ? getLevelsDecorating() : getLevelsFast();
+    levels = lInfo.getVal1();
+    pLevels = lInfo.getVal2();
+    buildTime += System.currentTimeMillis();
+    if (ExposedSettings.debug) {
+      System.out.println("Extracted Hierarchical information from source with "
+                         + source.getUniqueTermCount() + " unique terms in "
+                         + buildTime + "ms using splitByte " + splitByte);
     }
   }
 
@@ -123,11 +169,165 @@ public class HierarchicalTermProvider implements TermProvider {
       pLevels.set(index, pLevel);
       previous = current;
     }
-/*    System.out.println("Spend " + splitTime / 1000000 + " ms on "
-        + ordered.size() + " splits: " + splitTime / ordered.size()
-        + " ns/split");*/
+    if (ExposedSettings.debug) {
+      System.out.println("Spend " + splitTime / 1000000 + " ms on "
+                         + ordered.size() + " splits: "
+                         + (ordered.size() * 1000000L / splitTime)
+                         + " splits/ms");
+    }
     return new Pair<PackedInts.Reader, PackedInts.Reader>(
         reduce(levels), reduce(pLevels));
+  }
+
+  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsFast() throws
+                                                                     IOException {
+    long initTime = -System.currentTimeMillis();
+    PackedInts.Reader ordered = source.getOrderedOrdinals();
+    // FIXME: GrowingMutable should grow up to upper limit for bitsPerValue
+    final GrowingMutable levels = new GrowingMutable(
+      0, ordered.size(), 0, 1, true);
+    final GrowingMutable pLevels = new GrowingMutable(
+      0, ordered.size(), 0, 1, true);
+    List<BytesRef> previous = new ArrayList<BytesRef>(10);
+    int previousParts = 0;
+    // TODO: Consider speeding up by sorting indirect chunks for seq. access
+    // TODO: Consider using StringTokenizer or custom split
+    final List<BytesRef> current = new ArrayList<BytesRef>(10);
+    initTime += System.currentTimeMillis();
+
+    long splitTime = 0;
+    for (int indirect = 0 ; indirect < ordered.size() ; indirect++) {
+      splitTime -= System.nanoTime();
+      // TODO: Make the splitting byte definable
+      int parts = fastSplit(current, source.getOrderedTerm(indirect), '/');
+//        final String[] current = splitPattern.split(
+//            source.getOrderedTerm(indirect).utf8ToString());
+      splitTime += System.nanoTime();
+      int pLevel = 0;
+      for (int level = 0 ;
+           level < parts && level < previousParts ;
+           level++) {
+        if (current.get(level).equals(previous.get(level))) {
+          pLevel = level+1;
+        }
+      }
+      levels.set(indirect, parts);
+      pLevels.set(indirect, pLevel);
+      previous = current;
+      previousParts = parts;
+    }
+    long reduceTime = -System.currentTimeMillis();
+    Pair<PackedInts.Reader, PackedInts.Reader> reduced =
+      new Pair<PackedInts.Reader, PackedInts.Reader>(
+        reduce(levels), reduce(pLevels));
+    reduceTime += System.currentTimeMillis();
+    if (ExposedSettings.debug) {
+      System.out.println(
+        "getLevelsFast(): Init time: " + initTime + "ms. " +
+        "Splits " + splitTime / 1000000 + " ms on "
+        + ordered.size() + " splits (" + (ordered.size() * 1000000L / splitTime)
+        + " splits/ms). levels grow: " + levels.getGrowTime() / 1000000
+        + "ms. pLevels grow: " + pLevels.getGrowTime() / 1000000
+        + "ms. Mutable size optimization: " + reduceTime + " ms");
+    }
+    return reduced;
+  }
+
+  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsDecorating()
+    throws IOException {
+    long decorateTime = -System.currentTimeMillis();
+    final GrowingMutable levels = new GrowingMutable(0, 1, 0, 1, true);
+    final GrowingMutable pLevels = new GrowingMutable(0, 1, 0, 1, true);
+    final long[] timings = new long[2]; // split, assign
+    PackedInts.Reader ordered =
+      source.getOrderedOrdinals(new OrderedDecorator() {
+        List<BytesRef> previous = new ArrayList<BytesRef>(10);
+        int previousParts = 0;
+        final List<BytesRef> current = new ArrayList<BytesRef>(10);
+
+        @Override
+        public void decorate(BytesRef term, long indirect) {
+          timings[0] -= System.nanoTime();
+          // TODO: Make the splitting byte definable
+          int parts = fastSplit(current, term, '/');
+          timings[0] += System.nanoTime();
+          int pLevel = 0;
+          for (int level = 0 ;
+               level < parts && level < previousParts ;
+               level++) {
+            if (current.get(level).equals(previous.get(level))) {
+              pLevel = level+1;
+            }
+          }
+          timings[1] -= System.nanoTime();
+          levels.set((int)indirect, parts);
+          pLevels.set((int)indirect, pLevel);
+          timings[1] += System.nanoTime();
+          previous = current;
+          previousParts = parts;
+        }
+      });
+    decorateTime += System.currentTimeMillis();
+
+    long reduceTime = -System.currentTimeMillis();
+    Pair<PackedInts.Reader, PackedInts.Reader> reduced =
+      new Pair<PackedInts.Reader, PackedInts.Reader>(
+        reduce(levels), reduce(pLevels));
+    reduceTime += System.currentTimeMillis();
+    if (ExposedSettings.debug) {
+      System.out.println(
+        "getLevelsDecorating(): Total time: " + decorateTime / 1000000
+        + ", splits " + timings[0] / 1000000 + " ms on "
+        + ordered.size() + " splits ("
+        + (ordered.size() * 1000000L / timings[0])
+        + " splits/ms)"
+        + ", assignments " + timings[1] / 1000000 + " ms on "
+        + ordered.size() + " level-assignments ("
+        + (ordered.size() * 1000000L / timings[1])
+        + " splits/ms). "
+        + "Mutable size optimization: " + reduceTime + " ms");
+    }
+    return reduced;
+  }
+
+  /**
+   * Fast byte-based split with low object allocations. Requires the
+   * splitting element to be a single byte. Works like String.split(...).
+   * @param reuse     re-usable buffer to lower object allocation.
+   * @param input     The term to split.
+   * @param splitByte the byte to split on.
+   * @return the number of valid elements n the reuse list.
+   */
+  private int fastSplit(final List<BytesRef> reuse, BytesRef input,
+                        int splitByte) {
+    if (reuse == null) {
+      throw new IllegalArgumentException(
+        "A valid list of BytesRefs must be provided. "
+        + "The given list was null");
+    }
+    int elementCount = 0;
+    int start = input.offset;
+    for (int i = input.offset ; i < input.offset + input.length ; i++) {
+      if (input.bytes[i] == splitByte) {
+        assign(reuse, ++elementCount, input, start, i-start);
+      }
+    }
+    if (start != input.offset + input.length) {
+      assign(reuse, ++elementCount, input, start, input.offset + input.length - start);
+    }
+    return elementCount;
+  }
+
+  private void assign(final List<BytesRef> reuse, int elementCount,
+                      BytesRef input, int offset, int length) {
+    if (reuse.size() < elementCount) {
+      reuse.add(new BytesRef(input.bytes, offset, length));
+    } else {
+      BytesRef element = reuse.get(elementCount-1);
+      element.bytes = input.bytes;
+      element.offset = offset;
+      element.length = length;
+    }
   }
 
   private PackedInts.Reader reduce(GrowingMutable grower) {
@@ -219,6 +419,10 @@ public class HierarchicalTermProvider implements TermProvider {
 
   public PackedInts.Reader getOrderedOrdinals() throws IOException {
     return source.getOrderedOrdinals();
+  }
+
+  public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
+    return source.getOrderedOrdinals(decorator);
   }
 
   public PackedInts.Reader getDocToSingleIndirect() throws IOException {

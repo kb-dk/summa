@@ -36,6 +36,28 @@ import java.util.Iterator;
  */
 public interface TermProvider {
 
+    /**
+     * A decorating version of {@link #getOrderedOrdinals()}. For each ordinal
+     * an {@link ExposedTuple} is passed to the decorator.
+     * @param decorator called for each tuple.
+     * @return ordinals ordered by Comparator..
+     * @throws IOException if the ordinals could not be retrieved.
+     */
+    PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException;
+
+    /**
+     * A decorator for extra Term-oriented processing during ordinal generation by
+     * {@link #getOrderedOrdinals(org.apache.lucene.search.exposed.TermProvider.OrderedDecorator)}.
+     */
+    public static interface OrderedDecorator {
+      /**
+       * Called once and once only for every term in order.
+       * @param term     the current term. This should not be modified.
+       * @param indirect the index in the order-array.
+       */
+      public void decorate(BytesRef term, long indirect);
+    }
+
   /**
    * Performs a search for the given term, returning the indirect for the
    * term or the nearest indirect if not present.
