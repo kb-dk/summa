@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.ext.DefaultHandler2;
@@ -238,6 +239,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
 
+    private boolean missingIDReported = false;
     @Override
     public void endElement (String uri, String localName, String qName) throws
                                                                   SAXException {
@@ -247,12 +249,10 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
         inId = false; // ID is always a single element, so end-element clears id
         String expected = insideRecordElementStack.size() > 0 ?
-                          insideRecordElementStack.
-                                  remove(insideRecordElementStack.size()-1)
+                          insideRecordElementStack.remove(insideRecordElementStack.size() - 1)
                           : "NA";
         if (!expected.equals(qName)) {
-            log.warn("endElement: Expected '" + expected
-                     + "', got '" + qName + "'");
+            log.warn("endElement: Expected '" + expected + "', got '" + qName + "'");
         } else {
             log.trace("endElement: " + qName);
         }
@@ -267,13 +267,22 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                 if ("".equals(target.idElement)) {
                     makeRandomID(id);
                 } else {
-                    log.warn("Record found, but no id could be located. "
-                             + "Skipping Record");
+                    String message = "Record found, but no id could be located. Skipping Record";
+                    Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, "N/A");
+                    log.warn(message);
                     if (log.isTraceEnabled()) {
                         log.trace(String.format(
-                                "Dumping id-less Record-XML (expected "
-                                + "id-element %s#%s):\n%s",
+                                "Dumping id-less Record-XML (expected id-element %s#%s):\n%s",
                                 target.idElement, target.idTag, sw.toString()));
+                    }
+                    if (!missingIDReported) {
+                        String missing = "This is the first time an id could not be located for the target.idElement="
+                                         + target.idElement + ", so the constructed output is dumped. This dump will "
+                                         + "not be repeated for the duration of the XMLSplitterHandler instance\n"
+                                         + sw.toString();
+                        Logging.logProcess("XMLSplitterHandler.endElement", missing, Logging.LogLevel.WARN, "N/A");
+                        log.warn(missing);
+                        missingIDReported = true;
                     }
                     prepareScanForNextRecord();
                     return;
@@ -379,4 +388,3 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
 }
-
