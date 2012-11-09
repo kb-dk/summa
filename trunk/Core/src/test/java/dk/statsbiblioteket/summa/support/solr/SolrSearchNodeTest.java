@@ -16,33 +16,38 @@ package dk.statsbiblioteket.summa.support.solr;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
-import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.util.Progress;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -442,6 +447,132 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testFuzzySearch() throws IOException {
+        testFuzzySearch(5000000);
+    }
+    private void testFuzzySearch(int samples) throws IOException {
+        final String QUERIES[] = new String[] {
+            "title:mxyzptll~",
+            "title:mxyzptlk", // Non-fuzzy
+            "title:mxyzpelk~",
+            "title:xmyzpelk~",
+            "title:mxyzptl~"
+        };
+        ObjectFilter feeder = getFuzzyFeeder(samples, "squid", "mxyzptlk");
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(feeder);
+        //noinspection StatementWithEmptyBody
+        while (indexer.pump());
+        indexer.close(true);
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased());
+        warmup(searcher, 1000);
+
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "foo"
+        );
+        for (String query: QUERIES) {
+            request.put(DocumentKeys.SEARCH_QUERY, query);
+            responses.clear();
+            long searchTime = -System.nanoTime();
+            searcher.search(request, responses);
+            searchTime += System.nanoTime();
+            assertTrue("There should at least be 1 hit for '" + query + "'",
+                       ((DocumentResponse) (responses.iterator().next())).getHitCount() > 0);
+            System.out.println("Search time for '" + query + "' was " + searchTime + "ns ~= "
+                               + (1000000000L / searchTime) + " searches/s");
+        }
+    }
+
+    private void warmup(SearchNode searcher, int searches) throws RemoteException {
+        log.debug("Performing " + searcher + " searches to warm up searcher");
+        final Random random = getDeterministicRandom();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "foo"
+        );
+        for (int i = 0 ; i < searches ; i++) {
+            responses.clear();
+            request.put(DocumentKeys.SEARCH_QUERY, "title:" + getFuzzyWord(random));
+            searcher.search(request, responses);
+            assertTrue("There should be at least 1 response in the collection", responses.iterator().hasNext());
+        }
+    }
+
+    private Random getDeterministicRandom() {
+        return new Random(87);
+    }
+
+
+    private ObjectFilter getFuzzyFeeder(final int numDocs, final String... specificEntries) {
+        return new ObjectFilter() {
+            private Random random = getDeterministicRandom();
+            private Profiler profiler = new Profiler(numDocs + specificEntries.length, 10000);
+            private int count = 0;
+            @Override
+            public boolean hasNext() {
+                return count < numDocs + specificEntries.length;
+            }
+
+            @Override
+            public Payload next() {
+                if (!hasNext()) {
+                    return null;
+                }
+                String fuzzy = count >= numDocs ? specificEntries[count - numDocs] : getFuzzyWord(random);
+                count++;
+                profiler.beat();
+                if (profiler.getBeats() % 100000 == 0) {
+                    log.info("FuzzyFeeder produced Payload #" + profiler.getBeats() + " at "
+                              + (int)profiler.getBps(true) + " Payloads/sec. Ready in "
+                              + profiler.getTimeLeftAsString(true));
+                }
+                try {
+                    return new Payload(new Record(
+                        "doc" + count, "Dummy",
+                        ("<doc>\n"
+                        + "<field name=\"recordID\">doc" + count + "</field>\n"
+                        + "<field name=\"recordBase\">dummy</field>\n"
+                        + "<field name=\"title\">" + fuzzy + "</field>\n"
+                        + "</doc>\n").getBytes("utf-8")));
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException("UTF-8 should be supported", e);
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Not implemented");
+            }
+
+            @Override
+            public void setSource(Filter filter) {
+                throw new IllegalAccessError("Cannot have source");
+            }
+
+            @Override
+            public boolean pump() throws IOException {
+                if (hasNext()) {
+                    next();
+                }
+                return hasNext();
+            }
+
+            @Override
+            public void close(boolean success) { }
+        };
+    }
+
+    private StringBuffer sb = new StringBuffer(50);
+    private String getFuzzyWord(Random random) {
+        int chars = 2 + random.nextInt(20);
+        sb.setLength(0);
+        for (int i = 0 ; i < chars ; i++) {
+            sb.append((char)(97 + random.nextInt(25)));
+        }
+        return sb.toString();
+    }
+
     public void testExposedFacetedSearchHandler() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
@@ -539,6 +670,7 @@ public class SolrSearchNodeTest extends TestCase {
     private IndexController getIndexer() throws IOException {
         Configuration controllerConf = Configuration.newMemoryBased(
             IndexController.CONF_FILTER_NAME, "testcontroller");
+        controllerConf.set(IndexControllerImpl.CONF_COMMIT_MAX_DOCUMENTS, -1);
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
