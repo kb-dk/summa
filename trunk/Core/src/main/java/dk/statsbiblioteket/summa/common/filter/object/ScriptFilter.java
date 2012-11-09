@@ -167,11 +167,11 @@ public class ScriptFilter extends ObjectFilterImpl {
                 log.error("Script engine does not support compilation. Going on in interpretive mode");
                 this.compileScript = false;
             } else {
-                log.info("Downloading and compiling script");
+                log.debug("Downloading and compiling script");
                 compiledScript = ((Compilable) engine).compile(script);
             }
         } else {
-            log.info("Downloading script for interpretive mode");
+            log.debug("Downloading script for interpretive mode");
             CharArrayWriter out = new CharArrayWriter();
 
             char[] buf = new char[bufferSize];
@@ -214,8 +214,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws IOException If error occur reading script.
      */
     @SuppressWarnings("unused")
-    public ScriptFilter(InputStream script)
-                                           throws ScriptException, IOException {
+    public ScriptFilter(InputStream script) throws ScriptException, IOException {
         this(new InputStreamReader(script), true, "js");
     }
 
@@ -282,12 +281,11 @@ public class ScriptFilter extends ObjectFilterImpl {
             }
 
             try {
-                log.info("Reading script from " + conf.getString(CONF_SCRIPT_URL));
+                log.debug("Reading script from " + conf.getString(CONF_SCRIPT_URL));
                 URL url = Resolver.getURL(conf.getString(CONF_SCRIPT_URL));
 
                 if (url == null) {
-                    throw new ConfigurationException(
-                            "Unable to locate script: " + conf.getString(CONF_SCRIPT_URL));
+                    throw new ConfigurationException("Unable to locate script: " + conf.getString(CONF_SCRIPT_URL));
                 } else {
                     log.debug("Script resolved to: " + url);
                 }
@@ -295,7 +293,7 @@ public class ScriptFilter extends ObjectFilterImpl {
                 return url.openStream();
             } catch (MalformedURLException e) {
                 throw new ConfigurationException(String.format(
-                    "Malformed URL in %s: %s", CONF_SCRIPT_URL, e.getMessage()), e);
+                        "Malformed URL in %s: %s", CONF_SCRIPT_URL, e.getMessage()), e);
             } catch (IOException e) {
                 throw new ConfigurationException(String.format(
                         "Unable to read script data from URL '%s': %s",
@@ -303,15 +301,13 @@ public class ScriptFilter extends ObjectFilterImpl {
             }
         } else {
             assert conf.valueExists(CONF_SCRIPT_INLINE);
-            log.info("Using inlined script");
-            return new ByteArrayInputStream(
-                                 conf.getString(CONF_SCRIPT_INLINE).getBytes());
+            log.debug("Using inlined script");
+            return new ByteArrayInputStream(conf.getString(CONF_SCRIPT_INLINE).getBytes());
         }
     }
 
     @Override
-    protected final boolean processPayload(Payload payload)
-                                                       throws PayloadException {
+    protected final boolean processPayload(Payload payload) throws PayloadException {
         long time = System.nanoTime();
         final double oneSecond = 1000000D;
 
