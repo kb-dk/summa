@@ -146,6 +146,11 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
   }
 
   @Override
+  public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
+    return source.getOrderedOrdinals(decorator);
+  }
+
+  @Override
   public PackedInts.Reader getDocToSingleIndirect() throws IOException {
     return source.getDocToSingleIndirect();
   }

@@ -6,10 +6,7 @@ import junit.framework.TestSuite;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.exposed.ExposedCache;
-import org.apache.lucene.search.exposed.ExposedHelper;
-import org.apache.lucene.search.exposed.ExposedIOFactory;
-import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.packed.PackedInts;
@@ -87,36 +84,49 @@ public class TestHierarchicalTermProvider extends TestCase {
     }
   }
 
-  public void testAugmentationBuildTime() throws IOException {
-    final String REGEXP = "/";
-    final int[] SIZES = new int[]{100, 10000, 100000};
-    final int RUNS = 3;
-    for (int size: SIZES) {
-      deleteIndex();
-      long refs = createIndex(size, 5, 5);
-      IndexReader reader =
-          ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-      for (int i = 0 ; i < RUNS ; i++) {
-        ExposedCache.getInstance().purgeAllCaches();
-        long basicTime = -System.currentTimeMillis();
-        TermProvider basic = ExposedCache.getInstance().getProvider(
-            reader, "myGroup", Arrays.asList(HIERARCHICAL),
-            new NamedNaturalComparator());
-        basicTime += System.currentTimeMillis();
-        long buildTime = -System.currentTimeMillis();
-        HierarchicalTermProvider augmented =
-            new HierarchicalTermProvider(basic, REGEXP);
-        buildTime += System.currentTimeMillis();
-        System.out.println("Standard tp build for " + size
-            + " documents with a " +
-            "total of " + augmented.getOrderedOrdinals().size() + " tags " +
-            "referred "
-            + refs + " times: " + basicTime + " ms, " +
-            "augmented extra time: " + buildTime + " ms");
+    public void testAugmentationBuildTime() throws IOException {
+      final int RUNS = 6;
+      final String REGEXP = "/";
+      final int SPLIT_BYTE = '/';
+      final int[] SIZES = new int[]{100, 10000, 100000};
+      for (int size: SIZES) {
+        deleteIndex();
+        long refs = createIndex(size, 5, 5);
+        IndexReader reader =
+            ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+        for (int i = 0 ; i < RUNS ; i++) {
+          //ExposedSettings.debug = i >= RUNS-3;
+          ExposedCache.getInstance().purgeAllCaches();
+          long basicTime = -System.currentTimeMillis();
+          TermProvider basic = ExposedCache.getInstance().getProvider(
+              reader, "myGroup", Arrays.asList(HIERARCHICAL),
+              new NamedNaturalComparator());
+          assertNotNull("Basic should provide ordered ordinals",
+                        basic.getOrderedOrdinals());
+          basicTime += System.currentTimeMillis();
+          long buildTime = -System.currentTimeMillis();
+  //        HierarchicalTermProvider augmented =
+  //            new HierarchicalTermProvider(basic, REGEXP);
+
+          // TODO: sortOrdinals(decorator) in GroupTermProvider is called here. The underlying provider were supposed to have already done that!?
+          HierarchicalTermProvider augmented =
+              i % 3 == 0 ?
+              new HierarchicalTermProvider(basic, REGEXP) :
+              new HierarchicalTermProvider(basic, SPLIT_BYTE, i % 3 == 1);
+          buildTime += System.currentTimeMillis();
+          System.out.println(
+            (i % 3 == 1 ? "Decorating" : "Standard  ")
+            + " tp build with " + (i % 3 == 0 ? "regexp" : "byte  ")
+            + " split with a total of "
+            + augmented.getOrderedOrdinals().size() + " tags " +
+            "referred " + refs + " times: " + basicTime + " ms, " +
+            "augmented extra time: " + buildTime + " ms ("
+            + (basicTime == 0 ? "N/A" : (buildTime / basicTime))
+            + " times standard)");
+        }
       }
+      deleteIndex();
     }
-    deleteIndex();
-  }
 
   private void dumpField(IndexReader reader, String field, int tags)
       throws IOException {
@@ -182,8 +192,9 @@ public class TestHierarchicalTermProvider extends TestCase {
     writer.close();
     System.out.println("");
     System.out.println(String.format(
-        "Created %d document index with " + references
-            + " tag references in %sms at %s", docCount,
+        "Created %d document index with %d tag references, maxTagsPerlevel=%d, "
+        + "maxLevel=%d in %sms at %s",
+        docCount, references, maxTagsPerLevel, maxLevel,
         (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
     return references;
   }
