@@ -55,7 +55,8 @@ public class GrowingMutable implements PackedInts.Mutable {
   private long valueMax = 0;
   private int size = 0; // Size is explicit to handle grow seamlessly
   private boolean optimizeSpeed = false;
-  
+  private long growTime = 0; // ns spend on growing
+
   private PackedInts.Mutable values;
 
   /**
@@ -116,7 +117,14 @@ public class GrowingMutable implements PackedInts.Mutable {
         && value >= valueMin && value <= valueMax) {
       return;
     }
-    // TODO: Just adjust max is within bitsPerValue 
+    growTime -= System.nanoTime();
+/*    if (!(index >= indexMin && index <= indexMax)) {
+      System.out.print("i");
+    }
+    if (!(value >= valueMin && value <= valueMax)) {
+      System.out.print("v");
+    }*/
+    // TODO: Just adjust max is within bitsPerValue
     if (size() == 0) { // First addition
       indexMin = index;
       indexMax = index;
@@ -151,6 +159,7 @@ public class GrowingMutable implements PackedInts.Mutable {
     valueMin = newValueMin;
     valueMax = newValueMax;
     size = indexMax - indexMin; // Size is always minimum to accommodate index
+    growTime += System.nanoTime();
   }
 
   public void set(int index, long value) {
@@ -248,6 +257,13 @@ public class GrowingMutable implements PackedInts.Mutable {
 
   public long getValueMax() {
     return valueMax;
+  }
+
+  /**
+   * @return the number of nanoseconds spend on growing the internal structure.
+   */
+  public long getGrowTime() {
+    return growTime;
   }
 
 }
