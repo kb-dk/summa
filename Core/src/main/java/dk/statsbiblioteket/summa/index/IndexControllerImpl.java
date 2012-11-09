@@ -534,12 +534,17 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             commit();
         }
         triggerCheck();
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() || profiler.getBeats() % 100000 == 0) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("update(" + payload + ") finished - update count for the current location is "
+            String message = "update(" + payload + ") finished - update count for the current location is "
                       + profiler.getBeats() + " at current rate " + profiler.getBps(true)
                       + " records/sec. updatesSinceLastCommit = " + updatesSinceLastCommit
-                      + ", updatesSinceLastConsolidate = " + updatesSinceLastConsolidate);
+                      + ", updatesSinceLastConsolidate = " + updatesSinceLastConsolidate;
+            if (profiler.getBeats() % 1000000 == 0) {
+                log.info(message);
+            } else {
+                log.debug(message);
+            }
         }
         return requestCommit;
     }
