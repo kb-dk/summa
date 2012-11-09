@@ -504,7 +504,7 @@ public class LuceneManipulator implements IndexManipulator {
         /**
         log.trace("consolidate(): Removing deletions");
         writer.expungeDeletes(true);*/
-        log.debug(String.format(
+        log.info(String.format(
                 "Optimizing index at %s to a maximum of %d segments. This might take a while",
                 indexDirectory.getDirectory(), maxMergeOnConsolidate));
         writer.forceMerge(maxMergeOnConsolidate);

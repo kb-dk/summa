@@ -37,8 +37,7 @@ public class CursorReaper implements Runnable {
     private boolean mayRun;
     private long graceTimeMinutes;
 
-    public CursorReaper(Map<Long, Cursor> iterators,
-                        long graceTimeMinutes) {
+    public CursorReaper(Map<Long, Cursor> iterators, long graceTimeMinutes) {
         this.iterators = iterators;
         this.graceTimeMinutes = graceTimeMinutes;
         mayRun = true;
@@ -62,7 +61,7 @@ public class CursorReaper implements Runnable {
     }
 
     public void run() {
-        log.info("Starting");
+        log.debug("Starting stale cursor watch");
         while (mayRun) {
             try {
                 Thread.sleep(graceTimeMinutes*60*1000);
@@ -89,7 +88,7 @@ public class CursorReaper implements Runnable {
         for (Long key : deadIters) {
             Cursor iter = iterators.remove(key);
             iter.close();
-            log.info("Iterator " + iter.getKey() + " timed out");
+            log.info("Iterator " + iter.getKey() + " timed out and was closed");
         }
 
         log.debug("Scan complete");

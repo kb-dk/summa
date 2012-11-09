@@ -110,13 +110,16 @@ public class FilterPump extends StateThread implements Configurable {
               || (log.isInfoEnabled() && profiler.getBeats() % INFO_FEEDBACK == 0))) {
             return;
         }
-        String ms =
-                Double.toString((System.nanoTime() - startTime) / 1000000.0);
+        String ms = Double.toString((System.nanoTime() - startTime) / 1000000.0);
+        String currentAverage = profiler.getBps(true) < 10 ? Double.toString(profiler.getBps(true)) :
+                                Integer.toString((int) profiler.getBps(true));
+        String overallAverage = profiler.getBps(false) < 10 ? Double.toString(profiler.getBps(false)) :
+                                Integer.toString((int) profiler.getBps(false));
         String message = String.format(
                 "%d pumps performed in %s, average speed for the last %d pumps was %s pumps/sec, overall average was "
                 + "%s pumps/sec, last pump took %s ms and delivered %s",
-                profiler.getBeats(), profiler.getSpendTime(), profiler.getBpsSpan(), profiler.getBps(true),
-                profiler.getBps(false), ms, last == null ? "no Payload" : last.getId());
+                profiler.getBeats(), profiler.getSpendTime(), profiler.getBpsSpan(), currentAverage,
+                overallAverage, ms, last == null ? "no Payload" : last.getId());
         if (profiler.getBeats() % INFO_FEEDBACK == 0) {
             log.info(message);
         } else if (profiler.getBeats() % DEBUG_FEEDBACK == 0) {

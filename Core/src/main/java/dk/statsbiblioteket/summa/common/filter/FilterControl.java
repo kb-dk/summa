@@ -38,8 +38,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FilterControl extends StateThread implements Configurable,
-                                                            FilterChainHandler {
+public class FilterControl extends StateThread implements Configurable, FilterChainHandler {
     /** Local log instance. */
     private static Log log = LogFactory.getLog(FilterControl.class);
     /** List of pumps. */
@@ -78,8 +77,7 @@ public class FilterControl extends StateThread implements Configurable,
      *                      completed.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public FilterControl(Configuration configuration) throws
-                                                        ConfigurationException {
+    public FilterControl(Configuration configuration) throws ConfigurationException {
         log.debug("Constructing");
         List<Configuration> chainConfs;
         try {
@@ -96,7 +94,7 @@ public class FilterControl extends StateThread implements Configurable,
         for (Configuration chainConf : chainConfs) {
             try {
                 FilterPump pump = new FilterPump(chainConf);
-                log.info("Created chain '" + pump + "'");
+                log.debug("Created chain '" + pump + "'");
                 pumps.add(pump);
             } catch (Exception e) {
                 throw new ConfigurationException(String.format(
@@ -106,20 +104,19 @@ public class FilterControl extends StateThread implements Configurable,
         }
         try {
             sequential = configuration.getBoolean(CONF_SEQUENTIAL);
-            log.info("Sequential ingest set to " + sequential);
+            log.debug("Sequential ingest set to " + sequential);
         } catch (Exception e) {
-            log.info(CONF_SEQUENTIAL + " not specified. Defaulting to "
-                    + DEFAULT_SEQUENTIAL);
+            log.info(CONF_SEQUENTIAL + " not specified. Defaulting to " + DEFAULT_SEQUENTIAL);
             sequential = DEFAULT_SEQUENTIAL;
         }
-        log.info("Constructed and ready");
+        log.info("Constructed " + (sequential ? "sequential" : "parallel") + " filter control with " + pumps
+                 + " FilterPumps");
     }
 
     @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
-        log.info("Activating filter pump(s) " +
-                (sequential ? "sequentially" : "in parallel"));
+        log.info("Activating " + pumps.size() + " filter pump(s) " + (sequential ? "sequentially" : "in parallel"));
 
         for (FilterPump pump: pumps) {
             if (getStatus() != STATUS.running) {
@@ -128,20 +125,16 @@ public class FilterControl extends StateThread implements Configurable,
             try {
                 pump.start();
                 if (sequential) {
-                    log.debug("Waiting for filter chain '" + pump.getChainName()
-                            + "' to finish");
+                    log.debug("Waiting for filter chain '" + pump.getChainName() + "' to finish");
                     try {
                         pump.waitForFinish();
                     } catch (InterruptedException e) {
-                        log.warn("run: Interrupted while waiting for '"
-                                + pump.getChainName() + "' to finish");
+                        log.warn("run: Interrupted while waiting for '" + pump.getChainName() + "' to finish");
                     }
-                    log.info("Filter chain " + pump.getChainName()
-                            + " completed");
+                    log.info("Filter chain '" + pump.getChainName() + "' completed");
                 }
             } catch (Exception e) {
-                log.error("Unable to start pump for filter chain '"
-                        + pump.getChainName() + "'");
+                log.error("Unable to start pump for filter chain '" + pump.getChainName() + "'");
             }
         }
         if (!sequential) {
@@ -151,11 +144,9 @@ public class FilterControl extends StateThread implements Configurable,
                     log.debug("Waiting for filter chain '" + pump.getChainName()
                             + "' to finish");
                     pump.waitForFinish();
-                    log.info("Filter pump " + pump.getChainName()
-                            + " completed");
+                    log.info("Filter pump " + pump.getChainName() + " completed");
                 } catch (InterruptedException e) {
-                    log.warn("run: Interrupted while waiting for '"
-                            + pump.getChainName() + "' to finish");
+                    log.warn("run: Interrupted while waiting for '" + pump.getChainName() + "' to finish");
                 }
             }
         }

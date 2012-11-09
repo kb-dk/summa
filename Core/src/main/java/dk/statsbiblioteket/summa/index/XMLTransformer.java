@@ -223,7 +223,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     @Override
     public synchronized void close(boolean success) {
         super.close(success);
-        log.info("Closing down XMLTransformer. " + getProcessStats());
+        log.info("Closing down XMLTransformer '" + getName() + "'. " + getProcessStats());
     }
 
     @Override
@@ -266,7 +266,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             if (xsltLocation != null) {
                 initTransformer(conf);
             }
-            log.info("initialized Changeling '" + xsltLocation + "'. Namespaces will "
+            log.info("initialized Changeling for xsltLocation '" + xsltLocation + "'. Namespaces will "
                      + (stripXMLNamespaces ? "" : "not ") + "be stripped from input before transformation");
         }
 

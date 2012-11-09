@@ -268,15 +268,13 @@ public class XStorage implements ConfigurationStorage {
             // TODO Solve
             // https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
             if (!unclearSemanticsWarned) {
-                log.warn("Unclear semantics. "
-                         + "See https://gforge.statsbiblioteket.dk/"
-                         + "tracker/index.php?aid=1186");
+                // Lowered to DEBUG as this has been working perfectly fine in production for several years
+                log.debug("Unclear semantics. See https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186");
                 unclearSemanticsWarned = true;
             }
             return new XStorage((XProperties) sub);
         } catch (NullPointerException e) {
-            throw new IOException("Could not locate value for key '" + key
-                                  + "':", e);
+            throw new IOException("Could not locate value for key '" + key + "':", e);
         }
     }
 
@@ -290,12 +288,9 @@ public class XStorage implements ConfigurationStorage {
      * @throws IOException If error occur while creating sub storage.
      */
     @Override
-    public List<ConfigurationStorage> createSubStorages(String key, int count)
-                                                            throws IOException {
-        ArrayList<XProperties> subProperties =
-                new ArrayList<XProperties>(count);
-        List<ConfigurationStorage> storages =
-                new ArrayList<ConfigurationStorage>(count);
+    public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
+        ArrayList<XProperties> subProperties = new ArrayList<XProperties>(count);
+        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(count);
         for (int i = 0; i < count; i++) {
             subProperties.add(new XProperties());
             storages.add(new XStorage(subProperties.get(i)));
@@ -312,8 +307,7 @@ public class XStorage implements ConfigurationStorage {
      * @throws IOException If error occur while getting storage.
      */
     @Override
-    public List<ConfigurationStorage> getSubStorages(String key) throws
-                                                                 IOException {
+    public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
             throw new IOException(String.format(

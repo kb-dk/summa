@@ -76,18 +76,21 @@ public class Resolver {
                      + "property '" + SYSPROP_PERSISTENT_DIR + "'");
             return file;
         }
-        log.trace("Resolved system property '" + SYSPROP_PERSISTENT_DIR
-                  + "' to '" + persistentBase + "'");
+        log.trace("Resolved system property '" + SYSPROP_PERSISTENT_DIR + "' to '" + persistentBase + "'");
+        if (persistentBase == null || "".equals(persistentBase)) {
+            log.debug("No persistentBase specified for system property " + SYSPROP_PERSISTENT_DIR
+                      + ". Returning path '" + file.getAbsolutePath() + "' directly");
+            return file.getAbsoluteFile();
+        }
         try {
             File persistentBaseFile = new File(persistentBase);
-            File resolved =
-                 new File(persistentBaseFile, file.getPath()).getAbsoluteFile();
+            File resolved = new File(persistentBaseFile, file.getPath()).getAbsoluteFile();
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
             log.info(String.format(
-                    "Could not resolve File '%s' to persistentBaseFile with "
-                    + "persistent base '%s'. Using file directly as '%s'", 
+                    "Could not resolve File '%s' to persistentBaseFile with persistent base '%s'. "
+                    + "Using file directly as '%s'",
                     file, persistentBase, file.getAbsolutePath()));
             return file;
         }

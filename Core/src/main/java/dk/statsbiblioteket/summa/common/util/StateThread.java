@@ -30,8 +30,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class StateThread implements Runnable {
-    private final Log log = LogFactory.getLog(StateThread.class.getName()
-                                       + "#" + this.getClass().getSimpleName());
+    private final Log log = LogFactory.getLog(StateThread.class.getName() + "#" + this.getClass().getSimpleName());
 
     /**
      * ready:    Ready to run for the first time since creation.<br />
@@ -82,22 +81,20 @@ public abstract class StateThread implements Runnable {
     protected abstract void runMethod();
 
     public final void run() {
-        dk.statsbiblioteket.util.Profiler profiler =
-                new dk.statsbiblioteket.util.Profiler();
+        dk.statsbiblioteket.util.Profiler profiler = new dk.statsbiblioteket.util.Profiler();
         try {
             log.debug("Starting run");
             runMethod();
-            log.info("Run complete after " + profiler.getSpendTime()
-                     + ". Cleaning up");
+            log.info("Run complete after " + profiler.getSpendTime() + ". Cleaning up");
             if (!status.equals(STATUS.error)) {
                 status = STATUS.stopped;
             }
             if (STATUS.error.equals(getStatus())) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("run stopped with error. Status " + status);
+                log.warn("run stopped with error. Status " + status);
             } else {
                 //noinspection DuplicateStringLiteralInspection
-                log.warn("run stopped. Status " + status
+                log.info("run stopped without known complications. Status " + status
                          + " (" + getErrorMessage() + ")", getErrorCause());
             }
         } catch (Throwable t) {
