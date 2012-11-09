@@ -46,20 +46,18 @@ public class StorageRunner {
     public static void main (String[] args) {
         Log log = LogFactory.getLog(StorageRunner.class);
 
-        Thread.setDefaultUncaughtExceptionHandler(
-                                              new LoggingExceptionHandler(log));
+        Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(log));
 
         Configuration conf = Configuration.getSystemConfiguration(true);        
 
-        log.info("Creating storage instance");
+        log.debug("Creating storage instance");
         try {
             Storage storage = StorageFactory.createStorage(conf);
-            log.info("Storage is running");
+            log.info("Storage is running in the background");
             try {
                 stats = new MachineStats(conf, "Storage");
             } catch (Exception e) {
-                log.warn("Failed to create machine stats. Not critical, but "
-                         + "memory stats will not be logged", e);
+                log.warn("Failed to create machine stats. Not critical, but memory stats will not be logged", e);
             }
 
             // Block indefinitely (non-busy)

@@ -944,12 +944,11 @@ public class Configuration implements Serializable,
      * @return The {@link Class} associated with {@code key} or the defaultValue
      *         if {@code key} is not found.
      */
-    public <T> Class<? extends T> getClass(String key, Class<T> classType,
-                                              Class<? extends T> defaultValue) {
+    public <T> Class<? extends T> getClass(String key, Class<T> classType, Class<? extends T> defaultValue) {
         try {
             return getClass(key, classType);
         } catch (NullPointerException e) {
-            log.info("Unable to find class for property '" + key
+            log.debug("Unable to find class value for key '" + key
                       + "'. Using default '" + defaultValue.getName() + "'");
             return defaultValue;
         }
@@ -966,8 +965,7 @@ public class Configuration implements Serializable,
         try {
             return storage.get(key) != null;
         } catch (IOException e) {
-            log.error("Failed to detect existence of value '" + key + "': "
-                       + e.getMessage(), e);
+            log.error("Failed to detect existence of value '" + key + "'", e);
             return false;
         }
     }
@@ -978,13 +976,12 @@ public class Configuration implements Serializable,
      *
      * @return The iterator as described above.
      */
+    @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() {
         try {
             return storage.iterator();
         } catch (IOException e) {
-            throw new ConfigurationStorageException("Failed to create "
-                                                    + "configuration iterator",
-                                                    e);
+            throw new ConfigurationStorageException("Failed to create configuration iterator", e);
         }
     }
 
@@ -1009,11 +1006,8 @@ public class Configuration implements Serializable,
             try {
                 storage.put(entry.getKey(), entry.getValue());
             } catch (IOException e) {
-                throw new ConfigurationStorageException("Unable to import "
-                                                        + "property '"
-                                                        + entry.getKey() + "="
-                                                        + entry.getValue()
-                                                        + "'", e);
+                throw new ConfigurationStorageException(
+                        "Unable to import property '" + entry.getKey() + "=" + entry.getValue() + "'", e);
             }
         }
     }
@@ -1119,19 +1113,15 @@ public class Configuration implements Serializable,
             return con.newInstance(conf);
         } catch (NoSuchMethodException e) {
             log.debug(String.format(
-                    "No constructor taking Configuration in %s."
-                    + " Creating object with empty constructor instead",
+                    "No constructor taking Configuration in %s. Creating object with empty constructor instead",
                     configurable.getSimpleName()));
             return createNonConfigurable(configurable);
         } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(
-                              "Error creating new instance, illegal access", e);
+            throw new Configurable.ConfigurationException("Error creating new instance, illegal access", e);
         } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(
-                            "Error creating new instance, invocation error", e);
+            throw new Configurable.ConfigurationException("Error creating new instance, invocation error", e);
         } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(
-                         "Error creating new instance, instantiation error", e);
+            throw new Configurable.ConfigurationException("Error creating new instance, instantiation error", e);
         }
     }
 
@@ -1145,14 +1135,11 @@ public class Configuration implements Serializable,
                 "No empty constructor in  %s",
                 plainClass.getSimpleName()), e);
         } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(
-                              "Error creating new instance, illegal access", e);
+            throw new Configurable.ConfigurationException("Error creating new instance, illegal access", e);
         } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(
-                            "Error creating new instnace, invocation error", e);
+            throw new Configurable.ConfigurationException("Error creating new instnace, invocation error", e);
         } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(
-                         "Error creating new instance, instantiation error", e);
+            throw new Configurable.ConfigurationException("Error creating new instance, instantiation error", e);
         }
     }
 
@@ -1174,8 +1161,7 @@ public class Configuration implements Serializable,
                 return false;
             }
         } catch (IOException e) {
-            throw new RuntimeException("IOException when comparing "
-                    + "Configurations objects", e);
+            throw new RuntimeException("IOException when comparing Configurations objects", e);
         }
         // TODO override equals in classes implementing ConfigurationStorage.
         for (Map.Entry<String, Serializable> entry : conf) {
@@ -1202,8 +1188,7 @@ public class Configuration implements Serializable,
                 hashCode += iter.next().hashCode();
             }
         } catch (IOException e) {
-            throw new RuntimeException("IOException when computing hashCode for"
-                    + " Configurations objects", e);
+            throw new RuntimeException("IOException when computing hashCode for Configurations objects", e);
         }
         return hashCode;
     }
@@ -1298,10 +1283,8 @@ public class Configuration implements Serializable,
                     log.debug("Loaded '" + confResource + "' as XProperties");
                     return new Configuration(storage);
                 } catch (Exception e) {
-                    log.info("Failed to load '" + confResource
-                              + "' as XProperties:" + e.getMessage());
-                    log.debug("Failed to load '" + confResource
-                               + "' as XProperties:" + e.getMessage());
+                    log.info("Failed to load '" + confResource + "' as XProperties:" + e.getMessage());
+                    log.debug("Failed to load '" + confResource + "' as XProperties:" + e.getMessage());
                 }
 
                 try {

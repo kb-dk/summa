@@ -339,7 +339,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
 
 
-        log.info("CONF_LOAD_DATA_COLUMN:" + loadData);
+        log.debug("CONF_LOAD_DATA_COLUMN:" + loadData);
 
         if (usePersistence) {
             log.debug("Enabling progress tracker");

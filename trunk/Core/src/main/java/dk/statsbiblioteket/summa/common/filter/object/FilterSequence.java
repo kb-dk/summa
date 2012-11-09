@@ -81,16 +81,14 @@ public class FilterSequence implements ObjectFilter {
         try {
             filterConfigurations = conf.getSubConfigurations(CONF_FILTERS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
             List<String> filterNames;
             try {
                 filterNames = conf.getStrings(CONF_FILTERS);
             } catch (Exception e2) {
                 throw new ConfigurationException(String.format(
-                        "No Filters specified in property %s for "
-                        + "FilterSequence", CONF_FILTERS), e);
+                        "No Filters specified in property %s for FilterSequence", CONF_FILTERS), e);
             }
             throw new ConfigurationException(String.format(
                     "A list of Strings was specified in the property %s. A "
@@ -105,18 +103,16 @@ public class FilterSequence implements ObjectFilter {
             throw new ConfigurationException(
                     "No filters created in FilterSequence");
         }
-        log.debug("Finished building sequence  of " + filters.size()
-                  + " length");
+        log.debug("Finished building sequence  of " + filters.size() + " length");
     }
 
-    private void buildChain(List<Configuration> filterConfigurations)
-                                                            throws IOException {
+    private void buildChain(List<Configuration> filterConfigurations) throws IOException {
         log.trace("Entering buildChain");
         if (filterConfigurations == null) {
             log.warn("buildChain: No filter configurations");
             return;
         }
-        Logs.log(log, Logs.Level.INFO, "Building filter sequence with "
+        Logs.log(log, Logs.Level.DEBUG, "Building filter sequence with "
                  + filterConfigurations.size() + " filters");
         for (Configuration filterConf: filterConfigurations) {
             try {
@@ -124,10 +120,8 @@ public class FilterSequence implements ObjectFilter {
                         CONF_FILTER_ENABLED, DEFAULT_FILTER_ENABLED)) {
                     //noinspection DuplicateStringLiteralInspection
                     log.debug(String.format(
-                            "Skipping %s filter of class %s as it is not "
-                            + "enabled",
-                            filterConf.getString(
-                                    Filter.CONF_FILTER_NAME, "unknown"),
+                            "Skipping %s filter of class %s as it is not enabled",
+                            filterConf.getString(Filter.CONF_FILTER_NAME, "unknown"),
                             filterConf.getString(CONF_FILTER_CLASS, "unknown")
                     ));
                     continue;
@@ -135,22 +129,19 @@ public class FilterSequence implements ObjectFilter {
                 ObjectFilter filter = createFilter(filterConf);
                 log.debug("Adding Filter '" + filter + "' to sequence");
                 if (lastFilter != null) {
-                    log.trace("Chaining '" + filter + "' to the end of '"
-                              + lastFilter + "'");
+                    log.trace("Chaining '" + filter + "' to the end of '" + lastFilter + "'");
                     filter.setSource(lastFilter);
                 }
                 lastFilter = filter;
                 filters.add(lastFilter);
             } catch (Exception e) {
-                throw new IOException(String.format(
-                        "Could not create filter '%s'", filterConf), e);
+                throw new IOException(String.format("Could not create filter '%s'", filterConf), e);
             }
         }
         if (filters.size() == 0) {
             log.warn("buildChain: No filters created");
         }
-        log.info("Finished buildChain with " + filters.size()
-                 + " filters created");
+        log.info("Finished buildChain with " + filters.size() + " filters created");
     }
 
     private ObjectFilter createFilter(Configuration configuration) {

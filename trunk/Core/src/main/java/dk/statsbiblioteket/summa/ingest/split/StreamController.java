@@ -43,6 +43,7 @@ public class StreamController implements ObjectFilter {
      * This property is mandatory.
      */
     public static final String CONF_PARSER = "summa.ingest.stream.controller.parser";
+    private String name;
     /** The payload. */
     private Payload payload = null;
     /** The source filter. */
@@ -56,9 +57,10 @@ public class StreamController implements ObjectFilter {
      * @param conf The configuration.
      */
     public StreamController(Configuration conf) {
+        name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         Class<? extends StreamParser> parserClass =
                 Configuration.getClass(CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
-        log.info("Creating StreamParser '" + parserClass.getName() + "'");
+        log.info("Creating StreamParser '" + getName() + "'");
         parser = Configuration.create(parserClass, conf);
     }
 
@@ -74,8 +76,7 @@ public class StreamController implements ObjectFilter {
         checkSource();
         if (payload != null) {
             if (log.isTraceEnabled()) {
-                log.trace("makePayload: Payload already assigned with "
-                          + payload);
+                log.trace("makePayload: Payload already assigned with " + payload);
             }
             return;
         }
@@ -218,5 +219,9 @@ public class StreamController implements ObjectFilter {
     protected Class<? extends StreamParser> getDefaultStreamParserClass() {
         log.trace("getDefaultStreamParserClass(): returning null");
         return null;
+    }
+
+    public String getName() {
+        return name;
     }
 }
