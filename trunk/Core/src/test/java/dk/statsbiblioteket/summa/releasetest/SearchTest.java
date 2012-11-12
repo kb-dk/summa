@@ -206,6 +206,51 @@ public class SearchTest extends NoExitTestCase {
                    luceneFiles.length > 20);
     }
 
+    @SuppressWarnings("ConstantConditions")
+    public void testBoosting() throws Exception {
+        final int AMOUNT = 1;
+
+        createFagrefIndex(INDEX_ROOT.toString(), AMOUNT, "integration/search/fagref_xslt/fagref_index_boost.xsl");
+        SummaSearcher searcher = new SummaSearcherImpl(getSearcherConfiguration());
+        verifySearch(searcher, "*:*", AMOUNT);
+    }
+
+    // Temporary test to check sorting on the production index
+    public void disabled_testSortProductionIndex() throws Exception {
+        final File INDEX = new File("/home/te/tmp/remote/sb/");
+        Profiler profiler = new Profiler();
+//        final File INDEX = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/");
+
+        @SuppressWarnings("ConstantConditions") // INDEX/sb/20121108-1234/IndexDescriptor.xml
+        File descriptorLocation = new File(INDEX.listFiles()[0], "IndexDescriptor.xml");
+        assertTrue("The descriptor should exist", descriptorLocation.exists());
+
+        Configuration searcherConf = Configuration.load("integration/search/SearchTest_SearchConfiguration.xml");
+        assertNotNull("The configuration should not be empty", searcherConf);
+        searcherConf.set(SummaSearcherImpl.CONF_SEARCHER_AVAILABILITY_TIMEOUT, 99999999); // It takes time to open index
+        searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).set(
+            IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
+        searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX.toString());
+
+        log.info("Opening index");
+        SummaSearcherImpl searcher = new SummaSearcherImpl(searcherConf);
+        log.info("Performing availability test search");
+        assertTrue("There should be responses from the test search",
+                   getHits(searcher, new Request(
+                       DocumentKeys.SEARCH_QUERY, "foo",
+                       DocumentKeys.SEARCH_COLLECT_DOCIDS, false // Disable faceting
+                   )) > 0);
+
+        log.debug("Performing real test search");
+        System.out.println(searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "knausgaard",
+            DocumentKeys.SEARCH_FILTER, "lma_long:01",
+            DocumentKeys.SEARCH_SORTKEY, "sort_title",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false // Disable faceting
+        )).toXML());
+        log.info("Finished test in " + profiler.getSpendTime());
+    }
+
     private List<String> extractSortValue(DocumentResponse docs) {
         List<String> sortValues = new ArrayList<String>(docs.size());
         for (DocumentResponse.Record record: docs.getRecords()) {
@@ -221,10 +266,13 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private void createFagrefIndex(String indexLocation, int amount) throws IOException {
+        createFagrefIndex(indexLocation, amount, "integration/search/fagref_xslt/fagref_index.xsl");
+    }
+    private void createFagrefIndex(String indexLocation, int amount, String xslt) throws IOException {
         ObjectFilter producer = getSortdocuments(amount);
 
         ObjectFilter transformer = new XMLTransformer(Configuration.newMemoryBased(
-            XMLTransformer.CONF_XSLT, Resolver.getFile("integration/search/fagref_xslt/fagref_index.xsl")
+            XMLTransformer.CONF_XSLT, Resolver.getFile(xslt)
         ));
         transformer.setSource(producer);
 
@@ -257,7 +305,7 @@ public class SearchTest extends NoExitTestCase {
             assertTrue("There should be a next Payload for request #" + (i + 1), manipulator.hasNext());
             manipulator.next();
             profiler.beat();
-            if (i % 10000 == 0) {
+            if (i % 10000 == 0 || i == amount-1) {
                 log.info("Indexed " + i + " documents at rate " + (int)profiler.getBps(true)
                          + " Payloads/second. ETS: " + profiler.getETAAsString(true));
             }
@@ -446,11 +494,14 @@ public class SearchTest extends NoExitTestCase {
     private static Pattern hitPattern =
             Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
     public static int getHits(SummaSearcher searcher, String query) throws Exception {
-        String result = searcher.search(simpleRequest(query)).toXML();
-        log.debug("Result from search for '" + query + "': " + result);
+        return getHits(searcher, simpleRequest(query));
+    }
+
+    public static int getHits(SummaSearcher searcher, Request request) throws Exception {
+        String result = searcher.search(request).toXML();
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
-            throw new NullPointerException("Could not locate hitcount in " + result);
+            throw new NullPointerException("Could not locate hitCount in " + result);
         }
         return Integer.parseInt(matcher.group(1));
     }

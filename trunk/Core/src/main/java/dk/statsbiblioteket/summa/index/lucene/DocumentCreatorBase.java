@@ -77,7 +77,9 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
                                 indexField.getIndex(),
                                 indexField.getTermVector());
         if (boost != null) {
-            field.setBoost(indexField.getIndexBoost() * boost);
+            if (!field.fieldType().omitNorms() && field.fieldType().indexed()) {
+                field.setBoost(indexField.getIndexBoost() * boost);
+            }
         }
 
         if (log.isTraceEnabled()) {
