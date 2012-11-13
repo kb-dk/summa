@@ -33,6 +33,7 @@
                         <key>summa.filter.sequence.filters</key>
                         <value class="list">
 
+                            // 0
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
@@ -56,6 +57,7 @@
                                 </entry>
                             </xproperties>
 
+                            // 1
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
@@ -71,6 +73,7 @@
                                 </entry>
                             </xproperties>
 
+                            // 2
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
@@ -86,6 +89,7 @@
                                 </entry>
                             </xproperties>
 
+                            // 3
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
@@ -106,6 +110,7 @@
                                 </entry>
                             </xproperties>
 
+                            // 4
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
