@@ -313,7 +313,7 @@
                 Filter sorted search<br />
                 <label for="f3">Filter:</label> <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
                 <label for="q3">Query:</label> <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
-                <label for="j1">JSON:</label> <input type="text" name="json" size="55" id="j1" value="<%= form_json %>" /><br />
+                <label for="j1">JSON:</label> <textarea cols="55" rows="4" name="json" id="j1"><%= form_json %></textarea><br />
                 <label for="s3">Sort field:</label> <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
                 <% if (reverseSort) { %>
                   <label for="reverse">Reversed:</label> <input type="checkbox" name="reverse" id="reverse" checked="checked" /><br />
