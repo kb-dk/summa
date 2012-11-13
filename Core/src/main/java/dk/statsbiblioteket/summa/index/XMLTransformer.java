@@ -164,8 +164,7 @@ public class XMLTransformer extends GraphFilter<Object> {
         }
         if (conf.valueExists(CONF_SETUPS)) {
             try {
-                for (Configuration subConf:
-                    conf.getSubConfigurations(CONF_SETUPS)) {
+                for (Configuration subConf: conf.getSubConfigurations(CONF_SETUPS)) {
                     changelings.add(new Changeling(subConf, true));
                 }
             } catch (SubConfigurationsNotSupportedException e) {
