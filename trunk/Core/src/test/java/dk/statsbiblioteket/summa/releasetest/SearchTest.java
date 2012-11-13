@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
+import dk.statsbiblioteket.summa.ingest.stream.ArchiveReader;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
@@ -206,6 +207,33 @@ public class SearchTest extends NoExitTestCase {
                    luceneFiles.length > 20);
     }
 
+    public void testSearcherReload() throws Exception {
+        assertEquals("There should be 1 file indexed",
+                     1, index(0, new File(fagref_hj, "hans.jensen.xml").toString()));
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
+        verifySearch(searcher, "*:*", 1);
+        assertEquals("There should be 1 extra file indexed",
+                     1, index(1, new File(fagref_1plus2, "gurli.margrethe.xml").toString()));
+        log.info("Reloading index...");
+        searcher.reloadIndex();
+        log.info("Index reloaded, performing test search...");
+        verifySearch(searcher, "*:*", 2);
+        log.info("Reload test done");
+    }
+
+    private int index(int startID, String... files) throws IOException {
+        ObjectFilter feeder = new PayloadFeederHelper(startID, files);
+        ObjectFilter indexer = createIndexChain(
+            feeder, INDEX_ROOT.toString(), "integration/search/fagref_xslt/fagref_index_boost.xsl", 1, false);
+        int counter = 0;
+        while (indexer.hasNext()) {
+            indexer.next();
+            counter++;
+        }
+        indexer.close(true);
+        return counter;
+    }
+
     @SuppressWarnings("ConstantConditions")
     public void testBoosting() throws Exception {
         final int AMOUNT = 1;
@@ -271,6 +299,26 @@ public class SearchTest extends NoExitTestCase {
     private void createFagrefIndex(String indexLocation, int amount, String xslt) throws IOException {
         ObjectFilter producer = getSortdocuments(amount);
 
+        ObjectFilter manipulator = createIndexChain(producer, indexLocation, xslt, amount, true);
+
+        log.info("Generating index with " + amount + " sample documents");
+        final Profiler profiler = new Profiler(amount, 10000);
+        for (int i = 0 ; i < amount ; i++) {
+            assertTrue("There should be a next Payload for request #" + (i + 1), manipulator.hasNext());
+            manipulator.next();
+            profiler.beat();
+            if (i % 10000 == 0 || i == amount-1) {
+                log.info("Indexed " + i + " documents at rate " + (int)profiler.getBps(true)
+                         + " Payloads/second. ETS: " + profiler.getETAAsString(true));
+            }
+        }
+        assertFalse("The chain should be depleted", manipulator.hasNext());
+        manipulator.close(true);
+    }
+
+    // Custom producer
+    private ObjectFilter createIndexChain(
+            ObjectFilter producer, String indexLocation, String xslt, int amount, boolean isNew) throws IOException {
         ObjectFilter transformer = new XMLTransformer(Configuration.newMemoryBased(
             XMLTransformer.CONF_XSLT, Resolver.getFile(xslt)
         ));
@@ -288,7 +336,7 @@ public class SearchTest extends NoExitTestCase {
         documentCreator.setSource(legacy);
 
         Configuration indexConf = Configuration.newMemoryBased(
-            IndexControllerImpl.CONF_CREATE_NEW_INDEX, "true",
+            IndexControllerImpl.CONF_CREATE_NEW_INDEX, isNew,
             IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, indexLocation,
             IndexControllerImpl.CONF_COMMIT_MAX_DOCUMENTS, amount < 10 ? 2 : amount / 5
         );
@@ -298,20 +346,7 @@ public class SearchTest extends NoExitTestCase {
         luceneDescConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, "integration/search/SearchTest_IndexDescriptor.xml");
         ObjectFilter manipulator = new IndexControllerImpl(indexConf);
         manipulator.setSource(documentCreator);
-
-        log.info("Generating index with " + amount + " sample documents");
-        final Profiler profiler = new Profiler(amount, 10000);
-        for (int i = 0 ; i < amount ; i++) {
-            assertTrue("There should be a next Payload for request #" + (i + 1), manipulator.hasNext());
-            manipulator.next();
-            profiler.beat();
-            if (i % 10000 == 0 || i == amount-1) {
-                log.info("Indexed " + i + " documents at rate " + (int)profiler.getBps(true)
-                         + " Payloads/second. ETS: " + profiler.getETAAsString(true));
-            }
-        }
-        assertFalse("The chain should be depleted", manipulator.hasNext());
-        manipulator.close(true);
+        return manipulator;
     }
 
     private ObjectFilter getSortdocuments(final int amount) throws UnsupportedEncodingException {

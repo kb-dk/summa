@@ -284,7 +284,9 @@ public abstract class SearchNodeImpl implements SearchNode {
     public synchronized void close() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close() called");
-        try {
+        // The whole slot acquiring is performed by the SearchNodeImpl, except for final shutdown and in that case
+        // it does not matter that the shutdown is unclean
+/*        try {
             if (log.isTraceEnabled()) {
                 log.trace(String.format("close: acquiring %d slots", slots.getOverallPermits()));
             }
@@ -301,7 +303,7 @@ public abstract class SearchNodeImpl implements SearchNode {
             slots.setOverallPermits(0);
             throw new RemoteException("Interrupted while acquiring all slots for close", e);
         }
-
+  */
         try {
             managedClose();
         } catch(RemoteException e) {

@@ -14,6 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.unittest;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
@@ -53,6 +55,36 @@ public class PayloadFeederHelper implements ObjectFilter {
         log.debug("Creating feeder with " + payloads.size() + " Payloads");
         this.payloads = new ArrayList<Payload>(payloads.size());
         this.payloads.addAll(payloads);
+    }
+
+    /**
+     * Creates a payload feeder with a list of Stream based payloads.
+     * @param inputFiles an array of files which will be used for the Payloads..
+     */
+    public PayloadFeederHelper(String... inputFiles) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Creating feeder from " + inputFiles.length + " input files");
+        payloads = new ArrayList<Payload>(inputFiles.length);
+        int counter = 0;
+        for (String inputFile: inputFiles) {
+            payloads.add(new Payload(Resolver.getURL(inputFile).openStream(), inputFile));
+        }
+    }
+
+    /**
+     * Creates a payload feeder with a list of Record based payloads.
+     * @param startID    used as the starting point for the generated IDs.
+     * @param inputFiles an array of files which will be used for the Payloads..
+     */
+    public PayloadFeederHelper(int startID, String... inputFiles) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Creating feeder from " + inputFiles.length + " input files");
+        payloads = new ArrayList<Payload>(inputFiles.length);
+        int counter = startID;
+        for (String inputFile: inputFiles) {
+            payloads.add(new Payload(new Record(
+                "doc" + counter++, "dummy", Resolver.getUTF8Content(inputFile).getBytes("utf-8"))));
+        }
     }
 
     /**
