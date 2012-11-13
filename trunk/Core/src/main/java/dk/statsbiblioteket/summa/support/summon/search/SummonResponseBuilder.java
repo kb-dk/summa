@@ -113,7 +113,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     @Override
     public long buildResponses(Request request, SolrFacetRequest facets, ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-//        System.out.println(summonResponse.replace(">", ">\n"));
+        //System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         XMLStreamReader xml;
@@ -237,8 +237,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private FacetResult<String> extractFacetResult(XMLStreamReader xml, SolrFacetRequest facets)
         throws XMLStreamException {
         long startTime = System.currentTimeMillis();
-        HashMap<String, Integer> facetIDs =
-            new HashMap<String, Integer>(facets.getFacets().size());
+        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>(facets.getFacets().size());
         // 1 facet = 1 field in Summon-world
         HashMap<String, String[]> fields = new HashMap<String, String[]>(facets.getFacets().size());
         for (int i = 0 ; i < facets.getFacets().size() ; i++) {
@@ -284,7 +283,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
                 boolean isApplied = Boolean.parseBoolean(XMLStepper.getAttribute(xml, "isApplied", "false"));
                 boolean isNegated = Boolean.parseBoolean(XMLStepper.getAttribute(xml, "isNegated", "false"));
-                if (!(isApplied && isNegated)) { // Signifies negative facet value filter
+//                System.out.println("Facet " + facetName + ", tag " + tagName + ", count " + tagCount);
+                if (tagCount != 0 && !(isApplied && isNegated)) { // Signifies negative facet value filter
                     summaFacetResult.addTag(facetName, tagName, tagCount);
                 }
             }

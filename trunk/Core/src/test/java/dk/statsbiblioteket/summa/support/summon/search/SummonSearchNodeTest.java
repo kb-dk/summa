@@ -184,7 +184,7 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
         assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
                      + Strings.join(tags, "\n"),
-                     tagCount+1, tags.size());
+                     tagCount + 1, tags.size());
         summon.close();
     }
 
@@ -330,6 +330,31 @@ public class SummonSearchNodeTest extends TestCase {
             dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
         retXML = DOM.domToString(subDom);
         return retXML;
+    }
+
+    public void testNonExistingFacet() throws RemoteException {
+        final Request request = new Request(
+            "search.document.query", "foo",
+            "search.document.filter", "Language:abcde32542f",
+            "search.document.collectdocids", "true",
+            "solr.filterisfacet", "true"
+        );
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        log.debug("Searching");
+        summon.search(request, responses);
+        log.debug("Finished searching");
+        for (Response response : responses) {
+            if (response instanceof FacetResultExternal) {
+                FacetResultExternal facets = (FacetResultExternal)response;
+                for (Map.Entry<String, List<FacetResultImpl.Tag<String>>> entry: facets.getMap().entrySet()) {
+                    assertEquals("The number of tags for facet '" + entry.getKey()
+                                 + "' should be 0 as there should be no hits. First tag was '"
+                                 + (entry.getValue().size() == 0 ? "N/A" : entry.getValue().get(0).getKey()) + "',",
+                                 0, entry.getValue().size());
+                }
+            }
+        }
     }
 
     public void testColonSearch() throws RemoteException {
