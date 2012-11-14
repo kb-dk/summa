@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxyTest;
 import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
+import java.io.IOException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -58,7 +59,9 @@ public class StorageWriterClientTest extends TestCase {
         if(testRoot == null) {
             return;
         }
-        Files.delete(testRoot);
+        if (testRoot.exists()) {
+            Files.delete(testRoot);
+        }
     }
 
     public static Test suite() {
@@ -77,6 +80,24 @@ public class StorageWriterClientTest extends TestCase {
         storage.flush(new Record("Dummy1", "SomeBase", new byte[0]));
         assertNotNull("The added record should exist",
                       storage.getRecord("Dummy1", null));
+    }
+
+    public void testNoConnectionTimeout() throws IOException {
+        final int LIMIT = 1000;
+        Configuration conf = Configuration.newMemoryBased(
+                ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28087/nonexisting",
+                ConnectionConsumer.CONF_GRACE_TIME, "0"
+        );
+        StorageWriterClient remoteStorage = new StorageWriterClient(conf);
+        long clearTime = -System.currentTimeMillis();
+        try {
+            remoteStorage.clearBase("dummy");
+        } catch (Exception e) {
+            // Expected
+        }
+        clearTime += System.currentTimeMillis();
+        assertTrue("It should take less than " + LIMIT + "ms for timeout but took " + LIMIT + "ms",
+                   clearTime < LIMIT);
     }
 
     public void testRemoteWriteGetClear() throws Exception {

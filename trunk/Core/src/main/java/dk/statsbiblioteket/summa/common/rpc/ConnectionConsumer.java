@@ -62,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "mke")
+        author = "te, mke")
 public class ConnectionConsumer<E> implements Configurable {
     private static Log log = LogFactory.getLog(ConnectionConsumer.class);
 
@@ -79,9 +79,27 @@ public class ConnectionConsumer<E> implements Configurable {
      */
     public static final String CONF_RPC_TARGET = "summa.rpc.vendor";
 
+    /**
+     * If a connection cannot be established, The connection factory will sleep this number of seconds before retrying.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String CONF_GRACE_TIME = "summa.rpc.gracetime";
+    public static final int DEFAULT_GRACE_TIME = 1;
+
+    /**
+     * If a connection cannot be established, The connection factory will retry this many times.
+     * </p><p>
+     * Optional. Default is 3.
+     */
+    public static final String CONF_RETRIES = "summa.rpc.retries";
+    public static final int DEFAULT_RETRIES = 3;
+
     private ConnectionManager<E> connMan;
     private ConnectionContext<E> conn;
     private String connId;
+    private final int graceTime;
+    private final int retries;
 
     /**
      * Instantiate a new {@code ConnectionConsumer} based on {@code conf}.
@@ -108,6 +126,10 @@ public class ConnectionConsumer<E> implements Configurable {
             throw new ConfigurationException(String.format(
                     "%s not set. No RPC vendor", CONF_RPC_TARGET));
         }
+        graceTime = conf.getInt(CONF_GRACE_TIME, DEFAULT_GRACE_TIME);
+        retries = conf.getInt(CONF_RETRIES, DEFAULT_RETRIES);
+        connFact.setGraceTime(graceTime);
+        connFact.setNumRetries(retries);
         conn = null;
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("Created ConnectionConsumer '%s' for %s",
@@ -136,6 +158,10 @@ public class ConnectionConsumer<E> implements Configurable {
         connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
         conn = null;
         //noinspection DuplicateStringLiteralInspection
+        graceTime = conf.getInt(CONF_GRACE_TIME, DEFAULT_GRACE_TIME);
+        retries = conf.getInt(CONF_RETRIES, DEFAULT_RETRIES);
+        connFact.setGraceTime(graceTime);
+        connFact.setNumRetries(retries);
         log.debug(String.format("Created ConnectionConsumer '%s' for %s",
                                 this, connId));
     }
@@ -161,8 +187,7 @@ public class ConnectionConsumer<E> implements Configurable {
         }
 
         if (conn == null) {
-            log.debug("getConnection: ConnectionContext is null for id "
-                      + connId);
+            log.debug("getConnection: ConnectionContext is null for id " + connId);
             return null;
         }
 
