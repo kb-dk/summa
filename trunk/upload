@@ -28,6 +28,7 @@ fi
 cp summix-*-SNAPSHOT.zip $FOLDER
 
 echo "Deploying folder $FOLDER with content `ls $FOLDER` for user $USER"
+echo "scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/"
 scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/
 
 #scp Samples/Summix/target/summix-*.zip  toke-sb,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/1.8.0-20110830-l4exp-SNAPSHOT/
