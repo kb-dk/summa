@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
-@RunWith(com.carrotsearch.randomizedtesting.RandomizedRunner.class)
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
   private ExposedCache cache;

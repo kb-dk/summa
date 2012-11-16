@@ -80,26 +80,41 @@ public class ConnectionConsumer<E> implements Configurable {
     public static final String CONF_RPC_TARGET = "summa.rpc.vendor";
 
     /**
-     * If a connection cannot be established, The connection factory will sleep this number of seconds before retrying.
+     * If a connection cannot be established, The connection factory will sleep this number of ms before retrying.
      * </p><p>
-     * Optional. Default is 1.
+     * Optional. Default is 1000 (1 second).
      */
-    public static final String CONF_GRACE_TIME = "summa.rpc.gracetime";
-    public static final int DEFAULT_GRACE_TIME = 1;
+    public static final String CONF_INITIAL_GRACE_TIME = "summa.rpc.initial.gracetime";
+    public static final int DEFAULT_INITIAL_GRACE_TIME = 1000;
 
     /**
      * If a connection cannot be established, The connection factory will retry this many times.
      * </p><p>
      * Optional. Default is 3.
      */
-    public static final String CONF_RETRIES = "summa.rpc.retries";
-    public static final int DEFAULT_RETRIES = 3;
+    public static final String CONF_INITIAL_RETRIES = "summa.rpc.initial.retries";
+    public static final int DEFAULT_INITIAL_RETRIES = 2;
 
+    /**
+     * If a connection subsequent cannot be established, The connection factory will sleep this number of ms before
+     * retrying.
+     * </p><p>
+     * Optional. Default is 1ms.
+     */
+    public static final String CONF_SUBSEQUENT_GRACE_TIME = "summa.rpc.subsequent.gracetime";
+    public static final int DEFAULT_SUBSEQUENT_GRACE_TIME = 1;
+
+    /**
+     * If a subsequent connection cannot be established, The connection factory will retry this many times.
+     * </p><p>
+     * Optional. Default is 0 (no retries).
+     */
+    public static final String CONF_SUBSEQUENT_RETRIES = "summa.rpc.subsequent.retries";
+    public static final int DEFAULT_SUBSEQUENT_RETRIES = 0;
+    
     private ConnectionManager<E> connMan;
     private ConnectionContext<E> conn;
     private String connId;
-    private final int graceTime;
-    private final int retries;
 
     /**
      * Instantiate a new {@code ConnectionConsumer} based on {@code conf}.
@@ -118,22 +133,7 @@ public class ConnectionConsumer<E> implements Configurable {
      * @param conf configuration used to instantiate the connection consumer
      */
     public ConnectionConsumer (Configuration conf) {
-        ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
-        connMan = new ConnectionManager<E>(connFact);
-        try {
-            connId = conf.getString(CONF_RPC_TARGET);
-        } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "%s not set. No RPC vendor", CONF_RPC_TARGET));
-        }
-        graceTime = conf.getInt(CONF_GRACE_TIME, DEFAULT_GRACE_TIME);
-        retries = conf.getInt(CONF_RETRIES, DEFAULT_RETRIES);
-        connFact.setGraceTime(graceTime);
-        connFact.setNumRetries(retries);
-        conn = null;
-        //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format("Created ConnectionConsumer '%s' for %s",
-                                this, connId));
+        this(conf, null);
     }
 
     /**
@@ -156,15 +156,17 @@ public class ConnectionConsumer<E> implements Configurable {
         ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
         connMan = new ConnectionManager<E>(connFact);
         connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
+        if (connId == null) {
+            throw new ConfigurationException(String.format("%s not set. No RPC vendor", CONF_RPC_TARGET));
+        }
         conn = null;
-        //noinspection DuplicateStringLiteralInspection
-        graceTime = conf.getInt(CONF_GRACE_TIME, DEFAULT_GRACE_TIME);
-        retries = conf.getInt(CONF_RETRIES, DEFAULT_RETRIES);
-        connFact.setGraceTime(graceTime);
-        connFact.setNumRetries(retries);
-        log.debug(String.format("Created ConnectionConsumer '%s' for %s",
-                                this, connId));
+        connFact.setInitialGraceTimeMS(conf.getInt(CONF_INITIAL_GRACE_TIME, DEFAULT_INITIAL_GRACE_TIME));
+        connFact.setInitialNumRetries(conf.getInt(CONF_INITIAL_RETRIES, DEFAULT_INITIAL_RETRIES));
+        connFact.setSubsequentGraceTimeMS(conf.getInt(CONF_SUBSEQUENT_GRACE_TIME, DEFAULT_SUBSEQUENT_GRACE_TIME));
+        connFact.setSubsequentNumRetries(conf.getInt(CONF_SUBSEQUENT_RETRIES, DEFAULT_SUBSEQUENT_RETRIES));
+        log.debug(String.format("Created ConnectionConsumer '%s' for %s", this, connId));
     }
+
 
     /**
      * Look up a connection. When done using the connection it is the caller's
