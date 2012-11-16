@@ -176,7 +176,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil</artifactId>
-                <version>0.5.2</version>
+                <version>0.5.7</version>
             </dependency>
             <dependency>
                 <groupId>fastutil</groupId>
