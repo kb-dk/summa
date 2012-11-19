@@ -202,10 +202,11 @@ public class SolrManipulator implements IndexManipulator {
             send(payloads.size() + " Payloads", command.toString());
         } catch (IOException e) {
             String error = "IOException sending " + payloads.size() + " additions to " + this
-                           + ". Payloads: " + Strings.join(payloads, ", ") + ". First part of command:\n"
-                           + trim(command.toString(), 1000);
-            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.WARN, "", e);
-            log.warn(error, e);
+                           + ". Payloads: " + Strings.join(payloads, ", ") + ". The JVM will be shut down in 5 seconds."
+                           + " First part of command:\n" + trim(command.toString(), 1000);
+            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
+            Logging.fatal(log, "SolrManipulator.send", error, e);
+            new DeferredSystemExit(1, 5000);
         }
     }
 
