@@ -416,6 +416,9 @@ public class SummaQueryParser {
         } else if (query instanceof NumericRangeQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof RegexpQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {
             Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
             sw.append("<");
