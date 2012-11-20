@@ -33,7 +33,6 @@ import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
-import dk.statsbiblioteket.summa.ingest.stream.ArchiveReader;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;

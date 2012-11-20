@@ -14,9 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.Pair;
-import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.io.input.CharSequenceReader;
@@ -24,7 +22,6 @@ import org.apache.commons.io.input.CharSequenceReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.common.marc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * MARC21Slim constants etc.

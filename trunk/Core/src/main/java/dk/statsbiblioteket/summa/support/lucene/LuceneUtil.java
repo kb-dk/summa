@@ -19,11 +19,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.AtomicReaderContext;
-import org.apache.lucene.index.CompositeReader;
 import org.apache.lucene.index.IndexReader;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

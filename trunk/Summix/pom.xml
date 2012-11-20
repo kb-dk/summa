@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.0.0-20121116-trunk-SNAPSHOT</version>
+        <version>2.0.0-20121120-trunk-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -35,7 +35,7 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <!-- Dependencies -->
     <dependencies>
         <dependency>
@@ -93,109 +93,154 @@
             <groupId>org.marc4j</groupId>
             <artifactId>marc4j</artifactId>
         </dependency>
-      
+
 
         <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
         <dependency>
             <groupId>org.apache.solr</groupId>
-            <artifactId>solr-test-framework</artifactId>           
-         </dependency>
-        
+            <artifactId>solr-test-framework</artifactId>
+        </dependency>
+
         <dependency>
-           <groupId>org.apache.lucene</groupId>
-           <artifactId>lucene-core</artifactId>       
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+        </dependency>
+
+        <dependency>
+             <groupId>org.apache.solr</groupId>
+             <artifactId>solr-analysis-extras</artifactId>
+             <version>4.0.0</version>
          </dependency>
-       
-    
-         <dependency>
+
+        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-common</artifactId>
-         </dependency>
-
-       <dependency>
-          <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
-<!--        
-             <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-kuromoji</artifactId>
-            </dependency>
-            
-            <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-analyzers-morfologik</artifactId>
-             </dependency>
-    -->                    
-        
-            <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-phonetic</artifactId>              
-            </dependency>
 
-            <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-analyzers-smartcn</artifactId>
-            </dependency>
-       
-            <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-stempel</artifactId>
-            </dependency>
-        
-          <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-analyzers-uima</artifactId>              
-           </dependency>
-    
-           <dependency>
-               <groupId>org.apache.lucene</groupId>
-               <artifactId>lucene-queryparser</artifactId>
-            </dependency>
-      
-  
-           <dependency>
-              <groupId>org.apache.lucene</groupId>
-              <artifactId>lucene-queries</artifactId>
-           </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-icu</artifactId>
+        </dependency>
+        <!--
+                 <dependency>
+                  <groupId>org.apache.lucene</groupId>
+                  <artifactId>lucene-analyzers-kuromoji</artifactId>
+                </dependency>
 
-          <dependency>
-             <groupId>org.apache.lucene</groupId>
-             <artifactId>lucene-suggest</artifactId>
-          </dependency>
+                <dependency>
+                   <groupId>org.apache.lucene</groupId>
+                   <artifactId>lucene-analyzers-morfologik</artifactId>
+                 </dependency>
+        -->
+        <!--
+        <dependency>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-analyzers-phonetic</artifactId>
+        </dependency>
 
-         <dependency>
+        <dependency>
            <groupId>org.apache.lucene</groupId>
-           <artifactId>lucene-highlighter</artifactId>
-         </dependency>   
-    
-         <dependency>
+           <artifactId>lucene-analyzers-smartcn</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-analyzers-stempel</artifactId>
+        </dependency>
+
+      <dependency>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-analyzers-uima</artifactId>
+       </dependency>
+        -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+        </dependency>
+        <!--
+<dependency>
+  <groupId>org.apache.lucene</groupId>
+  <artifactId>lucene-suggest</artifactId>
+</dependency>
+
+<dependency>
+<groupId>org.apache.lucene</groupId>
+<artifactId>lucene-highlighter</artifactId>
+</dependency>
+        -->
+        <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-             <exclusions>
-                 <exclusion>
-                     <groupId>org.slf4j</groupId>
-                     <artifactId>slf4j-jdk14</artifactId>
-                 </exclusion>
-             </exclusions>
-         </dependency>
-
-         <dependency>  
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-         </dependency>
-        
-        <dependency>
-           <groupId>org.apache.lucene</groupId>
-           <artifactId>lucene-test-framework</artifactId>        
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-morfologik</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-kuromoji</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-phonetic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-smartcn</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-stempel</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-uima</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-highlighter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-spatial</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.zookeeper</groupId>
+                    <artifactId>zookeeper</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!--
+    <dependency>
+    <groupId>org.apache.solr</groupId>
+    <artifactId>solr-solrj</artifactId>
+    </dependency>
 
+    <dependency>
+    <groupId>org.apache.lucene</groupId>
+    <artifactId>lucene-test-framework</artifactId>
+    </dependency>
+        -->
 
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika</artifactId>
-        </dependency>
-        <!-- Local dependencies -->        
+        <!-- Tika is tiny but includes a lot of support JARs -->
+        <!--
+
+    <dependency>
+    <groupId>org.apache.tika</groupId>
+    <artifactId>tika</artifactId>
+    </dependency>
+        -->
+        <!-- Local dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>summa-core</artifactId>
@@ -239,6 +284,6 @@
             <version>${project.version}</version>
             <type>war</type>
         </dependency>
-        --> 
+        -->
     </dependencies>
 </project>

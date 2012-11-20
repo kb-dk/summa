@@ -1,12 +1,7 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.jetty.Server;

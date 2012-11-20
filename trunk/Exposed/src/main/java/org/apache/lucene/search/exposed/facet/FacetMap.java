@@ -6,7 +6,6 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.IntsRef;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;

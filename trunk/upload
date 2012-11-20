@@ -3,6 +3,7 @@
 
 mvn deploy -DskipTests
 
+
 # After package_full has been executed, this script
 # takes summix from Samples/Summix/target and uploads
 # it to SourceForge, effectively creating a release.
@@ -18,6 +19,8 @@ fi
 USER=$1
 
 cd Summix/target
+echo "MD5Sum: `md5sum summix-*-SNAPSHOT.zip`"
+
 VERSION=`ls *SNAPSHOT.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
 
 FOLDER=$VERSION-trunk-SNAPSHOT
