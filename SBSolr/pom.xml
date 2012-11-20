@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.0.0-20121116-trunk-SNAPSHOT</version>
+        <version>2.0.0-20121120-trunk-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-sbsolr</artifactId>
@@ -20,38 +20,70 @@
             <type>war</type>
         </dependency>
 
-         <dependency>
-              <groupId>org.apache.solr</groupId>
-              <artifactId>solr-analysis-extras</artifactId>
-       
-          <exclusions>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-icu</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-analysis-extras</artifactId>
+
+            <exclusions>
                 <exclusion>
                     <groupId>org.apache.solr</groupId>
                     <artifactId>solr-core</artifactId>
                 </exclusion>
 
+                <!-- We need ICU for sorting (also in Solr) -->
+                <!--
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-icu</artifactId>
+                </exclusion>
+                    -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.apache.lucene</groupId>
                     <artifactId>lucene-analyzers-morfologik</artifactId>
                 </exclusion>
-                     
-                 <exclusion>
-                  <groupId>org.apache.lucene</groupId>
-                  <artifactId>lucene-analyzers-icu</artifactId>                                  
-                </exclusion>   
-                
-                 <exclusion>
-                 <groupId>org.apache.lucene</groupId>
-                  <artifactId>lucene-analyzers-smartcn</artifactId>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-kuromoji</artifactId>
                 </exclusion>
-                
-                 <exclusion>
-                 <groupId>org.apache.lucene</groupId>
-                  <artifactId>lucene-analyzers-stempel</artifactId>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-phonetic</artifactId>
                 </exclusion>
-                     
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-smartcn</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-stempel</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-uima</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-highlighter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-spatial</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.zookeeper</groupId>
+                    <artifactId>zookeeper</artifactId>
+                </exclusion>
             </exclusions>
-         </dependency>
+        </dependency>
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -136,8 +168,8 @@
             </plugin>
 
         </plugins>
-     
+
         <finalName>${artifactId}</finalName>
-    
+
     </build>
 </project>

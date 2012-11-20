@@ -16,7 +16,6 @@ import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
-import org.junit.runner.RunWith;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;

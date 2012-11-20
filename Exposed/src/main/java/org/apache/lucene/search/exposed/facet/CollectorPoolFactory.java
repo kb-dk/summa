@@ -9,7 +9,6 @@ import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.security.PrivateKey;
 import java.util.*;
 
 /**

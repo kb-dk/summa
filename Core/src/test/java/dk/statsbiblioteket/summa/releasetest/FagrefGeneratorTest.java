@@ -26,7 +26,6 @@ import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;

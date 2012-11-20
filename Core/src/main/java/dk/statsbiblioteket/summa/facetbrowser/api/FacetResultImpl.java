@@ -18,12 +18,8 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.summa.common.util.FlexiblePair;
-import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -32,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
-import com.ibm.icu.text.Collator;
 import java.util.*;
 
 /**

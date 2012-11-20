@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * Timing information for performance measurements etc.

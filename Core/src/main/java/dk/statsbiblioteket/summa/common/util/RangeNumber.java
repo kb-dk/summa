@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * A range number represents a range as well as a pivot or "best guess" value.

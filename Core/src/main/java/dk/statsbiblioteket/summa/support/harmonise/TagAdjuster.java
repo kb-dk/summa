@@ -21,7 +21,6 @@ package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
