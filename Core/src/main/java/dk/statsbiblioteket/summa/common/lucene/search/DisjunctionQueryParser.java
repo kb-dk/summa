@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -125,7 +126,21 @@ public class DisjunctionQueryParser extends QueryParser {
     }
 
     private abstract interface InnerQueryMaker {
+        /**
+         * If the original field was a null, this method is called for every default field. Implementations should
+         * perform a recursive expansion based on the received field as it is possible that it is a group.
+         * @param fieldOrGroup designation for a field or group.
+         * @return a Query expanded with the given field or group.
+         * @throws ParseException if the query could not be processed.
+         */
         public Query getRecursiveQuery(String fieldOrGroup) throws ParseException;
+
+        /**
+         * This method is called only with fully resolved field names and should produce a query based on that.
+         * @param field a fully resolved field name, expected to be present in the index.
+         * @return a query based on the field.
+         * @throws ParseException if the query could not be processed.
+         */
         public Query getFinalQuery(String field) throws ParseException;
     }
 
@@ -316,5 +331,26 @@ public class DisjunctionQueryParser extends QueryParser {
     protected Query getSuperRangeQuery(String field, final String part1, final String part2,
                                        final boolean startInclusive, final boolean endInclusive) throws ParseException {
         return super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
+    }
+
+    @Override
+    protected Query getRegexpQuery(final String field, final String termStr) throws ParseException {
+        try {
+            return getExpanded(field, new InnerQueryMaker() {
+                @Override
+                public Query getRecursiveQuery(String fieldOrGroup) throws ParseException {
+                    return getRegexpQuery(fieldOrGroup, termStr);
+                }
+                @Override
+                public Query getFinalQuery(String field) throws ParseException {
+                    return getSuperRegexpQuery(field, termStr);
+                }
+            });
+        } catch (ParseException e) {
+            throw new RuntimeException("ParseException", e);
+        }
+    }
+    protected Query getSuperRegexpQuery(String field, String termStr) throws ParseException {
+        return super.getRegexpQuery(field, termStr);
     }
 }

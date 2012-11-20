@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +46,8 @@ public class LuceneBooster {
             Pattern.compile("^(.+)boost\\((.+)\\)$");
     private static final Pattern singleBoost =
             Pattern.compile("^(.+)\\^([0-9]+(\\.[0-9]+)?)$");
+
+    private static final QueryRewriter queryRewriter = new QueryRewriter(null, null, null); // Used for toString
 
     private LuceneIndexDescriptor descriptor;
     private Map<String, Float> descriptorBoosts;
@@ -128,7 +131,7 @@ public class LuceneBooster {
      */
     public boolean applyBoost(Query query, String boostString) {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("applyBoost(" + query + ", " + boostString + ") entered");
+        log.trace("applyBoost(" + queryRewriter.toString(query) + ", " + boostString + ") entered");
         if (boostString == null) {
             return false;
         }

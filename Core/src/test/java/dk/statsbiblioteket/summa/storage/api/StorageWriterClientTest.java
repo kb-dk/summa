@@ -86,7 +86,7 @@ public class StorageWriterClientTest extends TestCase {
         final int LIMIT = 1000;
         Configuration conf = Configuration.newMemoryBased(
                 ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28087/nonexisting",
-                ConnectionConsumer.CONF_GRACE_TIME, "0"
+                ConnectionConsumer.CONF_INITIAL_GRACE_TIME, "0"
         );
         StorageWriterClient remoteStorage = new StorageWriterClient(conf);
         long clearTime = -System.currentTimeMillis();

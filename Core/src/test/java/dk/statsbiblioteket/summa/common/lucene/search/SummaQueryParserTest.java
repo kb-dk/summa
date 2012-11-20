@@ -93,6 +93,20 @@ public class SummaQueryParserTest extends TestCase {
                      "author:foo[3.0]", "author:foo boost(author^2)");
     }
 
+    public void testRegexpQueryNPE() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("Regexp-queries should be handled correctly", qp,
+                     "(freetext:/12/[1.0] <title:/12/[1.0] titel:/12/[1.0]> id:/12/[1.0])[1.0]",
+                     "/12/"); // '/12/' is seen as a regexp
+    }
+
+    public void testRegexpQueryNPE2() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("Regexp-queries should be handled correctly", qp,
+                     "(freetext:/12/[1.0] <title:/12/[1.0] titel:/12/[1.0]> id:/12/[1.0])[1.0]",
+                     "/12/");
+    }
+
     public void testGroupBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should boost groups", qp,
