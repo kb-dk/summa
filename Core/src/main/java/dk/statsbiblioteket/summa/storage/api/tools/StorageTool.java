@@ -275,6 +275,19 @@ public class StorageTool {
         return 0;
     }
 
+    private static int actionClear(String[] args, StorageWriterClient writer) throws IOException {
+        if (args.length != 2) {
+            System.err.println("Please provide a base to clear");
+            return 1;
+        }
+        String base = args[1];
+        System.err.println("Clearing base '" + base + "'");
+        long startTime = System.currentTimeMillis();
+        writer.clearBase(base);
+        System.err.println("Finished clearing base '" + base + "' in " + (System.currentTimeMillis()-startTime) + "ms");
+        return 0;
+    }
+
     /**
      * Get the holdings, for a storage. This is info about the different bases,
      * like number of records, last modified time stamp.
@@ -429,6 +442,7 @@ public class StorageTool {
                            + "\ttouch <record_id> [record_id...]\n"
                            + "\txslt <record_id> <xslt_url>\n"
                            + "\tdump [base]     (dump storage on stdout)\n"
+                           + "\tclear base     (clear all records from base)\n"
                            + "\tholdings\n"
                            + "\tbatchjob <jobname> [base] [minMtime] "
                                        +"[maxMtime]   "
@@ -492,6 +506,8 @@ public class StorageTool {
             exitCode = actionXslt(args, reader);
         } else if ("dump".equals(action)){
             exitCode = actionDump(args, reader);
+        } else if ("clear".equals(action)){
+            exitCode = actionClear(args, writer);
         } else if ("holdings".equals(action)) {
             exitCode = actionHoldings(reader);
         } else if ("batchjob".equals(action)) {
@@ -503,4 +519,5 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
+
 }
