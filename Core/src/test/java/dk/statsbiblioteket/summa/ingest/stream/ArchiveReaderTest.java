@@ -192,6 +192,40 @@ public class ArchiveReaderTest extends TestCase {
         }
     }
 
+    // Introduced to test a real-world aleph dump with 35 ~100MB nested ZIP archives
+    public void disabledtestSpecificArchive() throws IOException {
+        //TFile zip = new TFile("/home/te/tmp/aleph_repack/repacked.zip");
+        TFile zip = new TFile("/home/te/tmp/aleph_repack/tst.zip");
+        int expected = 3500000;
+
+        log.debug("Creating ArchiveReader for " + zip);
+        ArchiveReader reader = new ArchiveReader(Configuration.newMemoryBased(
+                ArchiveReader.CONF_FILE_PATTERN, ".*xml",
+                ArchiveReader.CONF_RECURSIVE, true,
+                ArchiveReader.CONF_ROOT_FOLDER, zip.getPath(),
+                ArchiveReader.CONF_COMPLETED_POSTFIX, ""
+        ));
+        long feedback = expected < 100 ? 10 : expected / 100;
+        Profiler profiler = new Profiler(expected, 10000);
+        log.debug("Extracting XML-files from " + zip);
+        while (reader.hasNext()) {
+            Strings.flush(reader.next().getStream());
+            if (profiler.getBeats() % feedback == 0) {
+                log.debug("Extracted " + profiler.getBeats() + "/" + profiler.getExpectedTotal() +  " files at "
+                          + (int)profiler.getBps(true) + " records/sec. ETA at " + profiler.getETAAsString(true));
+                displayMem();
+            }
+            profiler.beat();
+        }
+        log.debug("Finished processing. Extracted " + profiler.getBeats() + "/" + profiler.getExpectedTotal()
+                  +  " files at " + (int)profiler.getBps(true) + " records/sec");
+        displayMem();
+        log.debug("nulling reader to detect if TrueZIP has any lingering resident structures");
+        //noinspection UnusedAssignment
+        reader = null;
+        displayMem();
+    }
+
     private void checkArchiveReader(TFile zip, long expected) throws IOException {
         ArchiveReader reader = new ArchiveReader(Configuration.newMemoryBased(
                 ArchiveReader.CONF_FILE_PATTERN, ".*dat",
