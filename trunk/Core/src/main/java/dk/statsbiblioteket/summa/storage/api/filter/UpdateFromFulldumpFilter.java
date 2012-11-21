@@ -250,7 +250,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                                            Logging.LogLevel.DEBUG, id);
                         writableStorage.flush(tmp);
                     }
-                    log.info("Marked '" + ids.size() + "' records as deleted and not indexable from base " + base
+                    log.info("Marked " + ids.size() + " records as deleted and not indexable from base " + base
                              + " in " + profiler.getSpendTime());
                 } catch(IOException e) {
                     log.error("IOException when deleting records from storage. Storage now contains deleted records");
