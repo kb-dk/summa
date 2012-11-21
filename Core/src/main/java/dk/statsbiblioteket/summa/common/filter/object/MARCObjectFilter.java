@@ -23,9 +23,9 @@ import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.tools.ant.filters.StringInputStream;
 
 import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
@@ -67,7 +67,8 @@ public abstract class MARCObjectFilter extends ObjectFilterImpl {
                 return false;
             }
             if (payload.getStream() != null) {
-                payload.setStream(new StringInputStream(adjusted.toXML()));
+                payload.setStream(new ByteArrayInputStream(adjusted.toXML().getBytes("utf-8")));
+                //payload.setStream(new StringInputStream(adjusted.toXML()));
             } else {
                 payload.getRecord().setContent(adjusted.toXML().getBytes("utf-8"), false);
             }
