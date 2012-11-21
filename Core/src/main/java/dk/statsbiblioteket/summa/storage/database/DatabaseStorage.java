@@ -2469,7 +2469,8 @@ public abstract class DatabaseStorage extends StorageBase {
                    + " FROM " + RECORDS
                    + " WHERE " + BASE_COLUMN + " = ?"
                    + " AND " + MTIME_COLUMN + " > ?"
-                   + " AND " + MTIME_COLUMN + " < ?";
+                   + " AND " + MTIME_COLUMN + " < ?"
+                   + " AND " + DELETED_COLUMN + " = 0";
         if (usePagingModel) {
             sql = getPagingStatement(sql);
         }
