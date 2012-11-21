@@ -125,9 +125,7 @@ public class PagingCursor implements Cursor {
 
         // update next record.
         nextRecord = nextValidRecord();
-        if (nextRecord == null) {
-            throw new NoSuchElementException();
-        }
+        
         pageRecords++;
         totalRecords++;
 
