@@ -179,8 +179,9 @@ public class StorageTestBase extends TestCase {
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long actual = 0;
         while (iter.hasNext()) {
-            iter.next();
-            actual++;
+            if (!iter.next().isDeleted()) {
+                actual++;
+            }
         }
 
         if (actual != expected) {
