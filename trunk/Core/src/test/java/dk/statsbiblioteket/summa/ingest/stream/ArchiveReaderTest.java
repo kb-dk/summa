@@ -207,6 +207,7 @@ public class ArchiveReaderTest extends TestCase {
             if (profiler.getBeats() % feedback == 0) {
                 log.debug("Extracted " + profiler.getBeats() + "/" + profiler.getExpectedTotal() +  " files at "
                           + (int)profiler.getBps(true) + " records/sec. ETA at " + profiler.getETAAsString(true));
+                displayMem();
             }
         }
         assertEquals("The number of extracted streams should match", expected, profiler.getBeats());
