@@ -144,8 +144,8 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testCommentID() throws IOException, XMLStreamException, ParseException {
         String[][] TESTS = new String[][] {
-            // Hand held by Hans
-            {"1397-3290_freeaarhusuniversitylibrariesejournalholdings", "Dette er en kommentar"},
+            // Hand held by Hans, now disabled
+            //{"1397-3290_freeaarhusuniversitylibrariesejournalholdings", "Dette er en kommentar"},
             // æ is entity-escaped
             {"1602-7930_aarhusuniversitylibrariesejournalholdings", "Klik på gæstelogin under den enkelte artikel"}
         };
