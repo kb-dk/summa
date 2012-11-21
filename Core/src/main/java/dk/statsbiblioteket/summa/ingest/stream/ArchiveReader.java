@@ -450,7 +450,7 @@ public class ArchiveReader extends FileSystemReader {
                         TVFS.umount(file);
                     } catch (FsSyncException e) {
                         if (umountWarnCount++ < 10) {
-                            log.warn("Unable to unmount " + file + ". This error will be displayed maximum 10 times", e);
+                            log.warn("Unable to umount " + file + ". This error will be displayed maximum 10 times", e);
                         }
                     }
                 } catch (NullPointerException e) {
