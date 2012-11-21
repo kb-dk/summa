@@ -84,7 +84,7 @@ public class Payload {
     /**
      * Create a Payload based on the given stream.
      * @param stream the content.
-     * @deprecated use
+     * @deprecated use {@link Payload(InputStream, String)} instead.
      */
     public Payload(InputStream stream) {
         assignIfValid(stream, record);

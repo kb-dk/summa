@@ -15,7 +15,9 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import de.schlichtherle.truezip.file.TFileInputStream;
+import de.schlichtherle.truezip.file.TVFS;
 import de.schlichtherle.truezip.fs.FsSyncException;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -56,12 +58,9 @@ public class ArchiveReader extends FileSystemReader {
 
     public ArchiveReader(Configuration conf) {
         boolean recursive = conf.getBoolean(CONF_RECURSIVE, DEFAULT_RECURSIVE);
-        boolean reverseSort = conf.getBoolean(
-            CONF_REVERSE_SORT, DEFAULT_REVERSE_SORT);
-        Pattern filePattern = Pattern.compile(conf.getString(
-            CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
-        String postfix = conf.getString(
-            CONF_COMPLETED_POSTFIX, DEFAULT_COMPLETED_POSTFIX);
+        boolean reverseSort = conf.getBoolean(CONF_REVERSE_SORT, DEFAULT_REVERSE_SORT);
+        Pattern filePattern = Pattern.compile(conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
+        String postfix = conf.getString(CONF_COMPLETED_POSTFIX, DEFAULT_COMPLETED_POSTFIX);
         String realPostfix = "".equals(postfix) ? null : postfix;
 
         String rootString = conf.getString(CONF_ROOT_FOLDER);
@@ -72,29 +71,22 @@ public class ArchiveReader extends FileSystemReader {
         }
         log.trace("Got root-property '" + rootString + "'");
         TFile root = new TFile(rootString).getAbsoluteFile();
-        log.debug(String.format(
-            "Setting root to '%s' from value '%s'", root, rootString));
+        log.debug(String.format("Setting root to '%s' from value '%s'", root, rootString));
 
         if (!root.exists()) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn(String.format(
-                "Root '%s'' does not exist. No files will be read", root));
+            log.warn(String.format("Root '%s'' does not exist. No files will be read", root));
             provider = new EmptyProvider();
         } else if (root.isFile()) {
-            log.debug(String.format(
-                "Root '%s' is a single regular file", root));
+            log.debug(String.format("Root '%s' is a single regular file", root));
             provider = new SingleFile(null, root, false, realPostfix);
         } else {
-            log.debug(String.format(
-                "Root '%s' is a folder or an archive", root));
-            provider = new FileContainer(
-                null, root, false, realPostfix, filePattern, reverseSort);
+            log.debug(String.format("Root '%s' is a folder or an archive", root));
+            provider = new FileContainer(null, root, false, realPostfix, filePattern, reverseSort);
         }
 
-        log.info("ArchiveReader created. Root: '" + root
-                 + "', recursive: " + recursive
-                 + ", file pattern: '" + filePattern.pattern()
-                 + "', completed postfix: '" + postfix + "'");
+        log.info("ArchiveReader created. Root: '" + root + "', recursive: " + recursive
+                 + ", file pattern: '" + filePattern.pattern() + "', completed postfix: '" + postfix + "'");
     }
 
     @Override
@@ -133,8 +125,7 @@ public class ArchiveReader extends FileSystemReader {
         return provider.next();
     }
 
-    private static final List<FileProvider> EMPTY =
-        new ArrayList<FileProvider>(0);
+    private static final List<FileProvider> EMPTY = new ArrayList<FileProvider>(0);
 
     private static abstract class FileProvider
         implements Iterator<Payload> {
@@ -157,6 +148,7 @@ public class ArchiveReader extends FileSystemReader {
         
         private boolean isRenamed = false;
         private boolean allOK = true;
+        private static int warnCount = 0; // Not the cleanest design as it works badly with multiple ArchiveReaders
 
         private FileProvider(FileProvider parent, TFile root, boolean inArchive, 
                              String postfix) {
@@ -167,8 +159,22 @@ public class ArchiveReader extends FileSystemReader {
         }
         
         public synchronized void cleanup() {
+            umount(root);
             if (parent != null) {
                 parent.cleanup();
+            }
+        }
+
+        private void umount(TFile file) {
+            if (root != null) {
+                try {
+                    TVFS.umount(root);
+                } catch (FsSyncException e) {
+                    if (warnCount++ < 10) {
+                        log.warn("Unable to umount file. This warning will be showed a max of 10 times. File: " + root,
+                                 e);
+                    }
+                }
             }
         }
 
@@ -216,23 +222,20 @@ public class ArchiveReader extends FileSystemReader {
             }
             try {
                 if (root == root.getTopLevelArchive()) {
-                    TFile.umount(root);
+                    TVFS.umount(root);
                 }
             } catch (FsSyncException e) {
-                log.warn("Explicit umount of TFile("
-                         + root.getAbsolutePath() + ") failed. This "
-                         + "might leave non-renamed files");
+                log.warn("Explicit umount of TFile("+ root.getAbsolutePath() + ") failed. This "
+                         + "might leave non-renamed files", e);
             }
             if (!new File(root.getPath()).renameTo(newFile)) {
-                log.warn(String.format(
-                    "Unable to rename '%s' to '%s'", root, newFile));
+                log.warn(String.format("Unable to rename '%s' to '%s'", root, newFile));
             } else {
                 isRenamed = true;
                 if (root.exists()) {
                     log.warn(this.getClass().getSimpleName() +
-                             ": Although the renaming of '" + root + "' to '"
-                             + newFile + "' was reported successfully, a file "
-                             + "with the old name is still present");
+                             ": Although the renaming of '" + root + "' to '" + newFile + "' was reported successfully,"
+                             + " a file with the old name is still present");
                 }
             }
             //No longer touch files to update lastmodificationtime
@@ -265,8 +268,7 @@ public class ArchiveReader extends FileSystemReader {
 
         @Override
         public Payload next() {
-            throw new IllegalAccessError(
-                "next() must never be called on the empty provider");
+            throw new IllegalAccessError("next() must never be called on the empty provider");
         }
 
         @Override
@@ -327,7 +329,7 @@ public class ArchiveReader extends FileSystemReader {
                     cleanup();
                 }
             };
-            Payload payload = new Payload(closingStream);
+            Payload payload = new Payload(closingStream, root.getPath());
             payload.getData().put(Payload.ORIGIN, root.getPath());
             if (log.isTraceEnabled()) {
                 log.trace("Created " + payload);
@@ -338,8 +340,7 @@ public class ArchiveReader extends FileSystemReader {
         @Override
         public synchronized void remove() {
             if (open) {
-                throw new IllegalStateException(
-                    "The file '" + root + " is currently open");
+                throw new IllegalStateException("The file '" + root + " is currently open");
             }
             log.debug("Skipping '" + root + "'");
             removed = true;
@@ -356,6 +357,11 @@ public class ArchiveReader extends FileSystemReader {
             log.trace("close(" + success + ") called");
             if (hasNext()) {
                 remove();
+            }
+            try {
+                TVFS.umount(root);
+            } catch (FsSyncException e) {
+                log.warn("Unable to umount " + root, e);
             }
             super.close(success);
         }
@@ -401,8 +407,7 @@ public class ArchiveReader extends FileSystemReader {
          * @param filePattern the pattern that files must match to be streamed.
          * @param reverseSort if true, entries are expanded in reverse order.
          */
-        public FileContainer(FileProvider parent, TFile root, boolean inArchive,
-                             String postfix, Pattern filePattern,
+        public FileContainer(FileProvider parent, TFile root, boolean inArchive, String postfix, Pattern filePattern,
                              boolean reverseSort){
             super(parent, checkContainer(root), inArchive, postfix);
             this.filePattern = filePattern;
@@ -411,53 +416,52 @@ public class ArchiveReader extends FileSystemReader {
 
         private static TFile checkContainer(TFile root) {
             if (!root.isDirectory() && !root.isArchive()) {
-                throw new IllegalArgumentException(
-                    "The provided file '" + root
-                    + "' must not be a regular file");
+                throw new IllegalArgumentException("The provided file '" + root + "' must not be a regular file");
             }
             return root;
         }
 
+        int umountWarnCount = 0;
         private List<FileProvider> expand(TFile source) {
             if (source.isFile()) {
                 return EMPTY;
             }
 //            System.out.println("Listing files for " + source);
             TFile[] files = source.listFiles();
-            List<FileProvider> providers =
-                new ArrayList<FileProvider>(files.length);
+            List<FileProvider> providers = new ArrayList<FileProvider>(files.length);
             for (TFile file: files) {
                 try {
                     if (postfix != null && file.getName().endsWith(postfix)) {
-                        log.trace("Skipping '" + file.getName() + "' as it is "
-                                  + "marked with the completed postfix");
-
+                        log.trace("Skipping '" + file.getName() + "' as it is " + "marked with the completed postfix");
+// TODO: This test results in auto-mounting. Maybe we can do isDirectory and pattern-match first?
                     } else if (file.isDirectory() || file.isArchive()) {
 //                        System.out.println(" Adding folder " + file);
-                        providers.add(new FileContainer(
-                            this, file, inArchive || root.isArchive(), postfix,
-                            filePattern, reverseSort));
+
+                        providers.add(new FileContainer(this, file, inArchive || root.isArchive(), postfix,
+                                                        filePattern, reverseSort));
                     } else if (filePattern.matcher(file.getName()).matches()) {
 //                        System.out.println(" Adding file  " + file);
-                        providers.add(new SingleFile(
-                            this, file, inArchive || root.isArchive(), postfix));
+                        providers.add(new SingleFile(this, file, inArchive || root.isArchive(), postfix));
                     } else {
-                        log.debug("Skipping '" + file.getName()
-                                  + "' as it does not match the pattern '"
+                        log.debug("Skipping '" + file.getName() + "' as it does not match the pattern '"
                                   + filePattern.pattern() + "'");
+                    }
+                    try {
+                        TVFS.umount(file);
+                    } catch (FsSyncException e) {
+                        if (umountWarnCount++ < 10) {
+                            log.warn("Unable to unmount " + file + ". This error will be displayed maximum 10 times", e);
+                        }
                     }
                 } catch (NullPointerException e) {
                     if (file.getName().contains(":")) {
-                        log.warn("Got NPE while accessing a name with colon. "
-                                 + "TrueZIP 7.0-pr2 does not support this and "
-                                 + "it is likely the cause for the NPE. "
-                                 + "The offending name is '"
-                                 + file.getAbsolutePath() + "'");
+                        log.warn("Got NPE while accessing a name with colon. TrueZIP 7.0-pr2 does not support this and "
+                                 + "although later versions claims to do so, this is likely the cause for the NPE. "
+                                 + "The offending name is '" + file.getAbsolutePath() + "'");
                         continue;
                     }
                     NullPointerException e2 = new NullPointerException(
-                        "NPE during access to '" + file + "' from '"
-                        + source + "'");
+                            "NPE during access to '" + file + "' from '" + source + "'");
                     e2.initCause(e);
                     throw e2;
                 }
@@ -465,8 +469,7 @@ public class ArchiveReader extends FileSystemReader {
             Collections.sort(providers, new Comparator<FileProvider>() {
                 @Override
                 public int compare(FileProvider o1, FileProvider o2) {
-                    return o1.root.getName().compareTo(
-                        o2.root.getName());
+                    return o1.root.getName().compareTo(o2.root.getName());
                 }
             });
             if (reverseSort) {
@@ -520,8 +523,8 @@ public class ArchiveReader extends FileSystemReader {
             cleanup(subs);
             cleanup(open);
             if (log.isTraceEnabled()) {
-                log.trace("Filecontainer: cleanUp() left " + subs.size()
-                          + " pending subs and " + open.size() + " open subs");
+                log.trace("Filecontainer: cleanUp() left " + subs.size() + " pending subs and "
+                          + open.size() + " open subs");
             }
             if (!isSafeToRemove()) {
                 return;
@@ -571,10 +574,7 @@ public class ArchiveReader extends FileSystemReader {
 
         @Override
         public String toString() {
-            return "FileContainer('" + root + ", "
-                   + (subs == null ? "subs not expanded" :
-                      subs.size() + " subs")
-                   + ")";
+            return "FileContainer('" + root + ", " + (subs == null ? "subs not expanded" : subs.size() + " subs") + ")";
         }
     }
 }
