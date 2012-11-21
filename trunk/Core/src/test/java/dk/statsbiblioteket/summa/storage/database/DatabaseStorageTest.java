@@ -88,16 +88,34 @@ public class DatabaseStorageTest extends StorageTestBase {
                    base.getModificationTime() > storageStart);
     }
 
-    public void testGetRecordsModifiedAfter() throws Exception {
-        assertBaseCount("base1", 0);
+    public void testGetRecordsModifiedAfter2() throws Exception {
+        testGetRecordsModifiedAfter(2);
+    }
 
-        Record r1 = new Record("id1", "base1", "data".getBytes());
-        Record r2 = new Record("id2", "base1", "data".getBytes());
+    public void testGetRecordsModifiedAfter3() throws Exception {
+        testGetRecordsModifiedAfter(3);
+    }
 
-        storage.flush(r1);
-        storage.flush(r2);
+    public void testGetRecordsModifiedAfterSpecifics() throws Exception {
+        final int[] RECORDS = new int[]{1, 2, 3, 4, 5, 10, 100, 1000};
+        for (int records: RECORDS) {
+            testGetRecordsModifiedAfter(records);
+        }
+    }
 
-        assertBaseCount("base1", 2);
+    private void testGetRecordsModifiedAfter(int records) throws Exception {
+        final String BASE = "base1";
+        final byte[] DATA = "data".getBytes("utf-8");
+
+        log.debug("Testing for " + records + " records");
+        storage.clearBase(BASE);
+        assertBaseCount(BASE, 0);
+
+        for (int i = 0 ; i < records ; i++) {
+            storage.flush(new Record("id" + i, BASE, DATA));
+        }
+
+        assertBaseCount(BASE, records);
     }
 
     /**
