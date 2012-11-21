@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.BaseStats;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -85,6 +86,18 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue("Base mtime must be updated, but base.getModificationTime() <= storageStart: "
                    + base.getModificationTime() + " <= " + storageStart,
                    base.getModificationTime() > storageStart);
+    }
+
+    public void testGetRecordsModifiedAfter() throws Exception {
+        assertBaseCount("base1", 0);
+
+        Record r1 = new Record("id1", "base1", "data".getBytes());
+        Record r2 = new Record("id2", "base1", "data".getBytes());
+
+        storage.flush(r1);
+        storage.flush(r2);
+
+        assertBaseCount("base1", 2);
     }
 
     /**
