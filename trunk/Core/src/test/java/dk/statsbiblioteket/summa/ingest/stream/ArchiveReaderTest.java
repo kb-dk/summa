@@ -3,17 +3,22 @@ package dk.statsbiblioteket.summa.ingest.stream;
 import de.schlichtherle.truezip.file.TArchiveDetector;
 import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
+import de.schlichtherle.truezip.file.TVFS;
 import de.schlichtherle.truezip.fs.FsSyncException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -24,6 +29,8 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ArchiveReaderTest extends TestCase {
+    private static Log log = LogFactory.getLog(ArchiveReaderTest.class);
+
     public ArchiveReaderTest(String name) {
         super(name);
     }
@@ -33,8 +40,7 @@ public class ArchiveReaderTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         File t = Resolver.getFile("ingest/zip");
-        assertTrue(
-            "The test data source 'zip' should exist", t.exists());
+        assertTrue("The test data source 'zip' should exist", t.exists());
         TMP = new File(t.getParent(), "ZIPTMP").getAbsoluteFile();
         if (TMP.exists()) {
             Files.delete(TMP);
@@ -50,6 +56,222 @@ public class ArchiveReaderTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(ArchiveReaderTest.class);
+    }
+
+    private void createRecursiveZIP(TFile outer, long innerZIPs, long entryCount, long entrySize) throws IOException {
+        TFile innerZIP = new TFile("innerarchive.zip");
+        try {
+            log.debug("Creating inner ZIP " + innerZIP);
+            createTestFile(innerZIP, entryCount, entryCount, entrySize);
+            assertTrue("The zip should be marked as an archive", innerZIP.isArchive());
+            log.debug("Created " + innerZIP + " of size " + innerZIP.length()/1048576 + "MB");
+            TVFS.umount(innerZIP);
+
+            log.debug("Creating outer zip " + outer);
+            TFile outerZIP = outer.mkdir(false);
+//            TFile.cp(getContent(entrySize), new TFile(outerZIP, "singlefile.dat"));
+            for (int i = 0 ; i < innerZIPs ; i++) {
+                TFile dest = new TFile(outerZIP, "inner_" + i + ".zip");
+                log.debug("Adding " + (i+1) + "/" + innerZIPs + " as " + dest);
+                TFile.cp_r(innerZIP, dest, null, TArchiveDetector.ALL);
+            }
+            TVFS.umount(outerZIP);
+        } finally {
+            Files.delete(new File(innerZIP.getPath()));
+        }
+    }
+
+    private void createTestFile(TFile zip, long entryCount, long batch, long entrySize) throws IOException {
+        TFile archive = zip.mkdir(false);
+        for (int i = 0 ; i < entryCount ; i++) {
+            if (i % 100000 == 0) {
+                log.debug("Compressed " + i + "/" + entryCount + " entries");
+            }
+            if (entryCount == batch) {
+                TFile.cp(getContent(entrySize), new TFile(archive, "file" + i + ".dat"));
+            } else {
+                TFile.cp(getContent(entrySize), new TFile(archive, "folder" + (i / batch) + "/file" + i + ".dat"));
+            }
+        }
+        TVFS.umount(archive);
+        log.debug("Finished creating " + zip);
+    }
+
+    private InputStream getContent(final long contentSize) {
+        return new InputStream() {
+            long count = 0;
+            @Override
+            public int read() throws IOException {
+                if (count == contentSize) {
+                    return -1;
+                }
+                count++;
+                return (int)(count & 0xFF);
+            }
+        };
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public void testTestFileCreation() throws IOException {
+        TFile zip = new TFile("testarchive.zip");
+        try {
+            createTestFile(zip, 10, 2, 100);
+            assertTrue("The zip should be marked as an archive", zip.isArchive());
+            assertEquals("The zip should contain 5 entries (folders)",
+                         5, zip.listFiles() == null ? 0 : zip.listFiles().length);
+            TVFS.umount();
+        } finally {
+            Files.delete(new File(zip.getPath()));
+        }
+    }
+
+    public void testCreateRecursiveZIP() throws IOException {
+        TFile zip = new TFile("testarchive.zip");
+        try {
+            createRecursiveZIP(zip, 5, 10, 20);
+            assertTrue("The zip should be marked as an archive", zip.isArchive());
+            TFile[] inners = zip.listFiles();
+            assertNotNull(zip + " should have content", inners);
+            assertTrue(zip + " should have at least 1 inner element", inners.length > 0);
+            for (TFile inner: inners) {
+                assertTrue("The inner element " + inner + " in " + zip + " should be an archive", inner.isArchive());
+            }
+            TVFS.umount(zip);
+        } finally {
+            Files.delete(new File(zip.getPath()));
+        }
+    }
+
+    // TrueZIP does not scale well to many entries in a ZIP file
+    public void testDirectoryScalingTiny() throws IOException {
+        testScaling(10);
+    }
+    public void testDirectoryScalingSmall() throws IOException {
+        testScaling(10000);
+    }
+    public void testDirectoryScalingSmallBatch() throws IOException {
+        testScaling(10000, 1000, false);
+    }
+    public void testDirectoryScalingSmallBatchNested() throws IOException {
+        testScaling(10000, 1000, true);
+    }
+    public void testDirectoryScalingMedium() throws IOException {
+        testScaling(100000);
+    }
+    public void testDirectoryScalingMediumBatch() throws IOException {
+        testScaling(100000, 10000, false);
+    }
+    public void testDirectoryScalingMediumBatchNested() throws IOException {
+        testScaling(100000, 10000, true);
+    }
+    // Upper practical limit as of 20121120
+    public void testDirectoryScalingLarge() throws IOException {
+        testScaling(500000);
+    }
+    // Semi-hange (used > 30 minutes to list files)
+    public void disabledtestDirectoryScalingHuge() throws IOException {
+        testScaling(3500000); // Approximate number of Records in the Aleph system at Statsbiblioteket as of 2012
+    }
+    private void testScaling(long entryCount) throws IOException {
+        testScaling(entryCount, entryCount, false);
+    }
+    private void testScaling(long entryCount, long batch, boolean nestedZIPs) throws IOException {
+        batch = Math.max(1, Math.min(entryCount, batch));
+        TFile zip = new TFile("testarchive_" + entryCount + "_" + batch + (nestedZIPs ? "_nested" : "") + ".zip");
+        try {
+            createTestArchive(zip, entryCount, batch, nestedZIPs);
+            log.debug(String.format(
+                    "Iterating with %s of size %dMB, containing %d entries (batch size %d), %susing nested archives",
+                    zip.getPath(), zip.length() / 1048576, entryCount, batch, nestedZIPs ? "" : "not "));
+            checkArchive(zip, entryCount, batch, nestedZIPs);
+            checkArchiveReader(zip, entryCount);
+            displayMem();
+            log.debug("Finished testing, cleaning up");
+        } finally {
+//            Files.delete(new File(zip.getPath()));
+        }
+    }
+
+    private void checkArchiveReader(TFile zip, long expected) throws IOException {
+        ArchiveReader reader = new ArchiveReader(Configuration.newMemoryBased(
+                ArchiveReader.CONF_FILE_PATTERN, ".*dat",
+                ArchiveReader.CONF_RECURSIVE, true,
+                ArchiveReader.CONF_ROOT_FOLDER, zip.getPath(),
+                ArchiveReader.CONF_COMPLETED_POSTFIX, ""
+        ));
+        long feedback = expected < 100 ? 10 : expected / 20;
+        Profiler profiler = new Profiler((int)expected, 1000);
+        while (reader.hasNext()) {
+            Strings.flush(reader.next().getStream());
+            profiler.beat();
+            if (profiler.getBeats() % feedback == 0) {
+                log.debug("Extracted " + profiler.getBeats() + "/" + profiler.getExpectedTotal() +  " files at "
+                          + (int)profiler.getBps(true) + " records/sec. ETA at " + profiler.getETAAsString(true));
+            }
+        }
+        assertEquals("The number of extracted streams should match", expected, profiler.getBeats());
+        log.debug("Extracted " + profiler.getBeats() + " records from " + zip + " in " + profiler.getSpendTime());
+    }
+
+    private void checkArchive(TFile zip, long entryCount, long batch, boolean nestedZIPs) throws FsSyncException {
+        displayMem();
+        log.debug("Listing entries in " + zip);
+        TFile[] entries = zip.listFiles();
+        assertNotNull("There should be entries in the zip " + zip, entries);
+        log.debug("Finished listing entries");
+        displayMem();
+        long expected = entryCount == batch ? entryCount : entryCount/batch;
+        assertEquals("The zip " + zip + " should contain " + expected + " entries",
+                     expected, entries.length);
+        log.debug("Iterating " + entries.length + " entries in " + zip + " and calling isDirectory on each");
+        for (TFile entry: entries) {
+            if (nestedZIPs || entryCount != batch) {
+                assertTrue("The entry " + entry + " should be a Directory", entry.isDirectory());
+            } else {
+                assertFalse("The entry " + entry + " should not be a Directory", entry.isDirectory());
+            }
+            TVFS.umount(entry);
+        }
+        log.debug("Finished isDirectory iteration");
+        displayMem();
+        log.debug("Iterating " + entries.length + " entries and calling isArchive on each");
+        for (TFile entry: entries) {
+            if (nestedZIPs) {
+                assertTrue("The entry " + entry + " should be an Archive", entry.isArchive());
+            } else {
+                assertFalse("The entry " + entry + " should not be an Archive", entry.isArchive());
+            }
+        }
+        log.debug("Finished isArchive iteration");
+        displayMem();
+    }
+
+    private void createTestArchive(TFile zip, long entryCount, long batch, boolean nestedZIPs) throws IOException {
+        displayMem();
+//        log.debug("Checking for existence of " + zip);
+        if (!zip.exists()) {
+            log.debug("Creating test file " + zip);
+            if (nestedZIPs) {
+                createRecursiveZIP(zip, entryCount / batch == 0 ? 1 : entryCount / batch, batch, 1);
+            } else {
+                createTestFile(zip, entryCount, batch, 1);
+            }
+        } else {
+            log.debug("Test file " + zip + " already exists. Reusing existing file");
+        }
+        assertTrue("The zip should be marked as an archive", zip.isArchive());
+    }
+
+    private void displayMem() {
+        long before = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
+        System.gc();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for GC to finish");
+        }
+        long after = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
+        log.debug("Heap size before and after GC: " + before + "MB / " + after + "MB");
     }
 
     public void testZIPFilenames() throws Exception {
@@ -77,7 +299,9 @@ public class ArchiveReaderTest extends TestCase {
         TFileInputStream tin =
             new TFileInputStream(new TFile(TZIP, "flam.xml"));
         //noinspection StatementWithEmptyBody
-        while (tin.read() != -1);
+        while (tin.read() != -1) {
+            ;
+        }
         tin.close();
         TFile.umount(TZIP);
 
