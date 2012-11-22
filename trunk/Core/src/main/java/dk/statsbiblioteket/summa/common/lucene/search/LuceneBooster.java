@@ -131,7 +131,9 @@ public class LuceneBooster {
      */
     public boolean applyBoost(Query query, String boostString) {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("applyBoost(" + queryRewriter.toString(query) + ", " + boostString + ") entered");
+        if (log.isTraceEnabled()) {
+            log.trace("applyBoost(" + queryRewriter.toString(query) + ", " + boostString + ") entered");
+        }
         if (boostString == null) {
             return false;
         }
