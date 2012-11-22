@@ -151,6 +151,11 @@ public class IndexLookup {
         IndexReader reader = searcher.getIndexReader();
         CollectorPool collectorPool;
         try {
+            if (!poolFactory.hasPool(searcher.getIndexReader(), fRequest)) {
+                log.info("The CollectorPoolFactory has no structures for the given request. A new structure will be "
+                         + "generated, which can take several minutes. The request was " + fRequest.getBuildKey()
+                         + " with groupKey '" + fRequest.getGroupKey() + "'");
+            }
             collectorPool = poolFactory.acquire(reader, fRequest);
         } catch (IOException e) {
             throw new RuntimeException(

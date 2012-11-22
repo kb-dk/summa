@@ -77,6 +77,13 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     return lastFactory;
   }
 
+  public synchronized boolean hasPool(IndexReader reader, FacetRequest request) {
+    if (readers.add(reader)) {
+      reader.addReaderClosedListener(this);
+    }
+    return poolMap.containsKey(request.getGroupKey());
+  }
+
   /**
    * If a matching CollectorPool exists, it is returned. If not, a new pool is
    * created. Note that pool creation is costly.
