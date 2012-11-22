@@ -126,8 +126,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         loadDescriptorFromIndex =
             !Structure.isSetupDefinedInConfiguration(conf);
         if (loadDescriptorFromIndex) {
-            log.debug("The Structure will be derived from IndexDescriptor XML "
-                      + "in the index folders upon calls to open(...)");
+            log.debug("The Structure will be derived from IndexDescriptor XML in the index folders upon calls to "
+                      + "open(...)");
         } else {
             log.info(String.format(
                 "The property %s was defined, so the IndexDescriptor will not be taken from the index-folder. "
@@ -235,7 +235,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                          + " defined in the request, so no faceting could be performed");
                 return;
             }
-            // TODO: Add codID-agnostic faceting option
+            // TODO: Add docID-agnostic faceting option
             log.debug("There were no docIDs collected for " + DocumentSearcher.SEARCH_QUERY
                       + "='" + request.get(DocumentKeys.SEARCH_QUERY) + "' so faceting is skipped");
             return;
@@ -262,6 +262,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
         CollectorPool collectorPool;
         try {
+            if (!poolFactory.hasPool(searcher.getIndexReader(), facetRequest)) {
+                log.info("The CollectorPoolFactory has no structures for the given request. A new structure will be "
+                         + "generated, which can take several minutes. The request was " + facetRequest.getBuildKey()
+                         + " with groupKey '" + facetRequest.getGroupKey() + "'");
+            }
             collectorPool = poolFactory.acquire(searcher.getIndexReader(), facetRequest);
         } catch (IOException e) {
             throw new RuntimeException("Unable to acquire a CollectorPool for " + facetRequest, e);
@@ -360,8 +365,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                     tagCollector.collect(collectedIDs.getBits());
                 } catch (IOException e) {
                     throw new RuntimeException(
-                        "IOException while assigning previously collected IDs "
-                        + "into TagCollector for query '" + query + "'", e);
+                        "IOException while assigning previously collected IDs into TagCollector for query '"
+                        + query + "'", e);
                 }
                 collectTime += System.currentTimeMillis();
                 log.debug("Filled tagCollector from bit set with length " + collectedIDs.getBits().size() + " in "
@@ -411,8 +416,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 fields.add(new ExposedRequest.Field(fieldName, comparator));
             }
             // TODO: Add reverse to request and here
-            ExposedRequest.Group group = new ExposedRequest.Group(
-                structure.getName(), fields, comparator);
+            ExposedRequest.Group group = new ExposedRequest.Group(structure.getName(), fields, comparator);
             FacetRequestGroup facetGroup = new FacetRequestGroup(
                 group, comparator.getOrder(), false, structure.getLocale(),
                 0, structure.getWantedTags(), 1, null);
@@ -421,8 +425,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         return new org.apache.lucene.search.exposed.facet.request.FacetRequest(query, groups);
     }
 
-    private DocIDCollector assignShared(Map<String, Object> shared)
-                                                        throws RemoteException {
+    private DocIDCollector assignShared(Map<String, Object> shared) throws RemoteException {
         Object o = shared.get(DocumentSearcher.DOCIDS);
         DocIDCollector collectedIDs = null;
         if (o != null) {

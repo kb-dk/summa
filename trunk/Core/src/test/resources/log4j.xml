@@ -26,7 +26,7 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.support.enrich.ETSSStatusFilter">
+    <logger name="dk.statsbiblioteket.summa.ingest.stream.ArchiveReaderTest">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>

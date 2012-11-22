@@ -586,19 +586,22 @@ public class FacetTest extends NoExitTestCase {
 
         updateIndex(STORAGE);
         log.debug("Index updated. Creating searcher");
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getSearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
         searcher.checkIndex(); // Make double sure
         log.debug("Searcher created");
         for (String name: "Jens Gurli Hans".split(" ")) {
             log.debug(String.format("Verifying existence of %s data", name));
-            SearchTest.verifySearch(
-                    searcher, name, name.equals("Hans") ? 3 : 1);
+            SearchTest.verifySearch(searcher, name, name.equals("Hans") ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
-        log.debug("Result for search for fagref "
-                  + searcher.search(SearchTest.simpleRequest(
-                "fagekspert")).toXML());
+        log.debug("Result for search for fagref " + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
+
+        log.debug("Repeating tests to check for facet structure re-use");
+        for (String name: "Jens Gurli Hans".split(" ")) {
+            log.debug(String.format("Verifying existence of %s data", name));
+            SearchTest.verifySearch(searcher, name, name.equals("Hans") ? 3 : 1);
+            verifyFacetResult(searcher, name);
+        }
         searcher.close();
         storage.close();
     }
