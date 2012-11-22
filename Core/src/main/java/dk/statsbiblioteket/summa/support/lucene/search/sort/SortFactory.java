@@ -85,8 +85,7 @@ public class SortFactory {
      * @param sortLanguage the language for sorting.
      * @param comparators  a map of existing comparators for fields.
      */
-    public SortFactory(COMPARATOR comparator, int buffer,
-                       String field, String sortLanguage,
+    public SortFactory(COMPARATOR comparator, int buffer, String field, String sortLanguage,
                       Map<String, ReusableSortComparator> comparators) {
         this.field = field;
         this.sortLanguage = sortLanguage;
@@ -102,27 +101,22 @@ public class SortFactory {
      * is undefined or there is an error creating the {@link Sort} object.
      */
     public synchronized Sort getSort(boolean reverse) {
-        log.trace("getSort for field '" + field + "' with language '"
-                  + sortLanguage + "' called");
+        log.trace("getSort for field '" + field + "' with language '" + sortLanguage + "' called");
         if (normalSort != null) {
             /* Already created, so just return */
             return reverse ? reverseSort : normalSort;
         }
         if (sortLanguage == null || "".equals(sortLanguage)) {
             /* No language, so just create default sorter */
-            log.debug("No sort language. Creating non-localized sorts for "
-                      + "field '" + field + "'");
+            log.debug("No sort language. Creating non-localized sorts for field '" + field + "'");
             return makeDefaultSorters(reverse);
         }
         try {
-            log.debug(String.format(
-                    "Creating sorters for field '%s' with language '%s'",
-                    field, sortLanguage));
+            log.debug(String.format("Creating sorters for field '%s' with language '%s'", field, sortLanguage));
             normalSort = new Sort(getSortField(false));
             reverseSort = new Sort(getSortField(true));
         } catch (Exception e) {
-            log.error("Could not create comparator for language code '"
-                      + sortLanguage + "'. Defaulting to basic sort");
+            log.error("Could not create comparator for language code '" + sortLanguage + "'. Defaulting to basic sort");
             return makeDefaultSorters(reverse);
         }
         return reverse ? reverseSort : normalSort;
@@ -147,9 +141,7 @@ public class SortFactory {
      */
     private SortField getSortField(boolean reverse) {
         if (comparator == COMPARATOR.lucene) {
-            throw new UnsupportedOperationException(
-                "Lucene trunk does not support search time locale based "
-                + "sorting");
+            throw new UnsupportedOperationException("Lucene trunk does not support search time locale based sorting");
             //return new SortField(field, new Locale(sortLanguage), reverse);
         }
         return new SortField(field, getComparator(), reverse);
@@ -166,25 +158,20 @@ public class SortFactory {
         synchronized (comparatorSync) {
             if (!comparators.containsKey(sortLanguage)) {
                 /* Language specified, so create localized sorters */
-                log.debug(String.format(
-                        "Creating localized comparators for field '%s' with "
-                        + "language '%s'", field, sortLanguage));
+                log.info(String.format(
+                        "Creating localized comparators for field '%s' with language '%s'", field, sortLanguage));
                 switch (comparator) {
                     case lucene: {
-                        throw new IllegalStateException(
-                                "Lucene sorters should be constructed by "
-                                + "getSortField");
+                        throw new IllegalStateException("Lucene sorters should be constructed by getSortField");
                     }
                     case exposed: {
-                        ExposedComparator c =
-                            new ExposedComparator(sortLanguage);
+                        ExposedComparator c = new ExposedComparator(sortLanguage);
                         c.indexChanged(lastReader);
                         comparators.put(sortLanguage, c);
                         break;
                     }
                     default: {
-                        throw new IllegalStateException(
-                                "Unknown compatator " + comparator);
+                        throw new IllegalStateException("Unknown comparator " + comparator);
                     }
                 }
             }
@@ -211,8 +198,7 @@ public class SortFactory {
      */
     public void indexChanged(IndexReader reader) {
         lastReader = reader;
-        for (Map.Entry<String, ReusableSortComparator> source:
-            comparators.entrySet()) {
+        for (Map.Entry<String, ReusableSortComparator> source: comparators.entrySet()) {
             source.getValue().indexChanged(reader);
         }
     }
