@@ -26,16 +26,7 @@ import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.search.*;
 
 /**
  * Lucene-related helper methods.
@@ -130,25 +121,20 @@ public class LuceneIndexUtils {
                 first = false;
             }
             sw.append(")");
-        } else if (query instanceof TermQuery) {
-            TermQuery termQuery = (TermQuery)query;
-            sw.append(termQuery.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof TermRangeQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof WildcardQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof FuzzyQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PrefixQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PhraseQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof TermQuery
+                   || query instanceof TermRangeQuery
+                   || query instanceof WildcardQuery
+                   || query instanceof FuzzyQuery
+                   || query instanceof PrefixQuery
+                   || query instanceof PhraseQuery) {
+            sw.append(query.toString()).append("[").append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof RegexpQuery) {
+            try {
+                sw.append(query.toString());
+            } catch (NullPointerException e) { // Missing field triggers this
+                throw (NullPointerException)new NullPointerException("Missing field in RegexpQuery").initCause(e);
+            }
+            sw.append("[").append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {
             Iterator<Query> iterator = ((DisjunctionMaxQuery)query).iterator();
             sw.append("<");
