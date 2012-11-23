@@ -33,7 +33,13 @@ public class TagCollector extends Collector {
 // TODO: Rememver query for caching of results
   public TagCollector(FacetMap map) {
     this.map = map;
-    this.tagCounts = new int[map.getTagCount()];
+    try {
+      this.tagCounts = new int[map.getTagCount()];
+    } catch (OutOfMemoryError e) {
+      throw (OutOfMemoryError)new OutOfMemoryError(String.format(
+              "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
+              map.getTagCount(), map.getTagCount() / 1048576, map.toString())).initCause(e);
+    }
   }
 
   @Override

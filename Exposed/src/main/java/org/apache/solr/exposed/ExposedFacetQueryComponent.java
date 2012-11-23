@@ -99,9 +99,6 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     }
     TagCollector tagCollector = collectorPool.acquire(eReq.getBuildKey());
 
-    if (tagCollector.getQuery() == null) { // Not cached
-      tagCollector.collect(rb.getResults().docSet.getBits());
-    }
 /*    if (tagCollector.getQuery() == null) { // Not cached
       try {
         QParser qp = QParser.getParser(eReq.getQuery(), null, req);
@@ -115,6 +112,9 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     }*/
     FacetResponse facetResponse;
     try {
+        if (tagCollector.getQuery() == null) { // Not cached
+          tagCollector.collect(rb.getResults().docSet.getBits());
+        }
         facetResponse = tagCollector.extractResult(eReq);
     } catch (IOException e) {
         throw new RuntimeException(

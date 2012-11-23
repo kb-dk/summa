@@ -273,6 +273,23 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         }
         TagCollector tagCollector;
         try {
+            CollectorPool.AVAILABILITY availability = collectorPool.getAvailability(query);
+            switch (availability) {
+                case hasFresh:
+                    log.debug("Acquiring fresh tagCollector for '" + query + "'");
+                    break;
+                case hasFilled:
+                    log.debug("Acquiring filled tagCollector for '" + query + "'");
+                    break;
+                case mustCreateNew:
+                    log.info("A new TagCollector will be created for query '" + query + "' from " + collectorPool);
+                    break;
+                case mightCreateNew:
+                    log.info("A new TagCollector might be created for query '" + query + "'");
+                    break;
+                default:
+                    log.warn("Unknown availability state: " + availability);
+            }
             tagCollector = collectorPool.acquire(query);
         } catch (OutOfMemoryError e) {
             Writer writer = new StringWriter(1000);
@@ -295,8 +312,9 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             extractTime += System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException("Unable to extract response from TagCollector", e);
+        } finally {
+            collectorPool.release(query, tagCollector);
         }
-        collectorPool.release(query, tagCollector);
 
         Response fr = newResponseToOldResult(facetResponse, request);
         fr.addTiming("facet.collectids.cached", collectTime);

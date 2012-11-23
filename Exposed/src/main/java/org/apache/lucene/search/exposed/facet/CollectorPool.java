@@ -15,14 +15,42 @@ import java.util.*;
  * cleared cache.
  * </p><p>
  * The pool is thread-safe and thread-efficient.
+ * </p><p>
+ * Important: It is essential that used collectors are released back after use!
+ * If collectors are not released, the pool fail til deliver collectors when
+ * maximum amount of live collectors is reached.
+ * It is highly recommended to acquire a pool, do processing inside a try and
+ * release the pool in a finally-statement.
  */
 // TODO: Consider making a limit on the number of collectors to create
 public class CollectorPool {
+  public enum AVAILABILITY {hasFresh, hasFilled, mightCreateNew, mustCreateNew}
+
+  private final FacetMap map;
+
   private final List<TagCollector> fresh;
   private final Map<String, TagCollector> filled;
-  private FacetMap map;
-  private final int freshCollectors;
+
+  private final int maxFresh;
   private final int maxFilled;
+
+  /**
+   * The number of delivered collectors that has not been returned yet.
+   */
+  private int activeCollectors = 0;
+
+  /**
+   * Is true, maxfresh and maxFilled are guaranteed. If false, temporary
+   * allocation of TagCollectors above these limits is possible.
+   */
+  private boolean enforceLimits = true;
+  /**
+   * The maximum number of retries before giving up on TacCollector acquirement.
+   * Only relevant when enforceLimits == true.
+   */
+  private int maxRetries = 10;
+
+  private long retryDelay = 100; // ms
 
   /**
    * When a TagCollector is released with a query, it is stored as filled. If
@@ -35,8 +63,10 @@ public class CollectorPool {
   public CollectorPool(
       FacetMap map, int filledCollectors, int freshCollectors) {
     this.map = map;
-    this.freshCollectors = freshCollectors;
+
+    this.maxFresh = freshCollectors;
     fresh = new ArrayList<TagCollector>();
+
     this.maxFilled = filledCollectors;
     filled = new LinkedHashMap<String, TagCollector>(filledCollectors) {
       @Override
@@ -63,21 +93,68 @@ public class CollectorPool {
    * instead call {@link TagCollector#extractResult(org.apache.lucene.search.exposed.facet.request.FacetRequest)} directly.
    * @return a recycled collector if one is available, else a new collector.
    */
-  public TagCollector acquire(String query) {
-    synchronized (filled) {
+  public synchronized TagCollector acquire(String query) {
+    int retries = 0;
+    do {
       if (query != null && maxFilled != 0 && filled.containsKey(query)) {
+        activeCollectors++;
         return filled.remove(query);
       }
-    }
 
-    synchronized (fresh) {
       for (int i = 0 ; i < fresh.size() ; i++) {
         if (!fresh.get(i).isClearRunning()) {
+          activeCollectors++;
           return fresh.remove(i);
         }
       }
+
+      if (!enforceLimits
+          || filled.size() + fresh.size() < maxFilled + maxFilled) {
+        activeCollectors++;
+        // It would be great to have standardized logging available here
+        // as creating a TagCollector is potentially a very costly process
+        return new TagCollector(map);
+      }
+
+      try {
+        Thread.sleep(retryDelay);
+      } catch (InterruptedException e) {
+        // Ignore the error as it is just a simple wait
+      }
+    } while (retries++ < maxRetries);
+    if (retries == maxRetries) {
+      throw new MissingResourceException(
+          String.format(
+              "Tried acquiring TagCollector from %s %d times @ %dms. "
+              + "Filled collectors: %d/%d, fresh collectors: %d/%d, "
+              + "active collectors: %d",
+              this, retries, retryDelay,
+              filled.size(), maxFilled, fresh.size(), maxFresh,
+              activeCollectors),
+          CollectorPool.class.getSimpleName(), query);
     }
     return new TagCollector(map);
+  }
+
+  /**
+   * Probes the caches and properties to determine what the result of a call to {@link #acquire(String)} will be at this
+   * point in time.
+   * @param query the query for the collector. This might be null.
+   * @return the expected result of a call til acquire.
+   */
+  public synchronized AVAILABILITY getAvailability(String query) {
+    if (query != null && maxFilled != 0 && filled.containsKey(query)) {
+      return AVAILABILITY.hasFilled;
+    }
+    for (TagCollector aFresh : fresh) {
+      if (!aFresh.isClearRunning()) {
+        return AVAILABILITY.hasFresh;
+      }
+    }
+    if (fresh.size() == 0) {
+      return AVAILABILITY.mustCreateNew;
+    }
+    return AVAILABILITY.mightCreateNew;
   }
 
   /**
@@ -91,37 +168,32 @@ public class CollectorPool {
    *                  collector is always going to the fresh cache.
    * @param collector the collector to put back into the pool for later reuse.
    */
-  public void release(String query, TagCollector collector) {
-    synchronized (filled) {
-      if (maxFilled > 0 && query != null) {
-        collector.setQuery(query);
-        filled.put(query, collector);
-        return;
-      }
+  public synchronized void release(String query, TagCollector collector) {
+    if (maxFilled > 0 && query != null) {
+      activeCollectors = Math.max(0, --activeCollectors);
+      collector.setQuery(query);
+      filled.put(query, collector);
+      return;
     }
     releaseFresh(collector);
   }
 
-  private void releaseFresh(TagCollector collector) {
-    synchronized (fresh) {
-      if (fresh.size() >= freshCollectors) {
-        return;
-      }
-      collector.delayedClear();
-      fresh.add(collector);
+  private synchronized void releaseFresh(TagCollector collector) {
+    activeCollectors = Math.max(0, --activeCollectors);
+    if (fresh.size() >= maxFresh) {
+      return;
     }
+    collector.delayedClear();
+    fresh.add(collector);
   }
 
-  public void clear() {
-    synchronized (fresh) {
-      fresh.clear();
-    }
-    synchronized (filled) {
-      filled.clear();
-    }
+  public synchronized void clear() {
+    activeCollectors = 0;
+    fresh.clear();
+    filled.clear();
   }
 
-  public String toString() {
+  public synchronized String toString() {
     long total = 0;
     for (Map.Entry<String, TagCollector> entry: filled.entrySet()) {
       total += entry.getValue().getMemoryUsage();
@@ -131,6 +203,7 @@ public class CollectorPool {
     }
     return "CollectorPool(" + map.toString() + ", #fresh counters = "
         + fresh.size() + ", #filled counters = " + filled.size()
-        + ", total counter size = " + total / 1024 + " KB)";
+        + ", active counters = " + activeCollectors
+        + ", total cached counter size = " + total / 1024 + " KB)";
   }
 }

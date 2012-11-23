@@ -66,7 +66,7 @@ public class IndexLookup {
     // TODO: Make a more common creator with custom values
     private static CollectorPoolFactory poolFactory =
         CollectorPoolFactory.getLastFactory() == null ?
-        new CollectorPoolFactory(6, 2, 2) : 
+        new CollectorPoolFactory(6, 2, 2) :
         CollectorPoolFactory.getLastFactory();
 
     private IndexSearcher searcher = null;
@@ -91,11 +91,9 @@ public class IndexLookup {
      * @throws java.rmi.RemoteException if the field in the request did not match
      *         the tagHandler structure (aka there was no facet with that name).
      */
-    public void lookup(Request request, ResponseCollection response)
-                                                        throws RemoteException {
+    public void lookup(Request request, ResponseCollection response) throws RemoteException {
         if (descriptor == null) {
-            log.warn("No descriptor defined in IndexLookup. "
-                     + "Locale-based sorting will not be used ");
+            log.warn("No descriptor defined in IndexLookup. Locale-based sorting will not be used ");
         }
         IndexRequest indexRequest = requestFactory.createRequest(request);
         if (indexRequest == null) {
@@ -104,8 +102,7 @@ public class IndexLookup {
         }
         Map<String, Object> shared = response.getTransient();
         if (!shared.containsKey(INDEX_SEARCHER)) {
-            log.error("No IndexSearcher in responses transients. No index "
-                      + "lookup will be performed");
+            log.error("No IndexSearcher in responses transients. No index lookup will be performed");
             searcher = null;
             return;
         }
@@ -115,8 +112,7 @@ public class IndexLookup {
             searcher = newSearcher;
         }
         if (!shared.containsKey(QUERY_PARSER)) {
-            log.error("No QueryParser in responses transients. No index "
-                      + "lookup will be performed");
+            log.error("No QueryParser in responses transients. No index lookup will be performed");
             qp = null;
             return;
         }
@@ -143,8 +139,7 @@ public class IndexLookup {
         long lookupTime = -System.currentTimeMillis();
         long collectTime = 0;
         long extractTime = 0;
-        org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest =
-            createFacetRequest(request);
+        org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest = createFacetRequest(request);
 
 //        System.out.println("Requesting for\n" + fRequest.toXML());
 
@@ -158,35 +153,35 @@ public class IndexLookup {
             }
             collectorPool = poolFactory.acquire(reader, fRequest);
         } catch (IOException e) {
-            throw new RuntimeException(
-                "Unable to acquire a CollectorPool for " + fRequest, e);
+            throw new RuntimeException("Unable to acquire a CollectorPool for " + fRequest, e);
         }
         String queryKey = toQueryKey(request);
         TagCollector tagCollector = collectorPool.acquire(queryKey);
-        if (queryKey.equals(tagCollector.getQuery())) {
-            log.debug("Reusing already filled collector for " + queryKey);
-        } else {
-            collectTime = -System.currentTimeMillis();
-            collect(tagCollector, fRequest, request.getQuery());
-            collectTime += System.currentTimeMillis();
-        }
         FacetResponse fResponse;
         try {
-            extractTime = -System.currentTimeMillis();
-            fResponse = tagCollector.extractResult(fRequest);
-            extractTime += System.currentTimeMillis();
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "Unable to extract response from TagCollector", e);
+            if (queryKey.equals(tagCollector.getQuery())) {
+                log.debug("Reusing already filled collector for " + queryKey);
+            } else {
+                collectTime = -System.currentTimeMillis();
+                collect(tagCollector, fRequest, request.getQuery());
+                collectTime += System.currentTimeMillis();
+            }
+            try {
+                extractTime = -System.currentTimeMillis();
+                fResponse = tagCollector.extractResult(fRequest);
+                extractTime += System.currentTimeMillis();
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to extract response from TagCollector", e);
+            }
+        } finally {
+            collectorPool.release(queryKey, tagCollector);
         }
-        collectorPool.release(queryKey, tagCollector);
 
         //System.out.println("Got response\n" + fResponse.toXML());
         
         IndexResponse iResponse = newResponseToOldResult(fResponse, request);
         lookupTime += System.currentTimeMillis();
-        log.debug("Finished IndexLookup for " + request + " in " + lookupTime
-                  + " ms");
+        log.debug("Finished IndexLookup for " + request + " in " + lookupTime + " ms");
         iResponse.addTiming("lookup.collectids", collectTime);
         iResponse.addTiming("lookup.extractfacets", extractTime);
         iResponse.addTiming("lookup.total", lookupTime);
@@ -194,8 +189,7 @@ public class IndexLookup {
     }
 
     private String toQueryKey(IndexRequest request) {
-        return (request.getQuery() == null ? "*" : request.getQuery())
-               + request.getField();
+        return (request.getQuery() == null ? "*" : request.getQuery()) + request.getField();
     }
 
     private IndexResponse newResponseToOldResult(
@@ -203,8 +197,7 @@ public class IndexLookup {
         IndexResponse response = new IndexResponse(request);
         for (FacetResponse.Tag tag:
             fResponse.getGroups().get(0).getTags().getTags()) {
-            response.addTerm(new Pair<String, Integer>(
-                tag.getTerm(), tag.getCount()));
+            response.addTerm(new Pair<String, Integer>(tag.getTerm(), tag.getCount()));
         }
         return response;
     }
@@ -217,19 +210,15 @@ public class IndexLookup {
             searcher.search(qp.parse(query), tagCollector);
         } catch (IOException e) {
             throw new RuntimeException(
-                "IOException while collecting IDs into TagCollector "
-                + "for query '" + query + "'", e);
+                    "IOException while collecting IDs into TagCollector for query '" + query + "'", e);
         } catch (ParseException e) {
-            throw new RuntimeException(
-                "Unable to parse query '" + query + "'", e);
+            throw new RuntimeException("Unable to parse query '" + query + "'", e);
         }
         collectTime += System.currentTimeMillis();
-        log.debug("Filled tagCollector for query '" + query + "' in "
-                  + collectTime + " ms");
+        log.debug("Filled tagCollector for query '" + query + "' in " + collectTime + " ms");
     }
 
-    private org.apache.lucene.search.exposed.facet.request.FacetRequest
-                                      createFacetRequest(IndexRequest request) {
+    private org.apache.lucene.search.exposed.facet.request.FacetRequest createFacetRequest(IndexRequest request) {
         Locale locale = null;
         if (request.getLocale() != null) {
             locale = request.getLocale();
@@ -239,39 +228,29 @@ public class IndexLookup {
         }
         NamedComparator comparator = ComparatorFactory.create(locale);
 
-        List<ExposedRequest.Field> fields =
-            new ArrayList<ExposedRequest.Field>();
+        List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
         // TODO: Add reverse to request and here
         fields.add(new ExposedRequest.Field(request.getField(), comparator));
         List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
         // TODO: Add reverse to request and here
         ExposedRequest.Group eGroup = new ExposedRequest.Group(
             request.getField(), fields, comparator);
-        NamedComparator.ORDER facetOrder = locale == null ?
-                                           NamedComparator.ORDER.index :
-                                           NamedComparator.ORDER.locale;
+        NamedComparator.ORDER facetOrder = locale == null ? NamedComparator.ORDER.index : NamedComparator.ORDER.locale;
 
         // TODO: Add reverse to request and here
         FacetRequestGroup facetGroup = new FacetRequestGroup(
-            eGroup, facetOrder, false,
-            locale == null ? null : locale.toString(),
-            request.getDelta(), request.getLength(), request.getMinCount(),
-            request.getTerm());
+            eGroup, facetOrder, false, locale == null ? null : locale.toString(),
+            request.getDelta(), request.getLength(), request.getMinCount(), request.getTerm());
         groups.add(facetGroup);
-        org.apache.lucene.search.exposed.facet.request.FacetRequest fRequest =
-            new org.apache.lucene.search.exposed.facet.request.FacetRequest(
-            request.getQuery() == null ? "*" : request.getQuery(), groups);
-        return fRequest;
+        return new FacetRequest(request.getQuery() == null ? "*" : request.getQuery(), groups);
     }
 
     public void updateDescriptor(File location) {
-        URL descriptorLocation = Resolver.getURL(
-            location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
+        URL descriptorLocation = Resolver.getURL(location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
         try {
             descriptor = new FacetIndexDescriptor(descriptorLocation);
         } catch (IOException e) {
-            log.warn("IOException while retrieving and parsing "
-                     + "FacetIndexDescriptor in updateIndex. Lookups will not"
+            log.warn("IOException while retrieving and parsing FacetIndexDescriptor in updateIndex. Lookups will not"
                      + " use locale-based sorting", e);
         }
         log.debug("Updated index descriptor from '" + location + "'");
