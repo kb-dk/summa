@@ -115,10 +115,10 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
     try {
       tagCollector = collectorPool.acquire(eReq.getBuildKey());
 
-      if (tagCollector.getQuery() == null) { // Not cached so fill it
-        tagCollector.collect(rb.getResults().docSet.getBits());
-      }
       try {
+        if (tagCollector.getQuery() == null) { // Not cached so fill it
+          tagCollector.collect(rb.getResults().docSet.getBits());
+        }
         lookupResponse = tagCollector.extractResult(eReq);
       } catch (IOException e) {
         throw new RuntimeException(

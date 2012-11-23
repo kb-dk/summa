@@ -273,26 +273,29 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     String sQuery = null;//request.getQuery();
     for (int i = 0 ; i < runs ; i++) {
       collector = collectorPool.acquire(sQuery);
-      long countStart = System.currentTimeMillis();
-      if (collector.getQuery() == null) { // Fresh collector
-        searcher.search(q, collector);
-        if (i == 0) {
-          System.out.println(collector.toString(true));
-        }
+      try {
+        long countStart = System.currentTimeMillis();
+        if (collector.getQuery() == null) { // Fresh collector
+          searcher.search(q, collector);
+          if (i == 0) {
+            System.out.println(collector.toString(true));
+          }
 //        collector.collectAllValid(reader);
-        long countTime = System.currentTimeMillis() - countStart;
-        collector.setCountTime(countTime);
+          long countTime = System.currentTimeMillis() - countStart;
+          collector.setCountTime(countTime);
+        }
+        response = collector.extractResult(request);
+        if (collector.getQuery() != null) { // Cached count
+         response.setCountingCached(true);
+        }
+        long totalTime = System.currentTimeMillis() - countStart;
+        response.setTotalTime(totalTime);
+        System.out.println("Collection and extraction #" + i + " for "
+            + collector.getHitCount() + " documents in "
+            + ExposedHelper.getTime(System.currentTimeMillis()-countStart));
+      } finally {
+        collectorPool.release(sQuery, collector);
       }
-      response = collector.extractResult(request);
-      if (collector.getQuery() != null) { // Cached count
-        response.setCountingCached(true);
-      }
-      long totalTime = System.currentTimeMillis() - countStart;
-      response.setTotalTime(totalTime);
-      System.out.println("Collection and extraction #" + i + " for "
-          + collector.getHitCount() + " documents in "
-          + ExposedHelper.getTime(System.currentTimeMillis()-countStart));
-      collectorPool.release(sQuery, collector);
     }
     System.out.println("Document count = " + reader.maxDoc());
     System.out.println("Hierarchical facet startup time = "

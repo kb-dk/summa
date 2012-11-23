@@ -88,24 +88,19 @@ public class FacetTest extends NoExitTestCase {
         }
         if (SearchTest.INDEX_ROOT.exists()) {
             throw new IllegalStateException(
-                "The folder " + SearchTest.INDEX_ROOT + " still exists. "
-                + "Cleanup incomplete");
+                "The folder " + SearchTest.INDEX_ROOT + " still exists. Cleanup incomplete");
         }
     }
 
     public static Configuration getSearcherConfiguration() throws Exception {
-        URL descriptorLocation = Resolver.getURL(
-                "integration/search/SearchTest_IndexDescriptor.xml");
-        assertNotNull("The descriptor location should not be null",
-                      descriptorLocation);
+        URL descriptorLocation = Resolver.getURL("integration/search/SearchTest_IndexDescriptor.xml");
+        assertNotNull("The descriptor location should not be null", descriptorLocation);
 
         Configuration searcherConf = IndexTest.loadFagrefProperties(
             "no_storage", "integration/search/FacetTest_SearchConfiguration.xml");
-        assertNotNull("The Facet configuration should not be empty",
-                      searcherConf);
+        assertNotNull("The Facet configuration should not be empty", searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                     descriptorLocation.getFile());
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation.getFile());
                 /*
         List<Configuration> subSearcherConfs =
                 searcherConf.getSubConfigurations(SearchNodeFactory.CONF_NODES);
@@ -137,8 +132,7 @@ public class FacetTest extends NoExitTestCase {
     }*/
 
     public void testCreateSearcher() throws Exception {
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getSearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
         log.debug("Searcher created: " + searcher);
         searcher.close();
     }
@@ -161,8 +155,7 @@ public class FacetTest extends NoExitTestCase {
             log.debug("Storage started");
             SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
             assertEquals("Hans Jensen data should be ingested",
-                         1, storage.getRecords(
-                Arrays.asList("fagref:hj@example.com"), null).size());
+                         1, storage.getRecords(Arrays.asList("fagref:hj@example.com"), null).size());
         } finally {
             storage.close();
         }
@@ -172,14 +165,11 @@ public class FacetTest extends NoExitTestCase {
         final String STORAGE = "transliteraye_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.debug("Storage started");
-        SearchTest.ingestFagref(STORAGE, Resolver.getURL(
-            "integration/transliteration/transliterate.xml").getFile());
+        SearchTest.ingestFagref(STORAGE, Resolver.getURL("integration/transliteration/transliterate.xml").getFile());
         assertEquals("Háns Jensén data should be ingested",
-                     1, storage.getRecords(
-            Arrays.asList("fagref:haje@example.com"), null).size());
+                     1, storage.getRecords(Arrays.asList("fagref:haje@example.com"), null).size());
         updateIndex(STORAGE);
-        SummaSearcherImpl searcher =
-                new SummaSearcherImpl(getSearcherConfiguration());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
         log.debug("Searcher created. Verifying searches");
         SearchTest.verifySearch(searcher, "*", 1);
         SearchTest.verifySearch(searcher, "Fagekspert", 1);
