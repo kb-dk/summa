@@ -85,10 +85,11 @@ public class PoolFactoryGate {
                     log.debug("Acquiring filled tagCollector for '" + key + "'");
                     break;
                 case mustCreateNew:
-                    log.info("A new TagCollector will be created for key '" + key + "' from " + collectorPool);
+                    log.info("A new TagCollector will be created for key '" + key + "' for " + caller
+                             + " from " + collectorPool);
                     break;
                 case mightCreateNew:
-                    log.info("A new TagCollector might be created for key '" + key + "'");
+                    log.info("A new TagCollector might be created for key '" + key + "' for " + caller);
                     break;
                 default:
                     log.warn("Unknown availability state: " + availability);
@@ -96,10 +97,14 @@ public class PoolFactoryGate {
             tagCollector = collectorPool.acquire(key);
             if (availability == CollectorPool.AVAILABILITY.mustCreateNew) {
                 log.info("Allocated " + tagCollector + " (availability was " + availability + "). "
-                         + "CollectorPoolFactory structure allocation is " + factory.toString());
+                         + "CollectorPoolFactory memory allocation is now at least " + factory.getMem()/1048576 + "MB");
+                log.info("CollectorPoolFactory structure allocation is " + factory.toString());
             } else if (availability == CollectorPool.AVAILABILITY.mightCreateNew) {
                 log.info("Potentially allocated " + tagCollector + " (availability was " + availability + "). "
-                         + "CollectorPoolFactory structure allocation is " + factory.toString());
+                         + "CollectorPoolFactory memory allocation is now at least " + factory.getMem()/1048576 + "MB");
+                if (log.isDebugEnabled()) {
+                    log.info("CollectorPoolFactory structure allocation is " + factory.toString());
+                }
             }
             return new SimplePair<CollectorPool, TagCollector>(collectorPool, tagCollector);
         } catch (OutOfMemoryError e) {

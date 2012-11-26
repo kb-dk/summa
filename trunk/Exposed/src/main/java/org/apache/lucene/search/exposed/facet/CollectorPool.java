@@ -109,7 +109,8 @@ public class CollectorPool {
       }
 
       if (!enforceLimits
-          || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
+          || activeCollectors + filled.size() + fresh.size() <
+             maxFilled + maxFresh) {
         activeCollectors++;
         // It would be great to have standardized logging available here
         // as creating a TagCollector is potentially a very costly process
@@ -212,5 +213,13 @@ public class CollectorPool {
       total += collector.getMemoryUsage();
     }
     return total;
+  }
+
+  public boolean isEnforceLimits() {
+    return enforceLimits;
+  }
+
+  public void setEnforceLimits(boolean enforceLimits) {
+    this.enforceLimits = enforceLimits;
   }
 }

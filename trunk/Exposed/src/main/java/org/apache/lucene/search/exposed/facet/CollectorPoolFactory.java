@@ -134,6 +134,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     poolMap.clear();
   }
 
+  @Override
   public void purgeAllCaches() {
     if (ExposedSettings.debug) {
       System.out.println("CollectorPoolFactory.purgeAllCaches() called");
@@ -141,6 +142,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     clear();
   }
 
+  @Override
   public void purge(IndexReader r) {
     if (ExposedSettings.debug) {
       System.out.println("CollectorPoolFactory.purge(" + r + ") called");
@@ -168,5 +170,16 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
   @Override
   public void onClose(IndexReader reader) {
     purge(reader);
+  }
+
+  /**
+   * @return approximate memory usage in bytes of FacetMaps and TagCounters.
+   */
+  public long getMem() {
+    long total = 0;
+    for (Map.Entry<String, CollectorPool> entry: poolMap.entrySet()) {
+      total += entry.getValue().getMem();
+    }
+    return total;
   }
 }
