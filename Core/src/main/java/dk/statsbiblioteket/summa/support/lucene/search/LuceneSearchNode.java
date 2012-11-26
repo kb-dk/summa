@@ -46,6 +46,8 @@ import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.*;
 
@@ -223,6 +225,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     public static final String CONF_FILTER_MATCHALL = "summa.support.lucene.filter.matchall";
     public static final String DEFAULT_FILTER_MATCHALL = "recordBase:sb*";
 
+    /**
+     * The FSDirectory-implementation to use. Valid values are 'nio', 'mmap' and 'auto' with nio being the old and safe
+     * implementation, at the cost of performance. mmap uses memory mapping and performs better. If is not recommended
+     * for 32 bit machines. auto uses Lucene's auto-selector.
+     * </p><p>
+     * Optional. Default is 'nio' (safe and slow).
+     */
+    public static final String CONF_FSDIRECTORY = "summa.support.lucene.fsdirectory";
+    public static final String DEFAULT_FSDIRECTORY = "mmap";
+    public static final String FS_MMAP = "mmap";
+    public static final String FS_NIO = "nio";
+    public static final String FS_AUTO = "AUTO";
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SortPool sortPool; // Toed to the descriptor
@@ -245,6 +260,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     private Integer mlt_maxNumTokensParsed = null;
     private Set<String> mlt_stopWords = null;
     private MoreLikeThis moreLikeThis = null;
+    private final String fsDirectory;
 
     private SortFactory.COMPARATOR sortComparator;
     private int sortBuffer;
@@ -259,7 +275,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
      */
     public LuceneSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        log.info("Constructing LuceneSearchNode");
+        log.debug("Constructing LuceneSearchNode");
         this.conf = conf;
         int maxBooleanClauses = conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, DEFAULT_MAX_BOOLEAN_CLAUSES);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
@@ -286,7 +302,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         setupMoreLikeThis(conf);
 
         explain = conf.getBoolean(CONF_EXPLAIN, explain);
-
+        String fsDirectoryT = conf.getString(CONF_FSDIRECTORY, DEFAULT_FSDIRECTORY).toLowerCase();
+        if (!(FS_AUTO.equals(fsDirectoryT) || FS_MMAP.equals(fsDirectoryT) || FS_NIO.equals(fsDirectoryT))) {
+            log.warn("The value for " + CONF_FSDIRECTORY + " must be either nio, mmap or auto but was '"
+                     + fsDirectoryT + "'. Selecting the default value " + DEFAULT_FSDIRECTORY);
+            fsDirectoryT = DEFAULT_FSDIRECTORY;
+        }
+        fsDirectory = fsDirectoryT;
+        log.info(String.format("Constructed LuceneSearchNode(FSDirectory='%s')",
+                               fsDirectory));
     }
 
     private void setupMoreLikeThis(Configuration conf) {
@@ -383,11 +407,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                   + searcher.getIndexReader().maxDoc());
     }
 
+    // TODO: Optimize with reopen support
     private IndexReader getIndexreader(URL location) throws IOException {
-        // TODO: Optimize with reopen support
         ExposedCache.getInstance().purgeAllCaches();
-        return DirectoryReader.open(
-            new NIOFSDirectory(new File(Resolver.urlToFile(location).getAbsolutePath())));
+        File file = new File(Resolver.urlToFile(location).getAbsolutePath());
+        if (FS_NIO.equals(fsDirectory)) {
+            return DirectoryReader.open(NIOFSDirectory.open(file));
+        } else if (FS_MMAP.equals(fsDirectory)) {
+            DirectoryReader.open(MMapDirectory.open(file));
+        } // auto
+        return DirectoryReader.open(FSDirectory.open(file));
     }
 
     private void openDescriptor(String location) throws RemoteException {

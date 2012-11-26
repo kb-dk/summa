@@ -502,6 +502,7 @@ public class SearchTest extends NoExitTestCase {
 
         Configuration searcherConf = Configuration.load("integration/search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty", searcherConf);
+        searcherConf.set(LuceneSearchNode.CONF_FSDIRECTORY, LuceneSearchNode.FS_MMAP);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
