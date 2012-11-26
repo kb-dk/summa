@@ -388,8 +388,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             sortPool = new SortPool(sortComparator, sortBuffer, descriptor);
         }
         try {
-            log.debug("Opening searcher from '" + urlLocation + "'");
-            searcher = new IndexSearcher(getIndexreader(urlLocation));
+            log.debug("Opening searcher from '" + urlLocation + "' with FSDirectory " + fsDirectory);
+            searcher = new IndexSearcher(getIndexReader(urlLocation));
 
             // Removed due to upgrade to Lucene 4 trunk
             //searcher.setDefaultFieldSortScoring(true, false);
@@ -408,7 +408,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     }
 
     // TODO: Optimize with reopen support
-    private IndexReader getIndexreader(URL location) throws IOException {
+    private IndexReader getIndexReader(URL location) throws IOException {
         ExposedCache.getInstance().purgeAllCaches();
         File file = new File(Resolver.urlToFile(location).getAbsolutePath());
         if (FS_NIO.equals(fsDirectory)) {
