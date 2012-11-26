@@ -19,7 +19,9 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.util.Pair;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.facetbrowser.FacetIndexDescriptor;
+import dk.statsbiblioteket.summa.facetbrowser.PoolFactoryGate;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -122,7 +124,11 @@ public class IndexLookup {
             qp = newQP;
         }
 
-        response.add(lookup(indexRequest));
+        try {
+            response.add(lookup(indexRequest));
+        } catch (IOException e) {
+            throw new RemoteException("Failed index lookup", e);
+        }
     }
 
     // TODO: Add locale to request
@@ -133,8 +139,7 @@ public class IndexLookup {
      * @throws IllegalStateException if the field in the request did not match
      *         the tagHandler structure (aka there was no facet with that name).
      */
-    private IndexResponse lookup(IndexRequest request)
-                                                  throws IllegalStateException {
+    private IndexResponse lookup(IndexRequest request) throws IllegalStateException, IOException {
         log.trace("lookup called");
         long lookupTime = -System.currentTimeMillis();
         long collectTime = 0;
@@ -144,19 +149,18 @@ public class IndexLookup {
 //        System.out.println("Requesting for\n" + fRequest.toXML());
 
         IndexReader reader = searcher.getIndexReader();
-        CollectorPool collectorPool;
-        try {
-            if (!poolFactory.hasPool(searcher.getIndexReader(), fRequest)) {
-                log.info("The CollectorPoolFactory has no structures for the given request. A new structure will be "
-                         + "generated, which can take several minutes. The request was " + fRequest.getBuildKey()
-                         + " with groupKey '" + fRequest.getGroupKey() + "'");
-            }
-            collectorPool = poolFactory.acquire(reader, fRequest);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to acquire a CollectorPool for " + fRequest, e);
-        }
         String queryKey = toQueryKey(request);
-        TagCollector tagCollector = collectorPool.acquire(queryKey);
+
+        SimplePair<CollectorPool, TagCollector> pair;
+        try {
+            pair = PoolFactoryGate.acquire(
+                    poolFactory, searcher.getIndexReader(), queryKey, fRequest, "index lookup");
+        } catch (IOException e) {
+            throw new IOException("Unable to acquire TagCollector for " + fRequest, e);
+        }
+        CollectorPool collectorPool = pair.getKey();
+        TagCollector tagCollector = pair.getValue();
+
         FacetResponse fResponse;
         try {
             if (queryKey.equals(tagCollector.getQuery())) {
@@ -189,7 +193,7 @@ public class IndexLookup {
     }
 
     private String toQueryKey(IndexRequest request) {
-        return (request.getQuery() == null ? "*" : request.getQuery()) + request.getField();
+        return request.getField() + ":" + (request.getQuery() == null ? "*" : request.getQuery());
     }
 
     private IndexResponse newResponseToOldResult(

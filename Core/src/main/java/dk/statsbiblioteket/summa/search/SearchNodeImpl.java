@@ -119,10 +119,10 @@ public abstract class SearchNodeImpl implements SearchNode {
         searcherAvailabilityTimeout = conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout);
         explicitID = conf.valueExists(CONF_ID);
         id = conf.getString(CONF_ID,  this.getClass().getSimpleName());
-        log.debug(String.format(
-                "Constructed SearchNodeImpl with concurrentSearches %d, "
-                + "warmupData '%s', warmupMaxTime %d, searchWhileOpening %s",
-                concurrentSearches, warmupData, warmupMaxTime, searchWhileOpening));
+        log.info(String.format(
+                "Constructed SearchNodeImpl(" + this.getClass().getSimpleName() + ") with concurrentSearches %d, "
+                + "warmupData length '%s', warmupMaxTime %d, searchWhileOpening %s",
+                concurrentSearches, warmupData == null ? 0 : warmupData.length(), warmupMaxTime, searchWhileOpening));
     }
 
     /**
@@ -329,7 +329,7 @@ public abstract class SearchNodeImpl implements SearchNode {
                         "Time-limit of %d milliseconds exceeded", searcherAvailabilityTimeout));
             }
         } catch (InterruptedException e) {
-            throw new RemoteException("Interruped while waiting for free slot for search");
+            throw new RemoteException("Interrupted while waiting for free slot for search");
         }
         try {
             managedSearch(request, responses);

@@ -92,8 +92,31 @@ public class TestGroupTermProvider extends TestCase {
   public void testTermSortAllDefined() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
     IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+      ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     testTermSort(reader, Arrays.asList("a"));
+    reader.close();
+  }
+
+  public void testBuildPerformance() throws IOException {
+    final String FIELD = "a";
+    final int DOCS = 1000;
+    ExposedSettings.debug = true;
+
+    helper.createIndex(DOCCOUNT, Arrays.asList(FIELD), DOCS, 2);
+    IndexReader reader = ExposedIOFactory.getReader(
+        ExposedHelper.INDEX_LOCATION);
+
+    Collator sorter = Collator.getInstance(new Locale("da"));
+    long extractTime = -System.currentTimeMillis();
+    TermProvider groupProvider = ExposedFactory.createProvider(
+        reader, "a-group", Arrays.asList(FIELD),
+        new NamedCollatorComparator(sorter));
+    extractTime += System.currentTimeMillis();
+
+    System.out.println("Extracted and sorted " + 20 + " terms in "
+                       + extractTime/1000 + " seconds");
+
+
     reader.close();
   }
 
