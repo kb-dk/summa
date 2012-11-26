@@ -92,6 +92,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
    * @return a CollectorPool matching the request.
    * @throws java.io.IOException if the reader could not be accessed.
    */
+  // TODO: Make more fine grained synchronization so that existing structures can be returned
   public synchronized CollectorPool acquire(
       IndexReader reader, FacetRequest request) throws IOException {
     if (readers.add(reader)) {

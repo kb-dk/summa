@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
@@ -47,7 +48,8 @@ import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -219,8 +221,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     // We always require a searcher and a query parser to ensure that the
     // searcher and the faceter are in sync.
     @Override
-    protected void managedSearch(Request request, ResponseCollection responses)
-        throws RemoteException {
+    protected void managedSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
         Map<String, Object> shared = responses.getTransient();
         DocIDCollector collectedIDs = assignShared(shared);
@@ -228,6 +229,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         indexLookup.lookup(request, responses);
         handleExposedDirect(request, responses);
 
+        // TODO: Construct a pseudo-query from query+filter+?
         String query = null;
         if (collectedIDs == null) {
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
@@ -260,46 +262,14 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
             constructFacetRequest(request, query);
 
-        CollectorPool collectorPool;
+        SimplePair<CollectorPool, TagCollector> pair;
         try {
-            if (!poolFactory.hasPool(searcher.getIndexReader(), facetRequest)) {
-                log.info("The CollectorPoolFactory has no structures for the given request. A new structure will be "
-                         + "generated, which can take several minutes. The request was " + facetRequest.getBuildKey()
-                         + " with groupKey '" + facetRequest.getGroupKey() + "'");
-            }
-            collectorPool = poolFactory.acquire(searcher.getIndexReader(), facetRequest);
+            pair = PoolFactoryGate.acquire(poolFactory, searcher.getIndexReader(), query, facetRequest, "facet");
         } catch (IOException e) {
-            throw new RuntimeException("Unable to acquire a CollectorPool for " + facetRequest, e);
+            throw new RemoteException("Unable to acquire TagCollector for " + facetRequest, e);
         }
-        TagCollector tagCollector;
-        try {
-            CollectorPool.AVAILABILITY availability = collectorPool.getAvailability(query);
-            switch (availability) {
-                case hasFresh:
-                    log.debug("Acquiring fresh tagCollector for '" + query + "'");
-                    break;
-                case hasFilled:
-                    log.debug("Acquiring filled tagCollector for '" + query + "'");
-                    break;
-                case mustCreateNew:
-                    log.info("A new TagCollector will be created for query '" + query + "' from " + collectorPool);
-                    break;
-                case mightCreateNew:
-                    log.info("A new TagCollector might be created for query '" + query + "'");
-                    break;
-                default:
-                    log.warn("Unknown availability state: " + availability);
-            }
-            tagCollector = collectorPool.acquire(query);
-        } catch (OutOfMemoryError e) {
-            Writer writer = new StringWriter(1000);
-            PrintWriter pw = new PrintWriter(writer);
-            e.printStackTrace(pw);
-            pw.flush();
-            throw new OutOfMemoryError(
-                "Encountered OOM when acquiring TagCollector for '" + query + "' from pool " + collectorPool
-                + " with full factory " + poolFactory + "\nCaused by: " + writer.toString());
-        }
+        CollectorPool collectorPool = pair.getKey();
+        TagCollector tagCollector = pair.getValue();
 
         long collectTime = -System.currentTimeMillis();
         FacetResponse facetResponse;
@@ -413,8 +383,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
                         request.getString(FacetKeys.SEARCH_FACET_FACETS) :
                         null;
-        dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest
-            oldFacetRequest = new FacetRequest(null, facets, structure);
+        dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest oldFacetRequest = new FacetRequest(
+                null, facets, structure);
         //ExposedRequest.
 
         List<FacetRequestGroup>

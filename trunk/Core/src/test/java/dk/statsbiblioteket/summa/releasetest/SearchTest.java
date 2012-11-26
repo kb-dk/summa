@@ -44,6 +44,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
@@ -58,6 +59,7 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.Collator;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -204,6 +206,55 @@ public class SearchTest extends NoExitTestCase {
         File[] luceneFiles = new File(INDEX).listFiles()[0].listFiles()[0].listFiles();
         assertTrue("The number of files in the Lucene index folder should exceed 20 but was " + luceneFiles.length,
                    luceneFiles.length > 20);
+    }
+
+    public void testConcurrent() throws Exception {
+        final int AMOUNT = 1000;
+        final int MAX_CONCURRENT = 10;
+        final int THREADS = 10;
+        final int HAMMER_RUNS = 20;
+        final Random random = new Random(87);
+        final String INDEX = INDEX_ROOT.toString();
+
+        createFagrefIndex(INDEX, AMOUNT);
+        Configuration conf = getSearcherConfiguration();
+        conf.set(LuceneSearchNode.CONF_NUMBER_OF_CONCURRENT_SEARCHES, MAX_CONCURRENT);
+        final SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+
+        ExecutorService executor = Executors.newFixedThreadPool(THREADS);
+        List<Future> tasks = new ArrayList<Future>(THREADS);
+        log.info("Starting " + THREADS + " search threads");
+        for (int t = 0 ; t < THREADS ; t++) {
+            FutureTask task = new FutureTask(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    for (int h = 0 ; h < HAMMER_RUNS ; h++) {
+                        ResponseCollection responses = searcher.search(new Request(
+                                DocumentKeys.SEARCH_QUERY, "*:*",
+                                DocumentKeys.SEARCH_COLLECT_DOCIDS, true
+                        ));
+                        assertTrue("There should be at least 1 response", responses.size() > 0);
+                        if (h < HAMMER_RUNS-1) {
+                            Thread.sleep(random.nextInt(10));
+                        }
+                    }
+                    return null;
+                }
+            });
+            tasks.add(task);
+            executor.submit(task);
+        }
+        log.info("Waiting for search threads to finish");
+        int counter = 0;
+        for (Future task: tasks) {
+            int concurrent = searcher.getConcurrentSearches();
+            log.debug("Waiting for task " + counter++ +". Concurrent searchers: " + concurrent);
+            task.get();
+        }
+        log.info("Finished with maximum concurrent searches " + searcher.getMaxConcurrent()
+                 + " with a theoretical max of " + MAX_CONCURRENT);
+        assertTrue("The maximum concurrent searchers should be > 1, but was " + searcher.getMaxConcurrent(),
+                   searcher.getMaxConcurrent() > 1);
     }
 
     public void testSearcherReload() throws Exception {
@@ -450,8 +501,7 @@ public class SearchTest extends NoExitTestCase {
         assertNotNull("The descriptor location should not be null", descriptorLocation);
 
         Configuration searcherConf = Configuration.load("integration/search/SearchTest_SearchConfiguration.xml");
-        assertNotNull("The configuration should not be empty",
-                      searcherConf);
+        assertNotNull("The configuration should not be empty", searcherConf);
         searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
