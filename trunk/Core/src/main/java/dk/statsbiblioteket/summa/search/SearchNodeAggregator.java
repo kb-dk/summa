@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.search;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ExecutionException;
 import java.rmi.RemoteException;
@@ -40,8 +42,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.QA_NEEDED,
         author = "te",
         comment = "JavaDoc needed.")
-public class SearchNodeAggregator extends ArrayList<SearchNode> implements
-                                                                    SearchNode {
+public class SearchNodeAggregator extends ArrayList<SearchNode> implements SearchNode {
     private static final long serialVersionUID = 8974858541L; 
     private static Log log = LogFactory.getLog(SearchNodeAggregator.class);
 
@@ -51,11 +52,13 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
      * </p><p>
      * Optional. default is true.
      */
-    public static final String CONF_SEQUENTIAL =
-                                           "summa.search.aggregator.sequential";
+    public static final String CONF_SEQUENTIAL = "summa.search.aggregator.sequential";
     public static final boolean DEFAULT_SEQUENTIAL = true;
 
     private boolean sequential = DEFAULT_SEQUENTIAL;
+
+    private static final int CONCURRENT = 20;
+    private ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT);
 
     public SearchNodeAggregator(Configuration conf) throws RemoteException {
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
@@ -69,9 +72,8 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
         addAll(nodes);
     }
 
-    public void search(final Request request,
-                       final ResponseCollection responses) throws
-                                                              RemoteException {
+    @Override
+    public void search(final Request request, final ResponseCollection responses) throws RemoteException {
         log.trace("Starting search");
         doTask(new Closure() {
             public void action(SearchNode node) throws RemoteException {
@@ -80,6 +82,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
         });
     }
 
+    @Override
     public void warmup(final String request) {
         if (log.isTraceEnabled()) {
             log.trace("Performing warmup with " + request);
@@ -95,6 +98,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
         }
     }
 
+    @Override
     public void open(final String location) throws RemoteException {
         log.debug(String.format("open(%s) called", location));
         doTask(new Closure() {
@@ -103,6 +107,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
             }
         });
     }
+    @Override
     public void close() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
@@ -113,20 +118,19 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
                 }
             });
         } catch (RemoteException e) {
-            log.error("Got a RemoteException during close. This should not "
-                      + "happen", e);
+            log.error("Got a RemoteException during close. This should not happen", e);
         }
     }
 
     /**
      * @return the minimum free slots for the underlying searchers.
      */
+    @Override
     public int getFreeSlots() {
         log.trace("Calculating free slots");
         int maxC = 0;
         for (SearchNode node: this) {
-            maxC = maxC == 0 ? node.getFreeSlots() :
-                   Math.min(maxC, node.getFreeSlots());
+            maxC = maxC == 0 ? node.getFreeSlots() : Math.min(maxC, node.getFreeSlots());
         }
         return maxC;
     }
@@ -144,13 +148,12 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
             }
         } else {
             log.trace("Creating and starting " + size() + " future tasks");
-            List<FutureTask<Object>> futures =
-                    new ArrayList<FutureTask<Object>>(size());
+            List<FutureTask<Object>> futures = new ArrayList<FutureTask<Object>>(size());
             for (SearchNode node: this) {
                 SearchNodeAsync aNode = new SearchNodeAsync(node);
                 closure.action(aNode);
                 FutureTask<Object> future = new FutureTask<Object>(aNode);
-                future.run();
+                executor.submit(future);
                 futures.add(future);
             }
             log.trace("Waiting for future tasks to finish");
@@ -159,18 +162,12 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
                 try {
                     future.get();
                 } catch (InterruptedException e) {
-                    throw new RemoteException("Interrupted while waiting for "
-                                              + "future task to finish", e);
+                    throw new RemoteException("Interrupted while waiting for future task to finish", e);
                 } catch (ExecutionException e) {
-                    throw new RemoteException("Interrupted while executing "
-                                              + "future tasks", e);
+                    throw new RemoteException("Interrupted while executing future tasks", e);
                 }
             }
         }
 
     }
 }
-
-
-
-
