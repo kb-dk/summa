@@ -109,7 +109,7 @@ public class CollectorPool {
       }
 
       if (!enforceLimits
-          || filled.size() + fresh.size() < maxFilled + maxFilled) {
+          || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
         activeCollectors++;
         // It would be great to have standardized logging available here
         // as creating a TagCollector is potentially a very costly process
@@ -137,8 +137,8 @@ public class CollectorPool {
   }
 
   /**
-   * Probes the caches and properties to determine what the result of a call to {@link #acquire(String)} will be at this
-   * point in time.
+   * Probes the caches and properties to determine what the result of a
+   * call to {@link #acquire(String)} will be at this point in time.
    * @param query the query for the collector. This might be null.
    * @return the expected result of a call til acquire.
    */
@@ -194,6 +194,16 @@ public class CollectorPool {
   }
 
   public synchronized String toString() {
+    return "CollectorPool(" + map.toString() + ", #fresh counters = "
+        + fresh.size() + ", #filled counters = " + filled.size()
+        + ", active counters = " + activeCollectors
+        + ", total cached counter size = " + getMem() / 1024 + " KB)";
+  }
+
+  /**
+   * @return approximate memory usage in bytes.
+   */
+  public long getMem() {
     long total = 0;
     for (Map.Entry<String, TagCollector> entry: filled.entrySet()) {
       total += entry.getValue().getMemoryUsage();
@@ -201,9 +211,6 @@ public class CollectorPool {
     for (TagCollector collector: fresh) {
       total += collector.getMemoryUsage();
     }
-    return "CollectorPool(" + map.toString() + ", #fresh counters = "
-        + fresh.size() + ", #filled counters = " + filled.size()
-        + ", active counters = " + activeCollectors
-        + ", total cached counter size = " + total / 1024 + " KB)";
+    return total;
   }
 }
