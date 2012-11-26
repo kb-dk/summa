@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                                           IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
+    private static Log queries = LogFactory.getLog("queries");
 
     /**
      * If a new search is requested and there is no free slots, the search
@@ -210,6 +211,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                 log.trace("Query performed in " + responseTime / 1000000.0 + " milliseconds");
                 queryCount.incrementAndGet();
                 totalResponseTime.addAndGet(responseTime);
+                if (queries.isDebugEnabled()) {
+                    queries.debug("Search finished in " + responseTime / 1000000.0 + "ms. Request was "
+                                  + request.toString(true));
+                }
                 return responses;
             } finally {
                 concurrentSearches.addAndGet(-1);
