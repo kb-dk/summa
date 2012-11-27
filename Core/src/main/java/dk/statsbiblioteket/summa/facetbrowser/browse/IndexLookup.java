@@ -54,7 +54,7 @@ import java.util.Map;
  * Utility class that performs IndexLookups on TagHandlers.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class IndexLookup {
     private static Log log = LogFactory.getLog(IndexLookup.class);
@@ -237,8 +237,7 @@ public class IndexLookup {
         fields.add(new ExposedRequest.Field(request.getField(), comparator));
         List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
         // TODO: Add reverse to request and here
-        ExposedRequest.Group eGroup = new ExposedRequest.Group(
-            request.getField(), fields, comparator);
+        ExposedRequest.Group eGroup = new ExposedRequest.Group(request.getField(), fields, comparator);
         NamedComparator.ORDER facetOrder = locale == null ? NamedComparator.ORDER.index : NamedComparator.ORDER.locale;
 
         // TODO: Add reverse to request and here

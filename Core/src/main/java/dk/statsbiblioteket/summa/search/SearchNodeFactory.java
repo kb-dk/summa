@@ -19,13 +19,12 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Constructs a tree of SearchNodes from properties. It is expected that
@@ -62,8 +61,7 @@ public class SearchNodeFactory {
      * @return a SearchNode based on the configuration.
      * @throws RemoteException if the SearchNode could not be created.
      */
-    public static SearchNode createSearchNode(Configuration conf) throws
-                                                               RemoteException {
+    public static SearchNode createSearchNode(Configuration conf) throws RemoteException {
         String searchNodeClassName;
         try {
             searchNodeClassName = conf.getString(CONF_NODE_CLASS);
@@ -110,8 +108,7 @@ public class SearchNodeFactory {
         try {
             sub = conf.getSubConfiguration(key);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new RemoteException(
-                    "Storage doesn't support sub configurations", e);
+            throw new RemoteException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new RemoteException(String.format(
                     "Could not extract the sub configuration '%s'", key), e);
@@ -134,40 +131,30 @@ public class SearchNodeFactory {
      * @see IndexDescriptor#copySetupToSubConfigurations
      */
     // TODO: Better JavaDoc
-    public static List<SearchNode> createSearchNodes(Configuration conf) throws
-                                                               RemoteException {
+    public static List<SearchNode> createSearchNodes(Configuration conf) throws RemoteException {
         List<Configuration> nodeConfs;
         try {
             nodeConfs = conf.getSubConfigurations(CONF_NODES);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new Configurable.ConfigurationException(
-                    "Storage doesn't support sub configurations", e);
+            throw new Configurable.ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new Configurable.ConfigurationException(String.format(
-                    "Could not extract a list of XProperties for SearchNodes "
-                    + "from configuration with key '%s'", CONF_NODES), e);
+                    "Could not extract a list of XProperties for SearchNodes from configuration with key '%s'",
+                    CONF_NODES), e);
         }
         IndexDescriptor.copySetupToSubConfigurations(conf, nodeConfs);
-        List<SearchNode> nodes =
-                new ArrayList<SearchNode>(nodeConfs.size());
+        List<SearchNode> nodes = new ArrayList<SearchNode>(nodeConfs.size());
         for (Configuration nodeConf: nodeConfs) {
             nodes.add(createSearchNode(nodeConf));
         }
         return nodes;
     }
 
-    private static SearchNode createSearchNode(String searchNodeClassName,
-                                               Configuration conf) {
+    private static SearchNode createSearchNode(String searchNodeClassName, Configuration conf) {
         log.trace("Getting SearchNode class '" + searchNodeClassName + "'");
-        Class<? extends SearchNode> searchNodeClass =
-                Configuration.getClass(CONF_NODE_CLASS, SearchNode.class, conf);
-        log.debug("Got SearchNode class " + searchNodeClass
-                  + ". Creating instance");
+        Class<? extends SearchNode> searchNodeClass = Configuration.getClass(CONF_NODE_CLASS, SearchNode.class, conf);
+        log.debug("Got SearchNode class " + searchNodeClass + ". Creating instance");
         return Configuration.create(searchNodeClass, conf);
     }
 
 }
-
-
-
-

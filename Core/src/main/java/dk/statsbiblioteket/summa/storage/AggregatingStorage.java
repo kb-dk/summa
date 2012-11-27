@@ -199,8 +199,7 @@ public class AggregatingStorage extends StorageBase {
                     continue;
                 }
 
-                if (newest.getModificationTime()
-                        < recBuffer[i].getModificationTime()) {
+                if (newest.getModificationTime() < recBuffer[i].getModificationTime()) {
                     newest = recBuffer[i];
                     newestOffset = i;
                 }
@@ -260,8 +259,7 @@ public class AggregatingStorage extends StorageBase {
          */
         private void initRecBuffer() throws IOException {
             if (recBuffer != null) {
-                log.error("Internal error. Double initialization of "
-                          + "recBuffer for MergingContext");
+                log.error("Internal error. Double initialization of recBuffer for MergingContext");
                 return;
             }
 
@@ -308,9 +306,8 @@ public class AggregatingStorage extends StorageBase {
          * @param lastAccess The last access time.
          * @throws IOException If error occur.
          */
-        public IteratorContext(ReadableStorage reader, String base, long mtime,
-                               QueryOptions opts, long lastAccess)
-                                                            throws IOException {
+        public IteratorContext(ReadableStorage reader, String base, long mtime, QueryOptions opts, long lastAccess)
+                throws IOException {
             this.reader = reader;
             this.base = base;
             this.mtime = mtime;
@@ -318,12 +315,10 @@ public class AggregatingStorage extends StorageBase {
             log = LogFactory.getLog(IteratorContext.class);
             this.lastAccess = lastAccess;
 
-            log.debug("IteratorContext class created with mtime '" + mtime
-                    + "', base '" + base + "'.");
+            log.debug("IteratorContext class created with mtime '" + mtime + "', base '" + base + "'.");
 
             if (reader != null) {
-                this.iterKey = reader.getRecordsModifiedAfter(mtime, base,
-                                                              opts);
+                this.iterKey = reader.getRecordsModifiedAfter(mtime, base, opts);
             }
         }
 
@@ -459,8 +454,7 @@ public class AggregatingStorage extends StorageBase {
                 log.debug("Joining IteratorContextReaper thread");
                 thread.join();
             } catch (InterruptedException e) {
-                log.warn("Interrupted while joining "
-                         + "IteratorContextReaper thread");
+                log.warn("Interrupted while joining IteratorContextReaper thread");
             }
 
             log.debug("Stopped");
@@ -567,7 +561,6 @@ public class AggregatingStorage extends StorageBase {
             log.trace("AggregatingStorage.getRecordsModifiedAfter(" + time + ", '" + base + "')");
         }
 
-        
         IteratorContext ctx;
         long now = System.currentTimeMillis();
 
@@ -600,9 +593,6 @@ public class AggregatingStorage extends StorageBase {
         return iterKey;
     }
 
-    
-    
- 
     /**
      * Return last modification time for a given base.
      * @param base The base in storage.

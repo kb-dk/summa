@@ -82,8 +82,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * </p><p>
      * Optional. Default is 1.
      */
-    public static final String CONF_INSTANCES =
-            "summa.muxfilter.filter.instances";
+    public static final String CONF_INSTANCES = "summa.muxfilter.filter.instances";
     public static final int DEFAULT_INSTANCES = 1;
 
     /**
@@ -92,8 +91,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * This property is optional. Default is 100.
      * @see MUXFilterFeeder#CONF_QUEUE_MAXPAYLOADS
      */
-    public static final String CONF_OUTQUEUE_MAXPAYLOADS =
-            "summa.muxfilter.outqueue.maxpayloads";
+    public static final String CONF_OUTQUEUE_MAXPAYLOADS = "summa.muxfilter.outqueue.maxpayloads";
     public static final int DEFAULT_OUTQUEUE_MAXPAYLOADS = 100;
 
     /**
@@ -101,8 +99,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * </p><p>
      * This property is optional. Default is 1 MB.
      */
-    public static final String CONF_OUTQUEUE_MAXBYTES =
-            "summa.muxfilter.outqueue.maxbytes";
+    public static final String CONF_OUTQUEUE_MAXBYTES = "summa.muxfilter.outqueue.maxbytes";
     public static final int DEFAULT_OUTQUEUE_MAXBYTES = 1024 * 1024;
 
     /**
@@ -129,10 +126,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
         outqueue = new PayloadQueue(
-                conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS,
-                            DEFAULT_OUTQUEUE_MAXPAYLOADS),
-                conf.getInt(CONF_OUTQUEUE_MAXBYTES,
-                            DEFAULT_OUTQUEUE_MAXBYTES));
+                conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS, DEFAULT_OUTQUEUE_MAXPAYLOADS),
+                conf.getInt(CONF_OUTQUEUE_MAXBYTES, DEFAULT_OUTQUEUE_MAXBYTES));
         if (!conf.valueExists(CONF_FILTERS)) {
             throw new Configurable.ConfigurationException(String.format(
                     "A value for the key %s must exist in the Configuration",
@@ -142,8 +137,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         try {
             filterConfs = conf.getSubConfigurations(CONF_FILTERS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
                     "Unable to extract Filter configurations from key %s",
@@ -151,9 +145,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         feeders = new ArrayList<MUXFilterFeeder>(filterConfs.size());
         for (Configuration filterConf: filterConfs) {
-            for (int i = 0 ;
-                 i < filterConf.getInt(CONF_INSTANCES, DEFAULT_INSTANCES) ;
-                 i++) {
+            for (int i = 0 ; i < filterConf.getInt(CONF_INSTANCES, DEFAULT_INSTANCES) ; i++) {
                 feeders.add(new MUXFilterFeeder(filterConf, outqueue));
             }
         }
@@ -297,15 +289,15 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         if (this.source == source) {
             log.warn(String.format(
-                    "The source %s is already assigned. No change is done and "
-                    + "no new Threads are started", source));
+                    "The source %s is already assigned. No change is done and no new Threads are started",
+                    source));
             return;
         }
         if (this.source != null) {
             log.error(String.format(
-                    "The source %s is already specified. A new thread will be"
-                    + " started for source %s, but correctness is not "
-                    + "guaranteed", this.source, source));
+                    "The source %s is already specified. A new thread will be started for source %s, but correctness "
+                    + "is not guaranteed",
+                    this.source, source));
         }
         this.source = (ObjectFilter)source;
         log.debug("Source " + source + " specified. Starting mux-thread for " + name);
@@ -430,4 +422,3 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }
 
 }
-

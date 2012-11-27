@@ -240,7 +240,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
-    private SortPool sortPool; // Toed to the descriptor
+    private SortPool sortPool; // Tied to the descriptor
     private Configuration conf;
     private boolean loadDescriptorFromIndex;
     private SummaQueryParser parser;
@@ -726,13 +726,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             Set<String> selector = new HashSet<String>(Arrays.asList(fields));
 
             if (request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)
-                    && (Arrays.binarySearch(
-                    fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {
+                    && (Arrays.binarySearch(fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {
                 log.debug("Turning on explain for '" + query + "'");
                 String[] newFields = new String[fields.length + 1];
                 System.arraycopy(fields, 0, newFields, 0, fields.length);
-                newFields[newFields.length - 1] =
-                        DocumentKeys.EXPLAIN_RESPONSE_FIELD;
+                newFields[newFields.length - 1] = DocumentKeys.EXPLAIN_RESPONSE_FIELD;
                 fields = newFields;
             }
 
@@ -742,12 +740,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             boolean sortWarned = false;
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;
-                 i < topDocs.scoreDocs.length && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)) ;
-                 i++) {
+                 i < topDocs.scoreDocs.length && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)) ; i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id
-                DocumentResponse.Record record =
-                        new DocumentResponse.Record(Integer.toString(scoreDoc.doc), "NA", scoreDoc.score, null);
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        Integer.toString(scoreDoc.doc), "NA", scoreDoc.score, null);
                 Document doc = searcher.getIndexReader().document(scoreDoc.doc, selector);
                 if (isMoreLikeThisSelfMatch(request, doc)) {
                     log.trace("Ignoring MoreLikeThis hit on source document");

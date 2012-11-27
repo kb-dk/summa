@@ -19,7 +19,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,15 +36,13 @@ public class SortPool {
     /**
      * Maintains cached structures and makes is cheap to construct new sorters.
      */
-    private Map<String, SortFactory> sortFactories =
-            new HashMap<String, SortFactory>(100);
+    private Map<String, SortFactory> sortFactories = new HashMap<String, SortFactory>(100);
 
     /**
      * Comparators does the heavy lifting when sorting. They are shared between
      * sortFactories.
      */
-    private Map<String, ReusableSortComparator> comparators =
-            new HashMap<String, ReusableSortComparator>(10);
+    private Map<String, ReusableSortComparator> comparators = new HashMap<String, ReusableSortComparator>(10);
 
     private boolean naturalOrder = false;
     private SortFactory.COMPARATOR comparatorImplementation;
@@ -60,17 +59,14 @@ public class SortPool {
      */
     public SortPool(SortFactory.COMPARATOR comparator, int buffer,
                     LuceneIndexDescriptor descriptor) {
-        log.debug("Creating lazy sort pool with comparator implementation "
-                  + comparator);
+        log.debug("Creating lazy sort pool with comparator implementation " + comparator);
         long startTime = System.currentTimeMillis();
         comparatorImplementation = comparator;
         bufferSize = buffer;
-        for (Map.Entry<String, LuceneIndexField> entry:
-                descriptor.getFields().entrySet()) {
+        for (Map.Entry<String, LuceneIndexField> entry: descriptor.getFields().entrySet()) {
                 updateField(entry.getValue());
         }
-        log.debug("Lazy sort pool finished creating in "
-                  + (System.currentTimeMillis() - startTime) + "ms");
+        log.debug("Lazy sort pool finished creating in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private void updateField(IndexField field) {
@@ -79,18 +75,14 @@ public class SortPool {
         }
         */
         if (!sortFactories.containsKey(field.getName())) {
-            log.debug("Adding sort locale '" + field.getSortLocale()
-                      + "' to Field '" + field.getName() + "'");
+            log.debug("Adding sort locale '" + field.getSortLocale() + "' to Field '" + field.getName() + "'");
             sortFactories.put(field.getName(), new SortFactory(
-                    comparatorImplementation,  bufferSize,
-                    field.getName(), field.getSortLocale(), comparators));
+                    comparatorImplementation,  bufferSize, field.getName(), field.getSortLocale(), comparators));
         } else {
             SortFactory oldFactory = sortFactories.get(field.getName());
             if (!oldFactory.getSortLanguage().equals(field.getSortLocale())) {
-                log.warn("New sort locale '" + field.getSortLocale()
-                         + "' overrides old sort locale '"
-                         + oldFactory.getSortLanguage()
-                         + "' for Field '" + field.getName() + "'");
+                log.warn("New sort locale '" + field.getSortLocale() + "' overrides old sort locale '"
+                         + oldFactory.getSortLanguage() + "' for Field '" + field.getName() + "'");
                 sortFactories.remove(field.getName());
                 updateField(field);
             }
@@ -106,27 +98,23 @@ public class SortPool {
      * @return a Lucene Sort, ready for use.
      */
     public Sort getSort(String field, boolean reverse) {
-        log.debug("getSort called for field '" + field
-                  + "', reverse " + reverse);
+        log.debug("getSort called for field '" + field + "', reverse " + reverse);
         // TODO: Remove the following 3 lines to enable caching
 //        if (field != null) {
 //            return new Sort(new SortField(field, new Locale("da"), reverse));
 //        }
         if (naturalOrder) {
-            log.warn("Returning sort in natural order. This effectively ignores"
-                     + " all localization on sort");
+            log.warn("Returning sort in natural order. This effectively ignores all localization on sort");
             return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
         if (!sortFactories.containsKey(field)) {
-            log.debug("No explicit sort specified for field '" + field
-                      + "'. Returning standard sort");
+            log.debug("No explicit sort specified for field '" + field + "'. Returning standard sort");
             return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
         try {
             return sortFactories.get(field).getSort(reverse);
         } catch (Exception e) {
-            log.warn("Could not get sorter for '" + field
-                     + "', Defaulting to standard sort, without caching", e);
+            log.warn("Could not get sorter for '" + field + "', Defaulting to standard sort, without caching", e);
             return new Sort(new SortField(field, SortField.Type.STRING, reverse));
         }
     }
@@ -154,4 +142,3 @@ public class SortPool {
         }
     }
 }
-

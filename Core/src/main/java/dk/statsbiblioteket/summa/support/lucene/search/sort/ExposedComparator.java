@@ -48,9 +48,8 @@ public class ExposedComparator extends ReusableSortComparator {
     public synchronized FieldComparator newComparator(
             String fieldname, int numHits, int sortPos, boolean reversed) throws IOException {
         if (reader == null) {
-            throw new IllegalStateException(
-                "No reader defined. indexChanged(newreader) must be called at "
-                + "least once before requesting a comparator");
+            throw new IllegalStateException("No reader defined. indexChanged(newreader) must be called at least once "
+                                            + "before requesting a comparator");
         }
         return exposedFCS.newComparator(fieldname, numHits, sortPos, reversed);
     }
