@@ -99,16 +99,10 @@ public class PoolFactoryGate {
                     log.warn("Unknown availability state: " + availability);
             }
             tagCollector = collectorPool.acquire(key);
-            if (availability == CollectorPool.AVAILABILITY.mustCreateNew) {
+            if (tagCollector.isNewborn()) {
                 log.info("Allocated " + tagCollector + " (availability was " + availability + "). "
                          + "CollectorPoolFactory memory allocation is now at least " + factory.getMem()/1048576 + "MB");
-                log.info("CollectorPoolFactory structure allocation is " + factory.toString());
-            } else if (availability == CollectorPool.AVAILABILITY.mightCreateNew) {
-                log.info("Potentially allocated " + tagCollector + " (availability was " + availability + "). "
-                         + "CollectorPoolFactory memory allocation is now at least " + factory.getMem()/1048576 + "MB");
-                if (log.isDebugEnabled()) {
-                    log.info("CollectorPoolFactory structure allocation is " + factory.toString());
-                }
+                log.debug("CollectorPoolFactory structure allocation is " + factory.toString());
             }
             return new SimplePair<CollectorPool, TagCollector>(collectorPool, tagCollector);
         } catch (OutOfMemoryError e) {
@@ -132,19 +126,19 @@ public class PoolFactoryGate {
      * @param key       the key identifying the collector content. null is valid.
      */
     public static void release(CollectorPool pool, TagCollector collector, String key) {
-        if (log.isDebugEnabled()) {
-            if (pool.releaseWillFree(key, collector)) {
+        boolean freed = pool.release(key, collector);
+        if (freed) {
+            long r = releaseCounter.incrementAndGet();
+            if (log.isDebugEnabled()) {
                 log.debug("The release of a TagCollector with size " + collector.getMemoryUsage()/1048576
-                          + "MB for query key '" + key + "' will probably result in the collector being freed. "
+                          + "MB for query key '" + key + "' resulted in the collector being freed. "
                           + "Consider increasing the limits for the CollectorPool " + pool.getKey());
             }
-        }
-        pool.release(key, collector);
-        long r = releaseCounter.incrementAndGet();
-        if (r % 100 == 0) {
-            log.info(r + " TagCollectors has been freed. Freeing TagCollectors means more GC activity on the heap. "
-                     + "Consider increasing the sizes of the CollectorPools to avoid this. "
-                     + "The pool for the last freed TagCollector was " + pool.getKey());
+            if (r % 100 == 0) {
+                log.info(r + " TagCollectors has been freed. Freeing TagCollectors means more GC activity on the heap. "
+                         + "Consider increasing the sizes of the CollectorPools to avoid this. "
+                         + "The pool for the last freed TagCollector was " + pool.getKey());
+            }
         }
     }
 }
