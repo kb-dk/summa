@@ -45,7 +45,8 @@ public class ExposedComparator extends ReusableSortComparator {
     }
 
     @Override
-    public FieldComparator newComparator(String fieldname, int numHits, int sortPos, boolean reversed) throws IOException {
+    public synchronized FieldComparator newComparator(
+            String fieldname, int numHits, int sortPos, boolean reversed) throws IOException {
         if (reader == null) {
             throw new IllegalStateException(
                 "No reader defined. indexChanged(newreader) must be called at "
@@ -55,7 +56,7 @@ public class ExposedComparator extends ReusableSortComparator {
     }
 
     @Override
-    public void indexChanged(IndexReader reader) {
+    public synchronized void indexChanged(IndexReader reader) {
         this.reader = reader;
         exposedFCS = new ExposedFieldComparatorSource(reader, comparator);
     }
