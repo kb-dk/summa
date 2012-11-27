@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Handles communication with the Exposed CollectorPoolFactory. Mainly used for logging and error handling.
@@ -123,6 +124,7 @@ public class PoolFactoryGate {
 
     }
 
+    private static AtomicLong releaseCounter = new AtomicLong(0);
     /**
      * Release a TagCollector after use.
      * @param pool      the pool for the collector.
@@ -130,11 +132,19 @@ public class PoolFactoryGate {
      * @param key       the key identifying the collector content. null is valid.
      */
     public static void release(CollectorPool pool, TagCollector collector, String key) {
-        if (pool.releaseWillFree(key, collector)) {
-            log.info("The release of a TagCollector with size " + collector.getMemoryUsage()/1048576
-                     + "MB for query key '" + key + "' will result in the collector being freed. "
-                     + "Consider increasing the limits for the CollectorPool " + pool.getKey());
+        if (log.isDebugEnabled()) {
+            if (pool.releaseWillFree(key, collector)) {
+                log.debug("The release of a TagCollector with size " + collector.getMemoryUsage()/1048576
+                          + "MB for query key '" + key + "' will probably result in the collector being freed. "
+                          + "Consider increasing the limits for the CollectorPool " + pool.getKey());
+            }
         }
         pool.release(key, collector);
+        long r = releaseCounter.incrementAndGet();
+        if (r % 100 == 0) {
+            log.info(r + " TagCollectors has been freed. Freeing TagCollectors means more GC activity on the heap. "
+                     + "Consider increasing the sizes of the CollectorPools to avoid this. "
+                     + "The pool for the last freed TagCollector was " + pool.getKey());
+        }
     }
 }
