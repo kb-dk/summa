@@ -129,7 +129,7 @@ public class PoolFactoryGate {
 
     }
 
-    private static AtomicLong releaseCounter = new AtomicLong(0);
+    private static AtomicLong freeCounter = new AtomicLong(0);
     /**
      * Release a TagCollector after use.
      * @param pool      the pool for the collector.
@@ -139,7 +139,7 @@ public class PoolFactoryGate {
     public static void release(CollectorPool pool, TagCollector collector, String key) {
         boolean freed = pool.release(key, collector);
         if (freed) {
-            long r = releaseCounter.incrementAndGet();
+            long r = freeCounter.incrementAndGet();
             if (log.isDebugEnabled()) {
                 log.debug("The release of a TagCollector with size " + collector.getMemoryUsage()/1048576
                           + "MB for query key '" + key + "' resulted in the collector being freed. "
@@ -150,6 +150,8 @@ public class PoolFactoryGate {
                          + "Consider increasing the sizes of the CollectorPools to avoid this. "
                          + "The pool for the last freed TagCollector was " + pool.getKey());
             }
+        } else {
+            log.debug("Releasing collector without freeing");
         }
     }
 }

@@ -22,7 +22,7 @@ import java.util.*;
  * It is highly recommended to acquire a pool, do processing inside a try and
  * release the pool in a finally-statement.
  */
-// TODO: Consider making a limit on the number of collectors to create
+// TODO: Consider introducing an allowance for extra allocations above pool size
 public class CollectorPool {
   public enum AVAILABILITY {
       hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
@@ -253,7 +253,7 @@ public class CollectorPool {
     return "CollectorPool(" + map.toString() + ", #fresh counters = "
         + fresh.size() + ", #filled counters = " + filled.size()
         + ", active counters = " + activeCollectors
-        + ", total lice counter size = " + getMem() / 1024 + " KB)";
+        + ", total counter size = " + getMem() / 1024 + " KB)";
   }
 
   /**
