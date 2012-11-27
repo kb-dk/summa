@@ -40,10 +40,8 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -692,6 +690,61 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
+
+    public void testFacetConcurrency() throws Exception {
+        final int MAX_CONCURRENT = 10;
+        final int THREADS = 10;
+        final int HAMMER_RUNS = 20;
+        final Random random = new Random(87);
+        final String STORAGE = "facetsearch_concurrent";
+
+//        ExposedSettings.debug = true;
+        Configuration conf = getSearcherConfiguration();
+        final SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
+        updateIndex(STORAGE);
+        searcher.checkIndex(); // Make double sure
+
+        ExecutorService executor = Executors.newFixedThreadPool(THREADS);
+        List<Future> tasks = new ArrayList<Future>(THREADS);
+        log.info("Starting " + THREADS + " search threads");
+        for (int t = 0 ; t < THREADS ; t++) {
+            FutureTask task = new FutureTask(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    for (int h = 0 ; h < HAMMER_RUNS ; h++) {
+                        verifyFacetResult(searcher, "Gurli");
+//                        SearchTest.verifySearch(searcher, "Gurli", 1);
+                        if (h < HAMMER_RUNS-1) {
+                            Thread.sleep(random.nextInt(10));
+                        }
+                    }
+                    return null;
+                }
+            });
+            tasks.add(task);
+            executor.submit(task);
+        }
+        log.info("Waiting for search threads to finish");
+        int counter = 0;
+        for (Future task: tasks) {
+            int concurrent = searcher.getConcurrentSearches();
+            log.debug("Waiting for task " + counter++ +". Concurrent searchers: " + concurrent);
+            task.get();
+        }
+        log.info("Finished with maximum concurrent searches " + searcher.getMaxConcurrent()
+                 + " with a theoretical max of " + MAX_CONCURRENT);
+        assertTrue("The maximum concurrent searchers should be > 1, but was " + searcher.getMaxConcurrent(),
+                   searcher.getMaxConcurrent() > 1);
+
+        log.debug("Sample output from large search: "
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
+        searcher.close();
+        storage.close();
+    }
+
 /*
     public void testFacetSearchExisting() throws Exception {
         File INDEX = new File("/home/te/tmp/sumfresh/sites/sb/index/sb/");
