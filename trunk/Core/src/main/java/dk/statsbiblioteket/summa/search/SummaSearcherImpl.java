@@ -19,8 +19,10 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
@@ -212,8 +214,16 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                 queryCount.incrementAndGet();
                 totalResponseTime.addAndGet(responseTime);
                 if (queries.isDebugEnabled()) {
-                    queries.debug("Search finished in " + responseTime / 1000000.0 + "ms. Request was "
-                                  + request.toString(true));
+                    String hits = "N/A";
+                    for (Response response: responses) {
+                        if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                            hits = Long.toString(((DocumentResponse)response).getHitCount());
+                        }
+                    }
+                    queries.debug("Search finished in " + responseTime / 1000000 + "ms with " + hits + " hits. "
+                                  + "Request was " + request.toString(true)
+                                  + " with Timing(" + responses.getTiming() + ")");
+
                 }
                 return responses;
             } finally {

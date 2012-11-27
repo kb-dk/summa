@@ -302,7 +302,7 @@ public class TagCollector extends Collector {
   }
 
   // Approximate
-  long getMemoryUsage() {
+  public long getMemoryUsage() {
     return tagCounts.length * 4;
   }
 }

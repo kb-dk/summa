@@ -100,6 +100,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     public static final String CONF_COLLECTOR_FRESH = "exposed.collectorpoolfactory.freshcollectors";
     public static final int DEFAULT_COLLECTOR_FRESH = 2;
 
+    // Really ugly as this is indirectly shared with IndexLookup
     private static CollectorPoolFactory poolFactory;
 
     private Structure structure = null;
@@ -284,7 +285,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         } catch (IOException e) {
             throw new RuntimeException("Unable to extract response from TagCollector", e);
         } finally {
-            collectorPool.release(query, tagCollector);
+            PoolFactoryGate.release(collectorPool, tagCollector, query);
         }
 
         Response fr = newResponseToOldResult(facetResponse, request);
