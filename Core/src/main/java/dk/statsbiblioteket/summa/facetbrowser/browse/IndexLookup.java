@@ -178,7 +178,7 @@ public class IndexLookup {
                 throw new RuntimeException("Unable to extract response from TagCollector", e);
             }
         } finally {
-            collectorPool.release(queryKey, tagCollector);
+            PoolFactoryGate.release(collectorPool, tagCollector, queryKey);
         }
 
         //System.out.println("Got response\n" + fResponse.toXML());

@@ -24,9 +24,11 @@ import java.util.*;
  */
 // TODO: Consider making a limit on the number of collectors to create
 public class CollectorPool {
-  public enum AVAILABILITY {hasFresh, hasFilled, mightCreateNew, mustCreateNew}
+  public enum AVAILABILITY {
+      hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
 
   private final FacetMap map;
+  private final String key;
 
   private final List<TagCollector> fresh;
   private final Map<String, TagCollector> filled;
@@ -56,13 +58,15 @@ public class CollectorPool {
    * When a TagCollector is released with a query, it is stored as filled. If
    * the cache for filled is full, the oldest entry is cleared and stored in
    * the fresh pool.
+   * @param key the unique id for the pool.
    * @param map the map to use the collectors with.
    * @param filledCollectors the maximum number of previously filled collectors.
    * @param freshCollectors the maximum number of fresh collectors.
    */
   public CollectorPool(
-      FacetMap map, int filledCollectors, int freshCollectors) {
+      String key, FacetMap map, int filledCollectors, int freshCollectors) {
     this.map = map;
+    this.key = key;
 
     this.maxFresh = freshCollectors;
     fresh = new ArrayList<TagCollector>();
@@ -78,6 +82,14 @@ public class CollectorPool {
         return false; // We handle the removal ourselves
       }
     };
+  }
+
+  /**
+   * @deprecated use {@link CollectorPool(String, FacetMap, int, int)}.
+   */
+  public CollectorPool(
+          FacetMap map, int filledCollectors, int freshCollectors) {
+    this("N/A", map, filledCollectors, freshCollectors);
   }
 
   /**
@@ -137,6 +149,12 @@ public class CollectorPool {
     return new TagCollector(map);
   }
 
+  private synchronized boolean isFurtherAllocationAllowed() {
+    return !enforceLimits
+           || activeCollectors + filled.size() + fresh.size() <
+              maxFilled + maxFresh;
+  }
+
   /**
    * Probes the caches and properties to determine what the result of a
    * call to {@link #acquire(String)} will be at this point in time.
@@ -153,9 +171,31 @@ public class CollectorPool {
       }
     }
     if (fresh.size() == 0) {
-      return AVAILABILITY.mustCreateNew;
+      // No fresh so there is either no free collectors allocated or
+      // they are in use
+      return isFurtherAllocationAllowed() ?
+             AVAILABILITY.mustCreateNew : AVAILABILITY.mustWait;
     }
-    return AVAILABILITY.mightCreateNew;
+    // Some fresh but uncleared so new ones will be created if allowed
+    return isFurtherAllocationAllowed() ?
+           AVAILABILITY.mightCreateNew : AVAILABILITY.mustWait;
+  }
+
+  /**
+   * Probes the caches to determine how a release of the given collector
+   * will affect them.
+   * @param query     the query to use as storage key. null is allowed.
+   * @param collector the collector to release.
+   * @return true if a release will result is a TagCollector being
+   *              freed.
+   */
+  public synchronized boolean releaseWillFree(
+          String query, TagCollector collector){
+      if (query != null) {
+          // If filled overflows, it will spill over in fresh
+          return filled.size() < maxFilled || fresh.size() < maxFresh;
+      }
+      return fresh.size() < maxFresh;
   }
 
   /**
@@ -219,7 +259,19 @@ public class CollectorPool {
     return enforceLimits;
   }
 
+  /**
+   * @param enforceLimits if true, the limits for TagCollector
+   *                      allocation will be obeyed.
+   */
   public void setEnforceLimits(boolean enforceLimits) {
     this.enforceLimits = enforceLimits;
+  }
+
+  /**
+   * @return the unique designation for this pool.
+   * Usable for HashMaps etc.
+   */
+  public String getKey() {
+    return key;
   }
 }

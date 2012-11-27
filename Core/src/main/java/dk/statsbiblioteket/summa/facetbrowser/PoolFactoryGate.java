@@ -84,6 +84,9 @@ public class PoolFactoryGate {
                 case hasFilled:
                     log.debug("Acquiring filled tagCollector for '" + key + "'");
                     break;
+                case mustWait:
+                    log.debug("All allowed TagCollectors are active for key '" + key + "' for " + caller);
+                    break;
                 case mustCreateNew:
                     log.info("A new TagCollector will be created for key '" + key + "' for " + caller
                              + " from " + collectorPool);
@@ -120,4 +123,18 @@ public class PoolFactoryGate {
 
     }
 
+    /**
+     * Release a TagCollector after use.
+     * @param pool      the pool for the collector.
+     * @param collector a used collector.
+     * @param key       the key identifying the collector content. null is valid.
+     */
+    public static void release(CollectorPool pool, TagCollector collector, String key) {
+        if (pool.releaseWillFree(key, collector)) {
+            log.info("The release of a TagCollector with size " + collector.getMemoryUsage()/1048576
+                     + "MB for query key '" + key + "' will result in the collector being freed. "
+                     + "Consider increasing the limits for the CollectorPool " + pool.getKey());
+        }
+        pool.release(key, collector);
+    }
 }
