@@ -193,9 +193,9 @@ public class CollectorPool {
           String query, TagCollector collector){
       if (query != null) {
           // If filled overflows, it will spill over in fresh
-          return filled.size() < maxFilled || fresh.size() < maxFresh;
+          return filled.size() >= maxFilled && fresh.size() >= maxFresh;
       }
-      return fresh.size() < maxFresh;
+      return fresh.size() >= maxFresh;
   }
 
   /**
