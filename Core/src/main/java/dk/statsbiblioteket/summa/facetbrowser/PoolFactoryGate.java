@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PoolFactoryGate {
     private static Log log = LogFactory.getLog(PoolFactoryGate.class);
 
+    private static AtomicLong allocateCounter = new AtomicLong(0);
     /**
      * Acquire a CollectorPool and TagCollector based on the given reader and request.
      * </p><p>
@@ -100,9 +101,19 @@ public class PoolFactoryGate {
             }
             tagCollector = collectorPool.acquire(key);
             if (tagCollector.isNewborn()) {
-                log.info("Allocated " + tagCollector + " (availability was " + availability + "). "
-                         + "CollectorPoolFactory memory allocation is now at least " + factory.getMem()/1048576 + "MB");
-                log.debug("CollectorPoolFactory structure allocation is " + factory.toString());
+                long a = allocateCounter.incrementAndGet();
+                if (a % 100 == 0 || log.isDebugEnabled()) {
+                    String message = "Allocated " + tagCollector + " #" + a
+                                     + "(availability was " + availability + "). "
+                                     + "CollectorPoolFactory memory allocation is now "
+                                     + factory.getMem()/1048576 + "MB";
+                    if (a % 100 == 0) {
+                        log.info(message);
+                    } else {
+                        log.debug(message);
+                    }
+                    log.debug("CollectorPoolFactory structure allocation is " + factory.toString());
+                }
             }
             return new SimplePair<CollectorPool, TagCollector>(collectorPool, tagCollector);
         } catch (OutOfMemoryError e) {
