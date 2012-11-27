@@ -30,7 +30,9 @@ public class TagCollector extends Collector {
   private final FacetMap map;
   private boolean clearRunning = false;
   private long hitCount = 0;
-// TODO: Rememver query for caching of results
+  private boolean newborn = true;
+
+// TODO: Remember query for caching of results
   public TagCollector(FacetMap map) {
     this.map = map;
     try {
@@ -65,6 +67,7 @@ public class TagCollector extends Collector {
   public void setNextReader(AtomicReaderContext context)
       throws IOException {
     docBase = context.docBase;
+    newborn = false;
   }
 
   @Override
@@ -90,6 +93,7 @@ public class TagCollector extends Collector {
       hitCount++;
       map.updateCounter(tagCounts, id);
     }
+    newborn = false;
     countTime = System.currentTimeMillis() - countTime;
   }
 
@@ -107,6 +111,7 @@ public class TagCollector extends Collector {
     for (int docID: docIDs) {
       map.updateCounter(tagCounts, docID);
     }
+    newborn = false;
     countTime = System.currentTimeMillis() - countTime;
   }
 
@@ -117,6 +122,7 @@ public class TagCollector extends Collector {
    */
   // TODO: Rewrite this to avoid allocation of the large bitset
   public void collectAllValid(IndexReader reader) throws IOException {
+    newborn = false;
     countTime = System.currentTimeMillis();
     OpenBitSet bits = new OpenBitSet(reader.maxDoc());
     if (reader instanceof AtomicReader) {
@@ -227,6 +233,7 @@ public class TagCollector extends Collector {
    * @throws IOException if the facet mapper could not deliver terms.
    */
   public FacetResponse extractResult(FacetRequest request) throws IOException {
+    newborn = false;
     if (map.getIndirectStarts().length-1 != request.getGroups().size()) {
       throw new IllegalStateException(
           "The number of term providers in the FacetMap was "
@@ -268,6 +275,7 @@ public class TagCollector extends Collector {
    * @param query the query used for the collector filling search.
    */
   public void setQuery(String query) {
+    newborn = false;
     this.query = query;
   }
 
@@ -276,10 +284,12 @@ public class TagCollector extends Collector {
    * by the user of this class with {@link #setQuery(String)}.
    */
   public String getQuery() {
+    newborn = false;
     return query;
   }
 
   public long getHitCount() {
+    newborn = false;
     return hitCount;
   }
 
@@ -299,10 +309,23 @@ public class TagCollector extends Collector {
    */
   public void setCountTime(long countTime) {
     this.countTime = countTime;
+    newborn = false;
   }
 
   // Approximate
   public long getMemoryUsage() {
     return tagCounts.length * 4;
   }
+
+  /**
+   * Note: Although the implementation tries its best to ensure the validity
+   * of this marker, the marker will not be updated in the method
+   * {@link #collect(int)} for performance reasons. All other relevant methods
+   * will update the marker to false.
+   * @return true if the object is freshly allocated.
+   */
+  public boolean isNewborn() {
+    return newborn;
+  }
+
 }

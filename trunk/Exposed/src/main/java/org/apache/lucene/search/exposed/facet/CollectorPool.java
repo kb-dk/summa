@@ -40,6 +40,7 @@ public class CollectorPool {
    * The number of delivered collectors that has not been returned yet.
    */
   private int activeCollectors = 0;
+  private long activeMem = 0;
 
   /**
    * Is true, maxfresh and maxFilled are guaranteed. If false, temporary
@@ -109,24 +110,30 @@ public class CollectorPool {
     int retries = 0;
     do {
       if (query != null && maxFilled != 0 && filled.containsKey(query)) {
+        TagCollector collector = filled.remove(query);
         activeCollectors++;
-        return filled.remove(query);
+        activeMem += collector.getMemoryUsage();
+        return collector;
       }
 
       for (int i = 0 ; i < fresh.size() ; i++) {
         if (!fresh.get(i).isClearRunning()) {
+          TagCollector collector = fresh.remove(i);
           activeCollectors++;
-          return fresh.remove(i);
+          activeMem += collector.getMemoryUsage();
+          return collector;
         }
       }
 
       if (!enforceLimits
           || activeCollectors + filled.size() + fresh.size() <
              maxFilled + maxFresh) {
-        activeCollectors++;
         // It would be great to have standardized logging available here
         // as creating a TagCollector is potentially a very costly process
-        return new TagCollector(map);
+        TagCollector collector = new TagCollector(map);
+        activeCollectors++;
+        activeMem += collector.getMemoryUsage();
+        return collector;
       }
 
       try {
@@ -208,19 +215,26 @@ public class CollectorPool {
    * @param query     the query used for filling this collector. If null, the
    *                  collector is always going to the fresh cache.
    * @param collector the collector to put back into the pool for later reuse.
+   * @return true if the release meant that the collector was freed (claimable
+   *         for the garbage collector). Freeing should be avoided. Too many
+   *         of those indicates that the pool size should be increased.
    */
-  public synchronized void release(String query, TagCollector collector) {
+  public synchronized boolean release(String query, TagCollector collector) {
+    boolean willFree = releaseWillFree(query, collector);
     if (maxFilled > 0 && query != null) {
       activeCollectors = Math.max(0, --activeCollectors);
+      activeMem -= collector.getMemoryUsage();
       collector.setQuery(query);
       filled.put(query, collector);
-      return;
+      return willFree;
     }
     releaseFresh(collector);
+    return willFree;
   }
 
   private synchronized void releaseFresh(TagCollector collector) {
     activeCollectors = Math.max(0, --activeCollectors);
+    activeMem -= collector.getMemoryUsage();
     if (fresh.size() >= maxFresh) {
       return;
     }
@@ -230,6 +244,7 @@ public class CollectorPool {
 
   public synchronized void clear() {
     activeCollectors = 0;
+    activeMem = 0; // Problematic as we might have running
     fresh.clear();
     filled.clear();
   }
@@ -238,7 +253,7 @@ public class CollectorPool {
     return "CollectorPool(" + map.toString() + ", #fresh counters = "
         + fresh.size() + ", #filled counters = " + filled.size()
         + ", active counters = " + activeCollectors
-        + ", total cached counter size = " + getMem() / 1024 + " KB)";
+        + ", total lice counter size = " + getMem() / 1024 + " KB)";
   }
 
   /**
@@ -252,6 +267,7 @@ public class CollectorPool {
     for (TagCollector collector: fresh) {
       total += collector.getMemoryUsage();
     }
+    total += activeMem;
     return total;
   }
 
