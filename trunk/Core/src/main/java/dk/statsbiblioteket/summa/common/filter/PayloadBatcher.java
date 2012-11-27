@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
  * Typically used to group requests to external resources.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public abstract class PayloadBatcher implements Configurable, Runnable {
     private static Log log = LogFactory.getLog(PayloadBatcher.class);

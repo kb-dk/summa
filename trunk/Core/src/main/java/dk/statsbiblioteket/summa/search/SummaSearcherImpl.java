@@ -52,8 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
-                                          IndexListener {
+public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
     private static Log queries = LogFactory.getLog("queries");
 
@@ -122,8 +121,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * is not defined the searcher will fall back to using a
      * {@link dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy}
      * @param conf the configuration for the searcher.
-     * @throws RemoteException if the underlying SearchNode could not be
-     *                         constructed.
+     * @throws RemoteException if the underlying SearchNode could not be constructed.
      */
     public SummaSearcherImpl(Configuration conf) throws RemoteException {
         log.info("Constructing SummaSearcherImpl");

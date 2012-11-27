@@ -4,18 +4,18 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
-
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.util.StateThread;
-import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Sets up a chain of ObjectFilters and pumps the last filter until no more data
@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
  * for that class for property requirements.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class FilterPump extends StateThread implements Configurable {
     /* We delay the creation of the log until we know the name of the chain. */
@@ -47,8 +47,7 @@ public class FilterPump extends StateThread implements Configurable {
     long streamBytesCounter = 0;
 
     public FilterPump(Configuration configuration) throws IOException {
-        classLog.trace ("Constructing FilterPump with config class "
-                        + configuration.getClass());
+        classLog.trace ("Constructing FilterPump with config class " + configuration.getClass());
         chainName = configuration.getString(Filter.CONF_FILTER_NAME, chainName);
         classLog.trace ("Creating chain log for chain: " + chainName);
         log = LogFactory.getLog(FilterPump.class.getName() + "#" + chainName);

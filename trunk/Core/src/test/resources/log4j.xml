@@ -31,6 +31,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.facetbrowser.PoolFactoryGate">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
     <logger name="dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />

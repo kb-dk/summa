@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * See {@link MachineStats} for setup parameters.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class MachineStatsFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(MachineStatsFilter.class);

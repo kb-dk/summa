@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Set;
-import java.util.List;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Helper class for {@link MUXFilter} that handles feeding of the right Payloads
@@ -49,8 +49,7 @@ public class MUXFilterFeeder implements Runnable {
      * </p><p>
      * This property is optional. Default is 1.
      */
-    public static final String CONF_QUEUE_MAXPAYLOADS =
-            "summa.muxfilter.feeder.queue.in.length";
+    public static final String CONF_QUEUE_MAXPAYLOADS = "summa.muxfilter.feeder.queue.in.length";
     public static final int DEFAULT_QUEUE_MAXPAYLOADS = 100;
 
     /**
@@ -58,23 +57,20 @@ public class MUXFilterFeeder implements Runnable {
      * </p><p>
      * This property is optional. Default is 1 MB.
      */
-    public static final String CONF_QUEUE_MAXBYTES =
-            "summa.muxfilter.feeder.queue.in.maxbytes";
+    public static final String CONF_QUEUE_MAXBYTES = "summa.muxfilter.feeder.queue.in.maxbytes";
     public static final int DEFAULT_QUEUE_MAXBYTES = 1024 * 1024;
 
     /*
      * @deprecated in favor of a shared outQueue.
      * @see {@link MUXFilter#CONF_OUTQUEUE_MAXPAYLOADS}.
      */
-    private static final String CONF_QUEUE_OUT_LENGTH =
-            "summa.muxfilter.feeder.queue.out.length";
+    private static final String CONF_QUEUE_OUT_LENGTH = "summa.muxfilter.feeder.queue.out.length";
 
     /*
      * @deprecated in favor of a shared outQueue.
      * @see {@link MUXFilter#CONF_OUTQUEUE_MAXBYTES}.
      */
-    private static final String CONF_QUEUE_OUT_MAXBYTES =
-            "summa.muxfilter.feeder.queue.out.maxbytes";
+    private static final String CONF_QUEUE_OUT_MAXBYTES = "summa.muxfilter.feeder.queue.out.maxbytes";
 
     /**
      * The Class name for a filter specified in {@link MUXFilter#CONF_FILTERS}.
@@ -83,15 +79,13 @@ public class MUXFilterFeeder implements Runnable {
      * </p><p>
      * This property is mandatory.
      */
-    public static final String CONF_FILTER_CLASS =
-            "summa.muxfilter.filter.class";
+    public static final String CONF_FILTER_CLASS = "summa.muxfilter.filter.class";
     /**
      * The name of the Filter. Used for feedback and debugging.
      * </p><p>
      * This property is optional. Default is "Unnamed Filter".
      */
-    public static final String CONF_FILTER_NAME =
-            "summa.muxfilter.filter.name";
+    public static final String CONF_FILTER_NAME = "summa.muxfilter.filter.name";
     public static final String DEFAULT_FILTER_NAME = "Unnamed MUXFilterFeeder";
     /**
      * If a Filter is marked as fallback, it should only be used if no other
@@ -103,8 +97,7 @@ public class MUXFilterFeeder implements Runnable {
      * </p><p>
      * This property is optional. Default is false.
      */
-    public static final String CONF_FILTER_ISFALLBACK =
-            "summa.muxfilter.filter.isfallback";
+    public static final String CONF_FILTER_ISFALLBACK = "summa.muxfilter.filter.isfallback";
     public static final boolean DEFAULT_FILTER_ISFALLBACK = false;
     /**
      * A list of the bases that the Filter accepts. This is either a plain list
@@ -113,13 +106,11 @@ public class MUXFilterFeeder implements Runnable {
      * </p><p>
      * This property is optional. Default is "*".
      */
-    public static final String CONF_FILTER_BASES =
-            "summa.muxfilter.filter.bases";
+    public static final String CONF_FILTER_BASES = "summa.muxfilter.filter.bases";
     public static final String DEFAULT_FILTER_BASES = "*";
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final Payload STOP =
-            new Payload(new Record("EOF", "Dummy", new byte[0]));
+    public static final Payload STOP = new Payload(new Record("EOF", "Dummy", new byte[0]));
 
 
     PayloadQueue out;
@@ -146,21 +137,18 @@ public class MUXFilterFeeder implements Runnable {
         if (conf.valueExists(CONF_QUEUE_OUT_LENGTH)) {
             log.warn(String.format(
                     "The configuration contained the deprecated key %s. "
-                    + "Use %s instead", CONF_QUEUE_OUT_LENGTH,
-                                        MUXFilter.CONF_OUTQUEUE_MAXPAYLOADS));
+                    + "Use %s instead", CONF_QUEUE_OUT_LENGTH, MUXFilter.CONF_OUTQUEUE_MAXPAYLOADS));
         }
         if (conf.valueExists(CONF_QUEUE_OUT_MAXBYTES)) {
             log.warn(String.format(
-                    "The configuration contained the deprecated key %s. "
-                    + "Use %s instead", CONF_QUEUE_OUT_MAXBYTES,
-                                        MUXFilter.CONF_OUTQUEUE_MAXBYTES));
+                    "The configuration contained the deprecated key %s. Use %s instead",
+                    CONF_QUEUE_OUT_MAXBYTES, MUXFilter.CONF_OUTQUEUE_MAXBYTES));
         }
         filter = createFilter(conf);
         filter.setSource(pusher);
         filterName = conf.getString(CONF_FILTER_NAME, filterName);
         isFallback = conf.getBoolean(CONF_FILTER_ISFALLBACK, isFallback);
-        List<String> baseList = conf.getStrings(CONF_FILTER_BASES,
-                                                (List<String>)null);
+        List<String> baseList = conf.getStrings(CONF_FILTER_BASES, (List<String>)null);
         if (baseList != null
             && !(baseList.size() == 1 && "*".equals(baseList.get(0)))) {
             bases = new HashSet<String>(baseList);
@@ -172,8 +160,7 @@ public class MUXFilterFeeder implements Runnable {
     private ObjectFilter createFilter(Configuration configuration) {
         Class<? extends ObjectFilter> filter = configuration.getClass(
                 CONF_FILTER_CLASS, ObjectFilter.class);
-        log.debug(String.format("Got filter class %s. Commencing creation",
-                                filter));
+        log.debug(String.format("Got filter class %s. Commencing creation", filter));
         return Configuration.create(filter, configuration);
     }
 
@@ -187,8 +174,7 @@ public class MUXFilterFeeder implements Runnable {
             log.trace("Queueing " + payload + " in " + this);
         }
         if (!accepts(payload)) {
-            throw new IllegalArgumentException(String.format(
-                    "%s does not accept %s", this, payload));
+            throw new IllegalArgumentException(String.format("%s does not accept %s", this, payload));
         }
         pusher.add(payload);
     }
@@ -211,8 +197,7 @@ public class MUXFilterFeeder implements Runnable {
             return true;
         }
         if (payload.getRecord() == null) {
-            log.warn("A Payload without base was received in accepts("
-                     + payload + ") in " + this);
+            log.warn("A Payload without base was received in accepts(" + payload + ") in " + this);
             return false;
         }
         return bases.contains(payload.getRecord().getBase());
@@ -259,33 +244,27 @@ public class MUXFilterFeeder implements Runnable {
                     }
                     if (next != null) {
                         try {
-                            log.trace("Offering payload to out queue in "
-                                      + this);
+                            log.trace("Offering payload to out queue in " + this);
                             out.put(next);
                             log.trace("outQueue accepted Payload");
                         } catch (InterruptedException e) {
-                            log.warn("Interrupted while trying to add "
-                                     + next + " to outQueue in " + this
+                            log.warn("Interrupted while trying to add " + next + " to outQueue in " + this
                                      + ". Retrying");
                         }
                     }
                 } catch (Exception e) {
                     log.warn(String.format(
-                            "Exception while calling next on filter '%s' in"
-                            + " %s. Sleeping a bit, then retrying",
+                            "Exception while calling next on filter '%s' in %s. Sleeping a bit, then retrying",
                             filter, this), e);
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ex) {
-                        log.warn("Interrupted while sleeping before next "
-                                 + "poll in " + this,
-                                 ex);
+                        log.warn("Interrupted while sleeping before next poll in " + this, ex);
                     }
                 }
             }
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Emptied " + filter + " after " + payloadCount
-                      + " Payloads");
+            log.debug("Emptied " + filter + " after " + payloadCount + " Payloads");
             eofReached = true;
             out.uninterruptablePut(STOP);
         } catch (Exception e) {

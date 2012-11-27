@@ -76,7 +76,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @see dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class FacetSearchNode extends SearchNodeImpl implements Browser {
     private static Logger log = Logger.getLogger(FacetSearchNode.class);
@@ -172,8 +172,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 urlLocation));
             return;
         }
-        log.info(String.format(
-            "Performing major initialization based on '%s'", urlLocation));
+        log.info(String.format("Performing major initialization based on '%s'",
+                               urlLocation));
         initStructures(newStructure);
         if (log.isDebugEnabled()) {
             log.debug(String.format(
