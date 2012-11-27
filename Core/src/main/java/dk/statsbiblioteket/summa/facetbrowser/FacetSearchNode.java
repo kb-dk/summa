@@ -230,7 +230,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         indexLookup.lookup(request, responses);
         handleExposedDirect(request, responses);
 
-        // TODO: Construct a pseudo-query from query+filter+?
+        // TODO: Construct a pseudo-query from query+filter+? Remember to remove setMaxFilled(0) when query is enabled
         String query = null;
         if (collectedIDs == null) {
             if (!request.containsKey(DocumentKeys.SEARCH_QUERY)) {
@@ -266,6 +266,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         SimplePair<CollectorPool, TagCollector> pair;
         try {
             pair = PoolFactoryGate.acquire(poolFactory, searcher.getIndexReader(), query, facetRequest, "facet");
+            pair.getKey().setMaxFilled(0);
         } catch (IOException e) {
             throw new RemoteException("Unable to acquire TagCollector for " + facetRequest, e);
         }

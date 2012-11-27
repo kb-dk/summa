@@ -33,8 +33,8 @@ public class CollectorPool {
   private final List<TagCollector> fresh;
   private final Map<String, TagCollector> filled;
 
-  private final int maxFresh;
-  private final int maxFilled;
+  private int maxFresh;
+  private int maxFilled;
 
   /**
    * The number of delivered collectors that has not been returned yet.
@@ -273,5 +273,23 @@ public class CollectorPool {
    */
   public String getKey() {
     return key;
+  }
+
+  public int getMaxFresh() {
+    return maxFresh;
+  }
+
+  public synchronized void setMaxFresh(int maxFresh) {
+    this.maxFresh = maxFresh;
+    fresh.clear();
+  }
+
+  public int getMaxFilled() {
+    return maxFilled;
+  }
+
+  public synchronized void setMaxFilled(int maxFilled) {
+    this.maxFilled = maxFilled;
+    filled.clear();
   }
 }
