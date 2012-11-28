@@ -116,6 +116,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
         int numHits, int sortPos, boolean reversed) throws IOException {
       this.groupName = groupName;
       this.fieldNames = fieldNames;
+      // TODO: Logging would be real nice here
       this.provider = ExposedCache.getInstance().getProvider(
           reader, groupName, fieldNames, comparator);
 

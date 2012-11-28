@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.FieldComparatorSource;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.FieldComparatorSource;
-import org.apache.log4j.Logger;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Lazy container with sorters for fields.
@@ -106,6 +106,7 @@ public class SortFactory {
             /* Already created, so just return */
             return reverse ? reverseSort : normalSort;
         }
+        log.info("Creating lazy sorters for field " + field + " with language " + sortLanguage);
         if (sortLanguage == null || "".equals(sortLanguage)) {
             /* No language, so just create default sorter */
             log.debug("No sort language. Creating non-localized sorts for field '" + field + "'");
@@ -144,6 +145,7 @@ public class SortFactory {
             throw new UnsupportedOperationException("Lucene trunk does not support search time locale based sorting");
             //return new SortField(field, new Locale(sortLanguage), reverse);
         }
+        log.debug("Creating lazy sortField for field " + field + " with language " + sortLanguage);
         return new SortField(field, getComparator(), reverse);
     }
 
