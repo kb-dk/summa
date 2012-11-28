@@ -715,7 +715,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             rawSearch = -System.currentTimeMillis();
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter, (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
-                    mlt_request || sortKey == null || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ?
+                    mlt_request || sortKey == null || "".equals(sortKey) || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ?
                     Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort), true, false);
             rawSearch += System.currentTimeMillis();
             if (log.isTraceEnabled()) {
