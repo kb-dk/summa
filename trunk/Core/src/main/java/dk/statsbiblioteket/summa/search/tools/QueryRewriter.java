@@ -365,7 +365,8 @@ public class QueryRewriter {
 
     private ReplaceReader escaper;
     {
-        String PROBLEMS = "!*\\'\"";
+        //String PROBLEMS = "!*\\'\"";
+        String PROBLEMS = "!*'\"";
         Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
         for (int i = 0 ; i < PROBLEMS.length() ; i++) {
             char problem = PROBLEMS.charAt(i);

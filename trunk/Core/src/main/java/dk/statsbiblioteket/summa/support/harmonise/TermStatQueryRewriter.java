@@ -29,8 +29,8 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -88,8 +88,7 @@ public class TermStatQueryRewriter implements Configurable {
      * @see {@link Target#SEARCH_WEIGHT}.
      */
     public static final String CONF_TERMSTATS_ENABLED = "queryrewriter.enabled";
-    public static final String SEARCH_TERMSTATS_ENABLED =
-        CONF_TERMSTATS_ENABLED;
+    public static final String SEARCH_TERMSTATS_ENABLED = CONF_TERMSTATS_ENABLED;
     public static final boolean DEFAULT_TERMSTATS_ENABLED = true;
 
     /**
@@ -98,8 +97,7 @@ public class TermStatQueryRewriter implements Configurable {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_LOWERCASE_QUERY =
-        "queryrewriter.lowercase.query";
+    public static final String CONF_LOWERCASE_QUERY = "queryrewriter.lowercase.query";
     public static final String SEARCH_LOWERCASE_QUERY = CONF_LOWERCASE_QUERY;
     public static final boolean DEFAULT_LOWERCASE_QUERY = true;
 
@@ -120,8 +118,7 @@ public class TermStatQueryRewriter implements Configurable {
                 targetConfs = conf.getSubConfigurations(CONF_TARGETS);
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException(
-                    "Unable to get sub configurations for key '"
-                    + CONF_TARGETS + "'", e);
+                    "Unable to get sub configurations for key '" + CONF_TARGETS + "'", e);
             }
             targets = new ArrayList<Target>(targetConfs.size());
             for (Configuration targetConf: targetConfs) {
@@ -131,10 +128,8 @@ public class TermStatQueryRewriter implements Configurable {
             log.warn("No targets specified. Rewriting will have zero effect");
             targets = new ArrayList<Target>(0);
         }
-        lowercase = conf.getBoolean(
-            CONF_LOWERCASE_QUERY, DEFAULT_LOWERCASE_QUERY);
-        log.info("Constructed query rewriter with " + targets.size()
-                 + " targets. Enabled: " + enabled);
+        lowercase = conf.getBoolean(CONF_LOWERCASE_QUERY, DEFAULT_LOWERCASE_QUERY);
+        log.info("Constructed query rewriter with " + targets.size() + " targets. Enabled: " + enabled);
     }
 
     private boolean noTargetsLog = false;
@@ -174,16 +169,14 @@ public class TermStatQueryRewriter implements Configurable {
         Map<String, String> result =
             new HashMap<String, String>(targets.size());
         for (Target target: targets) {
-            boolean doLowercase =
-                request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
+            boolean doLowercase = request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
             doLowercase = request.getBoolean(
                 target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
             try {
-                result.put(target.getID(),
-                           rewrite(request, target, query, doLowercase));
+                result.put(target.getID(), rewrite(request, target, query, doLowercase));
             } catch (ParseException e) {
-                log.info("ParseException while rewriting query '" + query
-                         + "' for target " + target + ": " + e.getMessage());
+                log.info("ParseException while rewriting query '" + query + "' for target " + target + ": "
+                         + e.getMessage());
                 return null;
             }
         }
@@ -226,21 +219,19 @@ public class TermStatQueryRewriter implements Configurable {
             return;
         }
 
-        boolean doLowercase =
-            request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
-        doLowercase = request.getBoolean(
-            target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
+        boolean doLowercase = request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
+        doLowercase = request.getBoolean(target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);
         String rewritten = query;
         try {
             rewritten = rewrite(request, target, query, doLowercase);
         } catch (Exception e) {
-            log.warn("The query '" + query + "' was not rewritten due to an "
-                     + "exception. Returning the unmodified query", e);
+            log.warn("The query '" + query + "' was not rewritten due to an exception. "
+                     + "Returning the unmodified query", e);
         }
         request.put(DocumentKeys.SEARCH_QUERY, rewritten);
         rewriteTime += System.currentTimeMillis();
-        log.debug("Finished rewriting target " + id + " '" + query + "' to '"
-                  + rewritten + "' in " + rewriteTime + " ms");
+        log.debug("Finished rewriting target " + id + " '" + query + "' to '" + rewritten
+                  + "' in " + rewriteTime + " ms");
     }
 
     private String rewrite(
@@ -261,31 +252,22 @@ public class TermStatQueryRewriter implements Configurable {
                     }
 
                     for (Target t : targets) {
-                        docFreq += t.getDF(request, term) *
-                                   t.getWeight(request);
+                        docFreq += t.getDF(request, term) * t.getWeight(request);
                         numDocs += t.getDocCount();
                     }
                     if (log.isTraceEnabled()) {
                         log.trace(String.format(
-                            "rewrite: target='%s', term='%s', df=%f, "
-                            + "docCount=%f",
+                            "rewrite: target='%s', term='%s', df=%f, docCount=%f",
                             target.getID(), term, docFreq, numDocs));
                     }
 
-                    double idealIDFSqr = Math.pow(Math.log(
-                        numDocs / (docFreq + 1)
-                    ) + 1.0, 2);
+                    double idealIDFSqr = Math.pow(Math.log(numDocs / (docFreq + 1)) + 1.0, 2);
                     double targetIDFSqr = Math.pow(Math.log(
-                        target.getDocCount() /
-                        (double) (target.getDF(request, term) + 1)
-                    ) + 1.0, 2);
+                            target.getDocCount() / (double) (target.getDF(request, term) + 1)) + 1.0, 2);
                     double boostFactor = idealIDFSqr / targetIDFSqr;
-                    float finalBoost = (float) Math.min(
-                        Float.MAX_VALUE, query.getBoost() * boostFactor);
+                    float finalBoost = (float) Math.min(Float.MAX_VALUE, query.getBoost() * boostFactor);
 
-
-                    if (finalBoost < 1.0d - ROUND_DELTA ||
-                        finalBoost > 1.0d + ROUND_DELTA) {
+                    if (finalBoost < 1.0d - ROUND_DELTA || finalBoost > 1.0d + ROUND_DELTA) {
                         query.setBoost(finalBoost);
                     }
                     return query;
@@ -339,8 +321,7 @@ public class TermStatQueryRewriter implements Configurable {
          * </p><p>
          * Optional. Default is 0.
          */
-        public static final String CONF_TERMSTAT_DF_INDEX =
-            "target.termstat.df.index";
+        public static final String CONF_TERMSTAT_DF_INDEX = "target.termstat.df.index";
         public static final int DEFAULT_TERMSTAT_DF_INDEX = 0;
 
         /**
@@ -348,8 +329,7 @@ public class TermStatQueryRewriter implements Configurable {
          * </p><p>
          * Optional. Default is {@code PERSISTENT_ROOT/termstats/id}.
          */
-        public static final String CONF_TERMSTAT_LOCATION =
-            "target.termstat.location";
+        public static final String CONF_TERMSTAT_LOCATION = "target.termstat.location";
 
         private final String id;
         private double weight = DEFAULT_WEIGHT;
@@ -362,8 +342,7 @@ public class TermStatQueryRewriter implements Configurable {
             id = conf.getString(CONF_ID);
             weight = conf.getDouble(CONF_WEIGHT, weight);
             fallbackDF = conf.getLong(CONF_FALLBACK_DF, fallbackDF);
-            dfIndex = conf.getInt(
-                CONF_TERMSTAT_DF_INDEX, DEFAULT_TERMSTAT_DF_INDEX);
+            dfIndex = conf.getInt(CONF_TERMSTAT_DF_INDEX, DEFAULT_TERMSTAT_DF_INDEX);
             termStats = new TermStat(conf);
             termstatLocation =
                 Resolver.getPersistentFile(
@@ -377,8 +356,7 @@ public class TermStatQueryRewriter implements Configurable {
                     "Unable to open term statistics from '" + termstatLocation
                     + "'. Make sure that valid term stat files are present", e);
             }
-            log.debug("Created target '" + id + "' with default weight " 
-                      + weight + " and term stats " + termStats);
+            log.debug("Created target '" + id + "' with default weight " + weight + " and term stats " + termStats);
         }
 
         public long getDF(Request request, final String term) {
@@ -386,13 +364,11 @@ public class TermStatQueryRewriter implements Configurable {
             if (log.isTraceEnabled()) {
                 if (termEntry == null) {
                     log.trace(
-                        "getDF(..., " + term + ") could not locate term entry. "
-                        + "Returning df "
+                        "getDF(..., " + term + ") could not locate term entry. Returning df "
                         + request.getLong(SEARCH_FALLBACK_DF, fallbackDF));
                 } else {
                     log.trace(
-                        "getDF(..., " + term + ") returning df "
-                        + termEntry.getStat(dfIndex));  
+                        "getDF(..., " + term + ") returning df " + termEntry.getStat(dfIndex));
                 }
             }
             return termEntry == null ?
@@ -403,11 +379,9 @@ public class TermStatQueryRewriter implements Configurable {
         public double getWeight(Request request) {
             if (log.isTraceEnabled()) {
                 if (request.containsKey(SEARCH_WEIGHT)) {
-                    log.trace("getWeight returns search-time weight "
-                              + request.getDouble(SEARCH_WEIGHT));
+                    log.trace("getWeight returns search-time weight " + request.getDouble(SEARCH_WEIGHT));
                 } else {
-                    log.trace("getWeight returning static defined weight "
-                              + weight);
+                    log.trace("getWeight returning static defined weight " + weight);
                 }
             }
             return request.getDouble(id + "." + SEARCH_WEIGHT, weight);
@@ -421,5 +395,4 @@ public class TermStatQueryRewriter implements Configurable {
             return id;
         }
     }
-
 }
