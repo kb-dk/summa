@@ -106,14 +106,13 @@ public class SortFactory {
             /* Already created, so just return */
             return reverse ? reverseSort : normalSort;
         }
-        log.info("Creating lazy sorters for field " + field + " with language " + sortLanguage);
         if (sortLanguage == null || "".equals(sortLanguage)) {
             /* No language, so just create default sorter */
-            log.debug("No sort language. Creating non-localized sorts for field '" + field + "'");
+            log.info("No sort language. Creating non-localized sorts for field '" + field + "'");
             return makeDefaultSorters(reverse);
         }
         try {
-            log.debug(String.format("Creating sorters for field '%s' with language '%s'", field, sortLanguage));
+            log.info(String.format("Creating lazy sorters for field '%s' with language '%s'", field, sortLanguage));
             normalSort = new Sort(getSortField(false));
             reverseSort = new Sort(getSortField(true));
         } catch (Exception e) {
