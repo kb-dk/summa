@@ -217,7 +217,8 @@ public class GroupTermProvider extends TermProviderImpl {
   }
 
     @Override
-    public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
+  public synchronized PackedInts.Reader getOrderedOrdinals(
+        OrderedDecorator decorator) throws IOException {
       if (order != null) {
         if (decorator != null) {
           for (int indirect = 0 ; indirect < order.size() ; indirect++) {
@@ -233,7 +234,8 @@ public class GroupTermProvider extends TermProviderImpl {
       return newOrder;
     }
 
-    private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator) throws IOException {
+    private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator)
+            throws IOException {
 //    System.out.println("FacetGroup sorting ordinals from " + providers.size()
 //        + " providers");
     int maxTermCount = (int)termOrdinalStarts[termOrdinalStarts.length-1];

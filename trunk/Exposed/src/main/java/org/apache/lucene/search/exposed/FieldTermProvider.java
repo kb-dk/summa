@@ -137,6 +137,7 @@ public class FieldTermProvider extends TermProviderImpl {
         lastOrdinalRequest++;
       }
       lastOrdinalRequest = ordinal;
+      // TODO: Switch to provided BytesRef instead
       return copy(term);
     }
 
@@ -220,7 +221,7 @@ public class FieldTermProvider extends TermProviderImpl {
   }
 
   @Override
-  public PackedInts.Reader getOrderedOrdinals() throws IOException {
+  public synchronized PackedInts.Reader getOrderedOrdinals() throws IOException {
     if (termsEnum == null) {
       return ExposedSettings.getMutable(0, 1);
     }
