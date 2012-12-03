@@ -1,8 +1,8 @@
 Index: module-build.xml
 ===================================================================
---- module-build.xml	(revision 1392277)
+--- module-build.xml	(revision 1416551)
 +++ module-build.xml	(working copy)
-@@ -178,6 +178,28 @@
+@@ -201,6 +201,28 @@
      <property name="facet-javadocs.uptodate" value="true"/>
    </target>
   
