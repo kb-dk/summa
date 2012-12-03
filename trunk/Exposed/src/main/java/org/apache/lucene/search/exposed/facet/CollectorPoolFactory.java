@@ -153,9 +153,14 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     if (ExposedSettings.debug) {
       System.out.println("CollectorPoolFactory.purge(" + r + ") called");
     }
-    if (readers.remove(r) && ExposedSettings.debug) {
+/*    if (readers.remove(r) && ExposedSettings.debug) {
         System.out.println("Located and released reader " + r);
-    }
+    } else if (ExposedSettings.debug) {
+        StringBuilder sb = new StringBuilder();
+        for (IndexReader reader: readers)
+        System.err.println("Unable to locate reader " + r
+        + " in the known readers pool. The pool contained ");
+    }*/
     // TODO: Make a selective clear
     clear();
   }
