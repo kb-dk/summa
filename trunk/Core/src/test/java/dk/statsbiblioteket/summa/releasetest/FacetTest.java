@@ -36,6 +36,8 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.exposed.ExposedSettings;
+import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -626,6 +628,60 @@ public class FacetTest extends NoExitTestCase {
         searcher.close();
         storage.close();
     }
+
+    public void testIndexUpdate() throws Exception {
+        final String STORAGE = "indexupdate_storage";
+        ExposedSettings.debug = true;
+
+        Storage storage = ReleaseHelper.startStorage(STORAGE);
+
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_hj);
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+        log.info("Initial index build");
+        updateIndex(STORAGE);
+
+        log.info("Initial index open");
+        SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
+        assertEquals("There should be 0 heap used by cached facet structures before initial search",
+                     0, CollectorPoolFactory.getLastFactory().getMem());
+        log.info("Initial search");
+        SearchTest.verifySearch(searcher, "Hans", 1);
+        assertTrue("There should be > 0 heap used by cached facet structures after first search",
+                   CollectorPoolFactory.getLastFactory().getMem() > 0);
+
+        SearchTest.ingestFagref(STORAGE, SearchTest.fagref_jh_gm);
+        assertEquals("The Records-count should be correct after second ingest",
+                     3, countRecords(storage, "fagref"));
+        log.info("Index update");
+        updateIndex(STORAGE);
+
+        Thread.sleep(5000); // Index discovery is done each second, so we wait 5 to be reasonably sure is is reopened
+        assertEquals("There should be 0 heap used by cached facet structures after index reopen",
+                     0, CollectorPoolFactory.getLastFactory().getMem());
+        log.info("Second search (index should have been re-opened)");
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        assertTrue("There should be > 0 heap used by cached facet structures after second search",
+                   CollectorPoolFactory.getLastFactory().getMem() > 0);
+
+        searcher.close();
+        storage.close();
+    }
+
+/*    private int countFacetCaches(SummaSearcherImpl searcher) {
+        CollectorPoolFactory.getLastFactory().
+        SearchNode inner = searcher.getSearchNode();
+        if (!(inner instanceof SearchNodeAggregator)) {
+            throw new IllegalStateException(
+                    "Expected the inner SearchNode to be a SearchNodeAggregator, but found " + inner.getClass());
+        }
+        SearchNodeAggregator aggregator = (SearchNodeAggregator)inner;
+        for (SearchNode node: aggregator) {
+            if (node instanceof FacetSearchNode) {
+
+            }
+        }
+    }    */
 
     private int countRecords(Storage storage, String base) throws IOException {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
