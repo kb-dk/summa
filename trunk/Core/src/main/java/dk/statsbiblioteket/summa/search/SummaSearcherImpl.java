@@ -233,14 +233,14 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                     ((DocIDCollector)o).close();
                 }
             }
-            if (queries.isDebugEnabled()) {
+            if (queries.isInfoEnabled()) {
                 String hits = "N/A";
                 for (Response response: responses) {
                     if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
                         hits = Long.toString(((DocumentResponse)response).getHitCount());
                     }
                 }
-                queries.debug("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                               + " in " + responseTime / 1000000 + "ms with " + hits + " hits. "
                               + "Request was " + request.toString(true)
                               + " with Timing(" + responses.getTiming() + ")");
