@@ -466,7 +466,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         if (mlt_stopWords != null) {
             moreLikeThis.setStopWords(mlt_stopWords);
         }
-        if (descriptor.getMoreLikethisFields().size() == 0) {
+        if (descriptor.getMoreLikethisFields().isEmpty()) {
             log.warn("No MoreLikethis-fields defined in LuceneIndexDescriptor. "
                      + "MoreLikethis probably won't return any results");
         } else {
@@ -483,7 +483,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             try {
                 log.debug("Closing down Searcher " + searcher.getIndexReader());
                 searcher.getIndexReader().close();
-                //log.info("Successfully closed down IndexReader " + searcher.getIndexReader(););
+                log.info("Successfully closed down IndexReader " + searcher.getIndexReader());
             } catch (IOException e) {
                 log.warn(String.format(
                         "Could not close index-connection to '%s'. This will probably result in a resource-leak",
