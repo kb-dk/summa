@@ -68,7 +68,12 @@ public class DeferredSystemExit implements Runnable {
             // Abort the System.exit. Someone probably called abortExit()
             return;
         }
-        System.exit (exitCode);
+        try {
+            System.exit (exitCode);
+        } catch (SecurityException e) {
+            System.err.println("Enable to perform a system.exit(" + exitCode + ") as the SecurityManager did not "
+                               + "permit this operation. This JVM instance might not terminate by itself");
+        }
     }
 
     /**
