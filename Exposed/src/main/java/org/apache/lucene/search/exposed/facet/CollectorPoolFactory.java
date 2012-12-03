@@ -135,6 +135,9 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     return pool;
   }
 
+  // TODO: clear() must wait until all pending TagHandlers has been returned
+  // Alternatively, TagHandlers could have a marker to verify if they are to
+  // be deprecated when returned
   public synchronized void clear() {
     poolMap.clear();
     readers.clear();
