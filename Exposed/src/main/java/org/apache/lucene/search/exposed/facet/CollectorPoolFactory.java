@@ -35,6 +35,11 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
    */
   private final int freshCollectors;
 
+  /**
+   * This is a really ugly sorta-Singleton.
+   * </p><p>
+   * TODO: Either make this a pure Singleton or let the calling code handle CollectorPoolFactory sharing
+   */
   private static CollectorPoolFactory lastFactory = null;
 
   /**
@@ -132,10 +137,11 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
 
   public synchronized void clear() {
     poolMap.clear();
+    readers.clear();
   }
 
   @Override
-  public void purgeAllCaches() {
+  public synchronized void purgeAllCaches() {
     if (ExposedSettings.debug) {
       System.out.println("CollectorPoolFactory.purgeAllCaches() called");
     }
@@ -143,9 +149,12 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
   }
 
   @Override
-  public void purge(IndexReader r) {
+  public synchronized void purge(IndexReader r) {
     if (ExposedSettings.debug) {
       System.out.println("CollectorPoolFactory.purge(" + r + ") called");
+    }
+    if (readers.remove(r) && ExposedSettings.debug) {
+        System.out.println("Located and released reader " + r);
     }
     // TODO: Make a selective clear
     clear();

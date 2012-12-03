@@ -481,7 +481,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         log.trace("close called");
         if (searcher != null) {
             try {
+                log.debug("Closing down Searcher " + searcher.getIndexReader());
                 searcher.getIndexReader().close();
+                log.info("Successfully closed down IndexReader " + searcher.getIndexReader(););
             } catch (IOException e) {
                 log.warn(String.format(
                         "Could not close index-connection to '%s'. This will probably result in a resource-leak",

@@ -174,6 +174,8 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         } catch (InterruptedException e) {
             throw new RemoteException("Interrupted while waiting for search queue access", e);
         }
+        long responseTime = -1;
+        boolean success = false;
         ResponseCollection responses = new ResponseCollection();
         try {
             try {
@@ -205,24 +207,13 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                 }
                 log.debug("Concurrent searches: " + concurrent);
                 searchNode.search(request, responses);
-                long responseTime = System.nanoTime() - fullStartTime;
+                responseTime = System.nanoTime() - fullStartTime;
                 lastResponseTime = responseTime;
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Query performed in " + responseTime / 1000000.0 + " milliseconds");
                 queryCount.incrementAndGet();
                 totalResponseTime.addAndGet(responseTime);
-                if (queries.isDebugEnabled()) {
-                    String hits = "N/A";
-                    for (Response response: responses) {
-                        if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
-                            hits = Long.toString(((DocumentResponse)response).getHitCount());
-                        }
-                    }
-                    queries.debug("Search finished in " + responseTime / 1000000 + "ms with " + hits + " hits. "
-                                  + "Request was " + request.toString(true)
-                                  + " with Timing(" + responses.getTiming() + ")");
-
-                }
+                success = true;
                 return responses;
             } finally {
                 concurrentSearches.addAndGet(-1);
@@ -241,6 +232,18 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                 if (o instanceof DocIDCollector) {
                     ((DocIDCollector)o).close();
                 }
+            }
+            if (queries.isDebugEnabled()) {
+                String hits = "N/A";
+                for (Response response: responses) {
+                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+                    }
+                }
+                queries.debug("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + responseTime / 1000000 + "ms with " + hits + " hits. "
+                              + "Request was " + request.toString(true)
+                              + " with Timing(" + responses.getTiming() + ")");
             }
         }
     }
@@ -470,5 +473,12 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      */
     public int getMaxConcurrent() {
         return maxConcurrent;
+    }
+
+    /**
+     * @return the inner SearchNode.
+     */
+    public SearchNode getSearchNode() {
+        return searchNode;
     }
 }
