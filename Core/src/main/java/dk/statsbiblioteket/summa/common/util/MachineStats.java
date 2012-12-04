@@ -41,8 +41,7 @@ public class MachineStats implements Runnable {
      * </p><p>
      * Optional. Default is 0 (disabled);
      */
-    public static final String CONF_LOG_INTERVAL_PINGS =
-            "summa.machinestats.log.interval.pings";
+    public static final String CONF_LOG_INTERVAL_PINGS = "summa.machinestats.log.interval.pings";
     public static final int DEFAULT_LOG_INTERVAL_PINGS = 0;
 
     /**
@@ -53,8 +52,7 @@ public class MachineStats implements Runnable {
      * </p><p>
      * Optional. Default is 60000; // 1 minute
      */
-    public static final String CONF_LOG_INTERVAL_MS =
-            "summa.machinestats.log.interval.ms";
+    public static final String CONF_LOG_INTERVAL_MS = "summa.machinestats.log.interval.ms";
     public static final int DEFAULT_LOG_INTERVAL_MS = 60 * 1000;
 
     /**
@@ -64,8 +62,7 @@ public class MachineStats implements Runnable {
      * </p><p>
      * Optional. Default is false;
      */
-    public static final String CONF_GC_BEFORE_LOG =
-            "summa.machinestats.gc.before-log";
+    public static final String CONF_GC_BEFORE_LOG = "summa.machinestats.gc.before-log";
     public static final boolean DEFAULT_GC_BEFORE_LOG = false;
 
     /**
@@ -75,8 +72,7 @@ public class MachineStats implements Runnable {
      * </p><p>
      * Optional. Default is 5 ms.
      */
-    public static final String CONF_GC_SLEEP_MS =
-            "summa.machinestats.gc.sleep-ms";
+    public static final String CONF_GC_SLEEP_MS = "summa.machinestats.gc.sleep-ms";
     public static final int DEFAULT_GC_SLEEP_MS = 5;
 
     /**
@@ -85,8 +81,7 @@ public class MachineStats implements Runnable {
      * </p><p>
      * Optional. Default is "Anonymous".
      */
-    public static final String CONF_DESIGNATION =
-            "summa.machinestats.designation";
+    public static final String CONF_DESIGNATION = "summa.machinestats.designation";
     public static final String DEFAULT_DESIGNATION = "Anonymous";
 
     private int logIntervalPings = DEFAULT_LOG_INTERVAL_PINGS;
@@ -107,21 +102,18 @@ public class MachineStats implements Runnable {
     }
 
     public MachineStats(Configuration conf, String designation) {
-        logIntervalPings = conf.getInt(
-                CONF_LOG_INTERVAL_PINGS, logIntervalPings);
+        logIntervalPings = conf.getInt(CONF_LOG_INTERVAL_PINGS, logIntervalPings);
         logIntervalMS = conf.getInt(CONF_LOG_INTERVAL_MS, logIntervalMS);
         gcBeforeLog = conf.getBoolean(CONF_GC_BEFORE_LOG, gcBeforeLog);
         gcSleepMS = conf.getInt(CONF_GC_SLEEP_MS, gcSleepMS);
         this.designation = designation;
         log.debug(String.format(
-                "Constructed MachineStatsFilter(logIntervalPings=%d, "
-                + "logIntervalMS=%d, gcBeforeLog=%b, gcSleepMS=%d, "
+                "Constructed MachineStatsFilter(logIntervalPings=%d, logIntervalMS=%d, gcBeforeLog=%b, gcSleepMS=%d, "
                 + "designation='%s')",
                 logIntervalPings, logIntervalMS, gcBeforeLog, gcSleepMS,
                 designation));
         if (logIntervalPings == 0 && logIntervalMS == 0) {
-            log.info("Both logIntervalPings and logIntervalMS are 0. "
-                     + "No logging will be performed");
+            log.info("Both logIntervalPings and logIntervalMS are 0. No logging will be performed");
             watcher = null;
             return;
         }
@@ -189,34 +181,28 @@ public class MachineStats implements Runnable {
                 }
             }
         }
-        Runtime r = Runtime.getRuntime();
         log.debug(String.format(locale,
-            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, "
-            + "Allocated memory: %s, Allocated unused memory: %s, "
-            + "Heap memory used: %s, Max memory: %s, "
-            + "Threads: %d, Load average: %s",
-            designation,
-            receivedPings, profiler.getSpendTime(), profiler.getBps(true),
-            reduce(r.totalMemory()),
-            reduce(r.freeMemory()),
-            reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
-                    getUsed()),
-            reduce(r.maxMemory()),
-            ManagementFactory.getThreadMXBean().getThreadCount(),
-            ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage()
-            ));
+            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, %s",
+            designation, receivedPings, profiler.getSpendTime(), profiler.getBps(true), stats()));
         lastLogCount = receivedPings;
         lastLogTime = System.currentTimeMillis();
     }
 
-    private String reduce(long bytes) {
+    public static String stats() {
+        Runtime r = Runtime.getRuntime();
+        return String.format(locale, "Allocated memory: %s, Allocated unused memory: %s, "
+                                     + "Heap memory used: %s, Max memory: %s, "
+                                     + "Threads: %d, "
+                                     + "Load average: %s",
+            reduce(r.totalMemory()), reduce(r.freeMemory()),
+            reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed()), reduce(r.maxMemory()),
+            ManagementFactory.getThreadMXBean().getThreadCount(),
+            ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage()
+            );
+    }
+
+    private static String reduce(long bytes) {
         return bytes / 1048576 + "MB";
-/*        if (bytes > 1048576) {
-            return bytes / 1048576 + "MB";
-        } else if (bytes > 1024) {
-            return bytes / 1024 + "KB";
-        }
-        return bytes + "bytes";*/
     }
 
     public void close() {
