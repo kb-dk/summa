@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -70,7 +71,8 @@ public class PoolFactoryGate {
             buildTime += System.currentTimeMillis();
             if (!hasPool) {
                 log.info("The PoolFactory was successfully updated in " + buildTime/1000 + " seconds. "
-                         + "Total allocation is " + factory.toString());
+                         + "Total allocation is " + factory.toString()
+                         + " with MachineStats(" + MachineStats.stats() + ")");
             }
         } catch (IOException e) {
             throw new RuntimeException("Unable to acquire a CollectorPool for " + request, e);
@@ -106,7 +108,7 @@ public class PoolFactoryGate {
                     String message = "Allocated " + tagCollector + " #" + a
                                      + "(availability was " + availability + "). "
                                      + "CollectorPoolFactory memory allocation is now "
-                                     + factory.getMem()/1048576 + "MB";
+                                     + factory.getMem()/1048576 + "MB with MachineStats(" + MachineStats.stats() + ")";
                     if (a % 100 == 0) {
                         log.info(message);
                     } else {
