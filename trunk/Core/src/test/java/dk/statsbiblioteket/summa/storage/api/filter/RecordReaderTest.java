@@ -22,22 +22,17 @@ import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Pattern;
-
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -216,35 +211,52 @@ public class RecordReaderTest extends TestCase {
             Record orig3 = new Record("test3", "base", "Hello".getBytes());
 
             sto.flushAll(Arrays.asList(orig1, orig2));
-            {
-                RecordReader reader = new RecordReader(readerConf);
-                waitForHasNext(reader, timeout);
-                Payload p = reader.next();
-                Record rec = p.getRecord();
-                assertEquals(orig1, rec);
-
-                p = reader.next();
-                rec = p.getRecord();
-                assertEquals(orig2, rec);
-
-                assertFalse("There should be no more Records after 2 initial", reader.hasNext());
-                reader.close(true);
+            { // Implicit initial
+                assertEquals("Initial iteration", Arrays.asList(orig1, orig2), empty(readerConf));
             }
 
             sto.flush(orig3);
-            {
-                RecordReader reader = new RecordReader(readerConf);
-                waitForHasNext(reader, timeout);
-                Payload p = reader.next();
-                Record rec = p.getRecord();
-                assertEquals(orig3, rec);
+            { // Update with content
+                assertEquals("First update", Arrays.asList(orig3), empty(readerConf));
+            }
 
-                assertFalse("There should be no more Records after 1 update", reader.hasNext());
-                reader.close(true);
+            { // Update without content
+                assertEquals("No update since last empty", new ArrayList<Record>(), empty(readerConf));
+            }
+
+            { // Full request
+                boolean originalStartFromScratch = readerConf.getBoolean(RecordReader.CONF_START_FROM_SCRATCH, false);
+                readerConf.set(RecordReader.CONF_START_FROM_SCRATCH, true);
+                assertEquals("Start from scratch", Arrays.asList(orig1, orig2, orig3), empty(readerConf));
+                readerConf.set(RecordReader.CONF_START_FROM_SCRATCH, originalStartFromScratch);
+            }
+
+            sto.flush(orig2);
+            { // Update existing
+                assertEquals("Update existing", Arrays.asList(orig2), empty(readerConf));
             }
         } finally {
             sto.close();
         }
+    }
+
+    private void assertEquals(String message, List<Record> expected, List<Record> actual) {
+        assertEquals(message + ". There should be the right number of Records",
+                     expected.size(), actual.size());
+        for (int i = 0 ; i < expected.size() ; i++) {
+            assertEquals(message + ". The Records at position " + i + " should be equal",
+                         expected.get(i), actual.get(i));
+        }
+    }
+
+    private List<Record> empty(Configuration readerConf) throws IOException {
+        RecordReader reader = new RecordReader(readerConf);
+        List<Record> records = new ArrayList<Record>();
+        while (reader.hasNext()) {
+            records.add(reader.next().getRecord());
+        }
+        reader.close(true);
+        return records;
     }
 
     public void testDelete() throws Exception {
