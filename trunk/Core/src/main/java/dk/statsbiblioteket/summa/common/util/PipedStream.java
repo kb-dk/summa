@@ -58,8 +58,7 @@ public class PipedStream extends InputStream {
      * @throws java.io.IOException if bytes could not be retrieved or added.
      */
     protected int addBytesRequest(int wanted) throws IOException {
-        log.trace("Default addBytesRequest(" + wanted
-                  + ") called. No action taken");
+        log.trace("Default addBytesRequest(" + wanted + ") called. No action taken");
         return 0;
     }
 
@@ -130,8 +129,7 @@ public class PipedStream extends InputStream {
         @Override
         public void write(int b) throws IOException {
             if (sourceEOF) {
-                throw new IllegalStateException(
-                        "The Stream has been closed");
+                throw new IllegalStateException("The Stream has been closed");
             }
             synchronized (feeder) {
                 if (length == buffer.length) { // We need to make room
@@ -140,10 +138,8 @@ public class PipedStream extends InputStream {
                         length -= pos;
                         pos = 0;
                     } else { // Expand
-                        byte[] newBuffer =
-                                new byte[(int)(buffer.length * EXPAND_FACTOR)];
-                        System.arraycopy(
-                                buffer, 0, newBuffer, 0, buffer.length);
+                        byte[] newBuffer = new byte[(int)(buffer.length * EXPAND_FACTOR)];
+                        System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
                         buffer = newBuffer;
                     }
                 }
@@ -158,4 +154,3 @@ public class PipedStream extends InputStream {
         }
     }
 }
-

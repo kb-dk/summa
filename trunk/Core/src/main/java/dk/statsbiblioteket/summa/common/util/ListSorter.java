@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Comparator;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * {@link Collections#sort} copies the content of a given list to an Array
@@ -93,4 +93,3 @@ public class ListSorter {
         siftDown(list, 0, heapSize, c);
     }
 }
-

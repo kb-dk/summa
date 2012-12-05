@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.rmi.RMISecurityManager;
-import java.security.Permission;
-
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.rmi.RMISecurityManager;
+import java.security.Permission;
 
 /**
  * Security-related methods.
@@ -30,21 +30,21 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class Security {
     private static Log log = LogFactory.getLog(Security.class);
 
-
     /**
      * Creates an allow-all if no manager is present.
      */
     public static void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
-            log.warn("No security manager found. "
-                     + "Setting allow-all security manager");
+            log.warn("No security manager found. Setting allow-all security manager");
             System.setSecurityManager(new RMISecurityManager() {
+                @Override
                 public void checkPermission(Permission perm) {
                     // Do nothing (allow all)
 /*                    if (log.isTraceEnabled()) {
                         log.trace("checkPermission(" + perm + ") called");
                     }*/
                 }
+                @Override
                 public void checkPermission(Permission perm, Object context) {
                     // Do nothing (allow all)
 /*                    if (log.isTraceEnabled()) {
@@ -54,8 +54,7 @@ public class Security {
                 }
             });
         } else {
-            log.debug("SecurityManager '" + System.getSecurityManager()
-                      + "' present");
+            log.debug("SecurityManager '" + System.getSecurityManager() + "' present");
         }
     }
 }

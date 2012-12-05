@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.io.Serializable;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.Serializable;
 
 /**
  * Pair with flexible sorting.
@@ -84,7 +84,3 @@ public class FlexiblePair<T extends Comparable<T>, S extends Comparable<S>>
         return value + "(" + key + ")";
     }
 }
-
-
-
-

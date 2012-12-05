@@ -16,17 +16,16 @@ package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.Serializable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Convenience iterator implementation masking the manual storage interactions
@@ -71,8 +70,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
      * @param key the iteration key as returned from the {@link ReadableStorage}
      * @param maxBufferSize maximum number of records to prefetch
      */
-    public StorageIterator(ReadableStorage iteratorHolder, long key,
-                           int maxBufferSize) {
+    public StorageIterator(ReadableStorage iteratorHolder, long key, int maxBufferSize) {
         log = LogFactory.getLog (this.getClass().getName());
         this.iteratorHolder = iteratorHolder;
         this.key = key;
@@ -80,11 +78,11 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         records = new LinkedBlockingQueue<Record>(maxBufferSize);
         maxQueueSize = maxBufferSize;
         if(log.isTraceEnabled()) {
-            log.trace("Created StorageIterator(" + iteratorHolder + ", " + key
-                + ", " + maxBufferSize + ")");
+            log.trace("Created StorageIterator(" + iteratorHolder + ", " + key + ", " + maxBufferSize + ")");
         }
     }
 
+    @Override
     public boolean hasNext() {
         try {
             checkRecords();
@@ -93,9 +91,10 @@ public class StorageIterator implements Iterator<Record>, Serializable {
             next = false;
         }
 
-        return next || records.size() > 0;
+        return next || !records.isEmpty();
     }
 
+    @Override
     public Record next() {
         if (!hasNext()) {
             throw new NoSuchElementException ("Depleted");
@@ -105,21 +104,20 @@ public class StorageIterator implements Iterator<Record>, Serializable {
 
     /**
      * Not supported
-     * @throws UnsupportedOperationException the remove operation is not
-     *                                       supported by this Iterator
+     * @throws UnsupportedOperationException the remove operation is not supported by this Iterator
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Download next batch of records if applicable and set the 'next' state
-     * appropriately
+     * Download next batch of records if applicable and set the 'next' state appropriately
      *
      * @throws IOException if something went wrong when checking records.
      */
     private void checkRecords () throws IOException {
-        if (records.size() == 0 && next) {
+        if (records.isEmpty() && next) {
             try {
                 List<Record> recs = iteratorHolder.next(key, maxQueueSize);
 
@@ -134,7 +132,3 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         }
     }
 }
-
-
-
-

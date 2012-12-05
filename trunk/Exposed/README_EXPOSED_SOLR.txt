@@ -2,14 +2,14 @@ Getting Started
 ---------------
 The Exposed faceting system can be tested with the standard Solr example the following way:
 
-1. Run 'ant run-example' in the solr folder.
+If this is a new checkout with patch, 
+  1. Run 'ant run-example' in the solr folder.
+else
+  2. Start Solr from the example folder with
+     java -jar start.jar
 
 
-2. Start Solr from the example folder with
-   java -jar start.jar
-
-
-3. Use the Tcl script facet_samples.tcl from contrib/exposed to create sample data:
+3. Use the Tcl script facet_samples.tcl from solr/examples to create sample data:
 tclsh ./facet_samples.tcl 100000 2 2 4 > 100000.csv
 If tcl is not available, a sample must be created by other means. 
 The csv-format is very simple. Below there it 2 documents, named 1 and 2.
