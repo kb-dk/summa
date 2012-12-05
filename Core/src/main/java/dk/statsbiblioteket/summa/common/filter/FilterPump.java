@@ -94,7 +94,7 @@ public class FilterPump extends StateThread implements Configurable {
             setError(error, t);
         }
         log.debug("Finished run with status " + getStatus());
-        if (STATUS.error.equals(getStatus())) {
+        if (STATUS.error == getStatus()) {
             log.warn("The run was finished with error '" + getErrorMessage(), getErrorCause());
         } else {
             log.debug("No error in run, calling close(true)");

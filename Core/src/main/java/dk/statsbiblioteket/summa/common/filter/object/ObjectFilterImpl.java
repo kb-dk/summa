@@ -34,8 +34,7 @@ import java.io.IOException;
         author = "te",
         comment = "Class needs JavaDoc")
 public abstract class ObjectFilterImpl implements ObjectFilter {
-    private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#"
-                                        + this.getClass().getSimpleName());
+    private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#" + this.getClass().getSimpleName());
 
     private ObjectFilter source;
     private long payloadCount = 0;
@@ -60,8 +59,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         while (processedPayload == null && source.hasNext()) {
             processedPayload = source.next();
             if (processedPayload == null) {
-                log.debug("hasNext(): Got null from source. This is legal but"
-                          + " unusual. Skipping to next payload");
+                log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
             }
             long startTime = System.nanoTime();
@@ -75,15 +73,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             } catch (PayloadException e) {
                 Logging.logProcess(
                         name,
-                        "processPayload failed with explicit PayloadException, "
-                        + "Payload discarded",
+                        "processPayload failed with explicit PayloadException, Payload discarded",
                         Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
                 processedPayload = null;
                 continue;
             } catch (Exception e) {
-                Logging.logProcess(name,
-                                   "processPayload failed, Payload discarded",
+                Logging.logProcess(name, "processPayload failed, Payload discarded",
                                    Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
                 //noinspection UnusedAssignment
@@ -91,15 +87,12 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 continue;
             } catch (Throwable t) {
                 /* Woops, this means major trouble, we dump everything we have */
-                String msg = "Unexpected error on payload "
-                             + processedPayload.toString();
+                String msg = "Unexpected error on payload " + processedPayload.toString();
                 String content = "";
                 Record rec = processedPayload.getRecord();
                 if (rec != null) {
-                    msg += ", enclosed record : "
-                           + rec.toString(true);
-                    content = "\n" + "Record content:\n"
-                              + rec.getContentAsUTF8();
+                    msg += ", enclosed record : " + rec.toString(true);
+                    content = "\n" + "Record content:\n" + rec.getContentAsUTF8();
                 } else {
                     msg += ", no enclosed record";
                 }
@@ -113,15 +106,11 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             String ms = Double.toString((spendTime / 1000000.0));
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("Processed " + processedPayload + ", #" + payloadCount
-                          + ", in " + ms + " ms using " + this);
+                log.trace("Processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms using " + this);
             } else if (log.isDebugEnabled() && feedback) {
-                log.debug("Processed " + processedPayload + ", #" + payloadCount
-                          + ", in " + ms + " ms");
+                log.debug("Processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
             }
-            Logging.logProcess(name,
-                               "processPayload #" + payloadCount
-                               + " finished in " + ms + "ms for " + name,
+            Logging.logProcess(name, "processPayload #" + payloadCount + " finished in " + ms + "ms for " + name,
                                Logging.LogLevel.TRACE, processedPayload);
             break;
         }
@@ -171,8 +160,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         }
         if (!(filter instanceof ObjectFilter)) {
             throw new IllegalArgumentException(
-                    "Only ObjectFilters accepted as source. The filter"
-                    + " provided was of class " + filter.getClass());
+                    "Only ObjectFilters accepted as source. The filter provided was of class " + filter.getClass());
         }
         source = (ObjectFilter)filter;
     }
@@ -198,17 +186,14 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format(
-                "Closing down '%s'. %s", this, getProcessStats()));
+        log.debug(String.format("Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
         source.close(success);
     }
 
     private void checkSource() {
         if (source == null) {
-            throw new IllegalStateException("No source defined for "
-                                            + getClass().getSimpleName()
-                                            + " filter");
+            throw new IllegalStateException("No source defined for " + getClass().getSimpleName() + " filter");
         }
     }
 
@@ -219,8 +204,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
         return "Processed " + payloadCount + " Payloads at "
-               + (payloadCount == 0 ? "NA" :
-                  totalTimeNS / 1000000.0 / payloadCount)
+               + (payloadCount == 0 ? "NA" : totalTimeNS / 1000000.0 / payloadCount)
                + " ms/Payload";
     }
 

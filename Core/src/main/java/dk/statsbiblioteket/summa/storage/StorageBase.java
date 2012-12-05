@@ -21,18 +21,13 @@ import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * StorageBase is an abstract class to facilitate implementations of the
@@ -206,14 +201,12 @@ public abstract class StorageBase implements Storage {
 
                 if (parentChildren == null) {
                     parent.setChildIds(Arrays.asList(record.getId()));
-                    log.trace("Creating child list '" + record.getId()
-                              + "' on parent " + parent.getId());
+                    log.trace("Creating child list '" + record.getId() + "' on parent " + parent.getId());
                     flushQueue.add(parent);
                 } else if (!parentChildren.contains(record.getId())) {
                     parentChildren.add(record.getId());
                     parent.setChildIds(parentChildren);
-                    log.trace("Adding child '" + record.getId()
-                              + "' to parent " + parent.getId());
+                    log.trace("Adding child '" + record.getId() + "' to parent " + parent.getId());
                     flushQueue.add(parent);
                 }
             }
@@ -231,20 +224,17 @@ public abstract class StorageBase implements Storage {
                 if (childParents == null) {
                     child.setParentIds(Arrays.asList(record.getId()));
                     child.setIndexable(false);
-                    log.trace("Creating parent list '" + record.getId()
-                               + " on child " + child.getId());
+                    log.trace("Creating parent list '" + record.getId() + " on child " + child.getId());
                     flushQueue.add(child);
                 } else if (!childParents.contains(record.getId())) {
                     child.getParentIds().add(record.getId());
                     child.setIndexable(false);
-                    log.trace("Adding parent '" + record.getId()
-                               + "' to child " + child.getId());
+                    log.trace("Adding parent '" + record.getId() + "' to child " + child.getId());
                     flushQueue.add(child);
 
                 } else {
                     if (child.isIndexable()) {
-                        log.debug("Child '" + child.getId() + "' of '"
-                                  + record.getId() + "' was marked as "
+                        log.debug("Child '" + child.getId() + "' of '" + record.getId() + "' was marked as "
                                   + "indexable. Marking as not indexable");
                         child.setIndexable(false);
                     }
@@ -304,8 +294,7 @@ public abstract class StorageBase implements Storage {
      * @throws IOException on communication errors
      */
     @Override
-    public void flushAll(List<Record> records, QueryOptions options)
-                                                            throws IOException {
+    public void flushAll(List<Record> records, QueryOptions options) throws IOException {
         for (Record rec : records) {
             flush(rec, options);
         }
@@ -332,8 +321,8 @@ public abstract class StorageBase implements Storage {
      * @return A list of records.
      * @throws IOException If error occur while communication with storage.
      */
-    public List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                        throws IOException {
+    @Override
+    public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
         for (String id : ids) {
@@ -344,8 +333,7 @@ public abstract class StorageBase implements Storage {
         }
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Finished getRecords(" + ids.size()
-                      + " ids, ...) in "
+            log.debug("Finished getRecords(" + ids.size() + " ids, ...) in "
                       + (System.currentTimeMillis() - startTime) + "ms");
         }
 

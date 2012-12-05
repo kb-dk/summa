@@ -240,6 +240,28 @@ public class RecordReaderTest extends TestCase {
         }
     }
 
+    public void testNoUpdates() throws Exception {
+        Storage sto = createStorage();
+        Configuration readerConf = Configuration.newMemoryBased();
+        try {
+            Record orig1 = new Record("test1", "base", "Hello".getBytes());
+            Record orig2 = new Record("test2", "base", "Hello".getBytes());
+            Record orig3 = new Record("test3", "base", "Hello".getBytes());
+
+            sto.flushAll(Arrays.asList(orig1, orig2));
+            { // Implicit initial
+                assertEquals("Initial iteration", Arrays.asList(orig1, orig2), empty(readerConf));
+            }
+
+            { // No news
+                assertEquals("Second iteration (with no available updates)",
+                             new ArrayList<Record>(), empty(readerConf));
+            }
+        } finally {
+            sto.close();
+        }
+    }
+
     private void assertEquals(String message, List<Record> expected, List<Record> actual) {
         assertEquals(message + ". There should be the right number of Records",
                      expected.size(), actual.size());

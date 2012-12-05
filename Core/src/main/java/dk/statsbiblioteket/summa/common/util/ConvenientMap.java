@@ -23,11 +23,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,8 +52,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         log.trace("Constructing with " + args.length + " arguments");
         if (args.length % 2 != 0) {
             throw new IllegalArgumentException(
-                "There must be an even number of arguments. Argument count was "
-                + args.length);
+                "There must be an even number of arguments. Argument count was " + args.length);
         }
         for (int i = 0 ; i < args.length ; i += 2) {
             put((String)args[i], args[i+1]);
@@ -80,8 +75,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             for (Object o: jsonObject.entrySet()) {
                 ListOrderedMap.Entry entry = (ListOrderedMap.Entry)o;
                 if (log.isTraceEnabled()) {
-                    log.trace("Putting " + entry.getKey() + ", "
-                              + entry.getValue());
+                    log.trace("Putting " + entry.getKey() + ", " + entry.getValue());
                 }
                 // TODO Make better error messages on cast fail
                 put((String)entry.getKey(), (Serializable)entry.getValue());
@@ -92,8 +86,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public Serializable get(String key) {
         Serializable value = super.get(key);
         if (value == null) {
-            throw new NullPointerException("Unable to locate key '" + key
-                                           + "'");
+            throw new NullPointerException("Unable to locate key '" + key + "'");
         }
         return value;
     }
@@ -125,8 +118,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
              * for cases where the value is an Long or Character */
             return Integer.parseInt(o.toString());
         } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting int for key '%s'", key), e);
+            log.warn(String.format("Exception extracting int for key '%s'", key), e);
             return null;
         }
     }
@@ -149,8 +141,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
              * for cases where the value is an Integer or Character */
             return Long.parseLong(o.toString());
         } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting long for key '%s'", key), e);
+            log.warn(String.format("Exception extracting long for key '%s'", key), e);
             return null;
         }
     }
@@ -284,7 +275,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         for (String s: unescaped) {
             //noinspection DuplicateStringLiteralInspection
             result.add(s.replaceAll("&comma;", ",").
-                         replaceAll("&amp;", "&"));
+                    replaceAll("&amp;", "&"));
         }
         return result;
     }
@@ -353,8 +344,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
      *         with the storage backend
      */
     @SuppressWarnings({"unchecked"})
-    public List<Pair<String, Integer>> getIntValues(String key,
-                                                    Integer defaultValue) {
+    public List<Pair<String, Integer>> getIntValues(String key, Integer defaultValue) {
         Object o = get(key);
         try {
             //noinspection unchecked
@@ -402,4 +392,3 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         return sw.toString();
     }
 }
-

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * An extension to HashMap<String, String> that disallows null-keys and values
@@ -58,12 +58,10 @@ public class StringMap extends HashMap<String, String> {
      */
     public String put(String key, String value) {
         if (key == null) {
-            throw new IllegalArgumentException("Key must not be "
-                                               + "null");
+            throw new IllegalArgumentException("Key must not be null");
         }
         if (value == null) {
-            throw new IllegalArgumentException("Value must not be "
-                                               + "null");
+            throw new IllegalArgumentException("Value must not be null");
         }
         return super.put(key, value);
     }
@@ -73,8 +71,7 @@ public class StringMap extends HashMap<String, String> {
      * @param map the content of the map is added to this.
      */
     public void putAll(Map<? extends String,? extends String> map) {
-        for (Map.Entry<? extends String, ? extends String> entry:
-                map.entrySet()) {
+        for (Map.Entry<? extends String, ? extends String> entry: map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -140,11 +137,9 @@ public class StringMap extends HashMap<String, String> {
             // We don't use split here, as we want to support empty key/values
             int divPos = line.indexOf('=');
             if (divPos == -1) {
-                throw new IllegalArgumentException("The line '" + line
-                                                   + "' did not contain an =");
+                throw new IllegalArgumentException("The line '" + line + "' did not contain an =");
             }
-            map.put(unescape(line.substring(0, divPos)),
-                    unescape(line.substring(divPos+1, line.length())));
+            map.put(unescape(line.substring(0, divPos)), unescape(line.substring(divPos+1, line.length())));
         }
         return map;
     }
@@ -157,14 +152,9 @@ public class StringMap extends HashMap<String, String> {
      */
     public static StringMap fromFormal(byte[] formal) {
         try {
-            return formal == null || formal.length == 0 ? null :
-                   fromFormal(new String(formal, "utf-8"));
+            return formal == null || formal.length == 0 ? null : fromFormal(new String(formal, "utf-8"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("Could not convert utf-8 bytes");
         }
     }
 }
-
-
-
-
