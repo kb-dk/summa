@@ -14,20 +14,21 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.search.api.QueryException;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.ExecutionException;
-import java.rmi.RemoteException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * All interaction with this SearchNode results in the same interaction
@@ -75,11 +76,16 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
     @Override
     public void search(final Request request, final ResponseCollection responses) throws RemoteException {
         log.trace("Starting search");
-        doTask(new Closure() {
-            public void action(SearchNode node) throws RemoteException {
-                node.search(request, responses);
-            }
-        });
+        try {
+            doTask(new Closure() {
+                @Override
+                public void action(SearchNode node) throws RemoteException {
+                    node.search(request, responses);
+                }
+            });
+        } catch (QueryException e) {
+            throw new QueryException("SearchNodeAggregator", e);
+        }
     }
 
     @Override
@@ -89,6 +95,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
         }
         try {
             doTask(new Closure() {
+                @Override
                 public void action(SearchNode node) throws RemoteException {
                     node.warmup(request);
                 }
@@ -102,6 +109,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
     public void open(final String location) throws RemoteException {
         log.debug(String.format("open(%s) called", location));
         doTask(new Closure() {
+            @Override
             public void action(SearchNode node) throws RemoteException {
                 node.open(location);
             }
@@ -113,6 +121,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
         log.trace("close() called");
         try {
             doTask(new Closure() {
+                @Override
                 public void action(SearchNode node) throws RemoteException {
                     node.close();
                 }

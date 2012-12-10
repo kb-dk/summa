@@ -26,8 +26,8 @@ import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 
@@ -77,8 +77,7 @@ public class AdjustingSearchNode implements SearchNode {
     }
 
     @Override
-    public void search(Request request, ResponseCollection responses)
-        throws RemoteException {
+    public void search(Request request, ResponseCollection responses) throws RemoteException {
         log.debug("Rewriting request, performing search and adjusting responses");
         long startTime = System.currentTimeMillis();
         Request adjusted = adjuster.rewrite(request);

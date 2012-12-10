@@ -77,8 +77,7 @@ public abstract class IndirectIntSorter<V> {
      * @param c     the comparator method for values.
      * @return the references array after sort, suitable for chaining.
      */
-    public int[] sort(int[] references, int start, int end,
-                       Comparator<? super V> c) {
+    public int[] sort(int[] references, int start, int end, Comparator<? super V> c) {
         if (end - start <= 1) {
             return references;
         }
@@ -101,8 +100,7 @@ public abstract class IndirectIntSorter<V> {
      * @param end    the end of the references to merge.
      * @param c      the comparator method for values.
      */
-    private void merge(int[] references, int start, int middle, int end,
-                       Comparator<? super V> c) {
+    private void merge(int[] references, int start, int middle, int end, Comparator<? super V> c) {
         if (middle - start == 0 || end - middle == 0) {
             return;
         }
