@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.search.api.QueryException;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -200,8 +201,8 @@ public class QueryRewritingSearchNode implements SearchNode {
     public void search(Request request, ResponseCollection responses) throws RemoteException {
         try {
             inner.search(process(request), responses);
-        } catch (ParseException e) {
-            throw new RemoteException("Exception parsing query or filter from " + request.toString(true), e);
+        } catch (ParseException e) { // Lucene query parser throws this
+            throw new QueryException("QueryRewritingSearchNode", request.toString(true), e.getMessage());
         }
     }
 

@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * for the given key.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te",
         comment = "Some methods needs JavaDoc")
 public class ConvenientMap extends HashMap<String, Serializable> {
@@ -51,8 +51,8 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         super();
         log.trace("Constructing with " + args.length + " arguments");
         if (args.length % 2 != 0) {
-            throw new IllegalArgumentException(
-                "There must be an even number of arguments. Argument count was " + args.length);
+            throw new IllegalArgumentException("There must be an even number of arguments. Argument count was "
+                                               + args.length);
         }
         for (int i = 0 ; i < args.length ; i += 2) {
             put((String)args[i], args[i+1]);
@@ -164,8 +164,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
              * for cases where the value is an Integer or Character */
             return Double.parseDouble(o.toString());
         } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting Double for key '%s'", key), e);
+            log.warn(String.format("Exception extracting Double for key '%s'", key), e);
             return null;
         }
     }
@@ -212,8 +211,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
              * for cases where the value is an Integer or Character */
             return Short.parseShort(o.toString());
         } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting Short for key '%s'", key), e);
+            log.warn(String.format("Exception extracting Short for key '%s'", key), e);
             return null;
         }
     }
@@ -235,8 +233,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
              * for cases where the value is an Integer or Character */
             return Boolean.parseBoolean(o.toString());
         } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting boolean for key '%s'", key), e);
+            log.warn(String.format("Exception extracting boolean for key '%s'", key), e);
             return null;
         }
     }
@@ -259,8 +256,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public List<String> getStrings(String key) {
         Object val = get(key);
         if (val instanceof List) {
-            ArrayList<String> result =
-                    new ArrayList<String>(((List)val).size());
+            ArrayList<String> result = new ArrayList<String>(((List)val).size());
             for (Object o: (List)val) {
                 result.add(o.toString());
             }
@@ -274,8 +270,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         ArrayList<String> result = new ArrayList<String>(unescaped.length);
         for (String s: unescaped) {
             //noinspection DuplicateStringLiteralInspection
-            result.add(s.replaceAll("&comma;", ",").
-                    replaceAll("&amp;", "&"));
+            result.add(s.replaceAll("&comma;", ",").replaceAll("&amp;", "&"));
         }
         return result;
     }
@@ -287,8 +282,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             return defaultValues;
         } catch (IllegalArgumentException e) {
             log.warn(String.format(
-                    "The property %s was expected to be a list of Strings, "
-                    + "but it was not. Using default %s instead",
+                    "The property %s was expected to be a list of Strings, but it was not. Using default %s instead",
                     key, defaultValues));
             return defaultValues;
         }
@@ -302,8 +296,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
      * @return value as an array of Strings.
      */
     public String[] getStrings(String key, String[] defaultValues) {
-        List<String> result = getStrings(key, defaultValues == null ? null :
-                                              Arrays.asList(defaultValues));
+        List<String> result = getStrings(key, defaultValues == null ? null : Arrays.asList(defaultValues));
         return result == null ? null :
                result.toArray(new String[result.size()]);
     }
@@ -354,16 +347,13 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             log.trace("intValues not stored directly for key '" + key + "'");
         }
         List<String> elements = getStrings(key);
-        List<Pair<String, Integer>> result =
-                new ArrayList<Pair<String, Integer>>(elements.size());
+        List<Pair<String, Integer>> result = new ArrayList<Pair<String, Integer>>(elements.size());
         for (String element: elements) {
             Matcher numberMatcher = numberPattern.matcher(element);
             if (numberMatcher.matches()) {
-                result.add(new Pair<String, Integer>(numberMatcher.group(1),
-                                     Integer.parseInt(numberMatcher.group(2))));
+                result.add(new Pair<String, Integer>(numberMatcher.group(1), Integer.parseInt(numberMatcher.group(2))));
             } else {
-                result.add(new Pair<String, Integer>(element.trim(),
-                                                     defaultValue));
+                result.add(new Pair<String, Integer>(element.trim(), defaultValue));
             }
         }
         return result;

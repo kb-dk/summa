@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.api.QueryException;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
@@ -38,8 +39,7 @@ import java.rmi.server.UnicastRemoteObject;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT
         )        
-public class RMISearcherProxy extends UnicastRemoteObject
-                              implements RemoteSearcher {
+public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearcher {
     private static final long serialVersionUID = 488468553186L; 
     private static final Log log = LogFactory.getLog (RMISearcherProxy.class);
 
@@ -54,8 +54,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
      * Configuration property defining on which port the RMI registry can be
      * found or may be started. Default is 28000
      */
-    public static final String CONF_REGISTRY_PORT =
-                                             "summa.searcher.rmi.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.searcher.rmi.registry.port";
     public static final int DEFAULT_REGISTRY_PORT = 28000;
 
     /**
@@ -76,12 +75,10 @@ public class RMISearcherProxy extends UnicastRemoteObject
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_FLATTEN_EXCEPTIONS =
-        "rmi.exceptions.flatten";
+    public static final String CONF_FLATTEN_EXCEPTIONS = "rmi.exceptions.flatten";
     public static final boolean DEFAULT_FLATTEN_EXCEPTIONS = true;
 
-    public static final Class<? extends SummaSearcher> DEFAULT_BACKEND =
-                                                        SummaSearcherImpl.class;
+    public static final Class<? extends SummaSearcher> DEFAULT_BACKEND = SummaSearcherImpl.class;
 
     private SummaSearcher backend;
     private String serviceName;
@@ -109,8 +106,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
      */
     public RMISearcherProxy (Configuration conf) throws IOException {
         super (getServicePort(conf));
-        flattenExceptions = conf.getBoolean(
-            CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
+        flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
         // FIXME: The below config should really be kept entirely in memory,
@@ -121,18 +117,15 @@ public class RMISearcherProxy extends UnicastRemoteObject
         if (conf.valueExists (CONF_BACKEND)) {
             backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
-                    + " for backend");
+            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for backend");
             backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
         }
 
         /* If the backend is set to be another RMISeacherProxy then avoid
          * infinite recursion by forcing it into a SummaSearcherImpl */
         if (backendConf.valueExists (CONF_CLASS)) {
-            if (this.getClass().getName().equals(
-                                        backendConf.getString (CONF_CLASS))) {
-                log.warn ("Backend set to RMISearcherProxy. Forcing backend " +
-                          "class to " + DEFAULT_BACKEND.getName()
+            if (this.getClass().getName().equals(backendConf.getString (CONF_CLASS))) {
+                log.warn ("Backend set to RMISearcherProxy. Forcing backend class to " + DEFAULT_BACKEND.getName()
                           + " to avoid infinite recursion");
                 backendConf.set (CONF_CLASS, DEFAULT_BACKEND.getName());
             }
@@ -146,18 +139,15 @@ public class RMISearcherProxy extends UnicastRemoteObject
         backend = SummaSearcherFactory.createSearcher (backendConf);
         log.trace ("Created searcher: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME,
-                                      DEFAULT_SERVICE_NAME);
-        registryPort = conf.getInt(CONF_REGISTRY_PORT,
-                                   DEFAULT_REGISTRY_PORT);
+        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
         
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
 
         try {
             RemoteHelper.exportMBean (this);
         } catch (Exception e) {
-            String msg = "Error exporting MBean of '" + this
-                         + "'. Going on without it: " + e.getMessage ();
+            String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage ();
             if (log.isTraceEnabled()) {
                 log.warn (msg, e);
             } else {
@@ -176,9 +166,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
         try {
             return conf.getInt(CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
-            log.warn ("Service port property " + CONF_SERVICE_PORT + " not "
-                     + "defined in configuration. Falling back to anonymous "
-                     + "port");
+            log.warn ("Service port property " + CONF_SERVICE_PORT + " not defined in configuration. Falling back to "
+                      + "anonymous port");
             return 0;
         }
     }
@@ -187,6 +176,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
     public ResponseCollection search(Request request) throws RemoteException {
         try {
             return backend.search (request);
+        } catch (QueryException e) {
+            throw new QueryException("RMISearcherProxy", e);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "search(%s) for %d:%s",
@@ -201,8 +192,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
-                    "close().unExportRemoteInterface(serviceName='%s', "
-                    + "registryPort=%d)",
+                    "close().unExportRemoteInterface(serviceName='%s', registryPort=%d)",
                     serviceName, registryPort), t, flattenExceptions);
         } finally {
             // If an exception was throws above, it was also logged, so we
@@ -225,4 +215,3 @@ public class RMISearcherProxy extends UnicastRemoteObject
         }
     }
 }
-

@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
+import dk.statsbiblioteket.summa.search.api.QueryException;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -547,8 +548,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     }
 
     @Override
-    protected void managedSearch(Request request, ResponseCollection responses)
-                                                        throws RemoteException {
+    protected void managedSearch(Request request, ResponseCollection responses) throws RemoteException {
         log.trace("Assigning searcher and query parser to responses.transient");
         long startTime = System.currentTimeMillis();
         try {
@@ -560,8 +560,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 "Caught StackOverflow at outer level during handling of lucene request %s:\n%s",
                 request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
-            throw new RemoteException(
-                "LuceneSearchNode.managedSearch: " + message);
+            throw new RemoteException("LuceneSearchNode.managedSearch: " + message);
         }
         responses.addTiming("lucene.search.total", System.currentTimeMillis() - startTime);
     }
@@ -599,8 +598,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             luceneFilter = parseFilter(filter, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
             luceneQuery = parseQuery(request, query);
         } catch (ParseException e) {
-            throw new IndexException(String.format(
-                    "ParseException during fullSearch for query '%s'", query), location, e);
+            throw new QueryException("QueryRewritingSearchNode", request.toString(true),
+                                     "Index '" + location + ": " + e.getMessage());
         }
         if (luceneQuery == null && luceneFilter == null) {
             log.debug("Both query and filter is null, returning empty result");

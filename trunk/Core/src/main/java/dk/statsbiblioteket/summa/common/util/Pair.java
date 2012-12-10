@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.io.Serializable;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.Serializable;
 
 /**
  * A standard pair that compares on key.
@@ -34,6 +34,7 @@ public class Pair <T extends Comparable<T> , S>
         this.key = key;
         this.value = value;
     }
+    @Override
     public int compareTo(Pair<T, S> o) {
         if (!o.getClass().equals(getClass())) {
             return 0;
@@ -60,7 +61,3 @@ public class Pair <T extends Comparable<T> , S>
         return value + "(" + key + ")";
     }
 }
-
-
-
-

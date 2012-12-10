@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.stream.events.XMLEvent;
-import java.text.ParseException;
 import java.io.StringWriter;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.text.ParseException;
 
 /**
  * convenience methods for parsing using XPath.
@@ -38,8 +38,7 @@ import org.apache.commons.logging.LogFactory;
 @Deprecated
 public class ParseUtil {
     private static final Log log = LogFactory.getLog(ParseUtil.class);
-    public static final String XML_HEADER =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    public static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     /**
      * Wrapper for {@link #getValue} that uses Floats.
@@ -53,15 +52,12 @@ public class ParseUtil {
      *                     defaultValue.
      * @throws ParseException if there was an error parsing.
      */
-    public static Float getValue(
-            XPath xPath, Node node, String path, Float defaultValue)
-                                                         throws ParseException {
+    public static Float getValue(XPath xPath, Node node, String path, Float defaultValue) throws ParseException {
         String sVal = getValue(xPath, node, path, (String)null);
         try {
             return sVal == null ? defaultValue : Float.valueOf(sVal);
         } catch (NumberFormatException e) {
-            log.warn("Expected a float for path '" + path
-                     + "' but got '" + sVal + "'");
+            log.warn("Expected a float for path '" + path + "' but got '" + sVal + "'");
             return defaultValue;
         }
     }
@@ -78,11 +74,8 @@ public class ParseUtil {
      *                     defaultValue.
      * @throws ParseException if there was an error parsing.
      */
-    public static Boolean getValue(
-            XPath xPath, Node node, String path, Boolean defaultValue)
-                                                         throws ParseException {
-        return Boolean.valueOf(getValue(
-                xPath, node, path, Boolean.toString(defaultValue)));
+    public static Boolean getValue(XPath xPath, Node node, String path, Boolean defaultValue) throws ParseException {
+        return Boolean.valueOf(getValue(xPath, node, path, Boolean.toString(defaultValue)));
 
     }
 
@@ -104,9 +97,7 @@ public class ParseUtil {
      *                     defaultValue.
      * @throws ParseException if there was an error parsing.
      */
-    public static String getValue(
-            XPath xPath, Node node, String path, String defaultValue)
-                                                         throws ParseException {
+    public static String getValue(XPath xPath, Node node, String path, String defaultValue) throws ParseException {
         if (log.isTraceEnabled()) {
             log.trace("getSingleValue: Extracting path '" + path + "'");
         }
@@ -115,25 +106,19 @@ public class ParseUtil {
             if (!((Boolean) xPath.evaluate(path, node,
                                            XPathConstants.BOOLEAN))) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("No value defined for path '" + path
-                          + "'. Returning default value '"
-                          + defaultValue + "'");
+                log.trace("No value defined for path '" + path + "'. Returning default value '" + defaultValue + "'");
                 return defaultValue;
         }
             nodeValue = xPath.evaluate(path, node);
         } catch (XPathExpressionException e) {
-            throw (ParseException) new ParseException(String.format(
-                    "Invalid expression '%s'", path), -1).initCause(e);
+            throw (ParseException) new ParseException(String.format("Invalid expression '%s'", path), -1).initCause(e);
         }
         if (nodeValue == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Got null value from expression '" + path
-                      + "'. Returning default value '" + defaultValue
-                      + "'");
+            log.trace("Got null value from expression '" + path + "'. Returning default value '" + defaultValue + "'");
             return defaultValue;
         }
-        log.trace("Got value '" + nodeValue + "' from expression '" 
-                  + path + "'");
+        log.trace("Got value '" + nodeValue + "' from expression '" + path + "'");
         return nodeValue;
     }
 
@@ -148,8 +133,8 @@ public class ParseUtil {
          if (node.getNodeType() == Node.ELEMENT_NODE) {
              NodeList all = node.getChildNodes();
              for (int i = 0; i < all.getLength(); i++) {
-                 if (all.item(i).getNodeType() == Node.TEXT_NODE ||
-                     all.item(i).getNodeType() == Node.CDATA_SECTION_NODE) {
+                 if (all.item(i).getNodeType() == Node.TEXT_NODE
+                     || all.item(i).getNodeType() == Node.CDATA_SECTION_NODE) {
                      // TODO: Check if we exceed the limit for getNodeValue
                      sw.append(all.item(i).getNodeValue());
                  }
@@ -181,8 +166,7 @@ public class ParseUtil {
             switch (eventType) {
                 case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
                 case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
-                case XMLEvent.PROCESSING_INSTRUCTION:
-                    return "PROCESSING_INSTRUCTION";
+                case XMLEvent.PROCESSING_INSTRUCTION: return "PROCESSING_INSTRUCTION";
                 case XMLEvent.CHARACTERS: return "CHARACTERS";
                 case XMLEvent.COMMENT: return "COMMENT";
                 case XMLEvent.START_DOCUMENT: return "START_DOCUMENT";
@@ -195,5 +179,4 @@ public class ParseUtil {
                 default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
             }
         }
-
 }

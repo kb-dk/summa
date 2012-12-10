@@ -48,12 +48,14 @@ public class DocIDCollector extends Collector {
     private int docCount = 0;
     private int docBase = 0;
     private Bits live = null;
+    private static int instantiationCount = 0;
 
     /**
      * Constructs a collector and adds it to the given queue.
      * @param queue the queue that this collector is added to.
      */
     public DocIDCollector(ArrayBlockingQueue<DocIDCollector> queue) {
+        log.debug("Constructing DocIDCollector #" + ++instantiationCount);
         this.queue = queue;
         while (true) {
             try {
@@ -71,6 +73,7 @@ public class DocIDCollector extends Collector {
      * @see #DocIDCollector(ArrayBlockingQueue)
      */
     public DocIDCollector() {
+        log.debug("Constructing queueless DocIDCollector #" + ++instantiationCount);
     }
 
     @Override

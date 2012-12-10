@@ -58,9 +58,9 @@ public class DeferredSystemExit implements Runnable {
     }
 
     /**
-     * Do not use this method. It is only meant to be internally called by
-     * {@code DefferedSystemExit}.
+     * Do not call the method externally. It is only meant to be internally called by {@code DefferedSystemExit}.
      */
+    @Override
     public void run() {
         try {
             Thread.sleep(delay);
