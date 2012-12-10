@@ -62,6 +62,17 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         });
     }
 
+    public void testColonWeight() throws RemoteException {
+        assertTransformations(Configuration.newMemoryBased(
+                QueryRewriter.CONF_TERSE, false,
+                QueryRewritingSearchNode.CONF_PHRASE_QUERIES, false,
+                QueryRewriter.CONF_QUOTE_TERMS, false
+        ), new String[][]{
+            {"foo:\"bar:zoo\"", "foo:\"bar:zoo\""},
+            {"foo:\"bar:zoo\"^2.5", "foo:\"bar:zoo\"^2.5"}
+        });
+    }
+
     public void testExplicit() throws RemoteException {
         assertTransformations(Configuration.newMemoryBased(
             QueryRewriter.CONF_TERSE, false
