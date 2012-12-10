@@ -366,7 +366,8 @@ public class QueryRewriter {
     private ReplaceReader escaper;
     {
         //String PROBLEMS = "!*\\'\"";
-        String PROBLEMS = "!*'\"";
+        //String PROBLEMS = "!*'\":";
+        String PROBLEMS = " ";
         Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
         for (int i = 0 ; i < PROBLEMS.length() ; i++) {
             char problem = PROBLEMS.charAt(i);
@@ -375,6 +376,13 @@ public class QueryRewriter {
         escaper = ReplaceFactory.getReplacer(rules);
     }
     private String convertSubqueryToString(String field, String text, boolean quote) {
+        text = escaper.transform(QueryParser.escape(text));
+        if (quote) {
+            text = "\"" + text + "\"";
+        }
+        return (field == null || field.isEmpty()) ? text : field + ":" + text;
+    }
+/*    private String convertSubqueryToString(String field, String text, boolean quote) {
         // Lucene removes back slashes
         String escapedText = text.replaceAll("([^\\\\]) ", "$1\\\\ ");
         if (quote) {
@@ -383,5 +391,5 @@ public class QueryRewriter {
             escapedText = escaper.transform(escapedText);
         }
         return (field == null || field.isEmpty()) ? escapedText : field + ":" + escapedText;
-    }
+    }*/
 }
