@@ -117,8 +117,8 @@ public class ETSSStatusFilterTest extends TestCase {
         ));
         etss.setSource(feeder);
         pumped = pump(etss);
-        assertEquals("There should be " + existing.length + " re-enriched Payloads",
-                     existing.length, pumped.size());
+        assertEquals("There should be 0 re-enriched Payloads with discarding",
+                     0, pumped.size());
     }
 
     public void testUpdateClean() throws IOException, XMLStreamException, ParseException {
@@ -183,8 +183,7 @@ public class ETSSStatusFilterTest extends TestCase {
             new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+            ETSSStatusFilter.CONF_REST, HYPERION
         ));
         statusFilter.setSource(feeder);
         Payload processed = statusFilter.next();
@@ -195,8 +194,7 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testProviderNormaliser() {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_$PROVIDER"
+            ETSSStatusFilter.CONF_REST, "dummy"
         ));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bar"));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bæar"));
@@ -206,8 +204,7 @@ public class ETSSStatusFilterTest extends TestCase {
 
     private void assertStatusFromID(String id, boolean hasPassword) throws IOException {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+            ETSSStatusFilter.CONF_REST, HYPERION
         ));
         assertEquals("The password status for " + id + " should be correct",
                      hasPassword,
@@ -229,7 +226,7 @@ public class ETSSStatusFilterTest extends TestCase {
     private void assertCommentID(String id, String comment) throws IOException {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
             ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+            HYPERION
         ));
         assertEquals("The comment for " + id + " should be correct",
                      comment, statusFilter.getComment(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
@@ -241,8 +238,7 @@ public class ETSSStatusFilterTest extends TestCase {
             new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+            ETSSStatusFilter.CONF_REST, HYPERION
         ));
         statusFilter.setSource(feeder);
         assertTrue("There should be at least one Payload", statusFilter.hasNext());

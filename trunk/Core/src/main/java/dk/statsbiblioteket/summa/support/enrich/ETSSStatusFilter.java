@@ -243,7 +243,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         for (MARCObject.DataField urls: marc.getDataFields("856")) {
             for (int i = urls.getSubFields().size()-1 ; i >= 0 ; i--) {
                 String code = urls.getSubFields().get(i).getCode();
-                if (PASSWORD_CONTENT.equals(code)
+                if (PASSWORD_SUBFIELD.equals(code)
                     || COMMENT_SUBFIELD.equals(code)
                     || PROVIDER_SPECIFIC_ID.equals(code)) {
                     urls.getSubFields().remove(i);
