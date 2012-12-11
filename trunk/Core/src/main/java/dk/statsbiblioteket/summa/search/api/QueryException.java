@@ -31,6 +31,7 @@ import java.rmi.RemoteException;
 public class QueryException extends RemoteException {
     private String component;
     private String query;
+    private QueryException clause = null;
 
     /**
      * Base constructor for query-related Exceptions.
@@ -50,9 +51,14 @@ public class QueryException extends RemoteException {
      * @param e         the inner query Exception.
      */
     public QueryException(String component, QueryException e) {
-        super("", e);
+        super("");
         this.component = component;
         this.query = null;
+        clause = e;
+    }
+
+    public QueryException getClause() {
+        return clause;
     }
 
     /**
