@@ -255,14 +255,30 @@ public class QueryRewriterTest extends TestCase {
                        "\"foo\"^2.2123");
     }
 
+    public void testEscapeWeight() throws ParseException {
+        String[][] TESTS = new String[][]{
+            {"foo:bar\\:zoo^2.2123", "foo:bar\\:zoo^2.2123"},
+            {"foo:bar\\:zoo^2.2123", "foo:\"bar\\:zoo\"^2.2123"}
+        };
+        QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(
+                    QueryRewriter.CONF_QUOTE_TERMS, false
+        ), null, new QueryRewriter.Event());
+
+        for (String[] test: TESTS) {
+            assertEquals("Escaping should work for '" + test[0] + "'", test[0], qr.rewrite(test[1]));
+        }
+    }
+
     public void testEscaping() throws ParseException {
         String[][] TESTS = new String[][]{
             {"foo", "foo"},
             {"\"foo\\\"\"", "foo\\\""},
             {"\"foo!\"", "foo\\!"}
         };
-        QueryRewriter qr = new QueryRewriter(
-            Configuration.newMemoryBased(QueryRewriter.CONF_QUOTE_TERMS, false), null, new QueryRewriter.Event());
+        QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(
+                    QueryRewriter.CONF_QUOTE_TERMS, false
+        ), null, new QueryRewriter.Event());
+
         for (String[] test: TESTS) {
             assertEquals("Escaping should work for '" + test[0] + "'", test[1], qr.rewrite(test[0]));
         }

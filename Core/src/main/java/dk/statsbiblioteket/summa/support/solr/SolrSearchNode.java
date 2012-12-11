@@ -563,7 +563,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             result = getData(restCall + "?" + queryString, responses);
         } catch (Exception e) {
             throw new RemoteException(
-                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString, e);
+                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString
+                + " and message " + e.getMessage());
         }
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
