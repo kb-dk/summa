@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.support.enrich;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.marc.MARCObject;
 import dk.statsbiblioteket.summa.common.marc.MARCObjectFactory;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
@@ -30,12 +31,17 @@ import javax.xml.stream.XMLStreamException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ETSSStatusFilterTest extends TestCase {
+    private final String HYPERION =
+            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
+
     public ETSSStatusFilterTest(String name) {
         super(name);
     }
@@ -75,6 +81,73 @@ public class ETSSStatusFilterTest extends TestCase {
         }
     }
 
+    public void testFlow() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "common/marc/existing_022a.xml",
+            "common/marc/existing_022x.xml",
+            "common/marc/existing_022l.xml"
+        };
+        PayloadFeederHelper feeder = new PayloadFeederHelper(existing);
+        ETSSStatusFilter etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION
+        ));
+        etss.setSource(feeder);
+        List<Payload> pumped = pump(etss);
+        assertEquals("There should be " + existing.length + " enriched Payloads",
+                     existing.length, pumped.size());
+
+        // Re-process no discard
+        feeder = new PayloadFeederHelper(pumped);
+        etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION,
+                ETSSStatusFilter.CONF_CLEAN_PREVIOUS_STATUS, true,
+                ETSSStatusFilter.CONF_DISCARD_UNCHANGED, false
+        ));
+        etss.setSource(feeder);
+        pumped = pump(etss);
+        assertEquals("There should be " + existing.length + " re-enriched Payloads without discarding",
+                     existing.length, pumped.size());
+
+        // Re-process
+        feeder = new PayloadFeederHelper(pumped);
+        etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION,
+                ETSSStatusFilter.CONF_CLEAN_PREVIOUS_STATUS, true,
+                ETSSStatusFilter.CONF_DISCARD_UNCHANGED, true
+        ));
+        etss.setSource(feeder);
+        pumped = pump(etss);
+        assertEquals("There should be " + existing.length + " re-enriched Payloads",
+                     existing.length, pumped.size());
+    }
+
+    public void testUpdateClean() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "common/marc/existing_022a.xml",
+            "common/marc/existing_022x.xml",
+            "common/marc/existing_022l.xml"
+        };
+        PayloadFeederHelper feeder = new PayloadFeederHelper(existing);
+        ETSSStatusFilter etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION,
+                ETSSStatusFilter.CONF_CLEAN_PREVIOUS_STATUS, true,
+                ETSSStatusFilter.CONF_DISCARD_UNCHANGED, true
+        ));
+        etss.setSource(feeder);
+        List<Payload> pumped = pump(etss);
+        assertEquals("There should be " + existing.length + " enriched Payloads",
+                     existing.length, pumped.size());
+    }
+
+    private List<Payload> pump(ObjectFilter filter) {
+        List<Payload> pumped = new ArrayList<Payload>();
+        while (filter.hasNext()) {
+            pumped.add(filter.next());
+        }
+        filter.close(true);
+        return pumped;
+    }
+
     public void testNonExisting() throws IOException, XMLStreamException, ParseException {
         assertStatus("common/marc/single_marc.xml", false);
         assertStatus("common/marc/existing_245a.xml", false); // Due to collapse of '-' in 245*a
@@ -87,8 +160,7 @@ public class ETSSStatusFilterTest extends TestCase {
             new Payload(new FileInputStream(Resolver.getFile(SOURCE)), SOURCE)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER"
+            ETSSStatusFilter.CONF_REST, HYPERION
         ));
         statusFilter.setSource(feeder);
         Payload processed = statusFilter.next();

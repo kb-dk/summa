@@ -23,8 +23,8 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -84,6 +84,24 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final String CONF_ETSS_READ_TIMEOUT = "etss.read.timeout";
     public static final int DEFAULT_ETSS_READ_TIMEOUT = 8000;
 
+    /**
+     * If true, all fields 856*k, 856*w and 856*l are cleared before processing. This is normally used in conjunction
+     * with {@link #CONF_DISCARD_UNCHANGED} to build a batch refresher of password requirements.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_CLEAN_PREVIOUS_STATUS = "etss.cleanpreviousstatus";
+    public static final boolean DEFAULT_CLEAN_PREVIOUS_STATUS = false;
+
+    /**
+     * If true, Records that are not changed by the password update are marked as discardable.
+     * If this is true, it is recommended to set {@link #CONF_CLEAN_PREVIOUS_STATUS} to true.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_DISCARD_UNCHANGED = "etss.discardunchanged";
+    public static final boolean DEFAULT_DISCARD_UNCHANGED = false;
+
     public static final String PASSWORD_SUBFIELD = "k"; // In 856
     public static final String PASSWORD_CONTENT = "password required";
     public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
@@ -92,7 +110,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final int connectionTimeout;
     protected final int readTimeout;
     protected final boolean haltOnError;
+    protected final boolean cleanPrevious;
+    protected final boolean discardUnchanged;
     protected final String rest;
+
     public ETSSStatusFilter(Configuration conf) {
         super(conf);
         feedback = false;
@@ -100,12 +121,26 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         connectionTimeout = conf.getInt(CONF_ETSS_CONNECTION_TIMEOUT, DEFAULT_ETSS_CONNECTION_TIMEOUT);
         readTimeout = conf.getInt(CONF_ETSS_READ_TIMEOUT, DEFAULT_ETSS_READ_TIMEOUT);
         haltOnError = conf.getBoolean(CONF_HALT_ON_EXTERNAL_ERROR, DEFAULT_HALT_ON_EXTERNAL_ERROR);
-        log.debug(String.format("Constructed filter with REST='%s''", rest));
+        cleanPrevious = conf.getBoolean(CONF_CLEAN_PREVIOUS_STATUS, DEFAULT_CLEAN_PREVIOUS_STATUS);
+        discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
+        log.info(String.format(
+                "Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, discardUnchanged=%b",
+                rest, haltOnError, cleanPrevious, discardUnchanged));
     }
 
     @Override
     protected MARCObject adjust(Payload payload, MARCObject marc) {
         long checkTime = -System.currentTimeMillis();
+        MARCObject original;
+        try {
+            original = discardUnchanged ? (MARCObject) marc.clone() : null;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalArgumentException("Unable to clone MARC record", e);
+        }
+        if (cleanPrevious) {
+            clean(marc);
+        }
+
         String recordID = getID(marc);
         if (recordID == null) {
             Logging.logProcess(
@@ -146,16 +181,19 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             }
         }
         checkTime += System.currentTimeMillis();
+        boolean discard = discardUnchanged && original.equals(marc);
         if (Logging.processLog.isDebugEnabled()) {
             Logging.logProcess("ETSSStatusFilter",
                                "Checked password requirement for " + urls.size() + " providers for record "
                                + recordID + " in " + checkTime + " ms. " + needs.size()
                                + " providers explicitly needs password (" + Strings.join(needs, ", ") + "). "
                                + noneeds.size()
-                               + " providers might not need passwords (" + Strings.join(noneeds, ", ") + ")",
+                               + " providers might not need passwords (" + Strings.join(noneeds, ", ") + ")"
+                               + (discard ? ". Requirements has not changed and the record will be discarded"
+                                          : ". Keeping record"),
                                Logging.LogLevel.DEBUG, payload);
         }
-        return marc;
+        return discard ? null : marc;
     }
 
     /**
@@ -197,6 +235,20 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         }
         if (providerPlusID != null) {
             subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
+        }
+    }
+
+    // Cleans all previous password enrichments
+    private void clean(MARCObject marc) {
+        for (MARCObject.DataField urls: marc.getDataFields("856")) {
+            for (int i = urls.getSubFields().size()-1 ; i >= 0 ; i--) {
+                String code = urls.getSubFields().get(i).getCode();
+                if (PASSWORD_CONTENT.equals(code)
+                    || COMMENT_SUBFIELD.equals(code)
+                    || PROVIDER_SPECIFIC_ID.equals(code)) {
+                    urls.getSubFields().remove(i);
+                }
+            }
         }
     }
 

@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.marc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -32,7 +32,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class MARCObject {
+public class MARCObject implements Cloneable {
     private static Log log = LogFactory.getLog(MARCObject.class);
 
     public static final String MARC21_NAMESPACE = "http://www.loc.gov/MARC21/slim";
@@ -46,6 +46,7 @@ public class MARCObject {
     private List<DataField> dataFields= new ArrayList<DataField>();
 
     public MARCObject(String id, String type) {
+        log.debug("Creating with id='" + id + "', type='" + type + "'");
         this.id = id;
         this.type = type;
     }
@@ -151,7 +152,7 @@ public class MARCObject {
         return field == null ? null : field.getFirstSubField(code);
     }
 
-    public static class Leader {
+    public static class Leader implements Cloneable {
         private String id;
         private String content;
 
@@ -175,9 +176,26 @@ public class MARCObject {
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
+
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            Leader other = (Leader) super.clone();
+            other.id = id;
+            other.content = content;
+            return other;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof Leader)) {
+                return false;
+            }
+            Leader other = (Leader)obj;
+            return MARCObject.equals(other.id, id) && MARCObject.equals(other.content, content);
+        }
     }
 
-    public static class ControlField {
+    public static class ControlField implements Cloneable {
         private String id;
         private String tag;
         private String content;
@@ -208,9 +226,29 @@ public class MARCObject {
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
+
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            ControlField other = (ControlField) super.clone();
+            other.id = id;
+            other.tag = tag;
+            other.content = content;
+            return other;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof ControlField)) {
+                return false;
+            }
+            ControlField other = (ControlField)obj;
+            return MARCObject.equals(other.id, id) 
+                   && MARCObject.equals(other.tag, tag)
+                   && MARCObject.equals(other.content, content);
+        }
     }
 
-    public static class DataField {
+    public static class DataField implements Cloneable {
         private String id;
         private String tag;
         private String ind1;
@@ -220,6 +258,8 @@ public class MARCObject {
         public DataField(String tag, String id, String ind1, String ind2) {
             this.id = id;
             this.tag = tag;
+            this.ind1 = ind1;
+            this.ind2 = ind2;
         }
 
         public String getId() {
@@ -268,9 +308,36 @@ public class MARCObject {
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
+
+        @Override
+        public Object clone() throws CloneNotSupportedException {
+            DataField other = (DataField) super.clone();
+            other.id = id;
+            other.tag = tag;
+            other.ind1 = ind1;
+            other.ind2 = ind2;
+            other.subFields = new ArrayList<SubField>(subFields.size());
+            for (SubField sf: subFields) {
+                other.subFields.add((SubField) sf.clone());
+            }
+            return other;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof DataField)) {
+                return false;
+            }
+            DataField other = (DataField)obj;
+            return MARCObject.equals(other.id, id)
+                   && MARCObject.equals(other.tag, tag)
+                   && MARCObject.equals(other.ind1, ind1)
+                   && MARCObject.equals(other.ind1, ind2)
+                   && MARCObject.equals(other.subFields, subFields);
+        }
     }
 
-    public static class SubField {
+    public static class SubField implements Cloneable {
         private String code;
         private String content;
 
@@ -294,6 +361,23 @@ public class MARCObject {
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
+
+        @Override
+        public Object clone() throws CloneNotSupportedException {
+            SubField other = (SubField) super.clone();
+            other.code = code;
+            other.content = content;
+            return other;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null || !(obj instanceof SubField)) {
+                return false;
+            }
+            SubField other = (SubField)obj;
+            return MARCObject.equals(other.code, code) && MARCObject.equals(other.content, content);
+        }
     }
 
     static void attribute(XMLStreamWriter xml, String name, String content) throws XMLStreamException {
@@ -303,4 +387,53 @@ public class MARCObject {
         xml.writeAttribute(name, content);
     }
 
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        MARCObject other = (MARCObject) super.clone();
+        other.id = id;
+        other.type = type;
+        other.leader = (Leader) leader.clone();
+        other.controlFields = new ArrayList<ControlField>(controlFields.size());
+        for (ControlField cf: controlFields) {
+            other.controlFields.add((ControlField) cf.clone());
+        }
+        other.dataFields = new ArrayList<DataField>(dataFields.size());
+        for (DataField df: dataFields) {
+            other.dataFields.add((DataField) df.clone());
+        }
+        return other;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof MARCObject)) {
+            return false;
+        }
+        MARCObject other = (MARCObject)obj;
+        return equals(other.id, id)
+               && equals(other.type, type)
+               && equals(other.leader, leader)
+               && equals(other.controlFields, controlFields)
+               && equals(other.dataFields, dataFields);
+    }
+
+
+    static boolean equals(Object s1, Object s2) {
+        return (s1 == null && s2 == null) || (s1 != null && s1.equals(s2));
+    }
+
+    static boolean equals(List l1, List l2) {
+        if (l1 == null && l2 == null) {
+            return true;
+        }
+        if (l1 == null || l2 == null || l1.size() != l2.size()) {
+            return false;
+        }
+        for (int i = 0 ; i < l1.size() ; i++) {
+            if (!equals(l1.get(i), l2.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
