@@ -332,7 +332,7 @@ public class MARCObject implements Cloneable {
             return MARCObject.equals(other.id, id)
                    && MARCObject.equals(other.tag, tag)
                    && MARCObject.equals(other.ind1, ind1)
-                   && MARCObject.equals(other.ind1, ind2)
+                   && MARCObject.equals(other.ind2, ind2)
                    && MARCObject.equals(other.subFields, subFields);
         }
     }
@@ -431,7 +431,7 @@ public class MARCObject implements Cloneable {
         }
         for (int i = 0 ; i < l1.size() ; i++) {
             if (!equals(l1.get(i), l2.get(i))) {
-                return false;
+                return equals(l1.get(i), l2.get(i));
             }
         }
         return true;
