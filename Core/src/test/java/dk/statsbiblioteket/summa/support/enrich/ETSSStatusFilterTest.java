@@ -121,6 +121,33 @@ public class ETSSStatusFilterTest extends TestCase {
                      0, pumped.size());
     }
 
+/*    public void testFlowDiscardSingle() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "/home/te/tmp/sumfresh/sites/sb/1"
+//            "common/marc/existing_022x.xml"
+        };
+        PayloadFeederHelper feeder = new PayloadFeederHelper(existing);
+        ETSSStatusFilter etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION
+        ));
+        etss.setSource(feeder);
+        List<Payload> pumped = pump(etss);
+        assertEquals("There should be " + existing.length + " enriched Payloads",
+                     existing.length, pumped.size());
+
+        // Re-process
+        feeder = new PayloadFeederHelper(pumped);
+        etss = new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, HYPERION,
+                ETSSStatusFilter.CONF_CLEAN_PREVIOUS_STATUS, true,
+                ETSSStatusFilter.CONF_DISCARD_UNCHANGED, true
+        ));
+        etss.setSource(feeder);
+        pumped = pump(etss);
+        assertEquals("There should be 0 re-enriched Payloads with discarding",
+                     0, pumped.size());
+    }*/
+
     public void testUpdateClean() throws IOException, XMLStreamException, ParseException {
         String[] existing = new String[] {
             "common/marc/existing_022a.xml",
