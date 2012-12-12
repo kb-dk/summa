@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.MARCObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.marc.MARCObject;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
@@ -102,6 +103,15 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final String CONF_DISCARD_UNCHANGED = "etss.discardunchanged";
     public static final boolean DEFAULT_DISCARD_UNCHANGED = false;
 
+    /**
+     * If true, Records marked as deleted are skipped. Note that setting this to true means that the deletion of an
+     * existing record will not result in an index update.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_DISCARD_DELETED = "etss.discarddeleted";
+    public static final boolean DEFAULT_DISCARD_DELETED = false;
+
     public static final String PASSWORD_SUBFIELD = "k"; // In 856
     public static final String PASSWORD_CONTENT = "password required";
     public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
@@ -112,6 +122,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final boolean haltOnError;
     protected final boolean cleanPrevious;
     protected final boolean discardUnchanged;
+    protected final boolean discardDeleted;
     protected final String rest;
 
     public ETSSStatusFilter(Configuration conf) {
@@ -123,9 +134,20 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         haltOnError = conf.getBoolean(CONF_HALT_ON_EXTERNAL_ERROR, DEFAULT_HALT_ON_EXTERNAL_ERROR);
         cleanPrevious = conf.getBoolean(CONF_CLEAN_PREVIOUS_STATUS, DEFAULT_CLEAN_PREVIOUS_STATUS);
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
+        discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
         log.info(String.format(
-                "Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, discardUnchanged=%b",
-                rest, haltOnError, cleanPrevious, discardUnchanged));
+                "Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, discardUnchanged=%b, "
+                + "discardDeleted=%b",
+                rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted));
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement")
+    @Override
+    protected boolean processPayload(Payload payload) throws PayloadException {
+        if (discardDeleted && payload.getRecord() != null && payload.getRecord().isDeleted()) {
+            return false;
+        }
+        return super.processPayload(payload);    // TODO: Implement this
     }
 
     @Override
