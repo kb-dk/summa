@@ -29,15 +29,14 @@ import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageChangeListener;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -235,6 +234,18 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     public static final boolean DEFAULT_LOAD_DATA_COLUMN = true;
 
+    /**
+     * If true the current time is stored as start_time when the first Record is received. If a Record with
+     * modified_time > start_time is received, no further Records are requested.
+     * </p><p>
+     * If the RecordReader is used for batch processing of Records from and to the same Storage, it is recommended
+     * to set this to true to guard against infinite loops.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_STOP_ON_NEWER = "summa.storage.recordreader.stop.on.newer";
+    public static final boolean DEFAULT_STOP_ON_NEWER = false;
+
 
     /**
      * The readable storage.
@@ -260,6 +271,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
     private boolean loadData = DEFAULT_LOAD_DATA_COLUMN;
 
+    private final boolean stopOnNewer;
+    private long firstRecordReceivedTime = -1; // -1 means no records received
 
     /**
      * The storage watcher used to check for changes.
@@ -364,6 +377,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
+        stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
         log.trace("RecordReader constructed, ready for pumping");
     }
 
@@ -552,8 +566,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 // finished waiting
                 // on it to make sure we don't drop any events
                 synchronized (storageWatcher) {
-                    if (storageWatcher.getLastNotify(base) >
-                        lastIteratorUpdate) {
+                    if (storageWatcher.getLastNotify(base) > lastIteratorUpdate) {
                         log.debug("Detected changes on base '" + base + "'since last check. Skipping wait");
                         break;
                     }
@@ -577,8 +590,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
 
         Payload payload = new Payload(recordIterator.next());
-        recordCounter++;
+        if (firstRecordReceivedTime == -1) {
+            firstRecordReceivedTime = System.currentTimeMillis();
+        }
         lastRecordTimestamp = payload.getRecord().getLastModified();
+        if (stopOnNewer && lastRecordTimestamp < lastRecordTimestamp) {
+            // TODO: Avoid sending the duplicate record
+            log.info("Stopping further Record requests as the Record " + payload.getId() + " has a timestamp newer"
+                     + " than the start time for the RecordReader. The current Record will be the last");
+            markEof();
+        }
+        recordCounter++;
 
         log.debug("Emitting " + payload);
 
