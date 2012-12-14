@@ -40,8 +40,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * Optional. Default is false;
      */
-    public static final String CONF_DISCARD_HASPARENT =
-            "summa.relativesfilter.discard.hasparent";
+    public static final String CONF_DISCARD_HASPARENT = "summa.relativesfilter.discard.hasparent";
     public static final boolean DEFAULT_DISCARD_HASPARENT = false;
 
     /**
@@ -49,8 +48,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * Optional. Default is false;
      */
-    public static final String CONF_DISCARD_HASCHILDREN =
-            "summa.relativesfilter.discard.haschildren";
+    public static final String CONF_DISCARD_HASCHILDREN = "summa.relativesfilter.discard.haschildren";
     public static final boolean DEFAULT_DISCARD_HASCHILDREN = false;
 
     private boolean discardHasParent = DEFAULT_DISCARD_HASPARENT;
@@ -59,28 +57,24 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
     public DiscardRelativesFilter(Configuration conf) {
         super(conf);
         feedback = false;
-        discardHasParent =
-                conf.getBoolean(CONF_DISCARD_HASPARENT, discardHasParent);
-        discardHasChildren =
-                conf.getBoolean(CONF_DISCARD_HASCHILDREN, discardHasChildren);
-        log.debug("Created relativesFilter with discardHasParent="
-                  + discardHasParent + " and discardHasChildren="
-                  + discardHasChildren);
+        discardHasParent = conf.getBoolean(CONF_DISCARD_HASPARENT, discardHasParent);
+        discardHasChildren = conf.getBoolean(CONF_DISCARD_HASCHILDREN, discardHasChildren);
+        log.debug("Created relativesFilter with discardHasParent=" + discardHasParent
+                  + " and discardHasChildren=" + discardHasChildren);
     }
 
     @Override
     protected boolean checkDiscard(Payload payload) {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("checkDiscard(" + payload + ") called with "
-                      + payload.getRecord());
+            log.trace("checkDiscard(" + payload + ") called with " + payload.getRecord());
         }
         if (payload.getRecord() == null) {
             return false;
         }
         log.trace("Checking for parents");
         List<Record> parents = payload.getRecord().getParents();
-        if (discardHasParent && parents != null && parents.size() > 0) {
+        if (discardHasParent && parents != null && !parents.isEmpty()) {
             Logging.logProcess(
                     getName() + "#" + this.getClass().getSimpleName(),
                     "Discarding due to parent existence",
@@ -91,7 +85,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
         }
         log.trace("Checking for children");
         List<Record> children = payload.getRecord().getChildren();
-        if (discardHasChildren && children != null && children.size() > 0) {
+        if (discardHasChildren && children != null && !children.isEmpty()) {
             Logging.logProcess(
                     getName() + "#" + this.getClass().getSimpleName(),
                     "Discarding due to children existence",
@@ -103,4 +97,3 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
         return false;
     }
 }
-
