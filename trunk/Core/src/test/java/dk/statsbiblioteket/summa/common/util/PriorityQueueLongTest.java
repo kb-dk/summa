@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.util.Arrays;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.util.Arrays;
 
 /**
  * PriorityQueueLong Tester.
@@ -32,10 +32,12 @@ public class PriorityQueueLongTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

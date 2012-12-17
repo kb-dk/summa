@@ -22,9 +22,9 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.marc4j.MarcPermissiveStreamReader;
 import org.marc4j.MarcReader;
 import org.marc4j.MarcWriter;
-import org.marc4j.MarcPermissiveStreamReader;
 import org.marc4j.marc.ControlField;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
@@ -312,7 +312,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                 // 000\u0031a3893228845\u0031fa\u0031od
                  String[] tokens = content.split(controlfieldDelimiter);
                 for (String token: tokens) {
-                    if (token.length() == 0) {
+                    if (token.isEmpty()) {
                         //noinspection UnnecessaryContinue
                         continue; // leading or trailing delimiter
                     } else if (token.length() == 1) {

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.StatusMonitor;
-import dk.statsbiblioteket.summa.control.api.ServiceConnectionFactory;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ServiceConnectionFactory;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.StatusMonitor;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +44,7 @@ public class WaitCommand extends RemoteCommand<ClientConnection> {
                                             "Default timeout is 24h");
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         if (getArguments().length != 1) {
             ctx.error("Only one service id may be specified, found "

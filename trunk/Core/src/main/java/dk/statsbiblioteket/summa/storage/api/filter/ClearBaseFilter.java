@@ -14,22 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
-
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.Strings;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple filter that clears a given set of bases on the first invocation
@@ -68,8 +66,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         fired = false;
         feedback = false; // Normally this filter is very fast
 
-        log.info("Created ClearBaseFilter directly on Storage for bases: "
-                 + Strings.join(bases, ", "));
+        log.info("Created ClearBaseFilter directly on Storage for bases: " + Strings.join(bases, ", "));
     }
 
     public ClearBaseFilter(WritableStorage storage, Configuration conf) {
@@ -79,8 +76,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         payloadMatcher = new PayloadMatcher(conf);
         fired = false;
 
-        log.info("Created ClearBaseFilter directly on Storage "
-                 + "with configuration");
+        log.info("Created ClearBaseFilter directly on Storage " + "with configuration");
     }
 
     public ClearBaseFilter(Configuration conf) {
@@ -92,13 +88,11 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         payloadMatcher = new PayloadMatcher(conf, false);
         fired = false;
 
-        log.info("Created ClearBaseFilter for bases: "
-                 + Strings.join(bases, ", "));
+        log.info("Created ClearBaseFilter for bases: " + Strings.join(bases, ", "));
     }
 
     @Override
-    protected synchronized boolean processPayload(Payload payload)
-                                                       throws PayloadException {
+    protected synchronized boolean processPayload(Payload payload) throws PayloadException {
         if (fired) {
             if (log.isTraceEnabled()) {
                 log.trace("Already fired. No-op");

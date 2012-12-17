@@ -45,6 +45,7 @@ public class Aleph2XML2Test extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
@@ -53,6 +54,7 @@ public class Aleph2XML2Test extends TestCase {
         return new TestSuite(Aleph2XML2Test.class);
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

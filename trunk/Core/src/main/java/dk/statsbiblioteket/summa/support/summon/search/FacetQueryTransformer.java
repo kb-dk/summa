@@ -112,7 +112,7 @@ public class FacetQueryTransformer {
             }
             return true;
         }
-        if (query instanceof BooleanQuery && negated) { // Only SHOULD allowed
+        if (query instanceof BooleanQuery) { // Only SHOULD allowed, negated is implied
             for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
                 if (clause.getOccur() != BooleanClause.Occur.SHOULD) {
                     if (log.isDebugEnabled()) {

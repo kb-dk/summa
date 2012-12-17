@@ -14,21 +14,21 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.Attributes;
 
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
-import java.util.List;
+import javax.xml.parsers.SAXParserFactory;
 import java.util.ArrayList;
+import java.util.List;
 
 public class XMLSplitterHandlerTest extends TestCase implements
                                                      XMLSplitterReceiver {
@@ -156,10 +156,12 @@ public class XMLSplitterHandlerTest extends TestCase implements
         assertTrue(content.contains("&amp;"));
     }
 
+    @Override
     public void queueRecord(Record record) {
         received.add(record);
     }
 
+    @Override
     public boolean isTerminated() {
         return false;
     }

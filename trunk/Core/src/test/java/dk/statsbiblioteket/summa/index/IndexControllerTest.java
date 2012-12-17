@@ -14,18 +14,17 @@
  */
 package dk.statsbiblioteket.summa.index;
 
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.index.IndexCommon;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -36,11 +35,13 @@ public class IndexControllerTest extends TestCase {
     }
     File root = new File(System.getProperty("java.io.tmpdir"), "subdirtest");
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         root.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (root.exists()) {

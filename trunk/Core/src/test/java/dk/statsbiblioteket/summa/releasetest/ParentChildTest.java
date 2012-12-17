@@ -14,32 +14,32 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.control.service.SearchService;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * The purpose of this test is to test handling of parent-child relations with
@@ -99,10 +99,8 @@ public class ParentChildTest extends NoExitTestCase {
         QueryOptions options = new QueryOptions(null, null, -1, 0);
         Record record = reader.getRecord("horizon:parent1", options);
         assertNotNull("The record should exist", record);
-        assertTrue("The record chould have child-IDs",
-                   record.getChildIds().size() > 0);
-        assertTrue("The record chould have children",
-                   record.getChildren().size() > 0);
+        assertTrue("The record chould have child-IDs", !record.getChildIds().isEmpty());
+        assertTrue("The record chould have children", !record.getChildren().isEmpty());
         reader.releaseConnection();
         storage.close();
     }
@@ -242,7 +240,7 @@ public class ParentChildTest extends NoExitTestCase {
         Record parent1 = reader.getRecord("horizon:parent1", qo);
         assertNotNull("parent1 should exist", parent1);
         assertTrue(parent1 + " should have children", 
-                   parent1.getChildren() != null && parent1.getChildren().size() > 0);
+                   parent1.getChildren() != null && !parent1.getChildren().isEmpty());
         storage.close();
     }
 

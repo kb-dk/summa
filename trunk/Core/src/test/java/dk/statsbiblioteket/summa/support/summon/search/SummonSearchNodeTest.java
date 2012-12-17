@@ -280,8 +280,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, "shortformat");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         List<String> dates= getPattern(summon, request, DATEPATTERN, false);
-        assertTrue("There should be at least 1 extracted date",
-                   dates.size() > 0);
+        assertTrue("There should be at least 1 extracted date", !dates.isEmpty());
         for (String date: dates) {
             assertTrue("the returned dates should be of length 4 or less, got '" + date + "'", date.length() <= 4);
         }
@@ -350,7 +349,7 @@ public class SummonSearchNodeTest extends TestCase {
                 for (Map.Entry<String, List<FacetResultImpl.Tag<String>>> entry: facets.getMap().entrySet()) {
                     assertEquals("The number of tags for facet '" + entry.getKey()
                                  + "' should be 0 as there should be no hits. First tag was '"
-                                 + (entry.getValue().size() == 0 ? "N/A" : entry.getValue().get(0).getKey()) + "',",
+                                 + (entry.getValue().isEmpty() ? "N/A" : entry.getValue().get(0).getKey()) + "',",
                                  0, entry.getValue().size());
                 }
             }
@@ -679,7 +678,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> ids = getAttributes(summon, request, "id", false);
-        assertTrue("There should be some hits", ids.size() > 0);
+        assertTrue("There should be some hits", !ids.isEmpty());
     }
 
     public void testPaging() throws RemoteException {
@@ -1016,7 +1015,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         Request request = new Request();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", " + "summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
+            "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
 //        String r1 = request.toString(true);
 
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -1026,7 +1025,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         request.clear();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", " + "summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
+            "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
   //      String r2 = request.toString(true);
         responses.clear();
         summon.search(request, responses);
@@ -1448,13 +1447,13 @@ public class SummonSearchNodeTest extends TestCase {
         request.put(DocumentKeys.SEARCH_QUERY, "recursion in string theory");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         List<String> ids = getAttributes(adjusting, request, "id", false);
-        assertTrue("There should be at least one ID", ids.size() > 0);
+        assertTrue("There should be at least one ID", !ids.isEmpty());
 
         request.clear();
         request.put(DocumentKeys.SEARCH_QUERY, IndexUtils.RECORD_FIELD + ":\"" + ids.get(0) + "\"");
         List<String> researchIDs = getAttributes(adjusting, request, "id", false);
         assertTrue("There should be at least one hit for a search for ID '"
-                   + ids.get(0) + "'", researchIDs.size() > 0);
+                   + ids.get(0) + "'", !researchIDs.isEmpty());
     }
 
     // TODO: "foo:bar zoo"

@@ -179,6 +179,7 @@ public class SBMARCParser extends MARCParser {
             this.sortField = sortField;
         }
 
+        @Override
         public int compareTo(Child other) {
             if (this.sortField == null) {
                 return other.sortField == null ? 0 : -1;
@@ -348,7 +349,7 @@ public class SBMARCParser extends MARCParser {
     @Override
     protected Record makeRecord(String xml) {       
         if (id == null) {
-            log.warn("makerecord called but no ID was extracted from MARC " + "record from " + source);
+            log.warn("makerecord called but no ID was extracted from MARC record from " + source);
             return null;
         }
         Record record;
@@ -381,7 +382,7 @@ public class SBMARCParser extends MARCParser {
             record.setParentIds(Arrays.asList(parent));
         }
 
-        if (children.size() != 0) {
+        if (!children.isEmpty()) {
             Collections.sort(children);
             ArrayList<String> childrenIDs = new ArrayList<String>(children.size());
             for (Child child: children) {

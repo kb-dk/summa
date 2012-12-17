@@ -34,8 +34,7 @@ import java.util.Comparator;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class WindowQueue<T extends Comparable<? super T>> 
-                                                      extends PriorityQueue<T> {
+public class WindowQueue<T extends Comparable<? super T>> extends PriorityQueue<T> {
     // If defined, only elements higher than this will be accepted
     private T lowerBound = null;
     // If defined, only elements lower than this will be accepted
@@ -51,6 +50,7 @@ public class WindowQueue<T extends Comparable<? super T>>
 
     /**
      * Create a queue with the given constraints.
+     *
      * @param comparator      determines the order. If null, natural ordering
      *                        is used.
      * @param lowerBound      elements lower than or equal to this won't be
@@ -59,9 +59,7 @@ public class WindowQueue<T extends Comparable<? super T>>
      *                        inserted in the queue. Ignored if null.
      * @param resourceTracker determines the queue size.
      */
-    public WindowQueue(
-            Comparator<T> comparator,
-            T lowerBound, T upperBound, ResourceTracker<T> resourceTracker) {
+    public WindowQueue(Comparator<T> comparator, T lowerBound, T upperBound, ResourceTracker<T> resourceTracker) {
         super(comparator, 10, Integer.MAX_VALUE); // resourceTracker controls
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
@@ -107,6 +105,7 @@ public class WindowQueue<T extends Comparable<? super T>>
 
     /**
      * Note: Changing the lower bound only affects future inserts.
+     *
      * @param lowerBound the lower bound for accepted valued.
      */
     public void setLowerBound(T lowerBound) {
@@ -119,6 +118,7 @@ public class WindowQueue<T extends Comparable<? super T>>
 
     /**
      * Note: Changing the upper bound only affects future inserts.
+     *
      * @param upperBound the upper bound for accepted valued.
      */
     public void setUpperBound(T upperBound) {

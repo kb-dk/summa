@@ -17,12 +17,12 @@ package dk.statsbiblioteket.summa.common.configuration.storage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interface for exposing a remote {@link ConfigurationStorage} both as a JMX
@@ -57,28 +57,37 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
      */
     public static final String CONF_REGISTRY_HOST = "summa.configuration.registry.host";
 
+    @Override
     public void put(String key, Serializable value) throws RemoteException;
 
+    @Override
     public Serializable get(String key) throws RemoteException;
 
+    @Override
     public Iterator<Map.Entry<String,Serializable>> iterator() throws
                                                                RemoteException;
 
+    @Override
     public void purge(String key) throws RemoteException;
 
     public String[] getConfigDump() throws RemoteException;
 
+    @Override
     public boolean supportsSubStorage() throws RemoteException;
 
+    @Override
     public ConfigurationStorage getSubStorage(String key) throws
                                                           RemoteException;
 
+    @Override
     public ConfigurationStorage createSubStorage(String key) throws
                                                              RemoteException;
 
+    @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                         throws RemoteException;
 
+    @Override
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                 RemoteException;
 }

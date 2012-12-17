@@ -14,25 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.StringWriter;
-import com.ibm.icu.text.Collator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
-
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.*;
 
 /**
  * A super-class with tests for String Pools.
@@ -58,6 +52,7 @@ public abstract class StringPoolSuper extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if(poolDir.exists()) {
@@ -71,6 +66,7 @@ public abstract class StringPoolSuper extends TestCase {
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         for (SortedPool<String> pool: pools) {
@@ -486,7 +482,7 @@ public abstract class StringPoolSuper extends TestCase {
         compareOrder("Sort with add should work",
                                     pool, sorted);
         pool.clear();
-        assertTrue("Pool should be empty after clear", pool.size() == 0);
+        assertTrue("Pool should be empty after clear", pool.isEmpty());
 
         pool.addAll(Arrays.asList(words));
         compareOrder("Sort with addAll should work",

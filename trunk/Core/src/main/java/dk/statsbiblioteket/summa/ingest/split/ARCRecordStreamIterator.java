@@ -16,14 +16,17 @@ import java.util.Iterator;
 public class ARCRecordStreamIterator implements Iterator<ARCRecordStream> {
     private static Log log = LogFactory.getLog(ARCRecordStreamIterator.class);
 
+    @Override
     public boolean hasNext() {
         return false;  // TODO: Implement this
     }
 
+    @Override
     public ARCRecordStream next() {
         return null;  // TODO: Implement this
     }
 
+    @Override
     public void remove() {
         // TODO: Implement this
     }

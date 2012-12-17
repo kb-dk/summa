@@ -22,10 +22,8 @@ import java.io.File;
  */
 public interface IndexListener {
     /**
-     * Called when the index has changed. This can be either an update or a
-     * changed position of the index.
-     * @param indexFolder the location of the index. This can be null, if no
-     *                    index is available.
+     * Called when the index has changed. This can be either an update or a changed position of the index.
+     * @param indexFolder the location of the index. This can be null, if no index is available.
      */
     public void indexChanged(File indexFolder);
 }

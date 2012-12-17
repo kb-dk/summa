@@ -14,25 +14,25 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Converts an old-style SearchDescriptor to proper Summa Index Descriptor XML.
@@ -74,7 +74,7 @@ public class DescriptorConverter {
         processGroups(doc, out);
         processFields(doc, out);
         addExtras(doc, out);
-        if (aliasClash.size() != 0) {
+        if (!aliasClash.isEmpty()) {
             out.append("  <!-- The following group- and field-names clashes\n"
                        + "       with aliases: ");
             for (String name: aliasClash) {
@@ -114,7 +114,7 @@ public class DescriptorConverter {
                     "Got %d children answering to the name '%s'. Expected 1",
                     children.size(), childName));
         }
-        if (children.size() == 0) {
+        if (children.isEmpty()) {
             throw new IllegalStateException(String.format(
                     "Got 0 children answering to the name '%s'. Expected 1",
                     childName));

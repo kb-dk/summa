@@ -1,14 +1,15 @@
 package org.apache.lucene.search.exposed;
 
+import com.ibm.icu.text.Collator;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
 
 import java.io.File;
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
 public class ExposedHelper {
   static final char[] CHARS = // Used for random content
@@ -76,6 +77,7 @@ public class ExposedHelper {
       this.comparator = comparator;
     }
 
+    @Override
     public int compareTo(Pair o) {
       return comparator.compare(term, o.term);
     }

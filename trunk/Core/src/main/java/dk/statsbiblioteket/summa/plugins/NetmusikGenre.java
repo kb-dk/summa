@@ -34,6 +34,7 @@ public class NetmusikGenre {
      * Return the singleton instance of the NetmusikGenre class.
      * @return The singleton instance of this class.
      */
+    @SuppressWarnings({"DefaultFileTemplate", "CallToPrintStackTrace"})
     private static synchronized NetmusikGenre getInstance(){
         if (thisInstance == null){
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -41,7 +42,7 @@ public class NetmusikGenre {
             try {
                 prop.loadFromXML(loader.getResourceAsStream("genremap.properties.xml"));
             } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
         return thisInstance;
@@ -53,6 +54,7 @@ public class NetmusikGenre {
      * @return The genre property.
      */
     public static String getGenre(String genreOrg){
-        return  getInstance().prop.getProperty(genreOrg, "");
+        getInstance();
+        return prop.getProperty(genreOrg, "");
     }
 }

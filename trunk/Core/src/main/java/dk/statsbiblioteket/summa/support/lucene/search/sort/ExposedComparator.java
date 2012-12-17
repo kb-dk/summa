@@ -28,9 +28,6 @@ import org.apache.lucene.search.exposed.compare.NamedComparator;
 
 import java.io.IOException;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

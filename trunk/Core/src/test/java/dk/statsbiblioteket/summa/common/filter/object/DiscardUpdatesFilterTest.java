@@ -14,17 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -73,24 +75,30 @@ public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
     /* Feeder for the Filter */
     private List<String> ids = new ArrayList<String>(10);
 
+    @Override
     public boolean hasNext() {
-        return ids.size() > 0;
+        return !ids.isEmpty();
     }
+    @Override
     public Payload next() {
         return new Payload(new Record(ids.remove(0), "foo", new byte[0]));
     }
+    @Override
     public void remove() {
         // Nada
     }
+    @Override
     public void setSource(Filter filter) {
         // Nada
     }
+    @Override
     public boolean pump() throws IOException {
         if (hasNext()) {
             next().close();
         }
         return hasNext();
     }
+    @Override
     public void close(boolean success) {
         // Nada
     }

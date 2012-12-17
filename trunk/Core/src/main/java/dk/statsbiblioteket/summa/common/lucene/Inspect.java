@@ -347,7 +347,7 @@ public class Inspect {
                 profiler.beat();
             }
             if (i % statspan == 0 || System.currentTimeMillis() > endTime) {
-                System.out.println(profiler.getBps(false) + " requests/sec" + " Mem: " + getMem() + " doc " + i + "/"
+                System.out.println(profiler.getBps(false) + " requests/sec Mem: " + getMem() + " doc " + i + "/"
                                    + ir.maxDoc());
             }
             if (System.currentTimeMillis() > endTime) {

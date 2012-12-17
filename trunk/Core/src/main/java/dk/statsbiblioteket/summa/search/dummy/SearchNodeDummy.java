@@ -19,11 +19,10 @@ import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.dummy.DummyResponse;
-
-import java.rmi.RemoteException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.rmi.RemoteException;
 
 /**
  * A {@link dk.statsbiblioteket.summa.search.SearchNode} implementation that
@@ -66,27 +65,26 @@ public class SearchNodeDummy extends SearchNodeImpl {
         id = conf.getString(CONF_ID, this.toString());
     }
 
+    @Override
     protected void managedWarmup (String request) {
-        log.info ("Warmup (" + warmupCount + "): " + request);
-        warmupCount++;
+        log.info ("Warmup (" + warmupCount++ + "): " + request);
     }
 
+    @Override
     protected void managedOpen (String location) throws RemoteException {
-        log.info ("Open (" + openCount + "): " + location);
-        openCount++;
+        log.info ("Open (" + openCount++ + "): " + location);
     }
 
+    @Override
     protected void managedClose () throws RemoteException {
-        log.info ("Close ("+closeCount+")");
-        closeCount++;
+        log.info ("Close (" + closeCount++ + ")");
     }
 
+    @Override
     protected void managedSearch (Request request, ResponseCollection responses) throws RemoteException {
         log.info ("Search:\tRequest:" + request + "\n\tResponses: " + responses);
 
-        responses.add(new DummyResponse(id, warmupCount, openCount,
-                                        closeCount, searchCount));
-        searchCount++;
+        responses.add(new DummyResponse(id, warmupCount, openCount, closeCount, searchCount++));
     }
 }
 

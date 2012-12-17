@@ -352,7 +352,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
          * @param line the String to process.
          */
         private void processLineContent(String line) {
-            if (buffer.size() == 0) {
+            if (buffer.isEmpty()) {
                 appendToBuffer(RECORD_START);
             }
             //  * 000000001 00800 L $$a1979$$bdk$$e1$$f0$$g0$$ldan$$tm

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
-import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
+import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
@@ -39,6 +39,7 @@ public class KillCommand extends RemoteCommand<ClientConnection> {
         this.clientAddress = clientAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
 
         /* Kill whoever needs to be killed  */

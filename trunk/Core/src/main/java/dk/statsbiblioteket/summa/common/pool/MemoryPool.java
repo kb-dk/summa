@@ -52,6 +52,7 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         log.trace("Created MemoryPool");
     }
 
+    @Override
     public boolean open(File location, String poolName, boolean readOnly,
                         boolean forceNew) throws IOException {
         //noinspection DuplicateStringLiteralInspection
@@ -95,12 +96,14 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return true;
     }
 
+    @Override
     public void close() {
         if (values != null) {
             values.clear();
         }
     }
 
+    @Override
     public void store() throws IOException {
         store(location, poolName);
     }

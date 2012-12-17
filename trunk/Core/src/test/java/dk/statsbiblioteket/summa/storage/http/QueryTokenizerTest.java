@@ -32,10 +32,12 @@ public class QueryTokenizerTest extends TestCase {
 
     QueryTokenizer toks;
 
+    @Override
     public void setUp() {
 
     }
 
+    @Override
     public void tearDown() {
 
     }

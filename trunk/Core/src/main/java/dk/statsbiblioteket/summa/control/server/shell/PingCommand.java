@@ -17,9 +17,9 @@ package dk.statsbiblioteket.summa.control.server.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * Simple command to test the connection to the control server
@@ -40,6 +40,7 @@ public class PingCommand extends Command {
         this.address = controlAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ConnectionContext<ControlConnection> connCtx = null;
 

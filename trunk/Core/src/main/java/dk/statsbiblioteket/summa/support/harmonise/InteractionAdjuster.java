@@ -749,7 +749,7 @@ public class InteractionAdjuster implements Configurable {
         Map<String, String> reversedSimplified = new HashMap<String, String>(facetMap.getForward().size());
         for (Map.Entry<String, Set<String>> entry:
             facetMap.getReverse().entrySet()) {
-            if (entry.getValue().size() > 0) {
+            if (!entry.getValue().isEmpty()) {
                 reversedSimplified.put(entry.getKey(), entry.getValue().iterator().next());
             }
         }
@@ -860,7 +860,7 @@ public class InteractionAdjuster implements Configurable {
         // It is okay to compare as worst case is an unnecessary adjustment
         //noinspection FloatingPointEquality
         if (addition == 0 && factor == 1.0) {
-            log.trace("No adjustment to make to scores " + "(factor == 1.0, addition == 0.0");
+            log.trace("No adjustment to make to scores (factor == 1.0, addition == 0.0");
             return;
         }
 

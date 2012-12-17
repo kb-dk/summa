@@ -15,17 +15,6 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.Iterator;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.marc4j.Constants;
@@ -33,13 +22,11 @@ import org.marc4j.MarcException;
 import org.marc4j.MarcReader;
 import org.marc4j.converter.CharConverter;
 import org.marc4j.converter.impl.AnselToUnicode;
-import org.marc4j.marc.ControlField;
-import org.marc4j.marc.DataField;
-import org.marc4j.marc.Leader;
-import org.marc4j.marc.MarcFactory;
-import org.marc4j.marc.Record;
-import org.marc4j.marc.Subfield;
+import org.marc4j.marc.*;
 import org.marc4j.marc.impl.Verifier;
+
+import java.io.*;
+import java.util.Iterator;
 
 /**
  * Implementation of MarcReader from marc4j, that allows for the input charset
@@ -130,6 +117,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
     /**
      * Returns true if the iteration has more records, false otherwise.
      */
+    @Override
     public boolean hasNext() {
         try {
             if (input.available() == 0) {
@@ -146,6 +134,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
      *
      * @return Record - the record object
      */
+    @Override
     public Record next() {
         record = factory.newRecord();
 

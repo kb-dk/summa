@@ -174,7 +174,7 @@ public class FacetRequest {
         reader.nextTag(); // Ignore and skip to END_ELEMENT
       }
     }
-    if (groups.size() == 0) {
+    if (groups.isEmpty()) {
       throw new XMLStreamException("No groups defined for " + request);
     }
     return groups;

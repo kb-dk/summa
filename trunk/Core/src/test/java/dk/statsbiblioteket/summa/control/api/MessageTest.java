@@ -17,11 +17,10 @@ package dk.statsbiblioteket.summa.control.api;
  * Unit tests for {@link Message} class
  */
 
+import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import junit.framework.TestCase;
 
 import java.util.Arrays;
-
-import dk.statsbiblioteket.summa.control.api.feedback.Message;
 
 public class MessageTest extends TestCase {
     Message message;
@@ -32,6 +31,7 @@ public class MessageTest extends TestCase {
     char[] respRaw;
 
 
+    @Override
     public void setUp () {
         msgText = "Hello world";
         msgRaw = new char[]{'r', 'a', 'w', ' ' , 'p', 'o', 'w', 'e', 'r'};

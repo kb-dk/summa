@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.shell;
 
-import java.util.*;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * A helper class to print tabular data to an {@code Appendable}
@@ -64,7 +64,7 @@ public class Layout {
                                                    + data.length);
             }
 
-            if (rows.size() == 0) {
+            if (rows.isEmpty()) {
                 appendRow();
             }
 
@@ -81,6 +81,7 @@ public class Layout {
             return row;
         }
 
+        @Override
         public Iterator<Map<String, String>> iterator() {
             return rows.iterator();
         }

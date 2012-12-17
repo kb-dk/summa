@@ -20,8 +20,6 @@
 package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -32,11 +30,11 @@ import java.util.regex.Pattern;
  * The canonical input is 2010-11-30T15:58:45+0200 but time offset is ignored
  * and variations such as 20101130 15:58:45 and 2010/11/30-15:58 are accepted.
  */
+@SuppressWarnings("MagicConstant") // The month-magic is assumed to be constant
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Datetime {
-    private static Log log = LogFactory.getLog(Datetime.class);
 
     // Nice online evaluator at http://regexplanet.com/simple/
     public static final Pattern datePattern =
@@ -91,8 +89,7 @@ public class Datetime {
                      new Locale("en") : new Locale(locale);
         Formatter formatter = new Formatter(buffer, loc);
         Calendar cal = Calendar.getInstance();
-        cal.set(Integer.parseInt(year), Integer.parseInt(month)-1,
-                Integer.parseInt(day));
+        cal.set(Integer.parseInt(year), Integer.parseInt(month)-1, Integer.parseInt(day));
         formatter.format("%1$tB %1$tb", cal);
         formatter.flush();
         return buffer.toString();
@@ -108,6 +105,7 @@ public class Datetime {
      * @return a space-delimited list of tokens with common ways of writing the
      *         given time. This includes HH:MM:SS.
      */
+    @SuppressWarnings("UnusedParameters")
     public static synchronized String timeExpand(String iso, String locale) {
         Matcher matcher = timePattern.matcher(iso);
         if (!matcher.matches()) {
@@ -179,7 +177,7 @@ public class Datetime {
         return s.substring(1, s.length());
     }
 
-    private static String align2(final int v) {
+/*    private static String align2(final int v) {
         return v < 10 ? "0" + Integer.toString(v) : Integer.toString(v);
     }
 
@@ -190,7 +188,7 @@ public class Datetime {
         }
         return result;
     }
-
+     */
     /**
      * Produces tokens with common variations of entering the given date and
      * time. This is a shorthand for calling both {@link #dateExpand} and
@@ -203,6 +201,4 @@ public class Datetime {
     public static String dateAndTimeExpand(String iso, String locale) {
         return dateExpand(iso, locale) + " " + timeExpand(iso, locale);
     }
-
-
 }

@@ -248,11 +248,11 @@ public class QueryRewriter {
      */
     public synchronized String rewrite(String query) throws ParseException {
         Query q = queryParser.parse(query);
-        Query walked = walkQuery(q, true);
+        Query walked = walkQuery(q);
         return walked == null ? null : convertQueryToString(walked, true);
     }
 
-    private Query walkQuery(Query query, boolean top) {
+    private Query walkQuery(Query query) {
         if (query instanceof BooleanQuery) {
             Query updated = event.onQuery((BooleanQuery)query);
             if (!(updated instanceof BooleanQuery)) {
@@ -262,7 +262,7 @@ public class QueryRewriter {
             BooleanQuery result = new BooleanQuery();
             boolean foundSome = false;
             for (BooleanClause clause : booleanQuery.getClauses()) {
-                Query walked = walkQuery(clause.getQuery(), false);
+                Query walked = walkQuery(clause.getQuery());
                 if (walked != null) {
                     BooleanClause clauseResult = event.createBooleanClause(walked, clause.getOccur());
                     if (clauseResult != null) {
@@ -341,8 +341,7 @@ public class QueryRewriter {
                     }
                     break;
                 case MUST:
-                    inner += (onlyMust && terse ? "" : "+") + convertQueryToString(currentClause.getQuery(), false)
-                             + " ";
+                    inner += (onlyMust ? "" : "+") + convertQueryToString(currentClause.getQuery(), false) + " ";
                     break;
                 case MUST_NOT:
                     inner += "-" + convertQueryToString(currentClause.getQuery(), false) + " ";

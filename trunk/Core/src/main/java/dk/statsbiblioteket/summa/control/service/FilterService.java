@@ -14,22 +14,20 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
-import java.rmi.RemoteException;
-import java.io.IOException;
-
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.service.ServiceBase;
-import dk.statsbiblioteket.summa.common.filter.FilterControl;
-import dk.statsbiblioteket.summa.common.filter.FilterChainHandler;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.FilterChainHandler;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
-import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
 
 /**
  * Wrapper for FilterControl. The setup of the concrete Filter chain handled by
@@ -84,6 +82,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
                   Logging.LogLevel.DEBUG);
     }
 
+    @Override
     public void start() throws RemoteException {
         if (filterControl == null) {
             log.info("Start requested with no filter control, "
@@ -150,6 +149,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         setStatusRunning("Creating filterControl");
         try {
             filterControl = new FilterControl(conf) {
+                @Override
                 protected void finishedCallback() {
                     switch (getStatus()) {
                         case error:
@@ -202,6 +202,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         setStatusIdle();
     }
 
+    @Override
     public void stop() throws RemoteException {
         log.trace("Recieved request to stop FilterControl service");
 

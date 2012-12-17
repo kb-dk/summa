@@ -14,10 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.rpc;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link ConnectionFactory} creating a backend {@link ConnectionFactory}
@@ -68,22 +68,27 @@ public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
                  + ", and retries=" + getNumRetries());
     }
 
+    @Override
     public E createConnection(String s) {
         return backend.createConnection(s);
     }
 
+    @Override
     public int getGraceTime () {
         return backend.getGraceTime();
     }
 
+    @Override
     public void setGraceTime (int seconds) {
         backend.setGraceTime(seconds);
     }
 
+    @Override
     public int getNumRetries () {
         return backend.getNumRetries();
     }
 
+    @Override
     public void setNumRetries (int retries) {
         backend.setNumRetries(retries);
     }

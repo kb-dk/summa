@@ -272,6 +272,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         // Search for Jens with default / different prefixes
     }
 
+    @Override
     public boolean hasNext() {
         return hasMore;
     }
@@ -279,6 +280,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private boolean hasMore = true;
     private String jens = null;
     private String DOC_ID = "fagref:jh@statsbiblioteket.invalid";
+    @Override
     public Payload next() {
         if (!hasMore) {
             return null;
@@ -298,16 +300,20 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
     }
 
+    @Override
     public void remove() {
     }
 
+    @Override
     public void setSource(Filter filter) {
     }
 
+    @Override
     public boolean pump() throws IOException {
         return next() != null;
     }
 
+    @Override
     public void close(boolean success) {
         hasMore = false;
     }

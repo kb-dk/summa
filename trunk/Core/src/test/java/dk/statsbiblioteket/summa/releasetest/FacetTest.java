@@ -1014,7 +1014,7 @@ public class FacetTest extends NoExitTestCase {
             log.debug("IDs from sort_title reverse: " + second);
 
             assertFalse(String.format(
-                "The first IDs '%s' should be in reverse order of the second " + "IDs '%s'", first, second),
+                "The first IDs '%s' should be in reverse order of the second IDs '%s'", first, second),
                         first.equals(second));
             searcher.close();
         } finally {

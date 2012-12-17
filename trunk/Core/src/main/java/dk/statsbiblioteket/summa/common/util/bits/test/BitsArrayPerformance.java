@@ -14,13 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util.bits.test;
 
-import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArray64Aligned;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArray64Packed;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArrayAligned;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArrayImpl;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArrayInt;
-import dk.statsbiblioteket.summa.common.util.bits.BitsArrayPacked;
+import dk.statsbiblioteket.summa.common.util.bits.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.StringWriter;
@@ -117,31 +111,37 @@ public class BitsArrayPerformance {
     public static List<BitsArrayGenerator> getGenerators() {
         return Arrays.asList(
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArrayPacked(length, maxValue);
                     }
                 },
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArrayAligned(length, maxValue);
                     }
                 },
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArrayInt(length);
                     }
                 },
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArray64Packed(length, maxValue);
                     }
                 },
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArray64Aligned(length, maxValue);
                     }
                 },
                 new BitsArrayGenerator() {
+                    @Override
                     public BitsArray create(int length, int maxValue) {
                         return new BitsArrayConstant();
                     }
@@ -378,6 +378,7 @@ public class BitsArrayPerformance {
         public SignalBAG(BitsArray signal) {
             this.signal = signal;
         }
+        @Override
         public BitsArray create(int length, int maxValue) {
             return signal;
         }
@@ -385,6 +386,7 @@ public class BitsArrayPerformance {
 
     // Use int[]
     public static final BitsArray ARRAYSIGNAL = new BitsArrayImpl() {
+        @Override
         public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
@@ -392,15 +394,19 @@ public class BitsArrayPerformance {
         protected void ensureSpace(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int getAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int fastGetAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public void assign(BitsArray other) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int getMaxValue() {
             throw new UnsupportedOperationException("Not supported");
         }
@@ -408,6 +414,7 @@ public class BitsArrayPerformance {
 
     // No read or write, only random values
     public static final BitsArray NULLSIGNAL = new BitsArrayImpl() {
+        @Override
         public void fastSet(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
@@ -415,15 +422,19 @@ public class BitsArrayPerformance {
         protected void ensureSpace(int index, int value) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int getAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int fastGetAtomic(int index) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public void assign(BitsArray other) {
             throw new UnsupportedOperationException("Not supported");
         }
+        @Override
         public int getMaxValue() {
             throw new UnsupportedOperationException("Not supported");
         }

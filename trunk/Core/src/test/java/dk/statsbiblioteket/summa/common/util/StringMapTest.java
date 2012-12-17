@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * StringMap Tester.
@@ -30,10 +30,12 @@ public class StringMapTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

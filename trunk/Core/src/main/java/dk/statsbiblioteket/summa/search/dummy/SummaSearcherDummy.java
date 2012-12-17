@@ -14,17 +14,16 @@
  */
 package dk.statsbiblioteket.summa.search.dummy;
 
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.dummy.DummyResponse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-
-import java.io.IOException;
-
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.dummy.DummyResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * Dummy implementattion of a {@link dk.statsbiblioteket.summa.search.api.SummaSearcher} returning
@@ -52,6 +51,7 @@ public class SummaSearcherDummy implements SummaSearcher {
         id = conf.getString(CONF_ID, this.toString());
     }
 
+    @Override
     public ResponseCollection search(Request request) throws IOException {
         log.info ("Got request (" + searchCount + "): " + request);
 
@@ -62,9 +62,9 @@ public class SummaSearcherDummy implements SummaSearcher {
         return resp;
     }
 
+    @Override
     public void close() throws IOException {
-        log.info ("Got close request (" + closeCount + ")");
-        closeCount++;
+        log.info ("Got close request (" + closeCount++ + ")");
     }
 }
 

@@ -14,28 +14,24 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.ext.DefaultHandler2;
-import org.xml.sax.SAXException;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.ext.DefaultHandler2;
+
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 /**
  * SAX-handler used by XMLSplitterParser.
@@ -248,7 +244,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             return;
         }
         inId = false; // ID is always a single element, so end-element clears id
-        String expected = insideRecordElementStack.size() > 0 ?
+        String expected = !insideRecordElementStack.isEmpty() ?
                           insideRecordElementStack.remove(insideRecordElementStack.size() - 1)
                           : "NA";
         if (!expected.equals(qName)) {

@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.ByteArrayInputStream;
@@ -46,6 +46,7 @@ public class SpecCommand extends RemoteCommand<ClientConnection> {
         this.clientAddress = clientAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
 

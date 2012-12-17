@@ -14,19 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.BufferedOutputStream;
-import java.io.StringWriter;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Collections;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Native command executor.
@@ -133,7 +126,7 @@ public class NativeRunner  {
      */
     private void waitForThreads() {
         long endTime = System.currentTimeMillis() + THREADTIMEOUT;
-        while (System.currentTimeMillis() < endTime && threads.size() > 0) {
+        while (System.currentTimeMillis() < endTime && !threads.isEmpty()) {
             try {
                 wait(10);
             } catch (InterruptedException e) {
@@ -222,6 +215,7 @@ public class NativeRunner  {
                 new ByteArrayOutputStream(Math.min(MAXINITIALBUFFER,
                                                    maxCollect));
         Thread t = new Thread() {
+            @Override
             public void run() {
                 try {
                     InputStream reader = null;
@@ -267,6 +261,7 @@ public class NativeRunner  {
         final OutputStream pIn = process.getOutputStream();
         final InputStream given = processInput;
         new Thread() {
+            @Override
             public void run() {
                 try {
                     OutputStream writer = null;

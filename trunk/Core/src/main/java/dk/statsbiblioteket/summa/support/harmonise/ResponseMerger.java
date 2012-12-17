@@ -30,8 +30,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
 
@@ -212,11 +212,6 @@ public class ResponseMerger implements Configurable {
         private DocumentResponse base = null;
         /* All records from the DocumentResponses, held until externalise */
         private List<AdjustRecord> records = new ArrayList<AdjustRecord>();
-        private final Request request;
-
-        public AdjustWrapper(Request request) {
-            this.request = request;
-        }
 
         /* Merge everything into the ResponseCollection. This class should not
          be used further after this call.
@@ -225,7 +220,7 @@ public class ResponseMerger implements Configurable {
             log.trace("Externalizing AdjustWrapper");
             if (base == null) {
                 log.trace("No DocumentResponse to externalize");
-                if (records != null && records.size() > 0) {
+                if (records != null && !records.isEmpty()) {
                     log.warn("Internal inconsistency: No DocumentResponse present, but " + records.size()
                              + " Records exist");
                 }
@@ -291,7 +286,7 @@ public class ResponseMerger implements Configurable {
      */
     public ResponseCollection merge(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
         long startTime = System.currentTimeMillis();
-        AdjustWrapper aw = deconstruct(request, responses);
+        AdjustWrapper aw = deconstruct(responses);
         if (aw.getBase() == null) {
             log.debug("No DocumentResponses present in responses, skipping merge");
             return aw.externalize();
@@ -361,7 +356,7 @@ public class ResponseMerger implements Configurable {
             any = false;
             for (Map.Entry<String, List<AdjustWrapper.AdjustRecord>> entry:
                 providers.entrySet()) {
-                if (entry.getValue().size() > 0) {
+                if (!entry.getValue().isEmpty()) {
                     any = true;
                     interleaved.add(entry.getValue().remove(0));
                 }
@@ -418,8 +413,8 @@ public class ResponseMerger implements Configurable {
             });
     }
 
-    private AdjustWrapper deconstruct(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
-        AdjustWrapper aw = new AdjustWrapper(request);
+    private AdjustWrapper deconstruct(List<SummaSearcherAggregator.ResponseHolder> responses) {
+        AdjustWrapper aw = new AdjustWrapper();
         List<AdjustWrapper.AdjustRecord> adjustRecords = new ArrayList<AdjustWrapper.AdjustRecord>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {
             if (!"".equals(response.getResponses().getTopLevelTiming())) {
@@ -550,9 +545,9 @@ public class ResponseMerger implements Configurable {
         // Insert!
         List<AdjustWrapper.AdjustRecord> result = new ArrayList<AdjustWrapper.AdjustRecord>(records.size() + promotees.size());
         for (int i = 0 ; i < topX ; i++) {
-            if (i >= firstInsertPos && insertionPoints.get(i-firstInsertPos) && promotees.size() > 0) {
+            if (i >= firstInsertPos && insertionPoints.get(i-firstInsertPos) && !promotees.isEmpty()) {
                 result.add(promotees.remove(0));
-            } else if (records.size() > 0) {
+            } else if (!records.isEmpty()) {
                 result.add(records.remove(0));
             }
         }

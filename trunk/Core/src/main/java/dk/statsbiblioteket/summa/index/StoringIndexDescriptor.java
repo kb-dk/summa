@@ -44,10 +44,12 @@ public class StoringIndexDescriptor extends IndexDescriptor<IndexField> {
         super(configuration);
     }
 
+    @Override
     public IndexField createNewField() {
         return new StoringField();
     }
 
+    @Override
     public IndexField createNewField(Node node) throws ParseException {
         return new StoringField(node, this);
     }

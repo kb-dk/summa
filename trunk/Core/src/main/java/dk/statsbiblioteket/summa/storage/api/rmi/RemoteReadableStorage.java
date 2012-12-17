@@ -24,71 +24,82 @@ import java.util.List;
 
 /**
  * Utility wrapper of the {@link ReadableStorage} interface to make RMI work.
+ *
  * @see ReadableStorage
  */
 public interface RemoteReadableStorage extends ReadableStorage, Remote {
     /**
      * Return iterator key for records in a given base modified after
      * {@code time}.
-     * @see ReadableStorage
-     * @param time The time stamp.
-     * @param base The base.
+     *
+     * @param time    The time stamp.
+     * @param base    The base.
      * @param options The query options.
      * @return The iterator key (sorted by record id).
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
-    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
-                                                         throws RemoteException;
+    @Override
+    long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws RemoteException;
 
     /**
      * Return the last modification time for a given base.
-     * @see ReadableStorage
+     *
      * @param base The base.
      * @return The modification time.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
+    @Override
     long getModificationTime(String base) throws RemoteException;
 
     /**
      * Return a list of records.
-     * @see ReadableStorage
-     * @param ids The records IDs.
+     *
+     * @param ids     The records IDs.
      * @param options {@link QueryOptions} that adds extra control over which
-     * records are returned.
+     *                records are returned.
      * @return List of record.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
-    List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                         throws RemoteException;
+    @Override
+    List<Record> getRecords(List<String> ids, QueryOptions options) throws RemoteException;
 
     /**
      * Return a single record.
-     * @see ReadableStorage
-     * @param id The record ID.
+     *
+     * @param id      The record ID.
      * @param options {@link QueryOptions} that adds extra control over which
-     * record are returned.
+     *                record are returned.
      * @return A record.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
+    @Override
     Record getRecord(String id, QueryOptions options) throws RemoteException;
 
     /**
      * Return next record given a iterator key.
-     * @see ReadableStorage
+     *
      * @param iteratorKey The iterator key.
      * @return The next record in the iterator.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
+    @Override
     Record next(long iteratorKey) throws RemoteException;
 
     /**
      * Returns the next {@code maxRecords} records from the iterator.
-     * @see ReadableStorage
+     *
      * @param iteratorKey The iterator key.;
-     * @param maxRecords The maximum records there should be returned. If less
-     * records are returned the iterator should be depleted.
+     * @param maxRecords  The maximum records there should be returned. If less
+     *                    records are returned the iterator should be depleted.
      * @return A list of the next (up to {@code maxRecords}) records.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see ReadableStorage
      */
+    @Override
     List<Record> next(long iteratorKey, int maxRecords) throws RemoteException;
 }

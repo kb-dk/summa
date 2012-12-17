@@ -158,7 +158,7 @@ public class PushFilter implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.debug("Close has no effect on PushFilter. Use signalEOF to shut " + "down the filter");
+        log.debug("Close has no effect on PushFilter. Use signalEOF to shut down the filter");
     }
 
     @Override
@@ -166,7 +166,7 @@ public class PushFilter implements ObjectFilter {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new IllegalStateException("EOF has been signalled. No more " + "Payloads available");
+            throw new IllegalStateException("EOF has been signalled. No more Payloads available");
         }
         Payload deliver = next;
         next = null;

@@ -74,8 +74,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      */
     public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT = "summa.search.searcheravailability.timeout";
     /** Default value for {@link #CONF_SEARCHER_AVAILABILITY_TIMEOUT}. */
-    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT =
-                                                                      5 * 60000;
+    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
 
     /**
      * If specified, watching for index changes will be disabled and an open
@@ -97,7 +96,6 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     public static final boolean DEFAULT_USE_LOCAL_INDEX = true;
 
     private int searcherAvailabilityTimeout = DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
-    private boolean useLocalIndex = DEFAULT_USE_LOCAL_INDEX;
 
     private ChangingSemaphore searchQueue;
     private ChangingSemaphore freeSlots = new ChangingSemaphore(0);
@@ -134,7 +132,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         searchNode = SearchNodeFactory.createSearchNode(conf, SearchNodeDummy.class);
 
         // Ready for open
-        if (conf.getBoolean(CONF_USE_LOCAL_INDEX, useLocalIndex)) {
+        if (conf.getBoolean(CONF_USE_LOCAL_INDEX, DEFAULT_USE_LOCAL_INDEX)) {
             String staticRoot = conf.getString(CONF_STATIC_ROOT, DEFAULT_STATIC_ROOT);
             if (staticRoot == null || "".equals(staticRoot)) {
                 log.debug("Starting index watcher");

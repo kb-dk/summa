@@ -32,10 +32,12 @@ public class MemoryStringPoolTest extends StringPoolSuper {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -44,6 +46,7 @@ public class MemoryStringPoolTest extends StringPoolSuper {
         return new TestSuite(MemoryStringPoolTest.class);
     }
 
+    @Override
     public SortedPool<String> getPool(File location,
                                       String name) throws Exception {
         SortedPool<String> pool = new MemoryStringPool(defaultCollator);

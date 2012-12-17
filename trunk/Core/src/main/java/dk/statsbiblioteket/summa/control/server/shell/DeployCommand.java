@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
-import dk.statsbiblioteket.summa.common.shell.Command;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
+import dk.statsbiblioteket.summa.common.shell.Command;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
-import dk.statsbiblioteket.summa.control.server.ControlUtils;
-import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
+import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -70,6 +70,7 @@ public class DeployCommand extends Command {
         systemConf = Configuration.getSystemConfiguration(true);
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         log.trace("invoke called");
         /* Extract and validate arguments */

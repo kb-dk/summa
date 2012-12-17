@@ -25,8 +25,8 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 
@@ -50,34 +50,27 @@ public class AdjustingSearchClient extends SearchClient {
         this(conf, null);
     }
 
-    public AdjustingSearchClient(
-        final Configuration conf, final TermStatQueryRewriter rewriter) {
+    public AdjustingSearchClient(final Configuration conf, final TermStatQueryRewriter rewriter) {
         super(conf);
         this.adjuster = new InteractionAdjuster(conf);
         id = adjuster.getId();
         this.rewriter = rewriter;
-        log.debug("Created AdjustingSearchClient for " + id + " with term stat "
-                  + "query rewriter "
+        log.debug("Created AdjustingSearchClient for " + id + " with term stat query rewriter "
                   + (rewriter == null ? "not " : "") + "present");
     }
 
     @Override
     public ResponseCollection search(Request request) throws IOException {
         long searchTime = -System.currentTimeMillis();
-        final String originalQuery =
-            request.getString(DocumentKeys.SEARCH_QUERY, null);
-        log.trace(
-            "Rewriting request for " + id + ", performing search and adjusting "
-            + "responses");
+        final String originalQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        log.trace("Rewriting request for " + id + ", performing search and adjusting responses");
         long rewriteTime = -System.currentTimeMillis();
         Request adjusted = adjuster.rewrite(request); // Creates new request
         if (rewriter != null) {
-            log.trace("Calling term stat based query rewriter with id "
-                      + adjuster.getId());
+            log.trace("Calling term stat based query rewriter with id " + adjuster.getId());
             rewriter.rewrite(adjusted, adjuster.getId());
         }
-        final String finalQuery =
-            adjusted.getString(DocumentKeys.SEARCH_QUERY, null);
+        final String finalQuery = adjusted.getString(DocumentKeys.SEARCH_QUERY, null);
         rewriteTime += System.currentTimeMillis();
         log.trace("Calling super.search");
         ResponseCollection responses = super.search(adjusted);
@@ -87,9 +80,8 @@ public class AdjustingSearchClient extends SearchClient {
         adjuster.adjust(adjusted, responses);
         adjustTime += System.currentTimeMillis();
         searchTime += System.currentTimeMillis();
-        log.debug("Adjusted search for " + id + " with original query '"
-                  + originalQuery + "' and adjusted query '" + finalQuery
-                  + " in " + searchTime + " ms");
+        log.debug("Adjusted search for " + id + " with original query '" + originalQuery + "' and adjusted query '"
+                  + finalQuery + " in " + searchTime + " ms");
         responses.addTiming("request.rewrite", rewriteTime);
         responses.addTiming("response.adjust", adjustTime);
         responses.addTiming("total", searchTime);

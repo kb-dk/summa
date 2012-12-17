@@ -14,19 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.filter.stream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.io.UnsupportedEncodingException;
-
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.BitUtil;
+
+import java.io.*;
 
 /**
  * On an abstract level, ingesting is just a chain of filters. In the beginning
@@ -80,6 +74,7 @@ public abstract class StreamFilter extends InputStream implements Configurable,
      * @return true if more data is available.
      * @throws IOException in case of read error.
      */
+    @Override
     public boolean pump() throws IOException {
         return read() != Payload.EOF;
     }

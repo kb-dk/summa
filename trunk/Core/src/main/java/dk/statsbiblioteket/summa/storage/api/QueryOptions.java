@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
@@ -357,10 +357,7 @@ public class QueryOptions implements Serializable {
             return r.isDeleted() == deletedFilter();
         }
 
-        if (hasIndexableFilter()) {
-            return r.isIndexable() == indexableFilter();
-        }
-        return true;
+        return !hasIndexableFilter() || r.isIndexable() == indexableFilter();
     }
 
     /**
@@ -427,7 +424,7 @@ public class QueryOptions implements Serializable {
             }
         }
         Record record = new Record(id, base, deleted, indexable, content, ct, mt, r.getParentIds(), r.getChildIds(),
-                                   meta == null || meta.size() == 0 ? null : meta, contentCompressed);
+                                   meta == null || meta.isEmpty() ? null : meta, contentCompressed);
         record.setParents(r.getParents());
         record.setChildren(r.getChildren());
         return record;
@@ -480,5 +477,4 @@ public class QueryOptions implements Serializable {
             attributes = newAttributes;
         }
     }
-
 }

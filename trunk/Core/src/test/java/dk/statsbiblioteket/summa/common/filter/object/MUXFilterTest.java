@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class MUXFilterTest extends TestCase implements ObjectFilter {
@@ -163,19 +162,24 @@ public class MUXFilterTest extends TestCase implements ObjectFilter {
 
     /* ObjectFilter */
     private int recordsLeft = 0;
+    @Override
     public boolean hasNext() {
         return recordsLeft > 0;
     }
+    @Override
     public void setSource(Filter filter) {
         // Nada
     }
+    @Override
     public boolean pump() throws IOException {
         next();
         return true;
     }
+    @Override
     public void close(boolean success) {
         // Nada
     }
+    @Override
     public Payload next() {
         if (!hasNext()) {
             return null;
@@ -184,6 +188,7 @@ public class MUXFilterTest extends TestCase implements ObjectFilter {
         return new Payload(new Record(
                 "Dummy_" + recordsLeft--, "foo", new byte[0]));
     }
+    @Override
     public void remove() {
         recordsLeft--;
     }

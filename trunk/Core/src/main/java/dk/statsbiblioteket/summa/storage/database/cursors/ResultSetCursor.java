@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.common.Record;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
@@ -57,16 +57,14 @@ public class ResultSetCursor implements Cursor {
      * Create a new non-anonymous cursor with {@code null} base and query
      * options.
      *
-     * @param db The DatabaseStorage owning the cursor.
-     * @param stmt The statement which produced {@code resultSet}.
+     * @param db        The DatabaseStorage owning the cursor.
+     * @param stmt      The statement which produced {@code resultSet}.
      * @param resultSet The ResultSet to read records from.
      * @throws SQLException on any SQLException reading the result set.
-     * @throws IOException on any IOExceptions reading records.
+     * @throws IOException  on any IOExceptions reading records.
      */
-    public ResultSetCursor(DatabaseStorage db,
-                           PreparedStatement stmt,
-                           ResultSet resultSet)
-                                               throws SQLException, IOException{
+    public ResultSetCursor(DatabaseStorage db, PreparedStatement stmt, ResultSet resultSet) throws SQLException,
+                                                                                                   IOException {
         this(db, stmt, resultSet, null, null, false);
     }
 
@@ -74,64 +72,52 @@ public class ResultSetCursor implements Cursor {
      * Create a new possibly anonymous cursor with {@code null} base and query
      * options.
      *
-     * @param db The DatabaseStorage owning the cursor.
-     * @param stmt The statement which produced {@code resultSet}.
+     * @param db        The DatabaseStorage owning the cursor.
+     * @param stmt      The statement which produced {@code resultSet}.
      * @param resultSet The ResultSet to read records from.
      * @param anonymous Anonymous cursors does less logging. They are suitable
      *                  for short lived, and intermediate, result sets.
      * @throws SQLException on any SQLException reading the result set.
-     * @throws IOException on any IOExceptions reading records.
+     * @throws IOException  on any IOExceptions reading records.
      */
-    public ResultSetCursor(DatabaseStorage db,
-                           PreparedStatement stmt,
-                           ResultSet resultSet,
-                           boolean anonymous)
-                                           throws SQLException, IOException {
+    public ResultSetCursor(DatabaseStorage db, PreparedStatement stmt, ResultSet resultSet,
+                           boolean anonymous) throws SQLException, IOException {
         this(db, stmt, resultSet, null, null, anonymous);
     }
 
     /**
      * Create a new non-anonymous cursor.
      *
-     * @param db The DatabaseStorage owning the cursor.
-     * @param stmt The statement which produced {@code resultSet}.
+     * @param db        The DatabaseStorage owning the cursor.
+     * @param stmt      The statement which produced {@code resultSet}.
      * @param resultSet The ResultSet to read records from.
-     * @param base The Record base the cursor is iterating over. Possibly
-     *             {@code null} if the base is undefined.
-     * @param options Any query options the records must match.
+     * @param base      The Record base the cursor is iterating over. Possibly
+     *                  {@code null} if the base is undefined.
+     * @param options   Any query options the records must match.
      * @throws SQLException on any SQLException reading the result set.
-     * @throws IOException on any IOExceptions reading records.
+     * @throws IOException  on any IOExceptions reading records.
      */
-    public ResultSetCursor(DatabaseStorage db,
-                           PreparedStatement stmt,
-                           ResultSet resultSet,
-                           String base,
-                           QueryOptions options)
-                                              throws SQLException, IOException {
+    public ResultSetCursor(DatabaseStorage db, PreparedStatement stmt, ResultSet resultSet, String base,
+                           QueryOptions options) throws SQLException, IOException {
         this(db, stmt, resultSet, base, options, false);
     }
 
     /**
      * Create a new possible anonymous cursor.
      *
-     * @param db The DatabaseStorage owning the cursor.
-     * @param stmt The statement which produced {@code resultSet}.
+     * @param db        The DatabaseStorage owning the cursor.
+     * @param stmt      The statement which produced {@code resultSet}.
      * @param resultSet The ResultSet to read records from.
-     * @param base The Record base the cursor is iterating over. Possibly
-     *             {@code null} if the base is undefined.
-     * @param options Any query options the records must match.
+     * @param base      The Record base the cursor is iterating over. Possibly
+     *                  {@code null} if the base is undefined.
+     * @param options   Any query options the records must match.
      * @param anonymous Anonymous cursors does less logging. They are suitable
      *                  for short lived, and intermediate, result sets.
      * @throws SQLException on any SQLException reading the result set.
-     * @throws IOException on any IOExceptions reading records.
+     * @throws IOException  on any IOExceptions reading records.
      */
-    public ResultSetCursor(DatabaseStorage db,
-                           PreparedStatement stmt,
-                           ResultSet resultSet,
-                           String base,
-                           QueryOptions options,
-                           boolean anonymous)
-                                          throws SQLException, IOException {
+    public ResultSetCursor(DatabaseStorage db, PreparedStatement stmt, ResultSet resultSet, String base,
+                           QueryOptions options, boolean anonymous) throws SQLException, IOException {
         this.db = db;
         this.stmt = stmt;
         this.base = base;
@@ -158,12 +144,10 @@ public class ResultSetCursor implements Cursor {
         totalRecords = 0;
 
         if (!anonymous) {
-            log.trace("Constructed with initial hasNext: "
-                      + resultSetHasNext + ", on base " + base);
+            log.trace("Constructed with initial hasNext: " + resultSetHasNext + ", on base " + base);
         }
-        log.debug("Constructed with initial hasNext: "
-                      + resultSetHasNext + ", nextValidRecord: '"
-                      + nextRecord + "', on base " + base);
+        log.debug("Constructed with initial hasNext: " + resultSetHasNext + ", nextValidRecord: '" + nextRecord
+                  + "', on base " + base);
     }
 
     /**
@@ -171,6 +155,7 @@ public class ResultSetCursor implements Cursor {
      *
      * @return last access time.
      */
+    @Override
     public long getLastAccess() {
         return lastAccess;
     }
@@ -180,7 +165,8 @@ public class ResultSetCursor implements Cursor {
      *
      * @return query options.
      */
-    public QueryOptions getQueryOptions () {
+    @Override
+    public QueryOptions getQueryOptions() {
         return options;
     }
 
@@ -192,6 +178,7 @@ public class ResultSetCursor implements Cursor {
      * @return {@code 0} if the cursor is anonymous. Otherwise the cursor's
      *         globally unique key will be returned.
      */
+    @Override
     public long getKey() {
         lastAccess = System.currentTimeMillis();
         return key;
@@ -202,6 +189,7 @@ public class ResultSetCursor implements Cursor {
      *
      * @return the base name.
      */
+    @Override
     public String getBase() {
         return base;
     }
@@ -212,6 +200,7 @@ public class ResultSetCursor implements Cursor {
      *
      * @return true if it has next item.
      */
+    @Override
     public boolean hasNext() {
         lastAccess = System.currentTimeMillis();
         return nextRecord != null;
@@ -223,7 +212,8 @@ public class ResultSetCursor implements Cursor {
      *
      * @return a Record based on the current row in the result set.
      */
-    public Record next () {
+    @Override
+    public Record next() {
         lastAccess = System.currentTimeMillis();
 
         if (nextRecord == null) {
@@ -268,8 +258,9 @@ public class ResultSetCursor implements Cursor {
      * Remove first element, by calling next() and throwing the returned record
      * away.
      */
-    public void remove () {
-        if(hasNext()) {
+    @Override
+    public void remove() {
+        if (hasNext()) {
             next();
         }
     }
@@ -279,9 +270,9 @@ public class ResultSetCursor implements Cursor {
      *
      * @return Next valid record.
      * @throws SQLException if database error occurred while fetching record.
-     * @throws IOException if error occurred while fetching record.
+     * @throws IOException  if error occurred while fetching record.
      */
-    private Record nextValidRecord () throws SQLException, IOException {
+    private Record nextValidRecord() throws SQLException, IOException {
         /*This check should _not_ use the method resultSetHasNext() because
           it is only the state of the resultSet that is important here. */
         if (!resultSetHasNext) {
@@ -302,16 +293,16 @@ public class ResultSetCursor implements Cursor {
             r = db.scanRecord(resultSet, this);
 
         }
-        log.debug("Found allowed record (" + r.getId() + ", " + r.getBase()
-                  + ", " + r.isDeleted() + ", " + r.isIndexable());
-        
+        log.debug("Found allowed record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
+                  + r.isIndexable());
+
         // We don't need all information from a record.
-        if(options.newRecordNeeded()) {
-            log.debug("Creating new record (" + r.getId() + ", " + r.getBase()
-                    + ", " + r.isDeleted() + ", " + r.isIndexable());
+        if (options.newRecordNeeded()) {
+            log.debug("Creating new record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
+                      + r.isIndexable());
             return options.getNewRecord(r);
         }
-        
+
         if (options.allowsRecord(r)) {
             log.debug("Record ID('" + r.getId() + "'') is allowed");
             return r;
@@ -327,23 +318,22 @@ public class ResultSetCursor implements Cursor {
     /**
      * Log depleted stats to debug.
      */
-    private void logDepletedStats () {
+    private void logDepletedStats() {
         // Only log stats if this is a non-anonymous cursor
         if (key != 0) {
-            log.debug(this + " depleted. After " + totalRecords
-                    + " records and " + (lastAccess - firstAccess) + "ms");
+            log.debug(this + " depleted. After " + totalRecords + " records and " + (lastAccess - firstAccess) + "ms");
         }
     }
 
     /**
      * Closes result set cursor.
      */
+    @Override
     public void close() {
         try {
             if (stmt.isClosed()) {
                 if (log.isTraceEnabled()) {
-                    log.trace("Ignoring close request on iterator "
-                              + this + ". Already closed");
+                    log.trace("Ignoring close request on iterator " + this + ". Already closed");
                 }
                 return;
             }
@@ -355,8 +345,7 @@ public class ResultSetCursor implements Cursor {
             resultSet.close();
             stmt.close();
         } catch (Exception e) {
-            log.warn("Failed to close cursor statement " + stmt + ": "
-                     + e.getMessage(), e);
+            log.warn("Failed to close cursor statement " + stmt + ": " + e.getMessage(), e);
         }
     }
 
@@ -381,7 +370,7 @@ public class ResultSetCursor implements Cursor {
      * models as offset for subsequent queries.
      *
      * @param mtimeTimestamp a timestamp in the binary format of a
-     *                                         {@link UniqueTimestampGenerator}.
+     *                       {@link UniqueTimestampGenerator}.
      */
     public void setRecordMtimeTimestamp(long mtimeTimestamp) {
         nextMtimeTimestamp = mtimeTimestamp;
@@ -394,7 +383,7 @@ public class ResultSetCursor implements Cursor {
      * The timestamp is <i>not</i> a standard system time value, but in the
      * binary format as generated by a {@link UniqueTimestampGenerator}. The
      * primary intent is to use this unique timestamp for {@link PagingCursor}.
-     * 
+     *
      * @return the raw, unique, binary timestamp of the last record returned by
      *         this cursor.
      */
@@ -412,4 +401,3 @@ public class ResultSetCursor implements Cursor {
         return "ResultSetCursor[" + key + "]";
     }
 }
-

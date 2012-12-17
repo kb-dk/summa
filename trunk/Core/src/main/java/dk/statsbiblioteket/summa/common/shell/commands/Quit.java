@@ -28,6 +28,7 @@ public class Quit extends Command {
             super("quit", "Exit the shell", new String[] {"exit"});
     }
 
+    @Override
     public void invoke(ShellContext ctx) {
         throw new AbortNotification(this);
     }

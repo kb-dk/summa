@@ -80,22 +80,27 @@ class FacetRequestSubtags implements SubtagsConstraints {
     this.subtags = subtags;
   }
 
+  @Override
   public int getMaxTags() {
     return maxTags;
   }
 
+  @Override
   public int getMinCount() {
     return minCount;
   }
 
+  @Override
   public int getMinTotalCount() {
     return minTotalCount;
   }
 
+  @Override
   public SUBTAGS_ORDER getSubtagsOrder() {
     return order;
   }
 
+  @Override
   public SubtagsConstraints getDeeperLevel() {
     return subtags == null ? this : subtags;
   }

@@ -18,9 +18,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
-import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
@@ -59,6 +59,7 @@ public class StartCommand extends Command {
         hostname = RemoteHelper.getHostname();
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         /* Extract and validate arguments */
         log.debug("Invoking StartCommand");

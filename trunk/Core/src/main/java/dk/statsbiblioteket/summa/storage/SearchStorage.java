@@ -132,7 +132,7 @@ public class SearchStorage implements Storage {
                     subIDs.clear();
                 }
             }
-            if (subIDs.size() > 0) {
+            if (!subIDs.isEmpty()) {
                 result.addAll(getRecords(subIDs, options));
             }
             return result;
@@ -196,7 +196,7 @@ public class SearchStorage implements Storage {
     public Record getRecord(String id, QueryOptions options) throws IOException {
         List<Record> records = getRecords(Arrays.asList(id), options);
         log.debug("getRecord(" + id + ", ...) returned " + records.size() + " records");
-        return records.size() == 0 ? null : records.get(0);
+        return records.isEmpty() ? null : records.get(0);
     }
 
     private String makeQuery(String id) {

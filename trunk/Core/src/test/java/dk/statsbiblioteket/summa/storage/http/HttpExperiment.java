@@ -14,18 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.http;
 
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-
-import java.io.*;
-import java.nio.CharBuffer;
-import java.net.InetSocketAddress;
-import java.net.URI;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import junit.framework.*;
+import junit.framework.TestCase;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.CharBuffer;
 
 /**
  * Experimental class used to play around with the HTTPServer shipped in
@@ -41,6 +43,7 @@ public class HttpExperiment extends TestCase {
             this.bridge = bridge;
         }
 
+        @Override
         public void handle (HttpExchange t) throws IOException {
             CharBuffer buf = CharBuffer.allocate(1024);
 

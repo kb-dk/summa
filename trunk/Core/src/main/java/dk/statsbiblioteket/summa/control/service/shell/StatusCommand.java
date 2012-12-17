@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 8, 2008 Time: 8:50:21 AM To
@@ -37,6 +37,7 @@ public class StatusCommand extends Command {
         this.address = serviceAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ConnectionContext<Service> connCtx = null;
 

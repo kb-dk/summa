@@ -97,7 +97,7 @@ public class DisjunctionQueryParser extends QueryParser {
                     subQueries.add(q);
                 }
             }
-            if (subQueries.size() == 0) {  // happens for stopwords
+            if (subQueries.isEmpty()) {  // happens for stopwords
                 return null;
             }
             return makeMulti(subQueries, disjunctDefaults);
@@ -176,7 +176,7 @@ public class DisjunctionQueryParser extends QueryParser {
      */
     private Query makeMulti(Collection<Query> queries, boolean disjunct) throws
                                                                 ParseException {
-        if (queries.size() == 0) {
+        if (queries.isEmpty()) {
             return null; // Stopwords?
         }
         if (disjunct) {

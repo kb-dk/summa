@@ -18,15 +18,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
 import dk.statsbiblioteket.summa.control.api.bundle.rmi.RemoteRepository;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.List;
 
 /**
  * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
@@ -109,6 +108,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * However the  {@link RemoteURLRepositoryClient} does not invoke
      * this method, but bypasses it with a {@link URLRepository#get}
      */
+    @Override
     public File get(String bundleId) throws RemoteException {
         try {
             return localRepo.get(bundleId);
@@ -118,6 +118,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
         }
     }
 
+    @Override
     public List<String> list(String regex) throws RemoteException {
         log.trace ("Got list() request: '" + regex + "'");
         try {
@@ -128,6 +129,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
         }
     }
 
+     @Override
      public String expandApiUrl (String jarFileName) throws RemoteException {
         try {
             return localRepo.expandApiUrl(jarFileName);
@@ -139,12 +141,14 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
 
     // Note that this method is intentionally not exported over rmi
     // since the RemoteRepository interface does not declare it
+    @Override
     public boolean installBundle(File bundle) throws IOException {
         return localRepo.installBundle(bundle);
     }
 
     // Note that this method is intentionally not exported over rmi
     // since the RemoteRepository interface does not declare it
+    @Override
     public boolean installApi(File apiFile) throws IOException {
         return localRepo.installApi(apiFile);
     }

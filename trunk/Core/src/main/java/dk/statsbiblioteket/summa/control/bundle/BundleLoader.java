@@ -14,10 +14,12 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import dk.statsbiblioteket.summa.control.api.ServicePackageException;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.api.ServicePackageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,9 +28,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>The {@code BundleLoader} class is used to create a {@link BundleStub} object
@@ -165,7 +164,7 @@ public class BundleLoader implements Configurable {
         } else if (builder.getInstanceId() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing  'instanceId' tag");
-        } else if (builder.getFiles().size() == 0) {
+        } else if (builder.getFiles().isEmpty()) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing  or empty 'fileList'"
                                           + " tag");

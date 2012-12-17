@@ -28,10 +28,10 @@ public interface LuceneKeys {
      * should be used as base for the MoreLikethis-functionality.
      * </p><p>
      * Optional. If no value is present, MoreLikeThis will not be active.
+     *
      * @see dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_START_INDEX
      * @see dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_MAX_RECORDS
      */
-    String SEARCH_MORELIKETHIS_RECORDID =
-            "search.document.lucene.morelikethis.recordid";
+    String SEARCH_MORELIKETHIS_RECORDID = "search.document.lucene.morelikethis.recordid";
 }
 

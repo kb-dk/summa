@@ -34,18 +34,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A description of the layout of the index, such as default fields, groups
@@ -478,7 +470,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                 defaultFields.add(dField);
             }
         }
-        if (defaultFields.size() == 0) {
+        if (defaultFields.isEmpty()) {
             log.warn("No default fields specified");
         } else {
             log.info("Default search fields: " 
@@ -714,6 +706,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      *         could not be found.
      * @see #allFields
      */
+    @Override
     public F getField(String fieldName) {
         return getField(fieldName, null);
     }

@@ -143,6 +143,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
         majorPosShift = super.calculateBits(elementBits-1);
     }
 
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
@@ -159,6 +160,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
         return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
     }
 
+    @Override
     public int fastGetAtomic(int index) {
         final long majorBitPos = index << majorPosShift; // * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
@@ -167,6 +169,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
         return (blocks[elementPos] >>> shifts[bitPos]) & readMask;
     }
 
+    @Override
     public void fastSet(final int index, final int value) {
         final long majorBitPos = index << majorPosShift; // * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
@@ -205,6 +208,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
      * will be cleared.
      * @param other the source of new values.
      */
+    @Override
     public void assign(final BitsArray other) {
         if (!(other instanceof BitsArrayAligned)) {
             throw new UnsupportedOperationException(String.format(
@@ -239,6 +243,7 @@ public class BitsArrayAligned extends BitsArrayImpl {
     }*/
 
 
+    @Override
     public int getMaxValue() {
         return maxValue;
     }

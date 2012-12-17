@@ -16,8 +16,8 @@ package dk.statsbiblioteket.summa.common.strings;
 
 import junit.framework.TestCase;
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Unit tests for the {@link CharSequenceReader}
@@ -27,6 +27,7 @@ public class CharSequenceReaderTest extends TestCase {
     StringBuffer buf;
     CharSequenceReader seq;
 
+    @Override
     public void setUp() {
         buf = new StringBuffer();
     }

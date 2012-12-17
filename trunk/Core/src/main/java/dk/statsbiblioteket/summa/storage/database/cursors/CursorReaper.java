@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class to clean up unused iterators. It should be started
@@ -60,6 +60,7 @@ public class CursorReaper implements Runnable {
         t.interrupt();
     }
 
+    @Override
     public void run() {
         log.debug("Starting stale cursor watch");
         while (mayRun) {

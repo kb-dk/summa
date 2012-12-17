@@ -77,6 +77,7 @@ public class CorpusGenerator {
       this.values = values;
     }
 
+    @Override
     public String getValue(int... seeds) { // docID, pathNum, depth(used)
        return seeds.length < 3 || seeds[2] >= values.length ?
              defaultValue : values[seeds[2]];
@@ -96,6 +97,7 @@ public class CorpusGenerator {
       this.producer = producer;
     }
 
+    @Override
     public String getValue(int... seeds) {
       return prefix + producer.getValue(seeds);
     }
@@ -118,6 +120,7 @@ public class CorpusGenerator {
       this.producers = producers;
     }
 
+    @Override
     public int getValue(int... seeds) {
       if (seeds.length <= level) {
         throw new IllegalArgumentException(
@@ -148,6 +151,7 @@ public class CorpusGenerator {
       this.max = max;
     }
 
+    @Override
     public int getValue(int... seeds) {
       return (min + random.nextInt((max - min + 1)));
     }
@@ -178,6 +182,7 @@ public class CorpusGenerator {
       this.probability = probability;
     }
 
+    @Override
     public int getValue(int... seeds) { // seeds are ignored here
       int value = min;
       for (int i = 0; i < (max - min); i++) {

@@ -14,13 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common;
 
-import java.io.*;
-import java.util.Properties;
-
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Properties;
 
 /**
  * Loads the current MAVEN_REVISION_NUMBER from property file. The property-file
@@ -64,7 +65,7 @@ public class SummaConstants {
     	String version = p.getProperty(VERSION);
     	if (version == null) {
     		String message = "Unknown version number. 'version' property not "
-                             + "found in " + "(" + propertyFileName + ")";
+                             + "found in (" + propertyFileName + ")";
             log.warn(message);
             return message;
     	}

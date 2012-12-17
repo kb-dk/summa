@@ -33,8 +33,7 @@ public class DummyResponse extends ResponseImpl {
     protected String searches;
     protected ArrayList<String> ids;
 
-    public DummyResponse (String id, int warmUps, int opens, int closes,
-                          int searches) {
+    public DummyResponse (String id, int warmUps, int opens, int closes, int searches) {
         this.warmUps = "" + warmUps;
         this.opens = "" + opens;
         this.closes = "" + closes;
@@ -43,10 +42,12 @@ public class DummyResponse extends ResponseImpl {
         ids.add(id);
     }
 
+    @Override
     public String getName () {
         return "DummyResponse";
     }
 
+    @Override
     public void merge (Response other) throws ClassCastException {
         DummyResponse resp = (DummyResponse)other;
         warmUps += ", " + resp.warmUps;
@@ -56,6 +57,7 @@ public class DummyResponse extends ResponseImpl {
         ids.addAll(resp.ids);
     }
 
+    @Override
     public String toXML () {
         return String.format ("<DummyResponse>\n" +
                               "  <warmUps>%s</warmUps>\n"+

@@ -30,6 +30,7 @@ public interface DocumentKeys {
      * </p><p>
      * The query is the basic request for a DocumentSearcher. It follows the
      * syntax of Lucene.
+     *
      * @see #SEARCH_FILTER and
      * @see <a href="http://lucene.apache.org/java/docs/queryparsersyntax.html">queryparsersyntax</a>
      */
@@ -40,6 +41,7 @@ public interface DocumentKeys {
      * </p><p>
      * The filter limits the amount of possible documents from a search.
      * It has the exact same syntax as a Query.
+     *
      * @see #SEARCH_QUERY
      */
     public static final String SEARCH_FILTER = "search.document.filter";
@@ -60,8 +62,7 @@ public interface DocumentKeys {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String SEARCH_FILTER_PURE_NEGATIVE =
-        "search.document.filter.purenegative";
+    public static final String SEARCH_FILTER_PURE_NEGATIVE = "search.document.filter.purenegative";
 
 
     /**
@@ -70,16 +71,14 @@ public interface DocumentKeys {
      * Used for paging. States the first hit to return from the whole set of
      * documents matching the filter and the query.
      */
-    public static final String SEARCH_START_INDEX =
-                                                   "search.document.startindex";
+    public static final String SEARCH_START_INDEX = "search.document.startindex";
 
     /**
      * Integer ("20"). Optional.
      * </p><p>
      * Used to limit the amount of hits that is returned for a given search.
      */
-    public static final String SEARCH_MAX_RECORDS =
-                                                   "search.document.maxrecords";
+    public static final String SEARCH_MAX_RECORDS = "search.document.maxrecords";
 
     /**
      * String ("myfield" or "summa-score"). Optional.
@@ -103,8 +102,7 @@ public interface DocumentKeys {
      * When a search has been performed by the underlying index searcher,
      * the content of these fields should be returned.
      */
-    public static final String SEARCH_RESULT_FIELDS =
-            "search.document.resultfields";
+    public static final String SEARCH_RESULT_FIELDS = "search.document.resultfields";
 
     /**
      * Comma-separated Strings ("foo, bar, zoo"). Optional.
@@ -114,10 +112,9 @@ public interface DocumentKeys {
      * defined, null is returned.
      * </p><p>
      * Note: The number of fallback-values must either be null or the same
-     *       as the number of result-fields.
+     * as the number of result-fields.
      */
-    public static final String SEARCH_FALLBACK_VALUES =
-                    "search.document.fallbackvalues";
+    public static final String SEARCH_FALLBACK_VALUES = "search.document.fallbackvalues";
 
     /**
      * Boolean ("true" or "false"). Optional.
@@ -128,8 +125,7 @@ public interface DocumentKeys {
      * </p><p>
      * This must be true for the FacetBrowser search node to work.
      */
-    public static final String SEARCH_COLLECT_DOCIDS =
-            "search.document.collectdocids";
+    public static final String SEARCH_COLLECT_DOCIDS = "search.document.collectdocids";
 
     /**
      * Boolean ("true" or "false"). Optional. Default is false.

@@ -162,6 +162,7 @@ public class GrowingMutable implements PackedInts.Mutable {
     growTime += System.nanoTime();
   }
 
+  @Override
   public void set(int index, long value) {
     checkValues(index, value);
     values.set(index - indexMin, value - valueMin);
@@ -199,6 +200,7 @@ public class GrowingMutable implements PackedInts.Mutable {
   /**
    * Clear only resets the array. It does not free memory or adjust size.
    */
+  @Override
   public void clear() {
     values.clear();
   }

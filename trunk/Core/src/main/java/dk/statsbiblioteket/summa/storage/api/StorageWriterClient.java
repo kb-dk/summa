@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
-import java.util.List;
 import java.net.NoRouteToHostException;
+import java.util.List;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -39,13 +39,12 @@ import java.net.NoRouteToHostException;
  * The property {@link ConnectionConsumer#CONF_RPC_TARGET} <i>must</i> be
  * defined all others are optional.
  *
- * @see StorageReaderClient 
+ * @see StorageReaderClient
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
-public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
-                                 implements WritableStorage {
+public class StorageWriterClient extends ConnectionConsumer<WritableStorage> implements WritableStorage {
     private static final String UNABLE_TO_CONNECT = "Unable to connect to ";
 
     /**
@@ -60,6 +59,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         super(conf, "//localhost:28000/summa-storage");
     }
 
+    @Override
     public void flush(Record record, QueryOptions options) throws IOException {
         WritableStorage storage = getConnection();
 
@@ -68,43 +68,44 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
 
         try {
-            storage.flush (record, options);
+            storage.flush(record, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format(
-                    "flush(%s) failed: %s", record, t.getMessage()), t);
+            throw new IOException(String.format("flush(%s) failed: %s", record, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
     }
 
+    @Override
     public void flush(Record record) throws IOException {
         flush(record, null);
     }
 
-    public void flushAll(List<Record> records, QueryOptions options)
-                                                            throws IOException {
+    @Override
+    public void flushAll(List<Record> records, QueryOptions options) throws IOException {
         WritableStorage storage = getConnection();
 
         if (storage == null) {
             throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
         }
-        
+
         try {
-            storage.flushAll (records, options);
+            storage.flushAll(records, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format(
-                    "flushAll(%s) failed: %s", records, t.getMessage()), t);
+            throw new IOException(String.format("flushAll(%s) failed: %s", records, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
     }
 
+    @Override
     public void flushAll(List<Record> records) throws IOException {
         flushAll(records, null);
     }
 
+    @Override
     public void clearBase(String base) throws IOException {
         WritableStorage storage = getConnection();
 
@@ -113,20 +114,18 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
 
         try {
-            storage.clearBase (base);
+            storage.clearBase(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format(
-                    "clearBase(%s) failed: %s", base, t.getMessage()), t);
+            throw new IOException(String.format("clearBase(%s) failed: %s", base, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
     }
 
     @Override
-    public String batchJob(String jobName, String base,
-                           long minMtime, long maxMtime, QueryOptions options)
-                                                            throws IOException {
+    public String batchJob(String jobName, String base, long minMtime, long maxMtime,
+                           QueryOptions options) throws IOException {
         WritableStorage storage = getConnection();
 
         if (storage == null) {
@@ -136,14 +135,13 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
             return storage.batchJob(jobName, base, minMtime, maxMtime, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format(
-                    "batchJob(%s, %s) failed: %s",
-                    jobName, base, t.getMessage()), t);
+            throw new IOException(String.format("batchJob(%s, %s) failed: %s", jobName, base, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
     }
 
+    @Override
     public void close() throws IOException {
         WritableStorage storage = getConnection();
 
@@ -152,7 +150,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
 
         try {
-            storage.close ();
+            storage.close();
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException("close() failed: " + t.getMessage(), t);

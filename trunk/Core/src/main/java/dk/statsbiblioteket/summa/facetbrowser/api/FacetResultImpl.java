@@ -127,7 +127,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         sw.write(XMLUtil.encode(getTiming()));
         sw.write("\">\n");
         for (Map.Entry<String, List<Tag<T>>> facet: map.entrySet()) {
-            if (facet.getValue().size() > 0) {
+            if (!facet.getValue().isEmpty()) {
                 sw.write("  <facet name=\"");
                 sw.write(XMLUtil.encode(facet.getKey()));
                 // TODO: Preserve scoring

@@ -56,6 +56,7 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         return size;
     }
 
+    @Override
     public int getAtomic(final int index) {
         if (index >= size()) {
             throw new ArrayIndexOutOfBoundsException(String.format(
@@ -65,10 +66,12 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         return values[index];
     }
 
+    @Override
     public int fastGetAtomic(final int index) {
         return values[index];
     }
 
+    @Override
     public void set(int position, int value) {
         if (position >= values.length) {
             int[] newValues = new int[(int)(
@@ -80,10 +83,12 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         size = Math.max(size, position + 1);
     }
 
+    @Override
     public void fastSet(int position, int value) {
         values[position] = value;
     }
 
+    @Override
     public void assign(BitsArray other) {
         if (!(other instanceof BitsArrayInt)) {
             throw new UnsupportedOperationException(String.format(
@@ -96,10 +101,12 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
         size = bai.size;
     }
 
+    @Override
     public int getMemSize() {
         return values.length * 4;
     }
 
+    @Override
     public int getMaxValue() {
         return Integer.MAX_VALUE;
     }

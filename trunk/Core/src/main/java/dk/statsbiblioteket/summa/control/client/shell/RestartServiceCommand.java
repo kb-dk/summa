@@ -43,6 +43,7 @@ public class RestartServiceCommand extends RemoteCommand<ClientConnection> {
         this.clientAddress = clientAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
 
         boolean kill = hasOption("k");

@@ -117,7 +117,7 @@ public class RemoteHelper {
     public synchronized static void unExportRemoteInterface (
                       String serviceName, int registryPort) throws IOException {
         log.trace("Preparing to unexport '" + serviceName
-                  + "' with registry on" + " port " + registryPort);
+                  + "' with registry on port " + registryPort);
         Registry reg;
 
         /* We should not try and create the registry when we want to
@@ -459,6 +459,7 @@ public class RemoteHelper {
             services.remove(name);
         }
 
+        @Override
         public void run() {
             // We actually don't do conccurent modifications of the
             // serviceRegistry map here

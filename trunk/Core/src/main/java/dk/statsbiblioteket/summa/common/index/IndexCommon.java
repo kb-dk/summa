@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.regex.Pattern;
-import java.util.Arrays;
-import java.util.Calendar;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.regex.Pattern;
 
 /**
  * Methods and constants common for index-handling.
@@ -64,6 +64,7 @@ public class IndexCommon {
      */
     public static final FilenameFilter SUBFOLDER_FILTER =
             new FilenameFilter() {
+                @Override
                 public boolean accept(File dir, String name) {
                     File full = new File(dir, name);
                     return full.isDirectory() && full.canRead() &&
@@ -77,6 +78,7 @@ public class IndexCommon {
      */
     public static final FilenameFilter SUBFOLDER_FILTER_WRITE =
             new FilenameFilter() {
+                @Override
                 public boolean accept(File dir, String name) {
                     File full = new File(dir, name);
                     return full.isDirectory() && full.canWrite() &&

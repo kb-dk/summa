@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
-import dk.statsbiblioteket.summa.control.api.*;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.shell.Layout;
+import dk.statsbiblioteket.summa.control.api.*;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -51,6 +51,7 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         this.controlAddress = controlAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ControlConnection control = getConnection(controlAddress);
         Layout layout = new Layout();

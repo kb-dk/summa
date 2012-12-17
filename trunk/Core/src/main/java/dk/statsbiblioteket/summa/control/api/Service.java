@@ -85,6 +85,7 @@ public interface Service extends Configurable, Remote, Monitorable {
      * @throws RemoteException if there is an error communicating with the
      *                         service.
      */
+    @Override
     public Status getStatus() throws RemoteException;
 
     /**

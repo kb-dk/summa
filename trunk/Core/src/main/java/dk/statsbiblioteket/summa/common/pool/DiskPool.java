@@ -18,19 +18,15 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import dk.statsbiblioteket.summa.common.util.ListSorter;
-import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
+import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
+import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -103,12 +99,14 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             }
         };
         mergeSorter = new IndirectLongSorter<E>() {
+            @Override
             protected E getValue(long reference) {
                 return DiskPool.this.getValue(reference);
             }
         };
     }
 
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.QA_NEEDED,
             author = "te",
@@ -160,6 +158,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return !forceNew;
     }
 
+    @Override
     public void store() throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("Storing pool '%s' to location '%s'",
@@ -211,6 +210,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         values.setBufferSize(VALUE_BUFFER_SIZE);
     }
 
+    @Override
     public void close() {
         log.debug("Close called on " + getName() + " for file "
                   + (values == null ? "N/A" : values.getFile()));

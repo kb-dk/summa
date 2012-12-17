@@ -71,7 +71,7 @@ import java.util.regex.Pattern;
     // TODO Implement getShortRecord
     // TODO: Implement getRecord in Storage
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te, mv")
 public class SummonSearchNode extends SolrSearchNode {
     private static Log log = LogFactory.getLog(SummonSearchNode.class);
@@ -173,7 +173,6 @@ public class SummonSearchNode extends SolrSearchNode {
     private final boolean sabotageDismax;
     private final String nonMatchingFacet;
     private final TermQuery nonMatchingQuery;
-    private final boolean fixPublication;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -188,7 +187,7 @@ public class SummonSearchNode extends SolrSearchNode {
         nonMatchingFacet = conf.getString(CONF_NONMATCHING_FACET, DEFAULT_NONMATCHING_FACET);
         String[] qt = conf.getString(CONF_NONMATCHING_QUERY, DEFAULT_NONMATCHING_QUERY).split(":");
         nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
-        fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
+//        boolean fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
         readyWithoutOpen();
         log.info("Serial Solutions Summon search node ready for host " + host);
     }
@@ -319,7 +318,7 @@ public class SummonSearchNode extends SolrSearchNode {
                         // There are no matches
                         return nonMatchingQuery;
                     }
-                    if (reduced.size() == 0 && match) {
+                    if (reduced.isEmpty() && match) {
                         // No queries left, but we encountered at least 1 match
                         return null; // As we do not have match-all
                     }
@@ -342,7 +341,7 @@ public class SummonSearchNode extends SolrSearchNode {
                     if ("PublicationYear".equals(query.getField())
                         && query.getLowerTerm().utf8ToString().length() == 4
                         && query.getUpperTerm().utf8ToString().length() == 4) {
-                        sq.add("PublicationDate" + "," + query.getLowerTerm().utf8ToString() + ":"
+                        sq.add("PublicationDate," + query.getLowerTerm().utf8ToString() + ":"
                                + query.getUpperTerm().utf8ToString() + "-12-31");
                     } else {
                         sq.add(query.getField() + "," + query.getLowerTerm().utf8ToString() + ":"

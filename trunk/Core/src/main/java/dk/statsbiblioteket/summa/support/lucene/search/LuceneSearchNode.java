@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortFactory;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -709,7 +710,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         long startIndex, long maxRecords, String sortKey, boolean reverseSort, String[] fields, String[] fallbacks,
         boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
-        long rawSearch = -1;
+        long rawSearch;
         boolean mlt_request = request != null && isMoreLikeThisRequest(request);
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
@@ -751,7 +752,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                     log.trace("Ignoring MoreLikeThis hit on source document");
                     continue;
                 }
-                sortWarned = assignSortValue(sortKey, topDocs, sortWarned, i, scoreDoc, record);
+                sortWarned = assignSortValue(sortKey, topDocs, sortWarned, scoreDoc, record);
 
                 for (int fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
                     String field = fields[fieldIndex];
@@ -802,7 +803,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     }
 
     private boolean assignSortValue(
-        String sortKey, TopFieldDocs topDocs, boolean sortWarned, int index,
+        String sortKey, TopFieldDocs topDocs, boolean sortWarned,
         ScoreDoc scoreDoc, DocumentResponse.Record record) {
         if (sortKey == null || "".equals(sortKey) || sortKey.equals(DocumentKeys.SORT_ON_SCORE)) {
             return sortWarned;
@@ -842,7 +843,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                         "Expected BytesRef or String as sort value but got " + fieldDoc.fields[0].getClass());
                 } catch (NullPointerException e) {
                     log.error("Got NPE where all checks should have been made for Field Doc '" + fieldDoc
-                              + "' with fields '" + fieldDoc == null ? "N/A" : fieldDoc.fields, e);
+                              + "' with fields '" + Strings.join(fieldDoc.fields, ", "), e);
                 }
                 sortWarned = true;
             }
@@ -1008,7 +1009,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 }
 
             }
-            log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') " + "got hit count " + count
+            log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') got hit count " + count
                       + " in " + (System.currentTimeMillis() - startTime) + " ms");
             return count;
         }
@@ -1074,7 +1075,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             }
         }
             //noinspection DuplicateStringLiteralInspection
-        log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') " + "got hit count " + count
+        log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') got hit count " + count
                   + " in " + (System.currentTimeMillis() - startTime) + " ms");
         return count;
     }

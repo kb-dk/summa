@@ -14,14 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.util.schedule;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.TimerTask;
-import java.util.Date;
 import java.text.DateFormat;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+import java.util.Date;
+import java.util.TimerTask;
 
 /**
  * The Schedule is resposible for calling a {@link Schedulable}.
@@ -51,6 +50,7 @@ class Schedule extends TimerTask{
     /**
      * implementing {@link Runnable}.
      */
+    @Override
     public void run() {
         log.info("Scheduled method call on:" + scheduleClass.getClass().getName() + "runtime:" + DateFormat.getInstance().format(new Date()));
         scheduleClass.perform();

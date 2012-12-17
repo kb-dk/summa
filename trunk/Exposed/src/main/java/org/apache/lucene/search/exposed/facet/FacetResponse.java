@@ -245,7 +245,7 @@ public class FacetResponse {
       writeIfDefined(out, "count", getCount());
       writeIfDefined(out, "totalCount", getTotalCount());
       writeIfDefined(out, "totaltags", getTotalTags());
-      if (getTags().size() > 0) {
+      if (!getTags().isEmpty()) {
         out.writeCharacters("\n");
       }
       for (Tag tag: getTags()) {

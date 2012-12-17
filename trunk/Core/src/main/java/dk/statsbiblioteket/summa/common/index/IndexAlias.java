@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.text.ParseException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An alias in Summa is a naming convention for naming fields and groups in
@@ -161,6 +161,7 @@ public final class IndexAlias implements Comparable {
     }
 
     //reuse javadoc
+    @Override
     public int compareTo(Object o) {
         //noinspection ObjectEquality
         if (this == o) {

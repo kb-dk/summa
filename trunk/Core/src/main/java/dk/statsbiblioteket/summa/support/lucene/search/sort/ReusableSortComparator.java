@@ -71,8 +71,7 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
     private String indexVersion = null;
 
     protected static final String summaChars =
-            "eaoi 0ntr1s24cl93857hd6pgum.bfv:xwykj_z/-qASPCXIUø"
-            + "NEGæ$>é#Väåö&ü^áāLó~–íãT*@ıç%čâèBM|š—FYêDúàūžñRð"
+            "eaoi 0ntr1s24cl93857hd6pgum.bfv:xwykj_z/-qASPCXIUøNEGæ$>é#Väåö&ü^áāLó~–íãT*@ıç%čâèBM|š—FYêDúàūžñRð"
             + "·Oć−ôë,łβα°±HşīîJõKZQēśδ†ṣōïěğăńýřûė→ì";
     // Unsafe:            "þ×µμγ§ßο∼"
 //            + "£ò▿ưκđσơλùειżτę­νπąρœ¤őηǩĸºφ≥ςĭωί³⋅≤иũňţθό∞ή™υź"
@@ -80,8 +79,9 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
 
     /**
      * Create a comparator based on the sorting rules for the given language.
+     *
      * @param language A two-letter ISO-639 language code. A list is located at
-     *                http://www.loc.gov/standards/iso639-2/php/English_list.php
+     *                 http://www.loc.gov/standards/iso639-2/php/English_list.php
      */
     public ReusableSortComparator(String language) {
         log.debug("Creating ReusableSortComparator(" + language + ")");
@@ -92,11 +92,11 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
 
     /**
      * Create a comparator using the given Collator.
+     *
      * @param collator The collator to use for sorting.
      */
     public ReusableSortComparator(Collator collator) {
-        log.debug("Creating ReusableSortComparator with custom Collator "
-                  + collator);
+        log.debug("Creating ReusableSortComparator with custom Collator " + collator);
         this.collator = collator;
     }
 
@@ -106,19 +106,19 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
      */
     // TODO: Remove this as it is deprecated by the fast ICUCollator
     protected Collator createCollator(Locale locale) {
-      return new NamedCollatorComparator(locale).getCollator();
+        return new NamedCollatorComparator(locale).getCollator();
     }
 
     // inherit javadocs
     @Override
     public abstract FieldComparator newComparator(
-            String fieldname, int numHits, int sortPos, boolean reversed)
-            throws IOException;
+            String fieldname, int numHits, int sortPos, boolean reversed) throws IOException;
 
     /**
      * Checks is the reader has changed and thus if cached structures should be
      * discarded. This should be called whenever a ScoreDocComparator is
      * requested.
+     *
      * @param reader The reader that the sorter should work on.
      */
     protected synchronized void checkCacheConsistency(IndexReader reader) {
@@ -133,6 +133,7 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
     /**
      * Called when the index has changed and cached structures should be
      * discarded.
+     *
      * @param reader the new Reader to use as basis for sorting.
      */
     public abstract void indexChanged(IndexReader reader);

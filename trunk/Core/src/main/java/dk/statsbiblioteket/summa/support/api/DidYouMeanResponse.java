@@ -48,8 +48,7 @@ public class DidYouMeanResponse extends ResponseImpl {
     /**
      * Did-You-Mean XML namespace.
      */
-    public static final String NAMESPACE =
-                     "http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse";
+    public static final String NAMESPACE = "http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse";
     /**
      * Did-You-Mean XML version.
      */
@@ -80,8 +79,7 @@ public class DidYouMeanResponse extends ResponseImpl {
     /**
      * Local XML output factory.
      */
-    private static XMLOutputFactory xmlOutputFactory =
-                                                XMLOutputFactory.newInstance();
+    private static XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     /**
      * Search query.
      */
@@ -90,7 +88,7 @@ public class DidYouMeanResponse extends ResponseImpl {
     /**
      * Search time.
      */
-    private long time = -1l;
+    private long time = -1L;
 
     /**
      * Local linkedList, which is used for storage of query results.
@@ -99,6 +97,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
     /**
      * Did-You-Mean response constructor.
+     *
      * @param query the query.
      */
     public DidYouMeanResponse(String query) {
@@ -108,8 +107,9 @@ public class DidYouMeanResponse extends ResponseImpl {
 
     /**
      * Did-You-Mean response constructor.
+     *
      * @param query the query.
-     * @param time the time in ms used for doing Did-You-Mean look up.
+     * @param time  the time in ms used for doing Did-You-Mean look up.
      */
     public DidYouMeanResponse(String query, long time) {
         this(query);
@@ -120,6 +120,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
     /**
      * Getter for Did-You-Mean name.
+     *
      * @return {@link DidYouMeanResponse#DIDYOUMEANRESPONSE}
      */
     @Override
@@ -129,6 +130,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
     /**
      * Should merge multiple responses together, used for distributed searc.
+     *
      * @param other the Response to merge into this.
      * @throws ClassCastException if 'other' can't be casted to {@link DidYouMeanResponse}.
      */
@@ -139,7 +141,7 @@ public class DidYouMeanResponse extends ResponseImpl {
         }
         super.merge(other);
         DidYouMeanResponse otherResponse = (DidYouMeanResponse) other;
-        for(ResultTuple tuple: otherResponse.getResultTuples()) {
+        for (ResultTuple tuple : otherResponse.getResultTuples()) {
             resultTuples.add(tuple);
         }
     }
@@ -147,13 +149,14 @@ public class DidYouMeanResponse extends ResponseImpl {
     /**
      * Converts response to an XML document. Eg.
      * <pre>
-          <?xml version="1.0" encoding="UTF-8" ?>
-          <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1.0" searchtime="110">
-              <didyoumean score="0.6666666666666667">koobas</didyoumean>
-              <didyoumean score="0.6666666666666667">boobar</didyoumean>
-          </DidYouMeanResponse>
-      </pre>
-
+     * <?xml version="1.0" encoding="UTF-8" ?>
+     * <DidYouMeanResponse xmlns="http://statsbiblioteket.dk/summa/2009/DidYouMeanResponse" query="foobaw" version="1
+     * .0" searchtime="110">
+     * <didyoumean score="0.6666666666666667">koobas</didyoumean>
+     * <didyoumean score="0.6666666666666667">boobar</didyoumean>
+     * </DidYouMeanResponse>
+     * </pre>
+     *
      * @return XML block as a string.
      */
     @Override
@@ -164,8 +167,7 @@ public class DidYouMeanResponse extends ResponseImpl {
         try {
             writer = xmlOutputFactory.createXMLStreamWriter(sw);
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Unable to create XMLStreamWriter from factory", e);
+            throw new RuntimeException("Unable to create XMLStreamWriter from factory", e);
         }
         // Write XML document.
         try {
@@ -175,11 +177,11 @@ public class DidYouMeanResponse extends ResponseImpl {
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
             writer.writeAttribute(TIMING, getTiming());
-            if(time != -1) {
+            if (time != -1) {
                 writer.writeAttribute(TIME_TAG, String.valueOf(time));
             }
             writer.writeCharacters("\n");
-            for(ResultTuple tuple: resultTuples) {
+            for (ResultTuple tuple : resultTuples) {
                 writer.writeCharacters("    ");
                 writer.writeStartElement(DIDYOUMEAN);
                 writer.writeAttribute("score", String.valueOf(tuple.getScore()));
@@ -191,12 +193,10 @@ public class DidYouMeanResponse extends ResponseImpl {
             writer.writeEndElement();
             writer.writeCharacters("\n");
             writer.writeEndDocument();
-            
+
             writer.flush(); // Just to make sure
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Got XMLStreamException while constructing XML from "
-                    + "DidYouMeanResponse", e);
+            throw new RuntimeException("Got XMLStreamException while constructing XML from DidYouMeanResponse", e);
         }
         return sw.toString();
     }
@@ -212,17 +212,18 @@ public class DidYouMeanResponse extends ResponseImpl {
 
     /**
      * Add a result to result list.
-     * @param result the result to add.
-     * @param score the result score.
+     *
+     * @param result             the result to add.
+     * @param score              the result score.
      * @param corpusQueryResults the corpusQuery for the result.
      */
     public void addResult(String result, double score, int corpusQueryResults) {
-        resultTuples.addFirst(new ResultTuple(result, score,
-                                                           corpusQueryResults));
+        resultTuples.addFirst(new ResultTuple(result, score, corpusQueryResults));
     }
 
     /**
      * Return this responses result tuple, which contains all results.
+     *
      * @return this responses result tuple.
      */
     public LinkedList<ResultTuple> getResultTuples() {
@@ -245,12 +246,12 @@ public class DidYouMeanResponse extends ResponseImpl {
 
         /**
          * Result Tuple Constructor.
-         * @param result the result.
-         * @param score result score.
+         *
+         * @param result             the result.
+         * @param score              result score.
          * @param corpusQueryResults result corpusQuery.
          */
-        public ResultTuple(String result, double score,
-                                                       int corpusQueryResults) {
+        public ResultTuple(String result, double score, int corpusQueryResults) {
             this.result = result;
             this.score = score;
             this.corpusQueryResults = corpusQueryResults;
@@ -258,6 +259,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
         /**
          * Getter for result.
+         *
          * @return the result.
          */
         public String getResult() {
@@ -266,6 +268,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
         /**
          * Getter for score.
+         *
          * @return the result score.
          */
         public double getScore() {
@@ -274,6 +277,7 @@ public class DidYouMeanResponse extends ResponseImpl {
 
         /**
          * Getter for corpusQuery.
+         *
          * @return the corpusQuery for the result.
          */
         public int getCorpusQueryResults() {

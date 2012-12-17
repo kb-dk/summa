@@ -18,15 +18,13 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.xml.DOM;
-
-import java.io.File;
-
 import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+
+import java.io.File;
 
 /**
  * Test class for the {@link SuggestStorage}.
@@ -37,6 +35,7 @@ public class SuggestStorageTest extends TestCase {
     File dbLocation;
     int dbCount;
 
+    @Override
     public void setUp() throws Exception {
         if (storage != null) {
             dbLocation = new File(
@@ -51,6 +50,7 @@ public class SuggestStorageTest extends TestCase {
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         storage.close();
         Files.delete(dbLocation);

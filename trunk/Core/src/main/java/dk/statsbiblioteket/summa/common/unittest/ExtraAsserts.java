@@ -16,20 +16,20 @@ package dk.statsbiblioteket.summa.common.unittest;
 
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
-import java.io.*;
-import java.util.*;
-import java.net.URL;
-
-import junit.framework.TestCase;
-
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.DocumentBuilder;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.util.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -140,7 +140,7 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
         if (!mismatch) {
             return;
         }
-        assertTrue(message + ".The lists should have content but did not", list1.size() > 0);
+        assertTrue(message + ".The lists should have content but did not", !list1.isEmpty());
         int matches = 0;
         int permutations = 0;
         int perfect = 0;
@@ -234,7 +234,7 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             fail(message + ". SAXExcaption " + e.getMessage() + "," 
                  + getSAXExceptions());
         }
-        if (saxProblems.size() > 0) {
+        if (!saxProblems.isEmpty()) {
             fail(message + ". Exceptions encountered:" + getSAXExceptions());
         }
     }
@@ -248,12 +248,15 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
         return sw.toString();
     }
 
+    @Override
     public void warning(SAXParseException exception) throws SAXException {
         saxProblems.add(exception);
     }
+    @Override
     public void error(SAXParseException exception) throws SAXException {
         saxProblems.add(exception);
     }
+    @Override
     public void fatalError(SAXParseException exception) throws SAXException {
         saxProblems.add(exception);
     }

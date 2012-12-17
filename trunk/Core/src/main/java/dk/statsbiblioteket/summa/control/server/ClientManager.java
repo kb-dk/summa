@@ -19,29 +19,24 @@ import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
-import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.api.ClientDeployer;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.bundle.Bundle;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.util.Strings;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This class helps the {@link ControlCore} manage its collection of clients.
@@ -237,6 +232,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
 				    ClientConnection.DEFAULT_REGISTRY_PORT);
     }
 
+    @Override
     public ConnectionContext<ClientConnection>get (String clientId) {
         Configuration deployConf = getDeployConfiguration(clientId);
         String address = getClientAddress (clientId, deployConf);
@@ -274,6 +270,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         return address;
     }
 
+    @Override
     public void run() {
         throw new UnsupportedOperationException();
     }
@@ -317,6 +314,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         return clients;
     }
 
+    @Override
     public Iterator<String> iterator () {
         return getClients ().iterator();
     }

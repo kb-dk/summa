@@ -17,14 +17,14 @@ package dk.statsbiblioteket.summa.control.server.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-import java.rmi.RemoteException;
 
 /**
  * Shell command for the Control shell to manage the repository
@@ -50,6 +50,7 @@ public class RepositoryCommand extends Command {
     }
 
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         String[] args = getArguments();
 

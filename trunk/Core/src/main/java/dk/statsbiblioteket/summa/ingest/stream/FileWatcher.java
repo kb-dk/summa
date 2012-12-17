@@ -148,6 +148,7 @@ public class FileWatcher extends FileReader implements Runnable {
         toDeliver = END_PAYLOAD;
     }
 
+    @Override
     public void run() {
         log.trace("Entering run() with doRun==" + doRun);
         try {

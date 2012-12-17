@@ -18,19 +18,13 @@ import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.*;
 
 /**
  * A Record is the atom data unit in Summa. Is is used for ingesting to the
@@ -779,6 +773,7 @@ public class Record implements Serializable, Comparable {
      *         of the record argument.
      * @throws ClassCastException If o is not a Record.
      */
+    @Override
     public int compareTo(Object o) {
         return getId().compareTo(((Record) o).getId());
     }
@@ -903,7 +898,7 @@ public class Record implements Serializable, Comparable {
      *         null or of length 0, null is returned.
      */
     public static String idListToString(List<String> ids) {
-        if (ids == null || ids.size() == 0) {
+        if (ids == null || ids.isEmpty()) {
             return null;
         }
         StringWriter sw = new StringWriter(ids.size() * 256);

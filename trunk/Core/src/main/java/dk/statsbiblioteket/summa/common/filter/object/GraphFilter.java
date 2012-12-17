@@ -75,7 +75,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
         requirement = REQUIREMENT.valueOf(r);
         if (requirement == null) {
             throw new ConfigurationException(
-                    "The requirement value '" + r + "' is not known. Valid values " + "are origin, all, none and one");
+                    "The requirement value '" + r + "' is not known. Valid values are origin, all, none and one");
         }
         log.debug(String.format("GraphFilter %s constructed with visitParents=%b, visitChildren=%b", getName(),
                                 visitParents, visitChildren));

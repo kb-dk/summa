@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ClientException;
 import dk.statsbiblioteket.summa.control.api.Service;
@@ -37,6 +37,7 @@ public class StopServiceCommand extends RemoteCommand<ClientConnection> {
         setUsage("stop <service-id> [service-id] ...");
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
 
         if (getArguments().length == 0) {

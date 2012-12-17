@@ -30,28 +30,36 @@ import java.util.List;
 public interface RemoteStorage extends Storage, Remote {
 
     /* Reader methods */
-    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
-                                                         throws RemoteException;
+    @Override
+    long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws RemoteException;
 
-    long getModificationTime (String base) throws RemoteException;
+    @Override
+    long getModificationTime(String base) throws RemoteException;
 
-    List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                         throws RemoteException;
+    @Override
+    List<Record> getRecords(List<String> ids, QueryOptions options) throws RemoteException;
 
+    @Override
     Record getRecord(String id, QueryOptions options) throws RemoteException;
 
+    @Override
     Record next(long iteratorKey) throws RemoteException;
 
+    @Override
     List<Record> next(long iteratorKey, int maxRecords) throws RemoteException;
 
     /* Writer methods */
+    @Override
     void flush(Record record) throws RemoteException;
 
+    @Override
     void flushAll(List<Record> records) throws RemoteException;
 
+    @Override
     void close() throws RemoteException;
 
-    void clearBase (String base) throws RemoteException;
+    @Override
+    void clearBase(String base) throws RemoteException;
 
     /* Remote methods */
 }

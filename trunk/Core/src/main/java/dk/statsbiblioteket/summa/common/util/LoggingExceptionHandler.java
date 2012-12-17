@@ -56,6 +56,7 @@ public class LoggingExceptionHandler
      * @param thread The thread calling this method.
      * @param e The throwable exception not caught.
      */
+    @Override
     public void uncaughtException(Thread thread, Throwable e) {
         String message = String.format(
                 "Uncaught exception in thread '%s'. Processing is unstable "

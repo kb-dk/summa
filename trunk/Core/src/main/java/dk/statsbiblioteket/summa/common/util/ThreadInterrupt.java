@@ -28,6 +28,7 @@ public class ThreadInterrupt {
     public ThreadInterrupt (final Thread t, final long delay) {
         Thread waiter = new Thread(new Runnable() {
 
+            @Override
             public void run() {
                 try {
                     Thread.sleep(delay);

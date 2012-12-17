@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +41,9 @@ import java.util.regex.Pattern;
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke")
 public abstract class StorageBase implements Storage {
-    /** Logger for this class. */
+    /**
+     * Logger for this class.
+     */
     private static Log log = LogFactory.getLog(StorageBase.class);
 
     /**
@@ -57,17 +60,25 @@ public abstract class StorageBase implements Storage {
      */
     protected static final String TRY_UPDATE = "TRY_UPDATE";
 
-    /** Storage start time. */
+    /**
+     * Storage start time.
+     */
     private long storageStartTime;
-    /** Last flush time. */
+    /**
+     * Last flush time.
+     */
     private HashMap<String, Long> lastFlushTimes;
-    /** An ID matcher. */
+    /**
+     * An ID matcher.
+     */
     private Matcher privateIdMatcher;
 
     /**
      * Storage base constructor.
+     *
      * @param conf Configuration to create this storage base with.
      */
+    @SuppressWarnings("UnusedParameters")
     public StorageBase(Configuration conf) {
         final int hashMapSize = 10;
         storageStartTime = System.currentTimeMillis();
@@ -118,7 +129,7 @@ public abstract class StorageBase implements Storage {
      * Set the time stamp for the last time {@link #flush} or
      * {@link #flushAll} was called on something in {@code base}.
      *
-     * @param base the base in which to register a change.
+     * @param base      the base in which to register a change.
      * @param timeStamp the new time stamp to set.
      * @return the {@code timeStamp} argument.
      */
@@ -142,15 +153,15 @@ public abstract class StorageBase implements Storage {
      * Default implementation that uses {@link #next(long)} to create the list
      * of records. As this happens server-side, this should be fast
      * enough.
+     *
      * @param iteratorKey The iterator key.
-     * @param maxRecords The maximum number of records to return.
+     * @param maxRecords  The maximum number of records to return.
      * @return A list of records. Length is equal maxRecords unleash the storage
-     * is depleted.
+     *         is depleted.
      * @throws IOException If error occur while fetching records from storage.
      */
     @Override
-    public List<Record> next(long iteratorKey, int maxRecords) throws
-                                                               IOException {
+    public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
         List<Record> records = new ArrayList<Record>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
@@ -196,19 +207,24 @@ public abstract class StorageBase implements Storage {
             }
 
             // Assert that the record is set as child on all existing parents
-            for (Record parent : parents) {
-                List<String> parentChildren = parent.getChildIds();
+            if (parents != null) {
+                for (Record parent : parents) {
+                    List<String> parentChildren = parent.getChildIds();
 
-                if (parentChildren == null) {
-                    parent.setChildIds(Arrays.asList(record.getId()));
-                    log.trace("Creating child list '" + record.getId() + "' on parent " + parent.getId());
-                    flushQueue.add(parent);
-                } else if (!parentChildren.contains(record.getId())) {
-                    parentChildren.add(record.getId());
-                    parent.setChildIds(parentChildren);
-                    log.trace("Adding child '" + record.getId() + "' to parent " + parent.getId());
-                    flushQueue.add(parent);
+                    if (parentChildren == null) {
+                        parent.setChildIds(Arrays.asList(record.getId()));
+                        log.trace("Creating child list '" + record.getId() + "' on parent " + parent.getId());
+                        flushQueue.add(parent);
+                    } else if (!parentChildren.contains(record.getId())) {
+                        parentChildren.add(record.getId());
+                        parent.setChildIds(parentChildren);
+                        log.trace("Adding child '" + record.getId() + "' to parent " + parent.getId());
+                        flushQueue.add(parent);
+                    }
                 }
+            } else {
+                log.warn("parentIDs " + Strings.join(record.getParentIds(), ", ") + " for record '" + record.getId()
+                         + "' resolved to null records");
             }
         }
 
@@ -272,9 +288,10 @@ public abstract class StorageBase implements Storage {
      * Convenience implementation of calling
      * {@link #flush(Record, QueryOptions)} with query options set to
      * {@code null}.
+     *
      * @param record the record to flush.
      * @throws IOException If error occur while running.
-     * {@link #flushAll(List, QueryOptions)}.
+     *                     {@link #flushAll(List, QueryOptions)}.
      */
     @Override
     public void flush(Record record) throws IOException {
@@ -285,7 +302,7 @@ public abstract class StorageBase implements Storage {
      * <p>Convenience implementation of {@link WritableStorage#flushAll}
      * simply iterating through the list and calling
      * {@link WritableStorage#flush} on each record.</p>
-     *
+     * <p/>
      * <p>Subclasses of {@code StorageBase} may choose to overwrite this method
      * for optimization purposes.</p>
      *
@@ -304,6 +321,7 @@ public abstract class StorageBase implements Storage {
      * Convenience implementation of calling
      * {@link #flushAll(List, QueryOptions)} with QueryOptions set to
      * {@code null}.
+     *
      * @param records the records to flush.
      * @throws IOException if error occur while flushing records.
      */
@@ -315,9 +333,10 @@ public abstract class StorageBase implements Storage {
     /**
      * Simple implementation of {@link ReadableStorage#getRecords} fetching
      * each record one at a time and collecting them in a list.
-     * @param ids List of IDs to fetch from storage.
+     *
+     * @param ids     List of IDs to fetch from storage.
      * @param options The query options for discarding records that can't be
-     * used in the given context.
+     *                used in the given context.
      * @return A list of records.
      * @throws IOException If error occur while communication with storage.
      */
@@ -333,8 +352,8 @@ public abstract class StorageBase implements Storage {
         }
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("Finished getRecords(" + ids.size() + " ids, ...) in "
-                      + (System.currentTimeMillis() - startTime) + "ms");
+            log.debug("Finished getRecords(" + ids.size() + " ids, ...) in " + (System.currentTimeMillis() - startTime)
+                      + "ms");
         }
 
         return result;
@@ -348,6 +367,7 @@ public abstract class StorageBase implements Storage {
      * Private records may only be retrieved if the {@code ALLOW_PRIVATE}
      * meta field is set on the query options passed to the storage when
      * calling {@link #getRecord}(s).
+     *
      * @param id The ID to check.
      * @return true if the ID is a private ID.
      */
@@ -358,6 +378,7 @@ public abstract class StorageBase implements Storage {
     /**
      * Returns {@code true} if and only if the {@code ALLOW_PRIVATE} meta
      * field is set to the string {@code "true"} in {@code opts}.
+     *
      * @param opts the query options to check
      * @return {@code true} if {@code ALLOW_PRIVATE} is set to {@code "true"}
      *         in {@code opts}
@@ -368,6 +389,7 @@ public abstract class StorageBase implements Storage {
 
     /**
      * The storage start time.
+     *
      * @return The storage start time.
      */
     public long getStorageStartTime() {

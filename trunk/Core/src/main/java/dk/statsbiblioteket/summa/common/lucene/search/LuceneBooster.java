@@ -158,7 +158,7 @@ public class LuceneBooster {
                 return false;
             }
         }
-        if (boosts.size() == 0) {
+        if (boosts.isEmpty()) {
             log.debug("No boosts detected in " + boostString);
             return false;
         }

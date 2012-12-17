@@ -35,8 +35,7 @@ import java.util.Comparator;
         author = "te")
 public class SuggestResponse extends ResponseImpl {
     private static final long serialVersionUID = 49L;
-    public static final String NAMESPACE =
-            "http://statsbiblioteket.dk/summa/2009/QueryResponse";
+    public static final String NAMESPACE = "http://statsbiblioteket.dk/summa/2009/QueryResponse";
     public static final String VERSION = "1.0";
 
     public static final String QUERY_RESPONSE = "QueryResponse";
@@ -54,6 +53,7 @@ public class SuggestResponse extends ResponseImpl {
     public static final String NAME = "SuggestResponse";
 
     private static XMLOutputFactory xmlOutputFactory;
+
     static {
         xmlOutputFactory = XMLOutputFactory.newInstance();
     }
@@ -80,9 +80,11 @@ public class SuggestResponse extends ResponseImpl {
      * As suggest is normally distributed by replication, merging is normally
      * not used. If this merger is to be used with sharded suggest-noded, it
      * should be tested vigorously.
+     *
      * @param otherResponse another SuggestResponse to merge into this.
      * @throws ClassCastException if otherResponse was not a SuggestResponse.
      */
+    @Override
     public void merge(Response otherResponse) throws ClassCastException {
         SuggestResponse other = (SuggestResponse) otherResponse;
         super.merge(other);
@@ -90,17 +92,13 @@ public class SuggestResponse extends ResponseImpl {
         for (SuggestTripel otherTripel : other.getSuggestions()) {
             for (SuggestTripel thisTripel : getSuggestions()) {
                 if (thisTripel.getQuery().equals(otherTripel.getQuery())) {
-                    thisTripel.setHits(
-                            thisTripel.getHits() + otherTripel.getHits());
-                    thisTripel.setQueryCount(Math.max(
-                            thisTripel.getQueryCount(),
-                            otherTripel.getQueryCount()));
+                    thisTripel.setHits(thisTripel.getHits() + otherTripel.getHits());
+                    thisTripel.setQueryCount(Math.max(thisTripel.getQueryCount(), otherTripel.getQueryCount()));
                     continue otherLoop;
                 }
             }
             // No match, so we add a copy
-            addSuggestion(otherTripel.getQuery(), otherTripel.getHits(),
-                          otherTripel.getQueryCount());
+            addSuggestion(otherTripel.getQuery(), otherTripel.getHits(), otherTripel.getQueryCount());
         }
         sortAndReduce();
     }
@@ -111,19 +109,19 @@ public class SuggestResponse extends ResponseImpl {
      */
     public void sortAndReduce() {
         Collections.sort(suggestions, new Comparator<SuggestTripel>() {
+            @Override
             public int compare(SuggestTripel o1, SuggestTripel o2) {
-                return Integer.valueOf(
-                        o2.getQueryCount()).compareTo(o1.getQueryCount());
+                return Integer.valueOf(o2.getQueryCount()).compareTo(o1.getQueryCount());
             }
         });
         if (suggestions.size() > maxResults) {
-            ArrayList<SuggestTripel> newSuggestions =
-                    new ArrayList<SuggestTripel>(maxResults);
+            ArrayList<SuggestTripel> newSuggestions = new ArrayList<SuggestTripel>(maxResults);
             newSuggestions.addAll(suggestions.subList(0, maxResults));
             suggestions = newSuggestions;
         }
     }
 
+    @Override
     public String toXML() {
         sortAndReduce();
         StringWriter sw = new StringWriter(2000);
@@ -131,8 +129,7 @@ public class SuggestResponse extends ResponseImpl {
         try {
             writer = xmlOutputFactory.createXMLStreamWriter(sw);
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Unable to create XMLStreamWriter from factory", e);
+            throw new RuntimeException("Unable to create XMLStreamWriter from factory", e);
         }
         try {
             writer.setDefaultNamespace(NAMESPACE);
@@ -157,13 +154,12 @@ public class SuggestResponse extends ResponseImpl {
             writer.writeEndDocument();
             writer.flush(); // Just to make sure
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Got XMLStreamException while constructing XML from "
-                    + "SuggestionResponse", e);
+            throw new RuntimeException("Got XMLStreamException while constructing XML from SuggestionResponse", e);
         }
         return sw.toString();
     }
 
+    @Override
     public String getName() {
         return NAME;
     }

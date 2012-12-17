@@ -27,8 +27,8 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.ingest.stream.ZIPParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -186,7 +186,7 @@ public class UnpackFilter implements ObjectFilter {
         }
         // The existing parsers
         while (payload == null) {
-            while (payload == null && active.size() > 0) {
+            while (payload == null && !active.isEmpty()) {
                 StreamParser last = active.peek().getValue();
                 try {
                     if (last.hasNext()) {
@@ -311,7 +311,7 @@ public class UnpackFilter implements ObjectFilter {
                     "close(%b): Cannot close as no source is specified",
                     success));
         } else {
-            while (active.size() > 0) {
+            while (!active.isEmpty()) {
                 active.pop().getValue().stop();
             }
             source.close(success);

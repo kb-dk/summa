@@ -18,13 +18,12 @@ import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaFieldSeparatingAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
-
-import java.text.ParseException;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
+
+import java.text.ParseException;
 
 /**
  * Extension of IndexField to support Lucene-specific behaviour.
@@ -80,6 +79,7 @@ public class LuceneIndexField extends
         return new SummaStandardAnalyzer();
     }
 
+    @Override
     public Analyzer getIndexAnalyzer() {
         if (isMultiValued()) {
             // TODO: Consider sanity-check for non-text analyzers
@@ -88,6 +88,7 @@ public class LuceneIndexField extends
         return super.getIndexAnalyzer();
     }
 
+    @Override
     public Analyzer getQueryAnalyzer() {
         if (isMultiValued()) { // TODO: Does multi-value make sense here?
             // TODO: Consider sanity-check for non-text analyzers

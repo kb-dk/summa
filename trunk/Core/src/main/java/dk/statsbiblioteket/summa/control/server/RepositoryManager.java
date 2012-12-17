@@ -19,18 +19,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
-import dk.statsbiblioteket.summa.control.bundle.Bundle;
-import dk.statsbiblioteket.summa.control.bundle.BundleFormatException;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.control.bundle.BundleUtils;
-import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient;
-import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryServer;
-import dk.statsbiblioteket.util.FileAlreadyExistsException;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.summa.control.bundle.*;
+import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.watch.FolderEvent;
 import dk.statsbiblioteket.util.watch.FolderListener;
@@ -308,6 +298,7 @@ public class RepositoryManager implements Configurable,
      * Iterate through the bundle ids of all bundles present in this repository.
      * @return An iterator over all bundle ids.
      */
+    @Override
     public Iterator<String> iterator() {
         return getBundles().iterator();
     }
@@ -577,17 +568,17 @@ public class RepositoryManager implements Configurable,
             builder.writeToDir(stagingDir);
         }
 
-        if (builder.getFiles().size() != 0) {
+        if (!builder.getFiles().isEmpty()) {
             log.debug ("Validating fileList for bundle '" + bundleId + "'");
             builder.checkFileList(stagingDir);
         }
 
-        if (builder.getApi().size() != 0) {
+        if (!builder.getApi().isEmpty()) {
             log.debug ("Validating publicApi for bundle '" + bundleId + "'");
             builder.checkPublicApi();
         }
 
-        if (!update && builder.getFiles().size() == 0){
+        if (!update && builder.getFiles().isEmpty()){
             throw new BundleFormatException("No, or empty,  fileList for"
                                             + " bundle '" + bundleId + "'");
         }

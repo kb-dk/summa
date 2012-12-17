@@ -26,14 +26,13 @@ import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * The default implementation of IndexController. It is basically an aggregator
@@ -240,7 +239,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         List<Configuration> manipulatorConfs;
         try {
             manipulatorConfs = conf.getSubConfigurations(CONF_MANIPULATORS);
-            if (manipulatorConfs.size() == 0) {
+            if (manipulatorConfs.isEmpty()) {
                 log.warn("No manipulators specified in " + CONF_MANIPULATORS + ". This is probably an error");
             } else {
                 log.debug("Got " + manipulatorConfs.size() + " manipulator configurations");

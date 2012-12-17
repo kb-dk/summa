@@ -14,21 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.api.watch;
 
-import junit.framework.TestCase;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.io.File;
-
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
+import junit.framework.TestCase;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -57,6 +56,7 @@ public class NotificationTest extends TestCase {
             events = new ArrayList<Event>();
         }
 
+        @Override
         public void storageChanged(StorageWatcher watch, String base, long timeStamp, Object userData) {
             events.add (new Event(watch, base, timeStamp, userData));
         }
@@ -88,6 +88,7 @@ public class NotificationTest extends TestCase {
         );
     }
 
+    @Override
     public void setUp () throws Exception {
         if (new File(testDBLocation).exists()) {
             Files.delete(testDBLocation);
@@ -107,6 +108,7 @@ public class NotificationTest extends TestCase {
         Thread.sleep(w.getPollInterval()+1000);
     }
 
+    @Override
     public void tearDown () throws Exception {
         w.stop();
         storage.close();

@@ -18,19 +18,19 @@
  */
 package dk.statsbiblioteket.summa.control.server.deploy;
 
-import java.rmi.RemoteException;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -42,16 +42,19 @@ public class FakeClient implements ClientConnection {
         log.info("Got created");
     }
 
+    @Override
     public void stop() throws RemoteException {
         log.info("Stop called");
         return; //new Status(Status.CODE.stopped, "Fake status says stopped");
     }
 
+    @Override
     public Status getStatus() throws RemoteException {
         log.info("Status called");
         return new Status(Status.CODE.running, "Fake status");
     }
 
+    @Override
     public String deployService(String bundleId, String instanceId,
                               String confLocation) throws RemoteException {
         log.info("Fake deploying bundle " + bundleId + " with config location "
@@ -59,29 +62,35 @@ public class FakeClient implements ClientConnection {
         return "fake-instance-id";
     }
 
+    @Override
     public void removeService(String instanceId) throws IOException {
         log.info("Remove service '" + instanceId + "'");
     }
 
+    @Override
     public void startService(String id,
                              String confLocation) throws RemoteException {
         log.info("Fake starting " + id);
     }
 
 
+    @Override
     public void stopService(String id) throws RemoteException {
         log.info("Fake stopping " + id);
     }
 
+    @Override
     public Status getServiceStatus(String id) throws RemoteException {
         log.info("Faking status for " + id);
         return new Status(Status.CODE.running, "Fake status for " + id);
     }
 
+    @Override
     public Service getServiceConnection(String id) throws IOException {
        throw new UnsupportedOperationException();
     }
 
+    @Override
     public List<String> getServices() throws RemoteException {
         log.info("Faking getServices");
         ArrayList<String> list = new ArrayList<String>(1);
@@ -89,18 +98,22 @@ public class FakeClient implements ClientConnection {
         return list;
     }
 
+    @Override
     public String getId() throws RemoteException {
         return "Fake Id";
     }
 
+    @Override
     public BundleRepository getRepository() throws IOException {
         return null;
     }
 
+    @Override
     public String getBundleSpec(String instanceId) throws IOException {
         return "<bundle></bundle>";
     }
 
+    @Override
     public void reportError(String id) throws IOException {
         log.info ("Error reported on: " + id);
     }

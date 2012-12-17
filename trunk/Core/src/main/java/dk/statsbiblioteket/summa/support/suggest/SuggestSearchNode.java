@@ -21,15 +21,14 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A suggest-search is a low overhead Search meant for interactive use.
@@ -40,11 +39,11 @@ import org.apache.commons.logging.LogFactory;
  * The list is sorted descending by queryCount.
  * </p><p>
  * Example: Suggest for "Foo" is requested. The visual result is {code
- foo fighters (3456)
- foo bears (43567)
- foo bar (23)
- fooey kabloey (4563454)
- }
+ * foo fighters (3456)
+ * foo bears (43567)
+ * foo bar (23)
+ * fooey kabloey (4563454)
+ * }
  * </p><p>
  * When a search has been performed, suggest should be updated with the query
  * and the hitCount. The queryCount will be increased with 1 for each call that
@@ -63,7 +62,9 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SuggestSearchNode extends SearchNodeImpl {
-    /** Logger for this class. */
+    /**
+     * Logger for this class.
+     */
     private static Log log = LogFactory.getLog(SuggestSearchNode.class);
 
     /**
@@ -72,9 +73,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * </p><p>
      * Optional. Default is 1000.
      */
-    public static final String CONF_MAX_RESULTS =
-                                             "summa.support.suggest.maxresults";
-    /** Default value for {@link #CONF_MAX_RESULTS}. */
+    public static final String CONF_MAX_RESULTS = "summa.support.suggest.maxresults";
+    /**
+     * Default value for {@link #CONF_MAX_RESULTS}.
+     */
     public static final int DEFAULT_MAX_RESULTS = 1000;
 
     /**
@@ -82,11 +84,13 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * query, but cannot exceed {@link #CONF_MAX_RESULTS}.
      * </p><p>
      * Optional. Default is 10.
+     *
      * @see SuggestKeys#SEARCH_MAX_RESULTS
      */
-    public static final String CONF_DEFAULT_MAX_RESULTS =
-                                      "summa.support.suggest.defaultmaxresults";
-    /** Default value for {@link #CONF_DEFAULT_MAX_RESULTS}. */
+    public static final String CONF_DEFAULT_MAX_RESULTS = "summa.support.suggest.defaultmaxresults";
+    /**
+     * Default value for {@link #CONF_DEFAULT_MAX_RESULTS}.
+     */
     public static final int DEFAULT_DEFAULT_MAX_RESULTS = 10;
 
     /**
@@ -99,9 +103,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_NORMALIZE_QUERIES =
-                                       "summa.support.suggest.normalizequeries";
-    /** Default value for {@link #CONF_NORMALIZE_QUERIES}. */
+    public static final String CONF_NORMALIZE_QUERIES = "summa.support.suggest.normalizequeries";
+    /**
+     * Default value for {@link #CONF_NORMALIZE_QUERIES}.
+     */
     public static final boolean DEFAULT_NORMALIZE_QUERIES = false;
 
     /**
@@ -110,11 +115,11 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * Optional. Default is
      * {@link dk.statsbiblioteket.summa.support.suggest.SuggestStorageH2}.
      */
-    public static final String CONF_STORAGE_CLASS =
-                                                "summa.support.suggest.storage";
-    /** Default value for {@link #CONF_STORAGE_CLASS}. */
-    public static final Class<? extends SuggestStorage> DEFAULT_STORAGE =
-                                                         SuggestStorageH2.class;
+    public static final String CONF_STORAGE_CLASS = "summa.support.suggest.storage";
+    /**
+     * Default value for {@link #CONF_STORAGE_CLASS}.
+     */
+    public static final Class<? extends SuggestStorage> DEFAULT_STORAGE = SuggestStorageH2.class;
 
     /**
      * The locale to use when lowercasing queries. This relevant both for
@@ -123,9 +128,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * </p><p>
      * Optional. Default is "da" (Danish).
      */
-    public static final String CONF_LOWERCASE_LOCALE =
-                                        "summa.support.suggest.lowercaselocale";
-    /** Default value for {@link #CONF_LOWERCASE_LOCALE}. */
+    public static final String CONF_LOWERCASE_LOCALE = "summa.support.suggest.lowercaselocale";
+    /**
+     * Default value for {@link #CONF_LOWERCASE_LOCALE}.
+     */
     public static final String DEFAULT_LOWERCASE_LOCALE = "da";
 
     /**
@@ -162,32 +168,35 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     static final String SEARCH_EXPORT = "summa.support.suggest.export";
 
-    /** The maximum results returned. */
+    /**
+     * The maximum results returned.
+     */
     private int maxResults;
-    /** Default default max result returned. */
+    /**
+     * Default default max result returned.
+     */
     private int defaultMaxResults;
-    /** The suggest storage holding the suggestion. */
+    /**
+     * The suggest storage holding the suggestion.
+     */
     private SuggestStorage storage;
 
     /**
      * Create a suggest search node.
+     *
      * @param conf The configuration for setting up the search node.
      */
     public SuggestSearchNode(Configuration conf) {
         super(conf);
         maxResults = conf.getInt(CONF_MAX_RESULTS, DEFAULT_MAX_RESULTS);
-        defaultMaxResults = conf.getInt(
-                CONF_DEFAULT_MAX_RESULTS, DEFAULT_DEFAULT_MAX_RESULTS);
+        defaultMaxResults = conf.getInt(CONF_DEFAULT_MAX_RESULTS, DEFAULT_DEFAULT_MAX_RESULTS);
 
         Class<? extends SuggestStorage> storageClass;
-        storageClass = Configuration.getClass(
-                CONF_STORAGE_CLASS, SuggestStorage.class, DEFAULT_STORAGE,
-                conf);
+        storageClass = Configuration.getClass(CONF_STORAGE_CLASS, SuggestStorage.class, DEFAULT_STORAGE, conf);
 
         storage = Configuration.create(storageClass, conf);
         log.info(String.format("Created SuggestSearchNode with maxResults=%d, "
-                               + " defaultMaxResults=%d and storage=%s",
-                               maxResults, defaultMaxResults,
+                               + " defaultMaxResults=%d and storage=%s", maxResults, defaultMaxResults,
                                storageClass.getSimpleName()));
     }
 
@@ -201,29 +210,26 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * recent ({@link #suggestRecent(Request, ResponseCollection)}),
      * delete ({@link #deleteSuggestion(String)}).
      * See documentation for details about the individual search requests.
-     * @param request The search request.
+     *
+     * @param request   The search request.
      * @param responses A collection of responses.
      * @throws RemoteException If an error occur searching or connection to the
-     * remote searcher.
+     *                         remote searcher.
      */
     @Override
-    protected void managedSearch(Request request, ResponseCollection responses)
-                                                        throws RemoteException {
+    protected void managedSearch(Request request, ResponseCollection responses) throws RemoteException {
         boolean maintenance = false;
         final int maxResults = 10;
         try {
             if (request.getBoolean(SEARCH_CLEAR, false)) {
                 log.info("Clearing all suggestions");
                 storage.clear();
-                responses.add(new SuggestResponse("Suggestions cleared",
-                                                  maxResults));
+                responses.add(new SuggestResponse("Suggestions cleared", maxResults));
                 maintenance = true;
             }
             if (request.containsKey(SuggestKeys.DELETE_SUGGEST)) {
-                String suggestion =
-                                  request.getString(SuggestKeys.DELETE_SUGGEST);
-                log.info("Deleting suggestion '" + suggestion
-                         + "' from storage");
+                String suggestion = request.getString(SuggestKeys.DELETE_SUGGEST);
+                log.info("Deleting suggestion '" + suggestion + "' from storage");
                 boolean isDeleted = storage.deleteSuggestion(suggestion);
                 if (!isDeleted) {
                     log.warn("Suggestion still exists in storage");
@@ -236,8 +242,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
                 URL source = new URL(sourceUrl);
                 storage.importSuggestions(source);
-                responses.add(new SuggestResponse("Suggestions imported",
-                                                  maxResults));
+                responses.add(new SuggestResponse("Suggestions imported", maxResults));
                 maintenance = true;
             }
             if (request.containsKey(SEARCH_EXPORT)) {
@@ -246,8 +251,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 log.info("Exporting suggestions to: " + target);
 
                 storage.exportSuggestions(target);
-                responses.add(new SuggestResponse("Suggestions exported",
-                                                  maxResults));
+                responses.add(new SuggestResponse("Suggestions exported", maxResults));
                 maintenance = true;
             }
             if (request.containsKey(SuggestKeys.SEARCH_PREFIX)) {
@@ -263,140 +267,121 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 return;
             }
         } catch (IOException e) {
-            throw new RemoteException(
-                    "Exception performing managed search with " + request, e);
+            throw new RemoteException("Exception performing managed search with " + request, e);
         }
         if (maintenance) {
             return;
         }
-        log.debug(String.format(
-                "None of the expected keys %s, %s, %s, %s or %s encountered,"
-                + " no suggest will be performed",
-                SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY,
-                SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
+        log.debug(String.format("None of the expected keys %s, %s, %s, %s or %s encountered,"
+                                + " no suggest will be performed", SuggestKeys.SEARCH_PREFIX,
+                                SuggestKeys.SEARCH_UPDATE_QUERY, SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
     }
 
     /**
      * Suggestion search.
-     * @param request The request. This should contain
-     * {@link SuggestKeys#SEARCH_PREFIX}.
+     *
+     * @param request   The request. This should contain
+     *                  {@link SuggestKeys#SEARCH_PREFIX}.
      * @param responses The response collection.
      * @throws IOException If error occur while doing search.
      */
-    private void suggestSearch(Request request, ResponseCollection responses)
-                                                            throws IOException {
+    private void suggestSearch(Request request, ResponseCollection responses) throws IOException {
         long startTime = System.nanoTime();
         String prefix = request.getString(SuggestKeys.SEARCH_PREFIX);
-        int maxResults = request.getInt(
-                SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
+        int maxResults = request.getInt(SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
         if (maxResults > this.maxResults) {
-            log.warn(String.format(
-                    "maxResults %d requested for '%s' with configuration-"
-                    + "defined maxResults %d. throttling to configuration-"
-                    + "defined max", maxResults, prefix, this.maxResults));
+            log.warn(String.format("maxResults %d requested for '%s' with configuration-"
+                                   + "defined maxResults %d. throttling to configuration-"
+                                   + "defined max", maxResults, prefix, this.maxResults));
             maxResults = this.maxResults;
         }
 
-        log.trace("Performing Suggest search on prefix '" + prefix
-                  + " with maxResults=" + maxResults);
+        log.trace("Performing Suggest search on prefix '" + prefix + " with maxResults=" + maxResults);
         SuggestResponse response = storage.getSuggestion(prefix, maxResults);
         double time = (System.nanoTime() - startTime) / 1000000D;
-        log.debug("Completed Suggest for prefix '" + prefix
-                  + "' with maxResults=" + maxResults + " in "
-                  + time + "ms");
+        log.debug("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms");
         response.addTiming("suggest.search", Math.round(time));
         responses.add(response);
     }
 
     /**
      * Perform a suggest recent on the suggest storage.
-     * @param request The request. This should contain
-     * {@link SuggestKeys#SEARCH_RECENT}
+     *
+     * @param request   The request. This should contain
+     *                  {@link SuggestKeys#SEARCH_RECENT}
      * @param responses The response.
      * @throws IOException If error occur while querying.
      */
-    private void suggestRecent(Request request, ResponseCollection responses)
-                                                            throws IOException {
+    private void suggestRecent(Request request, ResponseCollection responses) throws IOException {
         long startTime = System.nanoTime();
         int ageSeconds = request.getInt(SuggestKeys.SEARCH_RECENT);
-        int maxResults = request.getInt(
-                SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
+        int maxResults = request.getInt(SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
         if (maxResults > this.maxResults) {
-            log.warn(String.format(
-                    "maxResults %d requested for updates within last %ss" +
-                    " with configuration-defined maxResults %d. Throttling " +
-                    "to configuration-defined max",
-                    maxResults, ageSeconds, this.maxResults));
+            log.warn(String.format("maxResults %d requested for updates within last %ss with configuration-defined "
+                                   + "maxResults %d. Throttling to configuration-defined max",
+                                   maxResults, ageSeconds, this.maxResults));
             maxResults = this.maxResults;
         }
 
-        log.trace("Performing suggestRecent search within " + ageSeconds
-                  + "s with maxResults=" + maxResults);
+        log.trace("Performing suggestRecent search within " + ageSeconds + "s with maxResults=" + maxResults);
         responses.add(storage.getRecentSuggestions(ageSeconds, maxResults));
-        log.debug("Completed suggestRecent for updates within " + ageSeconds
-                  + "s with maxResults=" + maxResults + " in "
-                  + (System.nanoTime() - startTime) / 1000000D + "ms");
+        log.debug(
+                "Completed suggestRecent for updates within " + ageSeconds + "s with maxResults=" + maxResults + " in "
+                + (System.nanoTime() - startTime) / 1000000D + "ms");
     }
 
     /**
      * Perform a suggestion update.
-     * @param request The request. This should contain
-     * {@link SuggestKeys#SEARCH_UPDATE_QUERY} and
-     * {@link SuggestKeys#SEARCH_UPDATE_HITCOUNT}.
+     *
+     * @param request   The request. This should contain
+     *                  {@link SuggestKeys#SEARCH_UPDATE_QUERY} and
+     *                  {@link SuggestKeys#SEARCH_UPDATE_HITCOUNT}.
      * @param responses The response.
      * @throws IOException If error occur while querying.
      */
-    private void suggestUpdate(Request request, ResponseCollection responses)
-                                                            throws IOException {
+    private void suggestUpdate(Request request, ResponseCollection responses) throws IOException {
         long startTime = System.nanoTime();
         String query = request.getString(SuggestKeys.SEARCH_UPDATE_QUERY);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_HITCOUNT)) {
-            String msg = String.format(
-                    "Received an update with %s='%s' but no '%s' defined",
-                    SuggestKeys.SEARCH_UPDATE_QUERY, query,
-                    SuggestKeys.SEARCH_UPDATE_HITCOUNT);
+            String msg = String.format("Received an update with %s='%s' but no '%s' defined",
+                                       SuggestKeys.SEARCH_UPDATE_QUERY, query, SuggestKeys.SEARCH_UPDATE_HITCOUNT);
             log.warn(msg);
             //noinspection DuplicateStringLiteralInspection
-            responses.add(new SuggestResponse(
-                "Error: " + msg, 0));
+            responses.add(new SuggestResponse("Error: " + msg, 0));
             return;
         }
         int hits = request.getInt(SuggestKeys.SEARCH_UPDATE_HITCOUNT);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT)) {
             storage.addSuggestion(query, hits);
-            log.debug("Completed addSuggestion(" + query + ", " + hits
-                      + ") in "
+            log.debug("Completed addSuggestion(" + query + ", " + hits + ") in "
                       + (System.nanoTime() - startTime) / 1000000D + "ms");
         } else {
             int queryCount = request.getInt(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT);
             storage.addSuggestion(query, hits, queryCount);
-            log.debug("Completed extended addSuggestion(" + query + ", "
-                      + hits + ", " + queryCount + ") in "
+            log.debug("Completed extended addSuggestion(" + query + ", " + hits + ", " + queryCount + ") in "
                       + (System.nanoTime() - startTime) / 1000000D + "ms");
         }
-        responses.add(new SuggestResponse(
-                "addSuggestion of query '" + query + "'", 10));
+        responses.add(new SuggestResponse("addSuggestion of query '" + query + "'", 10));
     }
 
     /**
      * Opens any existing suggest storage at the given location. If no storage
      * is present, a new storage will be created.
+     *
      * @param location where the storage is or should be. This must be parsable
-     *        by {@code new File(...)}.
+     *                 by {@code new File(...)}.
      * @throws RemoteException if the storage could not be opened or created.
      */
     @Override
     protected void managedOpen(String location) throws RemoteException {
         File fileLocation = new File(new File(location), SUGGEST_FOLDER);
-        log.debug(String.format(
-                "manageOpen(%s) called. The specific folder was '%s'",
-                location, fileLocation.toString()));
+        log.debug(String.format("manageOpen(%s) called. The specific folder was '%s'", location,
+                                fileLocation.toString()));
         storage.close();
         try {
             storage.open(fileLocation);
         } catch (IOException e) {
-            throw new RemoteException(
-                    "Exception while opening '" + location + "'", e);
+            throw new RemoteException("Exception while opening '" + location + "'", e);
         }
     }
 
@@ -411,6 +396,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * No warmup is needed for suggestions.
+     *
      * @param request No used
      */
     @Override
@@ -420,31 +406,32 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * Wrapper for {@link SuggestStorage#listSuggestions}.
+     *
      * @param start the position from which to start extraction.
      * @param max   the maximum number of suggestions to extract.
      * @return a list of suggestions. Each suggest-entry if represented as
-     *        {@code query\thits\tqueryCount} where {@code \t} is tab.
+     *         {@code query\thits\tqueryCount} where {@code \t} is tab.
      * @throws IOException if the suggestions could not be extracted.
      */
-    public ArrayList<String> listSuggestions(int start, int max) throws
-                                                                 IOException {
+    public ArrayList<String> listSuggestions(int start, int max) throws IOException {
         return storage.listSuggestions(start, max);
     }
 
     /**
      * Wrapper for {@link SuggestStorage#addSuggestions}.
+     *
      * @param suggestions a list of suggestions.
      * @throws IOException if the suggestions could not be added.
      */
-    public void addSuggestions(ArrayList<String> suggestions) throws
-                                                              IOException {
+    public void addSuggestions(ArrayList<String> suggestions) throws IOException {
         storage.addSuggestions(suggestions.iterator());
     }
 
     /**
      * Delete all suggestion in storage, not depended on case.
+     *
      * @param suggestion The suggestion string to remove from
-     * storage.
+     *                   storage.
      * @return True if suggestion isn't present i storage anymore.
      */
     public boolean deleteSuggestion(String suggestion) {

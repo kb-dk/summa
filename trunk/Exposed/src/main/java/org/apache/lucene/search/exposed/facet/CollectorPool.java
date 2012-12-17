@@ -177,7 +177,7 @@ public class CollectorPool {
         return AVAILABILITY.hasFresh;
       }
     }
-    if (fresh.size() == 0) {
+    if (fresh.isEmpty()) {
       // No fresh so there is either no free collectors allocated or
       // they are in use
       return isFurtherAllocationAllowed() ?

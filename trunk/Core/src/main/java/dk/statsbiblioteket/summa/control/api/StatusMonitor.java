@@ -14,21 +14,21 @@
  */
 package dk.statsbiblioteket.summa.control.api;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
-import dk.statsbiblioteket.summa.control.api.feedback.FeedbackShellContext;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
+import dk.statsbiblioteket.summa.control.api.feedback.FeedbackShellContext;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.Arrays;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A {@link Runnable} helper class to monitor a {@link Monitorable} until
@@ -146,6 +146,7 @@ public class StatusMonitor implements Runnable {
                    + "Outputting to a " + feedback);
     }
 
+    @Override
     public void run() {
         String msg = "Waiting for status"
                    + (connectionId == null ? "" : ("from " + connectionId))

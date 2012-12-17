@@ -20,13 +20,12 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Takes a list of Payloads in the constructor and delivers the Payloads when
@@ -103,7 +102,7 @@ public class PayloadFeederHelper implements ObjectFilter {
 
     @Override
     public final boolean hasNext() {
-        return payloads.size() > 0;
+        return !payloads.isEmpty();
     }
 
     @Override

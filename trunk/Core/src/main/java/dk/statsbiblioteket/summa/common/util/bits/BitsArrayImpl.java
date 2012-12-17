@@ -44,6 +44,7 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
      * @param index the position for the value.
      * @param value the value to assign.
      */
+    @Override
     public void set(int index, int value) {
         ensureSpace(index, value);
         try {
@@ -112,6 +113,7 @@ public abstract class BitsArrayImpl extends AbstractList<Integer>
     /**
      * @return the number of bytes used for the internal array.
      */
+    @Override
     public int getMemSize() {
         return blocks.length * BLOCK_SIZE / 8;
     }

@@ -18,15 +18,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.bundle.rmi.RemoteRepository;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link BundleRepository} talking to a RemoteURLRepositoryServer}.
@@ -81,10 +80,12 @@ public class RemoteURLRepositoryClient implements BundleRepository {
         localRepo = new URLRepository(conf);
     }
 
+    @Override
     public File get(String bundleId) throws IOException {
         return localRepo.get (bundleId);
     }
 
+    @Override
     public List<String> list(String regex) throws IOException {
         BundleRepository repo = getConnection();
         try {
@@ -94,6 +95,7 @@ public class RemoteURLRepositoryClient implements BundleRepository {
         }
     }
 
+    @Override
     public String expandApiUrl (String jarFileName) throws IOException {
         BundleRepository repo = getConnection();
         try {

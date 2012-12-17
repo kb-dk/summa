@@ -247,6 +247,7 @@ public class ExposedPOC {
     }
     long startTimeSort = System.nanoTime();
     Arrays.sort(allDocIDS, new Comparator<Integer>() {
+      @Override
       public int compare(Integer o1, Integer o2) {
         return (int)(orderedDocs.get(o1) - orderedDocs.get(o2));
       }

@@ -41,6 +41,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
   }
 
   // Ensure that we can deliver an id
+  @Override
   public boolean hasNext() {
     while (true) {
       if (pending) {
@@ -62,6 +63,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
     }
   }
 
+  @Override
   public ExposedTuple next() {
     if (!hasNext()) {
       throw new IllegalStateException("The iterator is depleted");
@@ -103,6 +105,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
     }
   }
 
+  @Override
   public void remove() {
     throw new UnsupportedOperationException("Not a valid operation");
   }

@@ -257,8 +257,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         assertNotNull("Payload should have a document",
                       processed.getData(Payload.LUCENE_DOCUMENT));
         Document doc = (Document) processed.getData(Payload.LUCENE_DOCUMENT);
-        assertTrue("The document should have some fields",
-                   doc.getFields().size() > 0);
+        assertTrue("The document should have some fields", !doc.getFields().isEmpty());
         for (String fieldName : new String[] {
             "mystored", "freetext", "nonexisting"}) {
             assertNotNull("The document should contain the field " + fieldName,
@@ -325,8 +324,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                        expected.contains(field.stringValue()));
             expected.remove(field.stringValue());
         }
-        assertTrue("There should be no more expected values. Remaining: " + Strings.join(Arrays.asList(expected), ", "),
-                   expected.size() == 0);
+        assertTrue("There should be no more expected values. Remaining: " + Strings.join(Arrays.asList(expected), ", "), expected.isEmpty());
     }
 
     /* ObjectFilter implementation */

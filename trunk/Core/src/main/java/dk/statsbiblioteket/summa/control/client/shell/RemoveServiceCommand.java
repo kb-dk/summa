@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
@@ -41,6 +41,7 @@ public class RemoveServiceCommand extends RemoteCommand<ClientConnection> {
                                            + " fails to stop");
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
 
         if (getArguments().length == 0) {

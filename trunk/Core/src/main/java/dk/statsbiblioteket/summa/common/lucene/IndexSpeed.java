@@ -100,7 +100,7 @@ public class IndexSpeed {
         }
 
         List<String> arguments = new LinkedList<String>(Arrays.asList(args));
-        while (arguments.size() > 0) {
+        while (!arguments.isEmpty()) {
             String next = arguments.remove(0);
             if ("-m".equals(next)) {
                 maxdocs = getIntFromArgs(arguments, "maxdocs");

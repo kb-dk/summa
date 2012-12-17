@@ -14,25 +14,26 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
-import java.util.Arrays;
-
-import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 
 public class IndirectLongSorterTest extends TestCase {
     public IndirectLongSorterTest(String name) {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -95,6 +96,7 @@ public class IndirectLongSorterTest extends TestCase {
 
     private IndirectLongSorter<String> mySorter =
             new IndirectLongSorter<String>() {
+                @Override
                 protected String getValue(long reference) {
                     return Long.toString(Math.abs(5 - reference));
                 }
@@ -102,12 +104,14 @@ public class IndirectLongSorterTest extends TestCase {
 
     private IndirectLongSorter<String> simpleSorter =
             new IndirectLongSorter<String>() {
+                @Override
                 protected String getValue(long reference) {
                     return Long.toString(reference);
                 }
             };
 
     private Comparator<String> myComparator = new Comparator<String>() {
+        @Override
         public int compare(String o1, String o2) {
             return Long.valueOf(o1).compareTo(Long.valueOf(o2));
         }

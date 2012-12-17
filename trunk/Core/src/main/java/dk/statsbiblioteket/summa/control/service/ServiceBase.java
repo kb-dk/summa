@@ -15,21 +15,21 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
-import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.io.IOException;
 
 /**
  * <p>Helper class to ease implementation of Summa ClientManager {@link Service}s.
@@ -99,11 +99,13 @@ public abstract class ServiceBase extends UnicastRemoteObject
                  + " and id '" + id + "'");
     }
 
+    @Override
     public Status getStatus() throws RemoteException {
         log.trace("getStatus called, returning '" + status + "'");
         return status;
     }
 
+    @Override
     public String getId() throws RemoteException {
         log.trace("getID called, returning '" + id + "'");
         return id;
@@ -134,7 +136,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
     }
 
     protected String getRMIAddress() {
-        return "//localhost" + ":" + registryPort + "/" + id;
+        return "//localhost:" + registryPort + "/" + id;
     }
 
     /**
@@ -241,6 +243,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
         return "[service:" + id + "@" + getRMIAddress() + "]";
     }
 
+    @Override
     public void kill () throws RemoteException {
         log.info("Got kill command. Preparing for JVM shutdown");
         int exitCode = 0;

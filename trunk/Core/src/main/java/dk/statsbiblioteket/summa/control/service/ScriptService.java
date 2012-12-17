@@ -14,31 +14,20 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
 import dk.statsbiblioteket.summa.control.api.Service;
-
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.ByteArrayInputStream;
-import java.io.CharArrayReader;
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.rmi.RemoteException;
-import java.net.URL;
-import java.net.MalformedURLException;
-
+import dk.statsbiblioteket.summa.control.api.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.script.*;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
 
 /**
  * A {@link Service} implementation delegating all work to an underlying
@@ -194,6 +183,7 @@ public class ScriptService extends ServiceBase {
                   Logging.LogLevel.INFO);
     }
 
+    @Override
     public void start() throws RemoteException {
         if (scriptRunner.isRunning()) {
             throw new InvalidServiceStateException(
@@ -205,6 +195,7 @@ public class ScriptService extends ServiceBase {
         setStatusIdle();
     }
 
+    @Override
     public void stop() throws RemoteException {
         if (!scriptRunner.isRunning()) {
             throw new InvalidServiceStateException(
@@ -298,6 +289,7 @@ public class ScriptService extends ServiceBase {
                       Logging.LogLevel.INFO);
         }
 
+        @Override
         public void run() {
             long time = System.nanoTime();
 

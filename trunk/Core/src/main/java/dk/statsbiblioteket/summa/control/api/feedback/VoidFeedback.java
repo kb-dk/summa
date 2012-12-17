@@ -52,12 +52,14 @@ public class VoidFeedback implements Feedback, Configurable {
         this (Configuration.newMemoryBased());
     }
 
+    @Override
     public void putMessages(List<Message> messages) {
         for (Message msg : messages) {
             putMessage (msg);
         }
     }
 
+    @Override
     public void putMessage(Message message) {
         switch (message.getMessageType()) {
             case Message.MESSAGE_PLAIN :

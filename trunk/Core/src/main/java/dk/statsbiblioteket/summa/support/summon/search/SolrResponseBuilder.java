@@ -252,7 +252,7 @@ public class SolrResponseBuilder implements Configurable {
                 FacetResultExternal fr = (FacetResultExternal)response;
                 for (Map.Entry<String, List<FacetResultImpl.Tag<String>>> entry: fr.getMap().entrySet()) {
                     if (RECORD_BASE.equals(entry.getKey())) {
-                        if (entry.getValue() != null && entry.getValue().size() == 0) {
+                        if (entry.getValue() != null && entry.getValue().isEmpty()) {
                             fr.addTag(RECORD_BASE, recordBase, (int)hitCount, FacetResult.Reliability.PRECISE);
                         }
                         return;
@@ -447,12 +447,11 @@ public class SolrResponseBuilder implements Configurable {
             request, local, PRE + ExposedIndexLookupParams.ELOOKUP_SORT_LOCALE_VALUE, IndexKeys.SEARCH_INDEX_LOCALE);
         putIfExists(request, local,
                     PRE + ExposedIndexLookupParams.ELOOKUP_CASE_SENSITIVE, IndexKeys.SEARCH_INDEX_CASE_SENSITIVE);
-        IndexRequest lookupR = defaultIndexRequest.createRequest(local);
-        String sort = request.getString(PRE + ExposedIndexLookupParams.ELOOKUP_SORT, null);
+        //        String sort = request.getString(PRE + ExposedIndexLookupParams.ELOOKUP_SORT, null);
 //        if (sort != null && !(PRE + ExposedIndexLookupParams.ELOOKUP_SORT_BYINDEX).equals(sort)) {
 //            lookupR.setLocale(new Locale(sort));
 //        }
-        return lookupR;
+        return defaultIndexRequest.createRequest(local);
     }
     private boolean putIfExists(Request sourceRequest, Request destRequest, String sourceKey, String destKey) {
         if (sourceRequest.containsKey(sourceKey)) {
@@ -612,7 +611,7 @@ public class SolrResponseBuilder implements Configurable {
                     return true;
 
                 }
-                if (content.length() == 0) {
+                if (content.isEmpty()) {
                     log.debug("Content for " + current + "#" + name + " for document " + id + " was empty. Skipping");
                     return true;
                 }

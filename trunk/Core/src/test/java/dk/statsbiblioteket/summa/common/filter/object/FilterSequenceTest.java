@@ -94,29 +94,35 @@ public class FilterSequenceTest extends TestCase implements ObjectFilter {
 
     /* Object filter interface */
 
+    @Override
     public boolean hasNext() {
         return true;
     }
 
+    @Override
     public void setSource(Filter filter) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    @Override
     public boolean pump() throws IOException {
         return hasNext() && next() != null;
     }
 
+    @Override
     public void close(boolean success) {
         // Do nothing
     }
 
     private int counter = 0;
     private String lastID;
+    @Override
     public Payload next() {
         lastID = "Dummy" + counter++;
         return new Payload(new Record(lastID, "foo", new byte[0]));
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("Not implemented");
     }

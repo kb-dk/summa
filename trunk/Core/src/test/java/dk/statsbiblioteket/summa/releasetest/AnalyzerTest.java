@@ -14,29 +14,29 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
-import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
+import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.rmi.RemoteException;
 
 /**
  * Tests that the same analyzers are used in the indexing and searching phases.
@@ -116,7 +116,7 @@ public class AnalyzerTest extends TestCase {
     private void assertNoHits(LuceneSearchNode search, String query) throws
                                                                RemoteException {
         String result = search(search, query);
-        assertFalse("The search for '" + query + "' should give 0 hits. " + "Result was\n" + result,
+        assertFalse("The search for '" + query + "' should give 0 hits. Result was\n" + result,
                     result.contains("recordID\""));
     }
 

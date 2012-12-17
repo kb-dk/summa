@@ -99,7 +99,7 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
         }
         passed++;
         if (max == passed) {
-            log.debug("Maximum " + max + " reached. Future Payloads will be " + "discarded");
+            log.debug("Maximum " + max + " reached. Future Payloads will be discarded");
         }
         return false;
     }

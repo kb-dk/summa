@@ -14,16 +14,15 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
 import dk.statsbiblioteket.util.Files;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * An extension of {@link URLRepository} also implementing the
@@ -97,6 +96,7 @@ public class LocalURLRepository extends URLRepository
 
     }
 
+    @Override
     public boolean installBundle(File bundle) throws IOException {
         if(!bundleDir.mkdirs()) {
             log.warn("Directory '" + bundleDir + "' was not created");
@@ -114,6 +114,7 @@ public class LocalURLRepository extends URLRepository
         return true;
     }
 
+    @Override
     public boolean installApi(File apiFile) throws IOException {
         if(!apiDir.mkdirs()) {
             log.warn("Directory '" + apiDir + "' was not created");

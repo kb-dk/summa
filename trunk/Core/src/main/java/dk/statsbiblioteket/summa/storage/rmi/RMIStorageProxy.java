@@ -25,14 +25,13 @@ import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link Storage} implementation capable of wrapping an underlying backend
@@ -41,9 +40,10 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke, te, hbk")
-public class RMIStorageProxy extends UnicastRemoteObject
-                             implements RemoteStorage {
-    /** Serial version UID. */
+public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorage {
+    /**
+     * Serial version UID.
+     */
     private static final long serialVersionUID = 23485L;
 
     /**
@@ -59,16 +59,14 @@ public class RMIStorageProxy extends UnicastRemoteObject
     /**
      * Default class for the storage backend implementation.
      */
-    public static final Class<? extends Storage> DEFAULT_BACKEND =
-                                                             H2Storage.class;
+    public static final Class<? extends Storage> DEFAULT_BACKEND = H2Storage.class;
 
     /**
      * Configuration property specifying which port the registry used by
      * the Storage can be found on. Default value is
      * {@link #DEFAULT_REGISTRY_PORT}.
      */
-    public static final String CONF_REGISTRY_PORT =
-                                              "summa.storage.rmi.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.storage.rmi.registry.port";
 
     /**
      * Default value for the {@link #CONF_REGISTRY_PORT} property.
@@ -80,8 +78,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * service.
      * Default is {@link #DEFAULT_SERVICE_NAME}.
      */
-    public static final String CONF_SERVICE_NAME =
-                                               "summa.storage.rmi.service.name";
+    public static final String CONF_SERVICE_NAME = "summa.storage.rmi.service.name";
     /**
      * Default value for {@link RMIStorageProxy#CONF_SERVICE_NAME}.
      */
@@ -98,32 +95,41 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_FLATTEN_EXCEPTIONS =
-        "rmi.exceptions.flatten";
+    public static final String CONF_FLATTEN_EXCEPTIONS = "rmi.exceptions.flatten";
     public static final boolean DEFAULT_FLATTEN_EXCEPTIONS = true;
 
-    /** Private logger instance. */
+    /**
+     * Private logger instance.
+     */
     private static Log log = LogFactory.getLog(RMIStorageProxy.class);
-    /** Storage backend. */
+    /**
+     * Storage backend.
+     */
     private Storage backend;
-    /** RMI service name. */
+    /**
+     * RMI service name.
+     */
     private String serviceName;
-    /** Registry port. */
+    /**
+     * Registry port.
+     */
     private int registryPort;
-    /** Log expand size. */
+    /**
+     * Log expand size.
+     */
     private final int logExpand = 5;
 
     private final boolean flattenExceptions;
 
     /**
      * Constructs a RMI Storage proxy with a given configuration.
+     *
      * @param conf The configuration.
      * @throws IOException If error occur construction storage.
      */
     public RMIStorageProxy(Configuration conf) throws IOException {
         super(getServicePort(conf));
-        flattenExceptions = conf.getBoolean(
-            CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
+        flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
 
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
@@ -135,18 +141,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
         if (conf.valueExists(CONF_BACKEND)) {
             backendConf.set(CONF_CLASS, conf.getString(CONF_BACKEND));
         } else {
-            log.info(CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
-                     + " for backend");
+            log.info(CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for backend");
             backendConf.set(CONF_CLASS, DEFAULT_BACKEND);
         }
 
         /* If the backend is set to be another RMIStorageProxy then avoid
          * infinite recursion by forcing it into a DerbyStorage. */
         if (backendConf.valueExists(CONF_CLASS)) {
-            if (this.getClass().getName().equals(
-                                          backendConf.getString(CONF_CLASS))) {
-                log.warn("Backend set to RMIStorageProxy. Forcing backend "
-                         + "class to " + DEFAULT_BACKEND.getName()
+            if (this.getClass().getName().equals(backendConf.getString(CONF_CLASS))) {
+                log.warn("Backend set to RMIStorageProxy. Forcing backend " + "class to " + DEFAULT_BACKEND.getName()
                          + " to avoid infinite recursion");
                 backendConf.set(CONF_CLASS, DEFAULT_BACKEND.getName());
             }
@@ -168,8 +171,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             RemoteHelper.exportMBean(this);
         } catch (Exception e) {
-            String msg = "Error exporting MBean of '" + this
-                         + "'. Going on without it: " + e.getMessage();
+            String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage();
             if (log.isTraceEnabled()) {
                 log.warn(msg, e);
             } else {
@@ -188,9 +190,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return configuration.getInt(Storage.CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
-            log.warn(String.format(
-                    "Service port not defined in %s. Falling back to anonymous "
-                    + "port 0", Storage.CONF_SERVICE_PORT));
+            log.warn(String.format("Service port not defined in %s. Falling back to anonymous "
+                                   + "port 0", Storage.CONF_SERVICE_PORT));
             return 0;
         }
     }
@@ -199,19 +200,16 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Return iterator key for records modified after input time, from the
      * backend storage.
      *
-     * @param time Time stamp records should be modified after.
-     * @param base The base to look in.
+     * @param time    Time stamp records should be modified after.
+     * @param base    The base to look in.
      * @param options The query options.
      * @return Iterator key for the result set.
      * @throws RemoteException If error occurred while doing RMI call.
      */
     @Override
-    public long getRecordsModifiedAfter(long time, String base,
-                                        QueryOptions options)
-                                                        throws RemoteException {
-        log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', "
-                + options + ").");
-      
+    public long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws RemoteException {
+        log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ").");
+
         if (log.isTraceEnabled()) {
             log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ").");
         }
@@ -225,7 +223,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    
+
     /**
      * Return iterator key for records modified after input time, from the
      * backend storage.
@@ -250,21 +248,19 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Return a list of records, given a list of id's and query options, from
      * the backend storage.
      *
-     * @param ids A list of string id's.
+     * @param ids     A list of string id's.
      * @param options The query options.
      * @return Return a list of records, given the id's and query options.
      * @throws RemoteException if error occurred doing RMI.
      */
     @Override
-    public List<Record> getRecords(List<String> ids, QueryOptions options)
-                                                        throws RemoteException {
+    public List<Record> getRecords(List<String> ids, QueryOptions options) throws RemoteException {
         try {
             return backend.getRecords(ids, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getRecord(ids=%s, queryOptions=%s) for %d:%s",
-                    Logs.expand(ids, logExpand), options,
-                    registryPort, serviceName), t);
+                    Logs.expand(ids, logExpand), options, registryPort, serviceName), t);
             return null;
         }
     }
@@ -273,21 +269,19 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Return a single Record based on the id and query options, from the
      * backend storage.
      *
-     * @param id A single id string.
+     * @param id      A single id string.
      * @param options The query options.
      * @return Return a single record, given the id and query options.
      * @throws RemoteException If error occurred doing RMI.
      */
     @Override
-    public Record getRecord(String id, QueryOptions options)
-                                                        throws RemoteException {
+    public Record getRecord(String id, QueryOptions options) throws RemoteException {
         try {
             return backend.getRecord(id, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "getRecord(id='%s', queryOptions=%s) for %d:%s",
-                    id, options, registryPort, serviceName),
-                                         t, flattenExceptions);
+                    id, options, registryPort, serviceName), t, flattenExceptions);
             return null;
         }
     }
@@ -307,8 +301,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "next(iteratorKey=%d) for %d:%s",
-                    iteratorKey, registryPort, serviceName),
-                                         t, flattenExceptions);
+                    iteratorKey, registryPort, serviceName), t, flattenExceptions);
             return null;
         }
     }
@@ -318,20 +311,18 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * from the backend storage.
      *
      * @param iteratorKey The iterator key.
-     * @param maxRecords maximum number of records.
+     * @param maxRecords  maximum number of records.
      * @return a list of records based on iterator key from backend storage.
      * @throws RemoteException If error occurred doing RMI.
      */
     @Override
-    public List<Record> next(long iteratorKey, int maxRecords)
-                                                        throws RemoteException {
+    public List<Record> next(long iteratorKey, int maxRecords) throws RemoteException {
         try {
             return backend.next(iteratorKey, maxRecords);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "next(iteratorKey=%d, maxRecords=%d) for %d:%s",
-                    iteratorKey, maxRecords, registryPort, serviceName),
-                                         t, flattenExceptions);
+                    iteratorKey, maxRecords, registryPort, serviceName), t, flattenExceptions);
             return null;
         }
     }
@@ -339,20 +330,18 @@ public class RMIStorageProxy extends UnicastRemoteObject
     /**
      * Flush the record into backend storage, based on query options.
      *
-     * @param record The record to store or update.
+     * @param record  The record to store or update.
      * @param options A set of arguments to modify how the record is inserted
      *                or updated.
      * @throws RemoteException If error occurred doing RMI.
      */
     @Override
-    public void flush(Record record, QueryOptions options)
-                                                        throws RemoteException {
+    public void flush(Record record, QueryOptions options) throws RemoteException {
         try {
             backend.flush(record, options);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "flush(%s) for %d:%s",
-                    record, registryPort, serviceName), t, flattenExceptions);
+            RemoteHelper.exitOnThrowable(log, String.format("flush(%s) for %d:%s", record, registryPort,
+                                                            serviceName), t, flattenExceptions);
         }
     }
 
@@ -377,15 +366,13 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * @throws RemoteException If error occurred doing RMI.
      */
     @Override
-    public void flushAll(List<Record> records, QueryOptions options)
-                                                        throws RemoteException {
+    public void flushAll(List<Record> records, QueryOptions options) throws RemoteException {
         try {
             backend.flushAll(records, options);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "flushAll(%s) for %d:%s",
-                    Logs.expand(records, logExpand), registryPort, serviceName),
-                    t, flattenExceptions);
+                    Logs.expand(records, logExpand), registryPort, serviceName), t, flattenExceptions);
         }
     }
 
@@ -413,9 +400,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
             RemoteHelper.unExportRemoteInterface(serviceName, registryPort);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
-                    "close().unExportRemoteInterface(serviceName='%s', "
-                    + "registryPort=%d)", serviceName, registryPort),
-                                         t, flattenExceptions);
+                    "close().unExportRemoteInterface(serviceName='%s', registryPort=%d)",
+                    serviceName, registryPort), t, flattenExceptions);
         } finally {
             // If an exception was throws above, it was also logged, so we
             // accept that it might be eaten by an exception from the backend
@@ -423,16 +409,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
                 backend.close();
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
-                        "close() for %d:%s", registryPort, serviceName),
-                                             t, flattenExceptions);
+                        "close() for %d:%s",
+                        registryPort, serviceName), t, flattenExceptions);
             }
 
             try {
                 RemoteHelper.unExportMBean(this);
             } catch (Throwable t) {
-                RemoteHelper.exitOnThrowable(log, String.format(
-                        "close().unExportMBean() for %d:%s",
-                        registryPort, serviceName), t, flattenExceptions);
+                RemoteHelper.exitOnThrowable(log, String.format("close().unExportMBean() for %d:%s", registryPort,
+                                                                serviceName), t, flattenExceptions);
             }
         }
     }
@@ -445,8 +430,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
      */
     @Override
     public void clearBase(String base) throws RemoteException {
-        final String call = String.format("clearBase(%s) for %d:%s",
-                                          base, registryPort, serviceName);
+        final String call = String.format("clearBase(%s) for %d:%s", base, registryPort, serviceName);
         //noinspection DuplicateStringLiteralInspection
         log.debug(call + " called");
         try {
@@ -459,30 +443,28 @@ public class RMIStorageProxy extends UnicastRemoteObject
     /**
      * Run a batch job on the backend storage.
      *
-     * @param jobName The name of the job to instantiate.
-     *                The job name must match the regular expression
-     *                {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
-     *                resource in the classpath of the storage process.
-     *                Fx {@code count.job.js}.
-     * @param base Restrict the batch jobs to records in this base. If
-     *             {@code base} is {@code null} the records from all bases will
-     *             be included in the batch job.
+     * @param jobName  The name of the job to instantiate.
+     *                 The job name must match the regular expression
+     *                 {@code [a-zA-z_-]+.job.[a-zA-z_-]+} and correspond to a
+     *                 resource in the classpath of the storage process.
+     *                 Fx {@code count.job.js}.
+     * @param base     Restrict the batch jobs to records in this base. If
+     *                 {@code base} is {@code null} the records from all bases will
+     *                 be included in the batch job.
      * @param minMtime Only records with modification times strictly greater
      *                 than {@code minMtime} will be included in the batch job.
      * @param maxMtime Only records with modification times strictly less than
      *                 {@code maxMtime} will be included in the batch job.
-     * @param options Restrict to records for which
-     *                {@link QueryOptions#allowsRecord} returns true.
+     * @param options  Restrict to records for which
+     *                 {@link QueryOptions#allowsRecord} returns true.
      * @return a result string.
      * @throws IOException if error occurred.
      */
     @Override
-    public String batchJob(String jobName, String base,
-                           long minMtime, long maxMtime, QueryOptions options)
-                                                            throws IOException {
-        final String call = String.format(
-                "batchJob(%s, %s) for %d:%s",
-                jobName, base, registryPort, serviceName);
+    public String batchJob(String jobName, String base, long minMtime, long maxMtime, QueryOptions options)
+                                                                                                    throws IOException {
+        final String call = String.format("batchJob(%s, %s) for %d:%s",
+                                          jobName, base, registryPort, serviceName);
         //noinspection DuplicateStringLiteralInspection
         log.debug(call + " called");
         try {

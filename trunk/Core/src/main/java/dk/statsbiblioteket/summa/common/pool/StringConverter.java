@@ -18,10 +18,10 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.UnsupportedEncodingException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Simple conversion of Strings to and from bytes.
@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 public class StringConverter implements ValueConverter<String> {
     private static Log log = LogFactory.getLog(StringConverter.class);
 
+    @Override
     public byte[] valueToBytes(String value) {
         if (log.isTraceEnabled()) {
             log.trace("Converting \"" + value + "\" to bytes");
@@ -41,10 +42,11 @@ public class StringConverter implements ValueConverter<String> {
         }
     }
 
+    @Override
     public String bytesToValue(byte[] buffer, int length) {
         try {
             String result = new String(buffer, 0, length, "utf-8");
-            if (result.length() == 0) {
+            if (result.isEmpty()) {
                 return result;
             }
             return result.substring(0, result.length()-1); // Remove \n
