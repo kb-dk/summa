@@ -17,7 +17,7 @@ public class ExposedFactory {
   public static TermProvider createProvider(
       IndexReader reader, String groupName, List<String> fieldNames,
       NamedComparator comparator) throws IOException {
-    if (fieldNames.size() == 0) {
+    if (fieldNames.isEmpty()) {
       throw new IllegalArgumentException("There must be at least 1 field name");
     }
     if (reader instanceof AtomicReader && fieldNames.size() == 1) {

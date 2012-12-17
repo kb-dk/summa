@@ -14,13 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common;
 
+import dk.statsbiblioteket.util.Zips;
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
-
-import dk.statsbiblioteket.util.Zips;
 
 /**
  * Unit tests for the {@link Record} class
@@ -30,6 +29,7 @@ public class RecordTest extends TestCase {
     Record r;
     byte[] emptyContent;
 
+    @Override
     public void setUp () {
         r = new Record();
         emptyContent = new byte[0];

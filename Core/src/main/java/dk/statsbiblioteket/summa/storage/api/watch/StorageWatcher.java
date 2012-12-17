@@ -16,15 +16,15 @@ package dk.statsbiblioteket.summa.storage.api.watch;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.*;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * Change notification mechanism for a Summa storage service. Change
@@ -48,8 +48,8 @@ import java.io.IOException;
  * for {@link Object#wait} on how to handle this.
  * <p/>
  * <b>FIXME:</b> Batching of events if there are many? We should probably handle
- *               that with care since if allow user generated content in the
- *               storage things might change all the time
+ * that with care since if allow user generated content in the
+ * storage things might change all the time
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -61,8 +61,7 @@ public class StorageWatcher implements Configurable, Runnable {
      * polling {@link ReadableStorage#getModificationTime(String)}. Defaults
      * to {@link #DEFAULT_POLL_INTERVAL}
      */
-    public static final String CONF_POLL_INTERVAL =
-                                           "summa.storage.watcher.pollinterval";
+    public static final String CONF_POLL_INTERVAL = "summa.storage.watcher.pollinterval";
 
     /**
      * Default value for {@link #CONF_POLL_INTERVAL}
@@ -76,23 +75,21 @@ public class StorageWatcher implements Configurable, Runnable {
         private Object userData;
         private StorageChangeListener l;
 
-        public ListenerContext(StorageChangeListener l,
-                               List<String> bases,
-                               Object userData) {
+        public ListenerContext(StorageChangeListener l, List<String> bases, Object userData) {
             this.l = l;
             this.bases = bases;
             this.userData = userData;
         }
 
-        public StorageChangeListener getListener () {
+        public StorageChangeListener getListener() {
             return l;
         }
 
-        public List<String> getBases () {
+        public List<String> getBases() {
             return bases;
         }
 
-        public Object getUserData () {
+        public Object getUserData() {
             return userData;
         }
     }
@@ -100,26 +97,24 @@ public class StorageWatcher implements Configurable, Runnable {
     private ReadableStorage reader;
     private Thread thread;
     private boolean mayRun;
-    private Map<StorageChangeListener,ListenerContext> listeners;
+    private Map<StorageChangeListener, ListenerContext> listeners;
     private Set<String> bases;
     private int pollInterval;
-    private Map<String,Long> pollTimes;
-    private Map<String,Long> notifyTimes;
-    private long startTime;
+    private Map<String, Long> pollTimes;
+    private Map<String, Long> notifyTimes;
 
     private Log log;
 
-    public StorageWatcher (ReadableStorage reader, int pollInterval) {
+    public StorageWatcher(ReadableStorage reader, int pollInterval) {
         log = LogFactory.getLog(StorageWatcher.class);
 
         this.pollInterval = pollInterval;
         this.reader = reader;
 
-        startTime = System.currentTimeMillis();
-        pollTimes = new HashMap<String,Long>(10);
-        notifyTimes = new HashMap<String,Long>(10);
+        pollTimes = new HashMap<String, Long>(10);
+        notifyTimes = new HashMap<String, Long>(10);
         bases = new HashSet<String>(10);
-        listeners = new HashMap<StorageChangeListener,ListenerContext>();
+        listeners = new HashMap<StorageChangeListener, ListenerContext>();
 
         thread = new Thread(this, this.getClass().getSimpleName());
         thread.setDaemon(true); // Allow JVM to exit when watcher is running
@@ -127,24 +122,24 @@ public class StorageWatcher implements Configurable, Runnable {
         mayRun = false;
     }
 
-    public StorageWatcher (ReadableStorage reader) {
-        this (reader, DEFAULT_POLL_INTERVAL);
+    public StorageWatcher(ReadableStorage reader) {
+        this(reader, DEFAULT_POLL_INTERVAL);
     }
 
-    public StorageWatcher (Configuration conf) {
+    public StorageWatcher(Configuration conf) {
         this(new StorageReaderClient(conf));
 
         pollInterval = conf.getInt(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL);
     }
 
-    public void start () {
-        log.info ("Starting");
+    public void start() {
+        log.info("Starting");
         mayRun = true;
         thread.start();
     }
 
-    public void stop () {
-        log.debug ("Stopping");
+    public void stop() {
+        log.debug("Stopping");
         mayRun = false;
         thread.interrupt();
 
@@ -167,13 +162,13 @@ public class StorageWatcher implements Configurable, Runnable {
     /**
      * Notify all listeners on {@code base} that there has been a change in the
      * storage at time {@code eventTime}.
-     * @param base the base in which there has been changes
+     *
+     * @param base      the base in which there has been changes
      * @param eventTime the time these changes where detected by the watcher
      */
-    public synchronized void notifyListeners (String base, long eventTime) {
+    public synchronized void notifyListeners(String base, long eventTime) {
         if (log.isTraceEnabled()) {
-            log.trace ("Notifying listeners on base: "
-                       + (base != null ? base : BASE_WILDCARD));
+            log.trace("Notifying listeners on base: " + (base != null ? base : BASE_WILDCARD));
         }
 
         notifyTimes.put(base, System.currentTimeMillis());
@@ -186,12 +181,9 @@ public class StorageWatcher implements Configurable, Runnable {
             if (ctx.getBases() == null && base == null) {
                 /* Listeners subscribed to all changes should only be notified
                  * here to prevent multiple notifications on the same change */
-                ctx.getListener().storageChanged(this, null, eventTime,
-                                                 ctx.getUserData());
-            } else if (ctx.getBases() != null &&
-                       ctx.getBases().contains(base)) {
-                ctx.getListener().storageChanged(this, base, eventTime,
-                                                 ctx.getUserData());
+                ctx.getListener().storageChanged(this, null, eventTime, ctx.getUserData());
+            } else if (ctx.getBases() != null && ctx.getBases().contains(base)) {
+                ctx.getListener().storageChanged(this, base, eventTime, ctx.getUserData());
             }
         }
     }
@@ -204,7 +196,7 @@ public class StorageWatcher implements Configurable, Runnable {
      *         at the time of the last call to {@link #notifyListeners} or
      *         {@code -1} if no notifications has been emitted on {@code base}
      */
-    public long getLastNotify (String base) {
+    public long getLastNotify(String base) {
         Long lastNotify = notifyTimes.get(base);
 
         if (lastNotify == null) {
@@ -214,11 +206,11 @@ public class StorageWatcher implements Configurable, Runnable {
         return lastNotify;
     }
 
+    @Override
     public void run() {
         while (mayRun) {
             if (log.isTraceEnabled()) {
-                log.trace ("Polling storage with interval: "
-                           + getPollInterval() + " ms");
+                log.trace("Polling storage with interval: " + getPollInterval() + " ms");
             }
 
             try {
@@ -241,7 +233,7 @@ public class StorageWatcher implements Configurable, Runnable {
 
                 if (lastCheck == null) {
                     log.warn("No timestamp for base '" + base + "'. Skipping");
-                    updatePollTimes ();
+                    updatePollTimes();
                     continue;
                 }
 
@@ -256,9 +248,7 @@ public class StorageWatcher implements Configurable, Runnable {
                         pollTimes.put(base, mtime);
                     }
                 } catch (IOException e) {
-                    log.warn("Error connecting to storage "
-                             + reader + ", base '"
-                             + base + "': " + e.getMessage(), e);
+                    log.warn("Error connecting to storage " + reader + ", base '" + base + "': " + e.getMessage(), e);
                 }
             }
         }
@@ -269,49 +259,45 @@ public class StorageWatcher implements Configurable, Runnable {
      * in {@code bases}. If {@code bases==null} changes to any base will trigger
      * the listener
      *
-     * @param l the listener to notify on changes
+     * @param l              the listener to notify on changes
      * @param monitoredBases the bases to monitor. May be {@code null}
-     * @param userData any user data to pass back to the listener on changes.
-     *                 May be {@code null}
+     * @param userData       any user data to pass back to the listener on changes.
+     *                       May be {@code null}
      */
-    public void addListener (StorageChangeListener l,
-                             List<String> monitoredBases, Object userData) {
-        listeners.put (l, new ListenerContext(l, monitoredBases, userData));
+    public void addListener(StorageChangeListener l, List<String> monitoredBases, Object userData) {
+        listeners.put(l, new ListenerContext(l, monitoredBases, userData));
 
         if (monitoredBases != null) {
-            log.debug("Adding listener " + l + ", on bases: "
-                  + Strings.join(monitoredBases, ", "));
+            log.debug("Adding listener " + l + ", on bases: " + Strings.join(monitoredBases, ", "));
             bases.addAll(monitoredBases);
         } else {
             log.debug("Adding listener " + l + ", on all bases");
-            bases.add (BASE_WILDCARD);
+            bases.add(BASE_WILDCARD);
         }
 
         updatePollTimes();
     }
 
-    private void updatePollTimes () {
+    private void updatePollTimes() {
         for (String base : bases) {
             if (!pollTimes.containsKey(base)) {
                 try {
-                    log.debug("Getting initial timestamp for base '" + base
-                              + "'");
+                    log.debug("Getting initial timestamp for base '" + base + "'");
                     pollTimes.put(base, reader.getModificationTime(base));
                     log.trace("Got initial timestamp for base '" + base + "'");
                 } catch (IOException e) {
-                    log.warn("Failed to update timestamp for base '" + base
-                             + "': " + e.getMessage (), e);
+                    log.warn("Failed to update timestamp for base '" + base + "': " + e.getMessage(), e);
                 }
             }
 
         }
     }
 
-    public void setPollInterval (int pollInterval) {
+    public void setPollInterval(int pollInterval) {
         this.pollInterval = pollInterval;
     }
 
-    public int getPollInterval () {
+    public int getPollInterval() {
         return pollInterval;
     }
 
@@ -319,4 +305,3 @@ public class StorageWatcher implements Configurable, Runnable {
         return thread.isAlive();
     }
 }
-

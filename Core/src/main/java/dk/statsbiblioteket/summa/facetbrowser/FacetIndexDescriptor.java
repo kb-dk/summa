@@ -15,10 +15,10 @@
 package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
-import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -32,13 +32,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.text.ParseException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * Extracts Facet-setup from IndexDescriptor-XML.
@@ -73,10 +69,12 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         super(configuration);
     }
 
+    @Override
     public IndexField createNewField() {
         return new FacetField();
     }
 
+    @Override
     public IndexField createNewField(Node node) throws ParseException {
         return new FacetField(node, this);
     }

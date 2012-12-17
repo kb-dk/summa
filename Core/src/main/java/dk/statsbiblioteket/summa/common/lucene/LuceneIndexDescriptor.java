@@ -76,11 +76,13 @@ public class LuceneIndexDescriptor
         super(xml);
     }
 
+    @Override
     public LuceneIndexField createNewField() {
         log.trace("createNewField called");
         return new LuceneIndexField();
     }
 
+    @Override
     public LuceneIndexField createNewField(Node node) throws ParseException {
         return new LuceneIndexField(node, this);
     }

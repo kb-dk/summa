@@ -14,20 +14,20 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>Helper class to create connections to remote services exposing a
  * {@link Storage} interface.</p>
- *
+ * <p/>
  * <p>The right way to use this class is to pass an instance of it
  * to a {@link ConnectionManager} and use that to manage the connections.
  * For example:
@@ -43,13 +43,11 @@ import org.apache.commons.logging.LogFactory;
  * connMgr.release (connCtx);
  * </pre>
  * </p>
- *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
-public class StorageConnectionFactory extends ConnectionFactory<Storage>
-                                      implements Configurable {
+public class StorageConnectionFactory extends ConnectionFactory<Storage> implements Configurable {
 
     /**
      * Configuration property specifying which {@link ConnectionFactory} class
@@ -63,6 +61,7 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
 
     /**
      * Instantiate a new factory based on the supplied configuration.
+     *
      * @param conf the configuration for the storage connection. See
      *             {@link #CONN_FACT_CLASS}.
      */
@@ -72,10 +71,8 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
 
         /* Lookup which connection factory to use.
          * Default to an RMI factory */
-        Class<? extends ConnectionFactory> backendClass =
-                                conf.getClass(CONN_FACT_CLASS,
-                                              ConnectionFactory.class,
-                                              SummaRMIConnectionFactory.class);
+        Class<? extends ConnectionFactory> backendClass = conf.getClass(
+                CONN_FACT_CLASS, ConnectionFactory.class, SummaRMIConnectionFactory.class);
 
         log.debug("Using backend connection factory '" + backendClass + "'");
 
@@ -87,19 +84,16 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
      * Create a new factory instance with an empty configuration.
      * Ie. using the default configuration values throughout.
      */
-    public StorageConnectionFactory () {
-        this (Configuration.newMemoryBased());
+    public StorageConnectionFactory() {
+        this(Configuration.newMemoryBased());
     }
 
+    @Override
     public Storage createConnection(String connectionId) {
-        log.trace("Creating connection to '" + connectionId + "' via backend "
-                   + "'" + backend.getClass().getName() + "'");
+        log.trace("Creating connection to '" + connectionId + "' via backend " + "'" + backend.getClass().getName()
+                  + "'");
         Object o = backend.createConnection(connectionId);
         log.trace("Got storage proxy class: " + o);
         return (Storage) o;
     }
 }
-
-
-
-

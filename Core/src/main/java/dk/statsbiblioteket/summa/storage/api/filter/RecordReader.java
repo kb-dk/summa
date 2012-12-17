@@ -225,7 +225,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
 
     /**
-     * Will load the data column for methodsgetAllRecordsModifiedAfter {@link #CONF_LOAD_DATA_COLUMN}
+     * Will load the data column for methodsgetAllRecordsModifiedAfter CONF_LOAD_DATA_COLUMN
      * Ingest method will be much faster if data are not loaded. But for indexing, data are needed of course.
      */
     public static final String CONF_LOAD_DATA_COLUMN = "summa.storage.recordreader.load.data.column";
@@ -510,9 +510,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
 
-        if (isEof()) {
-            return false;
-        }
         //noinspection LoopConditionNotUpdatedInsideLoop
         while (!recordIterator.hasNext()) {
             log.trace("hasNext: RecordIterater does not have next. Waiting and checking");

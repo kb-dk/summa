@@ -39,6 +39,7 @@ public class FlexiblePair<T extends Comparable<T>, S extends Comparable<S>>
         this.value = value;
         this.sortType = sortType;
     }
+    @Override
     public int compareTo(FlexiblePair<T, S> o) {
         if (!o.getClass().equals(getClass())) {
             return 0;

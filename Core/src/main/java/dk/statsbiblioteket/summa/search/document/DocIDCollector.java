@@ -42,7 +42,7 @@ public class DocIDCollector extends Collector {
     private ArrayBlockingQueue<DocIDCollector> queue = null;
     /*
      * The Lucene OpenBitSet should be significantly faster than Java's BitSet:
-* http://lucene.apache.org/java/2_4_0/api/org/apache/lucene/util/OpenBitSet.html
+     * http://lucene.apache.org/java/2_4_0/api/org/apache/lucene/util/OpenBitSet.html
      */
     private OpenBitSet bits = new OpenBitSet(100000);
     private int docCount = 0;
@@ -52,6 +52,7 @@ public class DocIDCollector extends Collector {
 
     /**
      * Constructs a collector and adds it to the given queue.
+     *
      * @param queue the queue that this collector is added to.
      */
     public DocIDCollector(ArrayBlockingQueue<DocIDCollector> queue) {
@@ -70,6 +71,7 @@ public class DocIDCollector extends Collector {
     /**
      * Constructs a collector. Normally the other constructor will be used, in
      * order to re-use the collector.
+     *
      * @see #DocIDCollector(ArrayBlockingQueue)
      */
     public DocIDCollector() {
@@ -132,8 +134,7 @@ public class DocIDCollector extends Collector {
                     queue.put(this);
                     break;
                 } catch (InterruptedException e) {
-                    log.debug("Interrupted while putting "
-                               + "DocIDCollector. Retrying");
+                    log.debug("Interrupted while putting DocIDCollector. Retrying");
                 }
             }
         }
@@ -162,14 +163,10 @@ public class DocIDCollector extends Collector {
         sw.append("(");
         int foundCount = 0;
         int id = 0;
-        while ((id = bits.nextSetBit(id))!= -1 && foundCount++ < MAX_BITS) {
+        while ((id = bits.nextSetBit(id)) != -1 && foundCount++ < MAX_BITS) {
             sw.append(Integer.toString(id++)).append(" ");
         }
         sw.append(")");
         return sw.toString();
     }
 }
-
-
-
-

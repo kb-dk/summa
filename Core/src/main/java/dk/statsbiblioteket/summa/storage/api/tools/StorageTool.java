@@ -44,8 +44,7 @@ import java.util.List;
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
 public class StorageTool {
-    public static final String DEFAULT_RPC_TARGET =
-            "//localhost:28000/summa-storage";
+    public static final String DEFAULT_RPC_TARGET = "//localhost:28000/summa-storage";
 
     /**
      * Helper method for printing a record on {@link System#out} with or without
@@ -67,8 +66,7 @@ public class StorageTool {
      * @param withContents True if this record should be printed with its
      *                     content false otherwise.
      */
-    public static void printRecord(Record rec, OutputStream out,
-                                   boolean withContents) {
+    public static void printRecord(Record rec, OutputStream out, boolean withContents) {
         PrintWriter output = new PrintWriter(out, true);
 
         if (rec == null) {
@@ -93,11 +91,9 @@ public class StorageTool {
      *         occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionGet(String[] argv, StorageReaderClient storage)
-            throws IOException {
+    private static int actionGet(String[] argv, StorageReaderClient storage) throws IOException {
         if (argv.length == 1) {
-            System.err.println("You must specify at least one record id to "
-                               + "the 'get' action");
+            System.err.println("You must specify at least one record id to " + "the 'get' action");
             return 1;
         }
 
@@ -111,8 +107,7 @@ public class StorageTool {
         System.err.println("Getting record(s): " + Strings.join(ids, ", "));
         long startTime = System.currentTimeMillis();
         List<Record> recs = storage.getRecords(ids, options);
-        System.err.println("Got " + recs.size() + " records in "
-                           + (System.currentTimeMillis() - startTime) + " ms");
+        System.err.println("Got " + recs.size() + " records in " + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
             printRecord(r, true);
@@ -133,12 +128,10 @@ public class StorageTool {
      *         occur.
      * @throws IOException If error occur while communicating with storage.
      */
-    private static int actionTouch(String[] argv, StorageReaderClient reader,
-                                   StorageWriterClient writer)
-            throws IOException {
+    private static int actionTouch(String[] argv, StorageReaderClient reader, StorageWriterClient writer) throws
+                                                                                                          IOException {
         if (argv.length == 1) {
-            System.err.println("You must specify at least one record id to"
-                               + " the 'touch' action");
+            System.err.println("You must specify at least one record id to" + " the 'touch' action");
             return 1;
         }
 
@@ -168,8 +161,7 @@ public class StorageTool {
      *         occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionPeek(String[] argv, StorageReaderClient storage)
-            throws IOException {
+    private static int actionPeek(String[] argv, StorageReaderClient storage) throws IOException {
         int numPeek;
         String base;
 
@@ -190,11 +182,9 @@ public class StorageTool {
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
 
-        System.err.println("Got iterator after "
-                           + (System.currentTimeMillis() - startTime) + " ms");
+        System.err.println("Got iterator after " + (System.currentTimeMillis() - startTime) + " ms");
 
-        Iterator<Record> records = new StorageIterator(storage,
-                                                       iterKey, numPeek);
+        Iterator<Record> records = new StorageIterator(storage, iterKey, numPeek);
         Record rec;
         int count = 0;
         while (records.hasNext()) {
@@ -212,12 +202,10 @@ public class StorageTool {
         }
 
         if (base != null) {
-            System.err.println("Peek on base '" + base + "' completed in "
-                               + (System.currentTimeMillis() - startTime)
+            System.err.println("Peek on base '" + base + "' completed in " + (System.currentTimeMillis() - startTime)
                                + " ms (incl. iterator lookup time)");
         } else {
-            System.err.println("Peek on all bases completed in "
-                               + (System.currentTimeMillis() - startTime)
+            System.err.println("Peek on all bases completed in " + (System.currentTimeMillis() - startTime)
                                + " ms (incl. iterator lookup time)");
         }
         return 0;
@@ -233,8 +221,7 @@ public class StorageTool {
      *         occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionDump(String[] argv, StorageReaderClient storage)
-            throws IOException {
+    private static int actionDump(String[] argv, StorageReaderClient storage) throws IOException {
         String base;
         long count = 0;
 
@@ -250,8 +237,7 @@ public class StorageTool {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> records = new StorageIterator(storage, iterKey);
 
-        System.err.println("Got iterator after "
-                           + (System.currentTimeMillis() - startTime) + " ms");
+        System.err.println("Got iterator after " + (System.currentTimeMillis() - startTime) + " ms");
 
         Record rec;
         while (records.hasNext()) {
@@ -261,14 +247,12 @@ public class StorageTool {
         }
 
         if (base != null) {
-            System.err.println("Dumped " + count + " records from base '" + base
-                               + "' in "
-                               + (System.currentTimeMillis() - startTime)
-                               + " ms (including iterator lookup time)");
+            System.err.println("Dumped " + count + " records from base '" + base + "' in "
+                               + (System.currentTimeMillis() - startTime) + " ms (including iterator lookup time)");
         } else {
-            System.err.println("Dumped " + count + " records from all bases in "
-                               + (System.currentTimeMillis() - startTime)
-                               + " ms (including iterator lookup time)");
+            System.err.println(
+                    "Dumped " + count + " records from all bases in " + (System.currentTimeMillis() - startTime)
+                    + " ms (including iterator lookup time)");
         }
         return 0;
     }
@@ -296,8 +280,7 @@ public class StorageTool {
      *         occur.
      * @throws IOException If error occur while communicatinh to storage.
      */
-    private static int actionHoldings(StorageReaderClient storage)
-            throws IOException {
+    private static int actionHoldings(StorageReaderClient storage) throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
@@ -305,8 +288,7 @@ public class StorageTool {
         Record holdings = storage.getRecord("__holdings__", opts);
         String xml = holdings.getContentAsUTF8();
         System.out.println(xml);
-        System.err.println(String.format("Retrieved holdings in %sms",
-                                         (System.currentTimeMillis() - start)));
+        System.err.println(String.format("Retrieved holdings in %sms", (System.currentTimeMillis() - start)));
         return 0;
     }
 
@@ -327,10 +309,9 @@ public class StorageTool {
         }
 
         String jobName = argv[1];
-        String base = argv.length > 2 ? (argv[2].length() == 0 ? null : argv[2]) : null;
+        String base = argv.length > 2 ? (argv[2].isEmpty() ? null : argv[2]) : null;
         long minMtime = argv.length > 3 ? Long.parseLong(argv[3]) : 0;
-        long maxMtime = argv.length > 4 ?
-                        Long.parseLong(argv[4]) : Long.MAX_VALUE;
+        long maxMtime = argv.length > 4 ? Long.parseLong(argv[4]) : Long.MAX_VALUE;
 
         long start = System.currentTimeMillis();
         String result = writer.batchJob(jobName, base, minMtime, maxMtime, null);
@@ -340,8 +321,8 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nRan job '%s' in %sms",
-                                         jobName, (System.currentTimeMillis() - start)));
+        System.err.println(String.format("----------\nRan job '%s' in %sms", jobName,
+                                         (System.currentTimeMillis() - start)));
         return 1;
     }
 
@@ -356,11 +337,10 @@ public class StorageTool {
      *         occur.
      * @throws IOException if error occur while communicating to storage.
      */
-    private static int actionXslt(String[] argv, StorageReaderClient storage)
-            throws IOException {
+    @SuppressWarnings("CallToPrintStackTrace")
+    private static int actionXslt(String[] argv, StorageReaderClient storage) throws IOException {
         if (argv.length <= 2) {
-            System.err.println("You must specify a record id and a URL "
-                               + "for the XSLT to apply");
+            System.err.println("You must specify a record id and a URL " + "for the XSLT to apply");
             return 1;
         }
 
@@ -375,8 +355,7 @@ public class StorageTool {
         }
 
         System.out.println(r.toString(true) + "\n");
-        System.out.println("Original content:\n\n"
-                           + r.getContentAsUTF8() + "\n");
+        System.out.println("Original content:\n\n" + r.getContentAsUTF8() + "\n");
         System.out.println("\n===========================\n");
 
         Transformer t = compileTransformer(xsltUrl);
@@ -411,19 +390,16 @@ public class StorageTool {
         try {
             URL url = Resolver.getURL(xsltUrl);
             in = url.openStream();
-            transformer = tFactory.newTransformer(
-                    new StreamSource(in, url.toString()));
+            transformer = tFactory.newTransformer(new StreamSource(in, url.toString()));
         } catch (Exception e) {
-            throw new RuntimeException("Error compiling XSLT: "
-                                       + e.getMessage(), e);
+            throw new RuntimeException("Error compiling XSLT: " + e.getMessage(), e);
         } finally {
             try {
                 if (in != null) {
                     in.close();
                 }
             } catch (IOException e) {
-                System.err.println("Non-fatal IOException while closing "
-                                   + "stream for '" + xsltUrl + "'");
+                System.err.println("Non-fatal IOException while closing " + "stream for '" + xsltUrl + "'");
             }
         }
         return transformer;
@@ -433,18 +409,12 @@ public class StorageTool {
      * Print usage to {@link System#err}.
      */
     private static void printUsage() {
-        System.err.println("USAGE:\n\t" +
-                           "storage-tool.sh <action> [arg]...");
-        System.err.println("Actions:\n"
-                           + "\tget  <record_id>\n"
-                           + "\tpeek [base] [max_count=5]\n"
-                           + "\ttouch <record_id> [record_id...]\n"
-                           + "\txslt <record_id> <xslt_url>\n"
+        System.err.println("USAGE:\n\t" + "storage-tool.sh <action> [arg]...");
+        System.err.println("Actions:\n" + "\tget  <record_id>\n" + "\tpeek [base] [max_count=5]\n"
+                           + "\ttouch <record_id> [record_id...]\n" + "\txslt <record_id> <xslt_url>\n"
                            + "\tdump [base]     (dump storage on stdout)\n"
-                           + "\tclear base     (clear all records from base)\n"
-                           + "\tholdings\n"
-                           + "\tbatchjob <jobname> [base] [minMtime] "
-                           + "[maxMtime]   "
+                           + "\tclear base     (clear all records from base)\n" + "\tholdings\n"
+                           + "\tbatchjob <jobname> [base] [minMtime] " + "[maxMtime]   "
                            + "(empty base string means all bases)");
     }
 
@@ -472,8 +442,7 @@ public class StorageTool {
         try {
             conf = Configuration.getSystemConfiguration(false);
         } catch (Configurable.ConfigurationException e) {
-            System.err.println("Unable to load system config: " + e.getMessage()
-                               + ".\nUsing default configuration");
+            System.err.println("Unable to load system config: " + e.getMessage() + ".\nUsing default configuration");
             conf = Configuration.newMemoryBased();
         }
 
@@ -484,13 +453,11 @@ public class StorageTool {
             if (rpcVendor != null) {
                 conf.set(ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
             } else {
-                conf.set(ConnectionConsumer.CONF_RPC_TARGET,
-                         DEFAULT_RPC_TARGET);
+                conf.set(ConnectionConsumer.CONF_RPC_TARGET, DEFAULT_RPC_TARGET);
             }
         }
 
-        System.err.println("Using storage on: "
-                           + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
+        System.err.println("Using storage on: " + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
 
         StorageReaderClient reader = new StorageReaderClient(conf);
         StorageWriterClient writer = new StorageWriterClient(conf);

@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.control.api;
 
-import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.List;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * A connection to a running {@link Client} used to deploy 
@@ -123,6 +123,7 @@ public interface ClientConnection extends Monitorable {
      * string.
      * @throws IOException In case of communication errors.
      */
+    @Override
     public Status getStatus() throws IOException;
 
     /**

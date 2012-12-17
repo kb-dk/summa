@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.storage.http;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.*;
+import junit.framework.TestCase;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -74,10 +74,12 @@ public class QueryTokenizer extends TestCase implements Iterator<QueryToken> {
         return this;
     }
 
+    @Override
     public boolean hasNext() {
         return seq != null && pos < seq.length();
     }
 
+    @Override
     public QueryToken next() {
         if (seq == null || pos >= seq.length()) {
             throw new NoSuchElementException();
@@ -114,6 +116,7 @@ public class QueryTokenizer extends TestCase implements Iterator<QueryToken> {
         return tok;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

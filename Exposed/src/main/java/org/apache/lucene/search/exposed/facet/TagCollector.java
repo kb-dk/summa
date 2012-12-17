@@ -191,6 +191,7 @@ public class TagCollector extends Collector {
    */
   public void delayedClear() {
     new Thread(new Runnable() {
+      @Override
       public void run() {
         clear();
       }

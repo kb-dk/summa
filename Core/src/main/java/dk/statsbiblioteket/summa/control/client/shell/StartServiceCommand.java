@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ServiceConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.Status;
@@ -46,6 +46,7 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
                                           + "returning from this command");
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         String confLocation = getOption("c");
         log.debug("Invoke called with confLocation '" + confLocation + "'");        

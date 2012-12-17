@@ -146,6 +146,7 @@ public class BitsArray64Aligned extends BitsArray64Impl {
      * @param index the position of the value.
      * @return the value at the given position.
      */
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
@@ -162,6 +163,7 @@ public class BitsArray64Aligned extends BitsArray64Impl {
         return (int)((blocks[elementPos] >>> shifts[bitPos]) & readMask);
     }
 
+    @Override
     public int fastGetAtomic(final int index) {
         final long majorBitPos = index << majorPosShift; // * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
@@ -213,6 +215,7 @@ public class BitsArray64Aligned extends BitsArray64Impl {
      * will be cleared.
      * @param other the source of new values.
      */
+    @Override
     public void assign(final BitsArray other) {
         if (!(other instanceof BitsArray64Aligned)) {
             throw new UnsupportedOperationException(String.format(
@@ -247,6 +250,7 @@ public class BitsArray64Aligned extends BitsArray64Impl {
     }*/
 
 
+    @Override
     public int getMaxValue() {
         return maxValue;
     }

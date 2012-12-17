@@ -14,22 +14,22 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.util.Profiler;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.*;
 import java.io.*;
-import java.util.Arrays;
 import java.net.URL;
+import java.util.Arrays;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class RecordUtilTest extends TestCase {
@@ -64,7 +64,7 @@ public class RecordUtilTest extends TestCase {
         assertNotNull("The schema Record.xsd should be available",
                       schema.getFile());
         ExtraAsserts.assertValidates("single-level Record should validate",
-                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + xml);
+                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xml);
         assertEquals("fromXML(toXML(simpleRecord)) should work",
                      record, RecordUtil.fromXML(xml));
         log.info("Generated XML:\n" + xml);
@@ -89,7 +89,7 @@ public class RecordUtilTest extends TestCase {
         String xml = RecordUtil.toXML(record);
         log.debug("Got content for " + record + ":\n" + xml);
         ExtraAsserts.assertValidates("single-level Record should validate",
-                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + xml);
+                                     schema, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xml);
         assertEquals("fromXML(toXML(simpleRecord)) for content should work",
                      record.getContentAsUTF8(), 
                      RecordUtil.fromXML(xml).getContentAsUTF8());

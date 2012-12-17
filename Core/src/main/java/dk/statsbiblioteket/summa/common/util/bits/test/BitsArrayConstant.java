@@ -33,23 +33,30 @@ public class BitsArrayConstant extends AbstractList<Integer>
         return 88;  // TODO Implement this
     }
 
+    @Override
     public int getAtomic(final int index) {
         return 89;
     }
+    @Override
     public int fastGetAtomic(final int index) {
         return 89;
     }
 
+    @Override
     public void set(final int position, final int value) {}
 
+    @Override
     public void fastSet(int index, int value) {}
 
+    @Override
     public void assign(final BitsArray other) {}
 
+    @Override
     public int getMemSize() {
         return 90;
     }
 
+    @Override
     public int getMaxValue() {
         return 91;
     }

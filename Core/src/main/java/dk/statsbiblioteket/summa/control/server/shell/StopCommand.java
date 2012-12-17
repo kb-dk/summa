@@ -14,14 +14,14 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.InvalidClientStateException;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,6 +50,7 @@ public class StopCommand extends Command {
         hostname = RemoteHelper.getHostname();
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         /* Extract and validate arguments */
         log.debug("Invoking StopCommand");

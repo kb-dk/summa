@@ -19,12 +19,11 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
-
-import java.io.File;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
 
 /**
  * StorageFactory Tester.
@@ -42,6 +41,7 @@ public class StorageFactoryTest extends TestCase {
      * Setup.
      * @throws Exception if error.
      */
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (location.exists()) {
@@ -53,6 +53,7 @@ public class StorageFactoryTest extends TestCase {
      * Tear down.
      * @throws Exception If error.
      */
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         Files.delete(location);

@@ -74,21 +74,25 @@ public class DescriptorManipulator implements IndexManipulator {
         log.debug("DescriptorManipulator ready for use");
     }
 
+    @Override
     public void open(File indexRoot) throws IOException {
         log.debug(String.format("open(%s) called. Setting this as destination "
                                 + "for the IndexDescriptor", indexRoot));
         this.indexRoot = indexRoot;
     }
 
+    @Override
     public void clear() throws IOException {
         log.trace("clear() does nothing");
     }
 
+    @Override
     public boolean update(Payload payload) throws IOException {
         log.trace("update(...) called. No action taken");
         return false;
     }
 
+    @Override
     public void commit() throws IOException {
         if (indexRoot == null) {
             log.error("No indexRoot specified. This indicates that open(...) "
@@ -128,10 +132,12 @@ public class DescriptorManipulator implements IndexManipulator {
         }
     }
 
+    @Override
     public void consolidate() throws IOException {
         commit();
     }
 
+    @Override
     public void close() throws IOException {
         indexRoot = null;
         if (descriptor != null) {

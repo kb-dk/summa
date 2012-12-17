@@ -21,8 +21,6 @@ package dk.statsbiblioteket.summa.support.lucene.facet;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * Helper class for LuceneSearchNode that takes care of all facet handling.
@@ -31,9 +29,8 @@ import org.apache.commons.logging.Log;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class LuceneFacetHandler {
-    private static Log log = LogFactory.getLog(LuceneFacetHandler.class);
 
-    
+    @SuppressWarnings("UnusedParameters")
     public LuceneFacetHandler(Configuration conf) {
 
     }

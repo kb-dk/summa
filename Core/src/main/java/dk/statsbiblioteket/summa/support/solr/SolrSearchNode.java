@@ -423,7 +423,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         if (log.isDebugEnabled()) {
             log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
                       + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") with " + hitCount
-                      + " hits finished in " + searchTime + " ms (" + searchTime + " ms for remote search " + "call, "
+                      + " hits finished in " + searchTime + " ms (" + searchTime + " ms for remote search call, "
                       + buildResponseTime + " ms for converting to Summa response)");
         }
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
@@ -462,7 +462,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                              + "class " + v.getClass());
                 }
             }
-            if (values.size() == 0) {
+            if (values.isEmpty()) {
                 log.warn("Got empty list for Solr param " + key + ". Ignoring");
             } else {
                 if (log.isTraceEnabled()) {

@@ -18,8 +18,6 @@ import junit.framework.TestCase;
 
 import java.util.Arrays;
 
-import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
-
 /**
  *
  */
@@ -29,6 +27,7 @@ public class UniqueTimestampGeneratorTest extends TestCase {
     final long maxSalt = UniqueTimestampGenerator.MAX_SALT;
     final long maxTime = UniqueTimestampGenerator.MAX_TIME;
 
+    @Override
     public void setUp() throws Exception {
         gen = new UniqueTimestampGenerator();
     }

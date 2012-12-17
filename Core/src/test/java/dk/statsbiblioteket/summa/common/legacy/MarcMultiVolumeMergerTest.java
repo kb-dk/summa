@@ -177,26 +177,32 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
 
     /* simple ObjectFilter implementation */
 
+    @Override
     public boolean hasNext() {
-        return records.size() > 0;
+        return !records.isEmpty();
     }
 
+    @Override
     public void setSource(Filter filter) {
         // Nada
     }
 
+    @Override
     public boolean pump() throws IOException {
         return hasNext() && next() != null && hasNext();
     }
 
+    @Override
     public void close(boolean success) {
         records.clear();
     }
 
+    @Override
     public Payload next() {
         return new Payload(records.remove(0));
     }
 
+    @Override
     public void remove() {
         // Nada
     }

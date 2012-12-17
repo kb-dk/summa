@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.IOException;
 
@@ -150,24 +150,30 @@ public class DelayFilterTest extends TestCase implements ObjectFilter {
 
     private long lastNext = 0;
     private int counter = 0;
+    @Override
     public boolean hasNext() {
         return true;
     }
+    @Override
     public void setSource(Filter filter) {
         // Nada
     }
+    @Override
     public boolean pump() throws IOException {
         next();
         return true;
     }
+    @Override
     public void close(boolean success) {
         // Nada
     }
+    @Override
     public Payload next() {
         lastNext = System.nanoTime();
         return new Payload(new Record(
                 "Dummy_" + counter++, "foo", new byte[0]));
     }
+    @Override
     public void remove() {
         // Nada
     }

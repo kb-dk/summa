@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.control.api.feedback.rmi;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import dk.statsbiblioteket.summa.control.server.shell.ControlShell;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import dk.statsbiblioteket.util.Logs;
-
-import java.util.List;
-import java.io.IOException;
-
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * A {@link Feedback} implementation talking to a {@link RemoteFeedback}.
@@ -64,6 +63,7 @@ public class RemoteFeedbackClient implements Feedback {
         this (Configuration.getSystemConfiguration(true));
     }
 
+    @Override
     public void putMessages(List<Message> messages) {
         ConnectionContext<Feedback> conn = null;
         try {
@@ -87,6 +87,7 @@ public class RemoteFeedbackClient implements Feedback {
         }
     }
 
+    @Override
     public void putMessage(Message message) throws IOException {
         ConnectionContext<Feedback> conn = null;
         try {

@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.shell.commands;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.Script;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 
 /**
  * <p>This command launches a script which is a series of commands delimited
@@ -31,6 +31,7 @@ public class Exec extends Command {
         setUsage ("exec <command> [;command...]");
     }
     
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         Script script = new Script(getRawCommandLine());
         script.pushToShellContext(ctx);        

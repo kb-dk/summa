@@ -14,35 +14,35 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Performs ingest, index and search on multiple sources using the MUXFilter.
@@ -195,14 +195,14 @@ public class MultipleSourcesTest extends NoExitTestCase {
                     "Search result for query '%s' for source %s was:\n%s",
                     query, source, result));
             if (getSearchResultCount(result) == 0) {
-                if (fails.toString().length() != 0) {
+                if (!fails.toString().isEmpty()) {
                     fails.append("\n");
                 }
                 fails.append(source).append(": no hits found for query '")
                         .append(query).append("' for source ").append(source);
             }
         }
-        if (fails.toString().length() != 0) {
+        if (!fails.toString().isEmpty()) {
             fail("All sources should be indexed.\n" + fails.toString());
         }
     }
@@ -243,7 +243,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
     private static void performIngest(List<String> sources) throws Exception {
         Profiler profiler = new Profiler();
         log.info("Ingesting test data");
-        assertTrue("There should be at least one source", sources.size() > 0);
+        assertTrue("There should be at least one source", !sources.isEmpty());
         for (String source: sources) {
             performIngest(source);
         }
@@ -279,8 +279,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
     }
 
     public void testGetSources() throws Exception {
-        assertTrue("There should be more than one source", 
-                   getSources().size() > 0);
+        assertTrue("There should be more than one source", !getSources().isEmpty());
     }
 
     /**
@@ -295,6 +294,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 Pattern.compile("(.+)_ingest_configuration\\.xml");
         log.trace("Locating sources in " + INGEST_CONFIGURATIONS_ROOT);
         INGEST_CONFIGURATIONS_ROOT.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 log.debug("Checking " + name);
                 Matcher matcher = INGEST_CONFIGURATION.matcher(name);

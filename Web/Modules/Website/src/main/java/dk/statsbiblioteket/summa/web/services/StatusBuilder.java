@@ -353,7 +353,7 @@ public class StatusBuilder {
         buf.append("<p>\n");
         buf.append("<b>Popular queries the last 24 hours</b>");
         buf.append("<i>(number of queries - query string)</i>:<br/>");
-        if (queryCount.size() > 0) {
+        if (!queryCount.isEmpty()) {
             buf.append("<ul>");
             for (Pair<String, String> prop : queryCount) {
                 buf.append("<li>")

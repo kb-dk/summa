@@ -368,7 +368,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                     searcher.search(qp.parse(query), tagCollector);
                 } catch (IOException e) {
                     throw new RuntimeException(
-                        "IOException while collecting IDs into TagCollector " + "for query '" + query + "'", e);
+                        "IOException while collecting IDs into TagCollector for query '" + query + "'", e);
                 } catch (ParseException e) {
                     throw new RuntimeException("Unable to parse query '" + query + "'", e);
                 }

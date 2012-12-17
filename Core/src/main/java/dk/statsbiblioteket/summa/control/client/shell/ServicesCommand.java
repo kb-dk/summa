@@ -15,20 +15,20 @@
 package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.Layout;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
-import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.io.ByteArrayInputStream;
 
 /**
  * A {@link Command} to list the services deployed in a {@link Client}.
@@ -53,6 +53,7 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
 
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
 

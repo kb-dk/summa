@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.control;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * Helper class exposing a {@link ConnectionFactory} that establish
@@ -64,6 +63,7 @@ public class ClientConnectionFactory
         this.controlAddress = controlAddress;
     }
 
+    @Override
     public ClientConnection createConnection(String connectionId) {
         log.debug("Looking up Control server at " + controlAddress + " ... ");
         ControlConnection control =

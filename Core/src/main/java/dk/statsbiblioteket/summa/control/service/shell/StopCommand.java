@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.control.service.shell;
 
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.Command;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 8, 2008 Time: 8:49:32 AM To
@@ -36,6 +36,7 @@ public class StopCommand extends Command {
         this.address = serviceAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ConnectionContext<Service> connCtx = null;
 

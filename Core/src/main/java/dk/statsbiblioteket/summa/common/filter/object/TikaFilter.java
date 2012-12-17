@@ -92,7 +92,7 @@ public class TikaFilter extends ObjectFilterImpl {
             try {
                 parser = new AutoDetectParser(new TikaConfig(tikaConfUrl));
             } catch (Exception e) {
-                throw new ConfigurationException("Unable to load Tika " + "configuration: " + e.getMessage(), e);
+                throw new ConfigurationException("Unable to load Tika configuration: " + e.getMessage(), e);
             }
         } else {
             log.debug("Using default Tika configuration");
@@ -138,14 +138,14 @@ public class TikaFilter extends ObjectFilterImpl {
             throw new PayloadException("Failed to parse stream for payload " + payload + ": " + e.getMessage(), e);
         } catch (NoClassDefFoundError e) {
             log.error("Could not locate class while performing Tika-parse. This likely due to a missing support "
-                      + "library, so the " + "current " + payload + " is skipped and overall " + "processing is "
+                      + "library, so the current " + payload + " is skipped and overall processing is "
                       + "continued. However, the support library should be located to improve Tika capabilities", e);
             throw new PayloadException(
                     "Failed to parse stream for payload " + payload + " as a library could not be found: "
                     + e.getMessage(), e);
         } catch (StackOverflowError e) {
             log.warn("Received stack overflow while parsing " + parser + ". No shutdown is requested as Tika is prone "
-                     + "to such Errors. Consider raising the stack size or weeding " + "input if this Error occurs "
+                     + "to such Errors. Consider raising the stack size or weeding input if this Error occurs "
                      + "frequently");
             throw new PayloadException(
                     "Failed to parse stream for payload " + payload + " due to a stack overflow Error: "

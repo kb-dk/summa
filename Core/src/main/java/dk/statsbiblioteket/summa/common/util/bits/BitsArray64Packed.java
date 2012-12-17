@@ -143,6 +143,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
      * @param index the position of the value.
      * @return the value at the given index.
      */
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
@@ -163,6 +164,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
                       & readMasks[bitPos]));
     }
 
+    @Override
     public int fastGetAtomic(final int index) {
         final long majorBitPos = index * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
@@ -175,6 +177,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
                       & readMasks[bitPos]));
     }
 
+    @Override
     public void fastSet(final int index, final int value) {
         final long majorBitPos = index * elementBits;
         final int elementPos = (int)(majorBitPos >>> BLOCK_BITS); // / BLOCK_SIZE
@@ -220,6 +223,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
      * will be cleared.
      * @param other the source of new values.
      */
+    @Override
     public void assign(final BitsArray other) {
         if (!(other instanceof BitsArray64Packed)) {
             throw new UnsupportedOperationException(String.format(
@@ -254,6 +258,7 @@ public class BitsArray64Packed extends BitsArray64Impl {
         throw new IllegalArgumentException("Not implemented yet");
     }*/
 
+    @Override
     public int getMaxValue() {
         return maxValue;
     }

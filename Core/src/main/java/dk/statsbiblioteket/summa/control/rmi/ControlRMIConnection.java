@@ -14,10 +14,10 @@
  */
 package dk.statsbiblioteket.summa.control.rmi;
 
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;
@@ -33,19 +33,26 @@ import java.util.List;
         comment="Unfinished")
 public interface ControlRMIConnection extends ControlConnection, Remote {
 
+    @Override
     public ClientConnection getClient(String instanceId) throws RemoteException;
 
+    @Override
     public void deployClient(Configuration conf) throws RemoteException;
 
+    @Override
     public void startClient(Configuration conf) throws RemoteException;
 
+    @Override
     public List<String> getClients() throws RemoteException;
 
+    @Override
     public List<String> getBundles() throws RemoteException;
 
+    @Override
     public Configuration getDeployConfiguration (String instanceId)
                                                         throws RemoteException;
 
+    @Override
     public Status getStatus () throws RemoteException;
 
 }

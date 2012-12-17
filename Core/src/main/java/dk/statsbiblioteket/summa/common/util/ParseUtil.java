@@ -176,7 +176,7 @@ public class ParseUtil {
                 case XMLEvent.DTD: return "DTD";
                 case XMLEvent.CDATA: return "CDATA";
                 case XMLEvent.SPACE: return "SPACE";
-                default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
+                default: return "UNKNOWN_EVENT_TYPE ," + eventType;
             }
         }
 }

@@ -118,5 +118,4 @@ public class QueryPhraser implements Configurable {
         }
         return counter > 1 ? sw.toString() : null; // Single term is never a phrase
     }
-
 }

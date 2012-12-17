@@ -38,42 +38,59 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class BaseStats implements Serializable {
-    /** The serial version UID. */
+    /**
+     * The serial version UID.
+     */
     private static final long serialVersionUID = 7879514L;
-    /** The base name. */
+    /**
+     * The base name.
+     */
     private String baseName;
-    /** Last modification time. */
+    /**
+     * Last modification time.
+     */
     private long lastModified;
-    /** Base generation time. */
+    /**
+     * Base generation time.
+     */
     private long generationTime;
-    /** Number of deleted indexables. */
+    /**
+     * Number of deleted indexables.
+     */
     private long deletedIndexables;
-    /** Number of non deleted indexables. */
+    /**
+     * Number of non deleted indexables.
+     */
     private long nonDeletedIndexables;
-    /** Number of deleted non indexables. */
+    /**
+     * Number of deleted non indexables.
+     */
     private long deletedNonIndexables;
-    /** Number of non deleted non indexables. */
+    /**
+     * Number of non deleted non indexables.
+     */
     private long nonDeletedNonIndexables;
-    /** Meta data. */
+    /**
+     * Meta data.
+     */
     private StringMap meta;
 
     /**
      * Constructs the base statistic object.
      *
-     * @param baseName The base name.
-     * @param lastModified Last modification time for the base.
-     * @param generationTime The generation time of the base statistic object.
-     * @param deletedIndexables The number of deleted and indexable records.
-     * @param nonDeletedIndexables The number of non deleted and indexable
-     * records.
-     * @param deletedNonIndexables The number of deleted and non indexable
-     * records.
+     * @param baseName                The base name.
+     * @param lastModified            Last modification time for the base.
+     * @param generationTime          The generation time of the base statistic object.
+     * @param deletedIndexables       The number of deleted and indexable records.
+     * @param nonDeletedIndexables    The number of non deleted and indexable
+     *                                records.
+     * @param deletedNonIndexables    The number of deleted and non indexable
+     *                                records.
      * @param nonDeletedNonIndexables The number of non deleted and non
-     * indexable records.
+     *                                indexable records.
      */
-    public BaseStats(String baseName, long lastModified, long generationTime,
-                     long deletedIndexables, long nonDeletedIndexables,
-                     long deletedNonIndexables, long nonDeletedNonIndexables) {
+    public BaseStats(String baseName, long lastModified, long generationTime, long deletedIndexables,
+                     long nonDeletedIndexables, long deletedNonIndexables, long nonDeletedNonIndexables) {
         this.baseName = baseName;
         this.lastModified = lastModified;
         this.generationTime = generationTime;
@@ -87,6 +104,7 @@ public class BaseStats implements Serializable {
     /**
      * The total number of records in the <i>deleted</i> state,
      * disregarding whether or not they are <i>indexable</i>.
+     *
      * @return The total number of records that have the
      *         <i>deleted</i> flag set.
      */
@@ -97,6 +115,7 @@ public class BaseStats implements Serializable {
     /**
      * The total number of records in the <i>indexable</i> state,
      * disregarding whether or not they are <i>deleted</i>.
+     *
      * @return The total number of records that have the
      *         <i>indexable</i> flag set.
      */
@@ -126,12 +145,12 @@ public class BaseStats implements Serializable {
      *         name equal {@link #getBaseName()}.
      */
     public long getTotalCount() {
-        return deletedIndexables + nonDeletedIndexables
-               + nonDeletedNonIndexables + deletedNonIndexables;
+        return deletedIndexables + nonDeletedIndexables + nonDeletedNonIndexables + deletedNonIndexables;
     }
 
     /**
      * The name of the base these statistics were generated for.
+     *
      * @return The name of the base these statistics were generated for.
      */
     public String getBaseName() {
@@ -141,8 +160,9 @@ public class BaseStats implements Serializable {
     /**
      * Get the time stamp for the last update on the base represented by these
      * statistics.
+     *
      * @return The time stamp for when {@code flush()}, {@code flushAll()}, or
-     * {@code clearBase()} was called on the base in question.
+     *         {@code clearBase()} was called on the base in question.
      */
     public long getModificationTime() {
         return lastModified;
@@ -151,7 +171,7 @@ public class BaseStats implements Serializable {
     /**
      * Time stamp for generation time of this statistic object.
      *
-     * @return Time stamp for generation time of this statistic object. 
+     * @return Time stamp for generation time of this statistic object.
      */
     public long getGenerationTime() {
         return generationTime;
@@ -160,6 +180,7 @@ public class BaseStats implements Serializable {
     /**
      * Return whether or not these statistics has additional metadata
      * associated with them.
+     *
      * @return {@code true}.
      */
     public boolean hasMeta() {
@@ -169,6 +190,7 @@ public class BaseStats implements Serializable {
     /**
      * Return the additional meta data associated with these statistics.
      * Possibly {@code null} if no additional meta data has been recorded.
+     *
      * @return A key/value map of strings for the additional meta data or
      *         {@code null} if no meta data is recorded.
      */
@@ -180,6 +202,7 @@ public class BaseStats implements Serializable {
      * Return the metadata associated with the given {@code key}, returning
      * {@code null} if no data exists for the key or no metadata is associated
      * with the statistics.
+     *
      * @param key The name of the metadata field to look up.
      * @return The value corresponding to {@code key} or {@code null}.
      */
@@ -191,7 +214,8 @@ public class BaseStats implements Serializable {
      * Set a key/value pair as additional metadata carried with these
      * statistics. If a field already exists under the given name it will
      * be replaced with the supplied value.
-     * @param key The unique name for the metadata field.
+     *
+     * @param key   The unique name for the metadata field.
      * @param value The value to set for the field.
      * @return Always returns {@code this}.
      */
@@ -199,54 +223,37 @@ public class BaseStats implements Serializable {
         if (meta == null) {
             meta = new StringMap();
         }
-        meta.put(key,value);
+        meta.put(key, value);
         return this;
     }
 
     /**
      * Creates a XML representation of a list of base statistic elements.
+     *
      * @param stats The list of base statistic objects.
-     * @param out The writer for the output XML.
+     * @param out   The writer for the output XML.
      */
     public static void toXML(List<BaseStats> stats, Writer out) {
         long[] times = findMaxGenerationAndModificationTimes(stats);
         DateFormat date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         PrintWriter w = new PrintWriter(out);
-        w.append("<holdings date=\"")
-         .append(date.format(new Date(times[0])))
-         .append("\" mtime=\"")
-         .append(date.format(new Date(times[1])))
-         .append("\">\n");
+        w.append("<holdings date=\"").append(date.format(new Date(times[0]))).append("\" mtime=\"");
+        w.append(date.format(new Date(times[1]))).append("\">\n");
         for (BaseStats b : stats) {
-            w.append("  <base name=\"")
-             .append(XMLUtil.encode(b.getBaseName()))
-             .append("\"");
-            w.append(" deleted=\"")
-             .append(Long.toString(b.getDeletedCount()))
-             .append("\"");
-            w.append(" indexable=\"")
-             .append(Long.toString(b.getIndexableCount()))
-             .append("\"");
-            w.append(" live=\"")
-             .append(Long.toString(b.getLiveCount()))
-             .append("\"");
-            w.append(" total=\"")
-             .append(Long.toString(b.getTotalCount()))
-             .append("\"");
-            w.append(" mtime=\"")
-             .append(date.format(new Date(b.getModificationTime())))
-             .append("\"");
+            w.append("  <base name=\"").append(XMLUtil.encode(b.getBaseName())).append("\"");
+            w.append(" deleted=\"").append(Long.toString(b.getDeletedCount())).append("\"");
+            w.append(" indexable=\"").append(Long.toString(b.getIndexableCount())).append("\"");
+            w.append(" live=\"").append(Long.toString(b.getLiveCount())).append("\"");
+            w.append(" total=\"").append(Long.toString(b.getTotalCount())).append("\"");
+            w.append(" mtime=\"").append(date.format(new Date(b.getModificationTime()))).append("\"");
 
             if (!b.hasMeta()) {
                 w.append("/>\n");
             } else {
                 w.append(">\n");
-                for (Map.Entry<String,String> meta : b.meta().entrySet()) {
-                    w.append("    <meta key=\"")
-                     .append(XMLUtil.encode(meta.getKey()))
-                     .append("\" value=\"")
-                     .append(XMLUtil.encode(meta.getValue()))
-                     .append("\"/>\n");
+                for (Map.Entry<String, String> meta : b.meta().entrySet()) {
+                    w.append("    <meta key=\"").append(XMLUtil.encode(meta.getKey())).append("\" value=\"");
+                    w.append(XMLUtil.encode(meta.getValue())).append("\"/>\n");
                 }
                 w.append("  </base>\n");
             }
@@ -258,14 +265,15 @@ public class BaseStats implements Serializable {
     /**
      * Fixes the max generation and modification time for a list of base
      * statistic elements.
+     *
      * @param stats The list of elements.
      * @return List of generation time and modification time. Both are the
-     * newest timestamps.
+     *         newest timestamps.
      */
-    private static long[] findMaxGenerationAndModificationTimes(
-                                                        List<BaseStats> stats) {
+    private static long[] findMaxGenerationAndModificationTimes(List<BaseStats> stats) {
         long[] times = new long[2];
-        times[0] = 0; times[1] = 0;
+        times[0] = 0;
+        times[1] = 0;
 
         for (BaseStats b : stats) {
             times[0] = Math.max(b.getGenerationTime(), times[0]);

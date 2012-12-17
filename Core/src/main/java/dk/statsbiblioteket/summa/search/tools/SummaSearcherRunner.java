@@ -22,7 +22,7 @@ import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,8 +34,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke")
 public class SummaSearcherRunner {
 
-    private static MachineStats stats;
-
+    public static final Boolean shutdown = false;
     /**
      * Create a new SummaSearcher instance as defined by the configuration
      * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
@@ -44,11 +43,11 @@ public class SummaSearcherRunner {
      *
      * @param args These are ignored.
      */
-    public static void main (String[] args) {
+    @SuppressWarnings("UnusedDeclaration")
+    public static void main(String[] args) {
         Log log = LogFactory.getLog(SummaSearcherRunner.class);
 
-        Thread.setDefaultUncaughtExceptionHandler(
-                                              new LoggingExceptionHandler(log));
+        Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(log));
 
         Configuration conf = Configuration.getSystemConfiguration(true);
 
@@ -60,22 +59,20 @@ public class SummaSearcherRunner {
             log.info("Search engine is running");
 
             try {
-                stats = new MachineStats(conf, "Searcher");
+                MachineStats stats = new MachineStats(conf, "Searcher");
             } catch (Exception e) {
-                log.warn("Failed to create machine stats. Not critical, but "
-                         + "memory stats will not be logged", e);
+                log.warn("Failed to create machine stats. Not critical, but memory stats will not be logged", e);
             }
 
             // Block indefinitely (non-busy)
-            while(true) {
-                synchronized (conf) {
-                    conf.wait();
+            while (!shutdown) {
+                synchronized (shutdown) {
+                    shutdown.wait();
                 }
             }
         } catch (Throwable t) {
-            String message = String.format(
-                    "Caught toplevel throwable in SummaSearcherRunner.main " 
-                    + "with arguments %s", Strings.join(args, ", "));
+            String message = String.format("Caught toplevel throwable in SummaSearcherRunner.main with arguments %s",
+                                           Strings.join(args, ", "));
             Logging.fatal(log, "SummaSearcherRunner.main", message, t);
             System.err.println(message);
             t.printStackTrace(System.err);

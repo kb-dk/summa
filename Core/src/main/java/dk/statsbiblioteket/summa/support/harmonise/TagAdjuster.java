@@ -22,12 +22,12 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult.Reliability;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
 
@@ -51,17 +51,17 @@ public class TagAdjuster implements Configurable {
     public static final String CONF_FACET_NAME = "tagadjuster.facet.name";
 
     /**
-     * The map of tag transformations. The format supports many-to-many 
+     * The map of tag transformations. The format supports many-to-many
      * transformations the following way where the number to the left of
      * the colon is the number of source tagnames and the number to the
      * right is the number of destination tag names:<br/>
      * {@code 1:1} Direct rename of the tag.<br/>
      * {@code 1:n} n new tags are created, each with the tag count from the
-     *             source. The source tag is removed.<br/>
+     * source. The source tag is removed.<br/>
      * {@code n:1} 1 new tag is created where the tag count is the sum of the
-     *             tag count for the sources.<br/>
-     * {@code n:n} n new tag are created where the tag count for each is the sum 
-     *             of the tag count for the sources.<br/>
+     * tag count for the sources.<br/>
+     * {@code n:n} n new tag are created where the tag count for each is the sum
+     * of the tag count for the sources.<br/>
      * If a tag is renamed to an existing tag, their tag counts are merged.
      * Rules such as {@code a-b, b-a} are handled gracefully.
      * </p><p>
@@ -72,9 +72,9 @@ public class TagAdjuster implements Configurable {
      * destination: tagname|tagname;destination<br/>
      * Blanks are trimmed from the start and the end of tagnames.
      * </p><p>
-     * Example: {@code eng - english, dan;ger;hun - misc}.  
+     * Example: {@code eng - english, dan;ger;hun - misc}.
      * </p><p>
-     * Mandatory. 
+     * Mandatory.
      */
     public static final String CONF_TAG_MAP = "tagadjuster.tags";
 
@@ -82,7 +82,9 @@ public class TagAdjuster implements Configurable {
      * How to merge the counts for the tags when multiple source tags are mapped
      * to one destination tag (and by implication n:n).
      */
-    public static enum MERGE_MODE {min, max, sum}
+    public static enum MERGE_MODE {
+        min, max, sum
+    }
 
     /**
      * The way to merge counts for tags when more than one source tag maps to a
@@ -101,13 +103,10 @@ public class TagAdjuster implements Configurable {
 
     public TagAdjuster(Configuration conf) {
         facetNames = conf.getStrings(CONF_FACET_NAME);
-        mergeMode = MERGE_MODE.valueOf(conf.getString(
-            CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
+        mergeMode = MERGE_MODE.valueOf(conf.getString(CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
         map = new ManyToManyMapper(conf.getStrings(CONF_TAG_MAP));
-        log.info("Created TagAdjuster '" + facetNames + "' with "
-                 + map.getForward().size()
-                 + " source->destination rules and " + map.getForward().size()
-                 + " destination->source rules");
+        log.info("Created TagAdjuster '" + facetNames + "' with " + map.getForward().size()
+                 + " source->destination rules and " + map.getForward().size() + " destination->source rules");
     }
 
     public List<String> getFacetNames() {
@@ -119,63 +118,59 @@ public class TagAdjuster implements Configurable {
     /**
      * Adjusts the given facet result using the mapping stated in the
      * configuration.
+     *
      * @param facetResult a Summa facet result.
      */
     public void adjust(FacetResultExternal facetResult) {
- //       long startTime = System.currentTimeMillis();
-        for (String facetName: facetNames) {
+        //       long startTime = System.currentTimeMillis();
+        for (String facetName : facetNames) {
             long singleTime = System.currentTimeMillis();
-            List<FacetResultImpl.Tag<String>> oldTags =
-                facetResult.getMap().get(facetName);
-            if (oldTags == null || oldTags.size() == 0) {
+            List<FacetResultImpl.Tag<String>> oldTags = facetResult.getMap().get(facetName);
+            if (oldTags == null || oldTags.isEmpty()) {
                 continue;
             }
-            log.trace("Transforming " + oldTags.size() + " tags for facet "
-                      + facetName);
-            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags =
-                new LinkedHashMap<String, FacetResultImpl.Tag<String>>(
-                		(int) (oldTags.size() * 1.5));
-            for (FacetResultImpl.Tag<String> oldTag: oldTags) {
+            log.trace("Transforming " + oldTags.size() + " tags for facet " + facetName);
+            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags = new LinkedHashMap<String,
+                    FacetResultImpl.Tag<String>>((int) (
+                    oldTags.size() * 1.5));
+            for (FacetResultImpl.Tag<String> oldTag : oldTags) {
                 if (map.getForward().containsKey(oldTag.getKey())) {
-                    for (String newName: map.getForward().get(oldTag.getKey())) {
+                    for (String newName : map.getForward().get(oldTag.getKey())) {
                         mergePut(newTags, newName, oldTag);
                     }
                 } else {
                     mergePut(newTags, oldTag.getKey(), oldTag);
                 }
             }
-            List<FacetResultImpl.Tag<String>> newListTags =
-                new ArrayList<FacetResultImpl.Tag<String>>(newTags.size());
-            for (Map.Entry<String, FacetResultImpl.Tag<String>> tag: newTags.entrySet()) {
+            List<FacetResultImpl.Tag<String>> newListTags = new ArrayList<FacetResultImpl.Tag<String>>(newTags.size());
+            for (Map.Entry<String, FacetResultImpl.Tag<String>> tag : newTags.entrySet()) {
                 newListTags.add(tag.getValue());
-                    
+
             }
             facetResult.getMap().put(facetName, newListTags);
-            facetResult.addTiming(
-                "tagadjuster." + facetName + ".adjust",
-                System.currentTimeMillis() - singleTime);
+            facetResult.addTiming("tagadjuster." + facetName + ".adjust", System.currentTimeMillis() - singleTime);
         }
 /*        facetResult.addTiming(
             getPrefix() + "tagadjuster.adjust.all." + Strings.join(facetNames, "-"),
             System.currentTimeMillis() - startTime);*/
     }
 
-    private String getPrefix() {
+/*    private String getPrefix() {
         return id == null ? "" : id + ".";
-    }
+    }*/
 
     /**
      * Performs reverse lookup of the source tags pointing to the given
      * destination tag. Typically used for re-writing queries.
      * If the name is unknown, it is returned directly.
+     *
      * @param tagName a destination tag name.
      * @return source tag names pointing to the given name.
      */
     public Set<String> getReverse(String tagName) {
         if (log.isTraceEnabled()) {
             log.trace("getReverse(" + tagName + ") returning " +
-                      (map.getReverse().containsKey(tagName) ?
-                       map.getReverse().get(tagName) : tagName));
+                      (map.getReverse().containsKey(tagName) ? map.getReverse().get(tagName) : tagName));
         }
         if (map.getReverse().containsKey(tagName)) {
             return map.getReverse().get(tagName);
@@ -183,56 +178,52 @@ public class TagAdjuster implements Configurable {
         return new HashSet<String>(Arrays.asList(tagName));
     }
 
-    
+
     //TODO. The following method can be improve by using Reliability more instead of just using merge mode.
     // ie MORE 4 and LESS 2 -> 4 MORE  (no matter of merge mode)
-    private void mergePut(Map<String, FacetResultImpl.Tag<String>> tags, 
-    		String newName, FacetResultImpl.Tag<String> oldTag) {
+    private void mergePut(Map<String, FacetResultImpl.Tag<String>> tags, String newName,
+                          FacetResultImpl.Tag<String> oldTag) {
         if (!tags.containsKey(newName)) {
-        	FacetResultImpl.Tag<String> newTag = 
-        			new FacetResultImpl.Tag<String>(
-        					newName, oldTag.getCount(), oldTag.getReliability());
+            FacetResultImpl.Tag<String> newTag = new FacetResultImpl.Tag<String>(
+                    newName, oldTag.getCount(), oldTag.getReliability());
             tags.put(newName, newTag);
             return;
         }
-        
+
         FacetResultImpl.Tag<String> tag = tags.get(newName);
-        Reliability newR= tag.getReliability();
-        Reliability oldR= oldTag.getReliability();
-                      
+        Reliability newR = tag.getReliability();
+        Reliability oldR = oldTag.getReliability();
+
         switch (mergeMode) {
-        case min:
-        	tag.setCount(Math.min(tag.getCount(), oldTag.getCount()));
-            if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
-            	tag.setReliability(Reliability.IMPRECISE);
-            }
-            else{
-             tag.setReliability(Reliability.MORE);	            	
-            }                    	
-        	break;
-        case max:
-        	if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
-            	tag.setReliability(Reliability.IMPRECISE);
-            }
-            else{
-             tag.setReliability(Reliability.MORE);	            	
-            }                    	
-        	
-        	tag.setCount(Math.max(tag.getCount(), oldTag.getCount()));
-        	break;
-        case sum:
-        	if (oldR ==Reliability.IMPRECISE || newR==Reliability.IMPRECISE){
-            	tag.setReliability(Reliability.IMPRECISE);
-            }
-            else{
-             tag.setReliability(Reliability.LESS);	            	
-            }                    	
-        	        	
-        	tag.setCount(tag.getCount()+ oldTag.getCount());        	
-        	break;
-        default: throw new UnsupportedOperationException(
-        		"Merge mode '" + mergeMode + "' is unknown, unsuspected "
-        				+ "and unsupported");
+            case min:
+                tag.setCount(Math.min(tag.getCount(), oldTag.getCount()));
+                if (oldR == Reliability.IMPRECISE || newR == Reliability.IMPRECISE) {
+                    tag.setReliability(Reliability.IMPRECISE);
+                } else {
+                    tag.setReliability(Reliability.MORE);
+                }
+                break;
+            case max:
+                if (oldR == Reliability.IMPRECISE || newR == Reliability.IMPRECISE) {
+                    tag.setReliability(Reliability.IMPRECISE);
+                } else {
+                    tag.setReliability(Reliability.MORE);
+                }
+
+                tag.setCount(Math.max(tag.getCount(), oldTag.getCount()));
+                break;
+            case sum:
+                if (oldR == Reliability.IMPRECISE || newR == Reliability.IMPRECISE) {
+                    tag.setReliability(Reliability.IMPRECISE);
+                } else {
+                    tag.setReliability(Reliability.LESS);
+                }
+
+                tag.setCount(tag.getCount() + oldTag.getCount());
+                break;
+            default:
+                throw new UnsupportedOperationException(
+                        "Merge mode '" + mergeMode + "' is unknown, unsuspected and unsupported");
         }
     }
 

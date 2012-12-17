@@ -56,6 +56,7 @@ public class StringMap extends HashMap<String, String> {
      * @param value the value to store.
      * @return the old value if any.
      */
+    @Override
     public String put(String key, String value) {
         if (key == null) {
             throw new IllegalArgumentException("Key must not be null");
@@ -70,6 +71,7 @@ public class StringMap extends HashMap<String, String> {
      * Override of HashMap.putAll that fails in case of null keys or values.
      * @param map the content of the map is added to this.
      */
+    @Override
     public void putAll(Map<? extends String,? extends String> map) {
         for (Map.Entry<? extends String, ? extends String> entry: map.entrySet()) {
             put(entry.getKey(), entry.getValue());

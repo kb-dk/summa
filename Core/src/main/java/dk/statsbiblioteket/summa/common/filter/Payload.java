@@ -264,7 +264,7 @@ public class Payload {
      */
     private void assignIfValid(InputStream stream, Record record) {
         if (stream == null && record == null) {
-            throw new IllegalStateException("Either stream or record " + "must be defined");
+            throw new IllegalStateException("Either stream or record must be defined");
         }
         log.trace("Assigned stream: " + stream + " and record: " + record + " to Payload");
         this.stream = stream;

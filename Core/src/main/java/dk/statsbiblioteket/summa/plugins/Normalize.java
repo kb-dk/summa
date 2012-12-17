@@ -27,8 +27,7 @@ public class Normalize {
     /**
      * A thread local StringBuffer that is reset on each get() request
      */
-    private static final ThreadLocal<StringBuffer> threadLocalBuffer =
-                                               new ThreadLocal<StringBuffer>() {
+    private static final ThreadLocal<StringBuffer> threadLocalBuffer = new ThreadLocal<StringBuffer>() {
         @Override
         protected StringBuffer initialValue() {
             return new StringBuffer();
@@ -45,10 +44,11 @@ public class Normalize {
 
     /**
      * The String is trimed and:    - (  ) , . [ ]     is removed<br>
+     *
      * @param in the string to normalize
-     * @return  the normalized string
+     * @return the normalized string
      */
-    public static String normalize(String in){
+    public static String normalize(String in) {
         StringBuffer buf = threadLocalBuffer.get();
 
         for (int i = 0; i < in.length(); i++) {
@@ -56,8 +56,7 @@ public class Normalize {
 
             // This conditional is "ad-hoc-optimized" in the OR branching for
             // decreasingly frequent characters in the target strings
-            if (c == '-' || c == ',' || c == '.' || c == '(' || c == ')'
-                || c == '[' || c == ']') {
+            if (c == '-' || c == ',' || c == '.' || c == '(' || c == ')' || c == '[' || c == ']') {
                 continue;
             }
 
@@ -87,7 +86,7 @@ public class Normalize {
             return "";
         }
 
-        return buf.substring(firstChar, lastChar+1);
+        return buf.substring(firstChar, lastChar + 1);
     }
 
     /*public static void main (String[] args) {
@@ -96,7 +95,3 @@ public class Normalize {
         System.out.println("'" + normalize("-  (.  ,")+ "'");
     }*/
 }
-
-
-
-

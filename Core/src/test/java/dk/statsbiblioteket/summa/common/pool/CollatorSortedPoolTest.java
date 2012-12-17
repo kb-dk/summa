@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
-import com.ibm.icu.text.Collator;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -32,9 +32,11 @@ public class CollatorSortedPoolTest extends TestCase {
     public CollatorSortedPoolTest(String name) {
         super(name);
     }
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

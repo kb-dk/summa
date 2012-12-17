@@ -48,7 +48,7 @@ public abstract class FactoryPool<T> {
      * @return an element.
      */
     public synchronized T get() {
-        if (elements.size() == 0) {
+        if (elements.isEmpty()) {
             log.trace("Creating new element");
             return createNewElement();
         }

@@ -50,8 +50,10 @@ public interface RemoteFeedback extends Remote, Feedback {
      */
     public static final String CONF_REGISTRY_HOST = "summa.control.remoteconsole.registry.host";
 
+    @Override
     public void putMessages(List<Message> messages) throws RemoteException;
 
+    @Override
     public void putMessage(Message message) throws RemoteException;
 
 }

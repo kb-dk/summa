@@ -330,7 +330,7 @@ public class ScriptFilter extends ObjectFilterImpl {
             try {
                 engine.eval(new CharArrayReader(script));
             } catch (ScriptException e) {
-                throw new PayloadException("Error evaluating interpreted " + "script: " + e.getMessage(), e);
+                throw new PayloadException("Error evaluating interpreted script: " + e.getMessage(), e);
             }
 
         }

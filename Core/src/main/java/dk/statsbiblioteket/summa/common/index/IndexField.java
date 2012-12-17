@@ -17,7 +17,7 @@ package dk.statsbiblioteket.summa.common.index;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;   
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -353,7 +353,7 @@ public class IndexField<A, T, F> {
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
-        if (indexAnalyzer != null || indexFilters.size() != 0) {
+        if (indexAnalyzer != null || !indexFilters.isEmpty()) {
             sw.append("<analyzer type=\"index\"\n>");
             sw.append(String.format("%s\n",
                                     analyzerToXMLFragment(indexAnalyzer)));

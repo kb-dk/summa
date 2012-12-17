@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.util.Logs;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.StringWriter;
-import com.ibm.icu.text.Collator;
 import java.util.*;
 
 /**
@@ -35,10 +35,12 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -180,6 +182,7 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         }
     }
 
+    @Override
     public int compare(String o1, String o2) {
         return o1.compareTo(o2);
     }

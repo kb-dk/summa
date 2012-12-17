@@ -117,6 +117,7 @@ public class DumpFilterTest extends TestCase {
         Calendar calendar = Calendar.getInstance();
         final String noIDPrefix = String.format("%1$tF_", calendar);
         File[] noIDFiles = OUT.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return name.startsWith(noIDPrefix);
             }

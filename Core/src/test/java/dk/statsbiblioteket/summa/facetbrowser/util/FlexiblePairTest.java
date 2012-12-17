@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util;
 
-import java.util.LinkedList;
-import java.util.Random;
-import java.util.Collections;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.FlexiblePair;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * FlexiblePair Tester.
@@ -40,10 +40,12 @@ public class FlexiblePairTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }

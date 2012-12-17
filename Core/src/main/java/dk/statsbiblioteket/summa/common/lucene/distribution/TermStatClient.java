@@ -83,22 +83,22 @@ public class TermStatClient implements Configurable {
         String destination = null;
         List<String> fields = new ArrayList<String>(10);
         boolean fieldsActive = false;
-        while (arguments.size() > 0) {
+        while (!arguments.isEmpty()) {
             String argument = arguments.remove(0);
             if ("-i".equals((argument))) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-i must be followed by a path");
                 }
                 index = new File(arguments.remove(0));
             } else if ("-d".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-d must be followed by a path");
                 }
                 destination = arguments.remove(0);
             } else if ("-c".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-c must be followed by a column name");
                 }
@@ -109,13 +109,13 @@ public class TermStatClient implements Configurable {
             } else if ("-s".equals(argument)) {
                 skipSpace = true;
             } else if ("-mdf".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-mdf must be followed by an integer");
                 }
                 mdf = Integer.parseInt(arguments.remove(0));
             } else if ("-mtl".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-mtl must be followed by an integer");
                 }
@@ -140,30 +140,30 @@ public class TermStatClient implements Configurable {
         int mdf = 1;
         String destination = null;
         MODE mode = MODE.none;
-        while (arguments.size() > 0) {
+        while (!arguments.isEmpty()) {
             String argument = arguments.remove(0);
             if ("-d".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-d must be followed by a path");
                 }
                 destination = arguments.remove(0);
             } else if ("-c".equals(argument)) {
                 mode = MODE.column;
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-f must be followed by one or more fields");
                 }
                 continue;
             } else if ("-i".equals(argument)) {
                 mode = MODE.input;
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-i must be followed by one or more fields");
                 }
                 continue;
             } else if ("-mdf".equals(argument)) {
-                if (arguments.size() == 0) {
+                if (arguments.isEmpty()) {
                     throw new IllegalArgumentException(
                         "-mdf must be followed by an integer");
                 }
@@ -227,7 +227,7 @@ public class TermStatClient implements Configurable {
         if (destination == null) {
             throw new IllegalArgumentException("No destination specified");
         }
-        if (fieldRegexps.size() == 0) {
+        if (fieldRegexps.isEmpty()) {
             log.info("No fields specified. Extracting all fields");
             fieldRegexps.add(".*");
         }
@@ -302,7 +302,7 @@ public class TermStatClient implements Configurable {
                 }
             }
         }
-        if (fields.size() == 0) {
+        if (fields.isEmpty()) {
             log.warn("Unable to expand " + Strings.join(fieldRegexps, ", ") + " to any fields in " + index);
         }
         return fields;
@@ -332,13 +332,13 @@ public class TermStatClient implements Configurable {
 
     public void merge(
         List<File> inputs, List<String> columns, String destination, int mdf) {
-        if (inputs.size() == 0) {
+        if (inputs.isEmpty()) {
             throw new IllegalArgumentException("One or more inputs must be specified");
         }
         if (destination == null) {
             throw new IllegalArgumentException("No destination specified");
         }
-        if (columns.size() == 0) {
+        if (columns.isEmpty()) {
             log.info("No columns specified. Merging all columns");
             columns.add(".*");
         }

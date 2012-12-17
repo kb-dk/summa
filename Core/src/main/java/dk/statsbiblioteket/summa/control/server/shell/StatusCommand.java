@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
+import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
@@ -46,6 +46,7 @@ public class StatusCommand extends RemoteCommand<ControlConnection> {
         this.controlAddress = controlAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ControlConnection control = getConnection(controlAddress);
         Layout layout = new Layout("Client/Service");

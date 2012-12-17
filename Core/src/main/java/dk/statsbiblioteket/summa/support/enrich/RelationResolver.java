@@ -66,10 +66,10 @@ public class RelationResolver extends ObjectFilterImpl {
      * empty, in which case the query will be "searchvalue".
      * </p><p>
      * Optional. Default is no field.
+     *
      * @see {link #CONF_SEARCH_METAKEY}.
      */
-    public static final String CONF_SEARCH_FIELD =
-        "relationresolver.search.field";
+    public static final String CONF_SEARCH_FIELD = "relationresolver.search.field";
     public static final String DEFAULT_SEARCH_FIELD = "";
 
     /**
@@ -77,8 +77,7 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_SEARCH_QUOTE =
-        "relationresolver.search.quote";
+    public static final String CONF_SEARCH_QUOTE = "relationresolver.search.quote";
     public static final boolean DEFAULT_SEARCH_QUOTE = false;
 
     /**
@@ -87,8 +86,7 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Mandatory. This must be 1 or more keys for the Record meta data map.
      */
-    public static final String CONF_SEARCH_METAKEYS =
-        "relationresolver.search.metakeys";
+    public static final String CONF_SEARCH_METAKEYS = "relationresolver.search.metakeys";
 
     /**
      * The maximum number of hits to receive. The Record will be assigned as
@@ -96,8 +94,7 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is 1.
      */
-    public static final String CONF_SEARCH_MAXHITS =
-        "relationresolver.search.maxhits";
+    public static final String CONF_SEARCH_MAXHITS = "relationresolver.search.maxhits";
     public static final int DEFAULT_SEARCH_MAXHITS = 1;
 
     /**
@@ -106,8 +103,7 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_NONMATCHED_DISCARD =
-        "relationresolver.nonmatched.discard";
+    public static final String CONF_NONMATCHED_DISCARD = "relationresolver.nonmatched.discard";
     public static final boolean DEFAULT_NONMATCHED_DISCARD = true;
 
     /**
@@ -120,29 +116,25 @@ public class RelationResolver extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is "relations/nonmatched".
      */
-    public static final String CONF_NONMATCHED_FOLDER =
-        "relationresolver.nonmatched.folder";
-    public static final String DEFAULT_NONMATCHED_FOLDER =
-        "relations/nonmatched";
+    public static final String CONF_NONMATCHED_FOLDER = "relationresolver.nonmatched.folder";
+    public static final String DEFAULT_NONMATCHED_FOLDER = "relations/nonmatched";
 
     /**
      * If true, resolved relation-IDs are assigned as parents to the Record.
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_ASSIGN_PARENTS = 
-        "relationresolver.assign.parents";
-    public static final boolean DEFAULT_ASSIGN_PARENTS = true; 
-    
+    public static final String CONF_ASSIGN_PARENTS = "relationresolver.assign.parents";
+    public static final boolean DEFAULT_ASSIGN_PARENTS = true;
+
     /**
      * If true, resolved relation-IDs are assigned as children to the Record.
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_ASSIGN_CHILDREN = 
-        "relationresolver.assign.children";
-    public static final boolean DEFAULT_ASSIGN_CHILDREN = false; 
-    
+    public static final String CONF_ASSIGN_CHILDREN = "relationresolver.assign.children";
+    public static final boolean DEFAULT_ASSIGN_CHILDREN = false;
+
     private final SummaSearcher searcher;
     private final String searchField;
     private final int maxHits;
@@ -158,31 +150,24 @@ public class RelationResolver extends ObjectFilterImpl {
         searchField = conf.getString(CONF_SEARCH_FIELD, DEFAULT_SEARCH_FIELD);
         maxHits = conf.getInt(CONF_SEARCH_MAXHITS, DEFAULT_SEARCH_MAXHITS);
         metaKeys = conf.getStrings(CONF_SEARCH_METAKEYS);
-        assignAsParents = conf.getBoolean(
-            CONF_ASSIGN_PARENTS, DEFAULT_ASSIGN_PARENTS);
-        assignAsChildren = conf.getBoolean(
-            CONF_ASSIGN_CHILDREN, DEFAULT_ASSIGN_CHILDREN);
+        assignAsParents = conf.getBoolean(CONF_ASSIGN_PARENTS, DEFAULT_ASSIGN_PARENTS);
+        assignAsChildren = conf.getBoolean(CONF_ASSIGN_CHILDREN, DEFAULT_ASSIGN_CHILDREN);
         if (assignAsParents && assignAsChildren) {
-            log.warn(String.format(
-                "Both %s and %s is true. This normally does not make sense. "
-                + "It creates cycles in the Storage which is not a well-tested",
-                CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
+            log.warn(String.format("Both %s and %s is true. This normally does not make sense. "
+                                   + "It creates cycles in the Storage which is not a well-tested",
+                                   CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
         }
         if (!assignAsParents && !assignAsChildren) {
-            log.warn(String.format(
-                "Both %s and %s is false. No assignment will be performed, " 
-                + "making this filter inactive except for side-effects such as " 
-                + "validation and search-testing",
-                CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
+            log.warn(String.format("Both %s and %s is false. No assignment will be performed, "
+                                   + "making this filter inactive except for side-effects such as "
+                                   + "validation and search-testing",
+                                   CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
         }
-        discardNonmatched = conf.getBoolean(
-            CONF_NONMATCHED_DISCARD, DEFAULT_NONMATCHED_DISCARD);
-        if (metaKeys == null || metaKeys.size() == 0) {
-            throw new ConfigurationException(
-                "No values for key '" + CONF_SEARCH_METAKEYS + "' present");
+        discardNonmatched = conf.getBoolean(CONF_NONMATCHED_DISCARD, DEFAULT_NONMATCHED_DISCARD);
+        if (metaKeys == null || metaKeys.isEmpty()) {
+            throw new ConfigurationException("No values for key '" + CONF_SEARCH_METAKEYS + "' present");
         }
-        String non = conf.getString(
-            CONF_NONMATCHED_FOLDER, DEFAULT_NONMATCHED_FOLDER);
+        String non = conf.getString(CONF_NONMATCHED_FOLDER, DEFAULT_NONMATCHED_FOLDER);
         if (non == null || "".equals(non)) {
             log.debug("No folder for non-matched Records");
             nonmatchedFolder = null;
@@ -190,30 +175,25 @@ public class RelationResolver extends ObjectFilterImpl {
             File nonF = Resolver.getPersistentFile(new File(non));
             if (nonF == null) {
                 throw new ConfigurationException(
-                    "Unable to resolve non-matching folder '" + non
-                    + "' from property " + CONF_NONMATCHED_FOLDER);
+                        "Unable to resolve non-matching folder '" + non + "' from property " + CONF_NONMATCHED_FOLDER);
             }
             if (!nonF.exists()) {
                 if (!nonF.mkdirs()) {
-                    throw new ConfigurationException(
-                        "Unable to create non-matching folder '" + nonF + "'");
+                    throw new ConfigurationException("Unable to create non-matching folder '" + nonF + "'");
                 }
             }
             nonmatchedFolder = nonF;
         }
         if (maxHits == 0) {
-            log.warn("maxHits is 0, effectively making RelationResolver a "
-                     + "discard-all filter");
+            log.warn("maxHits is 0, effectively making RelationResolver a discard-all filter");
         }
         searcher = createSearchClient(conf);
         quote = conf.getBoolean(CONF_SEARCH_QUOTE, DEFAULT_SEARCH_QUOTE);
-        log.info(String.format(
-            "Created RelationResolver with searcher '%s', searchField '%s', "
-            + "quote %b, maxHits %d, metaKey '%s', discard non-matched %b and "
-            + "non-matching folder '%s'",
-            conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField,
-            quote, maxHits, Strings.join(metaKeys, ", "),
-            discardNonmatched, nonmatchedFolder));
+        log.info(String.format("Created RelationResolver with searcher '%s', searchField '%s', "
+                               + "quote %b, maxHits %d, metaKey '%s', discard non-matched %b and "
+                               + "non-matching folder '%s'",
+                               conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField, quote, maxHits,
+                               Strings.join(metaKeys, ", "), discardNonmatched, nonmatchedFolder));
     }
 
     protected SummaSearcher createSearchClient(Configuration conf) {
@@ -228,28 +208,21 @@ public class RelationResolver extends ObjectFilterImpl {
         }
 
         int matched = 0;
-        for (String metaKey: metaKeys) {
+        for (String metaKey : metaKeys) {
             String searchValue = payload.getRecord().getMeta(metaKey);
             if (searchValue == null) {
-                Logging.logProcess(
-                    "RelationResolver",
-                    "Unable to get search value from meta with key '" + metaKey
-                    + "'",
-                    Logging.LogLevel.TRACE, payload);
+                Logging.logProcess("RelationResolver", "Unable to get search value from meta with key '" + metaKey
+                                                       + "'", Logging.LogLevel.TRACE, payload);
                 continue;
             }
             DocumentResponse docResponse = getHits(payload, searchValue);
             if (docResponse.getHitCount() == 0) {
                 if (log.isDebugEnabled()) {
-                    log.debug(
-                        "No hits found for search value '" + searchValue
-                        + "' for " + payload);
+                    log.debug("No hits found for search value '" + searchValue + "' for " + payload);
                 }
-                Logging.logProcess(
-                    "RelationResolver",
-                    "Unable to find any documents matching search value '"
-                    + searchValue + "'",
-                    Logging.LogLevel.DEBUG, payload);
+                Logging.logProcess("RelationResolver",
+                                   "Unable to find any documents matching search value '" + searchValue
+                                   + "'", Logging.LogLevel.DEBUG, payload);
                 continue;
             }
             matched += docResponse.getHitCount();
@@ -257,21 +230,16 @@ public class RelationResolver extends ObjectFilterImpl {
         }
         if (matched == 0) {
             nonmatching(payload);
-            Logging.logProcess(
-                "RelationResolver", "Unable to resolve anything",
-                Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("RelationResolver", "Unable to resolve anything", Logging.LogLevel.DEBUG, payload);
             return !discardNonmatched;
         }
         return true;
     }
 
-    protected DocumentResponse getHits(Payload payload, String searchValue)
-                                                       throws PayloadException {
+    protected DocumentResponse getHits(Payload payload, String searchValue) throws PayloadException {
         Request request = new Request();
         String qw = quote ? "\"" : "";
-        String query =
-            "".equals(searchField) ? searchValue : 
-            searchField + ":" +qw + searchValue + qw;
+        String query = "".equals(searchField) ? searchValue : searchField + ":" + qw + searchValue + qw;
         request.put(DocumentKeys.SEARCH_QUERY, query);
         request.put(DocumentKeys.SEARCH_MAX_RECORDS, maxHits);
         request.put(DocumentKeys.SEARCH_RESULT_FIELDS, DocumentKeys.RECORD_ID);
@@ -281,14 +249,12 @@ public class RelationResolver extends ObjectFilterImpl {
             responses = searcher.search(request);
         } catch (IOException e) {
             nonmatching(payload);
-            throw new PayloadException(
-                "Exception while searching with query '" + query + "'",
-                e, payload);
+            throw new PayloadException("Exception while searching with query '" + query + "'", e, payload);
         }
         DocumentResponse docResponse = null;
-        for (Response response: responses) {
+        for (Response response : responses) {
             if (response instanceof DocumentResponse) {
-                docResponse = (DocumentResponse)response;
+                docResponse = (DocumentResponse) response;
                 break; // Consider is there should be support for multiple
             }
         }
@@ -296,35 +262,30 @@ public class RelationResolver extends ObjectFilterImpl {
             log.debug("No hits for query '" + query + "'");
             nonmatching(payload);
             throw new PayloadException(
-                "Did not receive a DocumentResponse when searching for query '"
-                + query+ "'", payload);
+                    "Did not receive a DocumentResponse when searching for query '" + query + "'", payload);
         }
         return docResponse;
     }
 
     private void nonmatching(Payload payload) {
         if (nonmatchedFolder == null) {
-            log.debug(
-                payload + " not stored as no non-matching folder is defined");
+            log.debug(payload + " not stored as no non-matching folder is defined");
             return;
         }
-        File filename =
-            new File(nonmatchedFolder, RecordUtil.getFileName(payload));
-        log.trace("Storing non-matched " + payload.getRecord()
-                  + " to '" + filename + "'");
+        File filename = new File(nonmatchedFolder, RecordUtil.getFileName(payload));
+        log.trace("Storing non-matched " + payload.getRecord() + " to '" + filename + "'");
         try {
             Files.saveString(payload.getRecord().getContentAsUTF8(), filename);
         } catch (IOException e) {
-            log.warn("Unable to dump the content of non-matched "
-                     + payload.getRecord() + " to file '" + filename + "'", e);
+            log.warn("Unable to dump the content of non-matched " + payload.getRecord() + " to file '" + filename
+                     + "'", e);
         }
     }
 
     private void assignRelatives(Payload payload, DocumentResponse docResponse) {
-        List<String> hitIDs =
-            new ArrayList<String>(docResponse.getRecords().size());
-        for (DocumentResponse.Record hitRecord: docResponse.getRecords()) {
-            for (DocumentResponse.Field field: hitRecord.getFields()) {
+        List<String> hitIDs = new ArrayList<String>(docResponse.getRecords().size());
+        for (DocumentResponse.Record hitRecord : docResponse.getRecords()) {
+            for (DocumentResponse.Field field : hitRecord.getFields()) {
                 if (DocumentResponse.RECORD_ID.equals(field.getName())) {
                     hitIDs.add(field.getContent());
                 }
@@ -334,39 +295,30 @@ public class RelationResolver extends ObjectFilterImpl {
         int parentAdd = 0;
         int childAdd = 0;
         Record record = payload.getRecord();
-        Set<String> parents =
-            record.getParentIds() == null ?
-            new HashSet<String>(docResponse.getRecords().size()) :
-            new HashSet<String>(record.getParentIds());
+        Set<String> parents = record.getParentIds() == null ?
+                              new HashSet<String>(docResponse.getRecords().size()) :
+                              new HashSet<String>(record.getParentIds());
         if (assignAsParents) {
             parentAdd = -parents.size();
             parents.addAll(hitIDs);
             parentAdd += parents.size();
-            record.setParentIds(
-                parents.size() == 0 ? null : new ArrayList<String>(parents));
-            Logging.logProcess(
-                "RelationResolver",
-                "Assigned " + docResponse.getRecords().size() + " parents. "
-                + "Parents are now " + Strings.join(parents, ", "),
-                Logging.LogLevel.DEBUG, payload);
+            record.setParentIds(parents.isEmpty() ? null : new ArrayList<String>(parents));
+            Logging.logProcess("RelationResolver",
+                               "Assigned " + docResponse.getRecords().size() + " parents. Parents are now "
+                               + Strings.join(parents, ", "), Logging.LogLevel.DEBUG, payload);
         }
-        Set<String> children =
-            record.getChildIds() == null ?
-            new HashSet<String>(docResponse.getRecords().size()) :
-            new HashSet<String>(record.getChildIds());
+        Set<String> children = record.getChildIds() == null ?
+                               new HashSet<String>(docResponse.getRecords().size()) :
+                               new HashSet<String>(record.getChildIds());
         if (assignAsChildren) {
             childAdd = -children.size();
             children.addAll(hitIDs);
             childAdd += children.size();
-            record.setChildIds(
-                children.size() == 0 ? null : new ArrayList<String>(children));
+            record.setChildIds(children.isEmpty() ? null : new ArrayList<String>(children));
         }
-        Logging.logProcess(
-            "RelationResolver",
-            "Assigned '" + parentAdd + " new parents (total parents: "
-            + Strings.join(parents, ", ") + ") and " + childAdd
-            + " new children (total children: " + Strings.join(children, ", ")
-            + ") from query '" + docResponse.getQuery() + "'",
-            Logging.LogLevel.DEBUG, payload);
+        Logging.logProcess("RelationResolver",
+                           "Assigned '" + parentAdd + " new parents (total parents: " + Strings.join(parents, ", ")
+                           + ") and " + childAdd + " new children (total children: " + Strings.join(children, ", ")
+                           + ") from query '" + docResponse.getQuery() + "'", Logging.LogLevel.DEBUG, payload);
     }
 }

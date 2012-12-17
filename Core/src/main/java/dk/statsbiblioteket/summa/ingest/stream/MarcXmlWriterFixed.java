@@ -14,15 +14,15 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import com.ibm.icu.text.Normalizer;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
-import java.util.Iterator;
+import org.marc4j.Constants;
+import org.marc4j.MarcException;
+import org.marc4j.MarcWriter;
+import org.marc4j.converter.CharConverter;
+import org.marc4j.marc.*;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -32,20 +32,8 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-
-import org.marc4j.Constants;
-import org.marc4j.MarcException;
-import org.marc4j.MarcWriter;
-import org.marc4j.converter.CharConverter;
-import org.marc4j.marc.ControlField;
-import org.marc4j.marc.DataField;
-import org.marc4j.marc.Leader;
-import org.marc4j.marc.Record;
-import org.marc4j.marc.Subfield;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
-
-import com.ibm.icu.text.Normalizer;
+import java.io.*;
+import java.util.Iterator;
 
 /**
  * Nearly direct copy of {@link org.marc4j.MarcXmlWriter} that fixed the
@@ -196,6 +184,7 @@ public class MarcXmlWriterFixed implements MarcWriter {
     /**
      * Closes the XML stream.
      */
+    @Override
     public void close() {
         writeEndDocument();
         try {
@@ -210,6 +199,7 @@ public class MarcXmlWriterFixed implements MarcWriter {
      *
      * @return CharConverter the character converter
      */
+    @Override
     public CharConverter getConverter() {
         return converter;
     }
@@ -220,6 +210,7 @@ public class MarcXmlWriterFixed implements MarcWriter {
      * @param converter
      *            the character converter
      */
+    @Override
     public void setConverter(CharConverter converter) {
         this.converter = converter;
     }
@@ -320,6 +311,7 @@ public class MarcXmlWriterFixed implements MarcWriter {
      * @param record the <code>Record</code> object
      * @throws SAXException
      */
+    @Override
     public void write(Record record) {
         try {
             toXml(record);

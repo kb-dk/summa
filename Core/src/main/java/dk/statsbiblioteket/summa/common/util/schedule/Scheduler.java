@@ -14,13 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util.schedule;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * The Scheduler sets up a {@link Timer} and {@link Schedule} on a {@link Schedulable} object.<p/>
@@ -47,7 +46,7 @@ public class Scheduler extends Thread {
     public void start(final Schedulable object, final int startup,
                       final int period){
         log.info("Starting Scheduler on:" + object.getClass().getName()
-                 + "latency: " + startup + "s." + "period:" +  period + "s.");
+                 + "latency: " + startup + "s.period:" +  period + "s.");
         final Timer timer = new Timer();
         final TimerTask task = new Schedule(object);
         timer.schedule(task,startup * 1000,period * 1000);

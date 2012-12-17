@@ -43,16 +43,17 @@ public interface SearchNode extends Configurable {
      * Response to responses.  Some searchers (notably the FacetSearcher)
      * requires data from previous Searchers (DocumentSearcher, in the case of
      * FacetSearcher).
+     *
      * @param request   contains SearchNode-specific request-data.
      * @param responses where a Response to a Request is stored.
      * @throws RemoteException if the search could not be performed.
      */
-    public void search(Request request, ResponseCollection responses) throws
-                                                                RemoteException;
+    public void search(Request request, ResponseCollection responses) throws RemoteException;
 
     /**
      * Performs a warm-up with the given request. This could be a single query
      * for a DocumentSearcher or a word for a did-you-mean searcher.
+     *
      * @param request implementation-specific warmup-data.
      */
     public void warmup(String request);
@@ -61,7 +62,8 @@ public interface SearchNode extends Configurable {
      * Opens the index at the given location. Implementations should ensure that
      * previously opened connections are closed before opening new.
      * It is not guaranteed that {@link #close()} will be called before open.
-     * @param location     where the index can be found.
+     *
+     * @param location where the index can be found.
      * @throws RemoteException if the index could not be opened.
      */
     public void open(String location) throws RemoteException;
@@ -70,6 +72,7 @@ public interface SearchNode extends Configurable {
      * Shut down the searcher and free all associated resources. The searcher
      * cannot be used after close. If an open() is called after close, the
      * searcher must be usable again.
+     *
      * @throws RemoteException if an error occured during close. Implementers
      *                         of the interface are urged to free as many
      *                         resources as possible, even in the event of an
@@ -81,11 +84,8 @@ public interface SearchNode extends Configurable {
      * A slot refers to the number of searches or warmups that can be performed
      * simultaneously at the current time. If the number of free slots is 0,
      * new requests should be queued.
+     *
      * @return the number of free slots. This can be 0.
      */
     public int getFreeSlots();
 }
-
-
-
-

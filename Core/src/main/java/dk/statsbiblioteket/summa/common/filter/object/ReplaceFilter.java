@@ -226,7 +226,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             basicReplacer = factory.getReplacer();
         }
         if (pattern == null && factory == null) {
-            log.info("ReplaceFilter created without any rules. Payloads will " + "pass through untouched");
+            log.info("ReplaceFilter created without any rules. Payloads will pass through untouched");
         }
     }
 
@@ -257,14 +257,14 @@ public class ReplaceFilter extends ObjectFilterImpl {
     private void processPattern(Payload payload) throws PayloadException {
         final int bufferSize = 1000;
         if (payload.getStream() != null) {
-            log.debug("Copying Stream content into memory in order to perform " + "Pattern replacement");
+            log.debug("Copying Stream content into memory in order to perform Pattern replacement");
             CircularCharBuffer cb = new CircularCharBuffer(bufferSize, Integer.MAX_VALUE);
             Reader in;
             try {
                 in = new InputStreamReader(payload.getStream(), encodingIn);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
-                        "The encoding '%s' for the InputStream is not supported" + " on this platform", encodingIn), e);
+                        "The encoding '%s' for the InputStream is not supported on this platform", encodingIn), e);
             }
             try {
                 int c;
@@ -282,7 +282,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 resultBytes = result.getBytes(encodingOut);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
-                        "The encoding '%s' for output is not supported on this " + "platform", encodingOut));
+                        "The encoding '%s' for output is not supported on this platform", encodingOut));
             }
             //noinspection UnusedAssignment
             result = null; // Make the memory available ASAP

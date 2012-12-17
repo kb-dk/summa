@@ -360,92 +360,114 @@ public class HierarchicalTermProvider implements TermProvider {
 
   /* Plain delegations */
 
+  @Override
   public int getNearestTermIndirect(BytesRef key) throws IOException {
     return source.getNearestTermIndirect(key);
   }
 
+  @Override
   public int getNearestTermIndirect(
       BytesRef key, int startTermPos, int endTermPos) throws IOException {
     return source.getNearestTermIndirect(key, startTermPos, endTermPos);
   }
 
+  @Override
   public NamedComparator getComparator() {
     return source.getComparator();
   }
 
+  @Override
   public String getDesignation() {
     return source.getDesignation();
   }
 
+  @Override
   public String getField(long ordinal) throws IOException {
     return source.getField(ordinal);
   }
 
+  @Override
   public BytesRef getTerm(long ordinal) throws IOException {
     return source.getTerm(ordinal);
   }
 
+  @Override
   public String getOrderedField(long indirect) throws IOException {
     return source.getOrderedField(indirect);
   }
 
+  @Override
   public BytesRef getOrderedTerm(long indirect) throws IOException {
     return source.getOrderedTerm(indirect);
   }
 
+  @Override
   public long getUniqueTermCount() throws IOException {
     return source.getUniqueTermCount();
   }
 
+  @Override
   public long getOrdinalTermCount() throws IOException {
     return source.getOrdinalTermCount();
   }
 
+  @Override
   public long getMaxDoc() {
     return source.getMaxDoc();
   }
 
+  @Override
   public IndexReader getReader() {
     return source.getReader();
   }
 
+  @Override
   public int getReaderHash() {
     return source.getReaderHash();
   }
 
+  @Override
   public int getRecursiveHash() {
     return source.getRecursiveHash();
   }
 
+  @Override
   public PackedInts.Reader getOrderedOrdinals() throws IOException {
     return source.getOrderedOrdinals();
   }
 
+  @Override
   public PackedInts.Reader getOrderedOrdinals(OrderedDecorator decorator) throws IOException {
     return source.getOrderedOrdinals(decorator);
   }
 
+  @Override
   public PackedInts.Reader getDocToSingleIndirect() throws IOException {
     return source.getDocToSingleIndirect();
   }
 
+  @Override
   public Iterator<ExposedTuple> getIterator(
       boolean collectDocIDs) throws IOException {
     return source.getIterator(collectDocIDs);
   }
 
+  @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     return source.getDocsEnum(ordinal, reuse);
   }
 
+  @Override
   public void transitiveReleaseCaches(int level, boolean keepRoot) {
     source.transitiveReleaseCaches(level, keepRoot);
   }
 
+  @Override
   public int getDocIDBase() {
     return source.getDocIDBase();
   }
 
+  @Override
   public void setDocIDBase(int base) {
     source.setDocIDBase(base);
   }

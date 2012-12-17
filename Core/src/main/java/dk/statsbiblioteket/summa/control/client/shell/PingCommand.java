@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 5, 2008 Time: 8:13:20 AM To
@@ -38,6 +38,7 @@ public class PingCommand extends RemoteCommand<ClientConnection> {
         this.clientAddress = clientAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
 

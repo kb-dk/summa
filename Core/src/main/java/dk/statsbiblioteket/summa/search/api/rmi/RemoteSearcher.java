@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.search.api.rmi;
 
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;
@@ -38,6 +38,7 @@ public interface RemoteSearcher extends Remote, SummaSearcher {
      * @return Collection containing all responses.
      * @throws RemoteException if there is an error getting responses over RMI.
      */
+    @Override
     public ResponseCollection search(Request request) throws RemoteException;
 
     /**
@@ -45,6 +46,7 @@ public interface RemoteSearcher extends Remote, SummaSearcher {
      * 
      * @throws RemoteException if an error is experienced during closing of this searcher.
      */
+    @Override
     public void close() throws RemoteException;
 
 }

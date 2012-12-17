@@ -21,20 +21,15 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * This reader performs a recursive scan for a given pattern of files.
@@ -166,12 +161,12 @@ public class FileReader extends FileSystemReader {
     protected synchronized void updateToDo() {
         if (log.isTraceEnabled()) {
             log.trace("updateTodo() called with first todo-element: "
-                      + (todo.size() > 0 ? todo.get(0) : "NA"));
+                      + (!todo.isEmpty() ? todo.get(0) : "NA"));
         }
         while (true) {
             File start = null;
             try {
-                if (todo.size() == 0 || todo.get(0).isFile()) {
+                if (todo.isEmpty() || todo.get(0).isFile()) {
                     return;
                 }
 
@@ -255,7 +250,7 @@ public class FileReader extends FileSystemReader {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         updateToDo();
-        if (todo.size() == 0) {
+        if (todo.isEmpty()) {
             log.info("next: No more files available");
             return null;
         }
@@ -302,7 +297,7 @@ public class FileReader extends FileSystemReader {
         log.debug("Closing");
         //noinspection DuplicateStringLiteralInspection
         closeDelivered(success);
-        if (todo.size() > 0) {
+        if (!todo.isEmpty()) {
             log.debug("When closing, " + todo.size()
                       + " files remained in queue");
             todo.clear();
@@ -376,7 +371,7 @@ public class FileReader extends FileSystemReader {
     @Override
     public synchronized boolean hasNext() {
         updateToDo();
-        return todo.size() > 0;
+        return !todo.isEmpty();
     }
 
     /**
@@ -387,6 +382,6 @@ public class FileReader extends FileSystemReader {
      */
     protected synchronized boolean isTodoEmpty() {
         log.trace("idTodoEmpty(): todo-size: " + todo.size());
-        return todo.size() == 0;
+        return todo.isEmpty();
     }
 }

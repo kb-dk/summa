@@ -14,16 +14,16 @@
  */
 package dk.statsbiblioteket.summa.plugins;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This plugin is used for encode Strings as values in embeded XML in CDATAsections.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        state = QAInfo.State.QA_OK,
+        author = "te, hal")
 public class CDATASectionKeepEntityEncoding {
 
     public static final Log log = LogFactory.getLog(CDATASectionKeepEntityEncoding.class);
@@ -39,16 +39,12 @@ public class CDATASectionKeepEntityEncoding {
      */
     // TODO: Review &apos; vs. &quot;
     public static String encode(String in){
-        in = in.replaceAll("&", "&amp;");
-        in = in.replaceAll("\"", "&quot;");
-        in = in.replaceAll("<", "&lt;");
-        in = in.replaceAll(">", "&gt;");
+        in = in.replace("&", "&amp;");
+        in = in.replace("\"", "&quot;");
+        in = in.replace("<", "&lt;");
+        in = in.replace(">", "&gt;");
         log.debug("encoded string: " + in);
         // FIXME: Consider double-encoding & if it is not part of &amp;
         return in;
     }
 }
-
-
-
-

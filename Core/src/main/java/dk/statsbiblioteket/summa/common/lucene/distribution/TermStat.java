@@ -55,7 +55,6 @@ Zoo\t54\t89
  * can be updated or queried.
  * </p><p>
  * Note: this TermStat-component is limited to Integer.MAX_VALUE terms.
- * @deprecated the new way is to load data directly from the index, instead of pre-extracting to persistent structure.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

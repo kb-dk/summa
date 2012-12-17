@@ -13,7 +13,7 @@ public abstract class Pool<T> {
   public abstract T createElement();
 
   public synchronized T acquire() {
-    if (elements.size() == 0) {
+    if (elements.isEmpty()) {
       return createElement();
     }
     return elements.remove(elements.size()-1);

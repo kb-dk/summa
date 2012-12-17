@@ -14,17 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RuleBasedCollator;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import com.ibm.icu.text.Collator;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Locale;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * The standard Collator from Java 1.5 and 1.6 prioritizes spaces below
@@ -199,6 +198,7 @@ public class CollatorFactory {
      */
     public static Comparator<String> wrapCollator(final Collator collator) {
         return new Comparator<String>() {
+            @Override
             public final int compare(final String o1, final String o2) {
                 return collator.compare(o1, o2);
             }

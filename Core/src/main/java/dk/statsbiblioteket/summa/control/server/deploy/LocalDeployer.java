@@ -71,6 +71,7 @@ public class LocalDeployer implements ClientDeployer {
         destination += File.separator + clientId;
     }
 
+    @Override
     public void deploy(Feedback feedback) throws Exception {
         File sourceFile = new File(source);
         //File destFile = new File(destination);
@@ -170,6 +171,7 @@ public class LocalDeployer implements ClientDeployer {
         log.trace("File permissions fixed for client '" + clientId + "'");
     }
 
+    @Override
     public void start(Feedback feedback) throws Exception {
         log.info("Starting service");
 
@@ -249,6 +251,7 @@ public class LocalDeployer implements ClientDeployer {
 
     }
 
+    @Override
     public String getTargetHost() {
         return "localhost";
     }

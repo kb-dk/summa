@@ -30,6 +30,7 @@ public class Help extends Command {
         setUsage("help [command]");
     }
 
+    @Override
     public void invoke(ShellContext ctx) {
         String[] args = getArguments();
         if (args.length >= 1) {

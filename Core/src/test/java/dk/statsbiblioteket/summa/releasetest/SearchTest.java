@@ -233,7 +233,7 @@ public class SearchTest extends NoExitTestCase {
                                 DocumentKeys.SEARCH_QUERY, "*:*",
                                 DocumentKeys.SEARCH_COLLECT_DOCIDS, true
                         ));
-                        assertTrue("There should be at least 1 response", responses.size() > 0);
+                        assertTrue("There should be at least 1 response", !responses.isEmpty());
                         if (h < HAMMER_RUNS-1) {
                             Thread.sleep(random.nextInt(10));
                         }

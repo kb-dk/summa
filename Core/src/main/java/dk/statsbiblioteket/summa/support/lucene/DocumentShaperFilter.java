@@ -15,27 +15,26 @@
 package dk.statsbiblioteket.summa.support.lucene;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.util.SimpleTriple;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.util.SimpleTriple;
+import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extends embedded Lucene documents with transient or persistent meta-data
@@ -77,7 +76,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
      * CONF_KEYS-list.
      * </p><p>
      * Optional. If the length of the list is 0, $0 (a direct copy of the match)
-     *           will be used for each regexp.
+     * will be used for each regexp.
      */
     public static final String CONF_FIELD_TEMPLATES = "document.field.templates";
     public static final String DEFAULT_FIELD_TEMPLATE = "$0";
@@ -92,7 +91,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
      * ${field}   the name of the field derived from the field template.
      * </p><p>
      * Optional. If the length of the list is 0, ${content} (a direct copy of
-     *           the content) will be used for each regexp.
+     * the content) will be used for each regexp.
      */
     public static final String CONF_FIELD_CONTENTS = "document.field.contents";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -103,8 +102,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
     private List<SimpleTriple<Pattern, String, String>> keys;
     private LuceneIndexDescriptor descriptor;
 
-    public DocumentShaperFilter (Configuration conf) throws
-                                                        ConfigurationException {
+    public DocumentShaperFilter(Configuration conf) throws ConfigurationException {
         super(conf);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         List<String> patterns = conf.getStrings(CONF_PATTERNS);
@@ -112,14 +110,12 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
                                  conf.getStrings(CONF_FIELD_TEMPLATES) :
                                  new ArrayList<String>(0);
         List<String> contents = conf.valueExists(CONF_FIELD_CONTENTS) ?
-                                 conf.getStrings(CONF_FIELD_CONTENTS) :
-                                 new ArrayList<String>(0);
+                                conf.getStrings(CONF_FIELD_CONTENTS) :
+                                new ArrayList<String>(0);
         if (templates.size() != patterns.size()) {
             log.debug(String.format(
-                    "Creating default templates as the length of the "
-                    + "patterns-list was %d and the length of the "
-                    + "templates-list was %d",
-                    patterns.size(), templates.size()));
+                    "Creating default templates as the length of the patterns-list was %d and the length of the "
+                    + "templates-list was %d", patterns.size(), templates.size()));
             templates = new ArrayList<String>(patterns.size());
             //noinspection UnusedDeclaration
             for (String pattern : patterns) {
@@ -128,23 +124,19 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
         }
         if (contents.size() != patterns.size()) {
             log.debug(String.format(
-                    "Creating default contents as the length of the"
-                    + " patterns-list was %d and the length of the "
-                    + "contents-list was %d",
-                    patterns.size(), contents.size()));
+                    "Creating default contents as the length of the patterns-list was %d and the length of the "
+                    + "contents-list was %d", patterns.size(), contents.size()));
             contents = new ArrayList<String>(patterns.size());
             //noinspection UnusedDeclaration
             for (String pattern : patterns) {
                 contents.add(DEFAULT_FIELD_CONTENT);
             }
         }
-        keys = new ArrayList<SimpleTriple<
-                Pattern, String, String>>(patterns.size());
-        for (int i = 0 ; i < patterns.size() ; i++) {
+        keys = new ArrayList<SimpleTriple<Pattern, String, String>>(patterns.size());
+        for (int i = 0; i < patterns.size(); i++) {
             keys.add(new SimpleTriple<Pattern, String, String>(
                     Pattern.compile(patterns.get(i)), templates.get(i),
-                    DEFAULT_FIELD_CONTENT.equals(contents.get(i)) ?
-                    null : contents.get(i)));
+                    DEFAULT_FIELD_CONTENT.equals(contents.get(i)) ? null : contents.get(i)));
         }
         log.debug(String.format("Created filter with %d keys", keys.size()));
     }
@@ -155,33 +147,26 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
         if (docO == null) {
             throw new PayloadException("No Lucene Document", payload);
         }
-        Document doc = (Document)docO;
-        for (SimpleTriple<Pattern, String, String> keyPair: keys) {
-            for (Map.Entry<String, Serializable> entry:
-                    payload.getData().entrySet()) {
-                assign(payload.getRecord(), doc, keyPair,
-                       entry.getKey(),entry.getValue());
+        Document doc = (Document) docO;
+        for (SimpleTriple<Pattern, String, String> keyPair : keys) {
+            for (Map.Entry<String, Serializable> entry : payload.getData().entrySet()) {
+                assign(payload.getRecord(), doc, keyPair, entry.getKey(), entry.getValue());
             }
         }
         return doc;
     }
 
     @Override
-    public boolean finish(Payload payload, Document doc, boolean success)
-                                                       throws PayloadException {
+    public boolean finish(Payload payload, Document doc, boolean success) throws PayloadException {
         return success;
     }
 
     @Override
-    public boolean processRecord(Record record, boolean origin, Document doc)
-                                                       throws PayloadException {
-        for (SimpleTriple<Pattern, String, String> keyPair: keys) {
-            if (record != null &&
-                record.getMeta() != null) {
-                for (Map.Entry<String, String> entry:
-                        record.getMeta().entrySet()) {
-                    assign(record, doc, keyPair,
-                           entry.getKey(), entry.getValue());
+    public boolean processRecord(Record record, boolean origin, Document doc) throws PayloadException {
+        for (SimpleTriple<Pattern, String, String> keyPair : keys) {
+            if (record != null && record.getMeta() != null) {
+                for (Map.Entry<String, String> entry : record.getMeta().entrySet()) {
+                    assign(record, doc, keyPair, entry.getKey(), entry.getValue());
                 }
             }
         }
@@ -189,36 +174,29 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
     }
 
     // False if not assigned
-    private boolean assign(Record record, Document document,
-                           SimpleTriple<Pattern, String, String> key,
-                           String metaKey, Object content)
-                                                       throws PayloadException {
+    private boolean assign(Record record, Document document, SimpleTriple<Pattern, String, String> key,
+                           String metaKey, Object content) throws PayloadException {
         if (content == null) {
             return false;
         }
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "assign(%s, ..., (%s, %s, %s), %s, %s) called",
-                    record, key.getKey(), key.getValue1(), key.getValue2(),
-                    metaKey, content.toString()));
+                    record, key.getKey(), key.getValue1(), key.getValue2(), metaKey, content.toString()));
         }
         String fieldName = getFieldName(key.getKey(), key.getValue1(), metaKey);
         if (fieldName == null) {
             return false;
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                    "Assigning field '%s' with content '%s' to %s with "
-                    + "content-template '%s'",
-                    fieldName, content, record,
-                    key.getValue2() == null ? DEFAULT_FIELD_CONTENT :
-                    key.getValue2()));
+            log.trace(String.format("Assigning field '%s' with content '%s' to %s with content-template '%s'",
+                                    fieldName, content, record,
+                                    key.getValue2() == null ? DEFAULT_FIELD_CONTENT : key.getValue2()));
         }
         String c = content.toString();
         if (c == null) {
-            log.debug(String.format(
-                    "Null from content.toString() in assign for field '%s' to " 
-                    + "%s", fieldName, record));
+            log.debug(String.format("Null from content.toString() in assign for field '%s' to %s",
+                                    fieldName, record));
             return false;
         }
         if ("".equals(c)) {
@@ -232,25 +210,24 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
                     replace("${key}", metaKey).
                     replace("${field}", fieldName);
             if (log.isTraceEnabled()) {
-                log.trace("Produced new content for field "
-                          + fieldName + ": " + c);
+                log.trace("Produced new content for field " + fieldName + ": " + c);
             }
         }
         try {
             addFieldToDocument(descriptor, document, fieldName, c, 1.0F);
         } catch (IndexServiceException e) {
-            throw new PayloadException(String.format(
-                    "Unable to add field '%s' with content '%s' to document for"
-                    + " %s",
-                    fieldName, content.toString(), record), e);
+            throw new PayloadException(String.format("Unable to add field '%s' with content '%s' to document for %s",
+                                                     fieldName, content.toString(), record), e);
         }
         return true;
     }
 
     private StringBuffer buffer = new StringBuffer(50);
+
     /**
      * If the key matches the pattern, template is used to extract the fieldName
      * which is then returned. Else null.
+     *
      * @param pattern  used with the key.
      * @param template used for generating the result.
      * @param key      tested against pattern.
@@ -266,9 +243,8 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
         matcher.appendReplacement(buffer, template);
         String newText = buffer.toString().substring(matchPos);
         if (newText == null || "".equals(newText)) {
-            log.warn(String.format(
-                    "'%s' matched '%s' but the template '%s' did not give any "
-                    + "result", pattern.pattern(), template, key));
+            log.warn(String.format("'%s' matched '%s' but the template '%s' did not give any result",
+                                   pattern.pattern(), template, key));
             return null;
         }
         return newText;

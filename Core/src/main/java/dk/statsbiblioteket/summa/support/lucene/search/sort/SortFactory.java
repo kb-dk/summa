@@ -71,7 +71,6 @@ public class SortFactory {
     private Sort normalSort;
     private Sort reverseSort;
     private COMPARATOR comparator;
-    private int buffer;
     private IndexReader lastReader = null;
 
     /**
@@ -85,13 +84,13 @@ public class SortFactory {
      * @param sortLanguage the language for sorting.
      * @param comparators  a map of existing comparators for fields.
      */
+    @SuppressWarnings("UnusedParameters")
     public SortFactory(COMPARATOR comparator, int buffer, String field, String sortLanguage,
                       Map<String, ReusableSortComparator> comparators) {
         this.field = field;
         this.sortLanguage = sortLanguage;
         this.comparators = comparators;
         this.comparator = comparator;
-        this.buffer = buffer;
     }
 
     /**

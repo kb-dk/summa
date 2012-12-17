@@ -171,7 +171,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 throw new ConfigurationException("Could not extract sub configurations", e);
             }
         }
-        if (changelings.size() == 0) {
+        if (changelings.isEmpty()) {
             throw new ConfigurationException(
                 "Unable to extract any transformation setups (key: " + CONF_SETUPS + ") or a XSLT location (key: "
                 + CONF_XSLT + ") from configuration");

@@ -14,19 +14,14 @@
  */
 package dk.statsbiblioteket.summa.search.api;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.Serializable;
-import java.io.StringWriter;
-
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.*;
 
 /**
  * A collection of Responses with auto-merging: If a Response with name A is
@@ -94,13 +89,13 @@ public class ResponseCollection extends TimerImpl
     public String getTiming() {
         StringBuffer timing = new StringBuffer(500);
         timing.append(super.getTiming()); // Collection-level timing
-        if (responses != null && responses.size() > 0) {
+        if (responses != null && !responses.isEmpty()) {
             for (Map.Entry<String, Response> entry: responses.entrySet()) {
                 collectTiming(timing, entry.getValue());
             }
         }
 
-        if (tran != null && tran.size() > 0) {
+        if (tran != null && !tran.isEmpty()) {
             for (Map.Entry<String, Object> entry: tran.entrySet()) {
                 collectTiming(timing, entry.getValue());
             }

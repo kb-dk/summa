@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.control.service.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * Send a kill command to the service
@@ -35,6 +35,7 @@ public class KillCommand extends Command {
         this.address = serviceAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         ConnectionContext<Service> connCtx = null;
 

@@ -26,6 +26,7 @@ import java.util.List;
 /**
  * Interface of a remote writable storage, this interface have a sibling in
  * {@link RemoteReadableStorage}.
+ *
  * @see WritableStorage
  */
 @QAInfo(author = "mke",
@@ -34,48 +35,58 @@ import java.util.List;
 public interface RemoteWritableStorage extends WritableStorage, Remote {
     /**
      * Insert a record into storage.
-     * @see WritableStorage
+     *
      * @param record Record to flush into storage.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see WritableStorage
      */
+    @Override
     void flush(Record record) throws RemoteException;
 
     /**
      * Insert a list of records into storage.
-     * @see WritableStorage
+     *
      * @param records A list of records to insert into storage.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see WritableStorage
      */
+    @Override
     void flushAll(List<Record> records) throws RemoteException;
 
     /**
      * Closes the storage.
-     * @see WritableStorage
+     *
      * @throws RemoteException If error occur when using the remote storage.
+     * @see WritableStorage
      */
+    @Override
     void close() throws RemoteException;
 
     /**
      * Clears a specific base from the storage.
-     * @see WritableStorage
+     *
      * @param base The base to clear.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see WritableStorage
      */
+    @Override
     void clearBase(String base) throws RemoteException;
 
     /**
      * Executes a batch job on a specific set of records in the storage. Records
      * can be specified by minimum and maximum MTime as well as base and a set
      * of {@link QueryOptions}.
-     * @see WritableStorage
-     * @param jobName The batch job name.
-     * @param base The base to execute batch job on.
+     *
+     * @param jobName  The batch job name.
+     * @param base     The base to execute batch job on.
      * @param minMtime The minimum MTime to execute batch job on.
      * @param maxMtime The maximum MTime to execute batch job on.
-     * @param options The query options.
+     * @param options  The query options.
      * @return Result of the batch job execution.
      * @throws RemoteException If error occur when using the remote storage.
+     * @see WritableStorage
      */
+    @Override
     String batchJob(String jobName, String base, long minMtime, long maxMtime,
                     QueryOptions options) throws RemoteException;
 }

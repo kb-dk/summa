@@ -14,20 +14,19 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.io.IOException;
-
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -111,24 +110,30 @@ public class RelativesFilterTest extends TestCase implements ObjectFilter {
     /* Feeder for the Filter */
     private List<Record> records = new ArrayList<Record>(10);
 
+    @Override
     public boolean hasNext() {
-        return records.size() > 0;
+        return !records.isEmpty();
     }
+    @Override
     public Payload next() {
         return new Payload(records.remove(0));
     }
+    @Override
     public void remove() {
         // Nada
     }
+    @Override
     public void setSource(Filter filter) {
         // Nada
     }
+    @Override
     public boolean pump() throws IOException {
         if (hasNext()) {
             next().close();
         }
         return hasNext();
     }
+    @Override
     public void close(boolean success) {
         // Nada
     }

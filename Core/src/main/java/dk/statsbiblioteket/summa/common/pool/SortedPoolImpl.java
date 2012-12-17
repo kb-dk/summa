@@ -14,25 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.ObjectInputStream;
-import java.io.UnsupportedEncodingException;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.LineReader;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Comparator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.LineReader;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Partial implementation of SortedPool to provide open and save.
@@ -116,11 +108,13 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         return getPoolPersistenceFile(VALUES_POSTFIX);
     }
 
+    @Override
     public File getPoolPersistenceFile(String postfix) {
         checkBase();
         return getPoolPersistenceFile(location, poolName, postfix);
     }
 
+    @Override
     public File getPoolPersistenceFile(File location, String poolName,
                                        String postfix) {
         return new File(location, poolName + postfix);
@@ -412,6 +406,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      *         exists in the pool, (-position)-1 is returned.
      * @see SortedPool#insert
      */
+    @Override
     public int insert(E value) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + value + "' to pool '" + poolName + "'");
@@ -429,6 +424,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     /**
      * Sorts the values and removes duplicates.
      */
+    @Override
     public void cleanup() {
         log.trace("cleanup called");
         long startTime = System.currentTimeMillis();
@@ -457,16 +453,19 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     protected abstract void sort();
 
     // Default comparator
+    @Override
     public int compare(E o1, E o2) {
         //noinspection unchecked
         return comparator == null ? o1.compareTo(o2) :
                comparator.compare(o1, o2);
     }
 
+    @Override
     public String getName() {
         return poolName;
     }
 
+    @Override
     public boolean dirtyAdd(E value) {
         add(size(), value);
         return true;
@@ -474,15 +473,18 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
 
     /* List interface */
 
+    @Override
     public boolean add(E e) {
         return insert(e) >= 0;
     }
 
+    @Override
     public int indexOf(E value) {
         int index = Collections.binarySearch(this, value, this);
         return index >= 0 ? index : -1;
     }
 
+    @Override
     public int indexOf(Object o) {
         try {
             //noinspection unchecked
@@ -492,15 +494,18 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         }
     }
 
+    @Override
     public boolean contains(Object o) {
         return indexOf(o) >= 0;
     }
 
     // We only have uniques in a sorted pool
+    @Override
     public int lastIndexOf(Object o) {
         return indexOf(o);
     }
 
+    @Override
     public boolean remove(Object o) {
         try {
             //noinspection unchecked

@@ -50,6 +50,7 @@ public abstract class ResourceListener implements Runnable {
         setActive(active);
     }
 
+    @Override
     public void run() {
         log.trace("Run entered");
         while (active && interval >= 0) {

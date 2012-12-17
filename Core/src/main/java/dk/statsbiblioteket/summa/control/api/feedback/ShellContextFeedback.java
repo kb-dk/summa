@@ -16,8 +16,8 @@ package dk.statsbiblioteket.summa.control.api.feedback;
 
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 
-import java.util.List;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * A {@link Feedback} bridging the messages into a {@link ShellContext}.
@@ -30,12 +30,14 @@ public class ShellContextFeedback implements Feedback {
         this.ctx = ctx;
     }
 
+    @Override
     public void putMessages(List<Message> messages) throws IOException {
         for (Message msg : messages) {
             putMessage(msg);
         }
     }
 
+    @Override
     public void putMessage(Message message) throws IOException {
         switch (message.getMessageType()) {
             case Message.MESSAGE_PLAIN :

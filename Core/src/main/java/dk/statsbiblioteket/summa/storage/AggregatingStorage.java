@@ -93,47 +93,66 @@ public class AggregatingStorage extends StorageBase {
      * sub configuration.
      */
     public static final String CONF_SUB_STORAGE_CONFIG = "summa.storage.substorage.config";
-    /** ID for unknown base keys. */
+    /**
+     * ID for unknown base keys.
+     */
     public static final long UNKNOWN_BASE_KEY = -1;
 
     /**
      * Iterator keys time out after 24 hours of inactivity.
      */
     public static final long ITERATOR_TIMEOUT = 86400000; // 24h
-    /** Map containing all readers. */
+    /**
+     * Map containing all readers.
+     */
     private HashMap<String, StorageReaderClient> readers;
-    /** List of all record getters. Note that the pattern can be null */
+    /**
+     * List of all record getters. Note that the pattern can be null
+     */
     private List<SimplePair<Pattern, StorageReaderClient>> recordGetters;
-    /** Map containing all writers. */
+    /**
+     * Map containing all writers.
+     */
     private HashMap<String, StorageWriterClient> writers;
-    /** Map of iterator keys. */
+    /**
+     * Map of iterator keys.
+     */
     private HashMap<Long, IteratorContext> iterators;
-    /** TODO . */
+    /**
+     * TODO .
+     */
     private IteratorContextReaper reaper;
-    /** Local log instance. */
+    /**
+     * Local log instance.
+     */
     private Log log;
 
     /**
      * Merging context class.
      */
     private class MergingContext extends IteratorContext {
-        /** Readable storage list. */
+        /**
+         * Readable storage list.
+         */
         private ReadableStorage[] readerList;
-        /** Record buffer. */
+        /**
+         * Record buffer.
+         */
         private Record[] recBuffer;
-        /** List of iterator keys. */
+        /**
+         * List of iterator keys.
+         */
         private long[] iterKeys;
 
         /**
          * Create a MergingContext.
          *
-         * @param mtime modified time.
-         * @param opts query options.
+         * @param mtime      modified time.
+         * @param opts       query options.
          * @param lastAccess lastAccess.
          * @throws IOException if error occurred.
          */
-        public MergingContext(long mtime, QueryOptions opts,
-                              long lastAccess) throws IOException {
+        public MergingContext(long mtime, QueryOptions opts, long lastAccess) throws IOException {
             super(null, null, mtime, opts, lastAccess);
 
             log.debug("Creating merging iterator over all sub storages");
@@ -148,20 +167,15 @@ public class AggregatingStorage extends StorageBase {
             iterKeys = new long[readers.size()];
 
             int counter = 0;
-            for (Map.Entry<String, StorageReaderClient> entry
-                    : readers.entrySet()) {
+            for (Map.Entry<String, StorageReaderClient> entry : readers.entrySet()) {
                 ReadableStorage reader = entry.getValue();
                 String readerBase = entry.getKey();
-                IteratorContext subIter = new IteratorContext(
-                        reader, readerBase, mtime, opts, lastAccess);
+                IteratorContext subIter = new IteratorContext(reader, readerBase, mtime, opts, lastAccess);
                 long subKey = subIter.getKey();
-                log.debug("Iterkey for '" + reader.toString() + "' is '"
-                                                                      + subKey);
+                log.debug("Iterkey for '" + reader.toString() + "' is '" + subKey);
                 // TODO Better collision handling
                 if (iterators.containsKey(subKey)) {
-                    throw new RuntimeException(String.format(
-                            "Internal error. Iterator key collision '%s'",
-                            subKey));
+                    throw new RuntimeException(String.format("Internal error. Iterator key collision '%s'", subKey));
                 }
 
                 // Calculate the merger's iterKey as the sum the children's
@@ -234,7 +248,7 @@ public class AggregatingStorage extends StorageBase {
                 }
             } catch (NoSuchElementException e) {
                 // Iterator is depleated
-                if (result.size() == 0) {
+                if (result.isEmpty()) {
                     throw new NoSuchElementException();
                 }
             }
@@ -245,6 +259,7 @@ public class AggregatingStorage extends StorageBase {
         /**
          * Returns the next record from the readerOffset reader in the reader
          * list.
+         *
          * @param readerOffset The offset into the readable storage list.
          * @return The next record.
          * @throws IOException If error occur while fetching record.
@@ -255,6 +270,7 @@ public class AggregatingStorage extends StorageBase {
 
         /**
          * Initialize record buffer.
+         *
          * @throws IOException If error occur communicating with storage.
          */
         private void initRecBuffer() throws IOException {
@@ -282,32 +298,47 @@ public class AggregatingStorage extends StorageBase {
      * Iterator context class.
      */
     private static class IteratorContext {
-        /** Readable storage. */
+        /**
+         * Readable storage.
+         */
         protected ReadableStorage reader;
-        /** The base. */
+        /**
+         * The base.
+         */
         protected String base;
-        /** Last modified time. */
+        /**
+         * Last modified time.
+         */
         protected long mtime;
-        /** Private logger instance. */
+        /**
+         * Private logger instance.
+         */
         private Log log;
-        /** Query options used by this context. */
+        /**
+         * Query options used by this context.
+         */
         protected QueryOptions opts;
-        /** Last access time. */
+        /**
+         * Last access time.
+         */
         protected long lastAccess;
-        /** The iterator key. */
-        protected long iterKey=0;
+        /**
+         * The iterator key.
+         */
+        protected long iterKey = 0;
 
         /**
          * Creates an iterator context.
-         * @param reader The readable storage.
-         * @param base The base in storage.
-         * @param mtime The modification time.
-         * @param opts The options.
+         *
+         * @param reader     The readable storage.
+         * @param base       The base in storage.
+         * @param mtime      The modification time.
+         * @param opts       The options.
          * @param lastAccess The last access time.
          * @throws IOException If error occur.
          */
-        public IteratorContext(ReadableStorage reader, String base, long mtime, QueryOptions opts, long lastAccess)
-                throws IOException {
+        public IteratorContext(ReadableStorage reader, String base, long mtime, QueryOptions opts,
+                               long lastAccess) throws IOException {
             this.reader = reader;
             this.base = base;
             this.mtime = mtime;
@@ -332,6 +363,7 @@ public class AggregatingStorage extends StorageBase {
 
         /**
          * Return a list of {@code madRecords} records.
+         *
          * @param maxRecords Number of records.
          * @return A list of at most {@code maxRecords} records.
          * @throws IOException If error occur while communicating with storage.
@@ -342,6 +374,7 @@ public class AggregatingStorage extends StorageBase {
 
         /**
          * Return the iterator key.
+         *
          * @return the iterator key.
          */
         public long getKey() {
@@ -355,6 +388,7 @@ public class AggregatingStorage extends StorageBase {
 
         /**
          * Return the last access time.
+         *
          * @return Last access time.
          */
         public long accessed() {
@@ -363,6 +397,7 @@ public class AggregatingStorage extends StorageBase {
 
         /**
          * Return true if this iterator context is time out.
+         *
          * @param now Time stamp.
          * @return True if this iterator context is timed out, false otherwise.
          */
@@ -375,19 +410,30 @@ public class AggregatingStorage extends StorageBase {
      * Iterator Context Reaper class.
      */
     private static class IteratorContextReaper implements Runnable {
-        /** Map from iterator key to iterator contexts. */
+        /**
+         * Map from iterator key to iterator contexts.
+         */
         private Map<Long, IteratorContext> iterators;
-        /** Local log instance. */
+        /**
+         * Local log instance.
+         */
         private Log log;
-        /** True if this may run. */
+        /**
+         * True if this may run.
+         */
         private boolean mayRun;
-        /** Private thread. */
+        /**
+         * Private thread.
+         */
         private Thread thread;
-        /** Sleep time. */
+        /**
+         * Sleep time.
+         */
         public static final int SLEEP_TIME = 1000 * 60;
 
         /**
          * Creates an iterator context.
+         *
          * @param iterators A map of iterator keys and iterator context.
          */
         public IteratorContextReaper(Map<Long, IteratorContext> iterators) {
@@ -486,7 +532,7 @@ public class AggregatingStorage extends StorageBase {
             throw new IOException("", e);
         }
 
-        if (subConfs.size() == 0) {
+        if (subConfs.isEmpty()) {
             log.warn("No sub storages configured");
         }
 
@@ -505,21 +551,21 @@ public class AggregatingStorage extends StorageBase {
 
             try {
                 bases = subConf.getStrings(CONF_SUB_STORAGE_BASES);
-                if (bases.size() == 0) {
+                if (bases.isEmpty()) {
                     log.error("No bases defined in sub configuration");
                     continue;
                 }
             } catch (NullPointerException e) {
                 throw new Configurable.ConfigurationException(
-                    CONF_SUB_STORAGE_BASES + " must be defined for each sub storage");
+                        CONF_SUB_STORAGE_BASES + " must be defined for each sub storage");
             }
 
             StorageReaderClient reader = new StorageReaderClient(subConf);
             StorageWriterClient writer = new StorageWriterClient(subConf);
 
-            Pattern pattern = subConf.valueExists(CONF_SUB_STORAGE_ID_PATTERN)
-                              ? Pattern.compile(subConf.getString(CONF_SUB_STORAGE_ID_PATTERN))
-                              : null;
+            Pattern pattern = subConf.valueExists(CONF_SUB_STORAGE_ID_PATTERN) ?
+                              Pattern.compile(subConf.getString(CONF_SUB_STORAGE_ID_PATTERN)) :
+                              null;
             log.debug("Adding recordGetter for pattern '" + pattern + "'");
             recordGetters.add(new SimplePair<Pattern, StorageReaderClient>(pattern, reader));
             for (String base : bases) {
@@ -549,8 +595,9 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns a iterator key over records modified after a given time.
-     * @param time Earliest time stamp we want records from.
-     * @param base The base in storage
+     *
+     * @param time    Earliest time stamp we want records from.
+     * @param base    The base in storage
      * @param options The query options.
      * @return An iterator key.
      * @throws IOException If error occur while communicating with storage.
@@ -595,6 +642,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Return last modification time for a given base.
+     *
      * @param base The base in storage.
      * @return Last modification time.
      * @throws IOException If error occur while communicating with storage.
@@ -609,7 +657,7 @@ public class AggregatingStorage extends StorageBase {
          * sub storages */
         if (base == null) {
             long mtime = 0;
-            for (Map.Entry<String, StorageReaderClient> entry: readers.entrySet()) {
+            for (Map.Entry<String, StorageReaderClient> entry : readers.entrySet()) {
                 StorageReaderClient reader = entry.getValue();
                 String readerBase = entry.getKey();
                 mtime = Math.max(mtime, reader.getModificationTime(readerBase));
@@ -631,7 +679,8 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns a list of records.
-     * @param ids A list of IDs on the records wanted.
+     *
+     * @param ids     A list of IDs on the records wanted.
      * @param options The query options to select records from.
      * @return A list of records.
      * @throws IOException If error occur while communicating with storage.
@@ -645,13 +694,13 @@ public class AggregatingStorage extends StorageBase {
         }
 
         List<Record> result = new ArrayList<Record>(ids.size());
-        List<SimplePair<StorageReaderClient, List<String>>> batches =
-            new ArrayList<SimplePair<StorageReaderClient, List<String>>>(recordGetters.size());
+        List<SimplePair<StorageReaderClient, List<String>>> batches = new ArrayList<SimplePair<StorageReaderClient,
+                List<String>>>(recordGetters.size());
         List<String> unassigned = new ArrayList<String>(ids);
-        for (SimplePair<Pattern, StorageReaderClient> getter: recordGetters) {
+        for (SimplePair<Pattern, StorageReaderClient> getter : recordGetters) {
             List<String> assigned = new ArrayList<String>();
             if (getter.getKey() != null) {
-                for (int i = unassigned.size()-1 ; i >= 0 ; i--) {
+                for (int i = unassigned.size() - 1; i >= 0; i--) {
                     String id = unassigned.get(i);
                     if (getter.getKey().matcher(id).matches()) {
                         log.trace("getRecords: ID '" + id + "' matched a StorageReaderClient");
@@ -664,7 +713,7 @@ public class AggregatingStorage extends StorageBase {
         }
         // Records in unassigned never found a fitting StorageReaderClient, so we assign to all SRCs without a pattern
         boolean nullFound = false;
-        for (int i = 0 ; i < recordGetters.size() ; i++) {
+        for (int i = 0; i < recordGetters.size(); i++) {
             if (recordGetters.get(i).getKey() == null) {
                 batches.get(i).getValue().addAll(unassigned);
                 nullFound = true;
@@ -677,8 +726,8 @@ public class AggregatingStorage extends StorageBase {
         // FIXME: This should be parallized
         log.trace("getRecords: Resolved all StorageReaderClients (" + unassigned.size() + " IDs did not have explicit "
                   + "pattern match). Executing sequential requests for records");
-        for (SimplePair<StorageReaderClient, List<String>> batch: batches) {
-            if (batch.getValue().size() != 0) {
+        for (SimplePair<StorageReaderClient, List<String>> batch : batches) {
+            if (!batch.getValue().isEmpty()) {
                 List<Record> recs = batch.getKey().getRecords(batch.getValue(), options);
                 result.addAll(recs);
             }
@@ -686,18 +735,19 @@ public class AggregatingStorage extends StorageBase {
 
         //noinspection DuplicateStringLiteralInspection
         if (ids.size() == 1) {
-            log.debug("Finished getRecords(" + ids.get(0)+ ", ...) -> " + result.size() + " records in "
-                      + (System.currentTimeMillis() - startTime));
+            log.debug("Finished getRecords(" + ids.get(0) + ", ...) -> " + result.size() + " records in " + (
+                    System.currentTimeMillis() - startTime));
         } else {
-            log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in "
-                      + (System.currentTimeMillis() - startTime));
+            log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in " + (
+                    System.currentTimeMillis() - startTime));
         }
         return result;
     }
 
     /**
      * Return a single record.
-     * @param id The record id.
+     *
+     * @param id      The record id.
      * @param options The query options to select records from.
      * @return A record with the given id.
      * @throws IOException If error occur while communication with storage.
@@ -708,7 +758,7 @@ public class AggregatingStorage extends StorageBase {
             log.trace("getRecord('" + id + "', " + options + ")");
         }
         List<Record> records = getRecords(Arrays.asList(id), options);
-        if (records.size() == 0) {
+        if (records.isEmpty()) {
             log.debug("No such record '" + id + "'");
             return null;
         }
@@ -721,6 +771,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns the next record from the iterator.
+     *
      * @param iteratorKey The iterator key.
      * @return The next record from the iterator.
      * @throws IOException If error occur while communication with storage.
@@ -750,9 +801,9 @@ public class AggregatingStorage extends StorageBase {
      * Get maxRecords records associated with given iterator.
      *
      * @param iteratorKey the key given by {@link ReadableStorage}.
-     * @param maxRecords max number of records returned.
+     * @param maxRecords  max number of records returned.
      * @return List containing max number of records, associated to the iterator
-     * key.
+     *         key.
      * @throws IOException if error occurred when fetching elements.
      */
     @Override
@@ -782,7 +833,8 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Flushes a record into the storage, taking any options into consideration.
-     * @param record The record to flush.
+     *
+     * @param record  The record to flush.
      * @param options The options to take into consideration.
      * @throws IOException If error occur while communication with storage.
      */
@@ -809,6 +861,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Flushes a list of records into the storage.
+     *
      * @param records A list of records to flush into the storage.
      * @throws IOException If error occur while communication with storage.
      */
@@ -848,6 +901,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Clears all records for a given base.
+     *
      * @param base The record base to clear.
      * @throws IOException If error occur while communication with storage.
      */
@@ -868,19 +922,20 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Runs a batch jobs on storage.
-     * @param jobName The batch job name.
-     * @param base The records base.
+     *
+     * @param jobName  The batch job name.
+     * @param base     The records base.
      * @param minMtime The minimum modification time on which batch job is
-     * runned.
+     *                 runned.
      * @param maxMtime The maximum modification time on which batch job is
-     * runned.
-     * @param options The query options.
+     *                 runned.
+     * @param options  The query options.
      * @return The result of the batch job.
      * @throws IOException If error occur while communication with storage.
      */
     @Override
-    public String batchJob(String jobName, String base, long minMtime, long maxMtime, QueryOptions options)
-                                                            throws IOException {
+    public String batchJob(String jobName, String base, long minMtime, long maxMtime,
+                           QueryOptions options) throws IOException {
         log.debug(String.format("Batch job '%s' on '%s", jobName, base));
 
         if (base != null) {
@@ -909,6 +964,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns a storage reader client for a specific base.
+     *
      * @param base The records base.
      * @return A storage reader client.
      */
@@ -918,6 +974,7 @@ public class AggregatingStorage extends StorageBase {
 
     /**
      * Returns a storage writer client for a specific base.
+     *
      * @param base The records base.
      * @return A storage writer client.
      */

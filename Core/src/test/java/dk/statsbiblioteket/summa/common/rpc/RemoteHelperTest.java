@@ -16,11 +16,11 @@ package dk.statsbiblioteket.summa.common.rpc;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+import java.rmi.Naming;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.rmi.Naming;
 import java.rmi.server.UnicastRemoteObject;
-import java.io.IOException;
 
 /**
  *
@@ -80,14 +80,17 @@ public class RemoteHelperTest extends TestCase {
                                                REGISTRY_PORT, SERVICE_NAME);
         }
 
+        @Override
         public String ping() throws RemoteException {
             return "Pong";
         }
 
+        @Override
         public void throwException() throws RemoteException {
             throw new RuntimeException("Here you go - an exception!");
         }
 
+        @Override
         public void throwOOM() throws RemoteException {
             throw new OutOfMemoryError("Fake serverside OOM");
         }

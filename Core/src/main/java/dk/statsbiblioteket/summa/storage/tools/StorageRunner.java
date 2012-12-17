@@ -21,7 +21,6 @@ import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -33,8 +32,8 @@ import org.apache.commons.logging.LogFactory;
         author = "mke")
 public class StorageRunner {
 
-    private static MachineStats stats;
-    
+    public static final Boolean shutdown = false;
+
     /**
      * Create a new storage instance as defined by the configuration
      * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
@@ -43,6 +42,7 @@ public class StorageRunner {
      *
      * @param args ignored
      */
+    @SuppressWarnings({"CallToPrintStackTrace", "UnusedDeclaration"})
     public static void main (String[] args) {
         Log log = LogFactory.getLog(StorageRunner.class);
 
@@ -55,15 +55,15 @@ public class StorageRunner {
             Storage storage = StorageFactory.createStorage(conf);
             log.info("Storage is running in the background");
             try {
-                stats = new MachineStats(conf, "Storage");
+                MachineStats stats = new MachineStats(conf, "Storage");
             } catch (Exception e) {
                 log.warn("Failed to create machine stats. Not critical, but memory stats will not be logged", e);
             }
 
             // Block indefinitely (non-busy)
-            while(true) {
-                synchronized (conf) {
-                    conf.wait();
+            while (!shutdown) {
+                synchronized (shutdown) {
+                    shutdown.wait();
                 }
             }
         } catch (Throwable t) {

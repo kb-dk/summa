@@ -92,7 +92,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 Record rec = processedPayload.getRecord();
                 if (rec != null) {
                     msg += ", enclosed record : " + rec.toString(true);
-                    content = "\n" + "Record content:\n" + rec.getContentAsUTF8();
+                    content = "\nRecord content:\n" + rec.getContentAsUTF8();
                 } else {
                     msg += ", no enclosed record";
                 }

@@ -14,12 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.rmi.RemoteException;
-import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -27,6 +21,12 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test-class that takes a stream and transforms received data into Records.
@@ -57,6 +57,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         log.trace("DummyStreamToRecords uses data size " + dataSize);
     }
 
+    @Override
     public boolean hasNext() {
         try {
             refreshRecord();
@@ -66,6 +67,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         return record != null;
     }
 
+    @Override
     public void setSource(Filter source) {
         if (source instanceof ObjectFilter) {
             this.source = (ObjectFilter)source;
@@ -75,6 +77,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         }
     }
 
+    @Override
     public boolean pump() throws IOException {
         if (!hasNext()) {
             return false;
@@ -87,6 +90,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         return true;
     }
 
+    @Override
     public Payload next() {
         try {
             refreshRecord();
@@ -102,6 +106,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         }
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("No removal, okay?");
     }
@@ -130,6 +135,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
         } */
     }
 
+    @Override
     public void close(boolean success) {
         log.debug("Closing with success " + success);
         source.close(success);

@@ -14,19 +14,20 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
-import org.xml.sax.ext.EntityResolver2;
+import org.apache.commons.logging.LogFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.ext.EntityResolver2;
 
-import java.io.*;
-import java.util.Map;
-import java.util.HashMap;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Entity resolver for XHTML 1.0. Handles the named entities defined by the
@@ -86,11 +87,12 @@ public class SummaEntityResolver implements EntityResolver2 {
         log.debug(String.format(
                 "Finished creating SummaEntityResolver with %d resources",
                 this.resources.size()));
-        if (this.resources.size() == 0) {
+        if (this.resources.isEmpty()) {
             log.warn("No resources specified for the SummaEntityResolver");
         }
     }
 
+    @Override
     public InputSource getExternalSubset(String name, String baseURI)
                                               throws SAXException, IOException {
         //System.out.println("*** " + name + ", " + baseURI);
@@ -102,6 +104,7 @@ public class SummaEntityResolver implements EntityResolver2 {
         return null; // Just let the caller handle it
     }
 
+    @Override
     public InputSource resolveEntity(String name, String publicId,
                                      String baseURI, String systemId)
                                               throws SAXException, IOException {
@@ -124,6 +127,7 @@ public class SummaEntityResolver implements EntityResolver2 {
         return new InputSource(source.openStream());
     }
 
+    @Override
     public InputSource resolveEntity(String publicId, String systemId)
                                               throws SAXException, IOException {
 //        System.out.println("***2");

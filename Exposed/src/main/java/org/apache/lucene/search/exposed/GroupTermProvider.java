@@ -134,6 +134,7 @@ public class GroupTermProvider extends TermProviderImpl {
     return request;
   }
 
+  @Override
   public String getField(long ordinal) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
     return providers.get(providerIndex).
@@ -155,22 +156,26 @@ public class GroupTermProvider extends TermProviderImpl {
         ordinal - termOrdinalStarts[providerIndex];
   }
 
+  @Override
   public synchronized BytesRef getTerm(long ordinal) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
     return providers.get(providerIndex).
         getTerm(adjustOrdinal(ordinal, providerIndex));
   }
 
+  @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
     return providers.get(providerIndex).
         getDocsEnum(adjustOrdinal(ordinal, providerIndex), reuse);
   }
 
+  @Override
   public String getOrderedField(long indirect) throws IOException {
     return getField(getOrderedOrdinals().get((int)indirect));
   }
 
+  @Override
   public BytesRef getOrderedTerm(final long indirect) throws IOException {
     return indirect == -1 ? null :
         getTerm(getOrderedOrdinals().get((int)indirect));
@@ -182,14 +187,17 @@ public class GroupTermProvider extends TermProviderImpl {
    * @return The number of unique terms.
    * @throws IOException if the underlyind providers failed.
    */
+  @Override
   public long getUniqueTermCount() throws IOException {
     return getOrderedOrdinals().size();
   }
 
+  @Override
   public long getOrdinalTermCount() throws IOException {
     return termOrdinalStarts[termOrdinalStarts.length-1];
   }
 
+  @Override
   public long getMaxDoc() {
     return docIDStarts[docIDStarts.length-1];
   }
@@ -200,10 +208,12 @@ public class GroupTermProvider extends TermProviderImpl {
         "Cannot request a reader from a collection of readers");
   }
 
+  @Override
   public int getReaderHash() {
     return readerHash;
   }
 
+  @Override
   public int getRecursiveHash() {
     int hash = 0;
     for (TermProvider provider: providers) {
@@ -212,6 +222,7 @@ public class GroupTermProvider extends TermProviderImpl {
     return hash;
   }
 
+  @Override
   public PackedInts.Reader getOrderedOrdinals() throws IOException {
     return getOrderedOrdinals(null);
   }

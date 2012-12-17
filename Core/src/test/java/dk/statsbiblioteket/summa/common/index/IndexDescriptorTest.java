@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.w3c.dom.Node;
+
 import java.text.ParseException;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
-import org.w3c.dom.Node;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -39,10 +39,12 @@ public class IndexDescriptorTest extends TestCase {
     // TODO: Test configuration of freetext and summa_default
     // TODO: Test fall-back to summa_default on inheritance
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -92,10 +94,12 @@ public class IndexDescriptorTest extends TestCase {
                 new IndexDescriptor<IndexField<Object, Object, Object>>(
                         SIMPLE_DESCRIPTOR) {
 
+            @Override
             public IndexField<Object, Object, Object> createNewField() {
                 return new IndexField<Object, Object, Object>();
             }
 
+            @Override
             public IndexField<Object, Object, Object> createNewField(Node node)
                     throws ParseException {
                 return new IndexField<Object, Object, Object>(node, this);
@@ -191,10 +195,12 @@ public class IndexDescriptorTest extends TestCase {
     public void testEmpty() throws Exception {
         IndexDescriptor id = new IndexDescriptor(SIMPLE_DESCRIPTOR_EMPTY) {
 
+            @Override
             public IndexField createNewField() {
                 return new IndexField<Object, Object, Object>();
             }
 
+            @Override
             public IndexField createNewField(Node node) throws ParseException {
                 return new IndexField<Object, Object, Object>(node, this);
             }

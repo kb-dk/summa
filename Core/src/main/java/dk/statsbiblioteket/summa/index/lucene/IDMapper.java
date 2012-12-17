@@ -14,16 +14,16 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collection;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.Directory;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Maps from RecordIDs to LuceneIDs for a given Lucene Index. The RecordIDs must
@@ -114,41 +114,53 @@ public class IDMapper implements Map<String, Integer> {
 
     /* Map interface methods */
 
+    @Override
     public int size() {
         return recordIDs.size();
     }
+    @Override
     public boolean isEmpty() {
         return recordIDs.isEmpty();
     }
+    @Override
     public boolean containsKey(Object key) {
         return recordIDs.containsKey(key);
     }
+    @Override
     public boolean containsValue(Object value) {
         return recordIDs.containsValue(value);
     }
+    @Override
     public Integer get(Object key) {
         return recordIDs.get(key);
     }
+    @Override
     public Integer put(String key, Integer value) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("put(" + key + ", " + value + ") called");
         return recordIDs.put(key, value);
     }
+    @Override
     public Integer remove(Object key) {
         return recordIDs.remove(key);
     }
+    @Override
     public void putAll(Map<? extends String, ? extends Integer> m) {
         recordIDs.putAll(m);
     }
+    @Override
     public void clear() {
         recordIDs.clear();
     }
+    @Override
     public Set<String> keySet() {
         return recordIDs.keySet();
     }
+    @Override
     public Collection<Integer> values() {
         return recordIDs.values();
     }
+    @Override
     public Set<Entry<String, Integer>> entrySet() {
         return recordIDs.entrySet();
     }

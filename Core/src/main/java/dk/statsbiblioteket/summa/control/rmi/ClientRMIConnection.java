@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.control.rmi;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -123,6 +123,7 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
      * @return The ID of this client.
      * @throws RemoteException If this call fails.
      */
+    @Override
     public String getId() throws RemoteException;
 
     /**

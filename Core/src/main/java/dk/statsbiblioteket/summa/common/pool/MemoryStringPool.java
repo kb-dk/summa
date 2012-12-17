@@ -19,9 +19,7 @@
 package dk.statsbiblioteket.summa.common.pool;
 
 import com.ibm.icu.text.Collator;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.pool.StringConverter;
 
 /**
  * Simple implementation of Strings with MemoryPool.
@@ -44,9 +42,11 @@ public class MemoryStringPool extends MemoryPool<String> implements
 
     /* Mutators */
 
+    @Override
     public Collator getCollator() {
         return collator;
     }
+    @Override
     public void setCollator(Collator collator) {
         this.collator = collator;
     }

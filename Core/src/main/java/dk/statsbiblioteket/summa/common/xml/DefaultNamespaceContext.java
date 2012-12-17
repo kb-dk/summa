@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.XMLConstants;
-import java.util.*;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
+import java.util.*;
 
 /**
  * For reasons beyond the frontiers of human intelligens, the XML api in JAVA only provide
@@ -102,6 +102,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
     }
 
 
+    @Override
     public String getNamespaceURI(String prefix) {
         if (prefix == null) { throw new IllegalArgumentException(); }
 
@@ -120,6 +121,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
     }
 
     
+    @Override
     public String getPrefix(String namespaceURI) {
         if (namespaceURI == null){ throw new IllegalArgumentException(); }
 
@@ -133,6 +135,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
         }
     }
 
+    @Override
     public Iterator getPrefixes(String namespaceURI) {
 
         if (namespaceURI == null){ throw new IllegalArgumentException(); }
@@ -180,6 +183,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
          *
          * @return <tt>true</tt> if the iterator has more elements.
          */
+        @Override
         public boolean hasNext() {
             return wrapped.hasNext();
         }
@@ -193,6 +197,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
          * @throws java.util.NoSuchElementException
          *          iteration has no more elements.
          */
+        @Override
         public Object next() {
             return wrapped.next();
         }
@@ -205,6 +210,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
          * @throws UnsupportedOperationException if the <tt>remove</tt>
          *                                       operation is not supported by this Iterator.
          */
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Conform to XML API please");
         }

@@ -67,7 +67,7 @@ public class TermStatSource implements Closeable {
 
     public Iterator<Triple<BytesRef, Long, Long>> getTerms(String field) throws IOException {
         List<AtomicReader> irs = LuceneUtil.gatherSubReaders(ir);
-        log.debug("getTerms(" + field + ") creating single field iterator " + " with " + irs.size()+ " readers");
+        log.debug("getTerms(" + field + ") creating single field iterator  with " + irs.size()+ " readers");
         List<Iterator<Triple<BytesRef, Long, Long>>> providers = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(irs.size());
         for (AtomicReader reader: irs) {
             LeafIterator li = new LeafIterator(reader, field);
@@ -120,7 +120,7 @@ public class TermStatSource implements Closeable {
 
         @Override
         public boolean hasNext() {
-            return providers.size() > 0;
+            return !providers.isEmpty();
         }
 
         @Override

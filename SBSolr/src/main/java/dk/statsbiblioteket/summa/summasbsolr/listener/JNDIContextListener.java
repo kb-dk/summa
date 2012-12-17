@@ -7,6 +7,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 public class JNDIContextListener implements ServletContextListener {
+    @Override
     public void contextInitialized(ServletContextEvent event) {
         if(System.getProperty("solr.home") == null) {
 
@@ -25,6 +26,7 @@ public class JNDIContextListener implements ServletContextListener {
         }
     }
 
+    @Override
     public void contextDestroyed(ServletContextEvent event) {
     }
 }

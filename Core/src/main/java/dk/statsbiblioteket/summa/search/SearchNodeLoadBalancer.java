@@ -14,17 +14,16 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.rmi.RemoteException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Treats a list of SearchNodes as equal in functionality and distributes
@@ -58,21 +57,16 @@ public class SearchNodeLoadBalancer implements SearchNode {
      * </p><p>
      * This is optional. The default is 2.
      */
-    public static final String CONF_SEARCHER_INSTANCES =
-            "summa.search.searcherinstances";
+    public static final String CONF_SEARCHER_INSTANCES = "summa.search.searcherinstances";
     public static final int DEFAULT_SEARCHER_INSTANCES = 2;
 
-    private int instances = DEFAULT_SEARCHER_INSTANCES;
     private List<SearchNode> nodes;
 
     public SearchNodeLoadBalancer(Configuration conf) throws RemoteException {
-        instances = conf.getInt(CONF_SEARCHER_INSTANCES, instances);
-        log.trace(String.format(
-                "Constructing SearchNodeLoadBalancer with %d instances",
-                instances));
-        for (int i = 0 ; i < instances ; i++) {
-            List<SearchNode> baseNodes =
-                    SearchNodeFactory.createSearchNodes(conf);
+        int instances = conf.getInt(CONF_SEARCHER_INSTANCES, DEFAULT_SEARCHER_INSTANCES);
+        log.trace(String.format("Constructing SearchNodeLoadBalancer with %d instances", instances));
+        for (int i = 0; i < instances; i++) {
+            List<SearchNode> baseNodes = SearchNodeFactory.createSearchNodes(conf);
             if (nodes == null) {
                 nodes = new ArrayList<SearchNode>(instances * baseNodes.size());
             }
@@ -80,21 +74,18 @@ public class SearchNodeLoadBalancer implements SearchNode {
             nodes.addAll(baseNodes);
         }
         if (nodes == null) {
-            log.warn("No SearchNodes defined in configuration. This is probably"
-                     + " an error. Specify SearchNodes under '"
-                     + SearchNodeFactory.CONF_NODES + "'");
+            log.warn("No SearchNodes defined in configuration. This is probably an error. "
+                     + "Specify SearchNodes under '" + SearchNodeFactory.CONF_NODES + "'");
             nodes = new ArrayList<SearchNode>(0);
         }
-        log.debug(String.format(
-                "Balancer created with a total of %d SearchNodes",
-                nodes.size()));
+        log.debug(String.format("Balancer created with a total of %d SearchNodes", nodes.size()));
     }
 
     @Override
     public void open(String location) throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("open(%s) called", location));
-        for (SearchNode node: nodes) {
+        for (SearchNode node : nodes) {
             node.open(location);
         }
     }
@@ -104,15 +95,13 @@ public class SearchNodeLoadBalancer implements SearchNode {
     // FIXME: Handle open
     // TODO: Try another searcher upon exception
     @Override
-    public void search(Request request, ResponseCollection responses) throws
-                                                               RemoteException {
+    public void search(Request request, ResponseCollection responses) throws RemoteException {
         SearchNode bestCandidate = null;
-        for (SearchNode node: nodes) {
+        for (SearchNode node : nodes) {
             //noinspection AssignmentToNull
             bestCandidate = bestCandidate == null ?
                             node.getFreeSlots() > 0 ? node : null :
-                            bestCandidate.getFreeSlots() > node.getFreeSlots() ?
-                            bestCandidate : node;
+                            bestCandidate.getFreeSlots() > node.getFreeSlots() ? bestCandidate : node;
         }
         if (bestCandidate == null) {
             log.warn("No free slots in any SearchNodes, trying first node");
@@ -124,7 +113,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
     @Override
     public void warmup(String request) {
         log.debug(String.format("warmup(%s) called", request));
-        for (SearchNode node: nodes) {
+        for (SearchNode node : nodes) {
             node.warmup(request);
         }
     }
@@ -134,12 +123,11 @@ public class SearchNodeLoadBalancer implements SearchNode {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
         RemoteException re = null;
-        for (SearchNode node: nodes) {
+        for (SearchNode node : nodes) {
             try {
                 node.close();
             } catch (RemoteException e) {
-                log.warn("Encountered an exception during close. "
-                         + "Continuing close of the remaining nodes", e);
+                log.warn("Encountered an exception during close. Continuing close of the remaining nodes", e);
                 // Problem: Previous exceptions are discarded 
                 re = e;
             }
@@ -152,12 +140,13 @@ public class SearchNodeLoadBalancer implements SearchNode {
     /**
      * The number of free slots is the sum of free slots on the underlying
      * nodes. In a multi-threaded environment, this will be an approximation.
+     *
      * @return the total number of free slots.
      */
     @Override
     public int getFreeSlots() {
         int slots = 0;
-        for (SearchNode node: nodes) {
+        for (SearchNode node : nodes) {
             slots += node.getFreeSlots();
         }
         return slots;

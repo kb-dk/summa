@@ -29,8 +29,6 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.*;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpClientConnection;
@@ -40,7 +38,9 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.params.SyncBasicHttpParams;
 import org.apache.http.protocol.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,8 +131,6 @@ public class SolrManipulator implements IndexManipulator {
     private int deletesSinceLastCommit = 0;
     private int deletes = 0;
     // Not thread safe, but as we need to process updates sequentially, this is not an issue
-    private HttpClient http;
-    private HttpPost post;
 
     // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {

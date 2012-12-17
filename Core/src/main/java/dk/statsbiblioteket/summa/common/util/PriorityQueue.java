@@ -18,10 +18,10 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 import java.util.ArrayList;
 import java.util.Comparator;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * A generic Priority Queue. This Queue supports a max capacity.
@@ -88,6 +88,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
             return comparator;
         }
         return new Comparator<T>() {
+            @Override
             public final int compare(final T o1, final T o2) {
                 return o1.compareTo(o2);
             }

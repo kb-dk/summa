@@ -14,22 +14,25 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.*;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Helper class for testing Storage.
@@ -311,12 +314,13 @@ public class StorageMonkeyHelper  {
             return recordCount;
         }
 
+        @Override
         public void run() {
             log.debug("Starting thread " + this);
             try {
                 WritableStorage storageW = getStorageW();
                 ReadableStorage storageR = getStorageR();
-                while (records.size() > 0) {
+                while (!records.isEmpty()) {
                     int currentJobSize = Math.min(flushSize, records.size());
                     ArrayList<Record> summaRecords = new ArrayList<Record>(
                             currentJobSize);

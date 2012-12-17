@@ -51,7 +51,7 @@ public class XMLStepper {
             }
             if (xml.getEventType() == XMLStreamReader.END_ELEMENT) {
                 String currentTag = xml.getLocalName();
-                if (tagStack.size() == 0) {
+                if (tagStack.isEmpty()) {
                     callback.end();
                     return;
                 }

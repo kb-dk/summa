@@ -14,27 +14,23 @@
  */
 package dk.statsbiblioteket.summa.ingest.source;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Record;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.regex.Pattern;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Generates semi-random Records, usable for testing performance and
@@ -303,11 +299,13 @@ public class RecordGenerator implements ObjectFilter {
                 incrementalNumbers.put(key, 0);
             }
         }
+        @Override
         public String getContent() {
             int counter = incrementalNumbers.get(key);
             incrementalNumbers.put(key, counter+1);
             return Integer.toString(counter);
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
             Matcher incrementalNumber =
                     PATTERN_INCREMENTAL_NUMBER.matcher(template);
@@ -326,6 +324,7 @@ public class RecordGenerator implements ObjectFilter {
             log.trace("Creating TimestampToken(" + unit + ")");
             this.unit = unit;
         }
+        @Override
         public String getContent() {
             if ("ms".equals(unit)) {
                 return Long.toString(System.currentTimeMillis());
@@ -338,6 +337,7 @@ public class RecordGenerator implements ObjectFilter {
                         + " is not supported");
             }
         }
+        @Override
         public TimestampToken createTokenIfMatch(String template) {
             Matcher matcher = PATTERN_TIMESTAMP.matcher(template);
             if (!matcher.matches()) {
@@ -356,9 +356,11 @@ public class RecordGenerator implements ObjectFilter {
             this.min = min;
             this.max = max;
         }
+        @Override
         public String getContent() {
             return Integer.toString(getRandomInt(min, max));
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
             Matcher matcher =
                     PATTERN_RANDOM_NUMBER.matcher(template);
@@ -383,9 +385,11 @@ public class RecordGenerator implements ObjectFilter {
             this.max = max;
             this.onlyLetters = onlyLetters;
         }
+        @Override
         public String getContent() {
             return randomChars(min, max, onlyLetters);
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
             Matcher matcher =
                     PATTERN_RANDOM_CHARS.matcher(template);
@@ -417,6 +421,7 @@ public class RecordGenerator implements ObjectFilter {
             this.maxLength = maxLength;
             this.onlyLetters = onlyLetters;
         }
+        @Override
         public String getContent() {
             int wordCount = getRandomInt(min, max);
             StringWriter sw = new StringWriter(wordCount * maxLength);
@@ -429,6 +434,7 @@ public class RecordGenerator implements ObjectFilter {
             }
             return sw.toString();
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
             Matcher matcher =
                     PATTERN_RANDOM_WORDS.matcher(template);
@@ -457,6 +463,7 @@ public class RecordGenerator implements ObjectFilter {
             this.max = max;
             words = getWords(listName);
         }
+        @Override
         public String getContent() {
             int wordCount = getRandomInt(min, max);
             StringWriter sw = new StringWriter(wordCount * 20);
@@ -468,6 +475,7 @@ public class RecordGenerator implements ObjectFilter {
             }
             return sw.toString();
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
             Matcher matcher =
                     PATTERN_WORD_LIST.matcher(template);
@@ -488,11 +496,13 @@ public class RecordGenerator implements ObjectFilter {
             log.trace("Creating LiteralToken(" + literal + ")");
             this.literal = literal;
         }
+        @Override
         public String getContent() {
             return literal;
         }
+        @Override
         public RecordToken createTokenIfMatch(String template) {
-            if (template.length() == 0) {
+            if (template.isEmpty()) {
                 return null;
             }
             return new LiteralToken(template);
@@ -501,10 +511,12 @@ public class RecordGenerator implements ObjectFilter {
 
     /* ObjectFilter interface */
 
+    @Override
     public boolean hasNext() {
         return generatedRecords < maxRecords;
     }
 
+    @Override
     public boolean pump() throws IOException {
         if (hasNext()) {
             next();
@@ -512,6 +524,7 @@ public class RecordGenerator implements ObjectFilter {
         return hasNext();
     }
 
+    @Override
     public void close(boolean success) {
         log.info(String.format(
                 "Closing down with success %b, spend %s generating %d Records "
@@ -523,15 +536,18 @@ public class RecordGenerator implements ObjectFilter {
         generatedRecords = maxRecords;
     }
 
+    @Override
     public void setSource(Filter filter) {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("No source accepted");
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("Removal is not supported");
     }
 
+    @Override
     public Payload next() {
         long sinceLast = System.currentTimeMillis() - lastGeneration;
         if (sinceLast < minDelay) {

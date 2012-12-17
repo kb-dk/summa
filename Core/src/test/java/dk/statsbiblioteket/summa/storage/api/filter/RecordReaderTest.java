@@ -400,6 +400,7 @@ public class RecordReaderTest extends TestCase {
             this.recordCount = recordCount;
         }
 
+        @Override
         public void run() {
             for (int i = 1; i <= recordCount; i++) {
                 Payload p = r.next();

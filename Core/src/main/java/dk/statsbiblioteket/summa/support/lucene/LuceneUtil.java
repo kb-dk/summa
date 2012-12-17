@@ -15,8 +15,6 @@
 package dk.statsbiblioteket.summa.support.lucene;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.IndexReader;
@@ -31,7 +29,6 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class LuceneUtil {
-    private static Log log = LogFactory.getLog(LuceneUtil.class);
 
 
     /**

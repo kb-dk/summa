@@ -381,7 +381,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
      * Create an aggregator for the given searchers.
      * @param searchers the searchers to aggregate. This is quite a hack as
      *                  the searchers are assumed to be RMI-exposed on
-     *                  {@code //localhost:28000/" + "searcher_#"} where # goes
+     *                  {@code //localhost:28000/searcher_#"} where # goes
      *                  from 0 to searchers.size()-1.
      * @return an aggregator based on the given searchers.
      * @throws java.io.IOException if the aggregator could not be created.
@@ -394,7 +394,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
                 SummaSearcherAggregator.CONF_SEARCHERS, searchers.size());
         for (int shardNumber = 0 ; shardNumber < searchers.size() ;
              shardNumber++){
-            String address = "//localhost:28000/" + "searcher_" + shardNumber;
+            String address = "//localhost:28000/searcher_" + shardNumber;
             log.debug("Connecting aggregator to '" + address + "'");
             connections.get(shardNumber).set(
                     SearchClient.CONF_RPC_TARGET, address);

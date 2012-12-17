@@ -23,18 +23,16 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.XMLTransformerTest;
 import dk.statsbiblioteket.util.Streams;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Document;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class CreateDocumentTest extends TestCase implements ObjectFilter {
@@ -140,7 +138,7 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
     @Override
     public boolean hasNext() {
         log.debug("payloads.size() = " + payloads.size());
-        return payloads.size() > 0;
+        return !payloads.isEmpty();
     }
 
     /**

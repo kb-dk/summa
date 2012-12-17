@@ -27,11 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * Straight forward aggregator for remote SummaSearchers that splits a request
@@ -156,7 +152,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         if (log.isTraceEnabled()) {
             log.trace("Starting search for " + request);
         }
-        if (searchers.size() == 0) {
+        if (searchers.isEmpty()) {
             throw new IOException("No remote summaSearchers connected");
         }
 
@@ -173,8 +169,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         }
 
         List<String> selected = request.getStrings(SEARCH_ACTIVE, defaultSearchers);
-        List<Pair<String, Future<ResponseCollection>>> searchFutures =
-            new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
+        List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
         for (Pair<String, SearchClient> searcher: searchers) {
             if (selected.contains(searcher.getKey())) {
                 searchFutures.add(new Pair<String, Future<ResponseCollection>>(
@@ -212,8 +207,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         private final Request request;
         private final ResponseCollection responses;
 
-        public ResponseHolder(
-            String searcherID, Request request, ResponseCollection responses) {
+        public ResponseHolder(String searcherID, Request request, ResponseCollection responses) {
             this.searcherID = searcherID;
             this.request = request;
             this.responses = responses;
@@ -230,8 +224,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         }
     }
 
-    private void postProcessPaging(
-        ResponseCollection merged, long startIndex, long maxRecords) {
+    private void postProcessPaging(ResponseCollection merged, long startIndex, long maxRecords) {
         if (startIndex == 0) {
             log.trace("No paging fix needed");
             return;

@@ -20,32 +20,25 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Assert;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class HarmoniseTestHelper {
-    private static Log log = LogFactory.getLog(HarmoniseTestHelper.class);
 
     public static void compareHits(String query, ResponseCollection rc1, ResponseCollection rc2) {
         String rs1 = Strings.join(getResultIDs(rc1), ", ");
-        Assert.assertEquals("Expected equality for query '" + query + "'",
-                            rs1, Strings.join(getResultIDs(rc2), ", "));
+        Assert.assertEquals("Expected equality for query '" + query + "'", rs1, Strings.join(getResultIDs(rc2), ", "));
         Assert.assertFalse("There was no result for '" + query + "'", "".equals(rs1));
     }
 
     public static void compareHits(String query, boolean shouldMatch, ResponseCollection rc1, ResponseCollection rc2) {
         if (shouldMatch) {
-            Assert.assertEquals("Expected equality for query '" + query + "'",
-                                Strings.join(getResultIDs(rc1), ", "), Strings.join(getResultIDs(rc2), ", "));
+            Assert.assertEquals("Expected equality for query '" + query
+                                + "'", Strings.join(getResultIDs(rc1), ", "), Strings.join(getResultIDs(rc2), ", "));
         } else {
             String qr1 = Strings.join(getResultIDs(rc1), ", ");
             String qr2 = Strings.join(getResultIDs(rc2), ", ");
@@ -58,9 +51,9 @@ public class HarmoniseTestHelper {
     public static List<String> getResultIDs(ResponseCollection responses) {
         for (Response response : responses) {
             if (response instanceof DocumentResponse) {
-                DocumentResponse dr = (DocumentResponse)response;
-                ArrayList<String> results = new ArrayList<String>((int)dr.getHitCount());
-                for (DocumentResponse.Record record: dr.getRecords()) {
+                DocumentResponse dr = (DocumentResponse) response;
+                ArrayList<String> results = new ArrayList<String>((int) dr.getHitCount());
+                for (DocumentResponse.Record record : dr.getRecords()) {
                     results.add(record.getId());
                 }
                 return results;
@@ -75,7 +68,6 @@ public class HarmoniseTestHelper {
                 return (int) ((DocumentResponse) response).getHitCount();
             }
         }
-        throw new IllegalArgumentException(
-                "No documentResponse in ResponseCollection");
+        throw new IllegalArgumentException("No documentResponse in ResponseCollection");
     }
 }

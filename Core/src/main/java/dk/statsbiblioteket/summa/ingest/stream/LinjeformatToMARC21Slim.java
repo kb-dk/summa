@@ -20,8 +20,8 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -119,7 +119,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         super(conf);
         inputCharset = conf.getString(CONF_INPUT_CHARSET, inputCharset);
         divider = conf.getString(CONF_DIVIDER, divider);
-        if (divider.length() == 0) {
+        if (divider.isEmpty()) {
             throw new ConfigurationException(
                     "The value for property " + CONF_DIVIDER
                     + " must not be empty");

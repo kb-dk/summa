@@ -33,11 +33,12 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class SearchTool {
     /**
      * Main method, for this commandline helper tool.
+     *
      * @param args Arguments given on the commandline, these are parse and send
-     * to the searcher.
+     *             to the searcher.
      * @throws Exception If error occur while connection to searcher.
      */
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             printUsage();
             System.exit(1);
@@ -50,29 +51,24 @@ public class SearchTool {
         try {
             conf = Configuration.getSystemConfiguration(false);
         } catch (Configurable.ConfigurationException e) {
-            System.err.println("Unable to load system config: " + e.getMessage()
-                               +".\nUsing default configuration");
+            System.err.println("Unable to load system config: " + e.getMessage() + ".\nUsing default configuration");
             conf = Configuration.newMemoryBased();
         }
 
         /* Make sure the summa.rpc.vendor property is set */
         if (!conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET)) {
-            rpcVendor = System.getProperty(
-                                         ConnectionConsumer.CONF_RPC_TARGET);
+            rpcVendor = System.getProperty(ConnectionConsumer.CONF_RPC_TARGET);
 
             if (rpcVendor != null) {
                 conf.set(ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
             } else {
-                conf.set(ConnectionConsumer.CONF_RPC_TARGET,
-                          "//localhost:28000/summa-searcher");
+                conf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/summa-searcher");
             }
         }
 
 
-        System.err.print("Connecting to searcher on "
-                         + conf.getString(ConnectionConsumer.CONF_RPC_TARGET)
-                         + " ... ");
-        SearchClient searcher = new SearchClient (conf);
+        System.err.print("Connecting to searcher on " + conf.getString(ConnectionConsumer.CONF_RPC_TARGET) + " ... ");
+        SearchClient searcher = new SearchClient(conf);
         System.err.println("[OK]");
 
         Request rq = parseArgs(args);
@@ -93,17 +89,13 @@ public class SearchTool {
      * Private helper method for print help usage of this commandline tool.
      */
     private static void printUsage() {
-        System.err.println("USAGE:\n\t" +
-                               "search-tool.sh <key=val> [key=val]...");
+        System.err.println("USAGE:\n\tsearch-tool.sh <key=val> [key=val]...");
         System.err.println("Examples:");
-        System.err.println("\tsearch-tool.sh " +
-                           "search.document.query=foo\n");
-        System.err.println("\tsearch-tool.sh " +
-                           "search.document.lucene.morelikethis.recordid=myRecordId27\n");
-        System.err.println("\tsearch-tool.sh " +
-                           "search.index.field=lme search.index.term=danmark\n");
-        System.err.println("\tsearch-tool.sh " +
-                           "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5\n");
+        System.err.println("\tsearch-tool.sh search.document.query=foo\n");
+        System.err.println("\tsearch-tool.sh search.document.lucene.morelikethis.recordid=myRecordId27\n");
+        System.err.println("\tsearch-tool.sh search.index.field=lme search.index.term=danmark\n");
+        System.err.println("\tsearch-tool.sh "
+                           + "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5\n");
         System.err.println("Optionally you may set the CONFIGURATION" +
                            "variable in your shell and it will be used for" +
                            "the summa.configuration property\n");
@@ -111,6 +103,7 @@ public class SearchTool {
 
     /**
      * Parse key=value pairs from the command line.
+     *
      * @param args The args as passed to {@link #main(String[])}.
      * @return A compiled {@link Request} object ready to pass to
      *         {@link SummaSearcher#search}.
@@ -121,9 +114,8 @@ public class SearchTool {
         for (String arg : args) {
             String[] keyVal = arg.split("=");
             if (keyVal.length != 2) {
-                throw new RuntimeException("Argument '" + arg + "' is not a"
-                        + " valid assignment string. Fx "
-                        + "summa.foo=bar");
+                throw new RuntimeException(
+                        "Argument '" + arg + "' is not a valid assignment string. Fx summa.foo=bar");
             }
             rq.put(keyVal[0], keyVal[1]);
         }

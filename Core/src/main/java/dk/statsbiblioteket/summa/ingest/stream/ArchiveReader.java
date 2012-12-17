@@ -14,17 +14,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
 import de.schlichtherle.truezip.file.TVFS;
 import de.schlichtherle.truezip.fs.FsSyncException;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Pattern;
-
-import de.schlichtherle.truezip.file.TFile;
 
 /**
  * Traverses sub folders and archives in a given folder depth-first to deliver
@@ -432,7 +430,7 @@ public class ArchiveReader extends FileSystemReader {
             for (TFile file: files) {
                 try {
                     if (postfix != null && file.getName().endsWith(postfix)) {
-                        log.trace("Skipping '" + file.getName() + "' as it is " + "marked with the completed postfix");
+                        log.trace("Skipping '" + file.getName() + "' as it is marked with the completed postfix");
 // TODO: This test results in auto-mounting. Maybe we can do isDirectory and pattern-match first?
                     } else if (file.isDirectory() || file.isArchive()) {
 //                        System.out.println(" Adding folder " + file);
@@ -480,7 +478,7 @@ public class ArchiveReader extends FileSystemReader {
 
         @Override
         public boolean isSafeToRemove() {
-            return subs != null && subs.size() == 0 && open.size() == 0;
+            return subs != null && subs.isEmpty() && open.isEmpty();
         }
 
         @Override
@@ -488,13 +486,13 @@ public class ArchiveReader extends FileSystemReader {
             if (subs == null) { // Expand if possible
                 subs = expand(root);
             }
-            while (subs.size() > 0) {
+            while (!subs.isEmpty()) {
                 FileProvider currentProvider = subs.get(0);
                 if (subs.get(0).hasNext()) {
                     return true;
                 }
                 // A remove might have been triggered
-                if (subs.size() == 0) {
+                if (subs.isEmpty()) {
                     break;
                 }
                 if (subs.get(0) != currentProvider) {
@@ -534,7 +532,7 @@ public class ArchiveReader extends FileSystemReader {
         }
         private void cleanup(List<FileProvider> p) {
             // Only remove until something unfinished is reached
-            while (p.size() > 0 && p.get(0).isSafeToRemove()) {
+            while (!p.isEmpty() && p.get(0).isSafeToRemove()) {
 //                System.out.println("Removing " + p.get(0));
                 p.remove(0).rename();
             }
@@ -546,7 +544,7 @@ public class ArchiveReader extends FileSystemReader {
                 throw new IllegalStateException(
                     "hasNext() is false so next() should not be called");
             }
-            if (subs.size() > 0) { // hasNext guarantees content in the first
+            if (!subs.isEmpty()) { // hasNext guarantees content in the first
                 return subs.get(0).next();
             }
             throw new InternalError(

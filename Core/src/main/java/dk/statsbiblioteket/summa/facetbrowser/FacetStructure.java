@@ -240,7 +240,7 @@ public class FacetStructure implements Serializable {
         }
     }
     private void setFields(List<String> fields) {
-        if (fields == null || fields.size() == 0) {
+        if (fields == null || fields.isEmpty()) {
             log.debug(NO_FIELDS_SPECIFIED + name + "'");
             this.fields = new String[]{name};
         } else {

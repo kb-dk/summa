@@ -156,5 +156,4 @@ public class SearchNodeFactory {
         log.debug("Got SearchNode class " + searchNodeClass + ". Creating instance");
         return Configuration.create(searchNodeClass, conf);
     }
-
 }

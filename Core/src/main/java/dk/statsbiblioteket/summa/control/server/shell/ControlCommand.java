@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -46,6 +46,7 @@ public class ControlCommand extends Command {
         this.controlAddress = controlAddress;
     }
 
+    @Override
     public void invoke(ShellContext ctx) throws Exception {
         /* Connect to the Control and request the control file
 	 * for the requested client */

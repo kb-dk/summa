@@ -40,8 +40,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
         author = "mke")
-public class SearchClient extends ConnectionConsumer<SummaSearcher>
-                          implements Configurable, SummaSearcher {
+public class SearchClient extends ConnectionConsumer<SummaSearcher> implements Configurable, SummaSearcher {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
     private String target;
@@ -67,8 +66,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
         SummaSearcher searcher = getConnection();
 
         if (searcher == null) {
-            final String msg =
-                           "The searcher retrieved from getConnection was null";
+            final String msg = "The searcher retrieved from getConnection was null";
             log.warn(msg);
             throw new IOException("Unable to connect to '" + target + "'");
         }

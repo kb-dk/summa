@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.CircularCharBuffer;
+import dk.statsbiblioteket.util.reader.ReplaceReader;
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 
 /**
@@ -59,6 +59,7 @@ public class LowerCasingReader extends ReplaceReader {
         return numRead;
     }
 
+    @Override
     public int read(CircularCharBuffer cbuf, int length) throws IOException {
         int codePoint;
         int count = 0;
@@ -75,14 +76,17 @@ public class LowerCasingReader extends ReplaceReader {
         return count;
     }
 
+    @Override
     public String transform(String s) {
         return s.toLowerCase();
     }
 
+    @Override
     public char[] transformToChars(char c) {
         return new char[]{Character.toLowerCase(c)};
     }
 
+    @Override
     public char[] transformToChars(char[] chars) {
         char[] result = new char[chars.length];
 
@@ -93,7 +97,8 @@ public class LowerCasingReader extends ReplaceReader {
         return result;
     }
 
-    public char[] transformToCharsAllowInplace(char[] chars) {        
+    @Override
+    public char[] transformToCharsAllowInplace(char[] chars) {
         for (int i = 0; i < chars.length; i++) {
             chars[i] = Character.toLowerCase(chars[i]);
         }
@@ -108,6 +113,7 @@ public class LowerCasingReader extends ReplaceReader {
      * @param in the new reader to read character data from
      * @return always returns {@code this}
      */
+    @Override
     public LowerCasingReader setSource(Reader in) {
         this.in = in;
         return this;

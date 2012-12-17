@@ -14,9 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.filter.stream;
 
-import java.io.IOException;
-import java.util.Random;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -25,6 +22,9 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.BitUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.Random;
 
 /**
  * A simple reader that produces dummy output. Used for testing.
@@ -58,14 +58,17 @@ public class DummyReader implements ObjectFilter {
                  + " and bodySize " + bodySize + ", content '" + content + "'");
     }
 
+    @Override
     public void setSource(Filter source) {
         throw new UnsupportedOperationException("No source accepted");
     }
 
+    @Override
     public boolean pump() throws IOException {
         return hasNext();
     }
 
+    @Override
     public void close(boolean success) {
         log.info("Closing Dummyreader with success " + success);
     }

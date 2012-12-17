@@ -99,7 +99,6 @@ public abstract class SearchNodeImpl implements SearchNode {
     private static final int BUFFER_SIZE = 8192;
     private static final int WARMUP_TIMEOUT = 10;
     private static final int OPEN_TIMEOUT = 60 * 1000;
-    private static final int CLOSE_TIMEOUT = 60 * 1000;
     private int searcherAvailabilityTimeout = DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     private int concurrentSearches = DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;

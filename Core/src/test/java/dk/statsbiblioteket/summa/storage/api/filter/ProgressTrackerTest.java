@@ -14,11 +14,10 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.util.Files;
 import junit.framework.TestCase;
 
 import java.io.File;
-
-import dk.statsbiblioteket.util.Files;
 
 /**
  * Unit tests for {@link ProgressTracker}
@@ -31,6 +30,7 @@ public class ProgressTrackerTest extends TestCase {
     File progressFile = new File(testDir, "test-progress.xml");
     ProgressTracker p;
 
+    @Override
     public void setUp() throws Exception {
         testDir.mkdirs();
         Files.delete(testDir);

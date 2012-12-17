@@ -74,43 +74,51 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
         return mem;
     }
 
+    @Override
     public boolean hasRoom(T element) {
         return count < minCountLimit ||
                (count + 1 <= maxCountLimit &&
                 calculateBytes(element) + mem < memLimit);
     }
 
+    @Override
     public boolean isOverflowing() {
         return count > minCountLimit 
                && (count > maxCountLimit || mem > memLimit);
     }
 
+    @Override
     public long getSize() {
         return count;
     }
 
+    @Override
     public void add(T element) {
         count++;
         mem += calculateBytes(element);
     }
 
+    @Override
     public void add(Collection<T> elements) {
         for (T e: elements) {
             add(e);
         }
     }
 
+    @Override
     public void remove(T element) {
         count--;
         mem -= calculateBytes(element);
     }
 
+    @Override
     public void remove(Collection<T> elements) {
         for (T e: elements) {
             remove(e);
         }
     }
 
+    @Override
     public void clear() {
         count = 0;
         mem = 0;

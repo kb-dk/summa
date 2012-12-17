@@ -80,6 +80,7 @@ public abstract class StateThread implements Runnable {
      */
     protected abstract void runMethod();
 
+    @Override
     public final void run() {
         dk.statsbiblioteket.util.Profiler profiler = new dk.statsbiblioteket.util.Profiler();
         try {

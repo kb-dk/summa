@@ -42,6 +42,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
      * beginning of the results or at the end, no matter the collator and
      * the sort-direction.<br />
      * If false, the order is up to the collator.
+     *
      * @see #NON_DEFINED_FIELDS_ARE_SORTED_LAST
      * @see #merge(Response)
      */
@@ -50,6 +51,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
      * If true, sorting on field X will put all records without field X after
      * the records with field X, no matter if the search is reversed or not.
      * If false, the records without the sort-field will be put first.
+     *
      * @see #NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED
      * @see #merge(Response)
      */
@@ -70,11 +72,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private List<Record> records;
 //    private final Collator collator;
 
-    public DocumentResponse(String filter, String query,
-                        long startIndex, long maxRecords,
-                        String sortKey, boolean reverseSort,
-                        String[] resultFields, long searchTime,
-                        long hitCount) {
+    public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
+                            boolean reverseSort, String[] resultFields, long searchTime, long hitCount) {
         log.trace("Creating search result for query '" + query + "'");
         this.filter = filter;
         this.query = query;
@@ -143,7 +142,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             appendIfDefined(sw, "id", id);
             appendIfDefined(sw, "source", source);
             sw.append(">\n");
-            for (Field field: fields) {
+            for (Field field : fields) {
                 field.toXML(sw);
             }
             sw.append("  </record>\n");
@@ -222,8 +221,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
     }
 
-    private static void appendIfDefined(StringWriter sw,
-                                        String name, String value) {
+    private static void appendIfDefined(StringWriter sw, String name, String value) {
         if (value == null) {
             return;
         }
@@ -233,12 +231,12 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     /**
      * Add a Record to the SearchResult. The order of Records is significant.
+     *
      * @param record A record that should belong to the search result.
      */
     public void addRecord(Record record) {
         if (record == null) {
-            throw new IllegalArgumentException(
-                    "Expected a Record, got null");
+            throw new IllegalArgumentException("Expected a Record, got null");
         }
         records.add(record);
     }
@@ -257,18 +255,18 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
      * In case of differences in the overall search result structures, such as
      * sortKey having different values, this result wins and a human-readable
      * warning is returned.
+     *
      * @param other The search result that should be merged into this.
      */
     @Override
     public void merge(Response other) {
         log.trace("merge called");
         if (!(other instanceof DocumentResponse)) {
-            throw new IllegalArgumentException(String.format(
-                    "Expected response of class '%s' but got '%s'",
-                    getClass().toString(), other.getClass().toString()));
+            throw new IllegalArgumentException(String.format("Expected response of class '%s' but got '%s'",
+                                                             getClass().toString(), other.getClass().toString()));
         }
         super.merge(other);
-        DocumentResponse docResponse = (DocumentResponse)other;
+        DocumentResponse docResponse = (DocumentResponse) other;
         // TODO: Check for differences in basic attributes and warn if needed
         //Collator collator = null;
 /*     * @param collator determines the order of Records, based on their
@@ -291,21 +289,20 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     /**
      * @return the comparator used for ordering Records belonging to this
-     * response.
+     *         response.
      */
     public Comparator<Record> getComparator() {
         if (sortKey == null || SORT_ON_SCORE.equals(sortKey)) {
-           return scoreComparator;
+            return scoreComparator;
         }
         final Collator collator = Collator.getInstance(new Locale("da"));
 
         return new Comparator<Record>() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public int compare(Record o1, Record o2) {
-                String s1 =
-                    o1.getSortValue() == null ? "" : o1.getSortValue();
-                String s2 =
-                    o2.getSortValue() == null ? "" : o2.getSortValue();
+                String s1 = o1.getSortValue() == null ? "" : o1.getSortValue();
+                String s2 = o2.getSortValue() == null ? "" : o2.getSortValue();
                 if (NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED) {
                     // Handle empty cases
                     if ("".equals(s1)) {
@@ -325,9 +322,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     private Comparator<Record> scoreComparator = new ScoreComparator();
 
-    private static class ScoreComparator implements Comparator<Record>,
-                                                   Serializable {
+    private static class ScoreComparator implements Comparator<Record>, Serializable {
         private static final long serialVersionUID = 168413841L;
+
         @Override
         public int compare(Record o1, Record o2) {
             float diff = o2.getScore() - o1.getScore();
@@ -337,24 +334,25 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     /**
      * {@code
-       <?xml version="1.0" encoding="UTF-8"?>
-       <documentresult filter="..." query="..."
-                     startIndex="..." maxRecords="..."
-                     sortKey="..." reverseSort="..."
-                     fields="..." searchTime="..." hitCount="...">
-         <record score="..." sortValue="...">
-           <field name="recordID">...</field>
-           <field name="shortformat">...</field>
-         </record>
-         ...
-       </documentresult>
-       }
+     * <?xml version="1.0" encoding="UTF-8"?>
+     * <documentresult filter="..." query="..."
+     * startIndex="..." maxRecords="..."
+     * sortKey="..." reverseSort="..."
+     * fields="..." searchTime="..." hitCount="...">
+     * <record score="..." sortValue="...">
+     * <field name="recordID">...</field>
+     * <field name="shortformat">...</field>
+     * </record>
+     * ...
+     * </documentresult>
+     * }
      * The content in the XML is entity-escaped.<br />
      * sortValue is the value that the sort was performed on. If the XML-result
      * from several searchers are to be merged, merge-ordering should be
      * dictated by this value.<br />
      * score is the score-value returned by the index implementation.<br />
      * searchTime is the number of milliseconds it took to perform the search.
+     *
      * @return The search-result as XML, suitable for web-services et al.
      */
     @Override
@@ -374,9 +372,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         sw.append(Boolean.toString(reverseSort)).append("\"");
         if (resultFields != null) {
             sw.append(" fields=\"");
-            for (int i = 0 ; i < resultFields.length ; i++) {
+            for (int i = 0; i < resultFields.length; i++) {
                 sw.append(XMLUtil.encode(resultFields[i]));
-                if (i < resultFields.length-1) {
+                if (i < resultFields.length - 1) {
                     sw.append(", ");
                 }
             }
@@ -388,7 +386,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         sw.append(XMLUtil.encode(getTiming())).append("\"");
         sw.append(" hitCount=\"");
         sw.append(Long.toString(hitCount)).append("\">\n");
-        for (Record record: records) {
+        for (Record record : records) {
             record.toXML(sw);
         }
         sw.append("</documentresult>\n");
@@ -429,8 +427,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public void setRecords(List<Record> records) {
         if (!(records instanceof Serializable)) {
             throw new IllegalArgumentException(
-                "The records list was of class " + records.getClass()
-                + " which is not serializable");
+                    "The records list was of class " + records.getClass() + " which is not serializable");
         }
         this.records = records;
     }

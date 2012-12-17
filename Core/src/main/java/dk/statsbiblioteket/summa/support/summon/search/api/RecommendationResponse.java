@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -37,8 +37,7 @@ import java.util.ArrayList;
 public class RecommendationResponse extends ResponseImpl {
     private static Log log = LogFactory.getLog(RecommendationResponse.class);
 
-    private ArrayList<RecommendationList> recommendationLists =
-        new ArrayList<RecommendationList>();
+    private ArrayList<RecommendationList> recommendationLists = new ArrayList<RecommendationList>();
 
     public RecommendationResponse() {
     }
@@ -46,6 +45,7 @@ public class RecommendationResponse extends ResponseImpl {
     /**
      * Construct a new list of recommendations, add it to the internal list and
      * return it.
+     *
      * @param type the type of the list.
      * @return an empty list, ready for population.
      */
@@ -56,7 +56,7 @@ public class RecommendationResponse extends ResponseImpl {
     }
 
     public boolean isEmpty() {
-        return recommendationLists.size() == 0;
+        return recommendationLists.isEmpty();
     }
 
     @Override
@@ -68,21 +68,19 @@ public class RecommendationResponse extends ResponseImpl {
     public void merge(Response other) throws ClassCastException {
 
         if (!(other instanceof RecommendationResponse)) {
-            log.trace("merge(...) expected a RecommendationResponse but got a "
-                      + other.getClass());
+            log.trace("merge(...) expected a RecommendationResponse but got a " + other.getClass());
             return;
         }
         log.trace("Merging RecommendationResponses");
         super.merge(other);
-        recommendationLists.addAll(
-            ((RecommendationResponse)other).recommendationLists);
+        recommendationLists.addAll(((RecommendationResponse) other).recommendationLists);
     }
 
     @Override
     public String toXML() {
         StringWriter sw = new StringWriter(200);
         sw.append("<recommendationLists>\n");
-        for (RecommendationList recommendationList: recommendationLists) {
+        for (RecommendationList recommendationList : recommendationLists) {
             recommendationList.toXML(sw);
         }
         sw.append("</recommendationLists>\n");
@@ -104,9 +102,8 @@ public class RecommendationResponse extends ResponseImpl {
         }
 
         public void toXML(StringWriter sw) {
-            sw.append("  ").append(String.format(
-                "<recommendationList type=\"%s\">\n", type));
-            for (Recommendation recommendation: this) {
+            sw.append("  ").append(String.format("<recommendationList type=\"%s\">\n", type));
+            for (Recommendation recommendation : this) {
                 recommendation.toXML(sw);
             }
             sw.append("  </recommendationList>\n");
@@ -125,11 +122,9 @@ public class RecommendationResponse extends ResponseImpl {
         }
 
         public void toXML(StringWriter sw) {
-            sw.append("    ").append(String.format(
-                "<recommendation title=\"%s\" description=\"%s\" "
-                + "link=\"%s\"/>\n",
-                XMLUtil.encode(title), XMLUtil.encode(description),
-                XMLUtil.encode(link)));
+            sw.append("    ");
+            sw.append(String.format("<recommendation title=\"%s\" description=\"%s\" link=\"%s\"/>\n",
+                                    XMLUtil.encode(title), XMLUtil.encode(description), XMLUtil.encode(link)));
         }
     }
 }

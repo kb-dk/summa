@@ -14,14 +14,13 @@
  */
 package dk.statsbiblioteket.summa.control.api;
 
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
-
-import java.io.IOException;
-
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
 
 /**
  * Helper class for instantiating connections to {@link Service}s
@@ -48,6 +47,7 @@ public class ServiceConnectionFactory extends ConnectionFactory<Service> {
         this.connMgr = connMgr;
     }
 
+    @Override
     public Service createConnection(String connectionId)  {
         ClientConnection conn;
 
