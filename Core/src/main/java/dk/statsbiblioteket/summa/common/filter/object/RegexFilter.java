@@ -14,10 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,9 +71,7 @@ public class RegexFilter extends AbstractDiscardFilter {
             return false;
         }
 
-        throw new ConfigurationException(
-                                  "Illegal mode definition '" + mode
-                                  + "'. Expected 'inclusive' or 'exclusive'");
+        throw new ConfigurationException("Illegal mode definition '" + mode + "'. Expected 'inclusive' or 'exclusive'");
     }
 
     @Override

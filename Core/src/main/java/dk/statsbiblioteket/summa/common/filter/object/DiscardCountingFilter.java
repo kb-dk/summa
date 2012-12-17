@@ -22,8 +22,8 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Discards Payloads based on counting, such as all payloads after the first
@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
  * of Payloads for testing and development purposes.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class DiscardCountingFilter extends AbstractDiscardFilter {
     private static Log log = LogFactory.getLog(DiscardCountingFilter.class);
@@ -75,9 +75,7 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
             fraction = Double.parseDouble(conf.getString(CONF_FRACTION));
         }
         this.feedback = false;
-        log.info(String.format(
-            "Created discarder witn min=%d, max=%d, fraction=%f",
-            min, max, fraction));
+        log.info(String.format("Created discarder witn min=%d, max=%d, fraction=%f", min, max, fraction));
     }
 
     @Override
@@ -101,8 +99,7 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
         }
         passed++;
         if (max == passed) {
-            log.debug("Maximum " + max + " reached. Future Payloads will be " 
-                      + "discarded");
+            log.debug("Maximum " + max + " reached. Future Payloads will be " + "discarded");
         }
         return false;
     }

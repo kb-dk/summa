@@ -21,8 +21,8 @@ import dk.statsbiblioteket.summa.common.marc.MARCObject;
 import dk.statsbiblioteket.summa.common.marc.MARCObjectFactory;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
@@ -35,7 +35,7 @@ import java.util.List;
  * of the object and passes it on in XML form.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public abstract class MARCObjectFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(MARCObjectFilter.class);
@@ -49,7 +49,7 @@ public abstract class MARCObjectFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         try {
             List<MARCObject> marcObjects = MARCObjectFactory.generate(RecordUtil.getStream(payload));
-            if (marcObjects.size() == 0) {
+            if (marcObjects.isEmpty()) {
                 log.warn("No MARCObject extracted from " + payload);
                 Logging.logProcess("MARCObjectFilter", "No MARCObject extracted", Logging.LogLevel.WARN, payload);
                 return false;

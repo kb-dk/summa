@@ -15,26 +15,29 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Checksums;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.metadata.Metadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.Parser;
 
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 /**
@@ -76,13 +79,12 @@ public class TikaFilter extends ObjectFilterImpl {
     public TikaFilter(Configuration conf) {
         super(conf);
 
-        if (conf.valueExists(CONF_TIKA_CONFIG)){
+        if (conf.valueExists(CONF_TIKA_CONFIG)) {
             URL tikaConfUrl = Resolver.getURL(conf.getString(CONF_TIKA_CONFIG));
 
             if (tikaConfUrl == null) {
                 throw new ConfigurationException(
-                                     "Unable to find Tika configuration: "
-                                     + conf.getString(CONF_TIKA_CONFIG));
+                        "Unable to find Tika configuration: " + conf.getString(CONF_TIKA_CONFIG));
             } else {
                 log.debug("Using Tika configuration: " + tikaConfUrl);
             }
@@ -90,9 +92,7 @@ public class TikaFilter extends ObjectFilterImpl {
             try {
                 parser = new AutoDetectParser(new TikaConfig(tikaConfUrl));
             } catch (Exception e) {
-                throw new ConfigurationException("Unable to load Tika "
-                                                 + "configuration: "
-                                                 + e.getMessage(), e);
+                throw new ConfigurationException("Unable to load Tika " + "configuration: " + e.getMessage(), e);
             }
         } else {
             log.debug("Using default Tika configuration");
@@ -102,8 +102,7 @@ public class TikaFilter extends ObjectFilterImpl {
         try {
             handler = getXmlContentHandler();
         } catch (TransformerConfigurationException e) {
-            throw new ConfigurationException("Unable to create XML writer: "
-                                             + e.getMessage(), e);
+            throw new ConfigurationException("Unable to create XML writer: " + e.getMessage(), e);
         }
 
         recordBase = conf.getString(CONF_BASE, DEFAULT_BASE);
@@ -113,12 +112,10 @@ public class TikaFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         InputStream raw;
         if (payload.getStream() == null) {
-            Logging.logProcess("TikaFilter", "Using Record content as source",
-                               Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("TikaFilter", "Using Record content as source", Logging.LogLevel.DEBUG, payload);
             raw = new ByteArrayInputStream(payload.getRecord().getContent());
         } else {
-            Logging.logProcess("TikaFilter", "Using embedded Stream as source",
-                               Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("TikaFilter", "Using embedded Stream as source", Logging.LogLevel.DEBUG, payload);
             raw = payload.getStream();
         }
 
@@ -129,8 +126,7 @@ public class TikaFilter extends ObjectFilterImpl {
         // Give the filename to the parser to help it sniff the content type
         // based on the extension
         if (payload.getData(Payload.ORIGIN) != null) {
-            meta.add(Metadata.RESOURCE_NAME_KEY,
-                     payload.getData(Payload.ORIGIN).toString());
+            meta.add(Metadata.RESOURCE_NAME_KEY, payload.getData(Payload.ORIGIN).toString());
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -139,27 +135,21 @@ public class TikaFilter extends ObjectFilterImpl {
         try {
             parser.parse(raw, handler, meta);
         } catch (Exception e) {
-            throw new PayloadException("Failed to parse stream for payload "
-                                       + payload + ": " + e.getMessage(), e);
+            throw new PayloadException("Failed to parse stream for payload " + payload + ": " + e.getMessage(), e);
         } catch (NoClassDefFoundError e) {
-            log.error("Could not locate class while performing Tika-parse. "
-                      + "This likely due to a missing support library, so the "
-                      + "current " +payload + " is skipped and overall "
-                      + "processing is continued. However, the support library "
-                      + "should be located to improve Tika capabilities", e);
+            log.error("Could not locate class while performing Tika-parse. This likely due to a missing support "
+                      + "library, so the " + "current " + payload + " is skipped and overall " + "processing is "
+                      + "continued. However, the support library should be located to improve Tika capabilities", e);
             throw new PayloadException(
-                "Failed to parse stream for payload "
-                + payload + " as a library could not be found: "
-                + e.getMessage(), e);
+                    "Failed to parse stream for payload " + payload + " as a library could not be found: "
+                    + e.getMessage(), e);
         } catch (StackOverflowError e) {
-            log.warn("Received stack overflow while parsing " + parser
-                     + ". No shutdown is requested as Tika is prone to such "
-                     + "Errors. Consider raising the stack size or weeding "
-                     + "input if this Error occurs frequently");
+            log.warn("Received stack overflow while parsing " + parser + ". No shutdown is requested as Tika is prone "
+                     + "to such Errors. Consider raising the stack size or weeding " + "input if this Error occurs "
+                     + "frequently");
             throw new PayloadException(
-                "Failed to parse stream for payload "
-                + payload + " due to a stack overflow Error: "
-                + e.getMessage(), e);
+                    "Failed to parse stream for payload " + payload + " due to a stack overflow Error: "
+                    + e.getMessage(), e);
         }
 
         try {
@@ -181,12 +171,10 @@ public class TikaFilter extends ObjectFilterImpl {
             } else {
                 log.debug("No origin for payload, using md5 checksum instead");
                 try {
-                    byte[] idDigest = Checksums.md5(
-                                       new ByteArrayInputStream(recordContent));
+                    byte[] idDigest = Checksums.md5(new ByteArrayInputStream(recordContent));
                     recordId = new String(idDigest);
                 } catch (IOException e) {
-                    throw new PayloadException("Failed to calculate record id: "
-                                               + e.getMessage(), e);
+                    throw new PayloadException("Failed to calculate record id: " + e.getMessage(), e);
                 }
             }
 
@@ -200,7 +188,7 @@ public class TikaFilter extends ObjectFilterImpl {
         // Add all extracted metadata to the stored record metadata
         for (String key : meta.names()) {
             if (log.isTraceEnabled()) {
-                String value = meta.get(key); 
+                String value = meta.get(key);
                 log.trace("record.meta(" + key + ") = '" + value + "'");
             }
             record.addMeta(key, meta.get(key));
@@ -212,14 +200,11 @@ public class TikaFilter extends ObjectFilterImpl {
     }
 
     // Lifted from org.apache.tika.cli.TikaCLI v0.3
-    private TransformerHandler getXmlContentHandler()
-            throws TransformerConfigurationException {
-        SAXTransformerFactory factory = (SAXTransformerFactory)
-            SAXTransformerFactory.newInstance();
+    private TransformerHandler getXmlContentHandler() throws TransformerConfigurationException {
+        SAXTransformerFactory factory = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
         TransformerHandler handler = factory.newTransformerHandler();
         handler.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
         handler.getTransformer().setOutputProperty(OutputKeys.INDENT, "yes");
         return handler;
     }
 }
-

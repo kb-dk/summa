@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
  * Typically used to group requests to external resources.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public abstract class PayloadBatcher implements Configurable, Runnable {
     private static Log log = LogFactory.getLog(PayloadBatcher.class);
@@ -140,7 +140,7 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
     }
 
     private synchronized void performFlush() {
-        if (queue.size() == 0) {
+        if (queue.isEmpty()) {
             log.trace("performFlush() called on empty queue");
             return;
         }
@@ -152,7 +152,7 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         flush(queue);
         flushTime += System.currentTimeMillis();
         lastAction = System.currentTimeMillis();
-        if (queue.size() != 0) {
+        if (!queue.isEmpty()) {
             throw new IllegalStateException(
                 "Queue must be empty after flush, but contained " + queue.size() + " Payloads");
         }
@@ -175,7 +175,7 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         log.debug(String.format("Close called with %d received Payloads and %d still queued", received, queue.size()));
         closed = true;
         try {
-            if (queue.size() > 0) {
+            if (!queue.isEmpty()) {
                 performFlush();
             }
         } finally {

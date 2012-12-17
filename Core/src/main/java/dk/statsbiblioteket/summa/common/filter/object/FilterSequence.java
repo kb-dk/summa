@@ -39,7 +39,7 @@ import java.util.List;
  * The filters are added in order of appearance.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class FilterSequence implements ObjectFilter {
     private static Log log = LogFactory.getLog(FilterSequence.class);
@@ -57,8 +57,7 @@ public class FilterSequence implements ObjectFilter {
      * This property is mandatory for each sub configuration in
      * {@link #CONF_FILTERS}.
      */
-    public static final String CONF_FILTER_CLASS =
-            "summa.filter.sequence.filterclass";
+    public static final String CONF_FILTER_CLASS = "summa.filter.sequence.filterclass";
 
     /**
      * Whether or not the filter is active. If this is false for a filter,
@@ -91,17 +90,14 @@ public class FilterSequence implements ObjectFilter {
                         "No Filters specified in property %s for FilterSequence", CONF_FILTERS), e);
             }
             throw new ConfigurationException(String.format(
-                    "A list of Strings was specified in the property %s. A "
-                    + "list of xproperties with filter-setups was expected."
-                    + " Maybe an old configuration-file hasn't been updated"
-                    + " to the list-of-xproperties style? Encountered "
-                    + "Strings was %s",
+                    "A list of Strings was specified in the property %s. A list of xproperties with filter-setups was "
+                    + "expected. Maybe an old configuration-file hasn't been updated to the list-of-xproperties style? "
+                    + "Encountered Strings was %s",
                     CONF_FILTERS, Logs.expand(filterNames, 10)), e);
         }
         buildChain(filterConfigurations);
         if (lastFilter == null) {
-            throw new ConfigurationException(
-                    "No filters created in FilterSequence");
+            throw new ConfigurationException("No filters created in FilterSequence");
         }
         log.debug("Finished building sequence  of " + filters.size() + " length");
     }
@@ -112,18 +108,14 @@ public class FilterSequence implements ObjectFilter {
             log.warn("buildChain: No filter configurations");
             return;
         }
-        Logs.log(log, Logs.Level.DEBUG, "Building filter sequence with "
-                 + filterConfigurations.size() + " filters");
-        for (Configuration filterConf: filterConfigurations) {
+        Logs.log(log, Logs.Level.DEBUG, "Building filter sequence with " + filterConfigurations.size() + " filters");
+        for (Configuration filterConf : filterConfigurations) {
             try {
-                if (!filterConf.getBoolean(
-                        CONF_FILTER_ENABLED, DEFAULT_FILTER_ENABLED)) {
+                if (!filterConf.getBoolean(CONF_FILTER_ENABLED, DEFAULT_FILTER_ENABLED)) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.debug(String.format(
-                            "Skipping %s filter of class %s as it is not enabled",
-                            filterConf.getString(Filter.CONF_FILTER_NAME, "unknown"),
-                            filterConf.getString(CONF_FILTER_CLASS, "unknown")
-                    ));
+                    log.debug(String.format("Skipping %s filter of class %s as it is not enabled",
+                                            filterConf.getString(Filter.CONF_FILTER_NAME, "unknown"),
+                                            filterConf.getString(CONF_FILTER_CLASS, "unknown")));
                     continue;
                 }
                 ObjectFilter filter = createFilter(filterConf);
@@ -138,15 +130,14 @@ public class FilterSequence implements ObjectFilter {
                 throw new IOException(String.format("Could not create filter '%s'", filterConf), e);
             }
         }
-        if (filters.size() == 0) {
+        if (filters.isEmpty()) {
             log.warn("buildChain: No filters created");
         }
         log.info("Finished buildChain with " + filters.size() + " filters created");
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
-        Class<? extends ObjectFilter> filter =
-                configuration.getClass(CONF_FILTER_CLASS, ObjectFilter.class);
+        Class<? extends ObjectFilter> filter = configuration.getClass(CONF_FILTER_CLASS, ObjectFilter.class);
         log.debug("Got filter class " + filter + ". Commencing creation");
         return Configuration.create(filter, configuration);
     }
@@ -160,26 +151,32 @@ public class FilterSequence implements ObjectFilter {
 
     /* ObjectFilter interface */
 
+    @Override
     public boolean hasNext() {
         return lastFilter.hasNext();
     }
 
+    @Override
     public void setSource(Filter filter) {
         filters.get(0).setSource(filter);
     }
 
+    @Override
     public boolean pump() throws IOException {
         return lastFilter.pump();
     }
 
+    @Override
     public void close(boolean success) {
         lastFilter.close(success);
     }
 
+    @Override
     public Payload next() {
         return lastFilter.next();
     }
 
+    @Override
     public void remove() {
         lastFilter.remove();
     }

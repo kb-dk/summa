@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Buffers all incoming payloads for later retrieval
@@ -42,6 +42,7 @@ public class PayloadBufferFilter extends ObjectFilterImpl {
      * @param payload The process.
      * @return True.
      */
+    @Override
     protected boolean processPayload(Payload payload) {
         payloads.add(payload);
         return true;

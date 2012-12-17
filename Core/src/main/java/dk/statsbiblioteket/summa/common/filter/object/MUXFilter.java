@@ -109,8 +109,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_ALLOW_UNMATCHED =
-        "summa.muxfilter.allow.unmatched";
+    public static final String CONF_ALLOW_UNMATCHED = "summa.muxfilter.allow.unmatched";
     public static final boolean DEFAULT_ALLOW_UNMATCHED = false;
 
     private ObjectFilter source = null;
@@ -149,7 +148,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 feeders.add(new MUXFilterFeeder(filterConf, outqueue));
             }
         }
-        if (feeders.size() > 0) {
+        if (!feeders.isEmpty()) {
             log.trace("Constructed feeders, starting to fill the feeders");
         } else {
             log.warn("No feeders defined for MUXFilter. There will never be any"
@@ -395,7 +394,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      */
     private Payload drain() {
         Payload next = null;
-        while (outqueue.size() > 0) {
+        while (!outqueue.isEmpty()) {
             next = outqueue.uninterruptibleTake();
             if (next != MUXFilterFeeder.STOP) {
                 break;
@@ -420,5 +419,4 @@ public class MUXFilter implements ObjectFilter, Runnable {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
     }
-
 }

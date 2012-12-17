@@ -18,8 +18,6 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Building block for making a filter that discards Payloads based on some
@@ -29,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
-    private static Log log = LogFactory.getLog(AbstractDiscardFilter.class);
 
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
@@ -38,6 +35,7 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
     /**
      * Checks whether the Payload should be discarded or not.
+     *
      * @param payload the payload to check.
      * @return true if the Payload should be discarded.
      */
@@ -47,11 +45,9 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         boolean discard = checkDiscard(payload);
         if (discard) {
-            Logging.logProcess(
-                    getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess(getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
         } else {
-            Logging.logProcess(
-                    getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
         }
         return !discard;
     }

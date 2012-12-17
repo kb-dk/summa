@@ -51,8 +51,7 @@ public class PushFilter implements ObjectFilter {
      * </p><p>
      * This property is optional. Default is 100.
      */
-    public static final String CONF_QUEUE_MAXPAYLOADS =
-            "summa.pushfilter.queue.maxpayloads";
+    public static final String CONF_QUEUE_MAXPAYLOADS = "summa.pushfilter.queue.maxpayloads";
     public static final int DEFAULT_QUEUE_MAXPAYLOADS = 100;
 
     /**
@@ -60,14 +59,12 @@ public class PushFilter implements ObjectFilter {
      * </p><p>
      * This property is optional. Default is 1 MB.
      */
-    public static final String CONF_QUEUE_MAXBYTES =
-            "summa.pushfilter.queue.maxbytes";
+    public static final String CONF_QUEUE_MAXBYTES = "summa.pushfilter.queue.maxbytes";
     public static final int DEFAULT_QUEUE_MAXBYTES = 1024 * 1024;
 
     // Signals EOF
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static final Payload STOP =
-            new Payload(new Record("EOF", "Dummy", new byte[0]));
+    private static final Payload STOP = new Payload(new Record("EOF", "Dummy", new byte[0]));
 
     private PayloadQueue queue;
     private Payload next = null;
@@ -87,16 +84,16 @@ public class PushFilter implements ObjectFilter {
 
     /**
      * Construct a PushFilter with the given constraints.
+     *
      * @param maxPayloads the maximum number of Payloads in the queue before it
      *                    blocks inserts.
-     * @param maxBytes    the maximum number of bytes in the queue before it 
+     * @param maxBytes    the maximum number of bytes in the queue before it
      *                    blocks inserts.
      */
     public PushFilter(int maxPayloads, int maxBytes) {
         queue = new PayloadQueue(maxPayloads, maxBytes);
-        log.debug(String.format(
-                "Constructed PushFilter with queue max payloads %d and max "
-                + "payload bytes %d", maxPayloads, maxBytes));
+        log.debug(String.format("Constructed PushFilter with queue max payloads %d and max "
+                                + "payload bytes %d", maxPayloads, maxBytes));
     }
 
     public void add(Payload payload) {
@@ -132,6 +129,7 @@ public class PushFilter implements ObjectFilter {
 
     /* ObjectFilter interface */
 
+    @Override
     public boolean hasNext() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("hasNext() called");
@@ -144,45 +142,43 @@ public class PushFilter implements ObjectFilter {
         }
         log.trace("Waiting for input in hasNext()");
         next = queue.uninterruptibleTake();
-        log.trace("Returning " + (next != STOP)
-                  + " after waiting in hasNext()");
+        log.trace("Returning " + (next != STOP) + " after waiting in hasNext()");
         return next != STOP;
     }
 
+    @Override
     public void setSource(Filter filter) {
-        throw new UnsupportedOperationException(
-                "PushFilter cannot have explicit source");
+        throw new UnsupportedOperationException("PushFilter cannot have explicit source");
     }
 
+    @Override
     public boolean pump() throws IOException {
         return hasNext() && next() != null;
     }
 
+    @Override
     public void close(boolean success) {
-        log.debug("Close has no effect on PushFilter. Use signalEOF to shut "
-                  + "down the filter");
+        log.debug("Close has no effect on PushFilter. Use signalEOF to shut " + "down the filter");
     }
 
+    @Override
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new IllegalStateException("EOF has been signalled. No more "
-                                            + "Payloads available");
+            throw new IllegalStateException("EOF has been signalled. No more " + "Payloads available");
         }
         Payload deliver = next;
         next = null;
         outPayloads++;
         if (log.isTraceEnabled()) {
-            log.trace("next() delivering " + deliver + ". Total in="
-                      + inPayloads + ", out=" + outPayloads);
+            log.trace("next() delivering " + deliver + ". Total in=" + inPayloads + ", out=" + outPayloads);
         }
         return deliver;
     }
 
+    @Override
     public void remove() {
-        throw new UnsupportedOperationException(
-                "Remove is not supported in PushFilter");
+        throw new UnsupportedOperationException("Remove is not supported in PushFilter");
     }
 }
-

@@ -43,16 +43,14 @@ public class StreamCopyFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_WARN_ON_NO_STREAM =
-            "common.streamcopy.warnonnostream";
+    public static final String CONF_WARN_ON_NO_STREAM = "common.streamcopy.warnonnostream";
     public static final boolean DEFAULT_WARN_ON_NO_STREAM = true;
 
     private boolean warnOnNoStream = DEFAULT_WARN_ON_NO_STREAM;
 
     public StreamCopyFilter(Configuration conf) {
         super(conf);
-        warnOnNoStream = conf.getBoolean(
-                CONF_WARN_ON_NO_STREAM, warnOnNoStream);
+        warnOnNoStream = conf.getBoolean(CONF_WARN_ON_NO_STREAM, warnOnNoStream);
     }
 
     @Override

@@ -58,7 +58,7 @@ import java.util.regex.PatternSyntaxException;
  * </p><p>
  * Hint: See the list of embedded options for regexp matching at
  * {link http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html}
- * Hint 2: When using multiline patterns, prepending {@code (?s)} to the regexp
+ * Hint 2: When using multiline patterns, prepending ?s to the regexp
  * sets the pattern matcher in DOTALL-mode. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -297,7 +297,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 "Unable to resolve " + CONF_META_REQUIREMENT + " value '" + conf.getString(CONF_META_REQUIREMENT)
                 + "' to any known requirement. Valid values are all, none and one");
         }
-        if (metaRequirement == RecordShaperFilter.REQUIREMENT.one && metas.size() == 0) {
+        if (metaRequirement == RecordShaperFilter.REQUIREMENT.one && metas.isEmpty()) {
             throw new ConfigurationException(
                 "There were 0 metas specified with a requirement of 1 in order for a Payload to pass. Set requirements "
                 + "to something else or add at least 1 meta");

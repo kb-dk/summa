@@ -24,8 +24,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 
@@ -112,22 +112,19 @@ public class SnippetFilter extends ObjectFilterImpl {
             skipBreaker = null;
         }
         buffer = new StringBuffer(Math.min(10000, maxLength));
-        log.info(String.format(
-            "Constructed SnippetFilter with maxLength=%d, destination=%s",
-            maxLength, destination));
+        log.info(String.format("Constructed SnippetFilter with maxLength=%d, destination=%s", maxLength, destination));
     }
 
     // State for the snippet generator
     private StringBuffer buffer;
     private int skipsLeft = 0;
     private int skipBreakPos = 0;
+
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        if (DESTINATION_CONTENT.equals(destination) &&
-            payload.getRecord() == null) {
-            throw new PayloadException(
-                "Destination " + DESTINATION_CONTENT + " requested, but the "
-                + "Payload does not have a Record", payload);
+        if (DESTINATION_CONTENT.equals(destination) && payload.getRecord() == null) {
+            throw new PayloadException("Destination " + DESTINATION_CONTENT + " requested, but the Payload does not "
+                                       + "have a Record", payload);
         }
 
 
@@ -153,7 +150,7 @@ public class SnippetFilter extends ObjectFilterImpl {
             while ((current = in.read()) != -1 && buffer.length() < maxLength) {
                 preserveChar(forward, current);
                 skipBreakCheck(current);
-                if (((char)current == '\n') || ((char)current == '\r')) { // Newline to space
+                if (((char) current == '\n') || ((char) current == '\r')) { // Newline to space
                     current = ' ';
                 }
                 if ((last == ' ' && current == ' ')) { // Skip multiple spaces
@@ -177,7 +174,7 @@ public class SnippetFilter extends ObjectFilterImpl {
                     }
                     current = ' '; // Tags count as space
                 } else if (--skipsLeft < 0) {
-                    buffer.append((char)current);
+                    buffer.append((char) current);
                 }
                 last = current;
             }
@@ -185,14 +182,11 @@ public class SnippetFilter extends ObjectFilterImpl {
         } catch (IOException e) {
             throw new PayloadException("Unable to extract snippet", e, payload);
         }
-        Logging.logProcess("SnippetFilter",
-                           "Assigning snippet of length "
-                           + buffer.length() + " to " + destination,
+        Logging.logProcess("SnippetFilter", "Assigning snippet of length " + buffer.length() + " to " + destination,
                            Logging.LogLevel.TRACE, payload);
         if (DESTINATION_CONTENT.equals(destination)) {
             try {
-                payload.getRecord().setContent(
-                    buffer.toString().getBytes("utf-8"), false);
+                payload.getRecord().setContent(buffer.toString().getBytes("utf-8"), false);
                 return true;
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("UTF-8 not supported", e);
@@ -200,8 +194,7 @@ public class SnippetFilter extends ObjectFilterImpl {
         }
         if (DESTINATION_STREAM.equals(destination)) {
             try {
-                payload.setStream(new ByteArrayInputStream(
-                    buffer.toString().getBytes("utf-8")));
+                payload.setStream(new ByteArrayInputStream(buffer.toString().getBytes("utf-8")));
                 return true;
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("UTF-8 not supported", e);
@@ -214,12 +207,9 @@ public class SnippetFilter extends ObjectFilterImpl {
         }
         if (forward != null) {
             forward.flush();
-            Logging.logProcess("SnippetFilter", "Preserved Stream",
-                               Logging.LogLevel.TRACE, payload);
-            payload.setStream(new SequenceInputStream(
-                new ReaderInputStream(
-                    new StringReader(forward.toString()), "utf-8"),
-                new ReaderInputStream(in, "utf-8")));
+            Logging.logProcess("SnippetFilter", "Preserved Stream", Logging.LogLevel.TRACE, payload);
+            payload.setStream(new SequenceInputStream(new ReaderInputStream(
+                    new StringReader(forward.toString()), "utf-8"), new ReaderInputStream(in, "utf-8")));
         }
         return true;
     }
@@ -228,7 +218,7 @@ public class SnippetFilter extends ObjectFilterImpl {
         if (skipsLeft <= 0 || skipBreaker == null) {
             return;
         }
-        if (((char)ic) == skipBreaker.charAt(skipBreakPos)) {
+        if (((char) ic) == skipBreaker.charAt(skipBreakPos)) {
             skipBreakPos++;
             if (skipBreakPos == skipBreaker.length()) {
                 log.trace("SkipBreaker " + skipBreaker + " matched");
@@ -244,10 +234,8 @@ public class SnippetFilter extends ObjectFilterImpl {
             try {
                 forward.write(ic);
             } catch (IOException e) {
-                throw new RuntimeException(
-                    "IOException writing to internal structure", e);
+                throw new RuntimeException("IOException writing to internal structure", e);
             }
         }
     }
-
 }

@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.Set;
  * as origin. Only Payloads with Records are permitted.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public abstract class GraphFilter<T> extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(GraphFilter.class);
@@ -47,8 +47,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_VISIT_CHILDREN =
-        "graphfilter.visit.children";
+    public static final String CONF_VISIT_CHILDREN = "graphfilter.visit.children";
     public static final boolean DEFAULT_VISIT_CHILDREN = false;
 
     /**
@@ -59,10 +58,9 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is all.
      */
-    public static final String
-        CONF_SUCCESS_REQUIREMENT = "graphfilter.success.requirement";
-    public static final String
-        DEFAULT_SUCCESS_REQUIREMENT = "all";
+    public static final String CONF_SUCCESS_REQUIREMENT = "graphfilter.success.requirement";
+    public static final String DEFAULT_SUCCESS_REQUIREMENT = "all";
+
     public static enum REQUIREMENT {origin, all, none, one}
 
     private final boolean visitParents;
@@ -71,21 +69,16 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
 
     public GraphFilter(Configuration conf) {
         super(conf);
-        visitParents = conf.getBoolean(
-            CONF_VISIT_PARENTS, DEFAULT_VISIT_PARENTS);
-        visitChildren = conf.getBoolean(
-            CONF_VISIT_CHILDREN, DEFAULT_VISIT_CHILDREN);
-        String r = conf.getString(
-            CONF_SUCCESS_REQUIREMENT, DEFAULT_SUCCESS_REQUIREMENT);
+        visitParents = conf.getBoolean(CONF_VISIT_PARENTS, DEFAULT_VISIT_PARENTS);
+        visitChildren = conf.getBoolean(CONF_VISIT_CHILDREN, DEFAULT_VISIT_CHILDREN);
+        String r = conf.getString(CONF_SUCCESS_REQUIREMENT, DEFAULT_SUCCESS_REQUIREMENT);
         requirement = REQUIREMENT.valueOf(r);
         if (requirement == null) {
             throw new ConfigurationException(
-                "The requirement value '" + r + "' is not known. Valid values "
-                + "are origin, all, none and one");
+                    "The requirement value '" + r + "' is not known. Valid values " + "are origin, all, none and one");
         }
-        log.debug(String.format(
-            "GraphFilter %s constructed with visitParents=%b, visitChildren=%b",
-            getName(), visitParents, visitChildren));
+        log.debug(String.format("GraphFilter %s constructed with visitParents=%b, visitChildren=%b", getName(),
+                                visitParents, visitChildren));
     }
 
     @Override
@@ -98,30 +91,26 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
         return finish(payload, state, success);
     }
 
-    private boolean processRecord(Record record, Tracker tracker, T state)
-                                                       throws PayloadException {
+    private boolean processRecord(Record record, Tracker tracker, T state) throws PayloadException {
         if (tracker != null && tracker.isVisited(record)) {
             log.trace("Already visited " + record.getId());
             return true;
         }
         if (log.isDebugEnabled()) {
-            log.debug("Processing "
-                      + (tracker == null ? "sub " : "origin ") + record);
+            log.debug("Processing " + (tracker == null ? "sub " : "origin ") + record);
         }
         if (!visitChildren && !visitParents) { // No traversal
-            return processRecord(record, true, state) ||
-                   requirement == REQUIREMENT.none;
+            return processRecord(record, true, state) || requirement == REQUIREMENT.none;
         }
         tracker = tracker == null ? new Tracker(requirement) : tracker;
-        tracker.addVisited(record,
-                           processRecord(record, tracker.isEmpty(), state));
+        tracker.addVisited(record, processRecord(record, tracker.isEmpty(), state));
         if (visitChildren && record.getChildren() != null) {
-            for (Record child: record.getChildren()) {
+            for (Record child : record.getChildren()) {
                 processRecord(child, tracker, state);
             }
         }
         if (visitParents && record.getParents() != null) {
-            for (Record parent: record.getParents()) {
+            for (Record parent : record.getParents()) {
                 processRecord(parent, tracker, state);
             }
         }
@@ -131,20 +120,21 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
 
     /**
      * Process the content of the Record.
+     *
      * @param record the record to process.
      * @param origin if true, the Record is the origin in the Record graph.
-     * @param state custom state object.
+     * @param state  custom state object.
      * @return true if the Record processing is considered a success.
      * @throws PayloadException if an error that warrants overall discarding of
-     *         the graph occurred during processing.
+     *                          the graph occurred during processing.
      */
-    public abstract boolean processRecord(
-        Record record, boolean origin, T state) throws PayloadException;
+    public abstract boolean processRecord(Record record, boolean origin, T state) throws PayloadException;
 
     /**
      * The state-object is created before any other processing is done and will
      * be send to all Records visited during traversal.
      * null is a valid value as all processing of the object is optional.
+     *
      * @param payload the Payload that is about to be processed.
      * @return a custom object for preserving state between process-calls.
      * @throws PayloadException if the state could not be created.
@@ -153,15 +143,15 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
 
     /**
      * Called with the originating payload when traversal has finished.
+     *
      * @param payload the Payload that entered this filter.
-     * @param state the custom state object.
+     * @param state   the custom state object.
      * @param success if the overall processing was considered a success.
-     * @throws PayloadException if an exception was appropriate instead of just
-     *         returning false.
      * @return true if the Payload entering the GraphFilter should be preserved.
+     * @throws PayloadException if an exception was appropriate instead of just
+     *                          returning false.
      */
-    public abstract boolean finish(Payload payload, T state, boolean success)
-                                                        throws PayloadException;
+    public abstract boolean finish(Payload payload, T state, boolean success) throws PayloadException;
 
     private class Tracker {
         private final REQUIREMENT requirement;
@@ -196,13 +186,17 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
 
         public boolean isSuccess() {
             switch (requirement) {
-                case none:   return true;
-                case all:    return encountered == successes;
-                case one:    return successes != 0;
-                case origin: return originSuccess;
-                default: throw new UnsupportedOperationException(
-                    "The requirement value '" + requirement
-                    + "' is unknown and unhandled");
+                case none:
+                    return true;
+                case all:
+                    return encountered == successes;
+                case one:
+                    return successes != 0;
+                case origin:
+                    return originSuccess;
+                default:
+                    throw new UnsupportedOperationException(
+                            "The requirement value '" + requirement + "' is unknown and unhandled");
             }
         }
     }

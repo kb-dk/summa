@@ -17,15 +17,15 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Passes all Payloads unchanged. Can be used with a muxer for processing some
  * Payloads while not touching others.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class IdentityFilter extends ObjectFilterImpl  {
     private static Log log = LogFactory.getLog(IdentityFilter.class);
