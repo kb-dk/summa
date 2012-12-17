@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
-import java.io.IOException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
 
 /**
  * A filter is something that can be chained at the end of other filters and
@@ -26,7 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * data, transforming, inspection etc.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public interface Filter {
 

@@ -14,14 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-
 import dk.statsbiblioteket.util.xml.XMLUtil;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,55 +36,49 @@ public class StdOutFilter extends ObjectFilterImpl {
      * dumped. By default (when this property is {@code false}) records will
      * be wrapped in an XML envelope with full record metadata.
      */
-    public static final String CONF_CONTENT_ONLY =
-                                             "summa.filter.stdout.contentonly";
+    public static final String CONF_CONTENT_ONLY = "summa.filter.stdout.contentonly";
 
     /**
      * Default value for the {@link #CONF_CONTENT_ONLY} property
      */
     public static final boolean DEFAULT_CONTENT_ONLY = false;
-    
+
     /**
      * Optional property defining if the written record content should be
      * XML-escaped. This affects the output regardless how
      * {@link #CONF_CONTENT_ONLY} is set
      */
-    public static final String CONF_ESCAPE_CONTENT =
-                                           "summa.filter.stdout.escapecontent";
+    public static final String CONF_ESCAPE_CONTENT = "summa.filter.stdout.escapecontent";
 
     /**
      * Default value for the {@link #CONF_ESCAPE_CONTENT} property
      */
     public static final boolean DEFAULT_ESCAPE_CONTENT = false;
-    
+
     private boolean contentOnly;
     private boolean escapeContent;
-    
+
     public StdOutFilter(Configuration conf) {
         super(conf);
-        
         contentOnly = conf.getBoolean(CONF_CONTENT_ONLY, DEFAULT_CONTENT_ONLY);
-        escapeContent = conf.getBoolean(CONF_ESCAPE_CONTENT,
-                                        DEFAULT_ESCAPE_CONTENT);
+        escapeContent = conf.getBoolean(CONF_ESCAPE_CONTENT, DEFAULT_ESCAPE_CONTENT);
     }
 
+    @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getRecord() == null) {
             throw new PayloadException("Payload has no record", payload);
-        }                
-        
+        }
+
         if (contentOnly) {
             String content = payload.getRecord().getContentAsUTF8();
-            System.out.println(escapeContent ?
-                                       XMLUtil.encode(content) : content);
+            System.out.println(escapeContent ? XMLUtil.encode(content) : content);
         } else {
             try {
-                System.out.println(RecordUtil.toXML(payload.getRecord(),
-                                                    escapeContent));
+                System.out.println(RecordUtil.toXML(payload.getRecord(), escapeContent));
             } catch (IOException e) {
-                throw new PayloadException("Error parsing record content for "
-                                           + payload.getId() + ": "
-                                           + e.getMessage(), e);
+                throw new PayloadException(
+                        "Error parsing record content for " + payload.getId() + ": " + e.getMessage(), e);
             }
         }
         return true;

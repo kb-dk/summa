@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The payload is the object that gets pumped through a filter chain.
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * Note: This is not the same map as the one provided by Record.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class Payload {
     private static Log log = LogFactory.getLog(Payload.class);
@@ -83,31 +83,30 @@ public class Payload {
 
     /**
      * Create a Payload based on the given stream.
+     *
      * @param stream the content.
      * @deprecated use {@link Payload(InputStream, String)} instead.
      */
     public Payload(InputStream stream) {
         assignIfValid(stream, record);
-        Logging.logProcess(this.getClass().getSimpleName(),
-                           "Created based on InputStream",
+        Logging.logProcess(this.getClass().getSimpleName(), "Created based on InputStream",
                            Logging.LogLevel.DEBUG, this);
     }
+
     public Payload(InputStream stream, String source) {
         assignIfValid(stream, record);
-        Logging.logProcess(this.getClass().getSimpleName(),
-                           "Created based on InputStream with specified source",
+        Logging.logProcess(this.getClass().getSimpleName(), "Created based on InputStream with specified source",
                            Logging.LogLevel.DEBUG, source);
     }
+
     public Payload(Record record) {
         assignIfValid(stream, record);
-        Logging.logProcess(this.getClass().getSimpleName(),
-                           "Created based on Record",
-                           Logging.LogLevel.DEBUG, this);
+        Logging.logProcess(this.getClass().getSimpleName(), "Created based on Record", Logging.LogLevel.DEBUG, this);
     }
+
     public Payload(InputStream stream, Record record) {
         assignIfValid(stream, record);
-        Logging.logProcess(this.getClass().getSimpleName(),
-                           "Created based on Record and InputStream", 
+        Logging.logProcess(this.getClass().getSimpleName(), "Created based on Record and InputStream",
                            Logging.LogLevel.DEBUG, this);
     }
 
@@ -116,6 +115,7 @@ public class Payload {
     public InputStream getStream() {
         return stream;
     }
+
     public Record getRecord() {
         return record;
     }
@@ -125,6 +125,7 @@ public class Payload {
      * it has no values. Use {@link #getData(String)} for fast look-up of values
      * where it is expected that the map is empty, as it will never create a
      * new map.
+     *
      * @return the data for this Payload.
      */
     public ConvenientMap getData() {
@@ -136,6 +137,7 @@ public class Payload {
 
     /**
      * Similar to {@link #getData()}.
+     *
      * @return the object data for this Payload.
      */
     public Map<String, Object> getObjectData() {
@@ -144,11 +146,13 @@ public class Payload {
         }
         return objects;
     }
+
     /**
      * Request a data-value for the given key. This method is more efficient
      * than requesting the full map with {@link #getData()}, as it never creates
      * a new map. This method falls back to getObjectData if no value is present
      * in data.
+     *
      * @param key the key for the value.
      * @return the value for the key, or null if the key is not in the map.
      */
@@ -162,6 +166,7 @@ public class Payload {
 
     /**
      * Non-serializable equivalent of {@link #getData(String)}.
+     *
      * @param key the key for the value.
      * @return the value for the key, or null if the key is not in the map.
      */
@@ -175,6 +180,7 @@ public class Payload {
 
     /**
      * Convenience method for extracting Strings from data.
+     *
      * @param key the data to get.
      * @return the value for the key if it exists and is a String, else null.
      */
@@ -183,7 +189,7 @@ public class Payload {
         if (object == null || !(object instanceof String)) {
             return null;
         }
-        return (String)object;
+        return (String) object;
     }
 
     /**
@@ -200,6 +206,7 @@ public class Payload {
      * 1. If the data contains IndexUtils#RECORD_FIELD, the value is used.
      * 2. If a Record is defined, its ID is used.
      * 3. If none of the above is present, null is returned.
+     *
      * @return the id for the Payload if present, else null.
      */
     public String getId() {
@@ -212,12 +219,10 @@ public class Payload {
                 return getRecord().getId();
             }
         } catch (Exception e) {
-            log.error("Exception extracting ID from payload '"
-                      + super.toString() + "'. Returning null", e);
+            log.error("Exception extracting ID from payload '" + super.toString() + "'. Returning null", e);
             return null;
         }
-        log.trace("Could not extract ID for payload '"
-                  + super.toString() + "'");
+        log.trace("Could not extract ID for payload '" + super.toString() + "'");
         return null;
     }
 
@@ -225,6 +230,7 @@ public class Payload {
      * Store the given id as RecordID in data and Record, if possible.
      * This method is forgiving: It can be called multiple times and tries to
      * correct any inconsistencies.
+     *
      * @param id the id to assign to the Payload.
      */
     public void setID(String id) {
@@ -244,6 +250,7 @@ public class Payload {
     public void setStream(InputStream stream) {
         assignIfValid(stream, record);
     }
+
     public void setRecord(Record record) {
         assignIfValid(stream, record);
     }
@@ -251,16 +258,15 @@ public class Payload {
     /**
      * Helper for assignment that ensures that at least one of the core
      * attributes is != null.
-     * @param stream   the stream to assign.
-     * @param record   the record to assign.
+     *
+     * @param stream the stream to assign.
+     * @param record the record to assign.
      */
     private void assignIfValid(InputStream stream, Record record) {
         if (stream == null && record == null) {
-            throw new IllegalStateException("Either stream or record "
-                                            + "must be defined");
+            throw new IllegalStateException("Either stream or record " + "must be defined");
         }
-        log.trace("Assigned stream: " + stream + " and record: " + record
-                  + " to Payload");
+        log.trace("Assigned stream: " + stream + " and record: " + record + " to Payload");
         this.stream = stream;
         this.record = record;
     }
@@ -273,7 +279,7 @@ public class Payload {
      * the underlying stream is empty.
      * </p><p>
      * Note: Calling close on the payload is not a substitute for calling
-     *       close(success) on the Filter.
+     * close(success) on the Filter.
      */
     public void close() {
         if (closed) {
@@ -281,9 +287,7 @@ public class Payload {
             return;
         }
         closed = true;
-        Logging.logProcess(this.getClass().getSimpleName(),
-                           "Closing payload",
-                           Logging.LogLevel.TRACE, this);
+        Logging.logProcess(this.getClass().getSimpleName(), "Closing payload", Logging.LogLevel.TRACE, this);
         if (stream != null) {
             try {
                 log.trace("Closing embedded stream for " + this);
@@ -296,14 +300,14 @@ public class Payload {
 
     /**
      * Pumps the underlying stream for one byte, if a stream is present.
+     *
      * @return true if there is potentially more data available.
      * @throws IOException in case of read errors.
      */
     public boolean pump() throws IOException {
         boolean cont = stream != null && stream.read() != -1;
         if (!cont) {
-            Logging.logProcess(this.getClass().getSimpleName(),
-                               "Calling close due to pump() being finished",
+            Logging.logProcess(this.getClass().getSimpleName(), "Calling close due to pump() being finished",
                                Logging.LogLevel.TRACE, this);
             close();
         }
@@ -314,11 +318,11 @@ public class Payload {
      * The clone-method is a shallow cloning, which means that all fields are
      * copied directly. For data, this means that a new Map is created and the
      * content from the old map is assigned using putAll.
+     *
      * @return a shallow copy of this object.
      */
     @Override
-    @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException",
-                       "CloneDoesntCallSuperClone"})
+    @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException", "CloneDoesntCallSuperClone"})
     public Payload clone() {
         Payload clone = new Payload(getStream(), getRecord());
         if (data != null) {
@@ -329,25 +333,22 @@ public class Payload {
 
     @Override
     public String toString() {
-        return "Payload(" + getId() + ")"
-               + (getData(ORIGIN) == null ?
-                  "" : " with origin '" + getData(ORIGIN) + "'")
-            + (hasData() ? " with " + getData().size() + " meta data" : "");
+        return "Payload(" + getId() + ")" + (getData(ORIGIN) == null ? "" : " with origin '" + getData(ORIGIN) + "'")
+               + (hasData() ? " with " + getData().size() + " meta data" : "");
     }
 
     public CharSequence toString(boolean verbose) {
         if (!verbose) {
             return toString();
         }
-        StringBuffer sb = new StringBuffer(100);
+        StringBuilder sb = new StringBuilder(100);
         sb.append("Payload(").append(getId()).append(")");
-        sb.append(getData(ORIGIN) == null ?
-                  "" : " with origin '" + getData(ORIGIN));
+        sb.append(getData(ORIGIN) == null ? "" : " with origin '" + getData(ORIGIN));
         sb.append(". MetaData:");
         if (data == null) {
             sb.append(" none");
         } else {
-            for (Map.Entry entry: getData().entrySet()) {
+            for (Map.Entry entry : getData().entrySet()) {
                 sb.append(" ");
                 sb.append(entry.getKey().toString()).append(":");
                 if (entry.getValue() instanceof String) {

@@ -52,11 +52,13 @@ import java.util.regex.Pattern;
  * ReaderInputStream.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te",
         comment = "JavaDoc needed especially on methods")
 public class ReplaceFilter extends ObjectFilterImpl {
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private static Log log = LogFactory.getLog(ReplaceFilter.class);
 
     /**
@@ -64,9 +66,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_PROCESS_CONTENT =
-            "common.replacefilter.process.content";
-    /** Default value for {@link #CONF_PROCESS_CONTENT}. */
+    public static final String CONF_PROCESS_CONTENT = "common.replacefilter.process.content";
+    /**
+     * Default value for {@link #CONF_PROCESS_CONTENT}.
+     */
     public static final boolean DEFAULT_PROCESS_CONTENT = true;
 
     /**
@@ -74,9 +77,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_PROCESS_STREAM =
-            "common.replacefilter.process.stream";
-    /** Default value for {@link #CONF_PROCESS_STREAM}. */
+    public static final String CONF_PROCESS_STREAM = "common.replacefilter.process.stream";
+    /**
+     * Default value for {@link #CONF_PROCESS_STREAM}.
+     */
     public static final boolean DEFAULT_PROCESS_STREAM = true;
 
     /**
@@ -84,9 +88,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is utf-8.
      */
-    public static final String CONF_ENCODING_IN =
-            "common.replacefilter.encoding.in";
-    /** Default value for {@link #CONF_ENCODING_IN}. */
+    public static final String CONF_ENCODING_IN = "common.replacefilter.encoding.in";
+    /**
+     * Default value for {@link #CONF_ENCODING_IN}.
+     */
     public static final String DEFAULT_ENCODING_IN = "utf-8";
 
     /**
@@ -94,9 +99,10 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is utf-8.
      */
-    public static final String CONF_ENCODING_OUT =
-            "common.replacefilter.encoding.out";
-    /** Default value for {@link #CONF_ENCODING_OUT}. */
+    public static final String CONF_ENCODING_OUT = "common.replacefilter.encoding.out";
+    /**
+     * Default value for {@link #CONF_ENCODING_OUT}.
+     */
     public static final String DEFAULT_ENCODING_OUT = "utf-8";
 
     /**
@@ -113,20 +119,18 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * be matched by the .-character, prefix the regexp with TODO with what?
      * Optional. Default is null (no regexp replacement).
      */
-    public static final String CONF_PATTERN_REGEXP =
-            "common.replacefilter.pattern.regexp";
+    public static final String CONF_PATTERN_REGEXP = "common.replacefilter.pattern.regexp";
 
     /**
      * Used as the replacement for matches on {@link #CONF_PATTERN_REGEXP}.
      * This uses the same rules as {@link Matcher#replaceAll(String)}.
      * </p><p>
      * Example: input "hello12world", regexp "o(.+)w", destination "$1"
-     *          result "hell12orld"
+     * result "hell12orld"
      * If {@link #CONF_PATTERN_REGEXP} is defined, CONF_PATTERN_REPLACEMENT must
      * also be defined.
      */
-    public static final String CONF_PATTERN_REPLACEMENT =
-            "common.replacefilter.pattern.destination";
+    public static final String CONF_PATTERN_REPLACEMENT = "common.replacefilter.pattern.destination";
 
     /**
      * String-to-string replacement, using the fast and memory-efficient replace
@@ -137,6 +141,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * single replacement.
      * </p><p>
      * Optional. Default is null (no rule-based replacement).
+     *
      * @see #CONF_RULE_TARGET
      * @see #CONF_RULE_REPLACEMENT
      */
@@ -147,94 +152,81 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * This must be defined in each of the sub-properties in the
      * {@link #CONF_RULES} list.
      */
-    public static final String CONF_RULE_TARGET =
-            "common.replacefilter.rule.target";
+    public static final String CONF_RULE_TARGET = "common.replacefilter.rule.target";
 
     /**
      * The replacement for a rule aka the String that is used verbatim instead
      * of the matched String. This must be defined in each of the sub-properties
      * in the {@link #CONF_RULES} list.
      */
-    public static final String CONF_RULE_REPLACEMENT =
-            "common.replacefilter.rule.replacement";
+    public static final String CONF_RULE_REPLACEMENT = "common.replacefilter.rule.replacement";
 
     private boolean processContent = DEFAULT_PROCESS_CONTENT;
-    private boolean processStream =  DEFAULT_PROCESS_STREAM;
-    private String encodingIn =      DEFAULT_ENCODING_IN;
-    private String encodingOut =     DEFAULT_ENCODING_OUT;
+    private boolean processStream = DEFAULT_PROCESS_STREAM;
+    private String encodingIn = DEFAULT_ENCODING_IN;
+    private String encodingOut = DEFAULT_ENCODING_OUT;
 
-    private Pattern pattern =           null;
+    private Pattern pattern = null;
     private String patternReplacement = null;
-    private ReplaceFactory factory =    null;
+    private ReplaceFactory factory = null;
     private ReplaceReader basicReplacer;
 
     /**
      * Constructs a new replace filter, with the specified configuration.
+     *
      * @param conf The configuration to construct this filter.
      */
     public ReplaceFilter(Configuration conf) {
         super(conf);
         processContent = conf.getBoolean(CONF_PROCESS_CONTENT, processContent);
-        processStream =  conf.getBoolean(CONF_PROCESS_STREAM,  processStream);
-        encodingIn =     conf.getString( CONF_ENCODING_IN,     encodingIn);
-        encodingOut =    conf.getString( CONF_ENCODING_OUT,    encodingOut);
+        processStream = conf.getBoolean(CONF_PROCESS_STREAM, processStream);
+        encodingIn = conf.getString(CONF_ENCODING_IN, encodingIn);
+        encodingOut = conf.getString(CONF_ENCODING_OUT, encodingOut);
         if (conf.valueExists(CONF_PATTERN_REGEXP)) {
             if (!conf.valueExists(CONF_PATTERN_REPLACEMENT)) {
-                throw new ConfigurationException(String.format(
-                        "Property %s was defined but %s was not",
-                        CONF_PATTERN_REGEXP, CONF_PATTERN_REPLACEMENT));
+                throw new ConfigurationException(String.format("Property %s was defined but %s was not",
+                                                               CONF_PATTERN_REGEXP, CONF_PATTERN_REPLACEMENT));
             }
             pattern = Pattern.compile(conf.getString(CONF_PATTERN_REGEXP));
             patternReplacement = conf.getString(CONF_PATTERN_REPLACEMENT);
-            log.debug(String.format(
-                    "Added pattern with regexp '%s' and replacement '%s'",
-                    pattern.pattern(), patternReplacement));
+            log.debug(String.format("Added pattern with regexp '%s' and replacement '%s'",
+                                    pattern.pattern(), patternReplacement));
         }
 
         if (conf.valueExists(CONF_RULES)) {
             List<Configuration> ruleConfs;
             try {
-                 ruleConfs = conf.getSubConfigurations(CONF_RULES);
+                ruleConfs = conf.getSubConfigurations(CONF_RULES);
                 log.debug(String.format("%d rules found", ruleConfs.size()));
             } catch (SubConfigurationsNotSupportedException e) {
-                throw new ConfigurationException(
-                        "Storage doesn't support sub configurations", e);
+                throw new ConfigurationException("Storage doesn't support sub configurations", e);
             } catch (NullPointerException e) {
-                throw new ConfigurationException(String.format(
-                        "IOException while extracting sub properties for %s",
-                        CONF_RULES), e);
+                throw new ConfigurationException(String.format("IOException while extracting sub properties for %s",
+                                                               CONF_RULES), e);
             }
-            Map<String, String> rules =
-                    new LinkedHashMap<String, String>(ruleConfs.size());
+            Map<String, String> rules = new LinkedHashMap<String, String>(ruleConfs.size());
             int count = 0;
-            log.debug(String.format("Located %d rules. Extracting...",
-                                    ruleConfs.size()));
-            for (Configuration ruleConf: ruleConfs) {
-                if (!ruleConf.valueExists(CONF_RULE_TARGET) ||
-                    !ruleConf.valueExists(CONF_RULE_REPLACEMENT)) {
+            log.debug(String.format("Located %d rules. Extracting...", ruleConfs.size()));
+            for (Configuration ruleConf : ruleConfs) {
+                if (!ruleConf.valueExists(CONF_RULE_TARGET) || !ruleConf.valueExists(CONF_RULE_REPLACEMENT)) {
                     throw new ConfigurationException(String.format(
-                            "For each sub-configuration in the list %s, a value"
-                            + " for the key %s and the key %s must exist. " 
-                            + "Rule #%d (counting from 0) did not comply",
-                            CONF_RULES, CONF_RULE_TARGET,
-                            CONF_RULE_REPLACEMENT, count));
+                            "For each sub-configuration in the list %s, a value for the key %s and the key %s must "
+                            + "exist. Rule #%d (counting from 0) did not comply",
+                            CONF_RULES, CONF_RULE_TARGET, CONF_RULE_REPLACEMENT, count));
                 }
                 if (log.isTraceEnabled()) {
-                    log.trace(String.format(
-                            "Adding rule with target '%s' and replacement '%s'",
-                            ruleConf.getString(CONF_RULE_TARGET),
-                            ruleConf.getString(CONF_RULE_REPLACEMENT)));
+                    log.trace(String.format("Adding rule with target '%s' and replacement '%s'",
+                                            ruleConf.getString(CONF_RULE_TARGET),
+                                            ruleConf.getString(CONF_RULE_REPLACEMENT)));
                 }
-                rules.put(ruleConf.getString(CONF_RULE_TARGET),
-                          ruleConf.getString(CONF_RULE_REPLACEMENT));
+                rules.put(ruleConf.getString(CONF_RULE_TARGET), ruleConf.getString(CONF_RULE_REPLACEMENT));
                 count++;
             }
             factory = new ReplaceFactory(rules);
             basicReplacer = factory.getReplacer();
         }
         if (pattern == null && factory == null) {
-            log.info("ReplaceFilter created without any rules. Payloads will "
-                     + "pass through untouched");
+            log.info("ReplaceFilter created without any rules. Payloads will " + "pass through untouched");
         }
     }
 
@@ -248,9 +240,8 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 processFactory(payload);
             } catch (UnsupportedEncodingException e) {
                 throw new PayloadException(String.format(
-                        "Unable to perform replacement on payload due to "
-                        + "unsupported encoding. Encoding for read was '%s', "
-                        + "encoding for store was '%s'",
+                        "Unable to perform replacement on payload due to unsupported encoding. Encoding for read was "
+                        + "'%s', encoding for store was '%s'",
                         encodingIn, encodingOut), e, payload);
             }
         }
@@ -259,92 +250,81 @@ public class ReplaceFilter extends ObjectFilterImpl {
 
     /**
      * Process the payload according to the pattern.
+     *
      * @param payload The payload to process.
      * @throws PayloadException If error occur with the processing.
      */
     private void processPattern(Payload payload) throws PayloadException {
         final int bufferSize = 1000;
         if (payload.getStream() != null) {
-            log.debug("Copying Stream content into memory in order to perform "
-                      + "Pattern replacement");
-            CircularCharBuffer cb =
-                    new CircularCharBuffer(bufferSize, Integer.MAX_VALUE);
+            log.debug("Copying Stream content into memory in order to perform " + "Pattern replacement");
+            CircularCharBuffer cb = new CircularCharBuffer(bufferSize, Integer.MAX_VALUE);
             Reader in;
             try {
                 in = new InputStreamReader(payload.getStream(), encodingIn);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
-                        "The encoding '%s' for the InputStream is not supported"
-                        + " on this platform", encodingIn), e);
+                        "The encoding '%s' for the InputStream is not supported" + " on this platform", encodingIn), e);
             }
             try {
                 int c;
                 while ((c = in.read()) != -1) {
-                    cb.add((char)c);
+                    cb.add((char) c);
                 }
             } catch (IOException e) {
-                throw new PayloadException(
-                        "Unable to read character from Stream", e, payload);
+                throw new PayloadException("Unable to read character from Stream", e, payload);
             }
             String result = pattern.matcher(cb).replaceAll(patternReplacement);
             //noinspection UnusedAssignment
             cb = null; // Make the memory available ASAP
-            byte [] resultBytes;
+            byte[] resultBytes;
             try {
                 resultBytes = result.getBytes(encodingOut);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(String.format(
-                        "The encoding '%s' for output is not supported on this "
-                        + "platform", encodingOut));
+                        "The encoding '%s' for output is not supported on this " + "platform", encodingOut));
             }
             //noinspection UnusedAssignment
             result = null; // Make the memory available ASAP
             payload.setStream(new ByteArrayInputStream(resultBytes));
         }
-        if (payload.getRecord() != null &&
-            payload.getRecord().getContent(false) != null) {
+        if (payload.getRecord() != null && payload.getRecord().getContent(false) != null) {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("ReplaceFilter '" + getName() + "'",
-                               "Performing pattern replace on Record content",
+            Logging.logProcess("ReplaceFilter '" + getName() + "'", "Performing pattern replace on Record content",
                                Logging.LogLevel.TRACE, payload);
             // We hack a bit to guess if content is compressed
             byte[] in = payload.getRecord().getContent();
-            boolean compressed =
-                    in.length != payload.getRecord().getContent(false).length;
+            boolean compressed = in.length != payload.getRecord().getContent(false).length;
             String replaced;
             try {
                 replaced = pattern.matcher(new String(in, encodingIn)).
                         replaceAll(patternReplacement);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format(
-                        "Encoding '%s' not supported for reading content",
-                        encodingIn), e);
+                throw new IllegalArgumentException(String.format("Encoding '%s' not supported for reading content",
+                                                                 encodingIn), e);
             }
             try {
-                payload.getRecord().setContent(
-                    replaced.getBytes(encodingOut), compressed);
+                payload.getRecord().setContent(replaced.getBytes(encodingOut), compressed);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format(
-                        "Encoding '%s' not supported for storing content",
-                        encodingOut), e);
+                throw new IllegalArgumentException(String.format("Encoding '%s' not supported for storing content",
+                                                                 encodingOut), e);
             }
         }
     }
 
     /**
      * Factory process for a given payload.
+     *
      * @param payload The payload.
      * @throws UnsupportedEncodingException If the encoding is unsupported.
      */
-    private void processFactory(Payload payload) throws
-                                                 UnsupportedEncodingException {
+    private void processFactory(Payload payload) throws UnsupportedEncodingException {
         if (payload.getStream() != null) {
             log.debug("Wrapping stream in replacer");
             payload.setStream(new ReaderInputStream(
                     factory.getReplacer(new InputStreamReader(payload.getStream(), encodingIn)), encodingOut));
         }
-        if (payload.getRecord() != null &&
-            payload.getRecord().getContent(false) != null) {
+        if (payload.getRecord() != null && payload.getRecord().getContent(false) != null) {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(getName(), "Performing replace on Record content", Logging.LogLevel.TRACE, payload);
             // We hack a bit to guess if content is compressed

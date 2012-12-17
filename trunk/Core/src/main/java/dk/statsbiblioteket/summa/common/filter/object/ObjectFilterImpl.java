@@ -30,7 +30,7 @@ import java.io.IOException;
  * filters. The implementation can only be chained after other ObjectFilters.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te",
         comment = "Class needs JavaDoc")
 public abstract class ObjectFilterImpl implements ObjectFilter {
@@ -204,8 +204,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
         return "Processed " + payloadCount + " Payloads at "
-               + (payloadCount == 0 ? "NA" : totalTimeNS / 1000000.0 / payloadCount)
-               + " ms/Payload";
+               + (payloadCount == 0 ? "NA" : totalTimeNS / 1000000.0 / payloadCount) + " ms/Payload";
     }
 
     /**

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import java.util.Iterator;
-
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.Iterator;
 
 /**
  * An ObjectFilter processes a triplet of Stream, Record and Document. Not all
@@ -46,6 +46,7 @@ public interface ObjectFilter extends Configurable, Filter, Iterator<Payload> {
      * If next() has returned null, hasNext must return false.
      * @return true if more Payloads are available, else false.
      */
+    @Override
     public boolean hasNext();
 }
 

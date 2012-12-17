@@ -21,13 +21,12 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * This class creates a given number of filter chains and pumps contents
@@ -36,12 +35,16 @@ import org.apache.commons.logging.LogFactory;
  */
 // TODO: Add scheduling capabilities
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class FilterControl extends StateThread implements Configurable, FilterChainHandler {
-    /** Local log instance. */
+    /**
+     * Local log instance.
+     */
     private static Log log = LogFactory.getLog(FilterControl.class);
-    /** List of pumps. */
+    /**
+     * List of pumps.
+     */
     private List<FilterPump> pumps;
 
     /**
@@ -61,7 +64,9 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
      * Optional. Default is true.
      */
     public static final String CONF_SEQUENTIAL = "filtercontrol.sequential";
-    /** Default value for {@link #CONF_SEQUENTIAL}. */
+    /**
+     * Default value for {@link #CONF_SEQUENTIAL}.
+     */
     public static final boolean DEFAULT_SEQUENTIAL = true;
     /**
      * Value of either {@link #CONF_SEQUENTIAL} or {@link #DEFAULT_SEQUENTIAL}.
@@ -71,10 +76,11 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
     /**
      * The FilterControl sets up the Filter Chains defines by the configuration.
      * The chains aren't pumped before {@link #start} is called.
+     *
      * @param configuration setup for the FilterControl's underlying filter
      *                      chains.
      * @throws ConfigurationException If the construction could not be
-     *                      completed.
+     *                                completed.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public FilterControl(Configuration configuration) throws ConfigurationException {
@@ -83,12 +89,10 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         try {
             chainConfs = configuration.getSubConfigurations(CONF_CHAINS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-            "Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "Could not locate a list of chain-Configurations at key %s",
-                    CONF_CHAINS), e);
+            throw new ConfigurationException(String.format("Could not locate a list of chain-Configurations at key %s",
+                                                           CONF_CHAINS), e);
         }
         pumps = new ArrayList<FilterPump>(chainConfs.size());
         for (Configuration chainConf : chainConfs) {
@@ -98,8 +102,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
                 pumps.add(pump);
             } catch (Exception e) {
                 throw new ConfigurationException(String.format(
-                        "Error creating chain '%s': " + e.getMessage(),
-                        chainConf), e);
+                        "Error creating chain '%s': " + e.getMessage(), chainConf), e);
             }
         }
         try {
@@ -118,7 +121,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
     protected void runMethod() {
         log.info("Activating " + pumps.size() + " filter pump(s) " + (sequential ? "sequentially" : "in parallel"));
 
-        for (FilterPump pump: pumps) {
+        for (FilterPump pump : pumps) {
             if (getStatus() != STATUS.running) {
                 break;
             }
@@ -139,10 +142,9 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         }
         if (!sequential) {
             log.info("Waiting for chains to finish");
-            for (FilterPump pump: pumps) {
+            for (FilterPump pump : pumps) {
                 try {
-                    log.debug("Waiting for filter chain '" + pump.getChainName()
-                            + "' to finish");
+                    log.debug("Waiting for filter chain '" + pump.getChainName() + "' to finish");
                     pump.waitForFinish();
                     log.info("Filter pump " + pump.getChainName() + " completed");
                 } catch (InterruptedException e) {
@@ -163,7 +165,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         }
         log.info("Stopping all pumps");
         super.stop();
-        for (FilterPump pump: pumps) {
+        for (FilterPump pump : pumps) {
             pump.stop();
         }
         log.trace("Pumps stopped");
@@ -183,13 +185,14 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
     /**
      * Show the status of the overall status and status of all pumps in a human
      * readable format.
+     *
      * @return A human-readable status consisting of overall status plus
      *         status for all pumps.
      */
     public String getVerboseStatus() {
         StringWriter sw = new StringWriter(500);
         sw.append(getStatus().toString()).append(": ");
-        for (int i = 0 ; i < pumps.size() ; i++) {
+        for (int i = 0; i < pumps.size(); i++) {
             sw.append(pumps.get(i).getChainName()).append("(");
             sw.append(pumps.get(i).getStatus().toString()).append(")");
             if (i < pumps.size() - 1) {
@@ -201,6 +204,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
 
     /**
      * Return a list of all filter pumps.
+     *
      * @return A list of all filter pumps.
      */
     // TODO: Consider if this should not be accessible
@@ -226,16 +230,16 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
             @Override
             protected void finishedCallback() {
                 switch (getStatus()) {
-                case error:
-                    Logging.fatal(log, "FilterControl.main", "Filter finished with status 'error'");
-                    break;
-                case ready:
-                case stopping:
-                case stopped:
-                    log.info("Stopped with status " + getStatus());
-                    break;
-                default:
-                    log.warn("Stopped with unknown state " + getStatus());
+                    case error:
+                        Logging.fatal(log, "FilterControl.main", "Filter finished with status 'error'");
+                        break;
+                    case ready:
+                    case stopping:
+                    case stopped:
+                        log.info("Stopped with status " + getStatus());
+                        break;
+                    default:
+                        log.warn("Stopped with unknown state " + getStatus());
                 }
             }
         };
@@ -247,6 +251,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         } catch (Throwable t) {
             Logging.fatal(log, "FilterControl.main", "Caught top level exception", t);
             System.err.println(t.getMessage());
+            //noinspection CallToPrintStackTrace
             t.printStackTrace();
             System.exit(1);
         }

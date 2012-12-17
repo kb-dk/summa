@@ -37,7 +37,7 @@ import java.util.Set;
  * the special Payload {@link #STOP} is added to the out queue.
  */
 @QAInfo(level = QAInfo.Level.FINE,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "te",
         comment = "This is a central component which uses threading. "
                   + "Please pay special attention to potential deadlocks")
@@ -158,8 +158,7 @@ public class MUXFilterFeeder implements Runnable {
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
-        Class<? extends ObjectFilter> filter = configuration.getClass(
-                CONF_FILTER_CLASS, ObjectFilter.class);
+        Class<? extends ObjectFilter> filter = configuration.getClass(CONF_FILTER_CLASS, ObjectFilter.class);
         log.debug(String.format("Got filter class %s. Commencing creation", filter));
         return Configuration.create(filter, configuration);
     }
@@ -232,6 +231,7 @@ public class MUXFilterFeeder implements Runnable {
      * Calls next on the filter until EOF is reached, puth the processed payload
      * in the out queue given in the constructor.
      */
+    @Override
     public void run() {
         try {
             while (filter.hasNext()) {

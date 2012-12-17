@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Note: Regardless of maxSize, there is always room for 1 Payload in the queue.
  */
 @QAInfo(level = QAInfo.Level.PEDANTIC,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te",
         comment = "The hard part about this is to ensure that totalSize is true under all conditions")
 public class PayloadQueue extends ArrayBlockingQueue<Payload> {
@@ -280,4 +280,3 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return totalSize.longValue();
     }
 }
-

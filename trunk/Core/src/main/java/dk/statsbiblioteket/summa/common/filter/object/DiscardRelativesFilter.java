@@ -30,7 +30,7 @@ import java.util.List;
  * relatives count in determining family. ID-only references are ignored.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class DiscardRelativesFilter extends AbstractDiscardFilter {
     private static Log log = LogFactory.getLog(DiscardRelativesFilter.class);

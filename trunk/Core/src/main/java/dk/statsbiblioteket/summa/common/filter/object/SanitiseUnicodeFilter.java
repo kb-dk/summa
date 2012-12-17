@@ -21,8 +21,8 @@ import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,6 +38,7 @@ import java.util.Set;
  * Note: The current implementation only checks for invalid characters below
  * code point 0x7F.
  * </p><p>
+ *
  * @see <a href="http://www.w3.org/TR/REC-xml/#charsets">W3C definition</a>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -73,15 +74,13 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
     public SanitiseUnicodeFilter(Configuration conf) {
         super(conf);
         feedback = false;
-        String re = conf.getString(
-            CONF_REPLACEMENT_CHAR, DEFAULT_REPLACEMENT_CHAR);
+        String re = conf.getString(CONF_REPLACEMENT_CHAR, DEFAULT_REPLACEMENT_CHAR);
         if ("".equals(re)) {
             replace = false;
         } else if (re.length() > 1 || re.charAt(0) > 0x7F) {
             throw new ConfigurationException(String.format(
-                "The replacement character with key %s was '%s'. It must be of"
-                + " length 1 or less and must be at code point 0x7F or less",
-                CONF_REPLACEMENT_CHAR, re));
+                    "The replacement character with key %s was '%s'. It must be of"
+                    + " length 1 or less and must be at code point 0x7F or less", CONF_REPLACEMENT_CHAR, re));
         } else {
             replacement = re.charAt(0);
         }
@@ -96,34 +95,27 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
         if (payload.getRecord() != null) {
             byte[] content = payload.getRecord().getContent();
             if (content == null || content.length == 0) {
-                Logging.logProcess("SanitiseContent", "Content was empty",
-                                   Logging.LogLevel.TRACE, payload);
+                Logging.logProcess("SanitiseContent", "Content was empty", Logging.LogLevel.TRACE, payload);
                 return true;
             }
             InputStream is = new ByteArrayInputStream(content);
             InputStream fixed = new FixUnicodeStream(is);
-            ByteArrayOutputStream out =
-                new ByteArrayOutputStream(content.length);
+            ByteArrayOutputStream out = new ByteArrayOutputStream(content.length);
             try {
                 Streams.pipe(fixed, out);
             } catch (IOException e) {
-                throw new PayloadException(
-                    "Unable to pipe content through FixUnicodeStream",
-                    e, payload);
+                throw new PayloadException("Unable to pipe content through FixUnicodeStream", e, payload);
             }
 
             payload.getRecord().setContent(out.toByteArray(), false);
-            Logging.logProcess("SanitiseContent", "Sanitised content",
-                               Logging.LogLevel.TRACE, payload);
+            Logging.logProcess("SanitiseContent", "Sanitised content", Logging.LogLevel.TRACE, payload);
             return true;
         }
         if (payload.getStream() == null) {
-            throw new PayloadException(
-                "Neither Record nor Stream in Payload", payload);
+            throw new PayloadException("Neither Record nor Stream in Payload", payload);
         }
         payload.setStream(new FixUnicodeStream(payload.getStream()));
-        Logging.logProcess("SanitiseContent",
-                           "Wrapped Payload.stream in FixUnicodeStream",
+        Logging.logProcess("SanitiseContent", "Wrapped Payload.stream in FixUnicodeStream",
                            Logging.LogLevel.TRACE, payload);
         return true;
     }
@@ -131,33 +123,33 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
     @Override
     public void close(boolean success) {
         super.close(success);
-        log.info("Closing down. Fixed invalid code points: "
-                 + fixed + "/" + processed);
+        log.info("Closing down. Fixed invalid code points: " + fixed + "/" + processed);
     }
 
     private void fixMeta(Payload payload) {
         if (payload.getRecord() != null) {
             StringMap map = payload.getRecord().getMeta();
             Set<String> keys = new HashSet<String>(map.keySet());
-            for (String key: keys) {
+            for (String key : keys) {
                 map.put(key, fixText(map.get(key)));
             }
         }
         ConvenientMap map = payload.getData();
         Set<String> keys = new HashSet<String>(map.keySet());
-        for (String key: keys) {
+        for (String key : keys) {
             Object value = map.get(key);
             if (value instanceof String) {
-                map.put(key, fixText((String)value));
+                map.put(key, fixText((String) value));
             }
         }
     }
 
     private StringBuffer buffer = new StringBuffer(100);
+
     // Only illegal chars, no handling of space and tags
     private String fixText(String input) {
         buffer.setLength(0);
-        for (char c: input.toCharArray()) {
+        for (char c : input.toCharArray()) {
             if (isValid(c)) {
                 buffer.append(c);
             } else if (replace) {

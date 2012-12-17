@@ -25,7 +25,7 @@ import java.util.List;
  * for that class for property requirements.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class FilterPump extends StateThread implements Configurable {
     /* We delay the creation of the log until we know the name of the chain. */
@@ -69,7 +69,7 @@ public class FilterPump extends StateThread implements Configurable {
         log.debug("Running FilterChain '" + chainName + "'");
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(1000);
-        Payload pumped = null;
+        Payload pumped;
         try {
             long startTime;
             while (getStatus() == STATUS.running) {
