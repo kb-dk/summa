@@ -46,7 +46,6 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
 
     private DataInputStream input = null;
     private MarcFactory factory = MarcFactory.newInstance();
-    private Record record;
 
     private CharConverter charConverter = null; // Precedence over encoding
     private String encoding = null;
@@ -58,29 +57,25 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
 
     public FlexibleMarcStreamReader(InputStream input, String encoding) {
         this.input = new DataInputStream(new BufferedInputStream(input));
-        this.encoding = encoding;
 
         if (encoding != null) {
-            String trimmed =
-                    encoding.toUpperCase().replace("-", "").replace("_", "");
+            String trimmed = encoding.toUpperCase().replace("-", "").replace("_", "");
             if ("MARC8".equals(trimmed)) {
-                log.debug("Encoding was MARC-8. Enabling AnselToUnicode "
-                          + "CharConverter");
+                log.debug("Encoding was MARC-8. Enabling AnselToUnicode CharConverter");
                 charConverter = new AnselToUnicode();
             } else if ("UTF8".equals(trimmed)) {
                 encoding = "UTF8";
             } else if ("ISO88591".equals(trimmed)) {
                 encoding = "ISO-8859-1";
             } else {
-                log.debug("Unknown encoding '" + encoding + "' will be used "
-                          + "directly by new String(byte[], encoding)");
+                log.debug("Unknown encoding '" + encoding + "' will be used directly by new String(byte[], encoding)");
             }
             override = true;
         }
+        this.encoding = encoding;
     }
 
-    public FlexibleMarcStreamReader(
-            InputStream input, CharConverter charConverter) {
+    public FlexibleMarcStreamReader(InputStream input, CharConverter charConverter) {
         this.input = new DataInputStream(new BufferedInputStream(input));
         this.charConverter = charConverter;
     }
@@ -92,15 +87,13 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         }
         try {
             if (encoding == null) {
-                log.debug("Encoding is null. Returning default new "
-                          + "String(byte[]). This won't work for anything else"
+                log.debug("Encoding is null. Returning default new String(byte[]). This won't work for anything else"
                           + " than plain ASCII");
                 return new String(bytes);
             }
             return new String(bytes, encoding);
         } catch (UnsupportedEncodingException e) {
-            throw new MarcException(
-                    "unsupported encoding '" + encoding + "'", e);
+            throw new MarcException("unsupported encoding '" + encoding + "'", e);
         }
     }
 
@@ -136,7 +129,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
      */
     @Override
     public Record next() {
-        record = factory.newRecord();
+        Record record = factory.newRecord();
 
         try {
 
@@ -147,55 +140,47 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
             byte[] recordBuf = new byte[recordLength - 24];
             input.readFully(recordBuf);
             parseRecord(record, byteArray, recordBuf, recordLength);
-            return(record);
-        }
-        catch (EOFException e) {
+            return (record);
+        } catch (EOFException e) {
             throw new MarcException("Premature end of file encountered", e);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new MarcException("an error occured reading input", e);
         }
     }
 
-    private void parseRecord(Record record, byte[] byteArray, byte[] recordBuf,
-                             int recordLength) {
+    private void parseRecord(Record record, byte[] byteArray, byte[] recordBuf, int recordLength) {
         Leader ldr;
         ldr = factory.newLeader();
         ldr.setRecordLength(recordLength);
-        int directoryLength=0;
+        int directoryLength;
 
         try {
             parseLeader(ldr, byteArray);
             directoryLength = ldr.getBaseAddressOfData() - (24 + 1);
-        }
-        catch (IOException e) {
-            throw new MarcException("error parsing leader with data: "
-                    + new String(byteArray), e);
-        }
-        catch (MarcException e) {
-            throw new MarcException("error parsing leader with data: "
-                    + new String(byteArray), e);
+        } catch (IOException e) {
+            throw new MarcException("error parsing leader with data: " + new String(byteArray), e);
+        } catch (MarcException e) {
+            throw new MarcException("error parsing leader with data: " + new String(byteArray), e);
         }
 
         // if MARC 21 then check encoding
         switch (ldr.getCharCodingScheme()) {
-        case ' ':
-            if (!override) {
-                encoding = "ISO-8859-1";
-            }
-            break;
-        case 'a':
-            if (!override) {
-                encoding = "UTF8";
-            }
+            case ' ':
+                if (!override) {
+                    encoding = "ISO-8859-1";
+                }
+                break;
+            case 'a':
+                if (!override) {
+                    encoding = "UTF8";
+                }
         }
         record.setLeader(ldr);
 
         if ((directoryLength % 12) != 0) {
             throw new MarcException("invalid directory");
         }
-        DataInputStream inputrec =
-                       new DataInputStream(new ByteArrayInputStream(recordBuf));
+        DataInputStream inputrec = new DataInputStream(new ByteArrayInputStream(recordBuf));
         int size = directoryLength / 12;
 
         String[] tags = new String[size];
@@ -221,38 +206,33 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
             }
 
             if (inputrec.read() != Constants.FT) {
-                throw new MarcException("Expected field terminator at end of "
-                                        + "directory");
+                throw new MarcException("Expected field terminator at end of directory");
             }
 
             for (int i = 0; i < size; i++) {
-                int fieldLength = getFieldLength(inputrec);
+//                int fieldLength = getFieldLength(inputrec);
                 if (Verifier.isControlField(tags[i])) {
                     byteArray = new byte[lengths[i] - 1];
                     inputrec.readFully(byteArray);
 
                     if (inputrec.read() != Constants.FT) {
-                        throw new MarcException("expected field terminator at "
-                                                + "end of field");
+                        throw new MarcException("expected field terminator at end of field");
                     }
 
                     ControlField field = factory.newControlField();
                     field.setTag(tags[i]);
                     field.setData(getDataAsString(byteArray));
                     record.addVariableField(field);
-                }
-                else {
+                } else {
                     byteArray = new byte[lengths[i]];
                     inputrec.readFully(byteArray);
 
                     try {
-                        record.addVariableField(parseDataField(tags[i],
-                                                               byteArray));
+                        record.addVariableField(parseDataField(tags[i], byteArray));
                     } catch (IOException e) {
                         throw new MarcException(
-                                "error parsing data field for tag: " + tags[i]
-                                        + " with data: "
-                                        + new String(byteArray), e);
+                                "error parsing data field for tag: " + tags[i] + " with data: " + new String(byteArray),
+                                e);
                     }
                 }
             }
@@ -260,14 +240,12 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
             if (inputrec.read() != Constants.RT) {
                 throw new MarcException("expected record terminator");
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new MarcException("an error occured reading input", e);
         }
     }
 
-    private DataField parseDataField(String tag, byte[] field)
-            throws IOException {
+    private DataField parseDataField(String tag, byte[] field) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(field);
         char ind1 = (char) bais.read();
         char ind2 = (char) bais.read();
@@ -288,70 +266,77 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
                 break;
             }
             switch (readByte) {
-            case Constants.US:
-                code = bais.read();
-                if (code < 0) {
-                    throw new IOException("unexpected end of data field");
-                }
-                if (code == Constants.FT) {
+                case Constants.US:
+                    code = bais.read();
+                    if (code < 0) {
+                        throw new IOException("unexpected end of data field");
+                    }
+                    if (code == Constants.FT) {
+                        break;
+                    }
+                    size = getSubfieldLength(bais);
+                    data = new byte[size];
+                    int l = bais.read(data);
+                    if (l == -1) {
+                        throw new IllegalStateException(
+                                "Attempted to read " + size + " bytes for sub field in " + tag + " but got EOS");
+                    }
+                    if (l != data.length) {
+                        byte[] nData = new byte[l];
+                        System.arraycopy(data, 0, nData, 0, l);
+                        data = nData;
+                    }
+                    subfield = factory.newSubfield();
+                    subfield.setCode((char) code);
+                    subfield.setData(getDataAsString(data));
+                    dataField.addSubfield(subfield);
                     break;
-                }
-                size = getSubfieldLength(bais);
-                data = new byte[size];
-                bais.read(data);
-                subfield = factory.newSubfield();
-                subfield.setCode((char) code);
-                subfield.setData(getDataAsString(data));
-                dataField.addSubfield(subfield);
-                break;
-            case Constants.FT:
-                break;
+                case Constants.FT:
+                    break;
             }
         }
         return dataField;
     }
 
-    private int getFieldLength(DataInputStream bais) throws IOException {
+/*    private int getFieldLength(DataInputStream bais) throws IOException {
         bais.mark(9999);
         int bytesRead = 0;
         while (true) {
             switch (bais.read()) {
-             case Constants.FT:
-                bais.reset();
-                return bytesRead;
-            case -1:
-                bais.reset();
-                throw new IOException("Field not terminated");
-            case Constants.US:
-            default:
-                bytesRead++;
+                case Constants.FT:
+                    bais.reset();
+                    return bytesRead;
+                case -1:
+                    bais.reset();
+                    throw new IOException("Field not terminated");
+                case Constants.US:
+                default:
+                    bytesRead++;
             }
         }
     }
-
-    private int getSubfieldLength(ByteArrayInputStream bais) 
-                                                            throws IOException {
+  */
+    private int getSubfieldLength(ByteArrayInputStream bais) throws IOException {
         bais.mark(9999);
         int bytesRead = 0;
         while (true) {
             switch (bais.read()) {
-            case Constants.US:
-            case Constants.FT:
-                bais.reset();
-                return bytesRead;
-            case -1:
-                bais.reset();
-                throw new IOException("subfield not terminated");
-            default:
-                bytesRead++;
+                case Constants.US:
+                case Constants.FT:
+                    bais.reset();
+                    return bytesRead;
+                case -1:
+                    bais.reset();
+                    throw new IOException("subfield not terminated");
+                default:
+                    bytesRead++;
             }
         }
     }
 
     private int parseRecordLength(byte[] leaderData) throws IOException {
-        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(
-                leaderData));
-        int length = -1;
+        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData));
+        int length;
         char[] tmp = new char[5];
         isr.read(tmp);
         try {
@@ -359,12 +344,11 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         } catch (NumberFormatException e) {
             throw new MarcException("unable to parse record length", e);
         }
-        return(length);
+        return (length);
     }
 
     private void parseLeader(Leader ldr, byte[] leaderData) throws IOException {
-        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(
-                leaderData));
+        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData));
         char[] tmp = new char[5];
         isr.read(tmp);
         // Skip over bytes for record length, ff we get here, its already been
@@ -387,14 +371,12 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
         ldr.setEntryMap(tmp);
         isr.close();
         try {
-            ldr.setIndicatorCount(Integer.parseInt(
-                                               String.valueOf(indicatorCount)));
+            ldr.setIndicatorCount(Integer.parseInt(String.valueOf(indicatorCount)));
         } catch (NumberFormatException e) {
             throw new MarcException("unable to parse indicator count", e);
         }
         try {
-            ldr.setSubfieldCodeLength(Integer.parseInt(String
-                    .valueOf(subfieldCodeLength)));
+            ldr.setSubfieldCodeLength(Integer.parseInt(String.valueOf(subfieldCodeLength)));
         } catch (NumberFormatException e) {
             throw new MarcException("unable to parse subfield code length", e);
         }
