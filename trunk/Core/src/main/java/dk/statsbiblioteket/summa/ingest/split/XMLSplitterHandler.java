@@ -44,17 +44,14 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     private static Log log = LogFactory.getLog(XMLSplitterHandler.class);
 
     // TODO: Extract this from the stream instead of hardcoding
-    private static final String HEADER =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    private static final String HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     private static final String XMLNS = "xmlns";
 
     private XMLSplitterReceiver receiver;
     private XMLSplitterParserTarget target;
 
     @SuppressWarnings({"UnusedDeclaration"})
-    public XMLSplitterHandler(Configuration conf,
-                              XMLSplitterReceiver receiver,
-                              XMLSplitterParserTarget target) {
+    public XMLSplitterHandler(Configuration conf, XMLSplitterReceiver receiver, XMLSplitterParserTarget target) {
         this.receiver = receiver;
         this.target = target;
     }
@@ -83,6 +80,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     void resetForNextRecord() {
         prepareScanForNextRecord();
     }
+
     void resetForNextStream() {
         prepareScanForNextRecord();
         outsideRecordPrefixStack.clear();
@@ -103,11 +101,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
 
 
     @Override
-    public void startPrefixMapping (String prefix, String uri) throws
-                                                               SAXException {
+    public void startPrefixMapping(String prefix, String uri) throws SAXException {
         checkRunning();
-        String expanded = ("".equals(prefix) ? XMLNS : XMLNS + ":" + prefix)
-                          + "=\"" + uri + "\"";
+        String expanded = ("".equals(prefix) ? XMLNS : XMLNS + ":" + prefix) + "=\"" + uri + "\"";
         if (log.isTraceEnabled()) {
             log.trace("Prefix: " + expanded);
         }
@@ -122,11 +118,10 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     private void overwriteOrAdd(Collection<String> existing, String n) {
         try {
             String newPrefix = n.split("=", 2)[0];
-            for (String e: existing) {
+            for (String e : existing) {
                 if (e.split("=", 2)[0].equals(newPrefix)) {
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format(
-                                "Overwriting namespace %s with %s", e, n));
+                        log.trace(String.format("Overwriting namespace %s with %s", e, n));
                     }
                     existing.remove(e);
                     break;
@@ -134,14 +129,13 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             }
             existing.add(n);
         } catch (Exception e) {
-            log.warn(String.format("Exception in overwriteOrAdd(%s, %s)",
-                                   Strings.join(existing, ", "), n), e);
+            log.warn(String.format("Exception in overwriteOrAdd(%s, %s)", Strings.join(existing, ", "), n), e);
         }
     }
 
 
     @Override
-    public void endPrefixMapping (String prefix) throws SAXException {
+    public void endPrefixMapping(String prefix) throws SAXException {
         checkRunning();
         // Ignore
 /*        String expected = prefixStack.remove(prefixStack.size()-1);
@@ -153,14 +147,12 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
     @Override
-    public void startElement (String uri, String local, String qName,
-                              Attributes atts) throws SAXException {
+    public void startElement(String uri, String local, String qName, Attributes atts) throws SAXException {
         checkRunning();
         List<String> prefixes;
         boolean rootRecordElement;
         if (!inRecord && equalsAny(target.recordElement, qName, local)
-            && (target.recordNamespace == null
-                || target.recordNamespace.equals(uri))) {
+            && (target.recordNamespace == null || target.recordNamespace.equals(uri))) {
             // This is the Record root element
             inRecord = true;
             rootRecordElement = true;
@@ -180,7 +172,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         // We're inside a Record
         sw.append("<").append(target.preserveNamespaces ? qName : local);
         if (target.preserveNamespaces) {
-            for (String prefix: prefixes) {
+            for (String prefix : prefixes) {
                 sw.append(" ").append(prefix);
                 // xmlns, xmlns:foo etc.
             }
@@ -196,31 +188,27 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             if (target.idNamespace == null) {
                 // Do sloppy id element extraction
                 if (equalsAny(target.idElement, qName, local)) {
-                    log.trace ("Found record ID by sloppy matching");
+                    log.trace("Found record ID by sloppy matching");
                     inId = true;
                 }
             } else {
                 // Me must match against the namespaced element
-                if (uri.equals(target.idNamespace) &&
-                    target.idElement.equals(local)) {
-                    log.trace ("Found record ID by strict matching");
+                if (uri.equals(target.idNamespace) && target.idElement.equals(local)) {
+                    log.trace("Found record ID by strict matching");
                     inId = true;
                 }
             }
         }
 
         // Append namespaces and attributes for the current element
-        for (int i = 0 ; i < atts.getLength() ; i++) {
+        for (int i = 0; i < atts.getLength(); i++) {
             if (atts.getLocalName(i).startsWith(XMLNS)) {
                 // We skip already added name spaces
             }
-            sw.append(" ").append(target.preserveNamespaces ?
-                                  atts.getQName(i) :
-                                  atts.getLocalName(i)).append("=\"");
+            sw.append(" ").append(target.preserveNamespaces ? atts.getQName(i) : atts.getLocalName(i)).append("=\"");
             sw.append(XMLUtil.encode(atts.getValue(i))).append("\"");
             if (inId && !"".equals(target.idTag) &&
-                equalsAny(target.idTag,
-                          atts.getQName(i), atts.getLocalName(i))) {
+                equalsAny(target.idTag, atts.getQName(i), atts.getLocalName(i))) {
                 // ID matches attribute
                 id.append(atts.getValue(i));
                 inId = false; // If attribute then !value
@@ -229,24 +217,23 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         sw.append(">");
     }
 
-    private boolean equalsAny(String expected, String possible1,
-                              String possible2) {
+    private boolean equalsAny(String expected, String possible1, String possible2) {
         return expected.equals(possible1) || expected.equals(possible2);
     }
 
 
     private boolean missingIDReported = false;
+
     @Override
-    public void endElement (String uri, String localName, String qName) throws
-                                                                  SAXException {
+    public void endElement(String uri, String localName, String qName) throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
         }
         inId = false; // ID is always a single element, so end-element clears id
         String expected = !insideRecordElementStack.isEmpty() ?
-                          insideRecordElementStack.remove(insideRecordElementStack.size() - 1)
-                          : "NA";
+                          insideRecordElementStack.remove(insideRecordElementStack.size() - 1) :
+                          "NA";
         if (!expected.equals(qName)) {
             log.warn("endElement: Expected '" + expected + "', got '" + qName + "'");
         } else {
@@ -255,8 +242,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         sw.append("</").append(target.preserveNamespaces ? qName : localName);
         sw.append(">");
         if (equalsAny(target.recordElement, qName, localName)
-            && (target.recordNamespace == null
-                || target.recordNamespace.equals(uri))) {
+            && (target.recordNamespace == null || target.recordNamespace.equals(uri))) {
             // Record XML end reached
             log.trace("Record XML collected, creating Record");
             if ("".equals(id.toString())) {
@@ -267,9 +253,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                     Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, "N/A");
                     log.warn(message);
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format(
-                                "Dumping id-less Record-XML (expected id-element %s#%s):\n%s",
-                                target.idElement, target.idTag, sw.toString()));
+                        log.trace(String.format("Dumping id-less Record-XML (expected id-element %s#%s):\n%s", 
+                                                target.idElement, target.idTag, sw.toString()));
                     }
                     if (!missingIDReported) {
                         String missing = "This is the first time an id could not be located for the target.idElement="
@@ -285,18 +270,14 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                 }
             }
             try {
-                Record record = new Record(
-                        id.toString(), // ID-modification is handled by parser
-                        target.base,
-                        (HEADER + sw.toString()).getBytes("utf-8"));
+                Record record = new Record(id.toString(), // ID-modification is handled by parser
+                                           target.base, (HEADER + sw.toString()).getBytes("utf-8"));
                 //noinspection DuplicateStringLiteralInspection
                 log.debug("Produced " + record);
                 receiver.queueRecord(record);
                 prepareScanForNextRecord();
             } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("Unable to convert string to utf-8 "
-                                           + "bytes: '" + sw.toString() + "'",
-                                           e);
+                throw new RuntimeException("Unable to convert string to utf-8 bytes: '" + sw.toString() + "'", e);
             }
         }
     }
@@ -304,16 +285,17 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     /**
      * Created a semi-random ID, guaranteed to be unique within the current
      * XMLSplitterHandler instance.
+     *
      * @param id where to append the ID.
      */
     private void makeRandomID(StringWriter id) {
         id.append("randomID_").append(Long.toString(utg.next()));
     }
+
     private UniqueTimestampGenerator utg = new UniqueTimestampGenerator();
 
     @Override
-    public void characters(char ch[], int start, int length) throws
-                                                             SAXException {
+    public void characters(char ch[], int start, int length) throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
@@ -324,17 +306,16 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             id.append(chars);
         }
         // Append escaped characters to the body if not in CData
-        sw.append(inCData ? chars: XMLUtil.encode(chars));
+        sw.append(inCData ? chars : XMLUtil.encode(chars));
     }
 
     @Override
-    public void ignorableWhitespace(char ch[], int start, int length) throws
-                                                                      SAXException {
+    public void ignorableWhitespace(char ch[], int start, int length) throws SAXException {
         characters(ch, start, length);
     }
 
     @Override
-    public void comment(char ch [], int start, int length) throws SAXException {
+    public void comment(char ch[], int start, int length) throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
@@ -352,6 +333,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
         sw.append("<![CDATA[");
     }
+
     @Override
     public void endCDATA() throws SAXException {
         checkRunning();
@@ -376,11 +358,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
      * Forcefully - not resolve DTDs
      */
     @Override
-    public InputSource resolveEntity(String name, String publicId,
-                                     String baseURI, String systemId) {
+    public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Ignoring request to resolve entity '" + publicId + "'");
         return new InputSource(new StringReader(""));
     }
-
 }

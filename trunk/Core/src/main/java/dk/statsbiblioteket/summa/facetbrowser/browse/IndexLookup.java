@@ -28,7 +28,6 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.exposed.ExposedRequest;
@@ -66,16 +65,16 @@ public class IndexLookup {
     private FacetIndexDescriptor descriptor = null;
 
     // TODO: Make a more common creator with custom values
-    private static CollectorPoolFactory poolFactory =
-        CollectorPoolFactory.getLastFactory() == null ?
-        new CollectorPoolFactory(6, 2, 2) :
-        CollectorPoolFactory.getLastFactory();
+    private static CollectorPoolFactory poolFactory = CollectorPoolFactory.getLastFactory() == null ?
+                                                      new CollectorPoolFactory(6, 2, 2) :
+                                                      CollectorPoolFactory.getLastFactory();
 
     private IndexSearcher searcher = null;
     private SummaQueryParser qp = null;
 
     /**
      * Sets up a default {@link IndexRequest} based on the configuration.
+     *
      * @param conf the configuration for the index lookup.
      */
     public IndexLookup(Configuration conf) {
@@ -85,13 +84,14 @@ public class IndexLookup {
 
     /**
      * Parses the generic request into an IndexRequest and performs the lookup.
-     * @param request    the lookup setup, as described in
-     *             {@link dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys}.
+     *
+     * @param request  the lookup setup, as described in
+     *                 {@link dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys}.
      * @param response the response to the index lookup will be added to the
      *                 collection, if the request contained proper search keys
      *                 for an index lookup.
      * @throws java.rmi.RemoteException if the field in the request did not match
-     *         the tagHandler structure (aka there was no facet with that name).
+     *                                  the tagHandler structure (aka there was no facet with that name).
      */
     public void lookup(Request request, ResponseCollection response) throws RemoteException {
         if (descriptor == null) {
@@ -108,7 +108,7 @@ public class IndexLookup {
             searcher = null;
             return;
         }
-        IndexSearcher newSearcher = (IndexSearcher)shared.get(INDEX_SEARCHER);
+        IndexSearcher newSearcher = (IndexSearcher) shared.get(INDEX_SEARCHER);
         if (newSearcher != searcher) {
             log.info("Assigning new searcher");
             searcher = newSearcher;
@@ -118,7 +118,7 @@ public class IndexLookup {
             qp = null;
             return;
         }
-        SummaQueryParser newQP = (SummaQueryParser)shared.get(QUERY_PARSER);
+        SummaQueryParser newQP = (SummaQueryParser) shared.get(QUERY_PARSER);
         if (newQP != qp) {
             log.info("Assigning new query parser");
             qp = newQP;
@@ -132,12 +132,14 @@ public class IndexLookup {
     }
 
     // TODO: Add locale to request
+
     /**
      * Performs an index lookup with the given request and tag handler.
-     * @param request    the field, term and other details on the index lookup.
+     *
+     * @param request the field, term and other details on the index lookup.
      * @return the result of an index lookup.
      * @throws IllegalStateException if the field in the request did not match
-     *         the tagHandler structure (aka there was no facet with that name).
+     *                               the tagHandler structure (aka there was no facet with that name).
      */
     private IndexResponse lookup(IndexRequest request) throws IllegalStateException, IOException {
         log.trace("lookup called");
@@ -148,13 +150,11 @@ public class IndexLookup {
 
 //        System.out.println("Requesting for\n" + fRequest.toXML());
 
-        IndexReader reader = searcher.getIndexReader();
         String queryKey = toQueryKey(request);
 
         SimplePair<CollectorPool, TagCollector> pair;
         try {
-            pair = PoolFactoryGate.acquire(
-                    poolFactory, searcher.getIndexReader(), queryKey, fRequest, "index lookup");
+            pair = PoolFactoryGate.acquire(poolFactory, searcher.getIndexReader(), queryKey, fRequest, "index lookup");
         } catch (IOException e) {
             throw new IOException("Unable to acquire TagCollector for " + fRequest, e);
         }
@@ -167,7 +167,7 @@ public class IndexLookup {
                 log.debug("Reusing already filled collector for " + queryKey);
             } else {
                 collectTime = -System.currentTimeMillis();
-                collect(tagCollector, fRequest, request.getQuery());
+                collect(tagCollector, request.getQuery());
                 collectTime += System.currentTimeMillis();
             }
             try {
@@ -182,7 +182,7 @@ public class IndexLookup {
         }
 
         //System.out.println("Got response\n" + fResponse.toXML());
-        
+
         IndexResponse iResponse = newResponseToOldResult(fResponse, request);
         lookupTime += System.currentTimeMillis();
         log.debug("Finished IndexLookup for " + request + " in " + lookupTime + " ms");
@@ -196,18 +196,15 @@ public class IndexLookup {
         return request.getField() + ":" + (request.getQuery() == null ? "*" : request.getQuery());
     }
 
-    private IndexResponse newResponseToOldResult(
-        FacetResponse fResponse, IndexRequest request) {
+    private IndexResponse newResponseToOldResult(FacetResponse fResponse, IndexRequest request) {
         IndexResponse response = new IndexResponse(request);
-        for (FacetResponse.Tag tag:
-            fResponse.getGroups().get(0).getTags().getTags()) {
+        for (FacetResponse.Tag tag : fResponse.getGroups().get(0).getTags().getTags()) {
             response.addTerm(new Pair<String, Integer>(tag.getTerm(), tag.getCount()));
         }
         return response;
     }
 
-    private void collect(TagCollector tagCollector,
-                         FacetRequest fRequest, String query) {
+    private void collect(TagCollector tagCollector, String query) {
         query = query == null ? "*" : query;
         long collectTime = -System.currentTimeMillis();
         try {
@@ -242,8 +239,8 @@ public class IndexLookup {
 
         // TODO: Add reverse to request and here
         FacetRequestGroup facetGroup = new FacetRequestGroup(
-            eGroup, facetOrder, false, locale == null ? null : locale.toString(),
-            request.getDelta(), request.getLength(), request.getMinCount(), request.getTerm());
+                eGroup, facetOrder, false, locale == null ? null : locale.toString(),
+                request.getDelta(), request.getLength(), request.getMinCount(), request.getTerm());
         groups.add(facetGroup);
         return new FacetRequest(request.getQuery() == null ? "*" : request.getQuery(), groups);
     }
@@ -253,8 +250,8 @@ public class IndexLookup {
         try {
             descriptor = new FacetIndexDescriptor(descriptorLocation);
         } catch (IOException e) {
-            log.warn("IOException while retrieving and parsing FacetIndexDescriptor in updateIndex. Lookups will not"
-                     + " use locale-based sorting", e);
+            log.warn("IOException while retrieving and parsing FacetIndexDescriptor in updateIndex. "
+                     + "Lookups will not use locale-based sorting", e);
         }
         log.debug("Updated index descriptor from '" + location + "'");
     }

@@ -390,8 +390,6 @@ public class RecordWriter extends ObjectFilterImpl {
             }
         }
     }
-
-    
 }
 
 

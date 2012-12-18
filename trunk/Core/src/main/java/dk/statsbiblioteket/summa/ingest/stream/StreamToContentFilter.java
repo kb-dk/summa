@@ -63,23 +63,18 @@ public class StreamToContentFilter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getStream() == null) {
-            Logging.logProcess(
-                    getName(), "No Stream, so no Record can be created",
-                    Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "No Stream, so no Record can be created", Logging.LogLevel.TRACE, payload);
             return true;
         }
         if (payload.getRecord() != null) {
-            Logging.logProcess(
-                    getName(), "Existing Record will be discarded",
-                    Logging.LogLevel.TRACE, payload);
+            Logging.logProcess(getName(), "Existing Record will be discarded", Logging.LogLevel.TRACE, payload);
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
         try {
             Streams.pipe(payload.getStream(), out); // Auto-closes both Streams
         } catch (IOException e) {
-            throw new PayloadException("Unable to copy Stream to content",
-                                       e, payload);
+            throw new PayloadException("Unable to copy Stream to content", e, payload);
         }
         byte[] result = out.toByteArray();
         log.trace("Produced content of length " + result.length);
@@ -87,16 +82,12 @@ public class StreamToContentFilter extends ObjectFilterImpl {
         payload.setRecord(record);
         payload.setStream(null);
 
-        Logging.logProcess(
-                getName(), "Assigned content of Stream to Record",
-                Logging.LogLevel.TRACE, payload);
+        Logging.logProcess(getName(), "Assigned content of Stream to Record", Logging.LogLevel.TRACE, payload);
         return true;
     }
 
     private String constructID(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
-        return payload.getId() == null
-               ? "Dummy_" + Long.toString(System.currentTimeMillis())
-               : payload.getId();
+        return payload.getId() == null ? "Dummy_" + Long.toString(System.currentTimeMillis()) : payload.getId();
     }
 }

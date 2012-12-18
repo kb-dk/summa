@@ -46,8 +46,7 @@ public class IndexRequest implements Serializable {
      * </p><p>
      * Optional. If no value is specified, false used.
      */
-    public static final String CONF_INDEX_CASE_SENSITIVE =
-            "search.index.default.casesensitive";
+    public static final String CONF_INDEX_CASE_SENSITIVE = "search.index.default.casesensitive";
     public static final boolean DEFAULT_INDEX_CASE_SENSITIVE = false;
 
     /**
@@ -57,8 +56,7 @@ public class IndexRequest implements Serializable {
      * </p><p>
      * Optional. If no value is specified, -5 is used.
      */
-    public static final String CONF_INDEX_DELTA =
-            "search.index.default.delta";
+    public static final String CONF_INDEX_DELTA = "search.index.default.delta";
     public static final int DEFAULT_INDEX_DELTA = -5;
 
     /**
@@ -67,8 +65,7 @@ public class IndexRequest implements Serializable {
      * </p><p>
      * Optional. If no value is specified, 20 is used.
      */
-    public static final String CONF_INDEX_LENGTH =
-            "search.index.default.length";
+    public static final String CONF_INDEX_LENGTH = "search.index.default.length";
     public static final int DEFAULT_INDEX_LENGTH = 20;
 
     /**
@@ -76,8 +73,7 @@ public class IndexRequest implements Serializable {
      * query will be reduced to be equal to or below the length limit.
      * Optional. Default is 10000.
      */
-    public static final String CONF_INDEX_LENGTHLIMIT =
-            "search.index.lengthlimit";
+    public static final String CONF_INDEX_LENGTHLIMIT = "search.index.lengthlimit";
     public static final int DEFAULT_INDEX_LENGTHLIMIT = 10000;
 
     /**
@@ -106,24 +102,22 @@ public class IndexRequest implements Serializable {
     /**
      * Create a default request object that is to be used for creating concrete
      * requests.
+     *
      * @param conf the configuration for the default request.
      */
     public IndexRequest(Configuration conf) {
         log.trace("Creating default index request object");
-        caseSensitive = conf.getBoolean(
-                CONF_INDEX_CASE_SENSITIVE, caseSensitive);
+        caseSensitive = conf.getBoolean(CONF_INDEX_CASE_SENSITIVE, caseSensitive);
         delta = conf.getInt(CONF_INDEX_DELTA, delta);
         length = conf.getInt(CONF_INDEX_LENGTH, length);
         lengthLimit = conf.getInt(CONF_INDEX_LENGTHLIMIT, lengthLimit);
         minCount = conf.getInt(CONF_INDEX_MINCOUNT, minCount);
-        log.debug(String.format(
-                "Created default index request with caseSensitive=%b, delta=%d,"
-                + " length=%d, lengthLimit=%d, minCount=%d",
-                caseSensitive, delta, length, lengthLimit, minCount));
+        log.debug(String.format("Created default index request with caseSensitive=%b, delta=%d,"
+                                + " length=%d, lengthLimit=%d, minCount=%d", 
+                                caseSensitive, delta, length, lengthLimit, minCount));
     }
 
-    IndexRequest(String query, String field, String term,
-                 boolean caseSensitive, int delta, int length, int minCount) {
+    IndexRequest(String query, String field, String term, boolean caseSensitive, int delta, int length, int minCount) {
         this.query = query;
         this.field = field;
         this.term = term;
@@ -133,8 +127,7 @@ public class IndexRequest implements Serializable {
         this.minCount = minCount;
         valid = true;
         log.debug(String.format(
-                "Created index request with field='%s', term='%s', "
-                + "caseSensitive=%b, delta=%d, length=%d",
+                "Created index request with field='%s', term='%s', caseSensitive=%b, delta=%d, length=%d", 
                 field, term, caseSensitive, delta, length));
     }
 
@@ -146,6 +139,7 @@ public class IndexRequest implements Serializable {
      * Note that this method is also usable for determining if an index lookup
      * should be performed at all, as it returns null if the generic request
      * does not contain the keys necessary to build an index request.
+     *
      * @param request a generic Search request.
      * @return an IndexRequest based on defaults and request or null, if no
      *         valid IndexRequest could be created.
@@ -155,22 +149,18 @@ public class IndexRequest implements Serializable {
         String query = request.getString(IndexKeys.SEARCH_INDEX_QUERY, null);
         String field;
         String term;
-        if ((field = request.getString(IndexKeys.SEARCH_INDEX_FIELD, null)) ==
-            null) {
+        if ((field = request.getString(IndexKeys.SEARCH_INDEX_FIELD, null)) == null) {
             log.trace("No field specified in createRequest");
             return null;
         }
-        if ((term = request.getString(IndexKeys.SEARCH_INDEX_TERM, null)) ==
-            null) {
+        if ((term = request.getString(IndexKeys.SEARCH_INDEX_TERM, null)) == null) {
             log.trace("No term specified in createRequest, assigning \"\"");
             term = "";
         }
         IndexRequest ir = new IndexRequest(
-                query, field, term,
-                request.getBoolean(
-                        IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, caseSensitive),
+                query, field, term, request.getBoolean(IndexKeys.SEARCH_INDEX_CASE_SENSITIVE, caseSensitive), 
                 request.getInt(IndexKeys.SEARCH_INDEX_DELTA, delta),
-                request.getInt(IndexKeys.SEARCH_INDEX_LENGTH, length),
+                request.getInt(IndexKeys.SEARCH_INDEX_LENGTH, length), 
                 request.getInt(IndexKeys.SEARCH_INDEX_MINCOUNT, minCount));
         if (request.containsKey(IndexKeys.SEARCH_INDEX_LOCALE)) {
             ir.setLocale(new Locale(request.getString(IndexKeys.SEARCH_INDEX_LOCALE)));
@@ -180,18 +170,15 @@ public class IndexRequest implements Serializable {
 
     private void checkValid() {
         if (!valid) {
-            throw new IllegalStateException(
-                    "This IndexRequest is not valid. The method createRequest "
-                    + "must be used for the creation of IndexRequests meant for"
-                    + " lookups");
+            throw new IllegalStateException("This IndexRequest is not valid. The method createRequest "
+                                            + "must be used for the creation of IndexRequests meant for lookups");
         }
     }
 
     @Override
     public String toString() {
-        return "IndexRequest(query='" + query + "', field=" + field + ", term='"
-               + term + "', locale=" + locale + ", delta=" + delta + ", length="
-               + length + ", minCount=" + minCount + ")";
+        return "IndexRequest(query='" + query + "', field=" + field + ", term='" + term + "', locale=" + locale
+               + ", delta=" + delta + ", length=" + length + ", minCount=" + minCount + ")";
     }
 
     // temporary hack to merge new exposed with old Summa
@@ -204,20 +191,25 @@ public class IndexRequest implements Serializable {
     public String getQuery() {
         return query;
     }
+
     public String getField() {
         checkValid();
         return field;
     }
+
     public String getTerm() {
         checkValid();
         return term;
     }
+
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
+
     public int getDelta() {
         return delta;
     }
+
     public int getLength() {
         return length;
     }
@@ -230,4 +222,3 @@ public class IndexRequest implements Serializable {
         return minCount;
     }
 }
-

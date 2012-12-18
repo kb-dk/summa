@@ -41,6 +41,7 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
     /**
      * Adds the content for a given field to the Lucene Document, handling
      * field-resolving, boosts and error-handling.
+     *
      * @param descriptor an index-descriptor for the index that should receive
      *                   the Document.
      * @param luceneDoc  the Lucene Document to update.
@@ -53,28 +54,22 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
      * @throws IndexServiceException in case of errors.
      */
     protected LuceneIndexField addFieldToDocument(
-            LuceneIndexDescriptor descriptor,
-            org.apache.lucene.document.Document luceneDoc, String fieldName,
+            LuceneIndexDescriptor descriptor, org.apache.lucene.document.Document luceneDoc, String fieldName,
             String content, Float boost) throws IndexServiceException {
         LuceneIndexField indexField = descriptor.getFieldForIndexing(fieldName);
         if (indexField == null) {
             throw new IndexServiceException(String.format(
-                    "The field name '%s' could not be resolved. This should"
-                    + " never happen (fallback should be the default "
-                    + "field)", fieldName
-            ));
+                    "The field name '%s' could not be resolved. This should never happen (fallback should be the "
+                    + "default field)",
+                    fieldName));
         }
         if (!fieldName.equals(indexField.getName())) {
-            log.debug("The field name '" + fieldName
-                      + "' resolved to index field '"
-                      + indexField.getName() + "'");
+            log.debug("The field name '" + fieldName + "' resolved to index field '" + indexField.getName() + "'");
         }
         if (log.isTraceEnabled()) {
-            log.trace("Creating field '" + fieldName + "' with boost " + boost
-                      + " and content\n" + content);
+            log.trace("Creating field '" + fieldName + "' with boost " + boost + " and content\n" + content);
         }
-        Field field = new Field(fieldName, content, indexField.getStore(),
-                                indexField.getIndex(),
+        Field field = new Field(fieldName, content, indexField.getStore(), indexField.getIndex(), 
                                 indexField.getTermVector());
         if (boost != null) {
             if (!field.fieldType().omitNorms() && field.fieldType().indexed()) {
@@ -83,10 +78,8 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
         }
 
         if (log.isTraceEnabled()) {
-            log.trace("Adding field '" + fieldName + "' with "
-                      + content.length()
-                      + " characters and boost " + field.boost()
-                      + " to Lucene Document");
+            log.trace("Adding field '" + fieldName + "' with " + content.length() + " characters and boost "
+                      + field.boost() + " to Lucene Document");
         }
         luceneDoc.add(field);
         return indexField;
@@ -95,6 +88,7 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
     /**
      * A special case of {@link #addFieldToDocument} that adds to the freetext-
      * field.
+     *
      * @param descriptor an index-descriptor for the index that should receive
      *                   the Document.
      * @param luceneDoc  the Lucene Document to update.
@@ -103,36 +97,26 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
      * @param content    the content for the field.
      * @throws IndexServiceException in case of errors.
      */
-    protected void addToFreetext(LuceneIndexDescriptor descriptor,
-                               org.apache.lucene.document.Document luceneDoc,
-                               String fieldName,
-                               String content) throws IndexServiceException {
-        LuceneIndexField freetext =
-                descriptor.getFieldForIndexing(IndexField.FREETEXT);
+    protected void addToFreetext(LuceneIndexDescriptor descriptor, org.apache.lucene.document.Document luceneDoc, 
+                                 String fieldName, String content) throws IndexServiceException {
+        LuceneIndexField freetext = descriptor.getFieldForIndexing(IndexField.FREETEXT);
         if (freetext == null) {
             throw new IndexServiceException(String.format(
-                    "The field freetext with name '%s' could not be "
-                    + "resolved. This should never happen (fallback "
+                    "The field freetext with name '%s' could not be resolved. This should never happen (fallback "
                     + "should be the default field)",
                     IndexField.FREETEXT));
         }
         if (!IndexField.FREETEXT.equals(freetext.getName())) {
-            log.warn("The field '" + IndexField.FREETEXT + "' could not"
-                     + " be located, so the content of field '" + fieldName
-                     + "' is not added to freetext");
+            log.warn("The field '" + IndexField.FREETEXT + "' could not be located, so the content of field '"
+                     + fieldName + "' is not added to freetext");
         } else {
             if (log.isTraceEnabled()) {
-                log.trace("Adding content from '" + fieldName
-                          + "' to freetext\n" + content);
+                log.trace("Adding content from '" + fieldName + "' to freetext\n" + content);
             }
-            Field freeField = new Field(freetext.getName(), content,
-                                        freetext.getStore(),
-                                        freetext.getIndex(),
+            Field freeField = new Field(freetext.getName(), content, freetext.getStore(), freetext.getIndex(),
                                         freetext.getTermVector());
             freeField.setBoost(freetext.getIndexBoost());
             luceneDoc.add(freeField);
         }
     }
-
 }
-

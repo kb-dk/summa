@@ -21,35 +21,32 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.log4j.Logger;
+import java.util.*;
 
 /**
  * The Facet Structure holds top-level information, such as the Facet names
  * and the maximum number of Tags in each Facet.
  * </p><p>
  * Note: The Facet names and IDs in the FacetStructure does not change during an
- *       execution, nor are any Facets added or removed.
+ * execution, nor are any Facets added or removed.
  */
+@SuppressWarnings("deprecation")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Structure implements Configurable, Serializable {
-    /** Serial version UID. */
+    /**
+     * Serial version UID.
+     */
     private static final long serialVersionUID = 96848713588L;
-    /** Logger for this class. */
+    /**
+     * Logger for this class.
+     */
     private static volatile Logger log = Logger.getLogger(Structure.class);
 
     /**
@@ -60,6 +57,7 @@ public class Structure implements Configurable, Serializable {
      * {@link IndexDescriptor#CONF_DESCRIPTOR} must be specified.
      * If both properties are specified, the descriptor takes precedence.
      * See the FacetIndexDescriptor.xsd for how to setup the facets.
+     *
      * @see FacetStructure
      * @deprecated Specify {@link IndexDescriptor#CONF_DESCRIPTOR} instead and
      *             set up the facet structure in an IndexDescriptor.
@@ -76,6 +74,7 @@ public class Structure implements Configurable, Serializable {
     /**
      * Constructs a new Structure and empty Structure, ready to be filled with
      * FacetStructures.
+     *
      * @param facetCount the estimated number of FacetStructures that will be
      *                   used in the new Structure.
      */
@@ -91,9 +90,8 @@ public class Structure implements Configurable, Serializable {
         } else if (conf.valueExists(CONF_FACETS)) {
             defineFacetsFromConfiguration(conf);
         } else {
-            throw new ConfigurationException(String.format(
-                    "Either %s or %s must be specified",
-                    IndexDescriptor.CONF_DESCRIPTOR, CONF_FACETS));
+            throw new ConfigurationException(String.format("Either %s or %s must be specified", 
+                                                           IndexDescriptor.CONF_DESCRIPTOR, CONF_FACETS));
         }
 
         freezeFacets();
@@ -102,28 +100,25 @@ public class Structure implements Configurable, Serializable {
 
     public Structure(URL descriptorLocation) {
         if (descriptorLocation == null) {
-            throw new IllegalArgumentException(
-                    "Got null as descriptor URL in constructor");
+            throw new IllegalArgumentException("Got null as descriptor URL in constructor");
         }
-        log.debug(String.format(
-                "Constructing Structure from IndexDescriptor at location '%s'",
-                descriptorLocation));
+        log.debug(String.format("Constructing Structure from IndexDescriptor at location '%s'", descriptorLocation));
         try {
-            FacetIndexDescriptor descriptor =
-                    new FacetIndexDescriptor(descriptorLocation);
+            FacetIndexDescriptor descriptor = new FacetIndexDescriptor(descriptorLocation);
             facets = descriptor.getFacets();
             descriptor.close();
             freezeFacets();
         } catch (IOException e) {
-            throw new ConfigurationException(String.format(
-                    "Unable to construct facet structure from location '%s'",
-                    descriptorLocation), e);
+            throw new ConfigurationException(String.format("Unable to construct facet structure from location '%s'", 
+                                                           descriptorLocation), e);
         }
     }
 
     /**
      * Overrides the currently defined facets.
-     * @param wantedFacets      as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     *
+     * @param wantedFacets      as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api
+     * .FacetKeys#SEARCH_FACET_FACETS}.
      * @param defaultWantedTags if no tag count is defined in the wanted facets
      *                          above, this is used.
      */
@@ -133,16 +128,17 @@ public class Structure implements Configurable, Serializable {
         String[] tokens = wantedFacets.split(" *, *");
         facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
         int counter = 0;
-        for (String facetToken: tokens) {
-            FacetStructure fc = new FacetStructure(
-                facetToken, defaultWantedTags, counter++);
+        for (String facetToken : tokens) {
+            FacetStructure fc = new FacetStructure(facetToken, defaultWantedTags, counter++);
             facets.put(fc.getName(), fc);
         }
     }
 
     /**
      * Overrides the currently defined facets.
-     * @param wantedFacets      as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys#SEARCH_FACET_FACETS}.
+     *
+     * @param wantedFacets as defined in {@link dk.statsbiblioteket.summa.facetbrowser.api
+     * .FacetKeys#SEARCH_FACET_FACETS}.
      */
     public Structure(String wantedFacets) {
         log.debug("Parsing '" + wantedFacets + "'");
@@ -150,7 +146,7 @@ public class Structure implements Configurable, Serializable {
         String[] tokens = wantedFacets.split(" *, *");
         facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
         int counter = 0;
-        for (String facetToken: tokens) {
+        for (String facetToken : tokens) {
             FacetStructure fc = new FacetStructure(facetToken, counter++);
             facets.put(fc.getName(), fc);
         }
@@ -158,36 +154,31 @@ public class Structure implements Configurable, Serializable {
 
     /**
      * Checks whether the Facet Structure can be derived from the configuration.
+     *
      * @param conf is the potential holder of setup-information for Structure.
      * @return true if a Structure can be created based on conf.
      */
     public static boolean isSetupDefinedInConfiguration(Configuration conf) {
-        return (conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)
-                || conf.valueExists(CONF_FACETS));
+        return (conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR) || conf.valueExists(CONF_FACETS));
     }
 
     private void defineFacetsFromDescriptor(Configuration conf) {
         Configuration descriptorConf;
         try {
-            descriptorConf =
-                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
+            descriptorConf = conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations", e);
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException(String.format(
-                    "Unable to extract sub configuration %s",
-                    IndexDescriptor.CONF_DESCRIPTOR), e);
+            throw new ConfigurationException(String.format("Unable to extract sub configuration %s", 
+                                                           IndexDescriptor.CONF_DESCRIPTOR), e);
         }
         try {
-            FacetIndexDescriptor descriptor =
-                    new FacetIndexDescriptor(descriptorConf);
+            FacetIndexDescriptor descriptor = new FacetIndexDescriptor(descriptorConf);
             facets = descriptor.getFacets();
             descriptor.close();
         } catch (IOException e) {
-            throw new ConfigurationException(
-                    "Unable to extract facet structure from configuration", e);
+            throw new ConfigurationException("Unable to extract facet structure from configuration", e);
         }
     }
 
@@ -196,34 +187,28 @@ public class Structure implements Configurable, Serializable {
         try {
             facetConfs = conf.getSubConfigurations(CONF_FACETS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations", e);
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (ClassCastException e) {
             throw new ConfigurationException(String.format(
-                    "Could not extract a list of Configurations from "
-                    + "configuration with key '%s' due to a ClassCastException",
-                    CONF_FACETS), e);
+                    "Could not extract a list of Configurations from configuration with key '%s' due to a "
+                    + "ClassCastException", CONF_FACETS), e);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "Could not access Configuration for key '%s'", CONF_FACETS),
-                                             e);
+            throw new ConfigurationException(String.format("Could not access Configuration for key '%s'", 
+                                                           CONF_FACETS), e);
         }
         facets = new LinkedHashMap<String, FacetStructure>(facetConfs.size());
         int facetID = 0;
-        for (Configuration facetConf: facetConfs) {
+        for (Configuration facetConf : facetConfs) {
             try {
                 FacetStructure fc = new FacetStructure(facetConf, facetID++);
                 if (facets.containsKey(fc.getName())) {
-                    log.warn(String.format(
-                            "Facets already contain a FacetStructure named "
-                            + "'%s'. The old structure will be replaced",
-                            fc.getName()));
+                    log.warn(String.format("Facets already contain a FacetStructure named "
+                                           + "'%s'. The old structure will be replaced", fc.getName()));
                 }
                 log.trace("Adding Facet '" + fc.getName() + "' to facets");
                 facets.put(fc.getName(), fc);
             } catch (Exception e) {
-                throw new ConfigurationException(
-                        "Unable to extract single Facet configuration", e);
+                throw new ConfigurationException("Unable to extract single Facet configuration", e);
             }
         }
     }
@@ -243,6 +228,7 @@ public class Structure implements Configurable, Serializable {
     /**
      * It is recommended not to change the map of FacetStructures externally,
      * as this might result in bad sorting of facets.
+     *
      * @return The Facet-definitions. The result is an ordered map.
      *         It is expected that the order will be used in presentation.
      */
@@ -254,9 +240,8 @@ public class Structure implements Configurable, Serializable {
      * @return The facets that makes up the Structure.
      */
     public List<FacetStructure> getFacetList() {
-        List<FacetStructure> result =
-                new ArrayList<FacetStructure>(facets.size());
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        List<FacetStructure> result = new ArrayList<FacetStructure>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             result.add(entry.getValue());
         }
         return result;
@@ -273,22 +258,23 @@ public class Structure implements Configurable, Serializable {
 
     /**
      * The FacetID is specified in {@link FacetStructure#id}.
+     *
      * @param facetID the ID for a Facet.
      * @return the Facet with the given ID.
      * @throws NullPointerException if the Facet could not be located.
      */
     public FacetStructure getFacet(int facetID) {
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             if (entry.getValue().getFacetID() == facetID) {
                 return entry.getValue();
             }
         }
-        throw new NullPointerException(String.format(
-                "Could not locate Facet with ID %d", facetID));
+        throw new NullPointerException(String.format("Could not locate Facet with ID %d", facetID));
     }
 
     /**
      * The ID of a Facet is the same as its sort position.
+     *
      * @param facetName the Facet to retrieve the ID for.
      * @return the ID for the Facet (unique among other Facets).
      */
@@ -298,14 +284,12 @@ public class Structure implements Configurable, Serializable {
         } catch (NullPointerException e) {
             if (facets == null) {
                 throw new IllegalStateException(String.format(
-                        "The facets list was null when performing lookup of"
-                        + " facet '%s'", facetName), e);
+                        "The facets list was null when performing lookup of facet '%s'", facetName), e);
             } else {
                 //noinspection unchecked
                 throw new IllegalArgumentException(String.format(
-                        "The facet '%s' did not exist in the facet-list %s", 
-                        facetName, Logs.expand(new ArrayList<String>(
-                        facets.keySet()), 20)), e);
+                        "The facet '%s' did not exist in the facet-list %s",
+                        facetName, Logs.expand(new ArrayList<String>(facets.keySet()), 20)), e);
             }
         }
     }
@@ -315,7 +299,7 @@ public class Structure implements Configurable, Serializable {
      */
     public List<String> getFacetNames() {
         List<String> facetNames = new ArrayList<String>(facets.size());
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             facetNames.add(entry.getValue().getName());
         }
         return facetNames;
@@ -325,9 +309,8 @@ public class Structure implements Configurable, Serializable {
      * @return A map from Facet-names to maximum tags. The order is significant.
      */
     public HashMap<String, Integer> getMaxTags() {
-        HashMap<String, Integer> map =
-                new LinkedHashMap<String, Integer>(facets.size());
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        HashMap<String, Integer> map = new LinkedHashMap<String, Integer>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getMaxTags());
         }
         return map;
@@ -337,18 +320,16 @@ public class Structure implements Configurable, Serializable {
      * @return a map from Facet-names to Facet-ids. The order is significant.
      */
     public HashMap<String, Integer> getFacetIDs() {
-        HashMap<String, Integer> map =
-                new LinkedHashMap<String, Integer>(facets.size());
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        HashMap<String, Integer> map = new LinkedHashMap<String, Integer>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFacetID());
         }
         return map;
     }
 
     public HashMap<String, String[]> getFacetFields() {
-        HashMap<String, String[]> map =
-                new LinkedHashMap<String, String[]>(facets.size());
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+        HashMap<String, String[]> map = new LinkedHashMap<String, String[]>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFields());
         }
         return map;
@@ -361,6 +342,7 @@ public class Structure implements Configurable, Serializable {
      * </p><p>
      * Absorption transfers all secondary parameters, such af maxTags and
      * similar into this structure, essentially allowing for on-the-fly tweaks.
+     *
      * @param other the Structure to absorb into this.
      * @return true if other was successfully absorbed into this.
      */
@@ -368,13 +350,10 @@ public class Structure implements Configurable, Serializable {
         if (!canAbsorb(other)) {
             return false;
         }
-        Iterator<Map.Entry<String, FacetStructure>> thisEntries =
-                this.getFacets().entrySet().iterator();
-        Iterator<Map.Entry<String, FacetStructure>> otherEntries =
-                other.getFacets().entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> thisEntries = this.getFacets().entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> otherEntries = other.getFacets().entrySet().iterator();
         while (thisEntries.hasNext()) {
-            thisEntries.next().getValue().absorb(
-                    otherEntries.next().getValue());
+            thisEntries.next().getValue().absorb(otherEntries.next().getValue());
 
         }
         return true;
@@ -383,6 +362,7 @@ public class Structure implements Configurable, Serializable {
     /**
      * Compares the facet names, fields and sort locale for equality with
      * significant ordering. If These attributes matches, true is returned.
+     *
      * @param other the Structure to compare against.
      * @return true if facet names, fields and sort locale are the same.
      */
@@ -393,41 +373,29 @@ public class Structure implements Configurable, Serializable {
             log.debug("absorb(): The number of facets differed");
             return false;
         }
-        Iterator<Map.Entry<String, FacetStructure>> thisEntries =
-                thisFacets.entrySet().iterator();
-        Iterator<Map.Entry<String, FacetStructure>> otherEntries =
-                otherFacets.entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> thisEntries = thisFacets.entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> otherEntries = otherFacets.entrySet().iterator();
         int counter = 0;
         while (thisEntries.hasNext()) {
             FacetStructure thisFacet = thisEntries.next().getValue();
             FacetStructure otherFacet = otherEntries.next().getValue();
 
             if (!thisFacet.getName().equals(otherFacet.getName())) {
-                log.debug(String.format(
-                        "absorb(): The facets at position %d (counting from 0)"
-                        + " did not have the same name: '%s' vs. '%s'",
-                        counter, thisFacet.getName(), otherFacet.getName()));
+                log.debug(String.format("absorb(): The facets at position %d (counting from 0)"
+                                        + " did not have the same name: '%s' vs. '%s'",
+                                        counter, thisFacet.getName(), otherFacet.getName()));
                 return false;
             }
-            if (!Strings.join(thisFacet.getFields(), ", ").equals(
-                    Strings.join(otherFacet.getFields(), ", "))) {
-                log.debug(String.format(
-                        "absorb(): The fields for facet '%s' were not the "
-                        + "same: '%s' vs. '%s'",
-                        thisFacet.getName(),
-                        Strings.join(thisFacet.getFields(), ", "),
-                        Strings.join(otherFacet.getFields(), ", ")));
+            if (!Strings.join(thisFacet.getFields(), ", ").equals(Strings.join(otherFacet.getFields(), ", "))) {
+                log.debug(String.format("absorb(): The fields for facet '%s' were not the same: '%s' vs. '%s'",
+                                        thisFacet.getName(), Strings.join(thisFacet.getFields(), ", "),
+                                        Strings.join(otherFacet.getFields(), ", ")));
                 return false;
             }
-            if ((thisFacet.getLocale() == null
-                 && otherFacet.getLocale() != null)
-                || (thisFacet.getLocale() != null &&
-                    !thisFacet.getLocale().equals(otherFacet.getLocale()))) {
-                log.debug(String.format(
-                        "absorb(): The sortLocales for facet '%s' were not the "
-                        + "same: '%s' vs. '%s'",
-                        thisFacet.getName(),
-                        thisFacet.getLocale(), otherFacet.getLocale()));
+            if ((thisFacet.getLocale() == null && otherFacet.getLocale() != null)
+                || (thisFacet.getLocale() != null && !thisFacet.getLocale().equals(otherFacet.getLocale()))) {
+                log.debug(String.format("absorb(): The sortLocales for facet '%s' were not the same: '%s' vs. '%s'",
+                                        thisFacet.getName(), thisFacet.getLocale(), otherFacet.getLocale()));
             }
             counter++;
         }
@@ -439,12 +407,11 @@ public class Structure implements Configurable, Serializable {
         if (!verbose) {
             return toString();
         }
-        return String.format("Structure(%s)",
-                             join(getFacetList(), ", "));
+        return String.format("Structure(%s)", join(getFacetList(), ", "));
     }
 
     // TODO: Should be Strings.join, but it fails?
-    private String join (Collection c, String delimiter) {
+    private String join(Collection c, String delimiter) {
         if (c == null) {
             throw new NullPointerException("Collection argument is null");
         } else if (delimiter == null) {
@@ -457,7 +424,7 @@ public class Structure implements Configurable, Serializable {
             if (b.length() == 0) {
                 b.append(o == null ? "" : o.toString());
             } else {
-                b.append (delimiter);
+                b.append(delimiter);
                 b.append(o == null ? "" : o.toString());
             }
         }

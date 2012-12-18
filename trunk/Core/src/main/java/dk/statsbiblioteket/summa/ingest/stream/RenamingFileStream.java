@@ -20,8 +20,8 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,26 +47,25 @@ public class RenamingFileStream extends CloseCallbackStream {
     /**
      * Constructs a FileInputStream where the postfix will potentially be
      * used upon close.
+     *
      * @param file    the file to open.
      * @param postfix the postfix to add, is setSuccess(true) has been
      *                called and close is called.
      * @throws java.io.FileNotFoundException if the file could not be located.
      */
-    public RenamingFileStream(File file, String postfix) throws
-                                                         FileNotFoundException {
+    public RenamingFileStream(File file, String postfix) throws FileNotFoundException {
         super(new FileInputStream(file));
-        log.trace("Created reader for '" + file
-                  + "' with potential postfix '" + postfix + "'");
+        log.trace("Created reader for '" + file + "' with potential postfix '" + postfix + "'");
         this.file = file;
         this.postfix = postfix;
     }
+
     public synchronized void setSuccess(boolean success) {
         this.success = success;
         try {
             close();
         } catch (IOException e) {
-            log.warn("setSuccess(" + success + "): Unable to close file '"
-                     + file + "'. Attempting rename()");
+            log.warn("setSuccess(" + success + "): Unable to close file '" + file + "'. Attempting rename()");
         }
     }
 
@@ -90,13 +89,11 @@ public class RenamingFileStream extends CloseCallbackStream {
                 log.trace("Renaming '" + file + "' to '" + newName + "'");
                 renamed = file.renameTo(newName);
                 //No longer touch files to update lastmodificationtime
-            } catch(Exception e) {
-                log.error("Could not rename '" + file
-                          + "' to '" + newName + "'", e);
+            } catch (Exception e) {
+                log.error("Could not rename '" + file + "' to '" + newName + "'", e);
             }
         } else if (log.isTraceEnabled()) {
-            log.trace("No renaming of '" + file + "'. closed=" + isClosed()
-                      + ", success=" + success + ", postfix='"
+            log.trace("No renaming of '" + file + "'. closed=" + isClosed() + ", success=" + success + ", postfix='"
                       + postfix + "'");
         }
     }

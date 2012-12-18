@@ -60,8 +60,7 @@ public class UnpackFilter implements ObjectFilter {
      * </p><p>
      * This property is optional. Default is ".*\.xml".
      */
-    public static final String CONF_FILE_PATTERN =
-            "summa.ingest.unpackfilter.filepattern";
+    public static final String CONF_FILE_PATTERN = "summa.ingest.unpackfilter.filepattern";
     public static final String DEFAULT_FILE_PATTERN = ".*\\.xml|.*\\.XML";
 
     /**
@@ -70,8 +69,7 @@ public class UnpackFilter implements ObjectFilter {
      * </p><p>
      * Optional. Default is zip.
      */
-    public static final String CONF_EMPTY_ORIGIN_POSTFIX =
-        "summa.ingest.unpackfilter.emptyoriginpostfix";
+    public static final String CONF_EMPTY_ORIGIN_POSTFIX = "summa.ingest.unpackfilter.emptyoriginpostfix";
     public static final String DEFAULT_EMPTY_ORIGIN_POSTFIX = "zip";
 
 
@@ -79,6 +77,7 @@ public class UnpackFilter implements ObjectFilter {
      * Supported unpackers.
      */
     private static final Map<String, Class<? extends StreamParser>> unpackers;
+
     static {
         unpackers = new HashMap<String, Class<? extends StreamParser>>(5);
         unpackers.put("zip", ZIPParser.class);
@@ -91,15 +90,13 @@ public class UnpackFilter implements ObjectFilter {
      * {@link #passive}. When the active list is empty, the next Payload from
      * source is processed.
      */
-    private final Deque<Pair<String, StreamParser>> active =
-        new ArrayDeque<Pair<String, StreamParser>>();
+    private final Deque<Pair<String, StreamParser>> active = new ArrayDeque<Pair<String, StreamParser>>();
 
     /**
      * Instantiated unpackers that are not in use. The key is the supported
      * file ending.
      */
-    private final List<Pair<String, StreamParser>> passive =
-        new ArrayList<Pair<String, StreamParser>>();
+    private final List<Pair<String, StreamParser>> passive = new ArrayList<Pair<String, StreamParser>>();
 
     /**
      * The source for the Payloads.
@@ -120,25 +117,23 @@ public class UnpackFilter implements ObjectFilter {
 
     public UnpackFilter(Configuration conf) {
         this.conf = conf;
-        emptyOriginPostfix = conf.getString(
-            CONF_EMPTY_ORIGIN_POSTFIX, emptyOriginPostfix);
-        filePattern = Pattern.compile(conf.getString(
-                CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
+        emptyOriginPostfix = conf.getString(CONF_EMPTY_ORIGIN_POSTFIX, emptyOriginPostfix);
+        filePattern = Pattern.compile(conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
 
         StringWriter sw = new StringWriter();
         boolean first = true;
-        for (Map.Entry<String, Class<? extends StreamParser>> entry:
-            unpackers.entrySet()) {
+        for (Map.Entry<String, Class<? extends StreamParser>> entry : unpackers.entrySet()) {
             if (first) {
                 first = false;
-            } {
+            }
+            {
                 sw.append(", ");
             }
             sw.append(entry.getKey()).append(": ");
             sw.append(entry.getValue().getSimpleName());
         }
-        log.debug("Creating UnpackFilter for files with pattern '"
-                  + filePattern.pattern() + "'. Supported unpackers: " + sw);
+        log.debug("Creating UnpackFilter for files with pattern '" + filePattern.pattern() + "'. Supported unpackers: "
+                  + sw);
     }
 
     @Override
@@ -154,8 +149,7 @@ public class UnpackFilter implements ObjectFilter {
         //noinspection AssignmentToNull
         payload = null;
         if (Logging.processLog.isTraceEnabled()) { // Cheating here
-            Logging.logProcess("UnpackFilter", "Unpacked file",
-                               Logging.LogLevel.TRACE, newPayload);
+            Logging.logProcess("UnpackFilter", "Unpacked file", Logging.LogLevel.TRACE, newPayload);
         }
         //  We cannot calls stop yet, as newPayload hasn't been finished
         /*if (payload == null) {
@@ -179,8 +173,7 @@ public class UnpackFilter implements ObjectFilter {
         log.trace("makePayload() called");
         if (payload != null) {
             if (log.isTraceEnabled()) {
-                log.trace("makePayload: Payload already assigned with "
-                          + payload);
+                log.trace("makePayload: Payload already assigned with " + payload);
             }
             return;
         }
@@ -195,8 +188,7 @@ public class UnpackFilter implements ObjectFilter {
                         passive.add(active.pop());
                     }
                 } catch (Exception e) {
-                    log.warn("Exception requesting payload from parser, "
-                             + "skipping to next stream payload", e);
+                    log.warn("Exception requesting payload from parser, skipping to next stream payload", e);
                     last.stop();
                     passive.add(active.pop());
                 }
@@ -204,10 +196,8 @@ public class UnpackFilter implements ObjectFilter {
             // If no Payload, try source
             if (payload == null && source.hasNext()) {
                 payload = source.next();
-                if (payload.getData(Payload.ORIGIN) == null &&
-                    !"".equals(emptyOriginPostfix)) {
-                    payload.getData().put(
-                        Payload.ORIGIN, "dummyname." + emptyOriginPostfix);
+                if (payload.getData(Payload.ORIGIN) == null && !"".equals(emptyOriginPostfix)) {
+                    payload.getData().put(Payload.ORIGIN, "dummyname." + emptyOriginPostfix);
                 }
             }
             if (payload == null) {
@@ -225,31 +215,28 @@ public class UnpackFilter implements ObjectFilter {
         // Check for origin existence
         String origin = payload.getStringData(Payload.ORIGIN);
         if (origin == null) {
-            Logging.logProcess(
-                "UnpackFilter",
-                "No " + Payload.ORIGIN + " defined in meta data. Unable to "
-                + "determine unpacker", Logging.LogLevel.WARN, payload);
+            Logging.logProcess("UnpackFilter",
+                               "No " + Payload.ORIGIN + " defined in meta data. Unable to determine unpacker",
+                               Logging.LogLevel.WARN, payload);
             return;
         }
         // Wrap Payload in packer if necessary
         String[] tokens = origin.split("\\.");
-        String postfix = tokens[tokens.length -1].toLowerCase();
+        String postfix = tokens[tokens.length - 1].toLowerCase();
         if (unpackers.containsKey(postfix)) {
             if (log.isTraceEnabled()) {
                 log.trace("Ending '" + postfix + "' matches an unpacker");
             }
-            for (int i = 0 ; i < passive.size() ; i++) {
+            for (int i = 0; i < passive.size(); i++) {
                 Pair<String, StreamParser> unpacker = passive.get(i);
                 if (unpacker.getKey().equals(postfix)) {
                     if (log.isTraceEnabled()) {
-                        log.trace("Located passive unpacker for ending '"
-                                  + postfix + "'. Reusing unpacker");
+                        log.trace("Located passive unpacker for ending '" + postfix + "'. Reusing unpacker");
                     }
                     unpacker.getValue().open(payload);
                     payload = null;
                     if (!passive.remove(unpacker)) {
-                        log.warn("Unable to remove '" + unpacker
-                                 + "' from passive list");
+                        log.warn("Unable to remove '" + unpacker + "' from passive list");
                     }
                     active.push(unpacker);
                     return;
@@ -260,24 +247,19 @@ public class UnpackFilter implements ObjectFilter {
             log.debug("Creating unpacker '" + parserClass.getName() + "'");
             StreamParser unpacker;
             if ("zip".equals(postfix)) {
-                Configuration zConf = Configuration.newMemoryBased(
-                    ZIPParser.CONF_FILE_PATTERN, ".*");
+                Configuration zConf = Configuration.newMemoryBased(ZIPParser.CONF_FILE_PATTERN, ".*");
                 unpacker = Configuration.create(unpackers.get(postfix), zConf);
             } else {
                 unpacker = Configuration.create(unpackers.get(postfix), conf);
             }
-            log.debug("Created unpacker '" + parserClass.getName()
-                      + "' for ending '" + postfix + "'");
-            Pair<String, StreamParser> pair =
-                new Pair<String, StreamParser>(postfix, unpacker);
+            log.debug("Created unpacker '" + parserClass.getName() + "' for ending '" + postfix + "'");
+            Pair<String, StreamParser> pair = new Pair<String, StreamParser>(postfix, unpacker);
             active.push(pair);
             unpacker.open(payload);
             payload = null;
         } else if (!filePattern.matcher(origin).matches()) {
-            Logging.logProcess(
-                "UnpackFilter",
-                "Payload origin did not match '" + filePattern.pattern()
-                + "'. Discarding Payload", Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess("UnpackFilter", "Payload origin did not match '" + filePattern.pattern()
+                                               + "'. Discarding Payload", Logging.LogLevel.DEBUG, payload);
             payload = null;
         }
     }
@@ -297,19 +279,16 @@ public class UnpackFilter implements ObjectFilter {
     @Override
     public void setSource(Filter filter) {
         if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException(
-                    "UnpackFilter can only be chained to ObjectFilters");
+            throw new IllegalArgumentException("UnpackFilter can only be chained to ObjectFilters");
         }
         log.debug("Assigning source " + source);
-        source = (ObjectFilter)filter;
+        source = (ObjectFilter) filter;
     }
 
     @Override
     public void close(boolean success) {
         if (source == null) {
-            log.warn(String.format(
-                    "close(%b): Cannot close as no source is specified",
-                    success));
+            log.warn(String.format("close(%b): Cannot close as no source is specified", success));
         } else {
             while (!active.isEmpty()) {
                 active.pop().getValue().stop();
@@ -329,17 +308,15 @@ public class UnpackFilter implements ObjectFilter {
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
-        Logging.logProcess("UnpackFilter",
-                           "Calling close for Payload as part of pump()",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess("UnpackFilter", "Calling close for Payload as part of pump()", Logging.LogLevel.TRACE, 
+                           payload);
         next.close();
         return true;
     }
 
     private void checkSource() {
         if (source == null) {
-            throw new NoSuchElementException(
-                    "No source specified for UnpackFilter");
+            throw new NoSuchElementException("No source specified for UnpackFilter");
         }
     }
 }

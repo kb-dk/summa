@@ -47,7 +47,6 @@ import org.apache.lucene.search.exposed.facet.FacetResponse;
 import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -228,7 +227,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         DocIDCollector collectedIDs = assignShared(shared);
 
         indexLookup.lookup(request, responses);
-        handleExposedDirect(request, responses);
+       // handleExposedDirect(request, responses);
 
         // TODO: Construct a pseudo-query from query+filter+? Remember to remove setMaxFilled(0) when query is enabled
         String query = null;
@@ -277,7 +276,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         FacetResponse facetResponse;
         long extractTime;
         try {
-            collect(tagCollector, facetRequest, query, collectedIDs);
+            collect(tagCollector, query, collectedIDs);
             collectTime += System.currentTimeMillis();
 
             extractTime = -System.currentTimeMillis();
@@ -307,7 +306,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     }
 
     // TODO: Implement exposed direct call
-    private void handleExposedDirect(
+/*    private void handleExposedDirect(
         Request request, ResponseCollection responses) throws RemoteException {
         if (!request.containsKey(FacetKeys.SEARCH_FACET_XMLREQUEST)) {
             return;
@@ -322,7 +321,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
 
 //        assignShared(shared, collectedIDs);
 
-    }
+    }*/
 
     // Not hierarchical
     private Response newResponseToOldResult(
@@ -345,9 +344,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         return oldResult;
     }
 
-    private void collect(TagCollector tagCollector,
-       org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest,
-       String query, DocIDCollector collectedIDs) {
+    private void collect(TagCollector tagCollector, String query, DocIDCollector collectedIDs) {
         if (tagCollector.getQuery() == null) {
             log.trace("No cached tag collector. Performing collection");
             long collectTime = -System.currentTimeMillis();

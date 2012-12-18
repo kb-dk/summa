@@ -7,9 +7,9 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Interface defining the search keys used by Summa's {@code BrowserImpl}.
@@ -49,94 +49,98 @@ public interface FacetKeys {
      * LUCENE-2369 (aka exposed). The return format is FacetResponse.xsd.
      * </p><p>
      * Sample request: {@code
-    <?xml version="1.0" encoding="UTF-8" ?>
-    <facetrequest xmlns="http://lucene.apache.org/exposed/facet/request/1.0" maxtags="30" mincount="1">
-      <query>freetext:"foo &lt;&gt; bar &amp; zoo"</query>
-      <groups>
-        <group name="title" order="locale" locale="da">
-          <fields>
-            <field name="title"/>
-            <field name="subtitle"/>
-          </fields>
-        </group>
-        <group name="author" order="index">
-          <fields>
-            <field name="name"/>
-          </fields>
-        </group>
-        <group name="material" order="count" mincount="0" maxtags="-1">
-          <fields>
-            <field name="materialetype"/>
-            <field name="type"/>
-          </fields>
-        </group>
-        <group name="place">
-          <fields>
-            <field name="position"/>
-          </fields>
-        </group>
-        <!-- A hierarchical group where tags on the first level are sorted by
-                 count while tags on subsequent levels are sorted by index order.
-
-            -->
-        <group name="depth" mincount="0" order="index" maxtags="5" hierarchical="true" levels="5" delimiter="/">
-          <fields>
-            <field name="classification"/>
-          </fields>
-          <subtags suborder="count" maxtags="10" mintotalcount="1">
-            <subtags suborder="base" maxtags="5"/>
-          </subtags>
-        </group>
-      </groups>
-    </facetrequest>
-     }. Sample response: {@code
-    <?xml version='1.0' encoding='utf-8'?>
-    <facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="all" hits="4911501" totalms="1284" countms="999">
-      <facet name="id" fields="id" order="count" maxtags="5" mincount="0" offset="0" prefix="" extractionms="266">
-        <subtags potentialtags="10000000" totaltags="10000000" count="4911501">
-          <tag count="1" term="00000006"/>
-          <tag count="1" term="00000002"/>
-          <tag count="1" term="00000000"/>
-          <tag count="1" term="00000004"/>
-          <tag count="1" term="09999998"/>
-        </subtags>
-      </facet>
-      <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" prefix="a_foo" extractionms="1">
-        <subtags potentialtags="-1" totaltags="-1" count="2311453">
-          <tag count="0" term="a_ fOO01991201"/>
-          <tag count="0" term="a_FOO0qVi Pljvjbæ9v5578717"/>
-          <tag count="0" term="a_FoO1725831"/>
-          <tag count="1" term="a_ foo18a01AøoCf 4518220"/>
-          <tag count="1" term="a_FOO1hzW5450992"/>
-        </subtags>
-      </facet>
-      <facet name="random" fields="evennull" order="locale" locale="da" maxtags="5" mincount="1" offset="0" prefix="" extractionms="18">
-      </facet>
-      <facet name="multi" fields="facet" order="index" maxtags="5" mincount="0" offset="-2" prefix="F" extractionms="0">
-        <subtags potentialtags="-1" totaltags="-1" count="12345678">
-          <tag count="465820" term="D"/>
-          <tag count="467009" term="E"/>
-          <tag count="465194" term="F"/>
-          <tag count="465960" term="G"/>
-          <tag count="464783" term="H"/>
-        </subtags>
-      </facet>
-      <facet name="depth" fields="classification" order="index" maxtags="5" mincount="0" hierarchical="true" levels="5" delimiter="/" extractionms="0">
-        <subtags mincount="0" mintotalcount="10" suborder="count" potentialtags="-1" totaltags="-1" count="20345654">
-          <tag count="465820" term="D"/>
-          <tag count="467009" term="E"/>
-          <tag count="465194" term="F"/>
-          <tag count="465960" term="G">
-            <subtags suborder="base" maxtags="5" totaltags="1" count="460">
-              <tag count="460" term="K"/>
-            </subtags>
-          </tag>
-          <tag count="464783" term="H"/>
-        </subtags>
-      </facet>
-    </facetresponse>
-    }
+     * <?xml version="1.0" encoding="UTF-8" ?>
+     * <facetrequest xmlns="http://lucene.apache.org/exposed/facet/request/1.0" maxtags="30" mincount="1">
+     * <query>freetext:"foo &lt;&gt; bar &amp; zoo"</query>
+     * <groups>
+     * <group name="title" order="locale" locale="da">
+     * <fields>
+     * <field name="title"/>
+     * <field name="subtitle"/>
+     * </fields>
+     * </group>
+     * <group name="author" order="index">
+     * <fields>
+     * <field name="name"/>
+     * </fields>
+     * </group>
+     * <group name="material" order="count" mincount="0" maxtags="-1">
+     * <fields>
+     * <field name="materialetype"/>
+     * <field name="type"/>
+     * </fields>
+     * </group>
+     * <group name="place">
+     * <fields>
+     * <field name="position"/>
+     * </fields>
+     * </group>
+     * <!-- A hierarchical group where tags on the first level are sorted by
+     * count while tags on subsequent levels are sorted by index order.
+     * <p/>
+     * -->
+     * <group name="depth" mincount="0" order="index" maxtags="5" hierarchical="true" levels="5" delimiter="/">
+     * <fields>
+     * <field name="classification"/>
+     * </fields>
+     * <subtags suborder="count" maxtags="10" mintotalcount="1">
+     * <subtags suborder="base" maxtags="5"/>
+     * </subtags>
+     * </group>
+     * </groups>
+     * </facetrequest>
+     * }. Sample response: {@code
+     * <?xml version='1.0' encoding='utf-8'?>
+     * <facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="all" hits="4911501"
+     * totalms="1284" countms="999">
+     * <facet name="id" fields="id" order="count" maxtags="5" mincount="0" offset="0" prefix="" extractionms="266">
+     * <subtags potentialtags="10000000" totaltags="10000000" count="4911501">
+     * <tag count="1" term="00000006"/>
+     * <tag count="1" term="00000002"/>
+     * <tag count="1" term="00000000"/>
+     * <tag count="1" term="00000004"/>
+     * <tag count="1" term="09999998"/>
+     * </subtags>
+     * </facet>
+     * <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" prefix="a_foo"
+     * extractionms="1">
+     * <subtags potentialtags="-1" totaltags="-1" count="2311453">
+     * <tag count="0" term="a_ fOO01991201"/>
+     * <tag count="0" term="a_FOO0qVi Pljvjbæ9v5578717"/>
+     * <tag count="0" term="a_FoO1725831"/>
+     * <tag count="1" term="a_ foo18a01AøoCf 4518220"/>
+     * <tag count="1" term="a_FOO1hzW5450992"/>
+     * </subtags>
+     * </facet>
+     * <facet name="random" fields="evennull" order="locale" locale="da" maxtags="5" mincount="1" offset="0"
+     * prefix="" extractionms="18">
+     * </facet>
+     * <facet name="multi" fields="facet" order="index" maxtags="5" mincount="0" offset="-2" prefix="F"
+     * extractionms="0">
+     * <subtags potentialtags="-1" totaltags="-1" count="12345678">
+     * <tag count="465820" term="D"/>
+     * <tag count="467009" term="E"/>
+     * <tag count="465194" term="F"/>
+     * <tag count="465960" term="G"/>
+     * <tag count="464783" term="H"/>
+     * </subtags>
+     * </facet>
+     * <facet name="depth" fields="classification" order="index" maxtags="5" mincount="0" hierarchical="true"
+     * levels="5" delimiter="/" extractionms="0">
+     * <subtags mincount="0" mintotalcount="10" suborder="count" potentialtags="-1" totaltags="-1" count="20345654">
+     * <tag count="465820" term="D"/>
+     * <tag count="467009" term="E"/>
+     * <tag count="465194" term="F"/>
+     * <tag count="465960" term="G">
+     * <subtags suborder="base" maxtags="5" totaltags="1" count="460">
+     * <tag count="460" term="K"/>
+     * </subtags>
+     * </tag>
+     * <tag count="464783" term="H"/>
+     * </subtags>
+     * </facet>
+     * </facetresponse>
+     * }
      */
-    public static final String SEARCH_FACET_XMLREQUEST =
-        "search.facet.xmlrequest";
+    public static final String SEARCH_FACET_XMLREQUEST = "search.facet.xmlrequest";
 }

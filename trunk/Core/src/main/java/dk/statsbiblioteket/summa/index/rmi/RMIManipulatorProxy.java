@@ -34,8 +34,7 @@ import java.rmi.server.UnicastRemoteObject;
  * The standard use case is to expose a {@link IndexControllerImpl} as a means
  * to remote control commits and consolidates of the index(es).
  */
-public class RMIManipulatorProxy extends UnicastRemoteObject
-                                 implements RemoteManipulator {
+public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteManipulator {
     private static final long serialVersionUID = 25681338871L;
 
     /**
@@ -52,16 +51,14 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
      * Default class for the manipulator backend implementation as defined
      * in the {@link #CONF_BACKEND} property.
      */
-    public static final Class<? extends IndexManipulator> DEFAULT_BACKEND =
-                                                      IndexControllerImpl.class;
+    public static final Class<? extends IndexManipulator> DEFAULT_BACKEND = IndexControllerImpl.class;
 
     /**
      * Configuration property specifying which port the registry used by
      * the indexer can be found on. Default value is
      * {@link #DEFAULT_REGISTRY_PORT}.
      */
-    public static final String CONF_REGISTRY_PORT =
-                                              "summa.index.rmi.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.index.rmi.registry.port";
 
     /**
      * Default value for the {@link #CONF_REGISTRY_PORT} property.
@@ -72,8 +69,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
      * Configuration property specifying the service name of the indexer
      * service. Default is {@link #DEFAULT_SERVICE_NAME}.
      */
-    public static final String CONF_SERVICE_NAME =
-                                               "summa.index.rmi.service.name";
+    public static final String CONF_SERVICE_NAME = "summa.index.rmi.service.name";
 
     /**
      * Default value for the {@link #CONF_SERVICE_NAME} property.
@@ -84,8 +80,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
      * The port RMI communications should run over. The default value for this
      * property is {@link #DEFAULT_SERVICE_PORT}.
      */
-    public static final String CONF_SERVICE_PORT =
-                                                 "summa.index.rmi.servic.eport";
+    public static final String CONF_SERVICE_PORT = "summa.index.rmi.servic.eport";
 
     /**
      * Default value for the {@link #CONF_SERVICE_PORT} property. Using port
@@ -99,7 +94,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
     private String serviceName;
     private int registryPort;
 
-    public RMIManipulatorProxy (Configuration conf) throws IOException {
+    public RMIManipulatorProxy(Configuration conf) throws IOException {
         super(getServicePort(conf));
 
         /* Create configuration for the backend, based on our own,
@@ -107,61 +102,54 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         // FIXME: The below config should really be kept entirely in memory,
         //        but we can't use a memorybased config because of bug:
         //        https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
-        Configuration backendConf = new Configuration (new XStorage(false));
-        backendConf.importConfiguration (conf);
-        if (conf.valueExists (CONF_BACKEND)) {
-            backendConf.set (CONF_MANIPULATOR_CLASS,
-                             conf.getString (CONF_BACKEND));
+        Configuration backendConf = new Configuration(new XStorage(false));
+        backendConf.importConfiguration(conf);
+        if (conf.valueExists(CONF_BACKEND)) {
+            backendConf.set(CONF_MANIPULATOR_CLASS, conf.getString(CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
-                      + " for backend");
-            backendConf.set (CONF_MANIPULATOR_CLASS, DEFAULT_BACKEND);
+            log.info(CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for backend");
+            backendConf.set(CONF_MANIPULATOR_CLASS, DEFAULT_BACKEND);
         }
 
         /* If the backend is set to be another RMIManipulatorProxy then avoid
          * infinite recursion */
-        if (backendConf.valueExists (CONF_MANIPULATOR_CLASS)) {
-            if (this.getClass().getName().equals(
-                              backendConf.getString (CONF_MANIPULATOR_CLASS))) {
+        if (backendConf.valueExists(CONF_MANIPULATOR_CLASS)) {
+            if (this.getClass().getName().equals(backendConf.getString(CONF_MANIPULATOR_CLASS))) {
 
-                throw new ConfigurationException("Nested RMIManipulatorProxy "
-                                                 + "objects not allowed");
+                throw new ConfigurationException("Nested RMIManipulatorProxy objects not allowed");
             }
         }
 
-        if (log.isTraceEnabled ()) {
-            log.trace ("Backend conf:\n" + backendConf.dumpString ());
+        if (log.isTraceEnabled()) {
+            log.trace("Backend conf:\n" + backendConf.dumpString());
         }
 
-        log.trace ("Creating manipulator backend");
+        log.trace("Creating manipulator backend");
         backend = ManipulatorFactory.createManipulator(backendConf);
-        log.trace ("Created manipulator: " + backend.getClass().getName());
+        log.trace("Created manipulator: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
 
-        RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
+        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
 
         try {
-            RemoteHelper.exportMBean (this);
+            RemoteHelper.exportMBean(this);
         } catch (Exception e) {
-            String msg = "Error exporting MBean of '" + this
-                         + "'. Going on without it: " + e.getMessage ();
+            String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage();
             if (log.isTraceEnabled()) {
-                log.warn (msg, e);
+                log.warn(msg, e);
             } else {
                 log.warn(msg);
             }
         }
     }
 
-    private static int getServicePort (Configuration conf) {
+    private static int getServicePort(Configuration conf) {
         try {
             return conf.getInt(CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
-            log.warn ("Service port not defined in "
-                    + CONF_SERVICE_PORT + ". Falling back to "
-                    + "anonymous port");
+            log.warn("Service port not defined in " + CONF_SERVICE_PORT + ". Falling back to anonymous port");
             return DEFAULT_SERVICE_PORT;
         }
     }
@@ -171,9 +159,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.open(indexRoot);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "open(%s) for %d:%s",
-                    indexRoot, registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("open(%s) for %d:%s", indexRoot, registryPort, 
+                                                            serviceName), t);
         }
     }
 
@@ -182,8 +169,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.clear();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "clear() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("clear() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -192,9 +178,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             return backend.update(payload);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "update(%s) for %d:%s",
-                    payload, registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("update(%s) for %d:%s", payload, registryPort, 
+                                                            serviceName), t);
             return false; // exitOnThrowable always throws
         }
     }
@@ -204,8 +189,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.commit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "commit() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("commit() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -214,8 +198,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.consolidate();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "consolidate() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("consolidate() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -224,8 +207,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.close();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "close() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("close() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -234,9 +216,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             backend.orderChangedSinceLastCommit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "orderChangedSinceLastCommit() for %d:%s",
-                    registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("orderChangedSinceLastCommit() for %d:%s",
+                                                            registryPort, serviceName), t);
         }
     }
 
@@ -245,9 +226,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
         try {
             return backend.isOrderChangedSinceLastCommit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
-                    "isOrderChangedSinceLastCommit() for %d:%s",
-                    registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format("isOrderChangedSinceLastCommit() for %d:%s",
+                                                            registryPort, serviceName), t);
             return true; // We bomb out in a few seconds, so the value is random
         }
     }

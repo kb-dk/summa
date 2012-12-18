@@ -20,15 +20,12 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
@@ -360,7 +357,7 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
 
-    /**
+    /*
      * Additions are either plain additions or updates. Updates are handled by
      * deleting any existing Document with the given id and then adding the
      * new document.
@@ -372,7 +369,7 @@ public class LuceneManipulator implements IndexManipulator {
      * @param payload the payload containing the document to add.
      * @throws IOException if the document could not be added.
      */
-    private void updateAddition(String id, Payload payload) throws IOException {
+/*    private void updateAddition(String id, Payload payload) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + id + "'");
         checkWriter();
@@ -406,8 +403,9 @@ public class LuceneManipulator implements IndexManipulator {
         log.trace("Updating idMapper with id '" + id + "' and pos " + (writer.maxDoc()-1));
 //        idMapper.put(id, writer.maxDoc()-1);
     }
+  */
 
-    private void updateDeletion(String id, Payload payload) throws IOException {
+/*    private void updateDeletion(String id, Payload payload) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Deleting '" + id + "'");
         checkWriter();
@@ -439,7 +437,7 @@ public class LuceneManipulator implements IndexManipulator {
 //                    Logging.LogLevel.DEBUG, payload);
 //        }
     }
-
+  */
     @Override
     public synchronized void commit() throws IOException {
         //noinspection DuplicateStringLiteralInspection

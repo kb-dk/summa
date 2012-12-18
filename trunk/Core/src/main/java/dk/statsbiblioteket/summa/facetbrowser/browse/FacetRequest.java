@@ -36,8 +36,8 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -57,6 +57,7 @@ public class FacetRequest extends Structure {
 
     /**
      * Construct a request for a Facet structure, based on the given data.
+     *
      * @param docIDs   the ids for the documents to calculate Tags for.
      * @param facets   a comma-separeted list with the names of the wanted
      *                 Facets.
@@ -74,8 +75,7 @@ public class FacetRequest extends Structure {
      *                 Example: "Title (ALPHA), Author (5 POPULARITY), City"
      * @param defaults the base for building the request.
      */
-    public FacetRequest(DocIDCollector docIDs,
-                   String facets, Structure defaults) {
+    public FacetRequest(DocIDCollector docIDs, String facets, Structure defaults) {
         super(defaults.getFacets().size());
         this.docIDs = docIDs;
         parse(facets, defaults);
@@ -91,17 +91,15 @@ public class FacetRequest extends Structure {
         try {
             // foo(23), bar, zoo(12 ALPHA)
             String[] tokens = wantedFacets.split(" *, *");
-            for (String facetToken: tokens) {
+            for (String facetToken : tokens) {
                 // zoo(12 ALPHA)
                 String[] subTokens = facetToken.split(" *\\(", 2);
                 // zoo
-                FacetStructure fc =
-                        defaults.getFacets().get(subTokens[0].trim());
+                FacetStructure fc = defaults.getFacets().get(subTokens[0].trim());
                 if (fc == null) {
-                    log.warn(String.format(
-                            "Could not find a Facet named '%s', parsed from "
-                            + "'%s' in the default structure. Skipping Facet",
-                            subTokens[0].trim(), wantedFacets));
+                    log.warn(String.format("Could not find a Facet named '%s', parsed from "
+                                           + "'%s' in the default structure. Skipping Facet",
+                                           subTokens[0].trim(), wantedFacets));
                     continue;
                 }
                 if (subTokens.length == 1) {
@@ -116,7 +114,7 @@ public class FacetRequest extends Structure {
                 // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
                 Integer maxTags = null;
                 String sortType = null;
-                for (String facetArg: facetArgs) {
+                for (String facetArg : facetArgs) {
                     if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
                         sortType = FacetStructure.SORT_POPULARITY;
                     } else if (FacetStructure.SORT_ALPHA.equals(facetArg)) {
@@ -125,20 +123,16 @@ public class FacetRequest extends Structure {
                         try {
                             maxTags = Integer.parseInt(facetArg);
                         } catch (NumberFormatException e) {
-                            log.warn(String.format(
-                                    "Argument '%s' to Facet '%s' in request "
-                                    + "'%s' could not be parsed",
-                                    facetArg, facetToken, wantedFacets));
+                            log.warn(String.format("Argument '%s' to Facet '%s' in request '%s' could not be parsed", 
+                                                   facetArg, facetToken, wantedFacets));
                         }
                     }
                 }
-                getFacets().put(fc.getName(),
-                                fc.getRequestFacet(maxTags, sortType));
+                getFacets().put(fc.getName(), fc.getRequestFacet(maxTags, sortType));
             }
         } catch (Exception e) {
             log.warn(String.format(
-                    "Exception encountered while parsing '%s'. "
-                    + "Switching to default facets", wantedFacets));
+                    "Exception encountered while parsing '%s'. Switching to default facets", wantedFacets));
             getFacets().putAll(defaults.getFacets());
         }
         freezeFacets();
@@ -154,6 +148,4 @@ public class FacetRequest extends Structure {
     public String toString() {
         return "FacetRequest(" + super.toString(true) + ")";
     }
-
 }
-

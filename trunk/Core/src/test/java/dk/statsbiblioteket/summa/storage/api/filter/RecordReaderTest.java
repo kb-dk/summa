@@ -40,14 +40,14 @@ import java.util.regex.Pattern;
         author = "te")
 public class RecordReaderTest extends TestCase {
     private static Log log = LogFactory.getLog(RecordReaderTest.class);
-    private static File db = new File("target/test_result",
-            "summatest" + File.separator + "recordreadertest");
+    private static File db = new File("target/test_result", "summatest" + File.separator + "recordreadertest");
     private final int timeout = 1000;
 
     public RecordReaderTest(String name) {
         super(name);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -77,11 +77,11 @@ public class RecordReaderTest extends TestCase {
 
     public void testTimestampFormatting() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
-        Assert.assertEquals("The timestamp should be properly formatted",
-                     expected, String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
+        Assert.assertEquals("The timestamp should be properly formatted", expected,
+                            String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
     }
 
-    public void waitForHasNext(RecordReader r, long timeout) throws Exception{
+    public void waitForHasNext(RecordReader r, long timeout) throws Exception {
         long start = System.currentTimeMillis();
 
         while (!r.hasNext()) {
@@ -103,18 +103,13 @@ public class RecordReaderTest extends TestCase {
                                                            formatted));
     }*/
 
-    private static final String expected =
-            "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
-            + "<lastRecordTimestamp>\n"
-            + "<epoch>1208461857000</epoch>\n"
-            + "<iso>20080417-215057</iso>\n"
-            + "</lastRecordTimestamp>\n";
+    private static final String expected = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" + "<lastRecordTimestamp>\n"
+                                           + "<epoch>1208461857000</epoch>\n" + "<iso>20080417-215057</iso>\n"
+                                           + "</lastRecordTimestamp>\n";
 
     public void testPatternMatching() throws Exception {
-        Pattern p = Pattern.compile("([0-9]{4})([0-9]{2})([0-9]{2})-"
-                                    + "([0-9]{2})([0-9]{2})([0-9]{2})");
-        assertTrue("Pattern should match simple case",
-                   p.matcher("20080417-215057").matches());
+        Pattern p = Pattern.compile("([0-9]{4})([0-9]{2})([0-9]{2})-" + "([0-9]{2})([0-9]{2})([0-9]{2})");
+        assertTrue("Pattern should match simple case", p.matcher("20080417-215057").matches());
 
         //String TAG = "lastRecordTimestamp";
         Pattern pfull;/* = Pattern.compile(".*<" + TAG + ">"
@@ -122,10 +117,8 @@ public class RecordReaderTest extends TestCase {
                     + "([0-9]{2})([0-9]{2})([0-9]{2})"
                     + "</" + TAG + ">", Pattern.DOTALL);*/
         pfull = ProgressTracker.TIMESTAMP_PATTERN;
-        assertTrue("Pattern should match extended case with input " + expected,
-                   pfull.matcher(expected).matches());
-        assertTrue("Pattern should match full case",
-                   pfull.matcher(expected).matches());
+        assertTrue("Pattern should match extended case with input " + expected, pfull.matcher(expected).matches());
+        assertTrue("Pattern should match full case", pfull.matcher(expected).matches());
     }
 
     public void testOne() throws Exception {
@@ -139,8 +132,8 @@ public class RecordReaderTest extends TestCase {
         Payload p = r.next();
         Record rec = p.getRecord();
 
-        assertEquals("\nVerbose orig: " + orig.toString(true) + "\nVerbose rec : " + rec.toString(true) + "\n",
-                     orig, rec);
+        assertEquals(
+                "\nVerbose orig: " + orig.toString(true) + "\nVerbose rec : " + rec.toString(true) + "\n", orig, rec);
         r.close(true);
         sto.close();
     }
@@ -197,9 +190,7 @@ public class RecordReaderTest extends TestCase {
     }
 
     public void testUpdateCustomProgress() throws Exception {
-        testUpdate(Configuration.newMemoryBased(
-            RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml"
-        ));
+        testUpdate(Configuration.newMemoryBased(RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml"));
     }
 
     public void testUpdate(Configuration readerConf) throws Exception {
@@ -246,7 +237,6 @@ public class RecordReaderTest extends TestCase {
         try {
             Record orig1 = new Record("test1", "base", "Hello".getBytes());
             Record orig2 = new Record("test2", "base", "Hello".getBytes());
-            Record orig3 = new Record("test3", "base", "Hello".getBytes());
 
             sto.flushAll(Arrays.asList(orig1, orig2));
             { // Implicit initial
@@ -254,8 +244,8 @@ public class RecordReaderTest extends TestCase {
             }
 
             { // No news
-                assertEquals("Second iteration (with no available updates)",
-                             new ArrayList<Record>(), empty(readerConf));
+                assertEquals("Second iteration (with no available updates)", new ArrayList<Record>(),
+                             empty(readerConf));
             }
         } finally {
             sto.close();
@@ -263,11 +253,10 @@ public class RecordReaderTest extends TestCase {
     }
 
     private void assertEquals(String message, List<Record> expected, List<Record> actual) {
-        assertEquals(message + ". There should be the right number of Records",
-                     expected.size(), actual.size());
-        for (int i = 0 ; i < expected.size() ; i++) {
-            assertEquals(message + ". The Records at position " + i + " should be equal",
-                         expected.get(i), actual.get(i));
+        assertEquals(message + ". There should be the right number of Records", expected.size(), actual.size());
+        for (int i = 0; i < expected.size(); i++) {
+            assertEquals(
+                    message + ". The Records at position " + i + " should be equal", expected.get(i), actual.get(i));
         }
     }
 
@@ -331,9 +320,7 @@ public class RecordReaderTest extends TestCase {
 
     public void testWatchOne() throws Exception {
         Storage sto = createStorage();
-        RecordReader r = new RecordReader(Configuration.newMemoryBased(
-                RecordReader.CONF_STAY_ALIVE, true
-        ));
+        RecordReader r = new RecordReader(Configuration.newMemoryBased(RecordReader.CONF_STAY_ALIVE, true));
 
         // Launch the probe on an empty storage waiting for records
         RecordProbe probe = new RecordProbe(r, 1);
@@ -348,8 +335,7 @@ public class RecordReaderTest extends TestCase {
         if (probe.records.isEmpty()) {
             fail("No records appeared on reader before timeout");
         } else if (probe.records.size() != 1) {
-            fail("Too many records. Expected 1, but got "
-                 + probe.records.size());
+            fail("Too many records. Expected 1, but got " + probe.records.size());
         }
 
         assertEquals(orig, probe.records.get(0));
@@ -359,9 +345,7 @@ public class RecordReaderTest extends TestCase {
 
     public void testWatchThree() throws Exception {
         Storage sto = createStorage();
-        RecordReader r = new RecordReader(Configuration.newMemoryBased(
-                RecordReader.CONF_STAY_ALIVE, true
-        ));
+        RecordReader r = new RecordReader(Configuration.newMemoryBased(RecordReader.CONF_STAY_ALIVE, true));
 
         // Launch the probe on an empty storage waiting for records
         RecordProbe probe = new RecordProbe(r, 3);
@@ -378,8 +362,7 @@ public class RecordReaderTest extends TestCase {
         if (probe.records.isEmpty()) {
             fail("No records appeared on reader before timeout");
         } else if (probe.records.size() != 3) {
-            fail("Too many records. Expected 3, but got "
-                 + probe.records.size());
+            fail("Too many records. Expected 3, but got " + probe.records.size());
         }
 
         assertEquals(orig1, probe.records.get(0));

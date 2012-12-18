@@ -18,16 +18,15 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 /**
  * Splits a XML document into pieces, validates and handles namespaces.
@@ -37,13 +36,15 @@ import org.xml.sax.SAXNotSupportedException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class XMLSplitterParser extends ThreadedStreamParser implements
-                                                           XMLSplitterReceiver {
-    /** Local instance of logger. */
+public class XMLSplitterParser extends ThreadedStreamParser implements XMLSplitterReceiver {
+    /**
+     * Local instance of logger.
+     */
     private static Log log = LogFactory.getLog(XMLSplitterParser.class);
-    /** Lical handler. */
-    public static final String LEXICAL_HANDLER =
-            "http://xml.org/sax/properties/lexical-handler";
+    /**
+     * Lical handler.
+     */
+    public static final String LEXICAL_HANDLER = "http://xml.org/sax/properties/lexical-handler";
 
     // TODO Purge double declarations
 
@@ -76,14 +77,11 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
 
             // TODO Handle non-namespaceaware saxparsers better
         } catch (ParserConfigurationException e) {
-            throw new RuntimeException("Could not instantiate SAXParser due to "
-                                       + "configuration exception", e);
+            throw new RuntimeException("Could not instantiate SAXParser due to " + "configuration exception", e);
         } catch (SAXNotRecognizedException e) {
-            throw new IllegalArgumentException(String.format(
-                    "SAXProperty %s not recognized", LEXICAL_HANDLER), e);
+            throw new IllegalArgumentException(String.format("SAXProperty %s not recognized", LEXICAL_HANDLER), e);
         } catch (SAXNotSupportedException e) {
-            throw new IllegalArgumentException(String.format(
-                    "SAXProperty %s not supported", LEXICAL_HANDLER), e);
+            throw new IllegalArgumentException(String.format("SAXProperty %s not supported", LEXICAL_HANDLER), e);
         } catch (SAXException e) {
             throw new RuntimeException("Could not instantiate SAXParser", e);
         }
@@ -91,8 +89,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
         handler.resetForNextRecord();
         lastRecordStart = System.nanoTime();
         parser.parse(source.getStream(), handler);
-        log.debug("Finished parsing " + source + " with " + thisRunQueued
-                  + " records produced");
+        log.debug("Finished parsing " + source + " with " + thisRunQueued + " records produced");
     }
 
     @Override
@@ -108,6 +105,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
     /**
      * Insert the given Record into the queue. This will block if the queue is
      * full.
+     *
      * @param record the Record to insert.
      */
     @Override
@@ -115,15 +113,13 @@ public class XMLSplitterParser extends ThreadedStreamParser implements
         final double oneMiliSecond = 1000000.0;
         thisRunQueued++;
         //try {
-            if (log.isTraceEnabled()) {
-                //noinspection DuplicateStringLiteralInspection
-                log.trace(String.format(
-                        "Produced record in %.5f ms: %s. queueing",
-                        (System.nanoTime() - lastRecordStart) / oneMiliSecond,
-                        record));
-            }
-            addToQueue(record);
-            lastRecordStart = System.nanoTime();
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace(String.format("Produced record in %.5f ms: %s. queueing",
+                                    (System.nanoTime() - lastRecordStart) / oneMiliSecond, record));
+        }
+        addToQueue(record);
+        lastRecordStart = System.nanoTime();
         /*} catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while adding to queue", e);
         }*/

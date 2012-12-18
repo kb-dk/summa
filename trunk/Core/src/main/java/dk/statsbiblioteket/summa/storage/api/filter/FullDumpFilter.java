@@ -22,8 +22,8 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 
@@ -86,8 +86,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
     public FullDumpFilter(Configuration conf) {
         super(conf);
         if (!conf.valueExists(CONF_BASE)) {
-            throw new ConfigurationException(String.format(
-                    "The entry %s is mandatory but not present", CONF_BASE));
+            throw new ConfigurationException(String.format("The entry %s is mandatory but not present", CONF_BASE));
         }
         base = conf.getString(CONF_BASE);
         minRecords = conf.getInt(CONF_MIN_RECORDS, minRecords);
@@ -96,10 +95,8 @@ public class FullDumpFilter extends ObjectFilterImpl {
             startupTimestamp = getStartupTimestamp(conf);
         } catch (IOException e) {
             throw new ConfigurationException(String.format(
-                    "Exception while trying to retrieve last modified timestamp"
-                    + " for base '%s' from '%s'",
-                    base,
-                    conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")));
+                    "Exception while trying to retrieve last modified timestamp for base '%s' from '%s'",
+                    base, conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")));
         }
         writer = new StorageWriterClient(conf);
         feedback = false;
@@ -121,48 +118,34 @@ public class FullDumpFilter extends ObjectFilterImpl {
     public void close(boolean success) {
         super.close(success);
         if (!success) {
-            log.warn(String.format(
-                    "close(false): The close-script '%s' for base %s will not "
-                    + "be called",
-                    script, base));
+            log.warn(String.format("close(false): The close-script '%s' for base %s will not be called",
+                                   script, base));
         } else if (received == 0) {
-            log.info(String.format(
-                    "close(true): No Record received for base %s. "
-                    + "The close-script '%s' will not be called",
-                    base, script));
-        } else  if (received < minRecords) {
-            log.warn(String.format(
-                    "close(true): %d Records received, but %d is required in "
-                    + "order to run the script '%s'",
-                    received, minRecords, script));
+            log.info(String.format("close(true): No Record received for base %s. "
+                                   + "The close-script '%s' will not be called",
+                                   base, script));
+        } else if (received < minRecords) {
+            log.warn(String.format("close(true): %d Records received, but %d is required in "
+                                   + "order to run the script '%s'",
+                                   received, minRecords, script));
         } else {
-            log.info(String.format(
-                    "close(true): %d Records received, calling script '%s' on "
-                    + "base '%s' for Records with timestamp <= %s",
-                    received, script, base,
-                    String.format(ISO_TIME, startupTimestamp)));
+            log.info(String.format("close(true): %d Records received, calling script '%s' on "
+                                   + "base '%s' for Records with timestamp <= %s",
+                                   received, script, base, String.format(ISO_TIME, startupTimestamp)));
             try {
                 // +1 as batch maxMTime is <, not <=
-                String result = writer.batchJob(
-                               script, base, 0, startupTimestamp+1, null);
+                String result = writer.batchJob(script, base, 0, startupTimestamp + 1, null);
                 if (log.isTraceEnabled()) {
-                    log.info(String.format(
-                            "Script '%s' successfully executed with output"
-                            + " '%s'",
-                            script, result));
+                    log.info(String.format("Script '%s' successfully executed with output '%s'",
+                                           script, result));
                 } else {
-                    log.info(String.format(
-                            "Script '%s' successfully executed with %d lines "
-                            + "in the output",
-                            script, countLines(result)));
+                    log.info(String.format("Script '%s' successfully executed with %d lines in the output",
+                                           script, countLines(result)));
 
                 }
-                } catch (IOException e) {
-                String message = String.format(
-                        "Exception while calling script '%s' on base '%s' with"
-                        + " endTime %s",
-                        script, base,
-                        String.format(ISO_TIME, startupTimestamp));
+            } catch (IOException e) {
+                String message = String.format("Exception while calling script '%s' on base '%s' with endTime %s",
+                                               script, base, String.format(ISO_TIME, startupTimestamp));
                 log.error(message, e);
                 throw new RuntimeException(message, e);
             }
@@ -175,7 +158,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
         }
         long nls = 0;
         final char NL = "\n".charAt(0); // We cheat a bit
-        for (int i = 0 ; i < result.length() ; i++) {
+        for (int i = 0; i < result.length(); i++) {
             if (NL == result.charAt(i)) {
                 nls++;
             }
@@ -186,4 +169,3 @@ public class FullDumpFilter extends ObjectFilterImpl {
     private static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
 
 }
-

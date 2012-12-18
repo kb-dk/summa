@@ -22,7 +22,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -32,11 +35,11 @@ import java.util.zip.ZipInputStream;
  * streams. the ZIPHandler is normally used by a {@link StreamController}.
  * </p><p>
  * Note: As streams does not allow for random access, calls to {@link #next}
- *       will block until the previous stream has been closed.
+ * will block until the previous stream has been closed.
  * // TODO: Consider adding a timeout or similar to guard against streams not
- *          being closed.
+ * being closed.
  * Note: The filter {@link ArchiveReader} supports reading compressed content
- *       directly from the file system and is preferable the source is files.
+ * directly from the file system and is preferable if the source is files.
  */
 @QAInfo(level = QAInfo.Level.PEDANTIC,
         state = QAInfo.State.QA_NEEDED,
@@ -49,8 +52,7 @@ public class ZIPParser extends ThreadedStreamParser {
      * </p><p>
      * This property is optional. Default is ".*\.xml".
      */
-    public static final String CONF_FILE_PATTERN =
-            "summa.ingest.unzipfilter.filepattern";
+    public static final String CONF_FILE_PATTERN = "summa.ingest.unzipfilter.filepattern";
     public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
 
     /**
@@ -58,31 +60,27 @@ public class ZIPParser extends ThreadedStreamParser {
      * ZIP-stream entry. If the processing-time exceeds this amount, the parser
      * will perform a close on the current entry and skip to the next.
      * </p><p>
+     * Note: currently (20121218) this has no effect.
+     * </p><p>
      * Optional. Default is Integer.MAX_VALUE.
      */
-    public static final String CONF_PROCESSING_TIMEOUT =
-            "summa.ingest.unzipfilter.processingtimeout";
+    public static final String CONF_PROCESSING_TIMEOUT = "summa.ingest.unzipfilter.processingtimeout";
     public static final int DEFAULT_PROCESSING_TIMEOUT = Integer.MAX_VALUE;
 
     private Pattern filePattern;
-    private int processingTimeout = DEFAULT_PROCESSING_TIMEOUT;
 
     public ZIPParser(Configuration conf) {
         super(conf);
-        filePattern = Pattern.compile(conf.getString(
-                CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
-        processingTimeout = conf.getInt(
-                CONF_PROCESSING_TIMEOUT, processingTimeout);
-        log.info(String.format(
-                "Created ZIPParser with file pattern '%s'",
-                conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN)));
+        filePattern = Pattern.compile(conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
+//        processingTimeout = conf.getInt(CONF_PROCESSING_TIMEOUT, DEFAULT_PROCESSING_TIMEOUT);
+        log.info(String.format("Created ZIPParser with file pattern '%s'", conf.getString(CONF_FILE_PATTERN,
+                                                                                          DEFAULT_FILE_PATTERN)));
     }
 
     @Override
     protected void protectedRun(Payload source) throws Exception {
         log.debug("Opening ZIP-Stream from " + source);
-        ZipInputStream zip = new ZipInputStream(
-                new BufferedInputStream(source.getStream()));
+        ZipInputStream zip = new ZipInputStream(new BufferedInputStream(source.getStream()));
         ZipEntry entry;
         int matching = 0;
         while ((entry = zip.getNextEntry()) != null && running) {
@@ -97,15 +95,11 @@ public class ZIPParser extends ThreadedStreamParser {
             /* Prepare a stream that we'll fill asynchronously while the
              * payload consumer reads from it */
             matching++;
-            final MonitoredPipedInputStream payloadIn =
-                new MonitoredPipedInputStream();
+            final MonitoredPipedInputStream payloadIn = new MonitoredPipedInputStream();
             PipedOutputStream payloadPipe = new PipedOutputStream();
             payloadPipe.connect(payloadIn);
             Payload payload = new Payload(payloadIn, "Copied from " + source.getId());
-            payload.getData().put(
-                Payload.ORIGIN,
-                source.getData(Payload.ORIGIN) + "!"
-                + entry.getName());
+            payload.getData().put(Payload.ORIGIN, source.getData(Payload.ORIGIN) + "!" + entry.getName());
             addToQueue(payload);
 
             /* Pipe the stream we gave to the payload */
@@ -121,12 +115,10 @@ public class ZIPParser extends ThreadedStreamParser {
                 payloadPipe.close();
             }
         }
-        log.debug("Ending processing of " + source + " with running="
-                  + running);
+        log.debug("Ending processing of " + source + " with running=" + running);
         zip.close();
         // TODO: Check if Payload should be closed here
-        log.debug(String.format("Processed %d ZIP entries from %s",
-                                matching, source));
+        log.debug(String.format("Processed %d ZIP entries from %s", matching, source));
     }
 
     /**
@@ -146,4 +138,3 @@ public class ZIPParser extends ThreadedStreamParser {
         }
     }
 }
-

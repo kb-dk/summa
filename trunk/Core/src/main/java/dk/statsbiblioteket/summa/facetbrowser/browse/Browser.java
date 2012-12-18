@@ -18,19 +18,19 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.List;
 import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  * This is tightly connected to
  * TODO tightly connecto to what? dk.statsbiblioteket.summa.common.search.Search
- *
+ * <p/>
  * as the browser should present the same query possibilities as the search.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface Browser  {
+public interface Browser {
     /**
      * @return a list with the names of all mapped Facets.
      */
@@ -43,17 +43,17 @@ public interface Browser  {
      * The parameters of this call are fairly low-level. It is recommended that
      * implementations of Browser also supply a query-based method for
      * requesting facet/tag information, as it eases experiments.
+     *
      * @param docIDs the ids for the documents to calculate Tags for.
      * @param facets a comma-separated list with the names and optionally
-     *              max tag count of the wanted Facets. See {@link FacetRequest}
-     *              for details. If null is specified, the default Facets
-     *              are returned.
+     *               max tag count of the wanted Facets. See {@link FacetRequest}
+     *               for details. If null is specified, the default Facets
+     *               are returned.
      * @return FacetResult with a serializable representation of the wanted
      *         facets.
      * @throws RemoteException if the request could not be handled.
      */
-    public FacetResult getFacetMap(DocIDCollector docIDs, String facets)
-                                                         throws RemoteException;
+    public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws RemoteException;
 
     // TODO: Add index-lookup
 }
