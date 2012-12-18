@@ -591,7 +591,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             firstRecordReceivedTime = System.currentTimeMillis();
         }
         lastRecordTimestamp = payload.getRecord().getLastModified();
-        if (stopOnNewer && lastRecordTimestamp < lastRecordTimestamp) {
+        if (stopOnNewer && lastRecordTimestamp < firstRecordReceivedTime) {
             // TODO: Avoid sending the duplicate record
             log.info("Stopping further Record requests as the Record " + payload.getId() + " has a timestamp newer"
                      + " than the start time for the RecordReader. The current Record will be the last");
