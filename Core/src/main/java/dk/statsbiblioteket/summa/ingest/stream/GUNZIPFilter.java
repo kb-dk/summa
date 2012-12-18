@@ -4,17 +4,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import java.io.IOException;
-import java.util.zip.GZIPInputStream;
-
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.zip.GZIPInputStream;
 
 /**
  * The filter takes the content-parts of the received streams and gunzips it.
@@ -22,12 +22,13 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
-        comment="Needs basic unit testing")
+        comment = "Needs basic unit testing")
 public class GUNZIPFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(GUNZIPFilter.class);
 
     /**
      * The GUNZIPFilter does not use the provided configuration for anything.
+     *
      * @param configuration setup for GUNZIPFilter.
      */
     public GUNZIPFilter(Configuration configuration) {
@@ -42,13 +43,11 @@ public class GUNZIPFilter extends ObjectFilterImpl {
             throw new PayloadException("No Stream present", payload);
         }
         log.debug("Wrapping Stream in " + payload + " in GZIPInputStream");
-        Logging.logProcess(getName(), "Wrapping Stream in GZIPInputStream",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess(getName(), "Wrapping Stream in GZIPInputStream", Logging.LogLevel.TRACE, payload);
         try {
             payload.setStream(new GZIPInputStream(payload.getStream()));
         } catch (IOException e) {
-            throw new PayloadException("Unable to create GZIPInputstream",
-                                       e, payload);
+            throw new PayloadException("Unable to create GZIPInputstream", e, payload);
         }
         return true;
     }

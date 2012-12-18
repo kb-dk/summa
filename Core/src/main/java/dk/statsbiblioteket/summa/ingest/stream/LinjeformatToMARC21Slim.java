@@ -38,23 +38,23 @@ import java.util.List;
  * Deviations are line length, divider sign, EOL and record divider.
  * An example of a variation is
  * {@code
-001 00/0 »a9789221077442«
-004 00/0 »ru»ae«
-008 00/0 »tm»a1991»bch»da»dy»leng»v4»&2«
-009 00/0 »aa»gxx«
-021 00/0 »a9221077446»d45.00F«
-021 00/0 »e9789221077442«
-088 00/0 »a331.6»a(470)»a(47)«
-096 00/0 »b331.6 In»cb«
-245 00/0 »aIn hiding of narrowness»cthe new Danish labour salespoint»eedited by Standup Guy«
-...
-}
+ * 001 00/0 »a9789221077442«
+ * 004 00/0 »ru»ae«
+ * 008 00/0 »tm»a1991»bch»da»dy»leng»v4»&2«
+ * 009 00/0 »aa»gxx«
+ * 021 00/0 »a9221077446»d45.00F«
+ * 021 00/0 »e9789221077442«
+ * 088 00/0 »a331.6»a(470)»a(47)«
+ * 096 00/0 »b331.6 In»cb«
+ * 245 00/0 »aIn hiding of narrowness»cthe new Danish labour salespoint»eedited by Standup Guy«
+ * ...
+ * }
  * </p><p>
- *  FIXME: Currently @-based escaping only maps to Unicode, not
- *         "referencetegnsættet" as it should.
+ * FIXME: Currently @-based escaping only maps to Unicode, not
+ * "referencetegnsættet" as it should.
  * </p><p>
  * Note: Calling hasNext() while a conversion is in progress blocks until the
- *       conversion has been finished.
+ * conversion has been finished.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -66,10 +66,10 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
      * The namespace for MARC21Slim.
      */
     public static final String MARC21SLIM = "http://www.loc.gov/MARC21/slim";
-    private static final String FIELD =    "datafield";
-    private static final String TAG =      "tag";
+    private static final String FIELD = "datafield";
+    private static final String TAG = "tag";
     private static final String SUBFIELD = "subfield";
-    private static final String CODE =     "code";
+    private static final String CODE = "code";
 
     /**
      * The charset to use when reading the input.
@@ -77,8 +77,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
      * </p><p>
      * Optional. Default is iso-8859-1.
      */
-    public static final String CONF_INPUT_CHARSET =
-            "summa.linjeformat.input.charset";
+    public static final String CONF_INPUT_CHARSET = "summa.linjeformat.input.charset";
     public static final String DEFAULT_INPUT_CHARSET = "iso-8859-1";
 
     /**
@@ -86,8 +85,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
      * </p><p>
      * Optional. Default is * (asterisk).
      */
-    public static final String CONF_DIVIDER =
-            "summa.linjeformat.subfielddivider";
+    public static final String CONF_DIVIDER = "summa.linjeformat.subfielddivider";
     public static final String DEFAULT_DIVIDER = "*";
 
     /**
@@ -120,20 +118,18 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         inputCharset = conf.getString(CONF_INPUT_CHARSET, inputCharset);
         divider = conf.getString(CONF_DIVIDER, divider);
         if (divider.isEmpty()) {
-            throw new ConfigurationException(
-                    "The value for property " + CONF_DIVIDER
-                    + " must not be empty");
+            throw new ConfigurationException("The value for property " + CONF_DIVIDER + " must not be empty");
         }
         eol = conf.getString(CONF_EOL, eol);
         eor = conf.getString(CONF_EOR, eor);
         outputFactory = XMLOutputFactory.newInstance();
-        log.info(String.format(
-                "Ready: input charset='%s', divider='%s', eol='%s', eor='%s'",
-                inputCharset, divider, eol, eor));
+        log.info(String.format("Ready: input charset='%s', divider='%s', eol='%s', eor='%s'",
+                               inputCharset, divider, eol, eor));
     }
 
     // TODO: Pass this as arguments instead of using a field
     private Payload source = null;
+
     @Override
     protected void protectedRun(Payload source) throws Exception {
         log.debug("Stream parsing content from " + source);
@@ -141,8 +137,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
             throw new PayloadException("No stream", source);
         }
         this.source = source;
-        LineNumberReader in = new LineNumberReader(
-                new InputStreamReader(source.getStream(), inputCharset));
+        LineNumberReader in = new LineNumberReader(new InputStreamReader(source.getStream(), inputCharset));
         in.setLineNumber(1); // Not geeky enough to count lines from 0
 
         MonitoredPipedInputStream payloadIn = new MonitoredPipedInputStream();
@@ -152,13 +147,10 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         Payload payload = new Payload(payloadIn, "Copied from " + source.getId());
 
         // TODO: Consider transferring all metadata
-        payload.getData().put(
-                Payload.ORIGIN,
-                source.getData(Payload.ORIGIN) + "!toMARC21Slim");
+        payload.getData().put(Payload.ORIGIN, source.getData(Payload.ORIGIN) + "!toMARC21Slim");
         addToQueue(payload);
 
-        XMLStreamWriter writer =
-                outputFactory.createXMLStreamWriter(payloadPipe, "utf-8");
+        XMLStreamWriter writer = outputFactory.createXMLStreamWriter(payloadPipe, "utf-8");
         writer.setDefaultNamespace(MARC21SLIM);
         writer.writeStartDocument("utf-8", "1.0");  // <?xml version="1.0" ...?>
         writer.writeCharacters("\n");
@@ -170,24 +162,18 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         try {
             records = writeRecords(in, payloadIn, writer);
             if (payloadIn.isClosed()) {
-                String message = String.format(
-                        "Stopping after %d records due to close of delivery %s."
-                        + " The output stream will not be valid XML",
-                        records, payload);
-                Logging.logProcess(
-                        "LinjeformatToMARC21Slim", message,
-                        Logging.LogLevel.WARN, source);
+                String message = String.format("Stopping after %d records due to close of delivery %s."
+                                               + " The output stream will not be valid XML",
+                                               records, payload);
+                Logging.logProcess("LinjeformatToMARC21Slim", message, Logging.LogLevel.WARN, source);
                 log.warn(message);
                 return;
             }
             if (!running) {
                 String message = String.format(
-                        "Stopping after %d records due to running == false. "
-                        + "The output stream will not be complete",
+                        "Stopping after %d records due to running == false. The output stream will not be complete",
                         records);
-                Logging.logProcess(
-                        "LinjeformatToMARC21Slim", message,
-                        Logging.LogLevel.WARN, source);
+                Logging.logProcess("LinjeformatToMARC21Slim", message, Logging.LogLevel.WARN, source);
                 log.warn(message);
             }
 
@@ -201,28 +187,24 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
             payloadPipe.close();
         }
 
-        log.debug(String.format(
-                "Ending processing of %s with %d constructed MARC-records and"
-                + " running = %b", source, records, running));
+        log.debug(String.format("Ending processing of %s with %d constructed MARC-records and running = %b",
+                                source, records, running));
     }
 
     // Iterate through all linjeformat-records and output XML
-    private long writeRecords(
-            LineNumberReader in, MonitoredPipedInputStream payloadIn,
-            XMLStreamWriter writer) throws IOException, XMLStreamException {
+    private long writeRecords(LineNumberReader in, MonitoredPipedInputStream payloadIn,
+                              XMLStreamWriter writer) throws IOException, XMLStreamException {
         String lastLine = null;
         String line;
         boolean inRecord = false;
         long records = 0;
-        while ((line = getLine(in)) != null && running
-               && !payloadIn.isClosed()) {
+        while ((line = getLine(in)) != null && running && !payloadIn.isClosed()) {
             if (line.equals("")) { // Divider
                 if (line.equals(lastLine)) {
-                    Logging.logProcess(
-                            "LinjeformatToMARC21Slim", String.format(
-                                "Encountered multiple divider lines at line %d",
-                                in.getLineNumber()), Logging.LogLevel.TRACE,
-                            source);
+                    Logging.logProcess("LinjeformatToMARC21Slim",
+                                       String.format("Encountered multiple divider lines at line %d",
+                                                     in.getLineNumber()),
+                                       Logging.LogLevel.TRACE, source);
                     continue;
                 } else {
                     if (inRecord) {
@@ -230,19 +212,15 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
                         writer.writeCharacters("\n");
                         inRecord = false;
                     } else {
-                        log.debug("No end element written as no record data has"
-                                  + " been encountered even though EndOfRecord "
-                                  + "was encountered at line "
-                                  + in.getLineNumber());
+                        log.debug("No end element written as no record data has been encountered even though "
+                                  + "EndOfRecord was encountered at line " + in.getLineNumber());
                     }
                 }
             } else {
                 if (!inRecord) {
-                    Logging.logProcess(
-                            "LinjeformatToMARC21Slim",
-                            "Starting XML for record at line "
-                            + in.getLineNumber(), Logging.LogLevel.TRACE,
-                            source);
+                    Logging.logProcess("LinjeformatToMARC21Slim",
+                                       "Starting XML for record at line " + in.getLineNumber(),
+                                       Logging.LogLevel.TRACE, source);
                     inRecord = true;
                     records++;
                     writer.writeCharacters("\n");
@@ -259,39 +237,31 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
 
     /**
      * Convertes the given linjeformat line to XML, according to danMARC2 rules.
-     * @param writer the XML stream to write to.
-     * @param line a danMARC2 linjeformat line, containing field and subfields.
+     *
+     * @param writer     the XML stream to write to.
+     * @param line       a danMARC2 linjeformat line, containing field and subfields.
      * @param lineNumber where the line is in the input stream.
-     * @throws javax.xml.stream.XMLStreamException if the writer encountered
-     *        an exception.
+     * @throws javax.xml.stream.XMLStreamException
+     *          if the writer encountered
+     *          an exception.
      */
-    private void writeField(XMLStreamWriter writer, String line,
-                            int lineNumber) throws XMLStreamException {
+    private void writeField(XMLStreamWriter writer, String line, int lineNumber) throws XMLStreamException {
         if (log.isTraceEnabled()) {
-            log.trace("Converting line #" + lineNumber + " '" + line
-                      + "' to XML");
+            log.trace("Converting line #" + lineNumber + " '" + line + "' to XML");
         }
         // 004 00 *r . *a .
         // 008 00/0 »tm»a1991»bch»da»dy»leng»v4»&2«
         String[] tokens = line.split(" ", 3);
         if (tokens.length != 3) {
-            Logging.logProcess(
-                    "LinjeformatToMARC21Slim",
-                    String.format(
-                            "Expected 3 space-divided tokens, got %d. "
-                            + "Skipping line #%d '%s'",
-                            tokens.length, lineNumber, line),
-                    Logging.LogLevel.DEBUG, source);
+            Logging.logProcess("LinjeformatToMARC21Slim",
+                               String.format("Expected 3 space-divided tokens, got %d. Skipping line #%d '%s'",
+                                             tokens.length, lineNumber, line), Logging.LogLevel.DEBUG, source);
             return;
         }
         if (tokens[0].length() < 3) {
-            Logging.logProcess(
-                    "LinjeformatToMARC21Slim",
-                    String.format(
-                            "Expected token #1 to have length 3, but it was %d."
-                            + " Token was '%s' from line #%d '%s'",
-                            tokens[0].length(), tokens[0], lineNumber, line),
-                    Logging.LogLevel.TRACE, source);
+            Logging.logProcess("LinjeformatToMARC21Slim", String.format(
+                    "Expected token #1 to have length 3, but it was %d. Token was '%s' from line #%d '%s'",
+                    tokens[0].length(), tokens[0], lineNumber, line), Logging.LogLevel.TRACE, source);
         }
         // TODO: Special-case leader
         writer.writeCharacters("  ");
@@ -306,32 +276,24 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         writer.writeCharacters("\n");
     }
 
-    private void writeSubFields(
-            XMLStreamWriter writer, String line, int lineNumber,
-            String content) throws XMLStreamException {
+    private void writeSubFields(XMLStreamWriter writer, String line, int lineNumber,
+                                String content) throws XMLStreamException {
         if (!eol.equals("") && content.endsWith(eol)) {
-            content = content.substring(0, content.length()-1);
+            content = content.substring(0, content.length() - 1);
         }
         if (!content.startsWith(divider)) {
-            Logging.logProcess(
-                    "LinjeformatToMARC21Slim",
-                    String.format(
-                            "Expected content for line #%d '%s' to start with"
-                            + " divider '%s'",
-                            lineNumber, line, divider),
-                    Logging.LogLevel.DEBUG, source);
+            Logging.logProcess("LinjeformatToMARC21Slim", String.format(
+                    "Expected content for line #%d '%s' to start with divider '%s'", lineNumber, line, divider),
+                               Logging.LogLevel.DEBUG, source);
             return;
         }
         List<String> tokens = splitAndReplace(line, lineNumber, content);
         // »tm»a1991»bch»da»dy»leng»v4»&2«
-        for (String token: tokens) {
+        for (String token : tokens) {
             if ("".equals(token)) {
-                Logging.logProcess(
-                        "LinjeformatToMARC21Slim",
-                        String.format(
-                                "Expected subfield content for line #%d '%s'",
-                                lineNumber, line),
-                        Logging.LogLevel.DEBUG, source);
+                Logging.logProcess("LinjeformatToMARC21Slim",
+                                   String.format("Expected subfield content for line #%d '%s'", lineNumber, line),
+                                   Logging.LogLevel.DEBUG, source);
                 continue;
             }
             writer.writeCharacters("    ");
@@ -346,10 +308,10 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
     }
 
     private StringBuffer rbuffer = new StringBuffer(200);
+
     // Split on divider and replace all @-occurences
     // »tm»a1991»bch»da»dy»leng»v4»&2 -> tm a19991 bch da dy leng v4 &2
-    private List<String> splitAndReplace(
-            String line, int lineNumber, String content) {
+    private List<String> splitAndReplace(String line, int lineNumber, String content) {
         List<String> result = new ArrayList<String>(10);
         int index = 0;
         rbuffer.setLength(0);
@@ -359,10 +321,8 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
                 continue;
             }
             if ((divider.length() == 1 // Divider encountered
-                 && content.charAt(index) == divider.charAt(0))
-                || content.substring(
-                    index, Math.min(index + divider.length(), content.length()))
-                    .equals(divider)) {
+                 && content.charAt(index) == divider.charAt(0)) || content.substring(index, Math.min(
+                    index + divider.length(), content.length())).equals(divider)) {
                 if (rbuffer.length() > 0) {
                     result.add(rbuffer.toString());
                     rbuffer.setLength(0);
@@ -381,12 +341,9 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
     private int unescape(String line, int lineNumber, String content, int index) {
         index++;
         if (index == content.length()) {
-            Logging.logProcess(
-                    "LinjeformatToMARC21Slim",
-                    String.format(
-                            "Encountered @ at EOL for line #%d '%s'",
-                            lineNumber, line),
-                    Logging.LogLevel.DEBUG, source);
+            Logging.logProcess("LinjeformatToMARC21Slim", String.format("Encountered @ at EOL for line #%d '%s'",
+                                                                        lineNumber, line), Logging.LogLevel.DEBUG,
+                               source);
             return index;
         }
         if (/*(content.charAt(index) == '¤')    // Sort sign
@@ -395,7 +352,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
             || (content.charAt(index) == 'å') // aa (we just copy)
             || (content.charAt(index) == 'Å') // Aa (we just copy)
             ||*/ (divider.length() == 1         // Divider
-                && content.charAt(index) == divider.charAt(0))) {
+                  && content.charAt(index) == divider.charAt(0))) {
             // TODO: Sort sign should be handled correctly
             // Unfortunately we have no established escape mechanism
             // for sort-signs in Summa
@@ -403,36 +360,30 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
             index++;
         } else { // @xxxx Unicode assumed. See JavaDoc for the class
             if (index >= content.length() - 3) {
-                Logging.logProcess(
-                        "LinjeformatToMARC21Slim",
-                        String.format(
-                                "Expected 4-digit Unicode after @ but "
-                                + "reached EOL for line #%d '%s'",
-                                lineNumber, line),
-                        Logging.LogLevel.DEBUG, source);
+                Logging.logProcess("LinjeformatToMARC21Slim",
+                                   String.format("Expected 4-digit Unicode after @ but reached EOL for line #%d '%s'",
+                                                 lineNumber, line),
+                                   Logging.LogLevel.DEBUG, source);
                 return index;
             }
-            String unicode = "" + content.charAt(index++)
-                             + content.substring(index, index + 3);
+            String unicode = "" + content.charAt(index++) + content.substring(index, index + 3);
             index += 3;
             try {
-                char u = (char)Integer.parseInt(unicode, 16);
+                char u = (char) Integer.parseInt(unicode, 16);
                 rbuffer.append(u);
             } catch (NumberFormatException e) {
-                Logging.logProcess(
-                        "LinjeformatToMARC21Slim",
-                        String.format(
-                                "Expected 4-digit Unicode after @ but "
-                                + "got exception for line #%d '%s'",
-                                lineNumber, line),
-                        Logging.LogLevel.DEBUG, source, e);
-              return index;
+                Logging.logProcess("LinjeformatToMARC21Slim",
+                                   String.format("Expected 4-digit Unicode after @ but got exception for line #%d '%s'",
+                                                 lineNumber, line),
+                                   Logging.LogLevel.DEBUG, source, e);
+                return index;
             }
         }
         return index;
     }
 
     private StringBuffer buffer = new StringBuffer(100);
+
     /**
      * Reads the next line from danMARC2 linjeformat. According to the standard,
      * lines are a maximum of 79 characters. If the data for a given field takes
@@ -440,7 +391,8 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
      * 4 spaces. This method concatenates such multi-lines to a single line.
      * </p><p>
      * If {@link #eol} is non-empty, lines containing the {@link #divider}
-     * character are read until {@link #eol}.  
+     * character are read until {@link #eol}.
+     *
      * @param in the reader to get the String from.
      * @return the next logical line for danMARC2 linjeformat or null is EOF.
      *         Record-dividing lines are always returned as blanks, regardless

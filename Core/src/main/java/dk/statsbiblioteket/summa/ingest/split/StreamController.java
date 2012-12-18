@@ -34,7 +34,9 @@ import java.util.NoSuchElementException;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class StreamController implements ObjectFilter {
-    /** Local logger instance. */
+    /**
+     * Local logger instance.
+     */
     private static Log log = LogFactory.getLog(StreamController.class);
 
     /**
@@ -44,22 +46,29 @@ public class StreamController implements ObjectFilter {
      */
     public static final String CONF_PARSER = "summa.ingest.stream.controller.parser";
     private String name;
-    /** The payload. */
+    /**
+     * The payload.
+     */
     private Payload payload = null;
-    /** The source filter. */
+    /**
+     * The source filter.
+     */
     private ObjectFilter source;
-    /** The stream parser. */
+    /**
+     * The stream parser.
+     */
     protected StreamParser parser;
     private long producedPayloads = 0;
 
     /**
      * Creates a stream controller with a given configuration.
+     *
      * @param conf The configuration.
      */
     public StreamController(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
-        Class<? extends StreamParser> parserClass =
-                Configuration.getClass(CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
+        Class<? extends StreamParser> parserClass = Configuration.getClass(
+                CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
         log.info("Creating StreamParser '" + getName() + "'");
         parser = Configuration.create(parserClass, conf);
     }
@@ -101,8 +110,7 @@ public class StreamController implements ObjectFilter {
                     log.trace("makePayload(): Source hasNext, calling source.next()");
                     Payload streamPayload = source.next();
                     if (streamPayload == null) {
-                        log.warn(String.format(
-                               "Got null Payload from source %s after hasNext() == true", source));
+                        log.warn(String.format("Got null Payload from source %s after hasNext() == true", source));
                     }
                     log.debug("makePayload: Opening source stream payload " + streamPayload);
                     parser.open(streamPayload);
@@ -140,8 +148,8 @@ public class StreamController implements ObjectFilter {
         payload = null;
         if (log.isTraceEnabled()) {
             try {
-                log.trace(
-                    "next() produced " + newPayload + " with content\n" + newPayload.getRecord().getContentAsUTF8());
+                log.trace("next() produced " + newPayload + " with content\n"
+                          + newPayload.getRecord().getContentAsUTF8());
             } catch (NullPointerException e) {
                 log.warn("NPE while dumping content of " + newPayload, e);
             }
@@ -166,8 +174,8 @@ public class StreamController implements ObjectFilter {
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
-        Logging.logProcess("StreamController", "Calling close for Payload as part of pump()",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess("StreamController", "Calling close for Payload as part of pump()", Logging.LogLevel.TRACE,
+                           payload);
         next.close();
         return true;
     }
@@ -175,14 +183,12 @@ public class StreamController implements ObjectFilter {
     @Override
     public final void close(boolean success) {
         if (source == null) {
-            log.warn(String.format(
-                    "close(%b): Cannot close as no source is specified",
-                    success));
+            log.warn(String.format("close(%b): Cannot close as no source is specified", success));
         } else {
             parser.stop();
             source.close(success);
             log.info(
-                "close(" + success + ") for " + parser + " called with " + producedPayloads + " produced Payloads");
+                    "close(" + success + ") for " + parser + " called with " + producedPayloads + " produced Payloads");
         }
     }
 
@@ -196,16 +202,14 @@ public class StreamController implements ObjectFilter {
      */
     private void checkSource() {
         if (source == null) {
-            throw new NoSuchElementException(
-                    "No source specified for StreamController");
+            throw new NoSuchElementException("No source specified for StreamController");
         }
     }
 
     @Override
     public final void setSource(Filter filter) {
         if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException(
-                    "StreamController can only be chained to ObjectFilters");
+            throw new IllegalArgumentException("StreamController can only be chained to ObjectFilters");
         }
         log.debug("Assigning source " + source);
         source = (ObjectFilter) filter;
@@ -214,6 +218,7 @@ public class StreamController implements ObjectFilter {
     /**
      * Override this method to bypass the requirement of having to specify
      * the {@link #CONF_PARSER}.
+     *
      * @return the default StreamParser class for this controller.
      */
     protected Class<? extends StreamParser> getDefaultStreamParserClass() {

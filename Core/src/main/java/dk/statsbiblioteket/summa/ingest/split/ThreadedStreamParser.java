@@ -22,7 +22,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
@@ -286,9 +285,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
      * it, blocking until there is room in the queue.
      * @param stream the newly generated strean to add to the out queue.
      */
-    protected void addToQueue(InputStream stream) {
-        uninterruptiblePut(new Payload(stream));
-    }
+//    protected void addToQueue(InputStream stream) {
+//        uninterruptiblePut(new Payload(stream));
+//    }
 
     /**
      * Add the generated Payload to the queue, blocking until there is room

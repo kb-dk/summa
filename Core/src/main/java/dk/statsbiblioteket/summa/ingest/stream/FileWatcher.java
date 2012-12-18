@@ -45,15 +45,12 @@ public class FileWatcher extends FileReader implements Runnable {
      * </p><p>
      * Optional. Default is 60,000 milliseconds (1 minute).
      */
-    public static final String CONF_POLL_INTERVAL =
-            "summa.ingest.filewatcher.pollinterval";
+    public static final String CONF_POLL_INTERVAL = "summa.ingest.filewatcher.pollinterval";
     public static final int DEFAULT_POLL_INTERVAL = 60 * 1000;
 
-    private static final Payload END_PAYLOAD =
-            new Payload(new Record("DummyPayload", "DummyBase", new byte[0]));
+    private static final Payload END_PAYLOAD = new Payload(new Record("DummyPayload", "DummyBase", new byte[0]));
 
     private int pollInterval = DEFAULT_POLL_INTERVAL;
-    private Thread fileWatcherThread = null;
     private boolean doRun = true;
     private Payload toDeliver = null;
 
@@ -62,12 +59,10 @@ public class FileWatcher extends FileReader implements Runnable {
         log.debug("Creating FileWatcher");
         pollInterval = conf.getInt(CONF_POLL_INTERVAL, pollInterval);
         log.trace("FileWatcher created with pollInterval " + pollInterval);
-        if (fileWatcherThread == null) {
-            log.debug("Starting fileWatcherThread");
-            fileWatcherThread = new Thread(
-                    this, "FileWatcher(" + pollInterval + " seconds)");
-            fileWatcherThread.start();
-        }
+        Thread fileWatcherThread;
+        log.debug("Starting fileWatcherThread");
+        fileWatcherThread = new Thread(this, "FileWatcher(" + pollInterval + " seconds)");
+        fileWatcherThread.start();
     }
 
     @Override
@@ -81,8 +76,7 @@ public class FileWatcher extends FileReader implements Runnable {
         toDeliver = getNextBlocking();
         log.trace("hasNext(): polling finished. Got " + toDeliver);
         if (toDeliver == null) {
-            throw new IllegalStateException(
-                    "The FileWatcher should never get null for delivery");
+            throw new IllegalStateException("The FileWatcher should never get null for delivery");
         }
         return toDeliver != END_PAYLOAD;
     }
@@ -90,6 +84,7 @@ public class FileWatcher extends FileReader implements Runnable {
     /**
      * Waits until the FileWatcher is stopped or there is something in the to do
      * list.
+     *
      * @return {@link #END_PAYLOAD} to mark thet the FileWatcher has stopped or
      *         the next file.
      */
@@ -100,8 +95,7 @@ public class FileWatcher extends FileReader implements Runnable {
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting in getNextBlocking",
-                         e);
+                log.warn("Interrupted while waiting in getNextBlocking", e);
             }
             if (super.hasNext()) {
                 return super.next();
@@ -117,8 +111,7 @@ public class FileWatcher extends FileReader implements Runnable {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new NoSuchElementException(
-                    "No more streams in FileWatcher");
+            throw new NoSuchElementException("No more streams in FileWatcher");
         }
         log.trace("next(): toDeliver set to '" + toDeliver + "'");
         Payload payload = toDeliver;
@@ -131,9 +124,8 @@ public class FileWatcher extends FileReader implements Runnable {
         if (hasNext()) {
             Payload payload = next();
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("FileWatcher",
-                               "Calling close for Payload as part of pump()",
-                               Logging.LogLevel.TRACE, payload);
+            Logging.logProcess("FileWatcher", "Calling close for Payload as part of pump()", Logging.LogLevel.TRACE, 
+                               payload);
             payload.close();
             return true;
         }
@@ -161,29 +153,23 @@ public class FileWatcher extends FileReader implements Runnable {
                                 log.trace("run(): Updating toDo");
                                 updateToDo(root);
                                 if (log.isTraceEnabled()) {
-                                    log.trace("todo is "+  (isTodoEmpty() ? 
-                                                            "empty" :
-                                                            "not empty"));
+                                    log.trace("todo is " + (isTodoEmpty() ? "empty" : "not empty"));
                                 }
                             }
                         } else {
-                            log.trace("run(): Exited after super.hasNext() "
-                                      + "with doRun==" + doRun);
+                            log.trace("run(): Exited after super.hasNext() with doRun==" + doRun);
                         }
                     } else {
-                        log.trace("run(): Exited after sleep with doRun=="
-                                  + doRun);
+                        log.trace("run(): Exited after sleep with doRun==" + doRun);
                     }
                 } catch (InterruptedException e) {
-                    log.error("Interrupted while sleeping for " + pollInterval
-                              + " ms in FileWatcher. Retrying sleep", e);
+                    log.error(
+                            "Interrupted while sleeping for " + pollInterval + " ms in FileWatcher. Retrying sleep", e);
                 }
             }
         } catch (Exception e) {
             log.error("Unrecoverable exception in run(). Exiting", e);
         }
-        log.debug("run() finished, FileWatcher is stopping with doRun=="
-                  + doRun);
+        log.debug("run() finished, FileWatcher is stopping with doRun==" + doRun);
     }
 }
-

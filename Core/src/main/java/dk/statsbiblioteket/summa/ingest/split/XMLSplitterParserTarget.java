@@ -40,7 +40,7 @@ public class XMLSplitterParserTarget {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String recordElement = "record";
     public String recordNamespace = null;
-    public String idElement ="id";
+    public String idElement = "id";
     public String idTag = "";
     public String idNamespace = null;
     public String base;
@@ -50,70 +50,55 @@ public class XMLSplitterParserTarget {
     /**
      * Create a new Target containing the target-specific information from
      * configuration.
+     *
      * @param configuration setup for the target.
      */
     public XMLSplitterParserTarget(Configuration configuration) {
-        idPrefix = configuration.getString(
-                XMLSplitterFilter.CONF_ID_PREFIX, idPrefix);
-        idPostfix = configuration.getString(
-                XMLSplitterFilter.CONF_ID_POSTFIX, idPostfix);
-        idNamespace = configuration.getString(
-                XMLSplitterFilter.CONF_ID_NAMESPACE, idNamespace);
-        collapsePrefix = configuration.getBoolean(
-                XMLSplitterFilter.CONF_COLLAPSE_PREFIX, collapsePrefix);
-        collapsePostfix = configuration.getBoolean(
-                XMLSplitterFilter.CONF_COLLAPSE_POSTFIX, collapsePostfix);
-        recordElement = configuration.getString(
-                XMLSplitterFilter.CONF_RECORD_ELEMENT, recordElement);
-        recordNamespace = configuration.getString(
-                XMLSplitterFilter.CONF_RECORD_NAMESPACE, recordNamespace);
-        idElement = configuration.getString(
-                XMLSplitterFilter.CONF_ID_ELEMENT, idElement);
+        idPrefix = configuration.getString(XMLSplitterFilter.CONF_ID_PREFIX, idPrefix);
+        idPostfix = configuration.getString(XMLSplitterFilter.CONF_ID_POSTFIX, idPostfix);
+        idNamespace = configuration.getString(XMLSplitterFilter.CONF_ID_NAMESPACE, idNamespace);
+        collapsePrefix = configuration.getBoolean(XMLSplitterFilter.CONF_COLLAPSE_PREFIX, collapsePrefix);
+        collapsePostfix = configuration.getBoolean(XMLSplitterFilter.CONF_COLLAPSE_POSTFIX, collapsePostfix);
+        recordElement = configuration.getString(XMLSplitterFilter.CONF_RECORD_ELEMENT, recordElement);
+        recordNamespace = configuration.getString(XMLSplitterFilter.CONF_RECORD_NAMESPACE, recordNamespace);
+        idElement = configuration.getString(XMLSplitterFilter.CONF_ID_ELEMENT, idElement);
         if ("".equals(idElement)) {
-            log.debug("The idElement is empty. A dummy ID will be assigned to "
-                      + "generated Records");
+            log.debug("The idElement is empty. A dummy ID will be assigned to generated Records");
         } else if (idElement.contains("#")) {
             if (!idElement.endsWith("#") || idElement.startsWith("#")) {
                 String oldIdElement = idElement;
-                idTag = idElement.substring(idElement.indexOf('#')+1);
+                idTag = idElement.substring(idElement.indexOf('#') + 1);
                 idElement = idElement.substring(0, idElement.indexOf('#'));
-                log.debug("split idElement '" + oldIdElement
-                          + "' into '" + idElement + "' # '" + idTag + "'");
+                log.debug("split idElement '" + oldIdElement + "' into '" + idElement + "' # '" + idTag + "'");
             } else {
-                log.warn("Suspiciously looking idElement for Target: '"
-                         + idElement + "'");
+                log.warn("Suspiciously looking idElement for Target: '" + idElement + "'");
             }
         }
         try {
             base = configuration.getString(XMLSplitterFilter.CONF_BASE);
             if ("".equals(base)) {
-                throw new Configurable.ConfigurationException(String.format(
-                        "Base, as defined by %s, must not be empty",
-                        XMLSplitterFilter.CONF_BASE));
+                throw new Configurable.ConfigurationException(String.format("Base, as defined by %s, must not be empty", 
+                                                                            XMLSplitterFilter.CONF_BASE));
             }
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new Configurable.ConfigurationException(String.format(
-                    "Could not get %s from configuration",
-                    XMLSplitterFilter.CONF_BASE));
+            throw new Configurable.ConfigurationException(String.format("Could not get %s from configuration", 
+                                                                        XMLSplitterFilter.CONF_BASE));
         }
-        preserveNamespaces = configuration.getBoolean(
-                XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, preserveNamespaces);
-        requireValid = configuration.getBoolean(
-                XMLSplitterFilter.CONF_REQUIRE_VALID, requireValid);
-        log.debug(String.format(
-                "Created XMLSplitterParserTaget with idPrefix='%s', " 
-                + "idPostfix='%s', idNamespace='%s', collapsePrefix=%b, "
-                + "collapsePostfix=%b, recordElement='%s', idElement='%s', "
-                + "idTag='%s', base='%s', preserveNamespaces=%b, "
-                + "requireValid=%b",
-                idPrefix, idPostfix, idNamespace, collapsePrefix,
-                collapsePostfix, recordElement, idElement, idTag, base,
-                preserveNamespaces, requireValid));
+        preserveNamespaces = configuration.getBoolean(XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, preserveNamespaces);
+        requireValid = configuration.getBoolean(XMLSplitterFilter.CONF_REQUIRE_VALID, requireValid);
+        log.debug(String.format("Created XMLSplitterParserTaget with idPrefix='%s', "
+                                + "idPostfix='%s', idNamespace='%s', collapsePrefix=%b, "
+                                + "collapsePostfix=%b, recordElement='%s', idElement='%s', "
+                                + "idTag='%s', base='%s', preserveNamespaces=%b, "
+                                + "requireValid=%b", idPrefix, idPostfix, idNamespace, collapsePrefix, 
+                                collapsePostfix, recordElement, idElement, idTag, base, preserveNamespaces, 
+                                requireValid));
     }
 
     /**
      * Adjusts the id for the Payload to fit prefix and postfix.
+     *
      * @param payload The Payload to adjust the id for.
      */
     public void adjustID(Payload payload) {
@@ -123,25 +108,21 @@ public class XMLSplitterParserTarget {
                 id = payload.getRecord().getId();
             }
             if (id == null) {
-                log.warn("Encountered Payload with no ID. Skipping adjustID " 
-                         + "for " + payload);
+                log.warn("Encountered Payload with no ID. Skipping adjustID for " + payload);
                 return;
             }
         }
         String origin_tail = "";
         try {
-            origin_tail = payload.getData(Payload.ORIGIN) == null ? "" :
-                          new File((String)payload.getData(Payload.ORIGIN)).
-                                  getParentFile().getName();
+            origin_tail =
+                    payload.getData(Payload.ORIGIN) == null ? "" : new File((String) payload.getData(Payload.ORIGIN)).
+                            getParentFile().getName();
             log.trace("Located expand-folder '" + origin_tail + "'");
         } catch (Exception e) {
-            log.debug("Exception while locating expand-folder for " + payload,
-                      e);
+            log.debug("Exception while locating expand-folder for " + payload, e);
         }
-        String prefix = idPrefix.replace(XMLSplitterFilter.EXPAND_FOLDER,
-                                         origin_tail);
-        String postfix = idPostfix.replace(XMLSplitterFilter.EXPAND_FOLDER,
-                                           origin_tail);
+        String prefix = idPrefix.replace(XMLSplitterFilter.EXPAND_FOLDER, origin_tail);
+        String postfix = idPostfix.replace(XMLSplitterFilter.EXPAND_FOLDER, origin_tail);
         if (collapsePrefix && id.startsWith(prefix)) {
             prefix = "";
         }

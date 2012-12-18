@@ -38,10 +38,8 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class FacetResultImpl<T extends Comparable<T>>
-    extends ResponseImpl implements FacetResult<T> {
-    private static final transient Log log =
-            LogFactory.getLog(FacetResultImpl.class);
+public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseImpl implements FacetResult<T> {
+    private static final transient Log log = LogFactory.getLog(FacetResultImpl.class);
     private static final long serialVersionUID = 7879716850L;
 
     private int DEFAULTFACETCAPACITY = 64;
@@ -65,48 +63,52 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     protected HashMap<String, Integer> maxTags;
     protected HashMap<String, Integer> facetIDs;
 
-  
-   public static class Tag<S> implements Serializable {
-		private S key;
-    	private int count;
-    	private Reliability reliability;     
-    	private static final long serialVersionUID = 101L;    	 
-    	
-    	public Tag(S key, int count, Reliability reliability) {
-			this.key = key;
-			this.count = count;
-			this.reliability = reliability;
-		}
-    	
-            
-		public S getKey() {
-			return key;
-		}
-		public void setKey(S key) {
-			this.key = key;
-		}
-		public int getCount() {
-			return count;
-		}
-		public void setCount(int count) {
-			this.count = count;
-		}
-		public Reliability getReliability() {
-			return reliability;
-		}
-		public void setReliability(Reliability reliability) {
-			this.reliability = reliability;
-		}
-		
-		
+
+    public static class Tag<S> implements Serializable {
+        private S key;
+        private int count;
+        private Reliability reliability;
+        private static final long serialVersionUID = 101L;
+
+        public Tag(S key, int count, Reliability reliability) {
+            this.key = key;
+            this.count = count;
+            this.reliability = reliability;
+        }
+
+
+        public S getKey() {
+            return key;
+        }
+
+        public void setKey(S key) {
+            this.key = key;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
+        }
+
+        public Reliability getReliability() {
+            return reliability;
+        }
+
+        public void setReliability(Reliability reliability) {
+            this.reliability = reliability;
+        }
+
+
     }
-    
+
     /**
      * @param maxTags  a map from Facet-name to max tags for the facet.
      * @param facetIDs a map from Facet-name to facetID.
      */
-    public FacetResultImpl(HashMap<String, Integer> maxTags,
-                           HashMap<String, Integer> facetIDs) {
+    public FacetResultImpl(HashMap<String, Integer> maxTags, HashMap<String, Integer> facetIDs) {
         map = new LinkedHashMap<String, List<Tag<T>>>(DEFAULTFACETCAPACITY);
         this.maxTags = maxTags;
         this.facetIDs = facetIDs;
@@ -115,6 +117,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * It is advisable to call reduce before calling toXML, to ensure that
      * all elements are trimmed and sorted.
+     *
      * @return an XML representation of the facet browser structure.
      */
     @Override
@@ -126,14 +129,14 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         sw.write("<facetmodel timing=\"");
         sw.write(XMLUtil.encode(getTiming()));
         sw.write("\">\n");
-        for (Map.Entry<String, List<Tag<T>>> facet: map.entrySet()) {
+        for (Map.Entry<String, List<Tag<T>>> facet : map.entrySet()) {
             if (!facet.getValue().isEmpty()) {
                 sw.write("  <facet name=\"");
                 sw.write(XMLUtil.encode(facet.getKey()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
-    //            sw.write(facet.getCustomString());
+                //            sw.write(facet.getCustomString());
                 int tagCount = 0;
 
                 Integer maxTags = this.maxTags.get(facet.getKey());
@@ -141,12 +144,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                     maxTags = DEFAULT_MAXTAGS;
                 }
 //                        structure.getFacets().get(facet.getKey()).getMaxTags();
-                for (Tag<T> tag: facet.getValue()) {
-                    String tagString = getTagString(
-                        facet.getKey(), tag.getKey());
+                for (Tag<T> tag : facet.getValue()) {
+                    String tagString = getTagString(facet.getKey(), tag.getKey());
                     if (!emptyTagsValid && "".equals(tagString)) {
-                        log.trace("Skipping empty tag from " + facet.getKey()
-                                  + " with tag count " + tag.getCount());
+                        log.trace("Skipping empty tag from " + facet.getKey() + " with tag count " + tag.getCount());
 
                         continue;
                     }
@@ -157,19 +158,16 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                             sw.write("\" score=\"");
                             sw.write(Float.toString(tag.getScore()));
                         }*/
-                        sw.write("\"" +
-                        		" addedobjects=\"");
+                        sw.write("\" addedobjects=\"");
                         sw.write(Integer.toString(tag.getCount()));
                         sw.write("\"");
                         sw.write(" reliability=\"");
                         sw.write(tag.getReliability().toString());
-                        sw.write("\"");                                                
+                        sw.write("\"");
                         sw.write(">\n");
-                        
+
                         //noinspection DuplicateStringLiteralInspection
-                        sw.write("    <query>"
-                                 + getQueryString(facet.getKey(), tag.getKey())
-                                 + "</query>\n");
+                        sw.write("    <query>" + getQueryString(facet.getKey(), tag.getKey()) + "</query>\n");
         /*                for (T object: tag.getObjects()) {
                             sw.write("      <object>");
                             sw.write(object.toString());
@@ -180,8 +178,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 }
                 sw.write("  </facet>\n");
             } else {
-                log.trace("Skipped \"" + facet.getKey() + "\" as it did not "
-                          + "contain any tags");
+                log.trace("Skipped \"" + facet.getKey() + "\" as it did not contain any tags");
             }
         }
         sw.write("</facetmodel>\n");
@@ -191,17 +188,15 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * Reduces the number of tags in the facets, as per the given request
      * structure.
+     *
      * @param request a request structure describing the facet setup.
      */
     public synchronized void reduce(Structure request) {
-        LinkedHashMap<String, List<Tag<T>>> newMap =
-                new LinkedHashMap<String,
-                        List<Tag<T>>>(map.size());
+        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<String, List<Tag<T>>>(map.size());
         sortFacets();
-        for (Map.Entry<String, List<Tag<T>>> facet:
-                map.entrySet()) {
+        for (Map.Entry<String, List<Tag<T>>> facet : map.entrySet()) {
             String facetName = facet.getKey();
-            List<Tag<T>> tags = facet.getValue();
+//            List<Tag<T>> tags = facet.getValue();
 
             Integer maxTags = request.getMaxTags().get(facetName);
             if (maxTags == null) { // Fallback 1
@@ -212,11 +207,9 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
             }
             if (!emptyTagsValid) {
                 List<Tag<T>> tagList = facet.getValue();
-                for (int i = 0 ; i < tagList.size() ; i++) {
-                    if ("".equals(getTagString(
-                        facetName, tagList.get(i).getKey()))) {
-                        log.trace("Removing empty tag from " + facetName
-                                  + " with tag count "
+                for (int i = 0; i < tagList.size(); i++) {
+                    if ("".equals(getTagString(facetName, tagList.get(i).getKey()))) {
+                        log.trace("Removing empty tag from " + facetName + " with tag count "
                                   + tagList.get(i).getCount());
                         tagList.remove(i);
                         break;
@@ -226,9 +219,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
             if (facet.getValue().size() <= maxTags) {
                 newMap.put(facet.getKey(), facet.getValue());
             } else {
-                newMap.put(facet.getKey(),
-                           new ArrayList<Tag<T>>(
-                                   facet.getValue().subList(0, maxTags)));
+                newMap.put(facet.getKey(), new ArrayList<Tag<T>>(facet.getValue().subList(0, maxTags)));
             }
         }
         map = newMap;
@@ -236,6 +227,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
     /**
      * Used by the default merge.
+     *
      * @return the internal map.
      */
     public Map<String, List<Tag<T>>> getMap() {
@@ -245,26 +237,25 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     @Override
     @SuppressWarnings({"unchecked"})
     public void merge(Response otherResponse) throws ClassCastException {
+        if (otherResponse == null) {
+            log.warn("Attempted to merge with null");
+            return;
+        }
         if (!(otherResponse instanceof FacetResult)) {
             //noinspection ProhibitedExceptionThrown
-            throw new ClassCastException(String.format(
-                    "Expected a FacetResult, but go '%s'",
-                    otherResponse.getClass().getName()));
+            throw new ClassCastException(String.format("Expected a FacetResult, but go '%s'", 
+                                                       otherResponse.getClass().getName()));
         }
-        FacetResult other = (FacetResult)otherResponse;
+        FacetResult other = (FacetResult) otherResponse;
         super.merge(other);
-        if (other == null) {
-            log.warn("Attempted to merge with null");
-        }
-        String typeProblem = "The FacetResultImpl<T> default merger can only"
-                             + " handle FacetResultImpl<T> as input";
+        String typeProblem = "The FacetResultImpl<T> default merger can only handle FacetResultImpl<T> as input";
         if (!(other instanceof FacetResultImpl)) {
             throw new IllegalArgumentException(typeProblem);
         }
         Map<String, List<Tag<T>>> otherMap;
-        try  {
+        try {
             //noinspection unchecked
-            otherMap = ((FacetResultImpl<T>)other).getMap();
+            otherMap = ((FacetResultImpl<T>) other).getMap();
         } catch (ClassCastException e) {
             throw new IllegalArgumentException(typeProblem, e);
         }
@@ -272,18 +263,17 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         // other is source and this is destination
         //noinspection unchecked
         mergeMaxTags((FacetResultImpl<T>) other);
-        for (Map.Entry<String, List<Tag<T>>> sEntry:
-                otherMap.entrySet()) {
+        for (Map.Entry<String, List<Tag<T>>> sEntry : otherMap.entrySet()) {
             List<Tag<T>> dList = map.get(sEntry.getKey());
             if (dList == null) { // Just add the taglist
                 map.put(sEntry.getKey(), sEntry.getValue());
             } else { // Merge the tags
                 List<Tag<T>> sList = sEntry.getValue();
-                for (Tag<T> sPair: sList) {
+                for (Tag<T> sPair : sList) {
                     boolean found = false;
-                    for (Tag<T> dPair: dList) {
+                    for (Tag<T> dPair : dList) {
                         if (sPair.getKey().equals(dPair.getKey())) { // Merge
-                            mergeTag(sPair, dPair);                                                        
+                            mergeTag(sPair, dPair);
                             found = true;
                             break;
                         }
@@ -306,40 +296,40 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @param sPair Will not modified
      * @param dPair Will be modified  
      */
-	private void mergeTag(Tag<T> sPair, Tag<T> dPair) {
-		dPair.setCount(sPair.getCount() + dPair.getCount());
-		Reliability rD = dPair.getReliability();
-		Reliability rS = sPair.getReliability();
-		
-		switch (rD) {
-		case IMPRECISE :
-		    dPair.setReliability(Reliability.IMPRECISE); 
-			break;
-		case LESS:
-			if (rS == Reliability.LESS || rS==Reliability.PRECISE) { 
-		        dPair.setReliability(Reliability.LESS);
-			}
-		    else { dPair.setReliability(Reliability.IMPRECISE);                                
-		    }                            	
-		break;
-		
-		case MORE:
-			if (rS == Reliability.MORE || rS==Reliability.PRECISE) { 
-		        dPair.setReliability(Reliability.MORE);
-			}
-		    else { dPair.setReliability(Reliability.IMPRECISE);                                
-		    }                            	
-		break;
-			                            
-		case PRECISE:
-		    dPair.setReliability(sPair.getReliability());                            	
-		break;
-		}
-	}
+    private void mergeTag(Tag<T> sPair, Tag<T> dPair) {
+        dPair.setCount(sPair.getCount() + dPair.getCount());
+        Reliability rD = dPair.getReliability();
+        Reliability rS = sPair.getReliability();
+
+        switch (rD) {
+            case IMPRECISE:
+                dPair.setReliability(Reliability.IMPRECISE);
+                break;
+            case LESS:
+                if (rS == Reliability.LESS || rS == Reliability.PRECISE) {
+                    dPair.setReliability(Reliability.LESS);
+                } else {
+                    dPair.setReliability(Reliability.IMPRECISE);
+                }
+                break;
+
+            case MORE:
+                if (rS == Reliability.MORE || rS == Reliability.PRECISE) {
+                    dPair.setReliability(Reliability.MORE);
+                } else {
+                    dPair.setReliability(Reliability.IMPRECISE);
+                }
+                break;
+
+            case PRECISE:
+                dPair.setReliability(sPair.getReliability());
+                break;
+        }
+    }
 
     private void mergeMaxTags(FacetResultImpl<T> otherResult) {
         log.trace("Merging maxTags");
-        for (Map.Entry<String, Integer> maxTag: otherResult.maxTags.entrySet()){
+        for (Map.Entry<String, Integer> maxTag : otherResult.maxTags.entrySet()) {
             if (!maxTags.containsKey(maxTag.getKey())) {
                 maxTags.put(maxTag.getKey(), maxTag.getValue());
             }
@@ -348,9 +338,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
     /**
      * Compare the tag keys according to specified order.
+     *
      * @param facet the container for the tags.
-     * @param tag1 first tag.
-     * @param tag2 second tag.
      * @return {@code CustomComparator.compare(tag1, tag2)}.
      */
     protected abstract Comparator<Tag<T>> getTagComparator(String facet);
@@ -361,20 +350,18 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     protected abstract List<String> getFacetNames();
 
     public void sortFacets() {
-    	// Sort on tag level
-        for (Map.Entry<String, List<Tag<T>>> facet:
-            map.entrySet()) {
-        	Collections.sort(facet.getValue(), getTagComparator(facet.getKey()));
+        // Sort on tag level
+        for (Map.Entry<String, List<Tag<T>>> facet : map.entrySet()) {
+            Collections.sort(facet.getValue(), getTagComparator(facet.getKey()));
         }
-        
+
         // Sort on facet level
-        LinkedHashMap<String, List<Tag<T>>> newMap = 
-        		new LinkedHashMap<String, List<Tag<T>>>();
-        for (String facetName: getFacetNames()) {
-        	List<Tag<T>> tags = map.remove(facetName);
-        	if (tags != null) {
-        		newMap.put(facetName, tags);
-        	}
+        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<String, List<Tag<T>>>();
+        for (String facetName : getFacetNames()) {
+            List<Tag<T>> tags = map.remove(facetName);
+            if (tags != null) {
+                newMap.put(facetName, tags);
+            }
         }
         newMap.putAll(map);
         map = newMap;
@@ -383,34 +370,36 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * This should be overridden when extending, if the tags does not resolve
      * naturally to Strings.
+     *
      * @param facet The facet that contains the tag.
-     * @param tag The tag to convert to String.
+     * @param tag   The tag to convert to String.
      * @return a String-representation of the Tag.
      */
     @SuppressWarnings({"UnusedDeclaration"})
     protected String getTagString(String facet, T tag) {
-        log.trace("Default-implementation of getTagString called with Tag "
-                  + tag);
+        log.trace("Default-implementation of getTagString called with Tag " + tag);
         return String.valueOf(tag);
     }
+
     /**
      * This should be overridden when extending, if the tags does not resolve
      * naturally to queries.
+     *
      * @param facet The facet that contains the tag.
-     * @param tag The tag to convert to a query.
+     * @param tag   The tag to convert to a query.
      * @return a query for the tag in the facet.
      */
     protected String getQueryString(String facet, T tag) {
-        return facet + ":\""
-               + XMLUtil.encode(queryEscapeTag(String.valueOf(tag))) + "\"";
+        return facet + ":\"" + XMLUtil.encode(queryEscapeTag(String.valueOf(tag))) + "\"";
     }
 
     /**
      * Assign the list of tags to the given Facet. Any existing Facet will be
      * overwritten.
+     *
      * @param facet The Facet to assign to.
-     * @param tags a list of pars, where the first element is the tag and the
-     *             second element is the tag-count.
+     * @param tags  a list of pars, where the first element is the tag and the
+     *              second element is the tag-count.
      */
     public void assignTags(String facet, List<Tag<T>> tags) {
         map.put(facet, tags);
@@ -424,13 +413,14 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * {@link #assignTags} if the uniqueness of the Tags is known.<br />
      * Note that the SortOrder for the FlexiblePairs may be reset by this
      * method.
+     *
      * @param facet The Facet to assign to.
-     * @param tags A list of pars, where the first element is the tag and the
-     *             second element is the tag-count.
+     * @param tags  A list of pars, where the first element is the tag and the
+     *              second element is the tag-count.
      */
     public void addTags(String facet, List<Tag<T>> tags) {
         if (map.containsKey(facet)) {
-            for (Tag<T> tag: tags) {
+            for (Tag<T> tag : tags) {
                 addTag(facet, tag);
             }
         } else {
@@ -438,38 +428,38 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         }
     }
 
-    
+
     public void addTag(String facet, T tagKey, int count) {
-    	addTag(facet, new Tag<T>(tagKey, count, Reliability.PRECISE));
+        addTag(facet, new Tag<T>(tagKey, count, Reliability.PRECISE));
     }
 
-        
+
     /**
      * Add a given Tag to a given Facet. If the Tag already exists, the tagCount
      * is added to the existing tagCount. Note that this iterates through all
      * Tags in the given Facet, thus being somewhat inefficient. Consider using
-     * {@link #assignTag} if the Tag is known to be unique within the Facet.
-     * @param facet    The Facet to add the Tag to. If it does not exist, a new
-     *                 Facet is created.
+     * assignTag if the Tag is known to be unique within the Facet.
+     *
+     * @param facet       The Facet to add the Tag to. If it does not exist, a new
+     *                    Facet is created.
      * @param tagKey      The Tag to add to the Facet.
-     * @param count The tagCount for the Tag.
-     * @param reliability  
+     * @param count       The tagCount for the Tag.
+     * @param reliability how authoritative the count is.
      */
     public void addTag(String facet, T tagKey, int count, Reliability reliability) {
-    	addTag(facet, new Tag<T>(tagKey, count, reliability));
+        addTag(facet, new Tag<T>(tagKey, count, reliability));
     }
 
-    public void addTag(String facet, Tag tag) {
+    public void addTag(String facet, Tag<T> tag) {
         List<Tag<T>> tags = map.get(facet);
         if (tags == null) {
-            tags = new ArrayList<Tag<T>>(
-                    DEFAULTFACETCAPACITY);
+            tags = new ArrayList<Tag<T>>(DEFAULTFACETCAPACITY);
             map.put(facet, tags);
         }
-        for (Tag<T> tPair: tags) {
+        for (Tag<T> tPair : tags) {
             if (tPair.getKey().equals(tag.getKey())) {
-            	mergeTag(tag, tPair); //tPair will be modified with new count and reliability
-            	return;
+                mergeTag(tag, tPair); //tPair will be modified with new count and reliability
+                return;
             }
         }
         tags.add(tag);
@@ -479,10 +469,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * Assigns a given Tag to a given Facet. There is no checking for duplicate
      * Tags, so ensuring consistency is up to the caller. Consider using
      * {@link #addTag} if it is unknown whether the tag is unique.
-     * @param facet    The Facet to assign the Tag to. If it does not exist,
-     *                 a new Facet is created.
-     * @param tag      The Tag to assign to the Facet.
-     * @param tagCount The tagCount for the Tag.
+     *
      */
 /*    public void assignTag(String facet, T tag, int tagCount) {
         List<Tag<T>> tags = map.get(facet);
@@ -495,15 +482,16 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 */
     public static String urlEntityEscape(String text) {
-        return text.replace("&",  "&amp;").
-                    replace("<",  "&lt;").
-                    replace(">",  "&gt;").
-                    replace("#",  "%23"). // Escaping for URL
-                    replace("\"", "&quot;");
+        return text.replace("&", "&amp;").
+                replace("<", "&lt;").
+                replace(">", "&gt;").
+                replace("#", "%23"). // Escaping for URL
+                replace("\"", "&quot;");
     }
 
     /**
      * Constructs a list of the Tags under the given Facet.
+     *
      * @param facet The facet to get Tags for.
      * @return all the Tags under the given Facet or null if the Facet does not
      *         exist.
@@ -514,7 +502,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
             return null;
         }
         List<String> result = new ArrayList<String>(map.get(facet).size());
-        for (Tag<T> pair: map.get(facet)) {
+        for (Tag<T> pair : map.get(facet)) {
             result.add(getTagString(facet, pair.getKey()));
         }
         return result;
@@ -523,6 +511,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     /**
      * Escape the tag for use in a query. Currently this means placing a
      * backslash in front of quotes.
+     *
      * @param cleanTag The tag to escape.
      * @return the escaped tag.
      */
@@ -535,7 +524,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     protected String[] adjust(Map<String, String> replacements, String[] s) {
-        for (int i = 0 ; i < s.length ; i++) {
+        for (int i = 0; i < s.length; i++) {
             s[i] = adjust(replacements, s[i]);
         }
         return s;
@@ -543,14 +532,12 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
 
     /**
      * Renames the facet. and the field-names according to the map.
+     *
      * @param replacements oldName -> newName for facets and fields.
      */
-    public synchronized void renameFacetsAndFields(
-                                             Map<String, String> replacements) {
-        LinkedHashMap<String, List<Tag<T>>> newTags =
-            new LinkedHashMap<String, List<Tag<T>>>(map.size());
-        for (Map.Entry<String, List<Tag<T>>> entry:
-            map.entrySet()) {
+    public synchronized void renameFacetsAndFields(Map<String, String> replacements) {
+        LinkedHashMap<String, List<Tag<T>>> newTags = new LinkedHashMap<String, List<Tag<T>>>(map.size());
+        for (Map.Entry<String, List<Tag<T>>> entry : map.entrySet()) {
             newTags.put(adjust(replacements, entry.getKey()), entry.getValue());
         }
         map = newTags;
@@ -559,12 +546,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         facetIDs = adjust(replacements, facetIDs);
     }
 
-    private HashMap<String, Integer> adjust(
-        Map<String, String> replacements, HashMap<String, Integer> map) {
+    private HashMap<String, Integer> adjust(Map<String, String> replacements, HashMap<String, Integer> map) {
         HashMap<String, Integer> adjusted = new HashMap<String, Integer>(map.size());
-        for (Map.Entry<String, Integer> entry: map.entrySet()) {
-            adjusted.put(adjust(
-                replacements, entry.getKey()), entry.getValue());
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            adjusted.put(adjust(replacements, entry.getKey()), entry.getValue());
         }
         return adjusted;
     }

@@ -53,8 +53,7 @@ public interface IndexManipulator extends Configurable {
      * </p><p>
      * This property is mandatory. No default.
      */
-    public static final String CONF_MANIPULATOR_CLASS =
-            "summa.index.manipulatorclass";
+    public static final String CONF_MANIPULATOR_CLASS = "summa.index.manipulatorclass";
 
     /**
      * If an index exists at the indexRoot, the manipulator should open it.
@@ -64,6 +63,7 @@ public interface IndexManipulator extends Configurable {
      * If a manipulator is already open, when open is called, all cached content
      * should be discarded. If is the responsibility of the caller to ensure
      * that close has been called, if a gracefull shutdown is required.
+     *
      * @param indexRoot the root location for the index. It is allowed to create
      *                  sub-folders to this root for index structures, but
      *                  manipulators should not put files highter in the folder
@@ -75,6 +75,7 @@ public interface IndexManipulator extends Configurable {
     /**
      * Clear the index, preparing for a fresh start. This discards all cached
      * data.
+     *
      * @throws IOException in case of I/O problems.
      */
     public void clear() throws IOException;
@@ -87,11 +88,12 @@ public interface IndexManipulator extends Configurable {
      * Manipulators are required to preserve the order of added payloads in the
      * index-updating precess, but in the event of changed or deleted payloads,
      * ordering can be ignored. This is due to Lucene being slow at deletes.
+     *
      * @param payload the parload containing a Document to add, change or
      *                delete in the index.
-     * @throws IOException in case of I/O problems.
      * @return true   if a commit is requested. This might be to reasons such as
-     *                internal buffers being full.
+     *         internal buffers being full.
+     * @throws IOException in case of I/O problems.
      */
     public boolean update(Payload payload) throws IOException;
 
@@ -100,6 +102,7 @@ public interface IndexManipulator extends Configurable {
      * searchers will open the commited index parts. It is strongly recommended
      * to optimize this call for time, so that commits are cheap. This ensures
      * short turn-around times for index updated.
+     *
      * @throws IOException in case of I/O problems.
      */
     public void commit() throws IOException;
@@ -109,6 +112,7 @@ public interface IndexManipulator extends Configurable {
      * this will most probably correspond to a call to optimize(). This call
      * might take some time to perform and will normally be called as part
      * of a batch clean-up at times with light workload.
+     *
      * @throws IOException in case of I/O problems.
      */
     public void consolidate() throws IOException;
@@ -117,6 +121,7 @@ public interface IndexManipulator extends Configurable {
      * Ensure that all content is flushed to persistent storage and close down
      * any open connections. After a close has been called, the only allowable
      * action on a manipulator is open.
+     *
      * @throws IOException in case of I/O problems.
      */
     public void close() throws IOException;
@@ -124,7 +129,8 @@ public interface IndexManipulator extends Configurable {
     /**
      * Notifies the manipulator that the order of indexed Records might have
      * changed since last commit. This might be caused by e.x. a delete of
-     * an existing Lucene document, followed by a merge. 
+     * an existing Lucene document, followed by a merge.
+     *
      * @throws IOException in case of I/O problems.
      */
     public void orderChangedSinceLastCommit() throws IOException;
@@ -132,10 +138,10 @@ public interface IndexManipulator extends Configurable {
     /**
      * This method is used for signalling other manipulators. It will normally
      * be called once for each Record. Consolidates always imply a commit.
-     * @return true if this manipulator might have changed the order of indexed 
-     * Records since last commit.
+     *
+     * @return true if this manipulator might have changed the order of indexed
+     *         Records since last commit.
      * @throws IOException in case of I/O problems.
      */
     public boolean isOrderChangedSinceLastCommit() throws IOException;
 }
-

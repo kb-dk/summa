@@ -39,8 +39,7 @@ public class StoringIndexDescriptor extends IndexDescriptor<IndexField> {
     private static Log log = LogFactory.getLog(StoringIndexDescriptor.class);
     private String xml; // Do not set this to null as it overrides parse value
 
-    public StoringIndexDescriptor(Configuration configuration)
-                                                            throws IOException {
+    public StoringIndexDescriptor(Configuration configuration) throws IOException {
         super(configuration);
     }
 
@@ -72,8 +71,7 @@ public class StoringIndexDescriptor extends IndexDescriptor<IndexField> {
 
     @Override
     public Document parse(String xml) throws ParseException {
-        log.debug("parse(...): Received IndexDescriptor XML of size "
-                  + (xml == null ? "null" : xml.length()));
+        log.debug("parse(...): Received IndexDescriptor XML of size " + (xml == null ? "null" : xml.length()));
         this.xml = xml;
         return super.parse(xml);
     }

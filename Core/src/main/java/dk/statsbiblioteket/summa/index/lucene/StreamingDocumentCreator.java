@@ -135,11 +135,11 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
         try {
             if (origin) {
                 log.trace("Processing top-level " + record.getId());
-                float docBoost = processHeader(reader, doc, record, origin);
+                float docBoost = processHeader(reader, record, origin);
                 processBody(reader, doc, docBoost, record, origin);
             } else {
                 log.trace("Skipping headers for non-toplevel " + record.getId());
-                processHeader(reader, doc, record, false);
+                processHeader(reader, record, false);
                 processBody(reader, doc, NEUTRAL_BOOST, record, false);
             }
         } catch (ParseException e) {
@@ -169,7 +169,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
     }
 
     private static final float NEUTRAL_BOOST = 1.0f;
-    private float processHeader(XMLStreamReader reader, Document doc, Record record, boolean origin)
+    private float processHeader(XMLStreamReader reader, Record record, boolean origin)
                                                                              throws ParseException, XMLStreamException {
         float boost = NEUTRAL_BOOST;
         long startTime = System.nanoTime();

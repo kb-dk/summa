@@ -49,7 +49,7 @@ public class WriterCallable implements Callable<Long> {
 
     private IndexWriter writer = null;
     private Payload payload = null;
-    private Analyzer analyzer= null;
+    private Analyzer analyzer = null;
 
     /**
      * @param callbackQueue when call is finished, the callable will be added
@@ -71,6 +71,7 @@ public class WriterCallable implements Callable<Long> {
     /**
      * Add, update or delete Document to the Lucene index, using the provided
      * IndexWriter.
+     *
      * @return the time in ns that it took to handle the Document.
      * @throws Exception if the Document could not be handled.
      */
@@ -79,21 +80,17 @@ public class WriterCallable implements Callable<Long> {
         try {
             Long exeTime = protectedCall();
             if (log.isTraceEnabled()) {
-                log.trace("Finished writing of " + payload + " in "
-                          + (exeTime / 1000000.0) + "ms");
+                log.trace("Finished writing of " + payload + " in " + (exeTime / 1000000.0) + "ms");
             }
         } catch (Exception e) {
             log.warn("Got exception while writing " + payload, e);
-            Logging.logProcess("WriterCallable", "Got exception while writing", 
-                               Logging.LogLevel.WARN, payload, e);
+            Logging.logProcess("WriterCallable", "Got exception while writing", Logging.LogLevel.WARN, payload, e);
             throw e; // Rethrow to keep the concrete Exception
             // TODO: Consider signalling orderChangedSinceLastCommit
         } catch (Error e) {
-            String message = String.format(
-                    "Encountered Error '%s' during protectedCall of %s "
-                    + "to index. The index "
-                    + "location was '%s'. JVM shutdown in %d seconds",
-                    e.getMessage(), payload, writer.getDirectory(), 5);
+            String message = String.format("Encountered Error '%s' during protectedCall of %s to index. The index "
+                                           + "location was '%s'. JVM shutdown in %d seconds",
+                                           e.getMessage(), payload, writer.getDirectory(), 5);
             Logging.fatal(log, "WriterCallable.call", message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
@@ -112,8 +109,8 @@ public class WriterCallable implements Callable<Long> {
     private long protectedCall() throws Exception {
         long startTime = System.nanoTime();
         if (payload.getRecord() == null) {
-            log.debug(
-                "update: " + payload + " did not have a record, so it will always be processed as a plain addition");
+            log.debug("update: " + payload
+                      + " did not have a record, so it will always be processed as a plain addition");
         }
         boolean deleted = payload.getRecord() != null && payload.getRecord().isDeleted();
         boolean updated = payload.getRecord() != null && payload.getRecord().isModified();
@@ -126,9 +123,10 @@ public class WriterCallable implements Callable<Long> {
             updateAddition();
             if (log.isTraceEnabled()) {
                 log.trace("Dumping analyzed fields for " + payload);
-                Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
-                for (Object field: document.getFields()) {
-                    log.trace("Field " + ((Field)field).name() + " has content '" + ((Field)field).stringValue() + "'");
+                Document document = (Document) payload.getData(Payload.LUCENE_DOCUMENT);
+                for (Object field : document.getFields()) {
+                    log.trace(
+                            "Field " + ((Field) field).name() + " has content '" + ((Field) field).stringValue() + "'");
                 }
             }
         }
@@ -136,13 +134,13 @@ public class WriterCallable implements Callable<Long> {
     }
 
     private void updateAddition() throws IOException {
-        Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+        Document document = (Document) payload.getData(Payload.LUCENE_DOCUMENT);
         try {
             writer.addDocument(document, analyzer);
         } catch (IOException e) {
             die(e, "addition");
         }
-        payload.getData().put(LuceneIndexUtils.META_ADD_DOCID, writer.maxDoc()-1);
+        payload.getData().put(LuceneIndexUtils.META_ADD_DOCID, writer.maxDoc() - 1);
 
         Logging.logProcess("LuceneManipulator", "Added Lucene document", Logging.LogLevel.TRACE, payload);
     }
@@ -168,4 +166,3 @@ public class WriterCallable implements Callable<Long> {
         throw new IOException(message, e);
     }
 }
-

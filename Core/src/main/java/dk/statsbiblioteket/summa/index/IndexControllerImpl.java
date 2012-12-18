@@ -705,7 +705,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             return false;
         }
         boolean hasNext = source.hasNext();
-        if (!hasNext && !getStatus().equals(STATUS.error) && !getStatus().equals(STATUS.stopped)) {
+        if (!hasNext && getStatus() != STATUS.error && getStatus() != STATUS.stopped) {
             log.debug("Calling close() due to no more Payloads");
             try {
                 close();
@@ -716,14 +716,13 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         return hasNext;
     }
 
-    /** How often to feed back. */
-    private int feedbackEvery = 1000;
-
     @Override
     public Payload next() {
         // Get the next payload
         long start = System.nanoTime();
         Payload payload = source.next();
+        /* How often to feed back. */
+        int feedbackEvery = 1000;
         if (log.isTraceEnabled() || (log.isDebugEnabled() && (profiler.getBeats()+1) % feedbackEvery == 0)) {
             log.trace("Got payload #" + (profiler.getBeats()+1) + " from source in "
                       + (System.nanoTime() - start)/1000000f + "ms. UpdatesSinceLastCommit=" + updatesSinceLastCommit

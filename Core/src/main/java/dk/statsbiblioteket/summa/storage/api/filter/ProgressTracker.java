@@ -14,10 +14,10 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * more or less updates than the number of records.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_OK,
         author = "te, mke")
 public class ProgressTracker {
     private static Log log = LogFactory.getLog(ProgressTracker.class);
@@ -160,7 +160,9 @@ public class ProgressTracker {
 
     public void clearProgressFile() {
         if (progressFile.exists()) {
-            progressFile.delete();
+            if (!progressFile.delete()) {
+                log.warn("Unable to delete progress file '" + progressFile.getAbsolutePath() + "'");
+            }
         }
     }
 

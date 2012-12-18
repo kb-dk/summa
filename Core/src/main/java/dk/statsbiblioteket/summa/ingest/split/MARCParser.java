@@ -62,8 +62,7 @@ import java.util.regex.Pattern;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te",
-        comment = "The parser should be extended for proper handling of control"
-                  + " fields")
+        comment = "The parser should be extended for proper handling of control fields")
 public abstract class MARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(MARCParser.class);
 
@@ -662,4 +661,3 @@ public abstract class MARCParser extends ThreadedStreamParser {
                + "' (" + super.toString() + "))";
     }
 }
-

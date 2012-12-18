@@ -30,23 +30,20 @@ public abstract class FileSystemReader implements ObjectFilter {
      * </p><p>
      * This property must be specified.
      */
-    public static final String CONF_ROOT_FOLDER =
-        "summa.ingest.filereader.rootfolder";
+    public static final String CONF_ROOT_FOLDER = "summa.ingest.filereader.rootfolder";
     /**
      * Whether to perform a recursive scan or not (valid values: true, false).
      * </p><p>
      * This property is optional. Default is "true".
      */
-    public static final String CONF_RECURSIVE =
-            "summa.ingest.filereader.recursive";
+    public static final String CONF_RECURSIVE = "summa.ingest.filereader.recursive";
     public static final boolean DEFAULT_RECURSIVE = true;
     /**
      * The file pattern to match.
      * </p><p>
      * This property is optional. Default is ".*\.xml".
      */
-    public static final String CONF_FILE_PATTERN =
-            "summa.ingest.filereader.filepattern";
+    public static final String CONF_FILE_PATTERN = "summa.ingest.filereader.filepattern";
     public static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
     /**
      * The postfix for the file when it has been fully processed.
@@ -54,8 +51,7 @@ public abstract class FileSystemReader implements ObjectFilter {
      * </p><p>
      * This property is optional. Default is ".completed".
      */
-    public static final String CONF_COMPLETED_POSTFIX =
-            "summa.ingest.filereader.completedpostfix";
+    public static final String CONF_COMPLETED_POSTFIX = "summa.ingest.filereader.completedpostfix";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_COMPLETED_POSTFIX = ".completed";
     /**
@@ -63,8 +59,7 @@ public abstract class FileSystemReader implements ObjectFilter {
      * </p><p>
      * This property is optional. Default is false.
      */
-    public static final String CONF_REVERSE_SORT =
-            "summa.ingest.filereader.sort.reverse";
+    public static final String CONF_REVERSE_SORT = "summa.ingest.filereader.sort.reverse";
     public static final boolean DEFAULT_REVERSE_SORT = false;
 
     @Override

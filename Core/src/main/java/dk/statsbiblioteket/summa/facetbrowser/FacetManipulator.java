@@ -23,8 +23,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,7 @@ import java.io.IOException;
  * Dummy class that logs that index-time FacetBuilding currently is a no-op.
  * </p><p>
  * We should keep this as it is possible to move the startup-cost for faceting
- * to the index side at a later time. 
+ * to the index side at a later time.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -41,9 +41,9 @@ import java.io.IOException;
 public class FacetManipulator implements IndexManipulator {
     private static Log log = LogFactory.getLog(FacetManipulator.class);
 
+    @SuppressWarnings("UnusedParameters")
     public FacetManipulator(Configuration conf) {
-        log.info(
-            "The current FacetSystem does not do any index-time processing");
+        log.info("The current FacetSystem does not do any index-time processing");
     }
 
     @Override
@@ -59,7 +59,7 @@ public class FacetManipulator implements IndexManipulator {
     @Override
     public boolean update(Payload payload) throws IOException {
         log.trace("Update called  doing nothing");
-        return false; 
+        return false;
     }
 
     @Override

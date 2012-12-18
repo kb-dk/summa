@@ -19,22 +19,24 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.FutureInputStream;
 import dk.statsbiblioteket.summa.common.util.LineInputStream;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
-import org.archive.io.RepositionableInputStream;
-import org.archive.io.arc.ARCReaderFactory;
+import org.apache.commons.logging.LogFactory;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.io.RepositionableInputStream;
+import org.archive.io.arc.ARCReaderFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
-import java.io.*;
 
 /**
  * Receives a stream in the ARC file format and extracts the content, along with
@@ -57,8 +59,7 @@ public class ARCParser extends ThreadedStreamParser {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_EXTRACT_HTTP_HEADERS =
-            "arcparser.extracthttpheaders";
+    public static final String CONF_EXTRACT_HTTP_HEADERS = "arcparser.extracthttpheaders";
     public static final boolean DEFAULT_EXTRACT_HTTP_HEADERS = true;
     public static final String HTTP_PREFIX = "http-header.";
 
@@ -66,18 +67,19 @@ public class ARCParser extends ThreadedStreamParser {
         arcname,       // filedesc://981-...
         arcoffset,     // Offset in arc file in bytes
         contentLength, // Length in bytes
-//        dateEpoch,     // Seconds since epoch
+        //        dateEpoch,     // Seconds since epoch
         digest,        // MD5?
         primaryType,   // MIME-primary (text/image/...)
         subType,       // MIME-sub (xml/gif/...)
         title,         // date+time+url
-//        tstamp,        // ISO-compact: YYYYMMDDHHmmSS
+        //        tstamp,        // ISO-compact: YYYYMMDDHHmmSS
         isodate,       // YYYYMMDD
         isotime,       // HHmmSS
         //response,      // 200, 404, 503...
         url,           // Origin as stated in ARC
         ipaddress,     // What site resolved to at harvest time
         site;          // Site minus www extracted from url
+
         @Override
         public String toString() {
             return "arc." + super.toString();
@@ -92,43 +94,42 @@ public class ARCParser extends ThreadedStreamParser {
     public ARCParser(Configuration conf) {
         super(conf);
         useFileHack = conf.getBoolean(CONF_USE_FILEHACK, useFileHack);
-        removeHTTPHeaders = conf.getBoolean(
-                CONF_EXTRACT_HTTP_HEADERS, removeHTTPHeaders);
-        log.debug("ARCParser constructed"
-                  + (useFileHack ? " with filehack enabled" : "")
-                  + " and removeHTTPHeaders=" + removeHTTPHeaders);
+        removeHTTPHeaders = conf.getBoolean(CONF_EXTRACT_HTTP_HEADERS, removeHTTPHeaders);
+        log.debug("ARCParser constructed" + (useFileHack ? " with filehack enabled" : "") + " and removeHTTPHeaders="
+                  + removeHTTPHeaders);
     }
 
     public static class MyARCReaderFactory extends ARCReaderFactory {
         public MyARCReaderFactory() {
             super();
         }
+
         public ArchiveReader getWithFallback(String id, InputStream stream) {
-            RepositionableInputStream ris =
-                (RepositionableInputStream)asRepositionable(stream);
+            RepositionableInputStream ris = (RepositionableInputStream) asRepositionable(stream);
             try {
                 return ARCReaderFactory.get(id, ris, true);
             } catch (IOException e) {
-                log.debug("Got IOException while creating ArchiveReader. "
-                         + "Attempting direct creation of "
-                         + "UncompressedArchiveReader");
+                log.debug("Got IOException while creating ArchiveReader. Attempting direct creation of "
+                          + "UncompressedArchiveReader");
                 ris.position(0);
                 return new UncompressedARCReader(id, ris);
             }
         }
+
         public ArchiveReader getUncompressed(File location) throws IOException {
             return new UncompressedARCReader(location);
         }
     }
+
     private MyARCReaderFactory marf = new MyARCReaderFactory();
 
     private long runCount = 0;
+
     @Override
     protected void protectedRun(Payload source) throws Exception {
 
 // 1839 records, 57 sec
-        log.trace("Starting protected run " + ++runCount + " for "
-                  + source);
+        log.trace("Starting protected run " + ++runCount + " for " + source);
         /*
         The file hack is truly horrible, but the ARCReaderFactory will always
         expect streams to be GZIPped and we need to experiment with uncompressed
@@ -136,12 +137,10 @@ public class ARCParser extends ThreadedStreamParser {
         that Ubuntu uses and the heritrix ARCParser.
         // TODO: Locate and eliminate the GZIP incompatability problem
          */
-        String origin = source.getData(Payload.ORIGIN) == null ? "N/A" :
-                        source.getData(Payload.ORIGIN).toString();
-        ArchiveReader archiveReader =
-            useFileHack ?
-            ARCReaderFactory.get(new File(origin), false, 0) :
-            marf.getWithFallback(origin, source.getStream());
+        String origin = source.getData(Payload.ORIGIN) == null ? "N/A" : source.getData(Payload.ORIGIN).toString();
+        ArchiveReader archiveReader = useFileHack ?
+                                      ARCReaderFactory.get(new File(origin), false, 0) :
+                                      marf.getWithFallback(origin, source.getStream());
 
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
@@ -150,8 +149,7 @@ public class ARCParser extends ThreadedStreamParser {
             String message = "No record present in ARC";
             log.debug(message + " for " + source);
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("ARCParser", message, Logging.LogLevel.DEBUG,
-                               source);
+            Logging.logProcess("ARCParser", message, Logging.LogLevel.DEBUG, source);
         }
         while (archiveRecords.hasNext() && running) {
             log.trace("Extracting record " + ++internalCount);
@@ -164,10 +162,9 @@ public class ARCParser extends ThreadedStreamParser {
 /*            for (Object field: ar.getHeader().getHeaderFields().entrySet().toArray()) {
                 System.out.println(field);
             }*/
-            
+
             if (!handleHTTPHeaders(payload, lis)) {
-                log.debug("Reached EOF, indicating empty HTTP-content, for "
-                          + payload);
+                log.debug("Reached EOF, indicating empty HTTP-content, for " + payload);
             }
             if (log.isTraceEnabled()) {
                 log.trace("Adding " + payload + " to output queue");
@@ -179,14 +176,10 @@ public class ARCParser extends ThreadedStreamParser {
             arStream.waitForClose();
             if (!arStream.isClosed()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.warn("Timeout while waiting for close of record from ARC "
-                         + "from " + source);
+                log.warn("Timeout while waiting for close of record from ARC from " + source);
                 //noinspection DuplicateStringLiteralInspection
-                Logging.logProcess(
-                        "ARCParser",
-                        "Stopped parsing as the handler of the last generated "
-                        + "Payload did not close the Stream",
-                        Logging.LogLevel.DEBUG, source);
+                Logging.logProcess("ARCParser", "Stopped parsing as the handler of the last generated "
+                                                + "Payload did not close the Stream", Logging.LogLevel.DEBUG, source);
                 break;
             }
             ar.close(); // Just to be sure
@@ -199,13 +192,11 @@ public class ARCParser extends ThreadedStreamParser {
         source.close();
         if (!running) {
             //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess(
-                    "ARCParser",
-                    "Stopped parsing  due to the running-flag being false",
-                    Logging.LogLevel.DEBUG, source);
+            Logging.logProcess("ARCParser", "Stopped parsing  due to the running-flag being false", 
+                               Logging.LogLevel.DEBUG, source);
         }
-        log.debug("Ending protected run " + runCount + " with " + internalCount
-                  + " extracted records. running=" + running);
+        log.debug("Ending protected run " + runCount + " with " + internalCount + " extracted records. running="
+                  + running);
     }
 
     @Override
@@ -215,8 +206,7 @@ public class ARCParser extends ThreadedStreamParser {
 
     // Leaves the stream at the beginning of the real content
     // return true if parsing should continue (EOF not reached)
-    private boolean handleHTTPHeaders(Payload payload, LineInputStream is)
-                                                            throws IOException {
+    private boolean handleHTTPHeaders(Payload payload, LineInputStream is) throws IOException {
         if (!removeHTTPHeaders) {
             log.trace("RemoveHTTPHeaders not enabled");
             return true;
@@ -225,8 +215,7 @@ public class ARCParser extends ThreadedStreamParser {
         if (url.length() < 4 || !url.startsWith("http")) {
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
-                        "Skipped handleHTTPHeaders for %s as content did not"
-                        + " start with http", payload));
+                        "Skipped handleHTTPHeaders for %s as content did not start with http", payload));
             }
             return true;
         }
@@ -236,7 +225,7 @@ public class ARCParser extends ThreadedStreamParser {
         String line;
         int counter = 0;
 //        System.out.println("Dumping HTTP-lines from " + payload);
-        while (!"".equals(line = is.readLine())) {
+        while ((line = is.readLine()) != null && !"".equals(line)) {
 //            System.out.println("*** " + line);
             String[] tokens = line.split(": ", 2);
             if (tokens.length == 2 && !"".equals(tokens[0])) {
@@ -246,17 +235,14 @@ public class ARCParser extends ThreadedStreamParser {
                 }
                 counter++;
                 if ("Last-Modified".equals(tokens[0])) {
-                    handleLastModified(
-                        payload, tokens[1], HTTP_PREFIX + tokens[0]);
+                    handleLastModified(payload, tokens[1], HTTP_PREFIX + tokens[0]);
                 }
             } else {
                 if (line.startsWith("HTTP/")) { // HTTP/1.1 200 OK
                     String[] statusTokens = line.split(" ", 3);
                     if (statusTokens.length == 3) {
-                        payload.getData().put(
-                            HTTP_PREFIX + "status", statusTokens[2]);
-                        payload.getData().put(
-                            HTTP_PREFIX + "status.code", statusTokens[1]);
+                        payload.getData().put(HTTP_PREFIX + "status", statusTokens[2]);
+                        payload.getData().put(HTTP_PREFIX + "status.code", statusTokens[1]);
                     }
                 }
             }
@@ -266,11 +252,11 @@ public class ARCParser extends ThreadedStreamParser {
     }
 
     private static final String[] MONTHS = new String[]{
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-        "Nov", "Dec"};
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
     private void handleLastModified( //   Sun, 14 Dec 2008 13:23:54 GMT
                                      //  2008-09-02T12:12:31MEST
-        Payload payload, String date, String prefix) {
+                                     Payload payload, String date, String prefix) {
         String[] tokens = date.split(" ");
         String isotime;
         String isodate;
@@ -286,32 +272,28 @@ public class ARCParser extends ThreadedStreamParser {
             try {
                 int monthIndex = -1;
                 String month = tokens[2].substring(0, 3);
-                for (int i = 0 ; i < MONTHS.length ; i++) {
+                for (int i = 0; i < MONTHS.length; i++) {
                     if (MONTHS[i].equals(month)) {
-                        monthIndex = i+1;
+                        monthIndex = i + 1;
                     }
                 }
                 if (monthIndex == -1) {
-                    log.debug("Unable to determine month index for month '"
-                              + month + "' from date '" + date
-                              + "' from " + payload);
+                    log.debug("Unable to determine month index for month '" + month + "' from date '" + date + "' from "
+                              + payload);
                     return;
                 }
-                isodate = String.format(
-                    "%s-%s-%s",
-                    tokens[3],
-                    align(monthIndex, 2),
-                    align(Integer.parseInt(tokens[1]), 2));
+                isodate = String.format("%s-%s-%s", tokens[3], align(monthIndex, 2), 
+                                        align(Integer.parseInt(tokens[1]), 2));
                 isotime = tokens[4];
             } catch (Exception e) { // Minor problem, so we do not stack trace
-                log.debug("Unable to parse date '" + date + "' for " + payload
-                          + ": " + e.getMessage());
+                log.debug("Unable to parse date '" + date + "' for " + payload + ": " + e.getMessage());
                 return;
             }
         }
         payload.getData().put(prefix + ".isodate", isodate);
         payload.getData().put(prefix + ".isotime", isotime);
     }
+
     private String align(int number, int digits) {
         String result = Integer.toString(number);
         while (result.length() < digits) {
@@ -321,8 +303,7 @@ public class ARCParser extends ThreadedStreamParser {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private void fillPayloadFromHeader(
-            Payload payload, ArchiveRecordHeader header, String arcFilename) {
+    private void fillPayloadFromHeader(Payload payload, ArchiveRecordHeader header, String arcFilename) {
 
 /*        StringWriter sw = new StringWriter(1000);
         for (Object entryO: header.getHeaderFields().entrySet()) {

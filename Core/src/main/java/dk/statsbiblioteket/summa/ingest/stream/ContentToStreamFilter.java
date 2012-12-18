@@ -70,12 +70,10 @@ public class ContentToStreamFilter extends ObjectFilterImpl {
             try {
                 payload.getStream().close();
             } catch (IOException e) {
-                throw new PayloadException(
-                        "Exception closing existing stream", e, payload);
+                throw new PayloadException("Exception closing existing stream", e, payload);
             }
         }
-        Logging.logProcess(getName(), "Wrapping record content as stream",
-                           Logging.LogLevel.TRACE, payload);
+        Logging.logProcess(getName(), "Wrapping record content as stream", Logging.LogLevel.TRACE, payload);
         payload.setStream(new ByteArrayInputStream(
                 payload.getRecord().getContent(true)));
         if (log.isTraceEnabled()) {

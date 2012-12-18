@@ -41,6 +41,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * </p><p>
  * Example: field=author, term=åse, delta=-2, length=5
  * Result: lars, melanie, åse
+ *
  * @see IndexResponse for the returned result.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -70,7 +71,7 @@ public interface IndexKeys {
      * for the returned index.
      * </p><p>
      * Optional: If no term is specified, index-lookup is performed from the
-     *           first available term.
+     * first available term.
      */
     public static final String SEARCH_INDEX_TERM = "search.index.term";
 
@@ -79,8 +80,7 @@ public interface IndexKeys {
      * </p><p>
      * Optional. If no value is specified, the default setup is used.
      */
-    public static final String SEARCH_INDEX_CASE_SENSITIVE =
-        "search.index.casesensitive";
+    public static final String SEARCH_INDEX_CASE_SENSITIVE = "search.index.casesensitive";
 
     // TODO: Reflect these in the LuceneSearchNode
     /**

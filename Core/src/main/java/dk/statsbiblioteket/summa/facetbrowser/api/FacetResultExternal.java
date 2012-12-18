@@ -43,10 +43,8 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     public static final String NAME = "FacetResult";
 
-    public FacetResultExternal(HashMap<String, Integer> maxTags,
-                               HashMap<String, Integer> facetIDs,
-                               HashMap<String, String[]> fields,
-                               Structure structure) {
+    public FacetResultExternal(HashMap<String, Integer> maxTags, HashMap<String, Integer> facetIDs, HashMap<String,
+            String[]> fields, Structure structure) {
         super(maxTags, facetIDs);
         this.fields = fields;
         this.structure = structure;
@@ -76,7 +74,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         if (fields.length > 1) {
             sw.append("(");
         }
-        for (int i = 0 ; i < fields.length ; i++) {
+        for (int i = 0; i < fields.length; i++) {
             sw.append(fields[i]);
             sw.append(":\"");
             sw.append(XMLUtil.encode(queryEscapeTag(cleanTag)));
@@ -120,14 +118,11 @@ public class FacetResultExternal extends FacetResultImpl<String> {
             return;
         }
         super.merge(otherResponse);
-        for (Map.Entry<String, String[]> otherField:
-                ((FacetResultExternal)otherResponse).getFields().entrySet()) {
+        for (Map.Entry<String, String[]> otherField : ((FacetResultExternal) otherResponse).getFields().entrySet()) {
             if (!fields.containsKey(otherField.getKey())) {
                 fields.put(otherField.getKey(), otherField.getValue());
             } else {
-                fields.put(otherField.getKey(),
-                           mergeArrays(fields.get(otherField.getKey()),
-                                       otherField.getValue()));
+                fields.put(otherField.getKey(), mergeArrays(fields.get(otherField.getKey()), otherField.getValue()));
             }
         }
     }
@@ -137,7 +132,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
             return one;
         }
         List<String> merged = Arrays.asList(one);
-        for (String t: two) {
+        for (String t : two) {
             if (!merged.contains(t)) {
                 merged.add(t);
             }
@@ -149,59 +144,56 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
     /**
      * Renames the facet. and the field-names according to the map.
+     *
      * @param map oldName -> newName for facets and fields.
      */
     @Override
     public void renameFacetsAndFields(Map<String, String> map) {
-        HashMap<String, String[]> newFields =
-            new HashMap<String, String[]>(fields.size());
-        for (Map.Entry<String, String[]> entry: fields.entrySet()) {
-            newFields.put(adjust(map, entry.getKey()),
-                          adjust(map, entry.getValue()));
+        HashMap<String, String[]> newFields = new HashMap<String, String[]>(fields.size());
+        for (Map.Entry<String, String[]> entry : fields.entrySet()) {
+            newFields.put(adjust(map, entry.getKey()), adjust(map, entry.getValue()));
         }
         fields = newFields;
         super.renameFacetsAndFields(map);
     }
 
-    private static class AlphaComparator implements Comparator<Tag<String>>{
-    	private Collator collator = null;
-    	public AlphaComparator(String locale) {
-    		if (locale != null) {
-    			collator = Collator.getInstance(new Locale(locale)); 
-    		}
-    	}
-		@Override
-		public int compare(Tag<String> t1,Tag<String> t2) {
-			if (collator == null) {
-				return t1.getKey().compareTo(t2.getKey());
-			}
-			return collator.compare(t1.getKey(), t2.getKey());
-		}
+    private static class AlphaComparator implements Comparator<Tag<String>> {
+        private Collator collator = null;
+
+        public AlphaComparator(String locale) {
+            if (locale != null) {
+                collator = Collator.getInstance(new Locale(locale));
+            }
+        }
+
+        @Override
+        public int compare(Tag<String> t1, Tag<String> t2) {
+            if (collator == null) {
+                return t1.getKey().compareTo(t2.getKey());
+            }
+            return collator.compare(t1.getKey(), t2.getKey());
+        }
     }
 
-    private static class PopularityComparator implements Comparator<Tag<String>>{
+    private static class PopularityComparator implements Comparator<Tag<String>> {
 
-		@Override
-		public int compare(
-				Tag<String> t1,
-				Tag<String> t2) {
-			return t2.getCount()-t1.getCount();  //Highest number first. (descending)
-		}
+        @Override
+        public int compare(Tag<String> t1, Tag<String> t2) {
+            return t2.getCount() - t1.getCount();  //Highest number first. (descending)
+        }
     }
-	@Override
-	protected Comparator<Tag<String>> getTagComparator(String facet) {
-		FacetStructure fc = structure.getFacet(facet);
-		if (fc == null || !FacetStructure.SORT_ALPHA.equals(fc.getSortType())) {
-			return new PopularityComparator();
-		}
-		return new AlphaComparator(fc.getLocale());
-	}
 
-	@Override
-	protected List<String> getFacetNames() {
-		return structure.getFacetNames();
-	}
-    
-    
+    @Override
+    protected Comparator<Tag<String>> getTagComparator(String facet) {
+        FacetStructure fc = structure.getFacet(facet);
+        if (fc == null || !FacetStructure.SORT_ALPHA.equals(fc.getSortType())) {
+            return new PopularityComparator();
+        }
+        return new AlphaComparator(fc.getLocale());
+    }
+
+    @Override
+    protected List<String> getFacetNames() {
+        return structure.getFacetNames();
+    }
 }
-

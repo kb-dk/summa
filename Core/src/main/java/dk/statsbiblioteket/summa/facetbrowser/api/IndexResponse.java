@@ -43,8 +43,7 @@ public class IndexResponse extends ResponseImpl {
     private static final long serialVersionUID = 798434168190L;
     private static Log log = LogFactory.getLog(IndexResponse.class);
 
-    public static final String INDEX_RESPONSE_NAMESPACE =
-            "http://statsbiblioteket.dk/summa/2009/IndexResponse";
+    public static final String INDEX_RESPONSE_NAMESPACE = "http://statsbiblioteket.dk/summa/2009/IndexResponse";
     public static final String NAME = "IndexResponse";
 
     private final IndexRequest request;
@@ -69,17 +68,16 @@ public class IndexResponse extends ResponseImpl {
      * </p><p>
      * Note that a cleanup will be performed when {@link #toXML()} is called,
      * so the order and exact number of terms added is not significant.
+     *
      * @param term the term to add to the index (a pir of String an occurrence
-     *        count.
+     *             count.
      */
     public void addTerm(Pair<String, Integer> term) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                    "Adding term '%s' to field '%s'", term, request.getField()));
+            log.trace(String.format("Adding term '%s' to field '%s'", term, request.getField()));
         }
         if (term.getKey() == null) {
-            log.warn("addTerm was called with null as term. Modifying to the "
-                     + "String 'null'");
+            log.warn("addTerm was called with null as term. Modifying to the " + "String 'null'");
             term.setKey("null");
         }
         if (term.getValue() == null) {
@@ -96,6 +94,7 @@ public class IndexResponse extends ResponseImpl {
 
     /**
      * Used exclusively for merging.
+     *
      * @return the index of terms.
      */
     ArrayList<Pair<String, Integer>> getIndex() {
@@ -104,21 +103,21 @@ public class IndexResponse extends ResponseImpl {
 
     /**
      * Merge the other SearchResult into this result.
+     *
      * @param other the index lookup result that should be merged into this.
      */
     @Override
     public void merge(Response other) {
         log.trace("Index-lookup merge called");
         if (!(other instanceof IndexResponse)) {
-            throw new IllegalArgumentException(String.format(
-                    "Expected index response of class '%s' but got '%s'",
-                    getClass().toString(), other.getClass().toString()));
+            throw new IllegalArgumentException(String.format("Expected index response of class '%s' but got '%s'",
+                                                             getClass().toString(), other.getClass().toString()));
         }
         super.merge(other);
-        IndexResponse indexResponse = (IndexResponse)other;
+        IndexResponse indexResponse = (IndexResponse) other;
         outer:
-        for (Pair<String, Integer> oPair: indexResponse.getIndex()) {
-            for (Pair<String, Integer> tPair: getIndex()) {
+        for (Pair<String, Integer> oPair : indexResponse.getIndex()) {
+            for (Pair<String, Integer> tPair : getIndex()) {
                 if (oPair.getKey().equals(tPair.getKey())) {
                     tPair.setValue(tPair.getValue() + oPair.getValue());
                     continue outer;
@@ -128,37 +127,39 @@ public class IndexResponse extends ResponseImpl {
         }
     }
 
-    private static class SensitiveComparator implements
-                               Comparator<Pair<String, Integer>>, Serializable {
+    private static class SensitiveComparator implements Comparator<Pair<String, Integer>>, Serializable {
         private static final long serialVersionUID = 798341696165L;
         private Collator collator = null;
+
         public SensitiveComparator(Collator collator) {
             this.collator = collator;
         }
-        public SensitiveComparator() { }
+
+        public SensitiveComparator() {
+        }
 
         @Override
         public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
-            return collator == null ?
-                   o1.getKey().compareTo(o2.getKey()) :
-                   collator.compare(o1.getKey(), o2.getKey());
+            return collator == null ? o1.getKey().compareTo(o2.getKey()) : collator.compare(o1.getKey(), o2.getKey());
         }
     }
-    private static class InSensitiveComparator implements
-                               Comparator<Pair<String, Integer>>, Serializable {
+
+    private static class InSensitiveComparator implements Comparator<Pair<String, Integer>>, Serializable {
         private static final long serialVersionUID = 7984368165L;
         private Collator collator = null;
+
         public InSensitiveComparator(Collator collator) {
             this.collator = collator;
         }
-        public InSensitiveComparator() { }
+
+        public InSensitiveComparator() {
+        }
 
         @Override
         public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
             return collator == null ?
                    o1.getKey().compareToIgnoreCase(o2.getKey()) :
-                   collator.compare(o1.getKey().toLowerCase(),
-                                    o2.getKey().toLowerCase());
+                   collator.compare(o1.getKey().toLowerCase(), o2.getKey().toLowerCase());
         }
     }
 
@@ -171,43 +172,40 @@ public class IndexResponse extends ResponseImpl {
         log.trace("clean() called");
         if (sorter == null) { // Create sorters
             if (request.getLocale() == null) {
-                sorter = request.isCaseSensitive()
-                         ? new SensitiveComparator()
-                         : new InSensitiveComparator();
+                sorter = request.isCaseSensitive() ? new SensitiveComparator() : new InSensitiveComparator();
             } else {
-                Collator collator = new NamedCollatorComparator(
-                    request.getLocale()).getCollator();
-                sorter = request.isCaseSensitive()
-                         ? new SensitiveComparator(collator)
-                         : new InSensitiveComparator(collator);
+                Collator collator = new NamedCollatorComparator(request.getLocale()).getCollator();
+                sorter = request.isCaseSensitive() ?
+                         new SensitiveComparator(collator) :
+                         new InSensitiveComparator(collator);
             }
         }
         Collections.sort(index, sorter);
         int start = Math.max(0, getOrigo() + request.getDelta());
-        index = new ArrayList<Pair<String, Integer>>(index.subList(
-                start, Math.min(index.size(), start + request.getLength())));
+        index = new ArrayList<Pair<String, Integer>>(
+                index.subList(start, Math.min(index.size(), start + request.getLength())));
     }
 
     private int getOrigo() {
-        int origo = Collections.binarySearch(
-            index, new Pair<String, Integer>(request.getTerm(), 0), sorter);
+        int origo = Collections.binarySearch(index, new Pair<String, Integer>(request.getTerm(), 0), sorter);
         return origo < 0 ? (origo + 1) * -1 : origo;
     }
 
     /**
      * {@code
-    <indexresponse xmlns="http://statsbiblioteket.dk/summa/2009/IndexResponse"
-                   field="author" term="hugo" caseSensitive="false"
-                   delta="-2" length="5" origo="2">
-        <index>
-            <term>birger</term>
-            <term>carsten</term>
-            <term>hugo</term>
-            <term>lars</term>
-            <term>melanie</term>
-        </index>
-    </indexresponse>
-       }
+     * <indexresponse xmlns="http://statsbiblioteket.dk/summa/2009/IndexResponse"
+     * field="author" term="hugo" caseSensitive="false"
+     * delta="-2" length="5" origo="2">
+     * <index>
+     * <term>birger</term>
+     * <term>carsten</term>
+     * <term>hugo</term>
+     * <term>lars</term>
+     * <term>melanie</term>
+     * </index>
+     * </indexresponse>
+     * }
+     *
      * @return the search-result as XML, suitable for web-services et al.
      */
     @Override
@@ -230,29 +228,22 @@ public class IndexResponse extends ResponseImpl {
             }
             xmlOut.writeAttribute("field", request.getField());
             xmlOut.writeAttribute("term", request.getTerm());
-            xmlOut.writeAttribute("caseSensitive",
-                                  Boolean.toString(request.isCaseSensitive()));
+            xmlOut.writeAttribute("caseSensitive", Boolean.toString(request.isCaseSensitive()));
             if (request.getLocale() != null) {
-                xmlOut.writeAttribute(
-                    "sortlocale", request.getLocale().toString());
+                xmlOut.writeAttribute("sortlocale", request.getLocale().toString());
             }
-            xmlOut.writeAttribute(
-                "delta", Integer.toString(request.getDelta()));
-            xmlOut.writeAttribute(
-                "length", Integer.toString(request.getLength()));
+            xmlOut.writeAttribute("delta", Integer.toString(request.getDelta()));
+            xmlOut.writeAttribute("length", Integer.toString(request.getLength()));
             xmlOut.writeAttribute("origo", Integer.toString(getOrigo()));
-            xmlOut.writeAttribute(
-                "mincount", Integer.toString(request.getMinCount()));
-            xmlOut.writeAttribute(
-                TIMING, getTiming());
+            xmlOut.writeAttribute("mincount", Integer.toString(request.getMinCount()));
+            xmlOut.writeAttribute(TIMING, getTiming());
             xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("index");
             xmlOut.writeCharacters("\n");
-            for (Pair<String, Integer> term: index) {
+            for (Pair<String, Integer> term : index) {
                 xmlOut.writeStartElement("term");
-                xmlOut.writeAttribute(
-                    "count", Integer.toString(term.getValue()));
+                xmlOut.writeAttribute("count", Integer.toString(term.getValue()));
                 xmlOut.writeCharacters(term.getKey());
                 xmlOut.writeEndElement();
                 xmlOut.writeCharacters("\n");
@@ -267,8 +258,7 @@ public class IndexResponse extends ResponseImpl {
 //            xmlOut.writeEndDocument();
 //            xmlOut.writeCharacters("\n");
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Unexpected XMLStreamException in toXML()", e);
+            throw new RuntimeException("Unexpected XMLStreamException in toXML()", e);
         }
 
         log.trace("Returning XML from toXML()");

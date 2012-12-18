@@ -50,8 +50,9 @@ import java.util.regex.Pattern;
  * </p><p>
  * Warning: The FileReader does not check for cyclic folders structures.
  * </p><p>
+ *
  * @deprecated {@link ArchiveReader} has the same functionality as FileReader
- * and furthermore supports packed content (ZIP, tar, gz...).
+ *             and furthermore supports packed content (ZIP, tar, gz...).
  */
 // TODO Make the FileReader handle cyclic folder structures
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -85,6 +86,7 @@ public class FileReader extends FileSystemReader {
     /**
      * Sets up the properties for the FileReader. Scanning for files are
      * postponed until the first read() or pump() is called.
+     *
      * @param configuration the setup for the FileReader. See the CONF-constants
      *                      for available properties.
      */
@@ -98,8 +100,7 @@ public class FileReader extends FileSystemReader {
             } else {
                 log.trace("Got root-property '" + rootString + "'");
                 root = new File(rootString).getAbsoluteFile();
-                log.debug("Setting root to '" + root + "' from value '"
-                          + rootString + "'");
+                log.debug("Setting root to '" + root + "' from value '" + rootString + "'");
                 if (!root.exists()) {
                     //noinspection DuplicateStringLiteralInspection
                     log.warn("Root '" + root + "' does not exist");
@@ -107,35 +108,27 @@ public class FileReader extends FileSystemReader {
             }
             todo.add(root);
         } catch (Exception e) {
-            throw new ConfigurationException(
-                    "No root specified for key " + CONF_ROOT_FOLDER);
+            throw new ConfigurationException("No root specified for key " + CONF_ROOT_FOLDER);
         }
-        recursive = configuration.getBoolean(CONF_RECURSIVE,
-                                             DEFAULT_RECURSIVE);
-        reverseSort = configuration.getBoolean(
-                CONF_REVERSE_SORT, reverseSort);
+        recursive = configuration.getBoolean(CONF_RECURSIVE, DEFAULT_RECURSIVE);
+        reverseSort = configuration.getBoolean(CONF_REVERSE_SORT, reverseSort);
         filePattern = Pattern.compile(configuration.
                 getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
         postfix = configuration.getString(CONF_COMPLETED_POSTFIX, postfix);
-        log.info("FileReader created. Root: '" + root
-                 + "', recursive: " + recursive
-                 + ", file pattern: '" + filePattern.pattern()
-                 + "', completed postfix: '" + postfix + "'");
+        log.info("FileReader created. Root: '" + root + "', recursive: " + recursive + ", file pattern: '"
+                 + filePattern.pattern() + "', completed postfix: '" + postfix + "'");
     }
 
     @Override
     public void setSource(Filter source) {
-        throw new UnsupportedOperationException(String.format(
-                "A %s must be positioned at the start of a filter chain",
-                getClass().getName()));
+        throw new UnsupportedOperationException(String.format("A %s must be positioned at the start of a filter chain",
+                                                              getClass().getName()));
     }
 
     private FileFilter dataAndFolderFilter = new FileFilter() {
         @Override
         public boolean accept(File pathname) {
-            return pathname.canRead()
-                   && (pathname.isDirectory()
-                       ||  filePattern.matcher(pathname.getName()).matches())
+            return pathname.canRead() && (pathname.isDirectory() || filePattern.matcher(pathname.getName()).matches())
                    && !alreadyHandled(pathname);
         }
     };
@@ -146,7 +139,9 @@ public class FileReader extends FileSystemReader {
             return o1.getName().compareTo(o2.getName());
         }
     };
-    /** If the first File in the to do list is a file or the to do list is
+
+    /**
+     * If the first File in the to do list is a file or the to do list is
      * empty, do nothing. Else expand the first File (which is logically a
      * folder since it is not a file), add the expansion to the start of the
      * to do list and call updateTodo again.
@@ -157,11 +152,10 @@ public class FileReader extends FileSystemReader {
      * </p><p>
      * When the call exits, the to do list will either be empty or contain a
      * file as the first entry.
-     **/
+     */
     protected synchronized void updateToDo() {
         if (log.isTraceEnabled()) {
-            log.trace("updateTodo() called with first todo-element: "
-                      + (!todo.isEmpty() ? todo.get(0) : "NA"));
+            log.trace("updateTodo() called with first todo-element: " + (!todo.isEmpty() ? todo.get(0) : "NA"));
         }
         while (true) {
             File start = null;
@@ -173,8 +167,7 @@ public class FileReader extends FileSystemReader {
                 // The first File is a folder
                 start = todo.remove(0);
                 if (!recursive) { // No expansion, just skip it
-                    log.debug("Skipping folder '" + start
-                              + "' as recursion is not enabled");
+                    log.debug("Skipping folder '" + start + "' as recursion is not enabled");
                     continue;
                 }
 
@@ -189,23 +182,22 @@ public class FileReader extends FileSystemReader {
                     ArrayUtil.reverse(files);
                 }
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("Queueing " + files.length + " files or folders from "
-                          + "'" + start + "'. Queue size before: "
-                          + todo.size());
+                log.debug(
+                        "Queueing " + files.length + " files or folders from " + "'" + start + "'. Queue size before: "
+                        + todo.size());
                 if (log.isTraceEnabled()) {
-                    Logs.log(log, Logs.Level.TRACE, "Queueing Files: ",
-                            Arrays.toString(files));
+                    Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", Arrays.toString(files));
                 }
                 todo.addAll(0, Arrays.asList(files));
             } catch (Exception e) {
-                log.warn("Could not process '" + start + ". Skipping: "
-                         + e.getMessage(), e);
+                log.warn("Could not process '" + start + ". Skipping: " + e.getMessage(), e);
             }
         }
     }
 
     /**
      * Adds the root to to do list and updates it.
+     *
      * @param root the starting point for the to do.
      */
     protected synchronized void updateToDo(File root) {
@@ -219,6 +211,7 @@ public class FileReader extends FileSystemReader {
      * Checks whether the file has been encountered before and remembers it
      * for subsequent checks if it hasn't.
      * If the File is a directory is is always considered not handled.
+     *
      * @param file a file to check.
      * @return true if the file has been encountered before.
      */
@@ -242,6 +235,7 @@ public class FileReader extends FileSystemReader {
     /**
      * Opens the next file in {@link #todo} and produces a Payload with a
      * stream to the file content.
+     *
      * @return a Payload with a stream for the next file or null if no further
      *         files are available.
      */
@@ -260,6 +254,7 @@ public class FileReader extends FileSystemReader {
     /**
      * Wrap the current file in a Payload with a RenamingFilestream.
      * When the Payload is closed, the file will be renamed automatically.
+     *
      * @param current a file to wrap.
      * @return a Payload with a stream for the file.
      */
@@ -276,8 +271,7 @@ public class FileReader extends FileSystemReader {
             return payload;
         } catch (FileNotFoundException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("Could not locate '" + current
-                      + "'. Skipping to next file");
+            log.error("Could not locate '" + current + "'. Skipping to next file");
             return next();
         }
     }
@@ -298,8 +292,7 @@ public class FileReader extends FileSystemReader {
         //noinspection DuplicateStringLiteralInspection
         closeDelivered(success);
         if (!todo.isEmpty()) {
-            log.debug("When closing, " + todo.size()
-                      + " files remained in queue");
+            log.debug("When closing, " + todo.size() + " files remained in queue");
             todo.clear();
         }
         // Note: if success, some streams might still be open.
@@ -307,37 +300,29 @@ public class FileReader extends FileSystemReader {
 
     protected void closeDelivered(boolean success) {
         synchronized (delivered) {
-            for (Payload payload: delivered) {
+            for (Payload payload : delivered) {
                 if (log.isTraceEnabled()) {
-                    log.trace("closedelivered(): Calling close(" + success
-                              + ") on " + payload);
+                    log.trace("closedelivered(): Calling close(" + success + ") on " + payload);
                 }
                 if (payload.getStream() == null) {
-                    log.warn("Can not close payload " + payload.getId()
-                             + ": Payload has no stream");
+                    log.warn("Can not close payload " + payload.getId() + ": Payload has no stream");
                     continue;
                 }
                 if (!(payload.getStream() instanceof RenamingFileStream)) {
-                    log.debug("RenamingFilestream not located when closing "
-                              + "payload " + payload.getId() + ". Got: "
+                    log.debug("RenamingFilestream not located when closing " + "payload " + payload.getId() + ". Got: "
                               + payload.getStream().getClass().getName());
                 } else {
-                    RenamingFileStream stream =
-                            (RenamingFileStream)payload.getStream();
-                    log.debug("Closing stream " + stream.getFile()
-                              + " with success: " + success);
+                    RenamingFileStream stream = (RenamingFileStream) payload.getStream();
+                    log.debug("Closing stream " + stream.getFile() + " with success: " + success);
                     stream.setSuccess(success);
                 }
-                Logging.logProcess("FileReader",
-                                   "Calling close in closeDelivered",
-                                   Logging.LogLevel.TRACE, payload);
+                Logging.logProcess("FileReader", "Calling close in closeDelivered", Logging.LogLevel.TRACE, payload);
                 payload.close(); // TODO: Do we want close always?
                 if (!success) {  // Or only on failure?
                     // Force close
                     log.debug("Forcing close on payload " + payload);
                     //noinspection DuplicateStringLiteralInspection
-                    Logging.logProcess("IndexControllerImpl",
-                                       "Calling close with success = false",
+                    Logging.logProcess("IndexControllerImpl", "Calling close with success = false",
                                        Logging.LogLevel.WARN, payload);
                     payload.close();
                 }
@@ -351,12 +336,13 @@ public class FileReader extends FileSystemReader {
      * embedded streams. When all streams are emptied, a new payload is created.
      * </p><p>
      * This is a heavy process if there are a lot of files.
+     *
      * @return true if pumping should continue, in order to process all data.
      * @throws IOException in case of read errors.
      */
     @Override
     public synchronized boolean pump() throws IOException {
-        for (Payload payload: delivered) {
+        for (Payload payload : delivered) {
             if (payload.pump()) {
                 return true;
             }
@@ -365,6 +351,7 @@ public class FileReader extends FileSystemReader {
     }
 
     /* Interface implementations */
+
     /**
      * {@inheritDoc}
      */
@@ -377,8 +364,9 @@ public class FileReader extends FileSystemReader {
     /**
      * Return the empty state of the number of folders/files ready to be
      * processed.
+     *
      * @return True if the number of folders/files ready to be precessed are
-     * empty, false otherwise
+     *         empty, false otherwise
      */
     protected synchronized boolean isTodoEmpty() {
         log.trace("idTodoEmpty(): todo-size: " + todo.size());

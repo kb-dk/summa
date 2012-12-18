@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.ingest.split;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,26 +30,28 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XMLSplitterFilter extends StreamController {
-    /** Local logger instance. */
+    /**
+     * Local logger instance.
+     */
     private static Log log = LogFactory.getLog(XMLSplitterFilter.class);
 
     /**
      * The prefix to prepend to the extracted Record-ids.
      * </p><p>
      * Optional. Default is "".
+     *
      * @see #EXPAND_FOLDER
      */
-    public static final String CONF_ID_PREFIX =
-            "summa.ingest.xmlsplitter.idprefix";
+    public static final String CONF_ID_PREFIX = "summa.ingest.xmlsplitter.idprefix";
 
     /**
      * The postfix to append to the extracted Record-ids.
      * </p><p>
      * Optional. Default is "".
+     *
      * @see #EXPAND_FOLDER
      */
-    public static final String CONF_ID_POSTFIX =
-            "summa.ingest.xmlsplitter.idpostfix";
+    public static final String CONF_ID_POSTFIX = "summa.ingest.xmlsplitter.idpostfix";
 
     /**
      * If this String is used inside {@link #CONF_ID_PREFIX} or
@@ -58,8 +59,7 @@ public class XMLSplitterFilter extends StreamController {
      * replace the String. If ORIGIN is not present, the String will be replaced
      * with "".
      * </p></p>
-     * Example: An XMLSplitterFilter is positioned after a
-     * {@link dk.statsbiblioteket.summa.ingest.stream.FileReader}.
+     * Example: An XMLSplitterFilter is positioned after a FileReader.
      * FileReader adds the folder for the fetched file as the meta-data element
      * {@link dk.statsbiblioteket.summa.common.filter.Payload#ORIGIN}.
      * If the ORIGIN is "/home/summa/data/mysource/specialfolder/somefile.xml",
@@ -72,26 +72,25 @@ public class XMLSplitterFilter extends StreamController {
      * will not have the prefix prepended.
      * </p><p>
      * Example: Prefix is "foo:" and collapse is true:<br />
-     *          "barbarella"   => "foo:barbarella"<br />
-     *          "foo:fighters" => "foo:fighters"<br />
-     *          Prefix is "foo:" and collapse is false:<br />
-     *          "barbarella"   => "foo:barbarella"<br />
-     *          "foo:fighters" => "foo:foo:fighters"<br />
+     * "barbarella"   => "foo:barbarella"<br />
+     * "foo:fighters" => "foo:fighters"<br />
+     * Prefix is "foo:" and collapse is false:<br />
+     * "barbarella"   => "foo:barbarella"<br />
+     * "foo:fighters" => "foo:foo:fighters"<br />
      * </p><p>
      * Default: "true".
      */
-    public static final String CONF_COLLAPSE_PREFIX =
-            "summa.ingest.xmlsplitter.collapseprefix";
+    public static final String CONF_COLLAPSE_PREFIX = "summa.ingest.xmlsplitter.collapseprefix";
 
     /**
      * If true, extracted ids which beginning matches {@link #CONF_ID_POSTFIX}
      * will not have the postfix appended.
      * </p><p>
      * Default: "true".
+     *
      * @see #CONF_COLLAPSE_PREFIX
      */
-    public static final String CONF_COLLAPSE_POSTFIX =
-            "summa.ingest.xmlsplitter.collapsepostfix";
+    public static final String CONF_COLLAPSE_POSTFIX = "summa.ingest.xmlsplitter.collapsepostfix";
 
 
     /**
@@ -101,8 +100,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Default: "record".
      */
-    public static final String CONF_RECORD_ELEMENT =
-            "summa.ingest.xmlsplitter.recordelement";
+    public static final String CONF_RECORD_ELEMENT = "summa.ingest.xmlsplitter.recordelement";
 
     /**
      * The XML namespace of the RECORD element matched by
@@ -112,8 +110,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Default: {@code null}.
      */
-    public static final String CONF_RECORD_NAMESPACE =
-            "summa.ingest.xmlsplitter.recordelementnamespace";
+    public static final String CONF_RECORD_NAMESPACE = "summa.ingest.xmlsplitter.recordelementnamespace";
 
     /**
      * The id-element containing the id for a given record. The element must be
@@ -122,7 +119,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Example 1: "foo" matches <foo>myid</foo> and returns myid.<br />
      * Example 2: "foo#bar" matches <foo bar="myid">whatever</foo> and returns
-     *             myid.<br />
+     * myid.<br />
      * </p><p>
      * The element can be qualified or non-qualified. Non-qualified ids will
      * match qualified documents, but not the other way around.
@@ -135,8 +132,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Optional. Default: "id".
      */
-    public static final String CONF_ID_ELEMENT =
-            "summa.ingest.xmlsplitter.idelement";
+    public static final String CONF_ID_ELEMENT = "summa.ingest.xmlsplitter.idelement";
 
     /**
      * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
@@ -145,8 +141,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Default: {@code null}.
      */
-    public static final String CONF_ID_NAMESPACE =
-            "summa.ingest.xmlsplitter.idelementnamespace";
+    public static final String CONF_ID_NAMESPACE = "summa.ingest.xmlsplitter.idelementnamespace";
 
     /**
      * The base for the constructed Records.
@@ -161,8 +156,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Default: "true".
      */
-    public static final String CONF_PRESERVE_NAMESPACES =
-            "summa.ingest.xmlsplitter.preservenamespaces";
+    public static final String CONF_PRESERVE_NAMESPACES = "summa.ingest.xmlsplitter.preservenamespaces";
 
     /**
      * If true, the XML-blocks must be valid. That means, other than being
@@ -175,8 +169,7 @@ public class XMLSplitterFilter extends StreamController {
      * </p><p>
      * Default: "false".
      */
-    public static final String CONF_REQUIRE_VALID =
-            "summa.ingest.xmlsplitter.requirevalid";
+    public static final String CONF_REQUIRE_VALID = "summa.ingest.xmlsplitter.requirevalid";
 
     // TODO Properties with default namespaces?
 
@@ -187,6 +180,7 @@ public class XMLSplitterFilter extends StreamController {
 
     /**
      * Creates an XMLSplitterFilter based on the given configuration.
+     *
      * @param conf The configuration.
      */
     public XMLSplitterFilter(Configuration conf) {
@@ -195,8 +189,7 @@ public class XMLSplitterFilter extends StreamController {
     }
 
     @Override
-    protected final Class<? extends StreamParser>
-                                                 getDefaultStreamParserClass() {
+    protected final Class<? extends StreamParser> getDefaultStreamParserClass() {
         return XMLSplitterParser.class;
     }
 }

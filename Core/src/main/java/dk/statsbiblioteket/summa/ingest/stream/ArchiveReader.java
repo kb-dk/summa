@@ -63,9 +63,8 @@ public class ArchiveReader extends FileSystemReader {
 
         String rootString = conf.getString(CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
-            throw new Configurable.ConfigurationException(String.format(
-                "No root. This must be specified with %s",
-                CONF_ROOT_FOLDER));
+            throw new Configurable.ConfigurationException(String.format("No root. This must be specified with %s", 
+                                                                        CONF_ROOT_FOLDER));
         }
         log.trace("Got root-property '" + rootString + "'");
         TFile root = new TFile(rootString).getAbsoluteFile();
@@ -83,15 +82,14 @@ public class ArchiveReader extends FileSystemReader {
             provider = new FileContainer(null, root, false, realPostfix, filePattern, reverseSort);
         }
 
-        log.info("ArchiveReader created. Root: '" + root + "', recursive: " + recursive
-                 + ", file pattern: '" + filePattern.pattern() + "', completed postfix: '" + postfix + "'");
+        log.info("ArchiveReader created. Root: '" + root + "', recursive: " + recursive + ", file pattern: '"
+                 + filePattern.pattern() + "', completed postfix: '" + postfix + "'");
     }
 
     @Override
     public void setSource(Filter source) {
         throw new UnsupportedOperationException(String.format(
-                "A %s must be positioned at the start of a filter chain",
-                getClass().getName()));
+                "A %s must be positioned at the start of a filter chain", getClass().getName()));
     }
 
     @Override
@@ -106,7 +104,9 @@ public class ArchiveReader extends FileSystemReader {
         if (hasNext()) {
             Payload next = next();
             //noinspection StatementWithEmptyBody
-            while (next.pump()); // Empty the Payload
+            while (next.pump()) {
+                 // Empty the Payload
+            }
         }
         return hasNext();
     }
@@ -125,8 +125,7 @@ public class ArchiveReader extends FileSystemReader {
 
     private static final List<FileProvider> EMPTY = new ArrayList<FileProvider>(0);
 
-    private static abstract class FileProvider
-        implements Iterator<Payload> {
+    private static abstract class FileProvider implements Iterator<Payload> {
         /**
          * Optional parent (folder or archive).
          */
@@ -141,21 +140,20 @@ public class ArchiveReader extends FileSystemReader {
          * consequence is that no renaming will take place on close.
          */
         protected final boolean inArchive;
-        
+
         protected final String postfix;
-        
+
         private boolean isRenamed = false;
         private boolean allOK = true;
         private static int warnCount = 0; // Not the cleanest design as it works badly with multiple ArchiveReaders
 
-        private FileProvider(FileProvider parent, TFile root, boolean inArchive, 
-                             String postfix) {
+        private FileProvider(FileProvider parent, TFile root, boolean inArchive, String postfix) {
             this.parent = parent;
             this.root = root;
             this.inArchive = inArchive;
             this.postfix = postfix;
         }
-        
+
         public synchronized void cleanup() {
             umount(root);
             if (parent != null) {
@@ -164,12 +162,12 @@ public class ArchiveReader extends FileSystemReader {
         }
 
         private void umount(TFile file) {
-            if (root != null) {
+            if (file != null) {
                 try {
-                    TVFS.umount(root);
+                    TVFS.umount(file);
                 } catch (FsSyncException e) {
                     if (warnCount++ < 10) {
-                        log.warn("Unable to umount file. This warning will be showed a max of 10 times. File: " + root,
+                        log.warn("Unable to umount file. This warning will be showed a max of 10 times. File: " + file,
                                  e);
                     }
                 }
@@ -178,16 +176,15 @@ public class ArchiveReader extends FileSystemReader {
 
         /**
          * @return true iff {@link #isSafeToRemove()} is true and the provider
-         * is a file or an archive, not embedded in another archive.
+         *         is a file or an archive, not embedded in another archive.
          */
         public boolean isSafeToRename() {
-            return isSafeToRemove() && !"".equals(postfix) && !inArchive
-                   && (root.isArchive() || root.isFile());
+            return isSafeToRemove() && !"".equals(postfix) && !inArchive && (root.isArchive() || root.isFile());
         }
 
         /**
          * @return true iff all files has been delivered as streams and all
-         * streams has been closed.
+         *         streams has been closed.
          */
         protected abstract boolean isSafeToRemove();
 
@@ -205,15 +202,12 @@ public class ArchiveReader extends FileSystemReader {
                 log.debug("No renaming of '" + root + "' as postfix is empty");
                 return;
             }
-            log.debug(String.format(
-                "%s: Renaming '%s' with completed postfix '%s'",
-                this.getClass().getSimpleName(), root.getAbsolutePath(),
-                postfix));
+            log.debug(String.format("%s: Renaming '%s' with completed postfix '%s'", this.getClass().getSimpleName(),
+                                    root.getAbsolutePath(), postfix));
             // We use File instead of TFile for rename to avoid folder creation
             File newFile = new File(root.getPath() + postfix);
             if (newFile.exists()) {
-                log.warn("A file with the name '" + newFile + "' already "
-                         + "exists. The file will be deleted");
+                log.warn("A file with the name '" + newFile + "' already exists. The file will be deleted");
                 if (!newFile.delete()) {
                     log.warn("Deletion of '" + newFile + "' was unsuccessful");
                 }
@@ -223,7 +217,7 @@ public class ArchiveReader extends FileSystemReader {
                     TVFS.umount(root);
                 }
             } catch (FsSyncException e) {
-                log.warn("Explicit umount of TFile("+ root.getAbsolutePath() + ") failed. This "
+                log.warn("Explicit umount of TFile(" + root.getAbsolutePath() + ") failed. This "
                          + "might leave non-renamed files", e);
             }
             if (!new File(root.getPath()).renameTo(newFile)) {
@@ -241,6 +235,7 @@ public class ArchiveReader extends FileSystemReader {
 
         /**
          * Premature close, allowing delivered Payloads to finish processing.
+         *
          * @param success if the close war benign.
          */
         public void close(boolean success) {
@@ -285,15 +280,13 @@ public class ArchiveReader extends FileSystemReader {
         private boolean finished = false;
         private boolean removed = false;
 
-        public SingleFile(FileProvider parent, TFile root, boolean inArchive,
-                          String postfix) {
+        public SingleFile(FileProvider parent, TFile root, boolean inArchive, String postfix) {
             super(parent, check(root), inArchive, postfix);
         }
 
         private static TFile check(TFile root) {
             if (!root.isFile()) {
-                throw new IllegalArgumentException(String.format(
-                    "The TFile '%s' was not a regular file", root));
+                throw new IllegalArgumentException(String.format("The TFile '%s' was not a regular file", root));
             }
             return root;
         }
@@ -306,16 +299,14 @@ public class ArchiveReader extends FileSystemReader {
         @Override
         public synchronized Payload next() {
             if (!hasNext()) {
-                throw new IllegalStateException(
-                    "hasNext() is false so no next() is allowed");
+                throw new IllegalStateException("hasNext() is false so no next() is allowed");
             }
             open = true;
             TFileInputStream stream;
             try {
                 stream = new TFileInputStream(root);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException(
-                    "Unable to open stream for '" + root + "'", e);
+                throw new RuntimeException("Unable to open stream for '" + root + "'", e);
             }
             // TODO: test implications of disabling auto close
             InputStream closingStream = new CloseCallbackStream(stream, false) {
@@ -397,16 +388,17 @@ public class ArchiveReader extends FileSystemReader {
 
         /**
          * Constructs a lazily expanded provider.
-         * @param parent    optional parent.
-         * @param root      the entry in the file system/archive hierarchy.
-         * @param inArchive if true, the provider resides in an archive and
-         *                  should never have its name changes as part of close.
-         * @param postfix   optional postfix for completed files.
+         *
+         * @param parent      optional parent.
+         * @param root        the entry in the file system/archive hierarchy.
+         * @param inArchive   if true, the provider resides in an archive and
+         *                    should never have its name changes as part of close.
+         * @param postfix     optional postfix for completed files.
          * @param filePattern the pattern that files must match to be streamed.
          * @param reverseSort if true, entries are expanded in reverse order.
          */
         public FileContainer(FileProvider parent, TFile root, boolean inArchive, String postfix, Pattern filePattern,
-                             boolean reverseSort){
+                             boolean reverseSort) {
             super(parent, checkContainer(root), inArchive, postfix);
             this.filePattern = filePattern;
             this.reverseSort = reverseSort;
@@ -420,6 +412,7 @@ public class ArchiveReader extends FileSystemReader {
         }
 
         int umountWarnCount = 0;
+
         private List<FileProvider> expand(TFile source) {
             if (source.isFile()) {
                 return EMPTY;
@@ -427,7 +420,7 @@ public class ArchiveReader extends FileSystemReader {
 //            System.out.println("Listing files for " + source);
             TFile[] files = source.listFiles();
             List<FileProvider> providers = new ArrayList<FileProvider>(files.length);
-            for (TFile file: files) {
+            for (TFile file : files) {
                 try {
                     if (postfix != null && file.getName().endsWith(postfix)) {
                         log.trace("Skipping '" + file.getName() + "' as it is marked with the completed postfix");
@@ -435,8 +428,9 @@ public class ArchiveReader extends FileSystemReader {
                     } else if (file.isDirectory() || file.isArchive()) {
 //                        System.out.println(" Adding folder " + file);
 
-                        providers.add(new FileContainer(this, file, inArchive || root.isArchive(), postfix,
-                                                        filePattern, reverseSort));
+                        providers.add(new FileContainer(this, file, inArchive
+                                                                    || root.isArchive(), postfix, filePattern, 
+                                                        reverseSort));
                     } else if (filePattern.matcher(file.getName()).matches()) {
 //                        System.out.println(" Adding file  " + file);
                         providers.add(new SingleFile(this, file, inArchive || root.isArchive(), postfix));
@@ -521,8 +515,8 @@ public class ArchiveReader extends FileSystemReader {
             cleanup(subs);
             cleanup(open);
             if (log.isTraceEnabled()) {
-                log.trace("Filecontainer: cleanUp() left " + subs.size() + " pending subs and "
-                          + open.size() + " open subs");
+                log.trace("Filecontainer: cleanUp() left " + subs.size() + " pending subs and " + open.size()
+                          + " open subs");
             }
             if (!isSafeToRemove()) {
                 return;
@@ -530,6 +524,7 @@ public class ArchiveReader extends FileSystemReader {
             rename();
             super.cleanup();
         }
+
         private void cleanup(List<FileProvider> p) {
             // Only remove until something unfinished is reached
             while (!p.isEmpty() && p.get(0).isSafeToRemove()) {
@@ -541,15 +536,12 @@ public class ArchiveReader extends FileSystemReader {
         @Override
         public synchronized Payload next() {
             if (!hasNext()) {
-                throw new IllegalStateException(
-                    "hasNext() is false so next() should not be called");
+                throw new IllegalStateException("hasNext() is false so next() should not be called");
             }
             if (!subs.isEmpty()) { // hasNext guarantees content in the first
                 return subs.get(0).next();
             }
-            throw new InternalError(
-                "There were no next in the first sub, but this was guaranteed "
-                + "by hasNext()");
+            throw new InternalError("There were no next in the first sub, but this was guaranteed by hasNext()");
         }
 
         @Override
@@ -561,10 +553,11 @@ public class ArchiveReader extends FileSystemReader {
         public synchronized void close(boolean success) {
             close(success, subs);
             close(success, open);
-            super.close(success);    
+            super.close(success);
         }
+
         private synchronized void close(boolean success, List<FileProvider> p) {
-            int index = p.size()-1;
+            int index = p.size() - 1;
             while (index >= 0) {
                 p.get(index--).close(success);
             }
