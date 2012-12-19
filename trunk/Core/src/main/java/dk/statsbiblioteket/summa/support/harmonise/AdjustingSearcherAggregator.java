@@ -91,7 +91,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     protected void preProcess(Request request) {
         if (sanitizer != null) {
             {
-                String query = request.getString(DocumentKeys.SEARCH_QUERY);
+                String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
                 if (query != null) {
                     QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(query);
                     log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
@@ -99,7 +99,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
                 }
             }
             {
-                String filter = request.getString(DocumentKeys.SEARCH_FILTER);
+                String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
                 if (filter!= null) {
                     QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
                     log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
