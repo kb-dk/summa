@@ -54,7 +54,6 @@ import java.util.concurrent.atomic.AtomicLong;
         author = "te")
 public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
-    private static Log queries = LogFactory.getLog("queries");
 
     /**
      * If a new search is requested and there is no free slots, the search

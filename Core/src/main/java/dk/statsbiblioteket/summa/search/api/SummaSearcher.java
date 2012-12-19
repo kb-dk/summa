@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 import java.io.IOException;
@@ -28,6 +30,8 @@ import java.io.IOException;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface SummaSearcher extends Configurable {
+
+    static final Log queries = LogFactory.getLog("queries");
 
     /**
      * The port on which the searcher service should communicate.

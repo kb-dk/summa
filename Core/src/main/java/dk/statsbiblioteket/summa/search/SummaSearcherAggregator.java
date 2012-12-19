@@ -20,6 +20,8 @@ import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -148,58 +150,83 @@ public class SummaSearcherAggregator implements SummaSearcher {
     // TODO: Add explicit handling of query rewriting for paging
     @Override
     public ResponseCollection search(Request request) throws IOException {
-        long startTime = System.nanoTime();
         if (log.isTraceEnabled()) {
             log.trace("Starting search for " + request);
         }
-        if (searchers.isEmpty()) {
-            throw new IOException("No remote summaSearchers connected");
-        }
-
-        long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L);
-        long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 0L);
-        if (startIndex > 0) {
-            if (log.isTraceEnabled()) {
-                log.debug(
-                    "Start index is " + startIndex + " and maxRecords is " + maxRecords
-                    + ". Setting startIndex=0 and maxRecords=" + (startIndex + maxRecords) + " for " + request);
+        long startTime = System.currentTimeMillis();
+        ResponseCollection merged = null;
+        boolean success = false;
+        try {
+            if (searchers.isEmpty()) {
+                throw new IOException("No remote summaSearchers connected");
             }
-            request.put(DocumentKeys.SEARCH_START_INDEX, 0);
-            request.put(DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
-        }
 
-        List<String> selected = request.getStrings(SEARCH_ACTIVE, defaultSearchers);
-        List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
-        for (Pair<String, SearchClient> searcher: searchers) {
-            if (selected.contains(searcher.getKey())) {
-                searchFutures.add(new Pair<String, Future<ResponseCollection>>(
-                    searcher.getKey(),
-                    executor.submit(new SearcherCallable(searcher.getKey(), searcher.getValue(), request))));
-            } else {
-                log.trace("search(...) skipping searcher " + searcher.getKey() + " as it is not asked for");
+            long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L);
+            long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 0L);
+            if (startIndex > 0) {
+                if (log.isTraceEnabled()) {
+                    log.trace(
+                            "Start index is " + startIndex + " and maxRecords is " + maxRecords
+                            + ". Setting startIndex=0 and maxRecords=" + (startIndex + maxRecords) + " for " + request);
+                }
+                request.put(DocumentKeys.SEARCH_START_INDEX, 0);
+                request.put(DocumentKeys.SEARCH_MAX_RECORDS, startIndex + maxRecords);
+            }
+
+            List<String> selected = request.getStrings(SEARCH_ACTIVE, defaultSearchers);
+            List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
+            for (Pair<String, SearchClient> searcher: searchers) {
+                if (selected.contains(searcher.getKey())) {
+                    searchFutures.add(new Pair<String, Future<ResponseCollection>>(
+                            searcher.getKey(),
+                            executor.submit(new SearcherCallable(searcher.getKey(), searcher.getValue(), request))));
+                } else {
+                    log.trace("search(...) skipping searcher " + searcher.getKey() + " as it is not asked for");
+                }
+            }
+            log.trace("All searchers started, collecting and waiting");
+
+
+            List<ResponseHolder> responses = new ArrayList<ResponseHolder>(searchFutures.size());
+            for (Pair<String, Future<ResponseCollection>> searchFuture: searchFutures) {
+                try {
+                    responses.add(new ResponseHolder(searchFuture.getKey(), request, searchFuture.getValue().get()));
+                } catch (InterruptedException e) {
+                    throw new IOException(
+                            "Interrupted while waiting for searcher result from " + searchFuture.getKey(), e);
+                } catch (ExecutionException e) {
+                    throw new IOException(
+                            "ExecutionException while requesting search result from " + searchFuture.getKey(), e);
+                } catch (Exception e) {
+                    throw new IOException("Exception while requesting search result from " + searchFuture.getKey(), e);
+                }
+            }
+            merged = merge(request, responses);
+            postProcessPaging(merged, startIndex, maxRecords);
+            log.debug("Finished search in " + (System.currentTimeMillis() - startTime) + " ms");
+            merged.addTiming("aggregator.searchandmergeall", (System.nanoTime() - startTime) / 1000000);
+            success = true;
+            return merged;
+        } finally {
+            if (merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
+                if (o instanceof DocIDCollector) {
+                    ((DocIDCollector)o).close();
+                }
+            }
+            if (queries.isInfoEnabled()) {
+                String hits = "N/A";
+                for (Response response: merged) {
+                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+                    }
+                }
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
+                              + hits + " hits. " + "Request was " + request.toString(true)
+                              + " with Timing(" + merged.getTiming() + ")");
             }
         }
-        log.trace("All searchers started, collecting and waiting");
-
-
-        List<ResponseHolder> responses = new ArrayList<ResponseHolder>(searchFutures.size());
-        for (Pair<String, Future<ResponseCollection>> searchFuture: searchFutures) {
-            try {
-                responses.add(new ResponseHolder(searchFuture.getKey(), request, searchFuture.getValue().get()));
-            } catch (InterruptedException e) {
-                throw new IOException("Interrupted while waiting for searcher result from " + searchFuture.getKey(), e);
-            } catch (ExecutionException e) {
-                throw new IOException("ExecutionException while requesting search result from " + searchFuture.getKey(),
-                                      e);
-            } catch (Exception e) {
-                throw new IOException("Exception while requesting search result from " + searchFuture.getKey(), e);
-            }
-        }
-        ResponseCollection merged = merge(request, responses);
-        postProcessPaging(merged, startIndex, maxRecords);
-        log.debug("Finished search in " + (System.nanoTime() - startTime) + " ns");
-        merged.addTiming("aggregator.searchandmergeall", (System.nanoTime() - startTime) / 1000000);
-        return merged;
     }
 
     public static class ResponseHolder {
