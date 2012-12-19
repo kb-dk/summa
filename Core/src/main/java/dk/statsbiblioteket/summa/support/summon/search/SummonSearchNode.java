@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.rmi.RemoteException;
@@ -639,9 +640,15 @@ public class SummonSearchNode extends SolrSearchNode {
             responses.addTiming(getID() + ".connect", summonConnect);
             responses.addTiming(getID() + ".rawcall", rawCall);
             
+        } catch (SocketTimeoutException e) {
+            String error = String.format(
+                "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) timed out",
+                target, content, date, idstring, sessionId);
+            log.warn(error, e);
+            throw new IOException(error, e);
         } catch (IOException e) {
             String error = String.format(
-                "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s failed with error stream\n%s",
+                "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
                 conn.getErrorStream() == null ? "N/A" :
                 Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
