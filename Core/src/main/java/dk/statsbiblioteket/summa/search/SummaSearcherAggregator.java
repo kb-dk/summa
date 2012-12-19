@@ -217,7 +217,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.warn(message, e);
             throw new IOException(message, e);
         } finally {
-            if (merged != null) {
+            if (merged == null) {
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
+                              + "Request was " + request.toString(true));
+            } else {
                 if (merged.getTransient() != null
                     && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);

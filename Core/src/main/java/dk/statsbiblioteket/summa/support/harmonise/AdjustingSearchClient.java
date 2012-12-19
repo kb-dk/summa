@@ -95,23 +95,29 @@ public class AdjustingSearchClient extends SearchClient {
             success = true;
             return responses;
         } finally {
-            if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
-                Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
-                if (o instanceof DocIDCollector) {
-                    ((DocIDCollector)o).close();
-                }
-            }
-            if (queries.isInfoEnabled()) {
-                String hits = "N/A";
-                for (Response response: responses) {
-                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
-                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+            if (responses == null) {
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + searchTime / 1000000 + "ms. " + "Request was " + request.toString(true));
+            } else {
+                if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                    Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
+                    if (o instanceof DocIDCollector) {
+                        ((DocIDCollector)o).close();
                     }
                 }
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + searchTime / 1000000 + "ms with " + hits + " hits. "
-                              + "Request was " + request.toString(true)
-                              + " with Timing(" + responses.getTiming() + ")");
+                if (queries.isInfoEnabled()) {
+                    String hits = "N/A";
+                    for (Response response: responses) {
+                        if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                            hits = Long.toString(((DocumentResponse)response).getHitCount());
+                        }
+                    }
+                    queries.info("Search finished "
+                                 + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                                 + " in " + searchTime / 1000000 + "ms with " + hits + " hits. "
+                                 + "Request was " + request.toString(true)
+                                 + " with Timing(" + responses.getTiming() + ")");
+                }
             }
 
         }
