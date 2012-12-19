@@ -643,6 +643,7 @@ public class SummonSearchNode extends SolrSearchNode {
             String error = String.format(
                 "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
+                conn.getErrorStream() == null ? "N/A" :
                 Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
             log.warn(error, e);
             throw new IOException(error, e);
