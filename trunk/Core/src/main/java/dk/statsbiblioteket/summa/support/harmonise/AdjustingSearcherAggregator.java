@@ -88,22 +88,25 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     }
 
     @Override
-    public ResponseCollection search(Request request) throws IOException {
+    protected void preProcess(Request request) {
         if (sanitizer != null) {
-            String query = request.getString(DocumentKeys.SEARCH_QUERY);
-            if (query != null) {
-                QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(query);
-                log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
-                request.put(DocumentKeys.SEARCH_QUERY, clean.getLastQuery());
+            {
+                String query = request.getString(DocumentKeys.SEARCH_QUERY);
+                if (query != null) {
+                    QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(query);
+                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                    request.put(DocumentKeys.SEARCH_QUERY, clean.getLastQuery());
+                }
             }
-            String filter = request.getString(DocumentKeys.SEARCH_FILTER);
-            if (query != null) {
-                QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
-                log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
-                request.put(DocumentKeys.SEARCH_FILTER, clean.getLastQuery());
+            {
+                String filter = request.getString(DocumentKeys.SEARCH_FILTER);
+                if (filter!= null) {
+                    QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
+                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                    request.put(DocumentKeys.SEARCH_FILTER, clean.getLastQuery());
+                }
             }
         }
-        return super.search(request);
     }
 
     @Override
@@ -121,16 +124,16 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     protected SearchClient createClient(Configuration searcherConf) {
         SearchClient searcher;
         if (searcherConf.getBoolean(
-            CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
+                CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
             log.debug("Creating adjusting search client with term stat based adjuster " + adjuster);
             searcher = new AdjustingSearchClient(searcherConf, adjuster);
             String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             String adjustID = ((AdjustingSearchClient)searcher).
-                getAdjuster().getId();
+                    getAdjuster().getId();
             if (!adjustID.equals(searcherName)) {
                 throw new ConfigurationException(
-                    "An AdjustingSearchClient was created with ID '" + adjustID + "' with an inner searcherID of '"
-                    + searcherName + "'. Equal designations are required");
+                        "An AdjustingSearchClient was created with ID '" + adjustID + "' with an inner searcherID of '"
+                        + searcherName + "'. Equal designations are required");
             }
             return searcher;
         }

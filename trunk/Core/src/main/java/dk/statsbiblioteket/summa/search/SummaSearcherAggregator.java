@@ -147,6 +147,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
         return merged;
     }
 
+    protected void preProcess(Request request) {
+        log.trace("No preprocessing for this node");
+    }
+
     // TODO: Add explicit handling of query rewriting for paging
     @Override
     public ResponseCollection search(Request request) throws IOException {
@@ -154,6 +158,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.trace("Starting search for " + request);
         }
         long startTime = System.currentTimeMillis();
+        preProcess(request);
         ResponseCollection merged = null;
         boolean success = false;
         try {
