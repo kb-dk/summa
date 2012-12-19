@@ -55,8 +55,9 @@ public class QuerySanitizerTest extends TestCase {
     }
 
     public void testColonWithMissingTerms() {
-        assertSanitize("Bad colon",     "foo\\: bar",   "foo: bar",      false, SYNTAX);
-        assertSanitize("Bad colon",     "foo bar\\:",   "foo bar:",      false, SYNTAX);
+        assertSanitize("Bad colon1",    "foo\\: bar",   "foo: bar",      false, SYNTAX);
+        assertSanitize("Bad colon2",    "foo \\: bar",  "foo : bar",     false, SYNTAX);
+        assertSanitize("Bad colon3",    "foo bar\\:",   "foo bar:",      false, SYNTAX);
         assertSanitize("OK colon",      "foo:bar",      "foo:bar",       false);
         assertSanitize("Quoted colon",  "\"foo: bar\"",  "\"foo: bar\"", false);
         assertSanitize("Escaped colon", "foo\\: bar",   "foo\\: bar",    false);

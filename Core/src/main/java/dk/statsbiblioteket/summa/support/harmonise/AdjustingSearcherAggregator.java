@@ -24,10 +24,13 @@ import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -40,7 +43,7 @@ import java.util.List;
  * A {@link TermStatQueryRewriter} is attached if the key
  * {@link TermStatQueryRewriter#CONF_TARGETS} is present in properties and
  * the adjustment is enabled for the search client.
- * It is the responsibility of the caller to ensure that the rewriter is
+ * It is the responsibility of the caller to ensure that the adjuster is
  * configured with a target for each search client and that the ids os the
  * target matches the search clients.
  */
@@ -60,22 +63,53 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     public static final String CONF_SEARCH_ADJUSTING = "search.aggregator.searcher.adjusting";
     public static final boolean DEFAULT_SEARCH_ADJUSTING = false;
 
+    /**
+     * If true, queries are pre-processed by the {@link QuerySanitizer} before being passed on in the chain.
+     * The QuerySanitizer can be tweaked by providing the properties defined in the class.
+     * </p><p>
+     * Optional. Default is true.    
+     */
+    public static final String CONF_SEARCH_SANITIZING = "search.aggregator.searcher.sanitizing";
+    public static final boolean DEFAULT_SEARCH_SANITIZING = true;
+
     private final ResponseMerger responseMerger;
-    private TermStatQueryRewriter rewriter;
+    private QuerySanitizer sanitizer;
+    private TermStatQueryRewriter adjuster;
 
     public AdjustingSearcherAggregator(Configuration conf) {
         super(conf);
         responseMerger = new ResponseMerger(conf);
+        if (conf.getBoolean(CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
+            sanitizer = new QuerySanitizer(conf);
+            log.debug("QuerySanitizer enabled");
+        } else {
+            sanitizer = null;
+        }
+    }
+
+    @Override
+    public ResponseCollection search(Request request) throws IOException {
+        if (sanitizer != null) {
+            if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                request.put(DocumentKeys.SEARCH_QUERY, 
+                            sanitizer.sanitize(request.getString(DocumentKeys.SEARCH_QUERY)).getLastQuery());
+            }
+            if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
+                request.put(DocumentKeys.SEARCH_FILTER, 
+                            sanitizer.sanitize(request.getString(DocumentKeys.SEARCH_FILTER)).getLastQuery());
+            }
+        }
+        return super.search(request);
     }
 
     @Override
     protected void preConstruction(Configuration conf) {
         if (conf.valueExists(TermStatQueryRewriter.CONF_TARGETS)) {
-            log.debug("Assigning term stat query rewriter");
-            rewriter = new TermStatQueryRewriter(conf);
+            log.debug("Assigning term stat query adjuster");
+            adjuster = new TermStatQueryRewriter(conf);
         } else {
-            log.debug("No term stat query rewriter");
-            rewriter = null;
+            log.debug("No term stat query adjuster");
+            adjuster = null;
         }
     }
 
@@ -84,8 +118,8 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         SearchClient searcher;
         if (searcherConf.getBoolean(
             CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
-            log.debug("Creating adjusting search client with term stat based rewriter " + rewriter);
-            searcher = new AdjustingSearchClient(searcherConf, rewriter);
+            log.debug("Creating adjusting search client with term stat based adjuster " + adjuster);
+            searcher = new AdjustingSearchClient(searcherConf, adjuster);
             String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             String adjustID = ((AdjustingSearchClient)searcher).
                 getAdjuster().getId();
