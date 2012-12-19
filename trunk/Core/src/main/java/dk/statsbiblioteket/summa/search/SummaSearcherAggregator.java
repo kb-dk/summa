@@ -213,7 +213,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             success = true;
             return merged;
         } finally {
-            if (merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+            if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                 Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
                 if (o instanceof DocIDCollector) {
                     ((DocIDCollector)o).close();
