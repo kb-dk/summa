@@ -224,23 +224,29 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         } finally {
             searchQueue.release();
             // TODO: Make this cleaner with no explicit dependency
-            if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
-                Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
-                if (o instanceof DocIDCollector) {
-                    ((DocIDCollector)o).close();
-                }
-            }
-            if (queries.isInfoEnabled()) {
-                String hits = "N/A";
-                for (Response response: responses) {
-                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
-                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+            if (responses == null) {
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                             + " in " + responseTime / 1000000 + "ms. " + "Request was " + request.toString(true));
+            } else {
+                if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                    Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
+                    if (o instanceof DocIDCollector) {
+                        ((DocIDCollector)o).close();
                     }
                 }
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + responseTime / 1000000 + "ms with " + hits + " hits. "
-                              + "Request was " + request.toString(true)
-                              + " with Timing(" + responses.getTiming() + ")");
+                if (queries.isInfoEnabled()) {
+                    String hits = "N/A";
+                    for (Response response: responses) {
+                        if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                            hits = Long.toString(((DocumentResponse)response).getHitCount());
+                        }
+                    }
+                    queries.info("Search finished "
+                                 + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                                 + " in " + responseTime / 1000000 + "ms with " + hits + " hits. "
+                                 + "Request was " + request.toString(true)
+                                 + " with Timing(" + responses.getTiming() + ")");
+                }
             }
         }
     }
@@ -447,7 +453,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      * Clear the statistic numbers from this searcher. This means set query count to zero, total
      * response to zero and last response time to -1.
      * FIXME Not really thread-safe, but statistically this should work ;-)
-     * 
+     *
      * @throws RemoteException if error occur while fetching query count remotely.
      */
     @Override
