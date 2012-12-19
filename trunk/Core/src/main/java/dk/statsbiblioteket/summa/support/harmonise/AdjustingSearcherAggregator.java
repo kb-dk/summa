@@ -79,7 +79,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     public AdjustingSearcherAggregator(Configuration conf) {
         super(conf);
         responseMerger = new ResponseMerger(conf);
-        if (conf.getBoolean(CONF_SEARCH_ADJUSTING, DEFAULT_SEARCH_ADJUSTING)) {
+        if (conf.getBoolean(CONF_SEARCH_SANITIZING, DEFAULT_SEARCH_SANITIZING)) {
             sanitizer = new QuerySanitizer(conf);
             log.debug("QuerySanitizer enabled");
         } else {
@@ -90,13 +90,17 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     @Override
     public ResponseCollection search(Request request) throws IOException {
         if (sanitizer != null) {
-            if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
-                request.put(DocumentKeys.SEARCH_QUERY, 
-                            sanitizer.sanitize(request.getString(DocumentKeys.SEARCH_QUERY)).getLastQuery());
+            String query = request.getString(DocumentKeys.SEARCH_QUERY);
+            if (query != null) {
+                QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(query);
+                log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                request.put(DocumentKeys.SEARCH_QUERY, clean.getLastQuery());
             }
-            if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
-                request.put(DocumentKeys.SEARCH_FILTER, 
-                            sanitizer.sanitize(request.getString(DocumentKeys.SEARCH_FILTER)).getLastQuery());
+            String filter = request.getString(DocumentKeys.SEARCH_FILTER);
+            if (query != null) {
+                QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
+                log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                request.put(DocumentKeys.SEARCH_FILTER, clean.getLastQuery());
             }
         }
         return super.search(request);
