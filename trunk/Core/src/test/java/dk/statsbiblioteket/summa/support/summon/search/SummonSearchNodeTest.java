@@ -166,7 +166,7 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
         assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
                      + Strings.join(tags, "\n"),
-                     tagCount+1, tags.size());
+                     tagCount + 1, tags.size());
         summon.close();
     }
 
@@ -298,6 +298,31 @@ public class SummonSearchNodeTest extends TestCase {
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         List<String> ids = getAttributes(summon, req, "id", false);
         assertTrue("There should be at least 1 result", ids.size() >= 1);
+    }
+
+    public void testTruncation() throws IOException, TransformerException {
+        String PLAIN = "Author:andersen";
+        String ESCAPED = "Author:andersen\\ christian";
+        String TRUNCATED = "Author:andersen*";
+        String ESCAPED_TRUNCATED = "Author:andersen\\ c*";
+        String ESCAPED_TRUNCATED2 = "lfo:andersen\\ h\\ c*";
+
+        List<String> QUERIES = Arrays.asList(PLAIN, ESCAPED, TRUNCATED, ESCAPED_TRUNCATED, ESCAPED_TRUNCATED2);
+
+        log.debug("Creating SummonSearchNode");
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SolrSearchNode.CONF_SOLR_READ_TIMEOUT, 20*1000);
+        SearchNode summon = new SummonSearchNode(conf);
+        for (String query: QUERIES) {
+            Request req = new Request(
+                    DocumentKeys.SEARCH_QUERY, query,
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            long searchTime = -System.currentTimeMillis();
+            List<String> ids = getAttributes(summon, req, "id", false);
+            searchTime += System.currentTimeMillis();
+            assertFalse("There should be at least 1 result for " + query, ids.isEmpty());
+            log.info("Got " + ids.size() + " from query '" + query + "' in " + searchTime + " ms");
+        }
     }
 
     public void testGetField() throws IOException, TransformerException {
