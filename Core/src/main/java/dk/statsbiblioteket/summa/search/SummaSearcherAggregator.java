@@ -86,7 +86,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         preConstruction(conf);
         List<Configuration> searcherConfs;
         try {
-             searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
+            searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
@@ -212,25 +212,32 @@ public class SummaSearcherAggregator implements SummaSearcher {
             merged.addTiming("aggregator.searchandmergeall", (System.nanoTime() - startTime) / 1000000);
             success = true;
             return merged;
+        } catch (Exception e) {
+            String message = "Encountered Exception while performing aggregate search for " + request.toString(true);
+            log.warn(message, e);
+            throw new IOException(message, e);
         } finally {
-
-            if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
-                Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
-                if (o instanceof DocIDCollector) {
-                    ((DocIDCollector)o).close();
-                }
-            }
-            if (queries.isInfoEnabled()) {
-                String hits = "N/A";
-                for (Response response: merged) {
-                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
-                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+            if (merged != null) {
+                if (merged.getTransient() != null
+                    && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                    Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
+                    if (o instanceof DocIDCollector) {
+                        ((DocIDCollector)o).close();
                     }
                 }
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
-                              + hits + " hits. " + "Request was " + request.toString(true)
-                              + " with Timing(" + merged.getTiming() + ")");
+                if (queries.isInfoEnabled()) {
+                    String hits = "N/A";
+                    for (Response response: merged) {
+                        if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                            hits = Long.toString(((DocumentResponse)response).getHitCount());
+                        }
+                    }
+                    queries.info("Search finished "
+                                 + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                                 + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
+                                 + hits + " hits. " + "Request was " + request.toString(true)
+                                 + " with Timing(" + merged.getTiming() + ")");
+                }
             }
         }
     }
@@ -275,7 +282,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 records.clear();
             } else {
                 records = new ArrayList<DocumentResponse.Record>(
-                    records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
+                        records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
             }
             docResponse.setRecords(records);
         }
