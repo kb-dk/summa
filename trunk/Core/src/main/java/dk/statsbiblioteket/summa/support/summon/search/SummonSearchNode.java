@@ -569,7 +569,7 @@ public class SummonSearchNode extends SolrSearchNode {
      * @param key The key to use while calculating the digest.
      * @param idString The String to digest.
      * @return A String containing a base64 encoded sha-1 digest.
-     * @throws java.security.SignatureException in case of Signature problems.
+     * @throws SignatureException in case of Signature problems.
      */
     private static String buildDigest(String key, String idString) throws SignatureException {
         try {
@@ -615,7 +615,7 @@ public class SummonSearchNode extends SolrSearchNode {
         conn.setRequestProperty("Accept-Charset", "utf-8");
         conn.setRequestProperty("x-summon-date", summonDateFormat.format(date));
         conn.setRequestProperty("Authorization", "Summon " + accessID + ";" + buildDigest(accessKey, idstring));
-        if (sessionId != null && !sessionId.equals("")) {
+        if (sessionId != null && !"".equals(sessionId)) {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
         conn.setConnectTimeout(connectionTimeout);

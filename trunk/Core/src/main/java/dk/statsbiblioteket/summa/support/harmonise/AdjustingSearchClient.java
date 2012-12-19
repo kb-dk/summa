@@ -21,9 +21,13 @@ package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +56,7 @@ public class AdjustingSearchClient extends SearchClient {
 
     public AdjustingSearchClient(final Configuration conf, final TermStatQueryRewriter rewriter) {
         super(conf);
-        this.adjuster = new InteractionAdjuster(conf);
+        adjuster = new InteractionAdjuster(conf);
         id = adjuster.getId();
         this.rewriter = rewriter;
         log.debug("Created AdjustingSearchClient for " + id + " with term stat query rewriter "
@@ -62,30 +66,55 @@ public class AdjustingSearchClient extends SearchClient {
     @Override
     public ResponseCollection search(Request request) throws IOException {
         long searchTime = -System.currentTimeMillis();
-        final String originalQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        log.trace("Rewriting request for " + id + ", performing search and adjusting responses");
-        long rewriteTime = -System.currentTimeMillis();
-        Request adjusted = adjuster.rewrite(request); // Creates new request
-        if (rewriter != null) {
-            log.trace("Calling term stat based query rewriter with id " + adjuster.getId());
-            rewriter.rewrite(adjusted, adjuster.getId());
+        ResponseCollection responses = null;
+        boolean success = false;
+        try {
+            final String originalQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
+            log.trace("Rewriting request for " + id + ", performing search and adjusting responses");
+            long rewriteTime = -System.currentTimeMillis();
+            Request adjusted = adjuster.rewrite(request); // Creates new request
+            if (rewriter != null) {
+                log.trace("Calling term stat based query rewriter with id " + adjuster.getId());
+                rewriter.rewrite(adjusted, adjuster.getId());
+            }
+            final String finalQuery = adjusted.getString(DocumentKeys.SEARCH_QUERY, null);
+            rewriteTime += System.currentTimeMillis();
+            log.trace("Calling super.search");
+            responses = super.search(adjusted);
+            responses.setPrefix("adjuster_" + id + ".");
+            log.trace("Adjusting response");
+            long adjustTime = -System.currentTimeMillis();
+            adjuster.adjust(adjusted, responses);
+            adjustTime += System.currentTimeMillis();
+            searchTime += System.currentTimeMillis();
+            log.debug("Adjusted search for " + id + " with original query '" + originalQuery + "' and adjusted query '"
+                      + finalQuery + " in " + searchTime + " ms");
+            responses.addTiming("request.rewrite", rewriteTime);
+            responses.addTiming("response.adjust", adjustTime);
+            responses.addTiming("total", searchTime);
+            success = true;
+            return responses;
+        } finally {
+            if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
+                if (o instanceof DocIDCollector) {
+                    ((DocIDCollector)o).close();
+                }
+            }
+            if (queries.isInfoEnabled()) {
+                String hits = "N/A";
+                for (Response response: responses) {
+                    if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
+                        hits = Long.toString(((DocumentResponse)response).getHitCount());
+                    }
+                }
+                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + searchTime / 1000000 + "ms with " + hits + " hits. "
+                              + "Request was " + request.toString(true)
+                              + " with Timing(" + responses.getTiming() + ")");
+            }
+
         }
-        final String finalQuery = adjusted.getString(DocumentKeys.SEARCH_QUERY, null);
-        rewriteTime += System.currentTimeMillis();
-        log.trace("Calling super.search");
-        ResponseCollection responses = super.search(adjusted);
-        responses.setPrefix("adjuster_" + id + ".");
-        log.trace("Adjusting response");
-        long adjustTime = -System.currentTimeMillis();
-        adjuster.adjust(adjusted, responses);
-        adjustTime += System.currentTimeMillis();
-        searchTime += System.currentTimeMillis();
-        log.debug("Adjusted search for " + id + " with original query '" + originalQuery + "' and adjusted query '"
-                  + finalQuery + " in " + searchTime + " ms");
-        responses.addTiming("request.rewrite", rewriteTime);
-        responses.addTiming("response.adjust", adjustTime);
-        responses.addTiming("total", searchTime);
-        return responses;
     }
 
     public InteractionAdjuster getAdjuster() {
