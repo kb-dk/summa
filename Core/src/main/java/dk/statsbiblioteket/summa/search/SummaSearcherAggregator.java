@@ -222,8 +222,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                               + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
                               + "Request was " + request.toString(true));
             } else {
-                if (merged.getTransient() != null
-                    && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
                     if (o instanceof DocIDCollector) {
                         ((DocIDCollector)o).close();
