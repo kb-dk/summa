@@ -19,10 +19,12 @@
  */
 package dk.statsbiblioteket.summa.search.tools;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -61,6 +63,18 @@ public class QueryRewriter {
      */
     public static final String CONF_QUOTE_TERMS = "queryrewriter.terms.quote";
     public static final boolean DEFAULT_QUOTE_TERMS = true;
+
+    public static final String PARSER_WHITESPACE = "whitespace";
+    public static final String PARSER_KEYWORD = "keyword";
+    /**
+     * The QueryParse to use when none is provided. Valid options are 'whitespace' and 'keyword'.
+     * </p><p>
+     * Optional. Default is 'whitespace'.
+     */
+    public static final String CONF_DEFAULT_PARSER = "queryrewriter.defaultparser";
+    public static final String DEFAULT_DEFAULT_PARSER = PARSER_WHITESPACE;
+    // TODO: Consider using keyword as new default
+    //public static final String DEFAULT_DEFAULT_PARSER = PARSER_KEYWORD;
 
     /**
      * A simple callback that fires when the rewriter encounters Queries.
@@ -164,6 +178,7 @@ public class QueryRewriter {
     private QueryParser queryParser;
     private final boolean terse;
     private final boolean quoteTerms;
+    private final String defaultParser;
 
     /**
      * Constructs a new QueryRewriter.
@@ -184,13 +199,29 @@ public class QueryRewriter {
      */
     public QueryRewriter(Configuration conf, QueryParser queryParser, Event event) {
         this.event = event;
-        this.queryParser = queryParser == null ? createDefaultQueryParser() : queryParser;
         terse = conf == null ? DEFAULT_TERSE : conf.getBoolean(CONF_TERSE, DEFAULT_TERSE);
         quoteTerms = conf == null ? DEFAULT_QUOTE_TERMS : conf.getBoolean(CONF_QUOTE_TERMS, DEFAULT_QUOTE_TERMS);
+        String dp = conf == null ? DEFAULT_DEFAULT_PARSER : conf.getString(CONF_DEFAULT_PARSER, DEFAULT_DEFAULT_PARSER);
+        if (!PARSER_WHITESPACE.equals(dp) && !PARSER_KEYWORD.equals(dp)) {
+            throw new Configurable.ConfigurationException(
+                    "Expected either whitespace or keyword as " + CONF_DEFAULT_PARSER + " but got " + dp);
+        }
+        defaultParser = dp;
+        this.queryParser = queryParser == null ? createQueryParser() : queryParser;
     }
 
     public static QueryParser createDefaultQueryParser() {
         QueryParser queryParser = new QueryParser(Version.LUCENE_40, "", new WhitespaceAnalyzer(Version.LUCENE_40));
+
+        queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+        return queryParser;
+    }
+
+    public QueryParser createQueryParser() {
+        QueryParser queryParser = new QueryParser(Version.LUCENE_40, "",
+                                                  PARSER_KEYWORD.equals(defaultParser) ?
+                                                  new KeywordAnalyzer() :
+                                                  new WhitespaceAnalyzer(Version.LUCENE_40));
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         return queryParser;
