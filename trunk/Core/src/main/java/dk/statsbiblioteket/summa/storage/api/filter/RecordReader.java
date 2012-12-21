@@ -389,7 +389,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     private long getStartTime() {
         if (startFromScratch || !usePersistence) {
-            log.trace("getStartTime: Starttime set to 0");
+            log.info("Starting extraction of base '" + base + "' from time 0");
             if (progressTracker != null) {
                 progressTracker.updated(0);
             }
@@ -398,10 +398,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         if (progressTracker != null) {
             progressTracker.loadProgress();
-            log.info("Resuming from " + progressTracker.getLastUpdate());
+            log.info("Resuming for base '" + base + "' from " + progressTracker.getLastUpdateStr());
             return progressTracker.getLastUpdate();
         } else {
-            log.debug("Not set to resume or keep progress state. Starting from time 0");
+            log.info("No progress tracker defined. Starting base '" + base + "'from time 0");
             return 0;
         }
     }

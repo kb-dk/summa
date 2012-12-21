@@ -113,8 +113,8 @@ public class ProgressTracker {
 
         if (log.isDebugEnabled()) {
             log.debug(String.format(
-                "Storing progress in '%s' (%d records has been extracted so far, last timestamp: %s)",
-                progressFile, numUpdates-1, String.format(ISO_TIME, lastExternalUpdate)));
+                    "Storing progress in '%s' (%d records has been extracted so far, last timestamp: %s)",
+                    progressFile, numUpdates-1, String.format(ISO_TIME, lastExternalUpdate)));
         }
         try {
             Files.saveString(String.format(TIMESTAMP_FORMAT, lastExternalUpdate), progressFile);
@@ -135,13 +135,11 @@ public class ProgressTracker {
             log.trace("getStartTime has persistence file");
             try {
                 long startTime = getTimestamp(progressFile, Files.loadString(progressFile));
-                if (log.isDebugEnabled()) {
-                    try {
-                        log.debug(String.format(
-                                "Extracted timestamp " + ISO_TIME + " from '%2$s'", startTime, progressFile));
-                    } catch (Exception e) {
-                        log.warn("Could not output properly formatted timestamp for " + startTime + " ms");
-                    }
+                try {
+                    log.info(String.format("Extracted timestamp " + ISO_TIME + " from '%2$s'", startTime,
+                                           progressFile));
+                } catch (Exception e) {
+                    log.warn("Could not output properly formatted timestamp for " + startTime + " ms");
                 }
                 lastExternalUpdate = startTime;
                 lastInternalUpdate = System.currentTimeMillis();
@@ -157,6 +155,14 @@ public class ProgressTracker {
     public long getLastUpdate() {
         return lastExternalUpdate;
     }
+    public String getLastUpdateStr() {
+        try {
+            return String.format(ISO_TIME, lastExternalUpdate);
+        } catch (Exception e) {
+            log.warn("Could not output properly formatted timestamp for " + lastExternalUpdate + " ms");
+            return "N/A";
+        }
+    }
 
     public void clearProgressFile() {
         if (progressFile.exists()) {
@@ -170,8 +176,8 @@ public class ProgressTracker {
         Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
         if (!matcher.matches() || matcher.groupCount() != 1) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("getTimestamp: Could not locate timestamp in file '" + progressFile + "' containing '"
-                      + xml + "'. Returning 0");
+            log.error("getTimestamp: Could not locate timestamp in file '" + progressFile + "' containing '" + xml
+                      + "'. Returning 0");
             return 0;
         }
         return Long.parseLong(matcher.group(1));
@@ -184,5 +190,5 @@ public class ProgressTracker {
                                      Integer.parseInt(matcher.group(6))).
                 getTimeInMillis();*/
     }
-}
 
+}
