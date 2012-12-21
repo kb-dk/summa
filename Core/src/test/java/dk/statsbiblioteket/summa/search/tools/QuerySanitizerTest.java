@@ -3,8 +3,8 @@ package dk.statsbiblioteket.summa.search.tools;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.util.Arrays;
 
@@ -61,6 +61,17 @@ public class QuerySanitizerTest extends TestCase {
         assertSanitize("OK colon",      "foo:bar",      "foo:bar",       false);
         assertSanitize("Quoted colon",  "\"foo: bar\"",  "\"foo: bar\"", false);
         assertSanitize("Escaped colon", "foo\\: bar",   "foo\\: bar",    false);
+    }
+
+    public void testEscaping() {
+        assertEquals("Space in term", Configuration.newMemoryBased(), "foo\\ bar", "foo\\ bar");
+        assertEquals("Space in term, qualified", Configuration.newMemoryBased(),
+                     "zoo:foo\\ bar", "zoo:foo\\ bar");
+    }
+
+    private void assertEquals(String message, Configuration conf, String expected, String query) {
+        QuerySanitizer sanitizer = new QuerySanitizer(conf);
+        assertEquals(message, expected, sanitizer.sanitize(query).getLastQuery());
     }
 
     public void testTrailingExclamationMark() {

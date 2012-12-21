@@ -30,113 +30,113 @@ public class QueryRewriterTest extends TestCase {
     public static Test suite() {
         return new TestSuite(QueryRewriterTest.class);
     }
-    
+
     public void testParenthesized1() throws ParseException {
         assertIdentity(
-            "\"foo\" OR (\"bar\" \"baz\")",
-            "\"foo\" OR (\"bar\" AND \"baz\")");
+                "\"foo\" OR (\"bar\" \"baz\")",
+                "\"foo\" OR (\"bar\" AND \"baz\")");
     }
 
     // The OR binds stronger than the implied AND
     public void testNonTerseImplicitAnd() throws ParseException {
         assertIdentity(
-            "(+\"foo\" \"bar\" OR \"zoo\")",
-            "foo bar OR zoo", false);
+                "(+\"foo\" \"bar\" OR \"zoo\")",
+                "foo bar OR zoo", false);
     }
 
     // The OR binds stronger than the explicit AND
     public void testNonTerseExplicitAnd() throws ParseException {
         assertIdentity(
-            "(+\"foo\" \"bar\" OR \"zoo\")",
-            "foo AND bar OR zoo", false);
+                "(+\"foo\" \"bar\" OR \"zoo\")",
+                "foo AND bar OR zoo", false);
     }
 
     // The OR binds stronger than the explicit AND
     public void testNonTerseImplicitAnds() throws ParseException {
         assertIdentity(
-            "(+\"foo\" \"bar\" OR \"zoo\" +\"goo\")",
-            "foo bar OR zoo goo", false);
+                "(+\"foo\" \"bar\" OR \"zoo\" +\"goo\")",
+                "foo bar OR zoo goo", false);
     }
 
     public void testParenthesized3() throws ParseException {
         assertIdentity(
-            "\"foo\" (\"bar\" \"baz\")",
-            "\"foo\" AND (\"bar\" AND \"baz\")");
+                "\"foo\" (\"bar\" \"baz\")",
+                "\"foo\" AND (\"bar\" AND \"baz\")");
     }
 
     public void testParenthesized4() throws ParseException {
         assertIdentity(
-            "\"foo\" \"bar\" \"baz\"",
-            "foo AND bar AND baz");
+                "\"foo\" \"bar\" \"baz\"",
+                "foo AND bar AND baz");
     }
 
     // TODO: enable this when proper boolean logic is enabled
     public void disabledtestParenthesized5() throws ParseException {
         assertIdentity(
-            "+\"foo\" +\"bar\" \"baz\" OR +\"spam\" \"eggs\" OR \"ham\"",
-            "foo AND bar AND baz OR spam AND eggs OR ham");
+                "+\"foo\" +\"bar\" \"baz\" OR +\"spam\" \"eggs\" OR \"ham\"",
+                "foo AND bar AND baz OR spam AND eggs OR ham");
     }
 
     // TODO: enable this when proper boolean logic is enabled
     public void disabledtestParenthesized6() throws ParseException {
         assertIdentity(
-            "+\"foo\" +\"bar\" \"baz\" OR +(-\"spam\") +(\"eggs\" OR -\"ham\")",
-            "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)");
+                "+\"foo\" +\"bar\" \"baz\" OR +(-\"spam\") +(\"eggs\" OR -\"ham\")",
+                "foo AND +bar AND baz OR +(-spam) AND (eggs OR -ham)");
     }
 
     public void testBooleanToFlagged1() throws ParseException {
         assertIdentity(
-            "+\"foo\" +\"bar\" \"baz\" OR \"spam\"",
-            "foo AND bar AND baz OR spam");
+                "+\"foo\" +\"bar\" \"baz\" OR \"spam\"",
+                "foo AND bar AND baz OR spam");
     }
 
     // TODO: enable this when proper boolean logic is enabled
     public void disabledtestBooleanToFlagged2() throws ParseException {
         assertIdentity(
-            "\"foo\" OR +\"bar\" +\"baz\"",
-            "foo OR bar AND baz");
+                "\"foo\" OR +\"bar\" +\"baz\"",
+                "foo OR bar AND baz");
     }
 
-     public void testBooleanToFlagged3() throws ParseException {
+    public void testBooleanToFlagged3() throws ParseException {
         assertIdentity(
-            "+\"foo\" \"bar\" OR \"baz\"",
-            "foo AND bar OR baz");
+                "+\"foo\" \"bar\" OR \"baz\"",
+                "foo AND bar OR baz");
     }
 
     public void testPhrase1() throws ParseException {
         assertIdentity(
-            "\"foo bar\"",
-            "\"foo bar\"");
+                "\"foo bar\"",
+                "\"foo bar\"");
     }
 
     public void testTerm1() throws ParseException {
         assertIdentity(
-            "\"foo\"",
-            "foo");
+                "\"foo\"",
+                "foo");
     }
 
     public void testTerm2() throws ParseException {
         assertIdentity(
-            "\"foo\"", // This is a Term even though it is quoted
-            "\"foo\"");
+                "\"foo\"", // This is a Term even though it is quoted
+                "\"foo\"");
     }
 
     public void testTerm3() throws ParseException {
         assertIdentity(
-            "\"\\-\"",
-            "- ");
+                "\"\\-\"",
+                "- ");
     }
 
     public void testPhraseSpace() throws ParseException {
         assertIdentity(
-            "\"- -\"",
-            "\"- -\"");
+                "\"- -\"",
+                "\"- -\"");
     }
 
     public void testPhrase2() throws ParseException {
         assertIdentity(
-            "\"foo bar\" OR \"zoo AND baz\"",
-            "\"foo bar\" OR \"zoo AND baz\"");
+                "\"foo bar\" OR \"zoo AND baz\"",
+                "\"foo bar\" OR \"zoo AND baz\"");
     }
 
     public void testRewriteDivider() throws ParseException {
@@ -148,17 +148,17 @@ public class QueryRewriterTest extends TestCase {
 
     public void testColon() throws ParseException {
         assertIdentity(
-            "foo:\"bar\\:zoo\"",
-            "foo:\"bar:zoo\"");
+                "foo:\"bar\\:zoo\"",
+                "foo:\"bar:zoo\"");
         assertIdentity(
-            "foo:\"bar\\:zoo\\:baz\"",
-            "foo:\"bar:zoo:baz\"");
+                "foo:\"bar\\:zoo\\:baz\"",
+                "foo:\"bar:zoo:baz\"");
     }
 
     public void testColonWithWeight() throws ParseException {
         assertIdentity(
-            "foo:\"bar\\:zoo\"^2.5",
-            "foo:\"bar:zoo\"^2.5");
+                "foo:\"bar\\:zoo\"^2.5",
+                "foo:\"bar:zoo\"^2.5");
     }
 
     public void testNoAdjustment() throws ParseException {
@@ -219,6 +219,14 @@ public class QueryRewriterTest extends TestCase {
         assertIdentity("new:\"umat\" new:\"11\"", query); // We accept this because one would normally use quotes instead of escaping
     }
 
+    public void testKeywordAnalyzer() throws ParseException {
+        assertEquals("Excaped spaces should not result in change", "foo\\ bar",
+                     new QueryRewriter(Configuration.newMemoryBased(
+                             QueryRewriter.CONF_QUOTE_TERMS, false,
+                             QueryRewriter.CONF_DEFAULT_PARSER, QueryRewriter.PARSER_KEYWORD
+                     ), null, new QueryRewriter.Event()).rewrite("foo\\ bar"));
+    }
+
     public void testEscape() throws ParseException {
         assertIdentity("baz:\"foo\\\"bar\"", "baz:foo\\\"bar");
     }
@@ -257,11 +265,11 @@ public class QueryRewriterTest extends TestCase {
 
     public void testEscapeWeight() throws ParseException {
         String[][] TESTS = new String[][]{
-            {"foo:bar\\:zoo^2.2123", "foo:bar\\:zoo^2.2123"},
-            {"foo:bar\\:zoo^2.2123", "foo:\"bar\\:zoo\"^2.2123"}
+                {"foo:bar\\:zoo^2.2123", "foo:bar\\:zoo^2.2123"},
+                {"foo:bar\\:zoo^2.2123", "foo:\"bar\\:zoo\"^2.2123"}
         };
         QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(
-                    QueryRewriter.CONF_QUOTE_TERMS, false
+                QueryRewriter.CONF_QUOTE_TERMS, false
         ), null, new QueryRewriter.Event());
 
         for (String[] test: TESTS) {
@@ -271,12 +279,12 @@ public class QueryRewriterTest extends TestCase {
 
     public void testEscaping() throws ParseException {
         String[][] TESTS = new String[][]{
-            {"foo", "foo"},
-            {"\"foo\\\"\"", "foo\\\""},
-            {"\"foo!\"", "foo\\!"}
+                {"foo", "foo"},
+                {"\"foo\\\"\"", "foo\\\""},
+                {"\"foo!\"", "foo\\!"}
         };
         QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(
-                    QueryRewriter.CONF_QUOTE_TERMS, false
+                QueryRewriter.CONF_QUOTE_TERMS, false
         ), null, new QueryRewriter.Event());
 
         for (String[] test: TESTS) {
@@ -313,7 +321,7 @@ public class QueryRewriterTest extends TestCase {
     private void assertIdentity(String expected, String input, boolean terse) throws ParseException {
         assertEquals("Rewrite should be correct",
                      expected, new QueryRewriter(
-            Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, terse),
-            null, new QueryRewriter.Event()).rewrite(input));
+                Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, terse),
+                null, new QueryRewriter.Event()).rewrite(input));
     }
 }
