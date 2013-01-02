@@ -224,7 +224,9 @@ public class RecordWriter extends ObjectFilterImpl {
             try {
                 String stats = records.size() + " records of total size " + byteSize/1024 + "KB, last recordID:'"
                                + (records.isEmpty() ? "N/A" : records.get(records.size()-1).getId()) + "'";
-                log.debug(String.format("Committing %s.", stats));
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("Committing %s.", stats));
+                }
                 long start = System.nanoTime();
                 totalCommits += records.size();
                 storage.flushAll(records, qOptions);
