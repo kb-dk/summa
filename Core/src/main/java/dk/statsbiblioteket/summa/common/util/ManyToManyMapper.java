@@ -57,8 +57,7 @@ public class ManyToManyMapper {
             String[] parts = rule.split(" * -  *"); // We demand spaces
             if (parts.length != 2) {
                 throw new Configurable.ConfigurationException(
-                    "Expected two parts by splitting '" + rule
-                    + "' with delimiter '-' but got " + parts.length);
+                    "Expected two parts by splitting '" + rule + "' with delimiter '-' but got " + parts.length);
             }
             String[] sources = parts[0].split(" *; *");
             String[] destinations = parts[1].split(" *; *");

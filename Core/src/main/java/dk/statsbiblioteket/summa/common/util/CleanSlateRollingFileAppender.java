@@ -15,11 +15,10 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.IOException;
-
 import org.apache.log4j.Layout;
 import org.apache.log4j.RollingFileAppender;
+
+import java.io.IOException;
 
 /**
  * Custom rolling file appender implementation for Log4J that rolls
@@ -44,8 +43,7 @@ public class CleanSlateRollingFileAppender extends RollingFileAppender {
      * @param filename They filename.
      * @throws IOException If error opening file specified.
      */
-    public CleanSlateRollingFileAppender(Layout layout, String filename)
-                                                            throws IOException {
+    public CleanSlateRollingFileAppender(Layout layout, String filename) throws IOException {
         super(layout, filename);
     }
 
@@ -57,8 +55,7 @@ public class CleanSlateRollingFileAppender extends RollingFileAppender {
      * @param append True iff the appender should append to existing files.
      * @throws IOException If error opening file specified.
      */
-    public CleanSlateRollingFileAppender(
-            Layout layout, String filename, boolean append) throws IOException {
+    public CleanSlateRollingFileAppender(Layout layout, String filename, boolean append) throws IOException {
         super(layout, filename, append);
     }
 

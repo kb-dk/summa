@@ -36,8 +36,7 @@ public abstract class FactoryPool<T> {
     private List<T> elements = new ArrayList<T>(10);
 
     /**
-     * Implementations of the FactoryPool must override this method to provide
-     *                 new elements.
+     * Implementations of the FactoryPool must override this method to provide new elements.
      * @return a new element.
      */
     protected abstract T createNewElement();

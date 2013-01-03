@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A space-efficient flexible-size 2-dimensional int array implementation.
@@ -43,7 +43,7 @@ public class IntArray2D {
     private static final int MAX_INCREMENT = 1000000;
 
     private static final int OFFSET_MASK = 0x7FFFFFFF; // 011...111
-    private static final int CLEAR_MASK =  0x80000000; // 100...000
+    private static final int CLEAR_MASK = 0x80000000; // 100...000
 
     private double growthFactor = DEFAULT_GROWTH_FACTOR;
 
@@ -61,6 +61,7 @@ public class IntArray2D {
 
     /**
      * Initialize the array with the given number of positions.
+     *
      * @param initialLength the initial number of positions.
      */
     public IntArray2D(int initialLength) {
@@ -71,6 +72,7 @@ public class IntArray2D {
     /**
      * Initialize the array with the given number of positions as well as the
      * factor used when growing the array.
+     *
      * @param initialLength the initial number of positions.
      * @param growthFactor  the factor for array-growth.
      */
@@ -92,39 +94,35 @@ public class IntArray2D {
             // Cleared
             return EMPTY;
         }
-        final int from = offsets[position]   & OFFSET_MASK;
-        final int to =   offsets[position+1] & OFFSET_MASK;
+        final int from = offsets[position] & OFFSET_MASK;
+        final int to = offsets[position + 1] & OFFSET_MASK;
         int[] result = new int[to - from];
-        for (int offset = from ; offset < to  ; offset++) {
-            result[offset - from] = valueStore[offset];
-        }
+        System.arraycopy(valueStore, from, result, from - from, to - from);
         return result;
     }
 
     /**
      * Set the values at the given position. This is fast if the position is
      * >= size, but slow for low positions vs. high size.
+     *
      * @param position where to store the values.
-     * @param values the values to store.
+     * @param values   the values to store.
      */
     public void set(int position, int[] values) {
         // Ensure offset-space
-        offsets = ArrayUtil.makeRoom(
-                offsets, position, growthFactor, MAX_INCREMENT, 2);
+        offsets = ArrayUtil.makeRoom(offsets, position, growthFactor, MAX_INCREMENT, 2);
         if (position < size) {
             setValuesInside(position, values);
             return;
         }
         // Ensure that there is room
-        valueStore = ArrayUtil.makeRoom(valueStore, offsets[size], growthFactor,
-                                        MAX_INCREMENT, values.length);
+        valueStore = ArrayUtil.makeRoom(valueStore, offsets[size], growthFactor, MAX_INCREMENT, values.length);
         //noinspection ManualArrayCopy
-        for (int i = 0 ; i <= position - size ; i++) { // Fill with 0 values
+        for (int i = 0; i <= position - size; i++) { // Fill with 0 values
             offsets[size + i + 1] = offsets[size + i];
         }
         offsets[position + 1] = offsets[position + 1] + values.length;
-        System.arraycopy(
-                values,  0, valueStore, offsets[position], values.length);
+        System.arraycopy(values, 0, valueStore, offsets[position], values.length);
         size = position + 1;
     }
 
@@ -132,55 +130,55 @@ public class IntArray2D {
      * Extend the array of values at the given position with the given value.
      * This is fast if the position is >= size, but slow for low positions vs.
      * high size.
+     *
      * @param position where to append the value.
-     * @param value the values to append.
+     * @param value    the values to append.
      */
     public void append(int position, int value) {
-        if (position < size-1) { // Append inside (slow)
+        if (position < size - 1) { // Append inside (slow)
             int[] existing = get(position);
-            int[] replacement = new int[existing.length+1];
-            replacement[replacement.length-1] = value;
+            int[] replacement = new int[existing.length + 1];
+            replacement[replacement.length - 1] = value;
             set(position, replacement);
             return;
         }
-        if (position > size-1) { // Plain new (somewhat slow)
+        if (position > size - 1) { // Plain new (somewhat slow)
             SINGLE[0] = value;
             set(position, SINGLE);
             return;
         }
         // position == size-1: Fast
-        valueStore = ArrayUtil.makeRoom(
-                valueStore, offsets[size], growthFactor, MAX_INCREMENT, 1);
-        valueStore[offsets[position+1]] = value;
-        offsets[position+1]++;
+        valueStore = ArrayUtil.makeRoom(valueStore, offsets[size], growthFactor, MAX_INCREMENT, 1);
+        valueStore[offsets[position + 1]] = value;
+        offsets[position + 1]++;
     }
+
     private static final int[] SINGLE = new int[1];
 
     private void setValuesInside(int position, int[] values) {
-        final int existingLength = offsets[position+1] - offsets[position];
+        final int existingLength = offsets[position + 1] - offsets[position];
         int adjust = values.length - existingLength;
         if (adjust > 0) { // Expand capacity
-            valueStore = ArrayUtil.makeRoom(
-                    valueStore, size, growthFactor, MAX_INCREMENT, adjust);
+            valueStore = ArrayUtil.makeRoom(valueStore, size, growthFactor, MAX_INCREMENT, adjust);
         }
         if (adjust != 0) {
             // Move trailing values
-            System.arraycopy(valueStore, offsets[position+1],          // From
-                             valueStore, offsets[position+1] + adjust, // To
-                             offsets[size] - offsets[position+1]);     // Length
+            System.arraycopy(valueStore, offsets[position + 1],          // From
+                             valueStore, offsets[position + 1] + adjust, // To
+                             offsets[size] - offsets[position + 1]);     // Length
             // Adjust trailing offsets
-            for (int i = position + 1 ; i <= size ; i++) {
+            for (int i = position + 1; i <= size; i++) {
                 offsets[i] += adjust;
             }
         }
         // Insert values
-        System.arraycopy(
-                values, 0, valueStore, offsets[position], values.length);
+        System.arraycopy(values, 0, valueStore, offsets[position], values.length);
     }
 
     /**
      * Clear the values at the given position without moving values (no GC).
      * This operation is constant time with minimal overhead.
+     *
      * @param position the position to clear.
      */
     public void dirtyClear(int position) {
@@ -194,6 +192,7 @@ public class IntArray2D {
      * Note: This adjusts internal values and might be expensive, depending og
      * the existing structure. If reclaiming of freed space in the internal
      * structure is not a priority, consider using {@link #dirtyClear}.
+     *
      * @param position were to remove the values.
      */
     public void clear(int position) {
@@ -212,8 +211,7 @@ public class IntArray2D {
     private void checkPos(final int position) {
         if (position >= size) {
             throw new ArrayIndexOutOfBoundsException(String.format(
-                    "The primary array has size %d, while the requested "
-                    + "position was %d", size, position));
+                    "The primary array has size %d, while the requested " + "position was %d", size, position));
         }
     }
 

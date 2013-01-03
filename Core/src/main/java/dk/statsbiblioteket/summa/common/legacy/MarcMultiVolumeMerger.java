@@ -31,13 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 
 /**
@@ -298,9 +292,9 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                 type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
             }
         }
-        if (type.equals(MarcAnnotations.MultiVolumeType.BIND)) {
+        if (type == MarcAnnotations.MultiVolumeType.BIND) {
             line = line.replace("tag=\"24x\"", "tag=\"248\"");
-        } else if (type.equals(MarcAnnotations.MultiVolumeType.SEKTION)) {
+        } else if (type == MarcAnnotations.MultiVolumeType.SEKTION) {
             line = line.replace("tag=\"24x\"", "tag=\"247\"");
         } else {
             Logging.logProcess(this.getClass().getSimpleName(),

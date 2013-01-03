@@ -59,8 +59,7 @@ public abstract class ResourceListener implements Runnable {
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException e) {
-                    log.error("Interrupted while sleeping in run. Aborting "
-                              + "auto-check");
+                    log.error("Interrupted while sleeping in run. Aborting auto-check");
                     setActive(false);
                 }
             }
@@ -82,18 +81,16 @@ public abstract class ResourceListener implements Runnable {
         try {
             newContent = Resolver.getUTF8Content(location);
         } catch (IOException e) {
-            lastException = new IOException(String.format(
-                    "Exception fetching '%s'", location), e);
+            lastException = new IOException(String.format("Exception fetching '%s'", location), e);
             return false;
         }
         if (newContent == null) {
-            log.debug("No content could be recolved from '" + location + "'");
+            log.debug("No content could be resolved from '" + location + "'");
         }
         try {
             if (oldContent == null || !oldContent.equals(newContent)) {
                 log.debug("performCheck got new content of size "
-                          + (newContent == null ? "null" : 
-                             newContent.length()));
+                          + (newContent == null ? "null" : newContent.length()));
                 oldContent = newContent;
                 resourceChanged(newContent);
                 log.trace("resourceChanged called successfully");
@@ -102,8 +99,7 @@ public abstract class ResourceListener implements Runnable {
                 return false;
             }
         } catch (Exception e) {
-            lastException = new Exception("Exception calling resourceChanged",
-                                          e);
+            lastException = new Exception("Exception calling resourceChanged", e);
         }
         return false;
     }

@@ -14,27 +14,27 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.ingest.stream.ArchiveReader;
 import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
+import dk.statsbiblioteket.summa.ingest.stream.ArchiveReader;
 import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The purpose of this class is to test "files => ingest-chain => storage".
@@ -286,7 +286,7 @@ public class IngestTest extends NoExitTestCase {
         ingester.start();
 
         long endTime = System.currentTimeMillis() + TIMEOUT;
-        while (!ingester.getStatus().getCode().equals(Status.CODE.stopped) &&
+        while (ingester.getStatus().getCode() != Status.CODE.stopped &&
                System.currentTimeMillis() < endTime) {
             log.debug("Sleeping a bit");
             Thread.sleep(100);

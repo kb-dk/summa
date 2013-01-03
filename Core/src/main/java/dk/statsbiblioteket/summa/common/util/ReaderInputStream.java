@@ -92,16 +92,11 @@ public class ReaderInputStream extends InputStream {
                             new char[wantedSize];
         int charCount = reader.read(readBuffer);
         readerEmpty = charCount == -1 || charCount == 0;
-        byte[] readByteBuffer = readerEmpty ? new byte[0]
-                      : new String(readBuffer, 0, charCount).getBytes(encoding);
+        byte[] readByteBuffer = readerEmpty ? new byte[0] : new String(readBuffer, 0, charCount).getBytes(encoding);
         if (byteBuffer != null && bufferPos < byteBuffer.length) {
-            byte[] merged = new byte[byteBuffer.length - bufferPos
-                                     + readByteBuffer.length];
-            System.arraycopy(byteBuffer, 0, merged, 0,
-                             byteBuffer.length - bufferPos);
-            System.arraycopy(readByteBuffer, 0, merged,
-                             byteBuffer.length - bufferPos,
-                             readByteBuffer.length);
+            byte[] merged = new byte[byteBuffer.length - bufferPos + readByteBuffer.length];
+            System.arraycopy(byteBuffer, 0, merged, 0, byteBuffer.length - bufferPos);
+            System.arraycopy(readByteBuffer, 0, merged, byteBuffer.length - bufferPos, readByteBuffer.length);
             byteBuffer = merged;
         } else {
             byteBuffer = readByteBuffer;

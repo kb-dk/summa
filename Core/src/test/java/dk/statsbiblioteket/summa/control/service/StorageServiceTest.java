@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
@@ -88,7 +87,7 @@ public class StorageServiceTest extends NoExitTestCase {
 
         storage.start();
         long endTime = System.currentTimeMillis() + 50 * 1000; // Not forever
-        while (Status.CODE.startingUp.equals(storage.getStatus().getCode())
+        while (Status.CODE.startingUp == storage.getStatus().getCode()
                && System.currentTimeMillis() < endTime) {
             Thread.sleep(50);
         }
@@ -98,7 +97,7 @@ public class StorageServiceTest extends NoExitTestCase {
         try {
             storage.stop();
             endTime = System.currentTimeMillis() + (10 * 1000 + 500);
-            while (Status.CODE.stopping.equals(storage.getStatus().getCode())
+            while (Status.CODE.stopping == storage.getStatus().getCode()
                    && System.currentTimeMillis() < endTime) {
                 Thread.sleep(50);
             }

@@ -235,17 +235,17 @@ public class LuceneIndexDescriptor
                                        Field.TermVector termVector,
                                        Analyzer analyzer) {
         LuceneIndexField field = new LuceneIndexField(name);
-        if (index.equals(Field.Index.NO)) {
+        if (index == Field.Index.NO) {
             field.setDoIndex(false);
             field.setAnalyze(false);
-        } else if (index.equals(Field.Index.NOT_ANALYZED_NO_NORMS)) {
+        } else if (index == Field.Index.NOT_ANALYZED_NO_NORMS) {
             throw new UnsupportedOperationException(
                     "Storing with no norms is not supported. Offending field "
                     + "has name '" + name + "'");
-        } else if (index.equals(Field.Index.ANALYZED)) {
+        } else if (index == Field.Index.ANALYZED) {
             field.setDoIndex(true);
             field.setAnalyze(true);
-        } else if (index.equals(Field.Index.NOT_ANALYZED)) {
+        } else if (index == Field.Index.NOT_ANALYZED) {
             field.setDoIndex(true);
             field.setAnalyze(false);
         }
@@ -253,10 +253,10 @@ public class LuceneIndexDescriptor
                 field.setDoStore(true);
                 field.setDoCompress(true);
               } else*/
-        if (store.equals(Field.Store.NO)) {
+        if (store == Field.Store.NO) {
             field.setDoStore(false);
             field.setDoCompress(false);
-        } else if (store.equals(Field.Store.YES)) {
+        } else if (store == Field.Store.YES) {
             field.setDoStore(true);
             field.setDoCompress(false);
         }

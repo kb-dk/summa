@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Allocates RAM and fills it with garbage until an OutOfMemoryError occurs.
@@ -47,12 +47,9 @@ public class RAMEater {
                         "Usage: RAMEater [-r [-u updates] [s ms]] [-m MB]");
                 System.out.println(
                         "-r: resident. Do not exit and perform periodical, "
-                        + "random updates to memory to keep it from being "
-                        + "swapped\n"
-                        + "-u: random updates to perform periodically when "
-                        + "resident (default " + updates + ")\n"
-                        + "-s: delay between each update-run (default "
-                        + sleepTime + " ms)\n"
+                        + "random updates to memory to keep it from being swapped\n"
+                        + "-u: random updates to perform periodically when resident (default " + updates + ")\n"
+                        + "-s: delay between each update-run (default " + sleepTime + " ms)\n"
                         + "-m: max MB to allocate");
                 return;
             }
@@ -98,16 +95,14 @@ public class RAMEater {
                 bytes.add(newBytes);
             }
         } catch (OutOfMemoryError e) {
-            System.out.println("Allocated "
-                               + (long)bytes.size() * BLOCK_SIZE / 1024 / 1024
+            System.out.println("Allocated " + (long)bytes.size() * BLOCK_SIZE / 1024 / 1024
                                + "MB before OutOfMemoryError was thrown");
         }
         if (!resident) {
             return;
         }
         System.out.println(String.format("Allocated %d MB",
-                                         (long)bytes.size() * BLOCK_SIZE 
-                                         / 1048576));
+                                         (long)bytes.size() * BLOCK_SIZE / 1048576));
         System.out.println(String.format(
                 "Entering random updates mode: Updating %d random bytes each "
                 + "%d ms", updates, sleepTime));
@@ -117,8 +112,7 @@ public class RAMEater {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
-                throw new IllegalStateException("Interrupted while sleeping in"
-                                                + " resident-mode", e);
+                throw new IllegalStateException("Interrupted while sleeping in resident-mode", e);
             }
             for (int i = 0 ; i < updates; i++) {
                 bytes.get(random.nextInt(bytes.size()))

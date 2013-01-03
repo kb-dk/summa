@@ -18,9 +18,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Wrapper that adds readLine-capabilities to an InputStream. Handles LG, CR
@@ -60,8 +60,7 @@ public class LineInputStream extends InputStream {
      */
     public LineInputStream(InputStream source) {
         this.source = source;
-        log.trace(
-                "Constructed LineInputStream with default charset " + charset);
+        log.trace("Constructed LineInputStream with default charset " + charset);
     }
 
     public LineInputStream(InputStream source, String charset) {

@@ -4,14 +4,13 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.Streams;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
-
-import dk.statsbiblioteket.util.Streams;
 
 /**
  * Wraps an InputStream and an OutputStream, copying all bytes read from the
@@ -26,13 +25,12 @@ public class CopyingInputStream extends InputStream {
     private boolean flushOnClose;
 
     /**
-     * @param in  the stream to read from.
-     * @param out the stream to write a copy of the read bytes to.
+     * @param in           the stream to read from.
+     * @param out          the stream to write a copy of the read bytes to.
      * @param flushOnClose if true, calling close will result in any remaining
      *                     bytes from the in stream to be copied to out.
      */
-    public CopyingInputStream(InputStream in, OutputStream out,
-                              boolean flushOnClose) {
+    public CopyingInputStream(InputStream in, OutputStream out, boolean flushOnClose) {
         if (in == null) {
             throw new IllegalArgumentException("InputStream was null");
         }
@@ -61,8 +59,7 @@ public class CopyingInputStream extends InputStream {
     public int read(byte b[], int off, int len) throws IOException {
         int readLength = in.read(b, off, len);
         if (readLength == -1) {
-            log.debug("EOF reached in read(buffer, offset, length), closing "
-                      + "output stream");
+            log.debug("EOF reached in read(buffer, offset, length), closing " + "output stream");
             out.close();
         } else {
             out.write(b, off, readLength);
@@ -75,11 +72,9 @@ public class CopyingInputStream extends InputStream {
         log.debug("Closing input- and output-stream");
         if (flushOnClose) {
             long startTime = System.nanoTime();
-            log.debug(
-                    "Flushing remaining content from in stream to out stream");
+            log.debug("Flushing remaining content from in stream to out stream");
             Streams.pipe(in, out);
-            log.debug("Finished flushing in "
-                      + (System.nanoTime() - startTime / 1000000.0) + "ms");
+            log.debug("Finished flushing in " + (System.nanoTime() - startTime / 1000000.0) + "ms");
         }
         in.close();
         out.close();

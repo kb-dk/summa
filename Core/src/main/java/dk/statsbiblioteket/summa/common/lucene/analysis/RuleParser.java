@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.StringReader;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This is a simple RuleParser, used for reading mapping rules found in
@@ -39,8 +39,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class RuleParser {
 
     // Cache used to store parsed ruleMaps.
-    private static Map<String,Map<String,String>> ruleCache =
-                                       new HashMap<String,Map<String,String>>();
+    private static Map<String, Map<String, String>> ruleCache = new HashMap<String, Map<String, String>>();
 
     /**
      * Parses a String containing rules, a rule is a mapping pair of Strings.
@@ -51,7 +50,7 @@ public class RuleParser {
      * @return a Map representation of the rules where keys are to mapped onto
      *         the value.
      */
-    public static Map<String,String> parse(String rules){
+    public static Map<String, String> parse(String rules) {
         return parse(rules, 64);
     }
 
@@ -60,13 +59,13 @@ public class RuleParser {
      * The maximun lenght for any String found in the rules String must not
      * exceed the maxLen argument.
      *
-     * @param rules - the rules to parse.
-     * @param maxLen  - the maxLen of any key or value found in the rules.
+     * @param rules  - the rules to parse.
+     * @param maxLen - the maxLen of any key or value found in the rules.
      * @return a Map representation of the rules where keys are to mapped onto
      *         the value.
      * @throws IllegalArgumentException if the rules cannot be parsed.
      */
-    public static Map<String,String> parse(String rules, int maxLen){
+    public static Map<String, String> parse(String rules, int maxLen) {
 
         Map<String, String> ruleMap;
 
@@ -98,57 +97,56 @@ public class RuleParser {
 
 
         StringReader read = new StringReader(rules);
-        try{
-        while ((i = read.read()) != -1) {
-            char val = (char) i;
-            if (val == m && !esNext) { // the char is a ping '
-                inM = !inM; // switch between in prase -> out frase
-            }
-            if (inM && val == ec && !esNext) {
-                es = !es;
-            }
+        try {
+            while ((i = read.read()) != -1) {
+                char val = (char) i;
+                if (val == m && !esNext) { // the char is a ping '
+                    inM = !inM; // switch between in prase -> out frase
+                }
+                if (inM && val == ec && !esNext) {
+                    es = !es;
+                }
 
-            // the rule is finished here
-            if (!inM && val == l) {
-                keyBuf = true;
-                char[] trVal = new char[valPoint];
-                char[] trKey = new char[keyPoint];
-                System.arraycopy(valBuf, 0, trVal, 0, valPoint);
-                System.arraycopy(keyByf, 0, trKey, 0, keyPoint);
-                ruleMap.put(new String(trKey), new String(trVal));
-                keyPoint = 0; valPoint = 0;
-                keyByf = new char[maxLen]; valBuf = new char[maxLen];
-            }
-            if (!inM && val == r) {
-                keyBuf = false;
-            }
-            if (es) {
-                esNext = true;
-                es = false;
-            } else if (!esNext) {
-                if (keyBuf && inM ||
-                    keyBuf && val != ign && val != l && val != m && !inM) {
-                    if (!inM || inM && val != m) {
-                        keyByf[keyPoint++] = val;
+                // the rule is finished here
+                if (!inM && val == l) {
+                    keyBuf = true;
+                    char[] trVal = new char[valPoint];
+                    char[] trKey = new char[keyPoint];
+                    System.arraycopy(valBuf, 0, trVal, 0, valPoint);
+                    System.arraycopy(keyByf, 0, trKey, 0, keyPoint);
+                    ruleMap.put(new String(trKey), new String(trVal));
+                    keyPoint = 0;
+                    valPoint = 0;
+                    keyByf = new char[maxLen];
+                    valBuf = new char[maxLen];
+                }
+                if (!inM && val == r) {
+                    keyBuf = false;
+                }
+                if (es) {
+                    esNext = true;
+                    es = false;
+                } else if (!esNext) {
+                    if (keyBuf && inM || keyBuf && val != ign && val != l && val != m && !inM) {
+                        if (!inM || inM && val != m) {
+                            keyByf[keyPoint++] = val;
+                        }
+                    } else if (inM && val != m || !inM && val != ign && val != r &&
+                                                  val != l && val != m) {
+                        valBuf[valPoint++] = val;
                     }
-                } else if (inM && val != m ||
-                           !inM && val != ign && val != r &&
-                           val != l && val != m) {
-                    valBuf[valPoint++] = val;
-                }
-            } else if (esNext) {
-                if (keyBuf) {
-                    keyByf[keyPoint++] = val;
+                } else if (esNext) {
+                    if (keyBuf) {
+                        keyByf[keyPoint++] = val;
 
-                } else {
-                    valBuf[valPoint++] = val;
+                    } else {
+                        valBuf[valPoint++] = val;
+                    }
+                    esNext = false;
                 }
-                esNext = false;
             }
-        }
-        } catch (Exception e){
-             throw new IllegalArgumentException("The rules could not be parsed",
-                                                e);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("The rules could not be parsed", e);
         }
 
         cacheRuleMap(rules, maxLen, ruleMap);
@@ -156,14 +154,11 @@ public class RuleParser {
         return ruleMap;
     }
 
-    private static void cacheRuleMap(String rules,
-                                     int maxLen,
-                                     Map<String,String> ruleMap) {
+    private static void cacheRuleMap(String rules, int maxLen, Map<String, String> ruleMap) {
         ruleCache.put(getRuleMapKey(rules, maxLen), ruleMap);
     }
 
-    private static Map<String,String> getCachedRuleMap(String rules,
-                                                       int maxLen) {
+    private static Map<String, String> getCachedRuleMap(String rules, int maxLen) {
         return ruleCache.get(getRuleMapKey(rules, maxLen));
     }
 
@@ -171,8 +166,7 @@ public class RuleParser {
         return maxLen + "_" + rules;
     }
 
-    public static String sanitize(String rules,
-                                  boolean keepDefaults, String defaults) {
+    public static String sanitize(String rules, boolean keepDefaults, String defaults) {
         if (keepDefaults) {
             if (rules == null || "".equals(rules)) {
                 return defaults;

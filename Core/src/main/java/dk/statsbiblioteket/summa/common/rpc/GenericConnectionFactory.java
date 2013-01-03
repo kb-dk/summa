@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link ConnectionFactory} creating a backend {@link ConnectionFactory}
- * dynamically from a {@link Configuration}. 
+ * dynamically from a {@link Configuration}.
  */
 public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
 
@@ -48,24 +48,22 @@ public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
     private ConnectionFactory<? extends E> backend;
 
     @SuppressWarnings("unchecked")
-    public GenericConnectionFactory (Configuration conf) {
-        super ();
-        log = LogFactory.getLog (GenericConnectionFactory.class);
+    public GenericConnectionFactory(Configuration conf) {
+        super();
+        log = LogFactory.getLog(GenericConnectionFactory.class);
 
-        Class<? extends ConnectionFactory> backendClass =
-                            conf.getClass(CONF_FACTORY, ConnectionFactory.class,
-                                          SummaRMIConnectionFactory.class);
+        Class<? extends ConnectionFactory> backendClass = conf.getClass(
+                CONF_FACTORY, ConnectionFactory.class, SummaRMIConnectionFactory.class);
 
-        log.debug ("Found backend class " + backendClass.getName());
+        log.debug("Found backend class " + backendClass.getName());
 
         // Suppressed unchecked assignment here
         backend = Configuration.create(backendClass, conf);
 
-        log.trace ("Applying configuration on backend");
+        log.trace("Applying configuration on backend");
         setGraceTime(conf.getInt(CONF_GRACE_TIME, 5));
         setNumRetries(conf.getInt(CONF_RETRIES, 5));
-        log.debug ("Configuration: gracetime=" + getGraceTime()
-                 + ", and retries=" + getNumRetries());
+        log.debug("Configuration: gracetime=" + getGraceTime() + ", and retries=" + getNumRetries());
     }
 
     @Override
@@ -74,26 +72,22 @@ public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
     }
 
     @Override
-    public int getGraceTime () {
+    public int getGraceTime() {
         return backend.getGraceTime();
     }
 
     @Override
-    public void setGraceTime (int seconds) {
+    public void setGraceTime(int seconds) {
         backend.setGraceTime(seconds);
     }
 
     @Override
-    public int getNumRetries () {
+    public int getNumRetries() {
         return backend.getNumRetries();
     }
 
     @Override
-    public void setNumRetries (int retries) {
+    public void setNumRetries(int retries) {
         backend.setNumRetries(retries);
     }
 }
-
-
-
-

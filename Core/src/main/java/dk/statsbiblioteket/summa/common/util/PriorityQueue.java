@@ -59,22 +59,19 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         this(Integer.MAX_VALUE);
     }
     public PriorityQueue(int maxCapacity) {
-        this(null, Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity),
-             maxCapacity);
+        this(null, Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), maxCapacity);
     }
     public PriorityQueue(Comparator<T> comparator, int maxCapacity) {
-        this(comparator, Math.min(DEFAULT_INITIAL_CAPACITY,
-                                  maxCapacity), maxCapacity);
+        this(comparator, Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), maxCapacity);
     }
     public PriorityQueue(int initialCapacity, int maxCapacity) {
         this(null, initialCapacity, maxCapacity);
     }
-    public PriorityQueue(Comparator<T> comparator, int initialCapacity,
-                         int maxCapacity) {
+    public PriorityQueue(Comparator<T> comparator, int initialCapacity, int maxCapacity) {
         if (maxCapacity < initialCapacity) {
             throw new IllegalArgumentException(String.format(
-                    "The max capacity (%d) must be larger than or equal to the "
-                    + "initial capacity (%d)", maxCapacity, initialCapacity));
+                    "The max capacity (%d) must be larger than or equal to the initial capacity (%d)",
+                    maxCapacity, initialCapacity));
         }
         //noinspection unchecked
         heap = (T[])new Comparable[initialCapacity];
@@ -110,13 +107,13 @@ public class PriorityQueue<T extends Comparable<? super T>> {
                           int maxCapacity) {
         if (size > values.length) {
             throw new IllegalArgumentException(String.format(
-                    "The size (%d) must be equal to or smaller than the length "
-                    + "of values (%d)", size, values.length));
+                    "The size (%d) must be equal to or smaller than the length of values (%d)",
+                    size, values.length));
         }
         if (maxCapacity < size) {
             throw new IllegalArgumentException(String.format(
-                    "The maxCapacity (%d) must be equal to or greater than "
-                    + "size (%d)", maxCapacity, size));
+                    "The maxCapacity (%d) must be equal to or greater than size (%d)",
+                    maxCapacity, size));
         }
         this.maxCapacity = maxCapacity;
         this.size = size;
@@ -124,8 +121,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
             heap = values;
         } else {
             //noinspection unchecked
-            heap = (T[])new Comparable[Math.max(Math.min(
-                    DEFAULT_INITIAL_CAPACITY, maxCapacity), size)];
+            heap = (T[])new Comparable[Math.max(Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), size)];
             System.arraycopy(values, 0, heap, 0, size);
         }
 
@@ -182,8 +178,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
      */
     public T getMin() {
         if (size == 0) {
-            throw new ArrayIndexOutOfBoundsException(
-                    "No values left on the heap");
+            throw new ArrayIndexOutOfBoundsException("No values left on the heap");
         }
         //noinspection unchecked
         return heap[0];
@@ -283,4 +278,3 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         return str + "}\n";
     }
 }
-

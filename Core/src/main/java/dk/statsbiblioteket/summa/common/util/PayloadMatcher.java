@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Helper class that performs regexp-matches on Payloads.
@@ -54,8 +54,7 @@ public class PayloadMatcher {
      * Defining this property implies that all filtered payloads must include a
      * {@code Record}. Payloads without Record will return false.
      */
-    public static final String CONF_CONTENT_REGEX =
-                                            "summa.record.contentpatterns";
+    public static final String CONF_CONTENT_REGEX = "summa.record.contentpatterns";
 
     /**
      * Optional property defining a list of keys. A list of the same length must
@@ -161,8 +160,7 @@ public class PayloadMatcher {
                 Object value = payload.getData(metaKey);
                 if (value != null &&
                     (metaValueMatchers == null
-                     || metaValueMatchers.get(i).reset(
-                            value.toString()).matches())) {
+                     || metaValueMatchers.get(i).reset(value.toString()).matches())) {
                     return true;
                 }
             }
@@ -192,8 +190,7 @@ public class PayloadMatcher {
                 Object value;
                 if ((value = record.getMeta(metaKey)) != null) {
                     if (metaValueMatchers == null ||
-                        metaValueMatchers.get(i).reset(
-                            value.toString()).matches()) {
+                        metaValueMatchers.get(i).reset(value.toString()).matches()) {
                         return true;
                     }
                 }
@@ -213,6 +210,4 @@ public class PayloadMatcher {
         }
         return false;
     }
-
 }
-
