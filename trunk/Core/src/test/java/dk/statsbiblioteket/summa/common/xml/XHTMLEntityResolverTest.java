@@ -22,11 +22,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -51,18 +47,14 @@ public class XHTMLEntityResolverTest extends TestCase {
 
     public void testNonescapingTransformation() throws Exception {
         TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer(new StreamSource(
-                new FileInputStream(Resolver.getFile(
-                        "common/XHTMLEntityResolver/identity.xslt"))));
+        Transformer transformer = factory.newTransformer(new StreamSource(new FileInputStream(Resolver.getFile
+                ("common/XHTMLEntityResolver/identity.xslt"))));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Result result = new StreamResult(out);
         try {
-            transformer.transform(new StreamSource(new FileInputStream(
-                    Resolver.getFile(
-                            "common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))),
-                                  result);
-            fail("Transformation of XHTML 1.0 content without DTD-resolving"
-                 + " should fail");
+            transformer.transform(new StreamSource(new FileInputStream(Resolver.getFile
+                    ("common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))), result);
+            fail("Transformation of XHTML 1.0 content without DTD-resolving" + " should fail");
         } catch (TransformerException e) {
             // Expected
         }
@@ -70,8 +62,11 @@ public class XHTMLEntityResolverTest extends TestCase {
     }
 
     public void testEscapingTransformation() throws Exception {
-        testEscapingTransformation(
-                "common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml");
+        testEscapingTransformation("common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml");
+    }
+
+    public void testUnhandledDTD() throws Exception {
+        testEscapingTransformation("common/XHTMLEntityResolver/webpage_xhtml-unhandledDTD.xml");
     }
 
     public void testEscapingTransformation2() throws Exception {
@@ -80,20 +75,17 @@ public class XHTMLEntityResolverTest extends TestCase {
 
     public void testEscapingTransformationNondeclared() throws Exception {
         try {
-            testEscapingTransformation(
-                    "common/XHTMLEntityResolver/webpage_html-nondeclared.html");
-        } catch(Exception e) {
+            testEscapingTransformation("common/XHTMLEntityResolver/webpage_html-nondeclared.html");
+        } catch (Exception e) {
             e.printStackTrace();
             fail("Should be fixed");
         }
     }
 
-    public static void testEscapingTransformation(String webpage)
-                                                              throws Exception {
+    public static void testEscapingTransformation(String webpage) throws Exception {
         TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer(new StreamSource(
-                new FileInputStream(Resolver.getFile(
-                        "common/XHTMLEntityResolver/identity.xslt"))));
+        Transformer transformer = factory.newTransformer(new StreamSource(new FileInputStream(Resolver.getFile
+                ("common/XHTMLEntityResolver/identity.xslt"))));
 
         XMLReader reader = XMLReaderFactory.createXMLReader();
         reader.setEntityResolver(new XHTMLEntityResolver(null));
@@ -103,7 +95,8 @@ public class XHTMLEntityResolverTest extends TestCase {
         xif.setProperty(XMLInputFactory.IS_VALIDATING, false);
         xif.setProperty(XMLInputFactory.SUPPORT_DTD, true);
         xif.setXMLResolver(new XMLResolver() {
-            public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace) throws XMLStreamException {
+            public Object resolveEntity(String publicID, String systemID, String baseURI,
+            String namespace) throws XMLStreamException {
                 System.out.println("public: " + publicID);
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
@@ -112,8 +105,7 @@ public class XHTMLEntityResolverTest extends TestCase {
 /*        XMLStreamReader streamReader = xif.createXMLStreamReader(new FileInputStream(
                     Resolver.getFile(webpage)));
                                                 */
-        InputSource is = new InputSource(new FileInputStream(
-                    Resolver.getFile(webpage)));
+        InputSource is = new InputSource(new FileInputStream(Resolver.getFile(webpage)));
         Source source = new SAXSource(reader, is);
 //        StAXSource ax = new StAXSource(streamReader);
 
