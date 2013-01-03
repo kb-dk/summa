@@ -21,7 +21,10 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
@@ -989,8 +992,8 @@ public class TestExposedFacets extends TestCase {
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
 
     //new ExposedHelper().close(); // Deletes old index
-    File LOCATION = ExposedHelper.INDEX_LOCATION;
-    if (!LOCATION.exists()) {
+    final File LOCATION = ExposedHelper.INDEX_LOCATION;
+    if (!LOCATION.exists()|| LOCATION.listFiles().length == 0) {
       final int DOCCOUNT = 10000000;
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
@@ -999,16 +1002,15 @@ public class TestExposedFacets extends TestCase {
           DOCCOUNT + " documents will be build at "
           + ExposedHelper.INDEX_LOCATION );
       helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
-      LOCATION = ExposedHelper.INDEX_LOCATION;
     }
-    if (!LOCATION.exists() || LOCATION.listFiles().length == 0) {
+/*    if (!LOCATION.exists() || LOCATION.listFiles().length == 0) {
       System.out.println("No index at " + LOCATION.getAbsolutePath()
                           + ". Please build a test index (you can use one from on of the other" +
                           " JUnit tests in TestExposedFacets) and correct the path. " +
                           "Alternatively: Delete the folder and a test index will be created" +
                           "automatically");
         return;
-    }
+    }*/
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
@@ -1041,6 +1043,8 @@ public class TestExposedFacets extends TestCase {
         poolFactory, searcher, q, sQuery, sw, FACET_SCALE_SIMPLE_REQUEST);
     System.out.println(sw.toString());
     System.out.println("Instances: " + ExposedTuple.instances);
+    totalTime += System.currentTimeMillis();
+    System.out.println("Total test time: " + totalTime + "ms");
   }
 
 /*  public void testP() {
