@@ -30,7 +30,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * getMin:    O(1)
  * clear:     O(1)
  * Note: This queue is not thread-safe.
- *
+ * <p/>
  * see http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps
  * and http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm
  */
@@ -46,16 +46,16 @@ public class PriorityQueueLong {
     public PriorityQueueLong() {
         this(Integer.MAX_VALUE);
     }
+
     public PriorityQueueLong(int maxCapacity) {
         this(Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), maxCapacity);
     }
+
     public PriorityQueueLong(int initialCapacity, int maxCapacity) {
         if (maxCapacity < initialCapacity) {
-            throw new IllegalArgumentException("The max capacity ("
-                                               + maxCapacity + ") must be "
-                                               + "larger than or equal to the "
-                                               + "initial capacity ("
-                                               + initialCapacity + ")");
+            throw new IllegalArgumentException(
+                    "The max capacity (" + maxCapacity + ") must be larger than or equal to the "
+                    + "initial capacity (" + initialCapacity + ")");
         }
         heap = new long[initialCapacity];
         this.maxCapacity = maxCapacity;
@@ -64,6 +64,7 @@ public class PriorityQueueLong {
     /**
      * Assign all the given values to the queue, replacing all existing values.
      * Time complexity is O(n).
+     *
      * @param values      the values to assign to the queue.
      * @param size        the number of values to assign. This must be equal to
      *                    or smaller than the number of values.
@@ -72,39 +73,34 @@ public class PriorityQueueLong {
      * @param maxCapacity the maximum capacity for this queue. The maximum must
      *                    be equal to or greater than the size.
      */
-    public void setValues(long[] values, int size, boolean reuseArray,
-                          int maxCapacity) {
+    public void setValues(long[] values, int size, boolean reuseArray, int maxCapacity) {
         if (size > values.length) {
-            throw new IllegalArgumentException("The size (" + size
-                                               + ") must be equal to or "
-                                               + "smaller than the length "
-                                               + "of values (" + values.length
-                                               + ")");
+            throw new IllegalArgumentException(
+                    "The size (" + size + ") must be equal to or smaller than the length of values ("
+                    + values.length + ")");
         }
         if (maxCapacity < size) {
-            throw new IllegalArgumentException("The maxCapacity (" + maxCapacity
-                                               + ") must be equal to or "
-                                               + "greater than size ("
-                                               + size + ")");
+            throw new IllegalArgumentException(
+                    "The maxCapacity (" + maxCapacity + ") must be equal to or greater than size (" + size + ")");
         }
         this.maxCapacity = maxCapacity;
         this.size = size;
         if (reuseArray) {
             heap = values;
         } else {
-            heap = new long[Math.max(Math.min(DEFAULT_INITIAL_CAPACITY,
-                                              maxCapacity), size)];
+            heap = new long[Math.max(Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), size)];
             System.arraycopy(values, 0, heap, 0, size);
         }
-        
+
         // This is O(n), although it looks like O(n*log(n))
-        for (int position = size / 2 - 1 ; position >= 0 ; position--) {
+        for (int position = size / 2 - 1; position >= 0; position--) {
             siftDown(position);
         }
     }
 
     /**
      * Insert a value in the queue. Time complexity is O(log(n)).
+     *
      * @param value the value to insert in the queue.
      */
     public void insert(long value) {
@@ -114,8 +110,8 @@ public class PriorityQueueLong {
                 siftDown();
             }
         } else { // Insert at the end and sift up
-            if (heap.length == size+1) { // Expand heap
-                int newSize = Math.min(maxCapacity, heap.length*2);
+            if (heap.length == size + 1) { // Expand heap
+                int newSize = Math.min(maxCapacity, heap.length * 2);
                 long[] newQueue = new long[newSize];
                 System.arraycopy(heap, 0, newQueue, 0, size);
                 heap = newQueue;
@@ -133,11 +129,12 @@ public class PriorityQueueLong {
 
     /**
      * Remove the smallest value on the queue Time complexity is O(log(n)).
+     *
      * @return the smallest value on the queue.
      */
     public long removeMin() {
         long result = getMin();
-        heap[0] = heap[size-1];
+        heap[0] = heap[size - 1];
         size--;
         siftDown();
         return result;
@@ -145,12 +142,12 @@ public class PriorityQueueLong {
 
     /**
      * Get the smallest value on the queue. Time complexity is O(1).
+     *
      * @return the smallest value on the queue.
      */
     public long getMin() {
         if (size == 0) {
-            throw new ArrayIndexOutOfBoundsException(
-                    "No values left on the heap");
+            throw new ArrayIndexOutOfBoundsException("No values left on the heap");
         }
         return heap[0];
     }
@@ -167,7 +164,7 @@ public class PriorityQueueLong {
      * balances the heap accordingly.
      */
     protected void siftUp() {
-        int position = size-1;
+        int position = size - 1;
         while (position > 0) {
             int parentPosition = parent(position);
             if (heap[parentPosition] > heap[position]) {
@@ -186,11 +183,12 @@ public class PriorityQueueLong {
     protected void siftDown() {
         siftDown(0);
     }
+
     protected void siftDown(int startPosition) {
         int position = startPosition;
         while (firstChild(position) < size) {
             int kid = firstChild(position);
-            if (kid < size-1 && heap[kid] > heap[kid+1]) {
+            if (kid < size - 1 && heap[kid] > heap[kid + 1]) {
                 kid++;
             }
             if (heap[position] < heap[kid]) {
@@ -207,7 +205,7 @@ public class PriorityQueueLong {
      * @return the position of the parent of the element.
      */
     protected int parent(int element) {
-      return (element-1) / 2;
+        return (element - 1) / 2;
     }
 
     /**
@@ -216,7 +214,7 @@ public class PriorityQueueLong {
      *         might be outside of the heap.
      */
     protected int firstChild(int element) {
-        return 2*element+1;
+        return 2 * element + 1;
     }
 
     private void swap(int element1, int element2) {
@@ -225,7 +223,3 @@ public class PriorityQueueLong {
         heap[element2] = temp;
     }
 }
-
-
-
-

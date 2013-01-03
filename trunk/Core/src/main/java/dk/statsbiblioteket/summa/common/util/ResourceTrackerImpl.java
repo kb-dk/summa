@@ -53,8 +53,7 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
      * @param maxCountLimit the maximum allowed number of elements.
      * @param memLimit      the maximum allowed bytes.
      */
-    public ResourceTrackerImpl(
-            long minCountLimit, long maxCountLimit, long memLimit) {
+    public ResourceTrackerImpl(long minCountLimit, long maxCountLimit, long memLimit) {
         this.minCountLimit = minCountLimit;
         this.maxCountLimit = maxCountLimit;
         this.memLimit = memLimit;
@@ -76,15 +75,12 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
 
     @Override
     public boolean hasRoom(T element) {
-        return count < minCountLimit ||
-               (count + 1 <= maxCountLimit &&
-                calculateBytes(element) + mem < memLimit);
+        return count < minCountLimit || (count + 1 <= maxCountLimit && calculateBytes(element) + mem < memLimit);
     }
 
     @Override
     public boolean isOverflowing() {
-        return count > minCountLimit 
-               && (count > maxCountLimit || mem > memLimit);
+        return count > minCountLimit && (count > maxCountLimit || mem > memLimit);
     }
 
     @Override
@@ -124,4 +120,3 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
         mem = 0;
     }
 }
-

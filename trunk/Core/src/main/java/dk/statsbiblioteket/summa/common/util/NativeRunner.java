@@ -62,13 +62,11 @@ public class NativeRunner  {
     public NativeRunner(String[] commands, String[] environment) {
         setParameters(commands, environment, null);
     }
-    public NativeRunner(String[] commands, String[] environment,
-                        InputStream processInput) {
+    public NativeRunner(String[] commands, String[] environment, InputStream processInput) {
         setParameters(commands, environment, processInput);
     }
 
-    public void setParameters(String[] commands, String[] environment,
-                              InputStream processInput) {
+    public void setParameters(String[] commands, String[] environment, InputStream processInput) {
         this.commands = commands;
         this.environment = environment;
         this.processInput = processInput;
@@ -85,14 +83,11 @@ public class NativeRunner  {
      *                   from the error-output of the native commands.
      * @throws Exception if execution of the native commands failed.
      */
-    public synchronized int execute(int maxOutput,
-                                    int maxError) throws Exception {
+    public synchronized int execute(int maxOutput, int maxError) throws Exception {
         try {
             Process p = Runtime.getRuntime().exec(commands, environment);
-            ByteArrayOutputStream pOut =
-                    collectProcessOutput(p.getInputStream(), maxOutput);
-            ByteArrayOutputStream pError =
-                    collectProcessOutput(p.getErrorStream(), maxError);
+            ByteArrayOutputStream pOut = collectProcessOutput(p.getInputStream(), maxOutput);
+            ByteArrayOutputStream pError = collectProcessOutput(p.getErrorStream(), maxError);
             feedProcess(p, processInput);
             while (true) {
                 try {
@@ -108,8 +103,7 @@ public class NativeRunner  {
             processError = new ByteArrayInputStream(pError.toByteArray());
             return p.exitValue();
         } catch (IOException e) {
-            throw new Exception("Failure while running "
-                                + stringsToString(commands), e);
+            throw new Exception("Failure while running " + stringsToString(commands), e);
         }
     }
 
@@ -241,8 +235,7 @@ public class NativeRunner  {
                     }
                 } catch (IOException e) {
                     // This seems ugly
-                    throw new RuntimeException("Couldn't read output from " +
-                                               "process.", e);
+                    throw new RuntimeException("Couldn't read output from process.", e);
                 }
                 threads.remove(this);
             }
@@ -279,8 +272,7 @@ public class NativeRunner  {
                     }
                 } catch (IOException e) {
                     // This seems ugly
-                    throw new RuntimeException("Couldn't write input to " +
-                                               "process.", e);
+                    throw new RuntimeException("Couldn't write input to process.", e);
                 }
             }
         }.start();
@@ -311,7 +303,4 @@ public class NativeRunner  {
 
     }
 }
-
-
-
 

@@ -41,6 +41,7 @@ public abstract class IndirectLongSorter<V> {
 
     /**
      * Get the value for the given reference.
+     *
      * @param reference a reference to a value.
      * @return a value corresponding to the given reference.
      */
@@ -54,6 +55,7 @@ public abstract class IndirectLongSorter<V> {
      * </p><p>
      * The article http://en.wikipedia.org/wiki/Merge_sort was used as base for
      * this code.
+     *
      * @param references the references to sort.
      * @param c          the comparator method for values.
      * @return the references array after sort, suitable for chaining.
@@ -71,14 +73,14 @@ public abstract class IndirectLongSorter<V> {
      * this code.
      * </p><p>
      * The given array of references is not changed by the sorting.
+     *
      * @param references the references to sort.
-     * @param start the index of the first reference to sort (inclusive).
-     * @param end   the index of the last reference to sort (exclusive).
-     * @param c     the comparator method for values.
+     * @param start      the index of the first reference to sort (inclusive).
+     * @param end        the index of the last reference to sort (exclusive).
+     * @param c          the comparator method for values.
      * @return the references array after sort, suitable for chaining.
      */
-    public long[] sort(long[] references, int start, int end,
-                       Comparator<? super V> c) {
+    public long[] sort(long[] references, int start, int end, Comparator<? super V> c) {
         if (end - start <= 1) {
             return references;
         }
@@ -95,14 +97,14 @@ public abstract class IndirectLongSorter<V> {
      * be sorted and the references from middle (inclusive) to end (exclusive)
      * to be sorted and performs a merge, with the result assigned to references
      * starting from start.
+     *
      * @param references the references to mere.
-     * @param start  the start of the references to merge.
-     * @param middle the middle of the references to merge.
-     * @param end    the end of the references to merge.
-     * @param c      the comparator method for values.
+     * @param start      the start of the references to merge.
+     * @param middle     the middle of the references to merge.
+     * @param end        the end of the references to merge.
+     * @param c          the comparator method for values.
      */
-    private void merge(long[] references, int start, int middle, int end,
-                       Comparator<? super V> c) {
+    private void merge(long[] references, int start, int middle, int end, Comparator<? super V> c) {
         if (middle - start == 0 || end - middle == 0) {
             return;
         }
@@ -125,7 +127,6 @@ public abstract class IndirectLongSorter<V> {
         while (iRight < end) {
             result[iResult++] = references[iRight++];
         }
-        System.arraycopy(result, 0 , references, start, result.length);
+        System.arraycopy(result, 0, references, start, result.length);
     }
 }
-

@@ -43,8 +43,7 @@ public class LowercaseMap {
                 LOWER.put(s, toLower(s));
             }
         }
-        log.trace("Finished constructing base TOLOWER with " + LOWER.size()
-                  + " rules");
+        log.trace("Finished constructing base TOLOWER with " + LOWER.size() + " rules");
     }
 
     // Technically speaking we should do this with a custom Locale.
@@ -64,8 +63,7 @@ public class LowercaseMap {
      */
     public static Map<String, String> getLowercaseMap(
             Map<String, String> replaceMap) {
-        Map<String, String> result = new HashMap<String, String>(
-                replaceMap.size() * 2 + LOWER.size());
+        Map<String, String> result = new HashMap<String, String>(replaceMap.size() * 2 + LOWER.size());
         // Handle existing
         for (Map.Entry<String, String> entry: replaceMap.entrySet()) {
             String key = entry.getKey();
@@ -92,4 +90,3 @@ public class LowercaseMap {
         return null;
     }
 }
-

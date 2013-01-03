@@ -38,9 +38,11 @@ public abstract class StateThread implements Runnable {
      * stopping: Attempting to stop running.<br />
      * stopped:  The run has stopped.<br />
      * error:    An exception occured and the StateThread is in an unstable
-     *           state. Further calls will probably fail.
+     * state. Further calls will probably fail.
      */
-    public static enum STATUS {ready, running, stopping, stopped, error}
+    public static enum STATUS {
+        ready, running, stopping, stopped, error
+    }
 
     // TODO: Consider reusing the Status from the Control framework
     private STATUS status = STATUS.ready;
@@ -62,6 +64,7 @@ public abstract class StateThread implements Runnable {
     /**
      * Set the status to error. Start cannot be called on StateThreads with
      * status error.
+     *
      * @param message a description of the error.
      * @param cause   the cause of the error or null.
      */
@@ -87,19 +90,19 @@ public abstract class StateThread implements Runnable {
             log.debug("Starting run");
             runMethod();
             log.info("Run complete after " + profiler.getSpendTime() + ". Cleaning up");
-            if (!status.equals(STATUS.error)) {
+            if (status != STATUS.error) {
                 status = STATUS.stopped;
             }
-            if (STATUS.error.equals(getStatus())) {
+            if (STATUS.error == getStatus()) {
                 //noinspection DuplicateStringLiteralInspection
                 log.warn("run stopped with error. Status " + status);
             } else {
                 //noinspection DuplicateStringLiteralInspection
-                log.info("run stopped without known complications. Status " + status
-                         + " (" + getErrorMessage() + ")", getErrorCause());
+                log.info("run stopped without known complications. Status " + status + " (" + getErrorMessage() + ")",
+                         getErrorCause());
             }
         } catch (Throwable t) {
-            log.error("Exception during run" , t);
+            log.error("Exception during run", t);
             status = STATUS.error;
         }
         try {
@@ -131,33 +134,27 @@ public abstract class StateThread implements Runnable {
                 }
                 if (status != STATUS.running) {
                     // continuing didn't work, try starting a new thread
-                    log.debug("start: Aborting previous stop failed, starting "
-                              + "anew instead");
+                    log.debug("start: Aborting previous stop failed, starting anew instead");
                     start();
                 } else {
-                    log.debug("start: Aborting previous stop estimated to be "
-                              + "successful");
+                    log.debug("start: Aborting previous stop estimated to be successful");
                 }
                 return;
             }
-            case error: throw new IllegalStateException("start: Cannot start "
-                                                        + "when the status is "
-                                                        + STATUS.error);
+            case error:
+                throw new IllegalStateException("start: Cannot start when the status is " + STATUS.error);
             case ready:
             case stopped: {
                 log.debug("start: Creating and starting Thread");
-                String threadName = "".equals(getClass().getSimpleName()) ?
-                                    "Anonymous" : getClass().getSimpleName();
-                thread = new Thread(this,
-                                    threadName+"-"+hashCode());
+                String threadName = "".equals(getClass().getSimpleName()) ? "Anonymous" : getClass().getSimpleName();
+                thread = new Thread(this, threadName + "-" + hashCode());
                 status = STATUS.running;
                 thread.start();
                 break;
             }
             default: {
                 //noinspection DuplicateStringLiteralInspection
-                throw new UnsupportedOperationException("Unknown status: "
-                                                        + status);
+                throw new UnsupportedOperationException("Unknown status: " + status);
             }
         }
 
@@ -193,8 +190,7 @@ public abstract class StateThread implements Runnable {
             }
             default: {
                 //noinspection DuplicateStringLiteralInspection
-                throw new UnsupportedOperationException("Unknown status: "
-                                                        + status);
+                throw new UnsupportedOperationException("Unknown status: " + status);
             }
         }
     }
@@ -203,20 +199,22 @@ public abstract class StateThread implements Runnable {
      * @return true if the thread is running or stopping, else false.
      */
     public boolean isRunning() {
-        return status.equals(STATUS.running) || status.equals(STATUS.stopping);
+        return status == STATUS.running || status == STATUS.stopping;
     }
 
     /**
-    * Wait for the implementation to finish.
-    * @throws InterruptedException if any Thread has interrupted the underlying
-    *                              thread.
-     * */
+     * Wait for the implementation to finish.
+     *
+     * @throws InterruptedException if any Thread has interrupted the underlying
+     *                              thread.
+     */
     public void waitForFinish() throws InterruptedException {
         waitForFinish(0);
     }
 
     /**
      * Wait for the implementation to finish.
+     *
      * @param timeout wait at most timeout milliseconds for finish.
      *                0 means wait forever.
      * @throws InterruptedException if any Thread has interrupted the underlying
@@ -225,9 +223,7 @@ public abstract class StateThread implements Runnable {
     public void waitForFinish(long timeout) throws InterruptedException {
         log.trace("Waiting for finish");
         while (true) {
-            if (status == STATUS.ready
-                || status == STATUS.stopped
-                || status == STATUS.error) {
+            if (status == STATUS.ready || status == STATUS.stopped || status == STATUS.error) {
                 return;
             }
             thread.join(timeout);
@@ -238,7 +234,8 @@ public abstract class StateThread implements Runnable {
      * This method will be called when the runMethod exits. Override it if some
      * processing should be done then.
      */
-    protected void finishedCallback() { }
+    protected void finishedCallback() {
+    }
 
     /**
      * @return a description of the last error encountered.
@@ -253,6 +250,4 @@ public abstract class StateThread implements Runnable {
     public Throwable getErrorCause() {
         return errorThrowable;
     }
-
 }
-

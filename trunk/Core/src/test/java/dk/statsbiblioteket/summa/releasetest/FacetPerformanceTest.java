@@ -14,7 +14,6 @@
  */
     package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
@@ -22,6 +21,7 @@ import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
@@ -153,13 +153,13 @@ public class FacetPerformanceTest extends NoExitTestCase {
                                   throws RemoteException, InterruptedException {
         long endTime = System.currentTimeMillis() + timeout;
         log.debug("Waiting a maximum of " + timeout + " ms for service");
-        while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
+        while (service.getStatus().getCode() != Status.CODE.stopped &&
                System.currentTimeMillis() < endTime) {
             log.trace("Sleeping a bit");
             Thread.sleep(100);
         }
         assertTrue("The service '" + service + "' should have stopped by now",
-                   service.getStatus().getCode().equals(Status.CODE.stopped));
+                   service.getStatus().getCode() == Status.CODE.stopped);
         log.debug("Finished waiting for service");
     }
 

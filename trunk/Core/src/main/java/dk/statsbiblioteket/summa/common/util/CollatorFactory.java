@@ -65,28 +65,24 @@ public class CollatorFactory {
     private static Collator fixCollator(Collator collator, boolean check) {
         if (!(collator instanceof RuleBasedCollator)) {
             log.warn(String.format(
-                    "fixCollator expected a RuleBasedCollator but got %s. "
-                    + "Unable to update Collator", collator.getClass()));
+                    "fixCollator expected a RuleBasedCollator but got %s. Unable to update Collator",
+                    collator.getClass()));
             return collator;
         }
         String rules = ((RuleBasedCollator)collator).getRules();
-        if (check && rules.indexOf("<' '<'\u005f'") == -1) {
-            log.debug("fixCollator: The received Collator already sorts spaces"
-                      + " first");
+        if (check && !rules.contains("<' '<'\u005f'")) {
+            log.debug("fixCollator: The received Collator already sorts spaces first");
             return collator;
         }
         try {
             RuleBasedCollator newCollator = new RuleBasedCollator(
                     rules.replace("<'\u005f'", "<' '<'\u005f'"));
-            log.trace("Successfully updated Collator to prioritize spaces "
-                      + "before other characters");
+            log.trace("Successfully updated Collator to prioritize spaces before other characters");
             return newCollator;
         } catch (ParseException e) {
-            throw new RuntimeException(
-                    "ParseException while parsing\n" + rules, e);
+            throw new RuntimeException("ParseException while parsing\n" + rules, e);
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Exception while parsing\n" + rules, e);
+            throw new RuntimeException("Exception while parsing\n" + rules, e);
         }
     }
 
@@ -102,25 +98,22 @@ public class CollatorFactory {
         String AA = ", AA , Aa , aA , aa";
         if (!(collator instanceof RuleBasedCollator)) {
             log.warn(String.format(
-                    "adjustAASorting expected a RuleBasedCollator but got %s. "
-                    + "Unable to update Collator", collator.getClass()));
+                    "adjustAASorting expected a RuleBasedCollator but got %s. Unable to update Collator",
+                    collator.getClass()));
             return collator;
         }
         String rules = ((RuleBasedCollator)collator).getRules();
-        if (rules.indexOf(AA) == -1) {
-            log.debug("adjustAASorting: The received Collator already treats "
-                      + "aa as 2*a");
+        if (!rules.contains(AA)) {
+            log.debug("adjustAASorting: The received Collator already treats aa as 2*a");
             return collator;
         }
         try {
             RuleBasedCollator newCollator = new RuleBasedCollator(
                     rules.replace(AA, ""));
-            log.trace("adjustAASorting: Successfully updated Collator to "
-                      + "treat aa as 2*a");
+            log.trace("adjustAASorting: Successfully updated Collator to treat aa as 2*a");
             return newCollator;
         } catch (ParseException e) {
-            throw new RuntimeException(
-                "ParseException while parsing\n" + rules, e);
+            throw new RuntimeException("ParseException while parsing\n" + rules, e);
         } catch (Exception e) {
             throw new RuntimeException("Exception while parsing\n" + rules, e);
         }
@@ -142,8 +135,7 @@ public class CollatorFactory {
             // as significant as letters (and comes before them)
             ((RuleBasedCollator)collator).setAlternateHandlingShifted(false);
         } else {
-            log.warn("Expected the ICU Collator to be a "
-                     + RuleBasedCollator.class.getSimpleName()
+            log.warn("Expected the ICU Collator to be a " + RuleBasedCollator.class.getSimpleName()
                      + " but got " + collator.getClass());
         }
         return collator;
@@ -167,8 +159,7 @@ public class CollatorFactory {
      * @see #adjustAASorting(com.ibm.icu.text.Collator)
      */
     public static Collator createCollator(Locale locale, boolean cache) {
-        return createCollator(
-            locale,  CachedCollator.COMMON_SUMMA_EXTRACTED, cache);
+        return createCollator(locale,  CachedCollator.COMMON_SUMMA_EXTRACTED, cache);
     }
 
     /**
@@ -184,8 +175,7 @@ public class CollatorFactory {
      * @see #fixCollator(com.ibm.icu.text.Collator)
      * @see #adjustAASorting(com.ibm.icu.text.Collator)
      */
-    public static Collator createCollator(
-        Locale locale, String cacheChars, boolean cache) {
+    public static Collator createCollator(Locale locale, String cacheChars, boolean cache) {
         return createCollator(locale);
         // TODO: Re-introduce CachedCollator when it has been fixed properly
         //return cache ? new CachedCollator(collator, cacheChars) : collator;

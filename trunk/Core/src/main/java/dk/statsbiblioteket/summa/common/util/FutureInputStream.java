@@ -15,11 +15,11 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Convenience wrapper that allows for a thread to block until the InputStream
@@ -53,8 +53,7 @@ public class FutureInputStream extends InputStream {
                 try {
                     waiter.wait();
                 } catch (InterruptedException e) {
-                    log.debug("Received InterruptedException while waiting "
-                              + "for close. Retrying waitForclose()");
+                    log.debug("Received InterruptedException while waiting for close. Retrying waitForclose()");
                 }
             }
         }
@@ -72,8 +71,7 @@ public class FutureInputStream extends InputStream {
                 try {
                     waiter.wait(timeout);
                 } catch (InterruptedException e) {
-                    log.debug("Received InterruptedException while timeout-"
-                              + "waiting for close. Retrying waitForclose("
+                    log.debug("Received InterruptedException while timeout-waiting for close. Retrying waitForclose("
                               + timeout + ")");
                 }
             }
@@ -158,4 +156,3 @@ public class FutureInputStream extends InputStream {
         return is.markSupported();
     }
 }
-

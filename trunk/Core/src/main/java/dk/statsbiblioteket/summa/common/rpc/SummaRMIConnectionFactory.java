@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.common.rpc;
 
-import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 
 import java.rmi.Remote;
 
@@ -25,10 +25,7 @@ import java.rmi.Remote;
  * {@link RMIConnectionFactory}.</p>
  * 
  */
-public class SummaRMIConnectionFactory<E extends Remote>
-                                               extends RMIConnectionFactory<E>
-                                               implements Configurable {
-    
+public class SummaRMIConnectionFactory<E extends Remote> extends RMIConnectionFactory<E> implements Configurable {
     public SummaRMIConnectionFactory (Configuration conf) {
         super ();
     }

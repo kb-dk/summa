@@ -47,6 +47,7 @@ public class UniqueTimestampGenerator {
     /**
      * Maximum number of unique timestamps per millisecond.
      */
+    // TODO: Shifting TIME_BITS is wrong. Fix this code
     public static final long MAX_SALT = ~0 >>> TIME_BITS; // ~0 is all ones
 
     /**
@@ -67,8 +68,7 @@ public class UniqueTimestampGenerator {
         last = -1;
 
         if (System.currentTimeMillis () >= MAX_TIME) {
-            throw new AssertionError("System time past " + MAX_TIME
-                                     + ". UniqueTimestampGenerator can not" +
+            throw new AssertionError("System time past " + MAX_TIME + ". UniqueTimestampGenerator can not" +
                                      " function past " + new Date(MAX_TIME));
         }
 
@@ -120,8 +120,7 @@ public class UniqueTimestampGenerator {
         if (salt > MAX_SALT) {
             // We are screwed since this method can not just sleep() to wait for
             // a new system time...
-            throw new RuntimeException("Forced to create non-unique "
-                                       + "salted timestamp");
+            throw new RuntimeException("Forced to create non-unique salted timestamp");
         }
 
         return applySalt(systemTime);

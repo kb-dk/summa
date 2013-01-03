@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.strings;
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 
 /**
  * A {@link Reader} implementation that can read characters from any object
@@ -48,8 +48,7 @@ public class CharSequenceReader extends Reader {
      */
     public CharSequenceReader reset(CharSequence seq) {
         if (seq == null) {
-            throw new NullPointerException("Can not reset internal CharSequence"
-                                           + " to null");
+            throw new NullPointerException("Can not reset internal CharSequence to null");
         }
 
         this.seq = seq;
@@ -67,10 +66,7 @@ public class CharSequenceReader extends Reader {
         int len = seq.length();
         int start = cursor;
 
-        while(cursor < len
-              && cursor-start < count
-              && cursor-start+offset < chars.length) {
-
+        while(cursor < len && cursor-start < count && cursor-start+offset < chars.length) {
             chars[cursor-start+offset] = seq.charAt(cursor);
             cursor++;
         }
@@ -99,4 +95,3 @@ public class CharSequenceReader extends Reader {
         seq = null;
     }
 }
-

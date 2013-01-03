@@ -38,8 +38,7 @@ public class ArrayUtil {
      *         been performed. Note that if sort is true, the order of the
      *         elements in primary might have been changed.
      */
-    public static int[] mergeArrays(int[] primary, int[] additions,
-                                    boolean removeDuplicates, boolean sort) {
+    public static int[] mergeArrays(int[] primary, int[] additions, boolean removeDuplicates, boolean sort) {
         int[] result;
         if (additions.length == 0) {
             result = primary;
@@ -47,8 +46,7 @@ public class ArrayUtil {
             result = new int[primary.length + additions.length];
             System.arraycopy(primary, 0, result, 0, primary.length);
             if (!removeDuplicates) {
-                System.arraycopy(additions, 0, result, primary.length,
-                                 additions.length);
+                System.arraycopy(additions, 0, result, primary.length, additions.length);
             } else {
                 int resultLength = primary.length;
                 addLoop:
@@ -111,9 +109,7 @@ public class ArrayUtil {
      * @return if no expansion occurs anArray will be returned, else the new
      *         array will be returned.
      */
-    public static int[] makeRoom(int[] anArray, int insertPos,
-                                 double growthFactor, int maxIncrement,
-                                 int headRoom) {
+    public static int[] makeRoom(int[] anArray, int insertPos, double growthFactor, int maxIncrement, int headRoom) {
         if (!(insertPos >= anArray.length - headRoom)) {
             return anArray;
         }
@@ -139,9 +135,7 @@ public class ArrayUtil {
      * @return if no expansion occurs anArray will be returned, else the new
      *         array will be returned.
      */
-    public static long[] makeRoom(long[] anArray, int insertPos,
-                                 double growthFactor, int maxIncrement,
-                                 int headRoom) {
+    public static long[] makeRoom(long[] anArray, int insertPos, double growthFactor, int maxIncrement, int headRoom) {
         if (!(insertPos >= anArray.length - headRoom)) {
             return anArray;
         }

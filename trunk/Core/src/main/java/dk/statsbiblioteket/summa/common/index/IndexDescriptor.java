@@ -55,18 +55,17 @@ import java.util.*;
  * </p><p>
  * The IndexDescriptor is abstract. Besides implementing the abstract methods,
  * sub classes will normally need to override {@link #createBaseField(String)}.
- * @see  <a href="http://wiki.apache.org/solr/SchemaXml">Solr Schema XML</a>
+ *
+ * @see <a href="http://wiki.apache.org/solr/SchemaXml">Solr Schema XML</a>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Warn if aliases clashes with field- or group-names
-public abstract class IndexDescriptor<F extends IndexField> implements
-                                   Configurable, FieldProvider<F> {
+public abstract class IndexDescriptor<F extends IndexField> implements Configurable, FieldProvider<F> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
-    public static final String DESCRIPTOR_NAMESPACE =
-            "http://statsbiblioteket.dk/summa/2008/IndexDescriptor";
+    public static final String DESCRIPTOR_NAMESPACE = "http://statsbiblioteket.dk/summa/2008/IndexDescriptor";
     public static final String DESCRIPTOR_NAMESPACE_PREFIX = "id";
 
     /**
@@ -83,8 +82,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * </p><p>
      * Either this property or {@link #CONF_ABSOLUTE_LOCATION} must be present.
      */
-    public static final String CONF_LOCATION_ROOT =
-            "summa.common.indexdescriptor.locationroot";
+    public static final String CONF_LOCATION_ROOT = "summa.common.indexdescriptor.locationroot";
     public static final String CURRENT = "current.txt";
 
     /**
@@ -95,8 +93,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * </p><p>
      * Either this property or {@link #CONF_LOCATION_ROOT} must be present.
      */
-    public static final String CONF_ABSOLUTE_LOCATION =
-            "summa.common.indexdescriptor.absolutelocation";
+    public static final String CONF_ABSOLUTE_LOCATION = "summa.common.indexdescriptor.absolutelocation";
 
     /**
      * How often the IndexDescriptor should be re-read from the resolved
@@ -104,15 +101,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * </p><p>
      * This property is optional. Default is -1.
      */
-    public static final String CONF_CHECK_INTERVAL =
-            "summa.common.index.checkinterval";
+    public static final String CONF_CHECK_INTERVAL = "summa.common.index.checkinterval";
     public static final int DEFAULT_CHECK_INTERVAL = -1;
 
     /**
-         * The property-key for a substorage containing the properties for the
-         * IndexDescriptor. This is used for inlining descriptor setup in other
-         * configurations.
-         */
+     * The property-key for a substorage containing the properties for the
+     * IndexDescriptor. This is used for inlining descriptor setup in other
+     * configurations.
+     */
     public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
 
     /**
@@ -139,8 +135,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * IndexDescriptor. This is enforced by the IndexDescriptor calling
      * {@link #createBaseField} with all BASE_FIELDS.
      */
-    public static final String[] BASE_FIELDS = new String[]{
-            IndexField.SUMMA_DEFAULT, // Index, store
+    public static final String[] BASE_FIELDS = new String[]{IndexField.SUMMA_DEFAULT, // Index, store
             IndexUtils.RECORD_FIELD,  // Index (no analyze), store
             IndexUtils.RECORD_BASE,   // Index (no analyze), store
             IndexField.FREETEXT,      // Index
@@ -167,8 +162,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
      */
-    private Map<String, IndexGroup<F>> groups =
-            new LinkedHashMap<String, IndexGroup<F>>(20);
+    private Map<String, IndexGroup<F>> groups = new LinkedHashMap<String, IndexGroup<F>>(20);
 
     // TODO: Assign this based on XML
     protected F defaultField = createNewField();
@@ -183,6 +177,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * </p><p>
      * If both keys are present, absoluteLocation takes precedence.
      * </p><p>
+     *
      * @param configuration contains the location of a stored IndexDescriptor.
      * @throws IOException if no persistent data could be loaded and parsed.
      */
@@ -190,43 +185,33 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         init();
         createBaseFields();
         String locationRoot = configuration.getString(CONF_LOCATION_ROOT, null);
-        String absoluteLocationString =
-                configuration.getString(CONF_ABSOLUTE_LOCATION, null);
+        String absoluteLocationString = configuration.getString(CONF_ABSOLUTE_LOCATION, null);
         if (locationRoot == null && absoluteLocationString == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("Either " + CONF_LOCATION_ROOT
-                      + " or " + CONF_ABSOLUTE_LOCATION
-                      + " must be present in the "
-                      + "configuration. Using default index descriptor. "
-                      + "It is highly recommended to specify the location of "
-                      + "a descriptor setup");
+            log.error("Either " + CONF_LOCATION_ROOT + " or " + CONF_ABSOLUTE_LOCATION + " must be present in the "
+                      + "configuration. Using default index descriptor. It is highly recommended to specify the " 
+                      + "location of a descriptor setup");
             return;
         }
         if (absoluteLocationString != null) {
             absoluteLocation = Resolver.getURL(absoluteLocationString);
             if (absoluteLocation == null) {
-                throw new IOException(String.format(
-                        "Could not resolve property %s with value '%s'",
-                        CONF_ABSOLUTE_LOCATION, absoluteLocationString));
+                throw new IOException(String.format("Could not resolve property %s with value '%s'", 
+                                                    CONF_ABSOLUTE_LOCATION, absoluteLocationString));
             }
         }
         if (locationRoot != null && absoluteLocationString != null) {
-            log.debug("Both " + CONF_LOCATION_ROOT + "(" + locationRoot
-                     + ") and " + CONF_ABSOLUTE_LOCATION + "("
-                     + absoluteLocationString + ") is defined. "
-                     + CONF_ABSOLUTE_LOCATION + " will be used");
+            log.debug("Both " + CONF_LOCATION_ROOT + "(" + locationRoot + ") and " + CONF_ABSOLUTE_LOCATION + "("
+                      + absoluteLocationString + ") is defined. " + CONF_ABSOLUTE_LOCATION + " will be used");
         }
         if (absoluteLocation == null) {
             try {
                 absoluteLocation = resolveAbsoluteLocation(locationRoot);
             } catch (IOException e) {
-                throw new IOException("Cannot resolve location root "
-                                      + locationRoot + "' to absolute location",
-                                      e);
+                throw new IOException("Cannot resolve location root " + locationRoot + "' to absolute location", e);
             }
         }
-        int checkInterval = configuration.getInt(CONF_CHECK_INTERVAL,
-                                                 DEFAULT_CHECK_INTERVAL);
+        int checkInterval = configuration.getInt(CONF_CHECK_INTERVAL, DEFAULT_CHECK_INTERVAL);
         fetchStateAndActivateListener(checkInterval);
     }
 
@@ -243,6 +228,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * Constructs an IndexDescriptor based on the stated resource. The resource
      * will only be loaded once.
+     *
      * @param absoluteLocation the location of the XML-representation of the
      *                         descriptor.
      * @throws IOException if no persistent data could be loaded and parsed.
@@ -257,6 +243,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     /**
      * Construct an IndexDescriptor based on the given xml.
+     *
      * @param xml an XML-representation of an IndexDescriptor.
      * @throws ParseException if the xml could not be parsed peoperly.
      */
@@ -268,29 +255,23 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.debug("Descriptor created based on XML");
     }
 
-    private void fetchStateAndActivateListener(
-            final int checkInterval) throws IOException {
-        listener =
-                new ResourceListener(absoluteLocation, checkInterval, false) {
+    private void fetchStateAndActivateListener(final int checkInterval) throws IOException {
+        listener = new ResourceListener(absoluteLocation, checkInterval, false) {
 
-                    @Override
-                    public void resourceChanged(String newContent) throws
-                                                                   Exception {
-                        parse(newContent);
-                    }
-                };
+            @Override
+            public void resourceChanged(String newContent) throws Exception {
+                parse(newContent);
+            }
+        };
         if (!listener.performCheck()) {
-            throw new IOException("Could not load description from '"
-                                  + absoluteLocation + "'",
-                                  listener.getLastException());
+            throw new IOException(
+                    "Could not load description from '" + absoluteLocation + "'", listener.getLastException());
         }
         listener.setActive(checkInterval > 0);
     }
 
-    private static URL resolveAbsoluteLocation(String locationRoot) throws
-                                                                   IOException {
-        log.debug("Resolving " + CURRENT + " in location root '"
-                  + locationRoot + "'");
+    private static URL resolveAbsoluteLocation(String locationRoot) throws IOException {
+        log.debug("Resolving " + CURRENT + " in location root '" + locationRoot + "'");
         if (locationRoot == null) {
             throw new IOException("The locationRoot is null");
         }
@@ -299,15 +280,13 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         String content;
         try {
             content = Resolver.getUTF8Content(url);
-        } catch(IOException e) {
-            throw new IOException(String.format(
-                    "Unable to get content from URL '%s', resolved from '%s'",
-                    url, locationRoot), e);
+        } catch (IOException e) {
+            throw new IOException(String.format("Unable to get content from URL '%s', resolved from '%s'", url, 
+                                                locationRoot), e);
         }
         String tokens[] = content.split("\n");
         URL absoluteLocation = Resolver.getURL(tokens[0].trim());
-        log.debug("fetchDescription: Got absoluteLocation '"
-                  + absoluteLocation + "' from '" + indirection + "'");
+        log.debug("fetchDescription: Got absoluteLocation '" + absoluteLocation + "' from '" + indirection + "'");
         return absoluteLocation;
     }
 
@@ -327,7 +306,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * and adds results to {@link #allFields}. Called by all constructors.
      */
     private void createBaseFields() {
-        for (String baseFieldName: BASE_FIELDS) {
+        for (String baseFieldName : BASE_FIELDS) {
             F field = createBaseField(baseFieldName);
             allFields.put(field.getName(), field);
         }
@@ -342,36 +321,29 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * The basic implementation of the is method does create valid IndexFields
      * which can be used for analysis of the IndexDescriptor. However, it is
      * expected that implementations will normally want to override the method.
+     *
      * @param baseFieldName the name of the field. It is guaranteed that all the
      *                      names from {@link #BASE_FIELDS} will be fed to this
-     *                      method. 
+     *                      method.
      * @return a base field from the given name.
      */
     protected F createBaseField(String baseFieldName) {
         log.debug(String.format("createBaseField(%s) called", baseFieldName));
-        if (baseFieldName.equals(IndexField.SUMMA_DEFAULT)
-            || baseFieldName.equals(IndexUtils.RECORD_FIELD)
-            || baseFieldName.equals(IndexUtils.RECORD_BASE)
-            || baseFieldName.equals(NUMBER)) {
+        if (baseFieldName.equals(IndexField.SUMMA_DEFAULT) || baseFieldName.equals(IndexUtils.RECORD_FIELD)
+            || baseFieldName.equals(IndexUtils.RECORD_BASE) || baseFieldName.equals(NUMBER)) {
             return createNewField(baseFieldName, true, true);
         }
-        if (baseFieldName.equals(IndexField.FREETEXT)
-            || baseFieldName.equals(KEYWORD)
-            || baseFieldName.equals(VERBATIM)
-            || baseFieldName.equals(LOWERCASE)
-            || baseFieldName.equals(TEXT)
-            || baseFieldName.equals(SORTKEY)
+        if (baseFieldName.equals(IndexField.FREETEXT) || baseFieldName.equals(KEYWORD) || baseFieldName.equals(VERBATIM)
+            || baseFieldName.equals(LOWERCASE) || baseFieldName.equals(TEXT) || baseFieldName.equals(SORTKEY)
             || baseFieldName.equals(DATE)) {
             return createNewField(baseFieldName, true, false);
         }
-        if (baseFieldName.equals(STORED_KEYWORD)
-            || baseFieldName.equals(STORED_VERBATIM)
+        if (baseFieldName.equals(STORED_KEYWORD) || baseFieldName.equals(STORED_VERBATIM)
             || baseFieldName.equals(STORED)) {
             return createNewField(baseFieldName, false, true);
         }
 
-        throw new IllegalArgumentException(String.format(
-                "The base field '%s' is unknown", baseFieldName));
+        throw new IllegalArgumentException(String.format("The base field '%s' is unknown", baseFieldName));
     }
 
     private F createNewField(String name, boolean index, boolean store) {
@@ -387,9 +359,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * accordingly. A parse replaces the previous state completely. If an
      * exception is thrown, the state is guaranteed to be the same as before
      * parse was called. See the class documentation for the format of the XML.
+     *
      * @param xml an XML representation of an IndexDescriptor.
-     * @throws ParseException if there was an error parsing the xml.
      * @return the input parsed as a Document, for further processing.
+     * @throws ParseException if there was an error parsing the xml.
      */
     public synchronized Document parse(String xml) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
@@ -410,9 +383,8 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         parseGroups(document);
 
         // Sanity check
-        for (String defaultField: defaultFields) {
-            if (allFields.get(defaultField) == null
-                && groups.get(defaultField) == null) {
+        for (String defaultField : defaultFields) {
+            if (allFields.get(defaultField) == null && groups.get(defaultField) == null) {
                 log.warn("The specified default field '" + defaultField
                          + "' did not have any corresponding field or group");
             }
@@ -421,48 +393,40 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     private Document parseXMLToDocument(String xml) throws ParseException {
-        DocumentBuilderFactory builderFactory =
-                DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
         builderFactory.setValidating(false);
         DocumentBuilder builder;
         try {
             builder = builderFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            throw (ParseException)new ParseException(
-                    "Could not create document builder", -1).initCause(e);
+            throw (ParseException) new ParseException("Could not create document builder", -1).initCause(e);
         }
-        
+
         try {
-            return builder.parse(new InputSource(
-                    new ByteArrayInputStream(xml.getBytes("utf-8"))));
+            return builder.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
         } catch (SAXException e) {
             throw (ParseException) new ParseException(
-                    "Could not create Document from xml '"
-                    + xml + "'", -1).initCause(e);
+                    "Could not create Document from xml '" + xml + "'", -1).initCause(e);
         } catch (UnsupportedEncodingException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw (ParseException) new ParseException(
-                    "utf-8 not supported", -1).initCause(e);
+            throw (ParseException) new ParseException("utf-8 not supported", -1).initCause(e);
         } catch (IOException e) {
             throw (ParseException) new ParseException(
-                    "Could not create ByteArrayInputStream from xml '"
-                    + xml + "'", -1).initCause(e);
+                    "Could not create ByteArrayInputStream from xml '" + xml + "'", -1).initCause(e);
         }
     }
 
     private void parseDefaultSearchFields(Document document) throws ParseException {
         NodeList defaultNodes;
 
-        final String DEFAULT_EXPR =
-                "/IndexDescriptor/defaultSearchFields/field";
+        final String DEFAULT_EXPR = "/IndexDescriptor/defaultSearchFields/field";
         defaultNodes = DOM.selectNodeList(document, DEFAULT_EXPR);
 
         defaultFields = new ArrayList<String>(defaultNodes.getLength());
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Located " + defaultNodes.getLength()
-                  + " default search field nodes");
-        for (int i = 0 ; i < defaultNodes.getLength(); i++) {
+        log.trace("Located " + defaultNodes.getLength() + " default search field nodes");
+        for (int i = 0; i < defaultNodes.getLength(); i++) {
             String dField = DOM.selectString(defaultNodes.item(i), "@ref", null);
             if (dField == null) {
                 log.warn("No ref-attribute for field in defaultSearchFields");
@@ -473,15 +437,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         if (defaultFields.isEmpty()) {
             log.warn("No default fields specified");
         } else {
-            log.info("Default search fields: " 
-                     + Logs.expand(defaultFields, 20));
+            log.info("Default search fields: " + Logs.expand(defaultFields, 20));
         }
     }
 
     private void parseDefaultLanguage(Document document) throws ParseException {
-        defaultLanguage = DOM.selectString(document,
-                                       "/IndexDescriptor/defaultLanguage",
-                                       defaultLanguage);
+        defaultLanguage = DOM.selectString(document, "/IndexDescriptor/defaultLanguage", defaultLanguage);
     }
 
     private void parseGroups(Document document) throws ParseException {
@@ -493,7 +454,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         groupNodes = DOM.selectNodeList(document, GROUP_EXPR);
         log.trace("Located " + groupNodes.getLength() + " group nodes");
 
-        for (int i = 0 ; i < groupNodes.getLength(); i++) {
+        for (int i = 0; i < groupNodes.getLength(); i++) {
             log.debug(groupNodes.item(i).getNodeName());
             addGroup(new IndexGroup<F>(groupNodes.item(i), this));
         }
@@ -506,7 +467,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         fieldNodes = DOM.selectNodeList(document, FIELD_EXPR);
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + fieldNodes.getLength() + " field nodes");
-        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
+        for (int i = 0; i < fieldNodes.getLength(); i++) {
             addField(createNewField(fieldNodes.item(i)));
         }
     }
@@ -515,16 +476,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         //String dop = ParseUtil.getValue(xPath, document,
         //        "id:IndexDescriptor/id:QueryParser/@defaultOperator",
         //        defaultOperator.toString());
-        String dop = DOM.selectString(document,
-                               "/IndexDescriptor/QueryParser/@defaultOperator",
-                               defaultOperator.toString());
+        String dop = DOM.selectString(document, "/IndexDescriptor/QueryParser/@defaultOperator", 
+                                      defaultOperator.toString());
         if ("or".equals(dop.toLowerCase())) {
             defaultOperator = OPERATOR.or;
         } else if ("and".equals(dop.toLowerCase())) {
             defaultOperator = OPERATOR.and;
         } else {
-            log.warn("Unexpected value '" + dop
-                     + "' found in QueryParser#defaultOperator");
+            log.warn("Unexpected value '" + dop + "' found in QueryParser#defaultOperator");
         }
     }
 
@@ -541,6 +500,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * Stores an XML representation of this IndexDescriptor to the given
      * location. See the class documentation for the format of the XML.
+     *
      * @param location where to store the XML representation.
      * @throws IOException if the representation could not be stored.
      */
@@ -552,6 +512,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * XML-representation usable for persistence. This is the format that
      * {@link #parse} accepts.
+     *
      * @return a well-formed XML representation of the descriptor.
      * @see #parse(String)
      */
@@ -561,13 +522,13 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         sw.append("<IndexDescriptor version=\"1.0\">\n");
 
         sw.append("<groups>\n");
-        for (IndexGroup<F> g: groups.values()){
-           sw.append(g.toXMLFragment());
+        for (IndexGroup<F> g : groups.values()) {
+            sw.append(g.toXMLFragment());
         }
         sw.append("</groups>\n");
 
         sw.append("<fields>\n");
-        for (Map.Entry<String, F> entry : allFields.entrySet()){
+        for (Map.Entry<String, F> entry : allFields.entrySet()) {
             sw.append(entry.getValue().toXMLFragment());
         }
         sw.append("</fields>\n");
@@ -578,7 +539,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 //        sw.append("<uniqueKey>").append(uniqueKey).append("</uniqueKey>\n");
 
         sw.append("<defaultSearchFields>\n");
-        for (String defaultField: defaultFields) {
+        for (String defaultField : defaultFields) {
             sw.append("  <field ref=\"").append(defaultField).append("\"/>\n");
         }
         sw.append("</defaultSearchFields>\n");
@@ -609,7 +570,8 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * existence of a Field with the same name.
      * </p><p>
      * Note: Id a field with the name {@link IndexField#SUMMA_DEFAULT} is
-     *       added, it will be the new {@link #defaultField}.
+     * added, it will be the new {@link #defaultField}.
+     *
      * @param field the field to add to the descriptor.
      * @return true if the Field was added, else false.
      * @see #allFields
@@ -637,24 +599,24 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * name.
      * </p><p>
      * Note: Adding a Group automatically adds all contained Fields to
-     *       {@link #allFields}.
+     * {@link #allFields}.
+     *
      * @param group the group to add to the descriptor.
      * @return true if the Group was added, else false.
-     * @see #groups 
+     * @see #groups
      */
     public synchronized boolean addGroup(IndexGroup<F> group) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addGroup(" + group + ") called");
         if (groups.get(group.getName()) != null) {
-            log.warn("A Group with name '" + group.getName()
-                     + "' is already present");
+            log.warn("A Group with name '" + group.getName() + "' is already present");
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding " + group);
         groups.put(group.getName(), group);
         log.trace("Adding Fields contained in " + group);
-        for (F field: group.getFields()) {
+        for (F field : group.getFields()) {
             if (!allFields.containsKey(field.getName())) {
                 addField(field);
             }
@@ -664,14 +626,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     /**
      * Add a Field to a Group. This is the preferred way of adding a Field to
-     * a Group, as it handles the updating of {@link #allFields} as a 
+     * a Group, as it handles the updating of {@link #allFields} as a
      * side-effect. Also: If the Group does not already exist in
      * {@link #groups}, it is added to that list.
+     *
      * @param group the field will be added to this group.
      * @param field this will be added to the group.
      */
-    public synchronized void addFieldToGroup(IndexGroup<F> group,
-                                             F field) {
+    public synchronized void addFieldToGroup(IndexGroup<F> group, F field) {
         group.addField(field);
         if (!allFields.containsKey(field.getName())) {
             addField(field);
@@ -684,12 +646,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * Wrapper for {@link #addFieldToGroup(IndexGroup, IndexField)}. If the
      * Group does not already exist, it is created first.
+     *
      * @param groupName the field will be added to this group, which will be
      *                  created if it is not already present.
      * @param field     this will be added to the group.
      */
-    public synchronized void addFieldToGroup(String groupName,
-                                             F field) {
+    public synchronized void addFieldToGroup(String groupName, F field) {
         IndexGroup<F> group = groups.get(groupName);
         if (group == null) {
             group = new IndexGroup<F>(groupName);
@@ -701,6 +663,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Locates and returns a field from the internal list of all fields.
      * The look-up is performed with alias-expansion with language null (all
      * languages match).
+     *
      * @param fieldName the name or alias of the wanted field.
      * @return the field corresponding to the name or alias or null if a field
      *         could not be found.
@@ -715,6 +678,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Locates and returns a field from the internal list of all fields.
      * The look-up is performed with alias-expansion. Name-matches takes
      * precedence over alias-matches.
+     *
      * @param fieldName the name or alias of the wanted field.
      * @param language  the language for alias-lookup. If the language is null,
      *                  it is ignored.
@@ -728,18 +692,19 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             return field;
         }
         // TODO: Optimize alias-lookup
-        for (Map.Entry<String, F> entry: allFields.entrySet()) {
+        for (Map.Entry<String, F> entry : allFields.entrySet()) {
             if (entry.getValue().isMatch(fieldName, language)) {
                 return entry.getValue();
             }
         }
-        log.debug("getField: No field with name '" + fieldName
-                  + "' found. Returning null");
+        log.debug("getField: No field with name '" + fieldName + "' found. Returning null");
         return null;
     }
+
     /**
      * Returns the field where the name (no alias-lookup) matches the fieldName.
      * If no field can be found, {@link #defaultField} is returned.
+     *
      * @param fieldName the name of the field to get.
      * @return a field corresponding to the name or the default field.
      */
@@ -750,8 +715,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         if (field != null) {
             return field;
         }
-        log.debug("No field with name '" + fieldName
-                  + "' found. Returning default field");
+        log.debug("No field with name '" + fieldName + "' found. Returning default field");
         return defaultField;
     }
 
@@ -788,6 +752,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * Locates and returns a group from the internal list of groups.
      * The look-up is performed with alias-expansion and language null.
+     *
      * @param groupName the name or alias of the wanted group.
      * @return the group corresponding to the name or alias or null if no group
      *         could be found.
@@ -801,6 +766,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Locates and returns a group from the internal list of groups.
      * The look-up is performed with alias-expansion. Name-matches takes
      * precedence over alias-matches.
+     *
      * @param groupName the name or alias of the wanted group.
      * @param language  the language for alias-lookup. If the language is null,
      *                  it is ignored.
@@ -814,15 +780,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             return group;
         }
         // TODO: Optimize alias-lookup
-        for (Map.Entry<String, IndexGroup<F>> entry: groups.entrySet()) {
+        for (Map.Entry<String, IndexGroup<F>> entry : groups.entrySet()) {
             if (entry.getValue().isMatch(groupName, language)) {
                 return entry.getValue();
             }
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                "Could not locate a group based on name '%s' and language '%s'",
-                groupName, language));
+            log.trace(String.format("Could not locate a group based on name '%s' and language '%s'",
+                                    groupName, language));
         }
         return null;
     }
@@ -835,16 +800,15 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * If the sub-configuration {@link #CONF_DESCRIPTOR} is present in the
      * given conf, it is copied to all the subConfs. If the CONF_DESCRIPTOR is
      * not present, nothing is done.
+     *
      * @param conf     the configuration that might contain IndexDescriptor
      *                 setup.
      * @param subConfs the configurations to copy the setup to, if present.
      */
-    public static void copySetupToSubConfigurations(
-            Configuration conf, List<Configuration> subConfs) {
+    public static void copySetupToSubConfigurations(Configuration conf, List<Configuration> subConfs) {
         if (!conf.valueExists(CONF_DESCRIPTOR)) {
-            log.debug(String.format(
-                    "No %s found in configuration. No copy of the index "
-                    + "descriptor setup is done", CONF_DESCRIPTOR));
+            log.debug(String.format("No %s found in configuration. No copy of the index "
+                                    + "descriptor setup is done", CONF_DESCRIPTOR));
             return;
         }
         log.debug("IndexDescriptor setup found. Copying to sub configurations");
@@ -852,28 +816,22 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         try {
             id = conf.getSubConfiguration(CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException(
-                    "Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "Unable to extract %s from configuration", CONF_DESCRIPTOR),
-                                             e);
+            throw new ConfigurationException(String.format("Unable to extract %s from configuration", 
+                                                           CONF_DESCRIPTOR), e);
         }
-        for (Configuration subConf: subConfs) {
+        for (Configuration subConf : subConfs) {
             if (subConf.valueExists(CONF_DESCRIPTOR)) {
-                log.debug("Skipping assignment og index descriptor setup for "
-                          + "subConf as it is already present");
+                log.debug("Skipping assignment og index descriptor setup for subConf as it is already present");
                 continue;
             }
             try {
                 subConf.createSubConfiguration(CONF_DESCRIPTOR).
-                    importConfiguration(id);
+                        importConfiguration(id);
             } catch (IOException e) {
-                throw new ConfigurationException(
-                        "Unable to insert index description in "
-                        + "sub configuration", e);
+                throw new ConfigurationException("Unable to insert index description in sub configuration", e);
             }
         }
     }
 }
-
