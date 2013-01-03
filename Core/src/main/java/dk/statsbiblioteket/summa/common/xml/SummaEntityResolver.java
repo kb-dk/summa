@@ -54,6 +54,9 @@ public class SummaEntityResolver implements EntityResolver2 {
 
     private Map<String, String> resources;
 
+    // Used if no resource matches. Null means external resolving
+    protected String defaultResource = null;
+
     public SummaEntityResolver(Configuration conf) {
         this(conf, null);
     }
@@ -62,80 +65,69 @@ public class SummaEntityResolver implements EntityResolver2 {
      * Specify the resource map using either Configuration, as described by
      * {@link #CONF_RESOURCE_MAP}, an already created map with resources or a
      * combination of the two.
+     *
      * @param conf      Configuration-based resource map.
      *                  If null, this argument is ignored.
      * @param resources already created map with resources.
      *                  If null, this argument is ignored.
      */
-    public SummaEntityResolver(
-            Configuration conf, Map<String, String> resources) {
+    public SummaEntityResolver(Configuration conf, Map<String, String> resources) {
         this.resources = new HashMap<String, String>(20);
         if (resources != null) {
             this.resources.putAll(resources);
         }
         if (conf != null && conf.valueExists(CONF_RESOURCE_MAP)) {
-            for (String resource: conf.getStrings(CONF_RESOURCE_MAP)) {
+            for (String resource : conf.getStrings(CONF_RESOURCE_MAP)) {
                 String tokens[] = resource.split(" ");
                 if (tokens.length != 2) {
                     throw new IllegalArgumentException(String.format(
-                            "Expected two strings separated by space from "
-                            + "property %s. Got '%s'",
+                            "Expected two strings separated by space from property %s. Got '%s'",
                             CONF_RESOURCE_MAP, resource));
                 }
             }
         }
-        log.debug(String.format(
-                "Finished creating SummaEntityResolver with %d resources",
-                this.resources.size()));
+        log.debug(String.format("Finished creating SummaEntityResolver with %d resources", this.resources.size()));
         if (this.resources.isEmpty()) {
             log.warn("No resources specified for the SummaEntityResolver");
         }
     }
 
     @Override
-    public InputSource getExternalSubset(String name, String baseURI)
-                                              throws SAXException, IOException {
+    public InputSource getExternalSubset(String name, String baseURI) throws SAXException, IOException {
         //System.out.println("*** " + name + ", " + baseURI);
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("getExternalSubset(name=" + name + ", baseURI="
-                      + baseURI + ")");
+            log.trace("getExternalSubset(name=" + name + ", baseURI=" + baseURI + ")");
         }
         return null; // Just let the caller handle it
     }
 
     @Override
-    public InputSource resolveEntity(String name, String publicId,
-                                     String baseURI, String systemId)
-                                              throws SAXException, IOException {
+    public InputSource resolveEntity(String name, String publicId, String baseURI,
+                                     String systemId) throws SAXException, IOException {
         //System.out.println("***1 " + name + ", " + publicId + ", " + baseURI + ", " + systemId);
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace(
-                    "resolveEntity(name=" + name + ", publicId=" + publicId
-                    + ", baseURI=" + baseURI + ", systemId=" + systemId + ")");
+            log.trace("resolveEntity(name=" + name + ", publicId=" + publicId + ", baseURI=" + baseURI + ", systemId="
+                      + systemId + ")");
         }
         String resource = resources.get(systemId);
-        if (resource == null) {
+        if (resource == null && (resource = defaultResource) == null) {
             return null;
         }
         URL source = Resolver.getURL(resource);
         if (source == null) {
-            throw new FileNotFoundException(String.format(
-                    "Unable to get URL for '%s'", resource));
+            throw new FileNotFoundException(String.format("Unable to get URL for '%s'", resource));
         }
         return new InputSource(source.openStream());
     }
 
     @Override
-    public InputSource resolveEntity(String publicId, String systemId)
-                                              throws SAXException, IOException {
+    public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
 //        System.out.println("***2");
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace(
-                    "resolveEntity(publicId=" + publicId
-                    + ", systemId=" + systemId + ")");
+            log.trace("resolveEntity(publicId=" + publicId + ", systemId=" + systemId + ")");
         }
         return resolveEntity(null, publicId, null, systemId);
     }

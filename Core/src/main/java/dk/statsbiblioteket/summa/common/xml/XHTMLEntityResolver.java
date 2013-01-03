@@ -14,17 +14,18 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Entity resolver for HTML 4.0 and XHTML 1.0. Handles the named entities
- * defined by the standard (lat1, symbol and special).
+ * defined by the standard (lat1, symbol and special). Also resolves commonly
+ * used DTD's to local copies.
  * </p><p>
  * This resolver can be extended by specifying the property
  * {@link SummaEntityResolver#CONF_RESOURCE_MAP}.
@@ -36,27 +37,21 @@ public class XHTMLEntityResolver extends SummaEntityResolver {
     private static Log log = LogFactory.getLog(XHTMLEntityResolver.class);
 
     public static final String[][] XHTML_RESOURCES = new String[][] {
-            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd",
-                    "xhtml1-strict.dtd"},
-            {"xhtml-lat1.ent",
-                    "xhtml-lat1.ent"},
-            {"xhtml-special.ent",
-                    "xhtml-special.ent"},
-            {"xhtml-symbol.ent",
-                    "xhtml-symbol.ent"},
-            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd",
-                    "xhtml1-frameset.dtd"},
-            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd",
-                    "xhtml1-transitional.dtd"}
+            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd", "xhtml1-strict.dtd"},
+            {"xhtml-lat1.ent", "xhtml-lat1.ent"},
+            {"xhtml-special.ent", "xhtml-special.ent"},
+            {"xhtml-symbol.ent", "xhtml-symbol.ent"},
+            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd", "xhtml1-frameset.dtd"},
+            {"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd", "xhtml1-transitional.dtd"}
     };
 
     public XHTMLEntityResolver(Configuration conf) {
         super(conf, getXHTMLResources());
+        defaultResource = "xhtml1-transitional.dtd";
     }
 
     private static Map<String, String> getXHTMLResources() {
-        Map<String, String> result =
-                new HashMap<String, String>(XHTML_RESOURCES.length);
+        Map<String, String> result = new HashMap<String, String>(XHTML_RESOURCES.length);
         for (String[] resource: XHTML_RESOURCES) {
             result.put(resource[0], resource[1]);
         }
