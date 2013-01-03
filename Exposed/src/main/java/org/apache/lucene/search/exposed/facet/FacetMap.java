@@ -199,6 +199,9 @@ public class FacetMap {
 
   private void fillRefs(final int[] tagCounts, final long totalRefs,
                         final PackedInts.Mutable refs) throws IOException {
+    long nextDocTime = 0;
+    long nextDocCount = 0;
+
     long fillTime = -System.currentTimeMillis();
     for (int providerNum = 0 ; providerNum < providers.size() ; providerNum++) {
       final TermProvider provider = providers.get(providerNum);
@@ -239,9 +242,11 @@ public class FacetMap {
         }
          */
 
+          nextDocTime -= System.nanoTime();
           int doc;
           final int base = (int)tuple.docIDBase;
           while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+            nextDocCount++;
   //            final int docID = ;
     //          final int refsOrigo = (int)doc2ref.get(docID);
   //          final int chunkOffset = (int)refs.get(refsOrigo);
@@ -260,6 +265,7 @@ public class FacetMap {
                       + (tuple.indirect+termOffset), e);
             }
           }
+          nextDocTime += System.nanoTime();
 
        /*
         int doc;
@@ -291,7 +297,8 @@ public class FacetMap {
     fillTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println("Filled map with "
-          + ExposedUtil.time("references", totalRefs, fillTime));
+          + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
+          ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
     }
   }
 
@@ -312,8 +319,11 @@ public class FacetMap {
         tagCounts.length, offset - refBase[tagCounts.length >>> BASE_BITS]);
 //      doc2ref.set(doc2ref.size()-1, offset);
     initTime += System.currentTimeMillis();
-//      System.out.println("Initialized map for " + totalRefs + " references in "
-//          + initTime / 1000 + " seconds");
+    // < 100 ms for 10M doc2refs so we do not print performance data
+/*    if (ExposedSettings.debug) {
+      System.out.println("initDoc2Ref with " + doc2ref.size() + " doc2refs "
+          +"finished in " + initTime + " ms");
+    }*/
   }
 
   private void countTags(final int[] tagCounts) throws IOException {
