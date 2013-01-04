@@ -218,7 +218,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean supportsPureNegative;
     protected final FacetQueryTransformer facetQueryTransformer;
     protected final Set<String> nonescapedFields = new HashSet<String>(10);
-    protected final String FIELD_ID;
+    protected final String fieldID;
     protected final boolean explicitFacetFilter;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
@@ -240,7 +240,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
         defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
-        FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
+        fieldID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         supportsPureNegative = conf.getBoolean(
             CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
@@ -369,8 +369,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
         long searchTime = -System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            if (FIELD_ID != null && !"".equals(FIELD_ID)) {
-                query = FIELD_ID + ":\"" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) + "\"";
+            if (fieldID != null && !"".equals(fieldID)) {
+                query = fieldID + ":\"" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) + "\"";
             } else {
                 query = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
             }

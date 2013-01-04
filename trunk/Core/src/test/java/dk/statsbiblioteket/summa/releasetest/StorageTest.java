@@ -161,14 +161,13 @@ public class StorageTest extends NoExitTestCase {
         lademands.setChildren(childrenList);
   
         storage.flushAll(records);
-        long startTime = 0;        
-        
+
         long oldMethodTotal=0;
         long newMethodTotal=0;
 
 
 
-        startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
                 
         System.out.println("Fetching record new method");
         Record lademanns_new = storage.getRecord("Lademanns leksikon",null);

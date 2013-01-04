@@ -315,7 +315,7 @@ public class LuceneManipulator implements IndexManipulator {
         return false;
     }
 
-    private void dispatchJob(Payload payload) throws IOException {
+    private void dispatchJob(Payload payload) {
         log.trace("Requesting writerCallable");
         WriterCallable writerCallable = null;
         while (writerCallable == null) {

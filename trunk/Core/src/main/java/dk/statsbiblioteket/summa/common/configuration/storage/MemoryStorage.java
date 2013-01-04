@@ -14,20 +14,15 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.List;
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.net.URL;
+import java.util.*;
 
 /**
  * A {@link ConfigurationStorage} implementation backed by an in-memory
@@ -38,21 +33,21 @@ import java.net.URL;
         author = "mke")
 public class MemoryStorage implements ConfigurationStorage {
     public static final long serialVersionUID = 342390483L;
-    private Map<String,Serializable> map;
+    private Map<String, Serializable> map;
 
     /**
      * Create a new empty {@code ConfigurationStorage} backed by an in-memory
      * {@link HashMap}.
      */
     public MemoryStorage() {
-        map = new HashMap<String,Serializable>(100);
+        map = new HashMap<String, Serializable>(100);
     }
 
     /**
      * Creates a new empty {@code ConfigurationStorage} with the given
      * configurations.
      * Backend by an in-memory {@link java.util.HashMap}.
-     * 
+     *
      * @param config The configuration for this MemoryStorage.
      */
     public MemoryStorage(Configuration config) {
@@ -63,7 +58,7 @@ public class MemoryStorage implements ConfigurationStorage {
     /**
      * Create a new MemoryStorage loading default values from an
      * input stream.
-     * 
+     *
      * @param in {@link InputStream} from which to load XML data.
      * @throws IOException If error occurs when loading XML from input stream.
      */
@@ -74,7 +69,7 @@ public class MemoryStorage implements ConfigurationStorage {
         p.loadFromXML(in);
 
         for (Map.Entry entry : p.entrySet()) {
-            map.put((String)entry.getKey(), (Serializable)entry.getValue());
+            map.put((String) entry.getKey(), (Serializable) entry.getValue());
         }
     }
 
@@ -106,7 +101,7 @@ public class MemoryStorage implements ConfigurationStorage {
     /**
      * Add the value to the configurations.
      *
-     * @param key The name used to access the stored object.
+     * @param key   The name used to access the stored object.
      * @param value The actual value to store.
      */
     @Override
@@ -127,6 +122,7 @@ public class MemoryStorage implements ConfigurationStorage {
 
     /**
      * Return a iterator over the key, value pairs in this memory storage.
+     *
      * @return Itarator over the key, value pairs in this storage.
      */
     @Override
@@ -136,6 +132,7 @@ public class MemoryStorage implements ConfigurationStorage {
 
     /**
      * Remove a value and its key from this storage.
+     *
      * @param key The name of the value to remove from the storage.
      */
     @Override
@@ -145,6 +142,7 @@ public class MemoryStorage implements ConfigurationStorage {
 
     /**
      * The size of this storage.
+     *
      * @return The size of this storage.
      */
     @Override
@@ -156,6 +154,7 @@ public class MemoryStorage implements ConfigurationStorage {
      * True since this implementation of
      * {@link dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage}
      * supports sub storage.
+     *
      * @return True.
      */
     @Override
@@ -164,11 +163,12 @@ public class MemoryStorage implements ConfigurationStorage {
     }
 
     /**
-     * Return a sub storage. 
+     * Return a sub storage.
+     *
      * @param key The name of the sub storage.
      * @return A Configuration storage, which is one of the sub storage.
      * @throws IOException If sub storage doesn't exists og this is of the wrong
-     * type.
+     *                     type.
      */
     @Override
     public ConfigurationStorage getSubStorage(String key) throws IOException {
@@ -176,46 +176,43 @@ public class MemoryStorage implements ConfigurationStorage {
             Object sub = get(key);
             if (!(sub instanceof MemoryStorage)) {
                 throw new IOException(String.format(
-                        "The value for '%s' was of class '%s'. "
-                        + "Expected MemoryStorage", key, sub.getClass()));
+                        "The value for '%s' was of class '%s'. Expected MemoryStorage",
+                        key, sub.getClass()));
             }
 
-            return (MemoryStorage)sub;
+            return (MemoryStorage) sub;
         } catch (NullPointerException e) {
-            throw new IOException(String.format(
-                    "Could not locate value for key '%s'", key));
+            throw new IOException(String.format("Could not locate value for key '%s'", key));
         }
     }
 
     /**
      * Creates a new sub storage.
+     *
      * @param key The name of the sub storage.
      * @return The created storage.
      * @throws IOException If error occur and the new storage wasn't inserted
-     * correctly.
+     *                     correctly.
      */
     @Override
-    public ConfigurationStorage createSubStorage(String key) throws
-                                                                   IOException {
+    public ConfigurationStorage createSubStorage(String key) throws IOException {
         put(key, new MemoryStorage());
         return getSubStorage(key);
     }
 
     /**
      * Create a specific number of sub storage and add those to the list.
-     * @param key The key for the list of storage.
+     *
+     * @param key   The key for the list of storage.
      * @param count The number of storage to create.
      * @return A list of all created sub storage.
      * @throws IOException if error occur while added sub storage.
      */
     @Override
-    public List<ConfigurationStorage> createSubStorages(String key, int count)
-                                                            throws IOException {
-        ArrayList<MemoryStorage> subProperties =
-                new ArrayList<MemoryStorage>(count);
-        List<ConfigurationStorage> storages =
-                new ArrayList<ConfigurationStorage>(count);
-        for (int i = 0 ; i < count ; i++) {
+    public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
+        ArrayList<MemoryStorage> subProperties = new ArrayList<MemoryStorage>(count);
+        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(count);
+        for (int i = 0; i < count; i++) {
             subProperties.add(new MemoryStorage());
             storages.add(subProperties.get(i));
         }
@@ -225,31 +222,29 @@ public class MemoryStorage implements ConfigurationStorage {
 
     /**
      * Return all sub storage with the given key.
+     *
      * @param key The key for the list of storage.
      * @return A list of sub storage.
      * @throws IOException If error occur while fetching sub storage.
      */
     @Override
-    public List<ConfigurationStorage> getSubStorages(String key) throws
-                                                                   IOException {
+    public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IOException(String.format(
-                    "The value for '%s' was of class '%s'. Expected List",
-                    key, sub.getClass()));
+            throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
+                                                key, sub.getClass()));
         }
-        List list = (List)sub;
-        List<ConfigurationStorage> storages =
-                new ArrayList<ConfigurationStorage>(list.size());
-        for (Object o: list) {
+        List list = (List) sub;
+        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(list.size());
+        for (Object o : list) {
             if (!(o instanceof MemoryStorage)) {
                 //noinspection DuplicateStringLiteralInspection
                 throw new IOException(String.format(
-                        "A class in the list for '%s' was '%s'. Expected "
-                        + "MemoryStorage", key, o.getClass()));
+                        "A class in the list for '%s' was '%s'. Expected MemoryStorage",
+                        key, o.getClass()));
             }
-            storages.add((MemoryStorage)o);
+            storages.add((MemoryStorage) o);
         }
         return storages;
     }

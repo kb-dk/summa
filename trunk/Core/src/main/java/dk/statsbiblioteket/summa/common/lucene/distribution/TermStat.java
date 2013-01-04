@@ -445,7 +445,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         long creationTime = -System.currentTimeMillis();
         lookupTable = new long[termCount+1];
         persistent.seek(0);
-        String line = null;
+        String line;
         // Skip heading
         long previous = 0;
         while ((line = persistent.readLine()) != null) {

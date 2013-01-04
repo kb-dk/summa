@@ -52,6 +52,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
 
         TokenStream ts;
         try {
+            // TODO: What does this extra call do and can we leave it out?
             ts = standard.createComponents("ss", reader).getTokenStream();
             ts = standard.tokenStream("dummy", reader);
         } catch (Exception e) {

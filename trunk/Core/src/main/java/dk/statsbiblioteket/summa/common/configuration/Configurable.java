@@ -35,12 +35,15 @@ public interface Configurable {
      * one-argument constructor that takes a {@link Configuration}.
      */
     public class ConfigurationException extends RuntimeException {
-        /** The serial version UID. */
+        /**
+         * The serial version UID.
+         */
         public static final long serialVersionUID = 76846183L;
 
         /**
          * Constructor that creates a {@link ConfigurationException} with a
          * {@link Throwable}.
+         *
          * @param cause The cause of this exception.
          */
         public ConfigurationException(Throwable cause) {
@@ -50,6 +53,7 @@ public interface Configurable {
         /**
          * Constructor that creates a {@link ConfigurationException} with a
          * message.
+         *
          * @param message The message.
          */
         public ConfigurationException(String message) {
@@ -59,8 +63,9 @@ public interface Configurable {
         /**
          * Constructor that creates a {@link ConfigurationException} with both
          * a message and a {@link Throwable}.
+         *
          * @param message The message.
-         * @param cause the cause.
+         * @param cause   the cause.
          */
         public ConfigurationException(String message, Throwable cause) {
             super(message, cause);
@@ -68,6 +73,7 @@ public interface Configurable {
 
         /**
          * Returns either the {@link Throwable#getMessage()} or unknown cause.
+         *
          * @param t The throwable.
          * @return The cause message.
          */
@@ -75,15 +81,12 @@ public interface Configurable {
             // If there is no message, or if the exception has its message set
             // to its class name (InvocationTargetException I am looking
             // at you!), we try and find a better message
-            if (t.getMessage() == null
-                || "".equals(t.getMessage())
-                || t.getClass().getName().equals(t.getMessage())) {
+            if (t.getMessage() == null || "".equals(t.getMessage()) || t.getClass().getName().equals(t.getMessage())) {
                 if (t.getCause() != null) {
                     return getCauseMessage(t.getCause());
                 }
             }
-            return (t.getMessage() == null || "".equals(t.getMessage())) ?
-                    "Unknwon cause" : t.getMessage();
+            return (t.getMessage() == null || "".equals(t.getMessage())) ? "Unknwon cause" : t.getMessage();
         }
     }
 }

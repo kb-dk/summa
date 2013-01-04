@@ -113,8 +113,8 @@ public class RecordGenerator implements ObjectFilter {
      * Key is a word made up of the letters a-z.
      */
     public static final String CONTENT_INCREMENTAL_NUMBER = "$INCREMENTAL_NUMBER";
-    private static Pattern PATTERN_INCREMENTAL_NUMBER = Pattern.compile("(\\$INCREMENTAL_NUMBER\\[(\\w+)\\])",
-                                                                        Pattern.DOTALL);
+    private static final Pattern PATTERN_INCREMENTAL_NUMBER =
+            Pattern.compile("(\\$INCREMENTAL_NUMBER\\[(\\w+)\\])", Pattern.DOTALL);
     private Map<String, Integer> incrementalNumbers = new HashMap<String, Integer>(10);
 
     /**
@@ -132,14 +132,15 @@ public class RecordGenerator implements ObjectFilter {
      * hardware, it might wise to avoid this unit.
      */
     public static final String CONTENT_TIMESTAMP = "$TIMESTAMP";
-    private static Pattern PATTERN_TIMESTAMP = Pattern.compile(".*?(\\$TIMESTAMP\\[(\\w+)\\]).*", Pattern.DOTALL);
+    private static final Pattern PATTERN_TIMESTAMP =
+            Pattern.compile(".*?(\\$TIMESTAMP\\[(\\w+)\\]).*", Pattern.DOTALL);
 
     /**
      * All occurences of "$RANDOM_NUMBER[min, max]" will be replaced by a random
      * integer from min to max (both inclusive).
      */
     public static final String CONTENT_RANDOM_NUMBER = "$RANDOM_NUMBER";
-    private static Pattern PATTERN_RANDOM_NUMBER = Pattern.compile(
+    private static final Pattern PATTERN_RANDOM_NUMBER = Pattern.compile(
             ".*?(\\$RANDOM_NUMBER\\[(\\d+), *(\\d+)\\]).*", Pattern.DOTALL);
 
     /**
@@ -148,7 +149,7 @@ public class RecordGenerator implements ObjectFilter {
      * to max. If onlyletters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_CHARS = "$RANDOM_CHARS";
-    private static Pattern PATTERN_RANDOM_CHARS = Pattern.compile(
+    private static final Pattern PATTERN_RANDOM_CHARS = Pattern.compile(
             ".*?(\\$RANDOM_CHARS\\[(\\d+), *(\\d+), *(\\w+)\\]).*", Pattern.DOTALL);
 
     /**
@@ -159,7 +160,7 @@ public class RecordGenerator implements ObjectFilter {
      * maxlength. If onlyLetters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_WORDS = "$RANDOM_WORDS";
-    private static Pattern PATTERN_RANDOM_WORDS = Pattern.compile(
+    private static final Pattern PATTERN_RANDOM_WORDS = Pattern.compile(
             ".*?(\\$RANDOM_WORDS\\[(\\d+), *(\\d+), *(\\d+), *(\\d+), *(\\w+)\\]).*", Pattern.DOTALL);
 
     /**
@@ -169,7 +170,7 @@ public class RecordGenerator implements ObjectFilter {
      * min to max. The word delimiter is space.
      */
     public static final String CONTENT_WORD_LIST = "$WORD_LIST";
-    private static Pattern PATTERN_WORD_LIST = Pattern.compile(
+    private static final Pattern PATTERN_WORD_LIST = Pattern.compile(
             ".*?(\\$WORD_LIST\\[(\\d+), *(\\d+), *(\\w+)\\]).*", Pattern.DOTALL);
 
     private Configuration conf;
@@ -195,14 +196,12 @@ public class RecordGenerator implements ObjectFilter {
         this.conf = conf;
         String contentTemplate;
         try {
-            if (conf.valueExists(CONF_CONTENT_TEMPLATE_LOCATION)) {
-                contentTemplate = Resolver.getUTF8Content(conf.getString(CONF_CONTENT_TEMPLATE_LOCATION));
-            } else {
-                contentTemplate = conf.getString(CONF_CONTENT_TEMPLATE);
-            }
+            contentTemplate = conf.valueExists(CONF_CONTENT_TEMPLATE_LOCATION) ?
+                              Resolver.getUTF8Content(conf.getString(CONF_CONTENT_TEMPLATE_LOCATION)) :
+                              conf.getString(CONF_CONTENT_TEMPLATE);
         } catch (IOException e) {
             throw new ConfigurationException(
-                    "Could not resolve template at '" + conf.getString(CONF_CONTENT_TEMPLATE_LOCATION));
+                    "Could not resolve template at '" + conf.getString(CONF_CONTENT_TEMPLATE_LOCATION), e);
         }
         String idTemplate = conf.getString(CONF_ID_TEMPLATE, DEFAULT_ID_TEMPLATE);
         String baseTemplate = conf.getString(CONF_BASE_TEMPLATE, DEFAULT_BASE);
@@ -219,7 +218,7 @@ public class RecordGenerator implements ObjectFilter {
         random = deterministic ? new Random(87) : new Random();
     }
 
-    private Pattern PATTERN_GENERIC = Pattern.compile("(\\$([A-Z]|_)+?\\[.*?\\])", Pattern.DOTALL);
+    private static final Pattern PATTERN_GENERIC = Pattern.compile("(\\$([A-Z]|_)+?\\[.*?\\])", Pattern.DOTALL);
 
     private List<RecordToken> parseTemplate(String template) {
         int lastEnd = 0;
@@ -560,10 +559,10 @@ public class RecordGenerator implements ObjectFilter {
             //noinspection DuplicateStringLiteralInspection
             log.trace("Generated " + payload + " (" + generatedRecords + "/" + maxRecords + "), average speed is "
                       + profiler.getBps(true) + " Records/sec");
-        } else if ((log.isDebugEnabled() &&
-                    // +1 to avoud division by zero
-                    generatedRecords % (profiler.getBpsSpan() / 10 + 1) == 0)
-                   || (log.isInfoEnabled() && generatedRecords % profiler.getBpsSpan() == 0)) {
+        } else if (log.isDebugEnabled() &&
+                    // +1 to avoid division by zero
+                    generatedRecords % (profiler.getBpsSpan() / 10 + 1) == 0
+                   || log.isInfoEnabled() && generatedRecords % profiler.getBpsSpan() == 0) {
             //noinspection DuplicateStringLiteralInspection
             String message = "Generated Payload" + generatedRecords + "/" + maxRecords + ", average speed is "
                              + profiler.getBps(true) + " Records/sec. ETA: " + profiler.getTimeLeftAsString(true);

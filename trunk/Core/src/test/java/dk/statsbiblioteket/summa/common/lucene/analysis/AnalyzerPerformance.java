@@ -28,7 +28,7 @@ import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.
  */
 public class AnalyzerPerformance extends TestCase {
 
-    final int NUM_TESTS = 2000;
+    final static int NUM_TESTS = 2000;
 
     Analyzer a;
     TokenStream t;

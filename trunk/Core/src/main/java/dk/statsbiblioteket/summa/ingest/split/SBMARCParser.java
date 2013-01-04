@@ -182,6 +182,15 @@ public class SBMARCParser extends MARCParser {
         }
 
         @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Child)) {
+                return false;
+            }
+            Child op = (Child)obj;
+            return id.equals(op.id) && sortField.equals(op.sortField);
+        }
+
+        @Override
         public String toString() {
             return "child(" + id + ")";
         }

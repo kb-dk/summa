@@ -1405,7 +1405,7 @@ public abstract class DatabaseStorage extends StorageBase {
             long mtime, String base, QueryOptions options) throws IOException {
 
 
-        StatementHandle handle = null;
+        StatementHandle handle;
         PreparedStatement stmt;
         log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " + options + ").");
 

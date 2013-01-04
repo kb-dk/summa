@@ -68,7 +68,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     private Log log = LogFactory.getLog (ClientManager.class);
     private File baseDir;
 
-    public ClientManager(Configuration conf) throws IOException {
+    public ClientManager(Configuration conf) {
         super (getConnectionFactory(conf));
 
         baseDir = ControlUtils.getControlBaseDir(conf);

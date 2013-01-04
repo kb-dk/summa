@@ -17,12 +17,11 @@ package dk.statsbiblioteket.summa.storage.database.cursors;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A cursor type that starts from a {@link ResultSetCursor} and transparently
@@ -68,11 +67,7 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
         totalRecords = 0;
 
-        if (page.hasNext()) {
-            nextRecord = page.next();
-        } else {
-            nextRecord = null;
-        }
+        nextRecord = page.hasNext() ? page.next() : null;
 
         log.debug("Created " + this + " for storage " + db + ", and result set " + firstPage);
     }
@@ -166,8 +161,9 @@ public class PagingCursor implements Cursor {
             }
             
             if (log.isDebugEnabled()) {
-                log.trace("Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp + " for "
-                          + this + ": " + page);
+                log.debug(
+                        "Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp + " for " + this
+                        + ": " + page);
             }
         } catch (IOException e) {
             log.warn("Failed to execute query for next page: " + e.getMessage(), e);

@@ -52,7 +52,7 @@ public class RepositoryCommand extends Command {
 
     @Override
     public void invoke(ShellContext ctx) throws Exception {
-        String[] args = getArguments();
+//        String[] args = getArguments();
 
         if (hasOption("l")) {
             doListBundles (ctx, null);

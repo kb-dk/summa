@@ -463,8 +463,10 @@ public class ResponseMerger implements Configurable {
             case ifnone:
                 postProcessIfNone(request, aw, forceTopX, forceRules);
                 break;
-            default: throw new UnsupportedOperationException(
-                "Post merge processing does not yet support '" + post + "'");
+            case none:
+                throw new IllegalStateException("POST.none should have been handled earlier");
+            default:
+                throw new UnsupportedOperationException("Post merge processing does not yet support '" + post + "'");
         }
         aw.getMerged().addTiming("responsemerger.post", System.currentTimeMillis() - startTime);
     }

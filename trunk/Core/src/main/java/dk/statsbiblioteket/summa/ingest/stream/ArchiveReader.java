@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class ArchiveReader extends FileSystemReader {
-    private static Log log = LogFactory.getLog(ArchiveReader.class);
+    private static final Log log = LogFactory.getLog(ArchiveReader.class);
 
     protected FileProvider provider;
 

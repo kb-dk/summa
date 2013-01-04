@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.common.marc;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -113,11 +113,9 @@ public class MARCStepper {
                     if (MARC.TAG_DATAFIELD.equals(xml.getLocalName())) {
                         processDataField(xml, callback);
                     } else if (MARC.TAG_CONTROLFIELD.equals(xml.getLocalName())) {
-                        processControlField(
-                            xml, XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null), callback);
+                        processControlField(xml, XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null), callback);
                     } else if (MARC.TAG_LEADER.equals(xml.getLocalName())) {
-                        callback.leader(
-                            XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null), xml.getElementText());
+                        callback.leader(XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null), xml.getElementText());
                     } else {
                         if (!encounteredUnexpectedStart) {
                             encounteredUnexpectedStart = true;
@@ -175,7 +173,7 @@ public class MARCStepper {
     // NOTE: id is optional
     private void processControlField(XMLStreamReader xml, String id, MarcCallback callback) throws XMLStreamException {
         String tag = XMLStepper.getAttribute(xml, MARC.TAG_CONTROLFIELD_ATTRIBUTE_TAG, null);
-        String tid= XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null);
+        //String tid= XMLStepper.getAttribute(xml, MARC.ATTRIBUTE_ID, null);
         String content = xml.getElementText();
         callback.controlField(tag, id, content);
     }

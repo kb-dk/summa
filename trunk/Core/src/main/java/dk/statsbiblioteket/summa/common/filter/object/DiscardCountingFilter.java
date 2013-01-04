@@ -78,6 +78,7 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
         log.info(String.format("Created discarder witn min=%d, max=%d, fraction=%f", min, max, fraction));
     }
 
+    @SuppressWarnings("FloatingPointEquality")
     @Override
     protected boolean checkDiscard(Payload payload) {
         encountered++;

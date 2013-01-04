@@ -76,9 +76,7 @@ public class DummyReader implements ObjectFilter {
     private byte[] createContent() {
         byte[] size = BitUtil.longToBytes(bodySize);
         byte[] theLong = new byte[bodySize + 8];
-        for(int i=0; i < 8; i++) {
-            theLong[i] = size[i];
-        }
+        System.arraycopy(size, 0, theLong, 0, 8);
         for(int i=8; i < bodySize+8; i++) {
             theLong[i] = (byte)random.nextInt(256);
         }

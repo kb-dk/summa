@@ -331,7 +331,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     }
 
 
-    protected byte[] BUFFER = new byte[1000];
+    protected byte[] buffer = new byte[1000];
     /**
      * Read a value from an open file.
      * @param reader       the reader wit access to the value-file.
@@ -343,7 +343,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
                                                                    IOException {
         int length = (int)getValueLength(indexElement);
         if (length == 0) {
-            return getValueConverter().bytesToValue(BUFFER, 0);
+            return getValueConverter().bytesToValue(buffer, 0);
         }
         long valPos = getValuePosition(indexElement);
         if (log.isTraceEnabled()) {
@@ -352,16 +352,16 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         }
         synchronized (this) {
             reader.seek(valPos);
-            if (BUFFER.length < length) {
-                BUFFER = new byte[length];
+            if (buffer.length < length) {
+                buffer = new byte[length];
             }
-            reader.readFully(BUFFER, 0, length);
+            reader.readFully(buffer, 0, length);
         }
 /*        for (int i = 0 ; i < length ; i++) {
-            System.out.println(BUFFER[i]);
+            System.out.println(buffer[i]);
         }
                                           */
-        return getValueConverter().bytesToValue(BUFFER, length);
+        return getValueConverter().bytesToValue(buffer, length);
     }
 
     /**

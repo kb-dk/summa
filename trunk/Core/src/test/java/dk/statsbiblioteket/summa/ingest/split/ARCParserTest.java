@@ -5,11 +5,10 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
-import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCReaderFactory;
 
 import java.io.*;
@@ -94,7 +93,6 @@ public class ARCParserTest extends TestCase {
 
     public void testFaultyCompressedStreaming() throws IOException {
         InputStream is = new FileInputStream(SAMPLE);
-        ArchiveReader ar;
         try {
             ARCReaderFactory.get(SAMPLE.toString(), is, true);
             fail("The reader was expected to throw an IOException, complaining "
@@ -121,7 +119,7 @@ public class ARCParserTest extends TestCase {
         int count = 0;
         while (ari.hasNext()) {
         	ArchiveRecord rec = ari.next();
-            ArchiveRecordHeader header = rec.getHeader();
+            rec.getHeader();
             rec.close();
             count++;
         }

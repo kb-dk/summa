@@ -343,7 +343,7 @@ public abstract class StringPoolSuper extends TestCase {
 
         //System.out.println("Construction took "+ profiler.getSpendTime());
 
-        Profiler store = new Profiler();
+//        Profiler store = new Profiler();
         pool.store();
         //System.out.println("Storing took "+ store.getSpendTime());
         profiler.pause();

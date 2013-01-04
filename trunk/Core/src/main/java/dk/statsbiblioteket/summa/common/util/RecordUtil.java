@@ -69,28 +69,28 @@ public class RecordUtil {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static String RECORD = "record";
+    private static final String RECORD = "record";
 
-    private static String ID = "id";
-    private static String BASE = "base";
+    private static final String ID = "id";
+    private static final String BASE = "base";
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static String DELETED = "deleted";
+    private static final String DELETED = "deleted";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static String INDEXABLE = "indexable";
+    private static final String INDEXABLE = "indexable";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static String CTIME = "ctime";
+    private static final String CTIME = "ctime";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static String MTIME = "mtime";
-    private static String CONTENT = "content";
+    private static final String MTIME = "mtime";
+    private static final String CONTENT = "content";
 
-    private static String PARENTS = "parents";
-    private static String CHILDREN = "children";
+    private static final String PARENTS = "parents";
+    private static final String CHILDREN = "children";
 
-    private static String META = "meta";
-    private static String ELEMENT = "element";
-    private static String KEY = "key";
-    private static String CONTENT_TYPE = "type";
+    private static final String META = "meta";
+    private static final String ELEMENT = "element";
+    private static final String KEY = "key";
+    private static final String CONTENT_TYPE = "type";
     private static final String CONTENT_TYPE_XML = "xml";
     private static final String CONTENT_TYPE_STRING = "string";
 
@@ -240,7 +240,7 @@ public class RecordUtil {
         out.writeStartElement(CONTENT);
         try {
             writeContent(out, record, escapeContent);
-        } catch (IOException e) {
+        } catch (RuntimeException e) {
             throw new XMLStreamException(String.format("Unable to write XML for content from %s", record), e);
         }
         out.writeEndElement();
@@ -291,7 +291,7 @@ public class RecordUtil {
      * The underlying Writer-hack is necessary to write XML directly.
      */
     private static void writeContent(
-            XMLStreamWriter out, Record record, boolean escapeContent) throws XMLStreamException, IOException {
+            XMLStreamWriter out, Record record, boolean escapeContent) throws XMLStreamException {
         if (escapeContent) {
             out.writeCharacters(record.getContentAsUTF8());
             return;
@@ -452,7 +452,7 @@ public class RecordUtil {
                     record.setContent(getContent(reader, record), false);
                 } catch (UnsupportedEncodingException e) {
                     //noinspection DuplicateStringLiteralInspection
-                    throw new IllegalStateException("utf-8 not supported");
+                    throw new IllegalStateException("utf-8 not supported", e);
                 }
                 continue;
             }
@@ -738,8 +738,7 @@ public class RecordUtil {
                 }
             }
         }
-        if (!followLinks ||
-            (record.getParents() == null && record.getChildren() == null)) {
+        if (!followLinks || record.getParents() == null && record.getChildren() == null) {
             return size;
         }
         if (visited == null) {
@@ -837,7 +836,7 @@ public class RecordUtil {
         try {
             return Strings.flush(payload.getStream());
         } catch (IOException e) {
-            throw new RuntimeException("Unable to flush the Stream in " + payload);
+            throw new RuntimeException("Unable to flush the Stream in " + payload, e);
         }
     }
 
@@ -923,7 +922,7 @@ public class RecordUtil {
         try {
             return new InputStreamReader(payload.getStream(), "utf-8");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException("The utf-8 encoding was not supported");
+            throw new IllegalArgumentException("The utf-8 encoding was not supported", e);
         }
     }
 
@@ -1016,7 +1015,7 @@ public class RecordUtil {
         int c;
         try {
             // TODO: Optimize this by using a buffer
-            while (count < limit && ((c = reader.read()) != -1)) {
+            while (count < limit && (c = reader.read()) != -1) {
                 sw.append((char)c);
                 count++;
             }

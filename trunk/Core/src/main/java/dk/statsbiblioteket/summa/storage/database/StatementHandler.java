@@ -16,8 +16,8 @@ package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -44,7 +44,7 @@ public abstract class StatementHandler {
     public abstract String getPagingStatement(String sql);
     public abstract MiniConnectionPoolManager.StatementHandle prepareStatement(String sql) throws SQLException;
 
-    private String RELATIONS_CLAUSE=
+    private static final String RELATIONS_CLAUSE=
         DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
         + DatabaseStorage.RELATIONS + "." + DatabaseStorage.PARENT_ID_COLUMN
         + " OR " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
