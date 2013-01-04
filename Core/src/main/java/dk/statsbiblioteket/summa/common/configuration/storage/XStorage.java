@@ -18,20 +18,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * XStorage class, is a configuration storage, where it is possible to on-the
@@ -41,17 +32,29 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.QA_NEEDED,
         author = "te, hbk")
 public class XStorage implements ConfigurationStorage {
-    /** Serial version UID. */
+    /**
+     * Serial version UID.
+     */
     public static final long serialVersionUID = 81293421421L;
-    /** Default xconfiguration resource. */
+    /**
+     * Default xconfiguration resource.
+     */
     public static final String DEFAULT_RESOURCE = "xconfiguration.%d.xml";
-    /** True if there has been a warning about the unclean semantic. */
+    /**
+     * True if there has been a warning about the unclean semantic.
+     */
     private static boolean unclearSemanticsWarned = false;
-    /** The storage file. */
+    /**
+     * The storage file.
+     */
     private File storageFile;
-    /** The Storage properties. */
+    /**
+     * The Storage properties.
+     */
     private XProperties xprops;
-    /** Local log instance. */
+    /**
+     * Local log instance.
+     */
     private static Log log = LogFactory.getLog(XStorage.class);
 
     /**
@@ -59,7 +62,7 @@ public class XStorage implements ConfigurationStorage {
      * {@link XStorage#nextAvailableConfigurationFile} configuration file.
      *
      * @throws IOException If error occur while fetching next available
-     * configuration file.
+     *                     configuration file.
      * @deprecated use {@link XStorage(boolean)} instead.
      */
     public XStorage() throws IOException {
@@ -72,7 +75,7 @@ public class XStorage implements ConfigurationStorage {
      * @throws IOException if the creation failed.
      */
     public XStorage(boolean createNew) throws IOException {
-        this (createNew ? nextAvailableConfigurationFile() : null);
+        this(createNew ? nextAvailableConfigurationFile() : null);
     }
 
     /**
@@ -108,12 +111,10 @@ public class XStorage implements ConfigurationStorage {
             return;
         }
         if (!configurationFile.exists()) {
-            log.warn("Property file '" + configurationFile + "' does not exist."
-                     + " Creating new file");
+            log.warn("Property file '" + configurationFile + "' does not exist." + " Creating new file");
             syncStorageFile();
         } else {
-            xprops.load(configurationFile.getAbsoluteFile().toString(),
-                        false, false);
+            xprops.load(configurationFile.getAbsoluteFile().toString(), false, false);
         }
     }
 
@@ -134,7 +135,7 @@ public class XStorage implements ConfigurationStorage {
     /**
      * Put a key-value pair into this configuration.
      *
-     * @param key The name used to access the stored object.
+     * @param key   The name used to access the stored object.
      * @param value The actual value to store.
      * @throws IOException If error occur while manipulating on disc file.
      */
@@ -149,7 +150,7 @@ public class XStorage implements ConfigurationStorage {
      *
      * @param key Name of object to look up.
      * @return Serializable object, which is the value of the given key, from
-     * the configuration.
+     *         the configuration.
      */
     @SuppressWarnings({"ProhibitedExceptionThrown"})
     @Override
@@ -158,8 +159,7 @@ public class XStorage implements ConfigurationStorage {
             return (Serializable) xprops.getObject(key);
         } catch (ClassCastException e) {
             throw new ClassCastException(String.format(
-                    "Unable to cast the value for key '%s' to Serializable, "
-                    + "got object of class %s",
+                    "Unable to cast the value for key '%s' to Serializable, got object of class %s",
                     key, xprops.getObject(key).getClass().getName()));
         } catch (NullPointerException e) {
             return null;
@@ -171,32 +171,25 @@ public class XStorage implements ConfigurationStorage {
      * the configuration.
      *
      * @return An iterator over String, Serializable pairs, or key, value from
-     * the configuration.
+     *         the configuration.
      * @throws IOException If error occur while serializing objects.
      */
     @SuppressWarnings({"ProhibitedExceptionThrown"})
     @Override
-    public Iterator<Map.Entry<String, Serializable>> iterator() throws
-                                                                   IOException {
+    public Iterator<Map.Entry<String, Serializable>> iterator() throws IOException {
         // TODO: Fully support iterators
-        log.debug("Iterators are not fully supported by XStorage. "
-                  + "This won't work well with nesting");
-        Map<String, Serializable> tempMap =
-                new HashMap<String, Serializable>(size());
+        log.debug("Iterators are not fully supported by XStorage. " + "This won't work well with nesting");
+        Map<String, Serializable> tempMap = new HashMap<String, Serializable>(size());
         for (Map.Entry<Object, Object> entry : xprops.entrySet()) {
             try {
-                    tempMap.put((String) entry.getKey(),
-                                (Serializable) entry.getValue());
+                tempMap.put((String) entry.getKey(), (Serializable) entry.getValue());
             } catch (ClassCastException e) {
                 throw new ClassCastException(String.format(
-                        "Unable to cast '%s' of class %s to String and '%s' of "
-                        + "class %s to Serializable",
-                        entry.getKey(), entry.getKey().getClass(),
-                        entry.getValue(), entry.getValue().getClass()));
+                        "Unable to cast '%s' of class %s to String and '%s' of class %s to Serializable",
+                        entry.getKey(), entry.getKey().getClass(), entry.getValue(), entry.getValue().getClass()));
             }
         }
-        log.trace("Created shallow copy of storage with " + size()
-                  + " elements. Returning iterator");
+        log.trace("Created shallow copy of storage with " + size() + " elements. Returning iterator");
         return tempMap.entrySet().iterator();
     }
 
@@ -238,11 +231,10 @@ public class XStorage implements ConfigurationStorage {
      * @param key The name of the sub storage.
      * @return The sub storage created.
      * @throws IOException If error occur while creating or retrieving sub
-     * storage.
+     *                     storage.
      */
     @Override
-    public ConfigurationStorage createSubStorage(String key) throws
-                                                             IOException {
+    public ConfigurationStorage createSubStorage(String key) throws IOException {
         put(key, new XProperties());
         return getSubStorage(key);
     }
@@ -259,10 +251,8 @@ public class XStorage implements ConfigurationStorage {
         try {
             Object sub = get(key);
             if (!(sub instanceof XProperties)) {
-                throw new IOException("The value for '" + key
-                                      + "' was of class '"
-                                      + sub.getClass()
-                                      + "'. Expected XStorage");
+                throw new IOException(
+                        "The value for '" + key + "' was of class '" + sub.getClass() + "'. Expected XStorage");
             }
 
             // TODO Solve
@@ -282,7 +272,7 @@ public class XStorage implements ConfigurationStorage {
      * Create 'count' number of sub storage and associated these with the
      * given 'key'.
      *
-     * @param key The key for the list of storage.
+     * @param key   The key for the list of storage.
      * @param count The number of storage to create.
      * @return A list of sub storage.
      * @throws IOException If error occur while creating sub storage.
@@ -310,18 +300,15 @@ public class XStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
-            throw new IOException(String.format(
-                    "The value for '%s' was of class '%s'. Expected List",
-                    key, sub.getClass()));
+            throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
+                                                key, sub.getClass()));
         }
         List list = (List) sub;
-        List<ConfigurationStorage> storages =
-                               new ArrayList<ConfigurationStorage>(list.size());
+        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(list.size());
         for (Object o : list) {
             if (!(o instanceof XProperties)) {
                 throw new IOException(String.format(
-                        "A class in the list for '%s' was '%s'. Expected "
-                        + "XProperties", key, o.getClass()));
+                        "A class in the list for '%s' was '%s'. Expected " + "XProperties", key, o.getClass()));
             }
             storages.add(new XStorage((XProperties) o));
         }
@@ -332,9 +319,9 @@ public class XStorage implements ConfigurationStorage {
      * Get next available configuration file.
      *
      * @return The configuration file, which is 'xconfiguration.%d.xml', where
-     * '%d' is a forth-running number.
+     *         '%d' is a forth-running number.
      * @throws IOException If IOException is cast while doing IO operations on
-     * disc.
+     *                     disc.
      */
     private static File nextAvailableConfigurationFile() throws IOException {
         int count = 0;
@@ -357,7 +344,6 @@ public class XStorage implements ConfigurationStorage {
             return;
         }
         log.trace("Syncing XStorage to '" + storageFile + "'");
-        xprops.store(new BufferedOutputStream(
-                                      new FileOutputStream(storageFile)), null);
+        xprops.store(new BufferedOutputStream(new FileOutputStream(storageFile)), null);
     }
 }

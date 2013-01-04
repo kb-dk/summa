@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * Resolves paths relative to System properties.
@@ -41,14 +41,14 @@ public class Resolver {
      * The location of the persistent dir for a service. This can be resolved
      * by calling System.getProperty(SYSPROP_PERSISTENT_DIR).
      */
-    public static final String SYSPROP_PERSISTENT_DIR =
-            "summa.control.client.persistent.dir";
+    public static final String SYSPROP_PERSISTENT_DIR = "summa.control.client.persistent.dir";
 
     /**
      * Transforms the given file to an absolute path, if it is not absolute
      * already. The absolute location will be relative to the System property
      * "summa.control.client.persistent.dir". If that system property does not
      * exist, the location will be relative to the current dir.
+     *
      * @param file a file that should be relative to the persistent dir.
      * @return the file relative to the persistent dir.
      */
@@ -58,8 +58,7 @@ public class Resolver {
             return null;
         }
         if (file.getPath().equals(file.getAbsolutePath())) {
-            log.trace("getPersistentFile(" + file.getPath() + ") got a file"
-                      + " that was already absolute");
+            log.trace("getPersistentFile(" + file.getPath() + ") got a file that was already absolute");
             return file;
         }
         String persistentBase;
@@ -67,13 +66,12 @@ public class Resolver {
             persistentBase = System.getProperty(SYSPROP_PERSISTENT_DIR);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn("System property '" + SYSPROP_PERSISTENT_DIR
-                     + "' not defined");
+            log.warn("System property '" + SYSPROP_PERSISTENT_DIR + "' not defined");
             return file;
         } catch (SecurityException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn("The SecurityManager disallows the extraction of system "
-                     + "property '" + SYSPROP_PERSISTENT_DIR + "'");
+            log.warn("The SecurityManager disallows the extraction of system property '" + SYSPROP_PERSISTENT_DIR
+                     + "'");
             return file;
         }
         log.trace("Resolved system property '" + SYSPROP_PERSISTENT_DIR + "' to '" + persistentBase + "'");
@@ -88,10 +86,9 @@ public class Resolver {
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
-            log.info(String.format(
-                    "Could not resolve File '%s' to persistentBaseFile with persistent base '%s'. "
-                    + "Using file directly as '%s'",
-                    file, persistentBase, file.getAbsolutePath()));
+            log.info(String.format("Could not resolve File '%s' to persistentBaseFile with persistent base '%s'. "
+                                   + "Using file directly as '%s'",
+                                   file, persistentBase, file.getAbsolutePath()));
             return file;
         }
     }
@@ -105,6 +102,7 @@ public class Resolver {
      * Absolute paths: /tmp/resource.txt<br />
      * Class-loader resolvable: resource.xml<br />
      * The resource resolving is done in the order above.
+     *
      * @param resource the resource to locate.
      * @return the URL for the resource, if possible, else null.
      */
@@ -119,27 +117,24 @@ public class Resolver {
             return new URL(resource);
         } catch (MalformedURLException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Malformed URL '" + resource
-                      + "'. Attempting file resolving");
+            log.trace("Malformed URL '" + resource + "'. Attempting file resolving");
         }
         File file = new File(resource);
         if (file.exists() && file.canRead()) {
             try {
                 return file.toURI().toURL();
             } catch (MalformedURLException e) {
-                log.debug("Could not convert the file '" + file
-                          + "' to URL. Attempting class-loader", e);
+                log.debug("Could not convert the file '" + file + "' to URL. Attempting class-loader", e);
             }
         } else {
-            log.trace("File(" + resource + ") cannot be accesses. "
-                      + "Attempting class-loader resolving");
+            log.trace("File(" + resource + ") cannot be accesses. Attempting class-loader resolving");
         }
-        return Thread.currentThread().getContextClassLoader().getResource(
-                resource);
+        return Thread.currentThread().getContextClassLoader().getResource(resource);
     }
 
     /**
      * Subset of the {@link #getURL} that only resolves Files.
+     *
      * @param resource the resource to locate.
      * @return the File for the resource if possible, else null.
      */
@@ -149,8 +144,7 @@ public class Resolver {
             return url == null ? null : new File(url.toURI());
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format(
-                    "Unable to convert URL '%s' to URI", url));
+            throw new RuntimeException(String.format("Unable to convert URL '%s' to URI", url), e);
         }
     }
 
@@ -162,6 +156,7 @@ public class Resolver {
      * Absolute paths: /tmp/resource.txt<br />
      * Class-loader resolvable: resource.xml<br />
      * The resource resolving is done in the order above.
+     *
      * @param resource the resource to get, in a format as specified above.
      * @return the content of the resource, read as UTF8.
      * @throws IOException if the resource could not be retrieved.
@@ -174,11 +169,9 @@ public class Resolver {
             return getUTF8Content(url);
         } catch (MalformedURLException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Malformed URL '" + resource
-                      + "'. Attempting file loading");
+            log.trace("Malformed URL '" + resource + "'. Attempting file loading");
         } catch (IOException e) {
-            log.debug("Could not get '" + resource + "' as an URL. "
-                      + "Attempting file loading", e);
+            log.debug("Could not get '" + resource + "' as an URL. Attempting file loading", e);
         }
         try {
             File file = new File(resource);
@@ -186,18 +179,17 @@ public class Resolver {
                 return Files.loadString(file);
             } else {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("File(" + resource + ") can not be accesses. "
-                          + "Attempting class-loader");
+                log.trace("File(" + resource + ") can not be accesses. Attempting class-loader");
             }
         } catch (IOException e) {
-            log.debug("Error accessing File(" + resource + "). Attempting "
-                      + "class-loader", e);
+            log.debug("Error accessing File(" + resource + "). Attempting class-loader", e);
         }
         return Streams.getUTF8Resource(resource);
     }
 
     /**
      * Retrieve an UTF-8 test file from the given location.
+     *
      * @param location where to fetch the resource.
      * @return the UTF-8 string at the location.
      * @throws IOException if the string could not be requested.
@@ -214,8 +206,7 @@ public class Resolver {
             Streams.pipe(in, bytes);
             return bytes.toString("utf-8");
         } catch (IOException e) {
-            throw new IOException("Could not get content of '" + location + "'",
-                                  e);
+            throw new IOException("Could not get content of '" + location + "'", e);
         }
     }
 
@@ -224,6 +215,7 @@ public class Resolver {
      * </p><p>
      * Note: Do not just make a {@code new File(url.getFile())} as it does not
      * work for much else that paths consisting of a-zA-Z0-9 due to escaping.
+     *
      * @param url the URL to convert to File.
      * @return the URL as a File.
      */
@@ -231,9 +223,7 @@ public class Resolver {
         try {
             return new File(url.toURI());
         } catch (URISyntaxException e) {
-            throw new RuntimeException(String.format(
-                    "Unable to convert the URL '%s' to URI", url), e);
+            throw new RuntimeException(String.format("Unable to convert the URL '%s' to URI", url), e);
         }
     }
 }
-

@@ -46,20 +46,17 @@ public class ClearBaseFilterTest extends TestCase {
     ClearBaseFilter filter;
     PayloadBufferFilter chain;
 
-    public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
-                                                  Record... records) {
+    public PayloadBufferFilter prepareFilterChain(ObjectFilter filter, Record... records) {
         // Set up the source filter
-        PushFilter source = new PushFilter(records.length+1, 2048);
+        PushFilter source = new PushFilter(records.length + 1, 2048);
 
-        for (int i = 0; i < records.length; i++) {
-            Payload p = new Payload(records[i]);
-            source.add(p);
+        for (Record record : records) {
+            source.add(new Payload(record));
         }
         source.signalEOF();
 
         // Set up the endpoint filter
-        PayloadBufferFilter buf = new PayloadBufferFilter(
-                                                Configuration.newMemoryBased());
+        PayloadBufferFilter buf = new PayloadBufferFilter(Configuration.newMemoryBased());
 
         // Connect filters
         filter.setSource(source);
@@ -69,7 +66,7 @@ public class ClearBaseFilterTest extends TestCase {
 
     }
 
-    public void assertBaseCount (String base, long expected) throws Exception {
+    public void assertBaseCount(String base, long expected) throws Exception {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long actual = 0;
@@ -81,23 +78,20 @@ public class ClearBaseFilterTest extends TestCase {
         }
 
         if (actual != expected) {
-            fail("Base '" + base + "' should contain " + expected
-                 + " records, but found " + actual);
+            fail("Base '" + base + "' should contain " + expected + " records, but found " + actual);
         }
     }
 
     public Storage createTestStorage() throws Exception {
-        String dbLocation = "target"+File.separator+"summatest" + File.separator + "testDB";
+        String dbLocation = "target" + File.separator + "summatest" + File.separator + "testDB";
         File dbFile = new File(dbLocation);
         if (dbFile.getParentFile().exists()) {
             Files.delete(dbFile.getParentFile());
         }
 
-        storage = StorageFactory.createStorage(
-                        Configuration.newMemoryBased(
-                                   Storage.CONF_CLASS, H2Storage.class,
-                                   DatabaseStorage.CONF_LOCATION,
-                                   dbLocation));
+        storage = StorageFactory.createStorage(Configuration.newMemoryBased(
+                Storage.CONF_CLASS, H2Storage.class,
+                DatabaseStorage.CONF_LOCATION, dbLocation));
 
         assertBaseCount("base", 0);
         return storage;
@@ -106,28 +100,32 @@ public class ClearBaseFilterTest extends TestCase {
     /**
      * Test how we fare with no bases and no connection configured
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public void testNoBases() throws Exception {
         filter = new ClearBaseFilter(Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter,
-                                   new Record("id", "base", "data".getBytes()));
+        chain = prepareFilterChain(filter, new Record("id", "base", "data".getBytes()));
 
-        while(chain.pump());
+        while (chain.pump()) {
+            ;
+        }
 
         assertEquals(1, chain.size());
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     public void testOneBaseOneRecord() throws Exception {
         createTestStorage();
-        
+
         Record rec = new Record("id", "base", "data".getBytes());
         storage.flush(rec);
         assertBaseCount("base", 1);
 
         filter = new ClearBaseFilter(storage, Arrays.asList("base"));
-        chain = prepareFilterChain(filter,
-                                   rec);
+        chain = prepareFilterChain(filter, rec);
 
-        while(chain.pump());
+        while (chain.pump()) {
+            ;
+        }
 
         assertEquals(1, chain.size());
 
@@ -144,11 +142,12 @@ public class ClearBaseFilterTest extends TestCase {
         assertBaseCount("base", 2);
 
         filter = new ClearBaseFilter(storage, Arrays.asList("base"));
-        chain = prepareFilterChain(filter,
-                                   rec1, rec2);
+        chain = prepareFilterChain(filter, rec1, rec2);
 
         //noinspection StatementWithEmptyBody
-        while(chain.pump());
+        while (chain.pump()) {
+            ;
+        }
 
         assertEquals(2, chain.size());
 
@@ -164,8 +163,7 @@ public class ClearBaseFilterTest extends TestCase {
         cal.set(Calendar.HOUR_OF_DAY, 16);
         cal.set(Calendar.MINUTE, 9);
         cal.set(Calendar.SECOND, 32);
-        log.info(String.format(
-                ProgressTracker.TIMESTAMP_FORMAT, cal));
+        log.info(String.format(ProgressTracker.TIMESTAMP_FORMAT, cal));
     }
 
     public void testPayloadMatcher() throws Exception {
@@ -180,18 +178,14 @@ public class ClearBaseFilterTest extends TestCase {
         assertBaseCount("base", 3);
 
 
-        Configuration conf = Configuration.newMemoryBased(
-                PayloadMatcher.CONF_ID_REGEX, "id2",
-                ClearBaseFilter.CONF_CLEAR_BASES, "base"
-        );
+        Configuration conf = Configuration.newMemoryBased(PayloadMatcher.CONF_ID_REGEX, "id2",
+                                                          ClearBaseFilter.CONF_CLEAR_BASES, "base");
 
         filter = new ClearBaseFilter(storage, conf);
         chain = prepareFilterChain(filter, rec1, rec11, rec2);
 
-        assertEquals("The first pumped record should match",
-                     "id1", chain.next().getId());
-        assertEquals("The chain should contain the right number of Payloads", 
-                     1, chain.size());
+        assertEquals("The first pumped record should match", "id1", chain.next().getId());
+        assertEquals("The chain should contain the right number of Payloads", 1, chain.size());
         assertBaseCount("base", 3);
         chain.pump();
         chain.pump();

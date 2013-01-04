@@ -67,7 +67,7 @@ public class IndexUtils {
             String message = "No Document present, so no basic properties can be assigned";
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("IndexUtils.assignBasicProperties", message, Logging.LogLevel.DEBUG, payload);
-            log.warn(String.format(message + ": " + payload));
+            log.warn(message + ": " + payload);
             return;
         }
         Document document =
@@ -80,7 +80,7 @@ public class IndexUtils {
             String message = "No Record present, so no base can be assigned";
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("IndexUtils.assignBasicProperties", message, Logging.LogLevel.DEBUG, payload);
-            log.debug(String.format(message + ": " + payload));
+            log.debug(message + ": " + payload);
             return;
         }
         String base = payload.getRecord().getBase();
@@ -115,7 +115,7 @@ public class IndexUtils {
         if (ids != null && ids.length > 0) {
             if (ids.length > 1) {
                 Logs.log(log, Logs.Level.WARN,
-                         "Multiple RecordIDs defined in Document '" + this + "'. Returning first RecordID out of: ",
+                         "Multiple RecordIDs defined in Document '" + document + "'. Returning first RecordID out of: ",
                          (Object)ids);
             }
             return ids[0];

@@ -119,9 +119,7 @@ public class Layout {
     }
 
     public void appendColumns(String... cols) {
-        for (String col : cols) {
-            columns.add(col);
-        }
+        Collections.addAll(columns, cols);
     }
 
     public Model getModel() {

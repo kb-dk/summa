@@ -14,30 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
 
 /**
  *
@@ -57,43 +44,41 @@ public class JStorage implements ConfigurationStorage {
      * {@link JStorage#JStorage()}.
      *
      * @param file A file containing a script to evaluate
-     * {@link #eval(java.io.Reader)}.
+     *             {@link #eval(java.io.Reader)}.
      * @throws IOException From creation of {@link java.io.FileReader}.
      */
     public JStorage(File file) throws IOException {
         this();
-        eval(new FileReader(file));        
+        eval(new FileReader(file));
     }
 
     /**
      * Creates a JStorage instance, with a given system resource, this is
      * evaluated {@link JStorage#eval(java.io.Reader)} as a script. Instance is
      * create with an empty configuration {@link JStorage#JStorage()}.
-     * 
+     *
      * @param resource System resource for initial script.
      * @throws IOException If resource isn't found or there occurs an error
-     * reading the file.
+     *                     reading the file.
      */
     public JStorage(String resource) throws IOException {
         this();
         InputStream in = ClassLoader.getSystemResourceAsStream(resource);
         if (in == null) {
-            throw new FileNotFoundException("Unable to locate resource: "
-                                            + resource);
+            throw new FileNotFoundException("Unable to locate resource: " + resource);
         }
 
         try {
             eval(new InputStreamReader(in));
         } catch (Exception e) {
-            throw new ConfigurationStorageException("Error reading resource '"
-                                                    + resource + "': "
-                                                    + e.getMessage(), e);
+            throw new ConfigurationStorageException("Error reading resource '" + resource + "': " + e.getMessage(), e);
         }
     }
 
     /**
      * Creates a JStorage with an empty configuration. The argument URL is
      * fetched and evaluated as a script.
+     *
      * @param url URL that is fetched and evaluated as a script.
      * @throws IOException If error occur while reading content from the URL.
      */
@@ -103,8 +88,7 @@ public class JStorage implements ConfigurationStorage {
         try {
             eval(new InputStreamReader(url.openStream()));
         } catch (Exception e) {
-            throw new ConfigurationStorageException("Error reading " + url
-                                                    + ": " + e.getMessage(), e);
+            throw new ConfigurationStorageException("Error reading " + url + ": " + e.getMessage(), e);
         }
     }
 
@@ -120,10 +104,8 @@ public class JStorage implements ConfigurationStorage {
         try {
             eval(in);
         } catch (Exception e) {
-            throw new ConfigurationStorageException("Error reading "
-                                                    + "configuration from "
-                                                    + "stream: "
-                                                    + e.getMessage(), e);
+            throw new ConfigurationStorageException(
+                    "Error reading configuration from stream: " + e.getMessage(), e);
         }
     }
 
@@ -131,7 +113,7 @@ public class JStorage implements ConfigurationStorage {
      * Creates a JStorage instance with the given configuration.
      *
      * @param conf Configuration which should be used for this JStorage
-     * instance.
+     *             instance.
      */
     @SuppressWarnings("unused")
     public JStorage(Configuration conf) {
@@ -153,13 +135,12 @@ public class JStorage implements ConfigurationStorage {
     /**
      * Used for creating sub-storage.
      *
-     * @param eng The scriptEngine.
-     * @param engMan The scriptEngine.
-     * @param conf The configuration.
+     * @param eng       The scriptEngine.
+     * @param engMan    The scriptEngine.
+     * @param conf      The configuration.
      * @param createNew If {@code true} a new configuration.
      */
-    private JStorage(ScriptEngine eng, ScriptEngineManager engMan,
-                     String conf, boolean createNew){
+    private JStorage(ScriptEngine eng, ScriptEngineManager engMan, String conf, boolean createNew) {
         engine = eng;
         engineManager = engMan;
         config = conf;
@@ -169,9 +150,8 @@ public class JStorage implements ConfigurationStorage {
         }
 
         if (Boolean.parseBoolean(eval(config + " == null").toString())) {
-            throw new RuntimeException("Can not create sub storage of a "
-                                       + "non-existing sub configuration: "
-                                       + config);
+            throw new RuntimeException(
+                    "Can not create sub storage of a non-existing sub configuration: " + config);
         }
     }
 
@@ -180,9 +160,9 @@ public class JStorage implements ConfigurationStorage {
      * - setting up the {@link javax.script.ScriptEngineManager} used for this
      * class.
      * <ul>
-     *  <li>Installing __ext_size() method.</li>
-     *  <li>Installing __ext_type(value) method.</li>
-     *  <li>Installing __ext_new_list(list) method.</li>
+     * <li>Installing __ext_size() method.</li>
+     * <li>Installing __ext_type(value) method.</li>
+     * <li>Installing __ext_new_list(list) method.</li>
      * </ul>
      */
     private void init() {
@@ -190,68 +170,62 @@ public class JStorage implements ConfigurationStorage {
         engine = engineManager.getEngineByName("js");
 
         if (engine == null) {
-            throw new RuntimeException("Script engine 'js'"
-                                       + " not supported by JRE");
+            throw new RuntimeException("Script engine 'js' not supported by JRE");
         }
 
         /* Install __ext_size() method on all objects */
-        eval(
-        "Object.prototype.__ext_size = function () {     \n" +
-        "  var len = 0;                                  \n" +
-        "  for (var k in this) {                         \n" +
-        "      if ( k.substr(0,6) != '__ext_' )          \n" +
-        "          len++;                                \n" +
-        "  }                                             \n" +
-        "  return len;                                   \n" +
-        "}                                               \n"
-        );
+        eval("Object.prototype.__ext_size = function () {     \n" +
+             "  var len = 0;                                  \n" +
+             "  for (var k in this) {                         \n" +
+             "      if ( k.substr(0,6) != '__ext_' )          \n" +
+             "          len++;                                \n" +
+             "  }                                             \n" +
+             "  return len;                                   \n" +
+             "}                                               \n");
 
         /* Install __ext_type function in the global scope. We use this to
          * differentiate between objects and arrays */
-        eval(
-        "function __ext_type(value) {               \n" +
-        "    var s = typeof value;                  \n" +
-        "    if (s === 'object') {                  \n" +
-        "        if (value) {                       \n" +
-        "            if (value instanceof Array) {  \n" +
-        "                s = 'array';               \n" +
-        "            }                              \n" +
-        "        } else {                           \n" +
-        "            s = 'null';                    \n" +
-        "        }                                  \n" +
-        "    }                                      \n" +
-        "    return s;                              \n" +
-        "}"
-        );
+        eval("function __ext_type(value) {               \n" +
+             "    var s = typeof value;                  \n" +
+             "    if (s === 'object') {                  \n" +
+             "        if (value) {                       \n" +
+             "            if (value instanceof Array) {  \n" +
+             "                s = 'array';               \n" +
+             "            }                              \n" +
+             "        } else {                           \n" +
+             "            s = 'null';                    \n" +
+             "        }                                  \n" +
+             "    }                                      \n" +
+             "    return s;                              \n" +
+             "}");
 
         /* Create a Java ArrayList out of a JS list */
-        eval(
-        "function __ext_new_list(list) {               \n" +
-        "    var result = new java.util.ArrayList()    \n" +
-        "    for (var elt in list) {                   \n" +
-        "        if (elt.toString().substr(0,6) != '__ext_')\n" +
-        "            result.add(list[elt].toString())  \n" +
-        "    }                                         \n" +
-        "    return result                             \n" +
-        "}                                             \n"
-        );
+        eval("function __ext_new_list(list) {               \n" +
+             "    var result = new java.util.ArrayList()    \n" +
+             "    for (var elt in list) {                   \n" +
+             "        if (elt.toString().substr(0,6) != '__ext_')\n" +
+             "            result.add(list[elt].toString())  \n" +
+             "    }                                         \n" +
+             "    return result                             \n" +
+             "}                                             \n");
     }
 
     /**
      * {@inheritDoc}
      *
-     * @param key The name used to access the stored object.
+     * @param key   The name used to access the stored object.
      * @param value The actual value to store.
      */
     @Override
     public void put(String key, Serializable value) {
-      
-    	
-    	eval(config+"['"+key+"'] = "+ parseObject(value));
+
+
+        eval(config + "['" + key + "'] = " + parseObject(value));
     }
 
     /**
      * {@inheritDoc}
+     *
      * @param key Name of object to look up.
      * @return A serializable object which corresponds to the key.
      */
@@ -259,30 +233,29 @@ public class JStorage implements ConfigurationStorage {
     public Serializable get(String key) {
         engine.put("__ext_storage", this);
 
-        String query =
-                "var val = CONFIG['KEY']                             \n"+
-                "if( typeof(val) == 'function' )                     \n" +
-                "    val = val()                                     \n" +
-                "else if ( typeof(val) == 'object' && val != null) { \n" +
-                "    if (val instanceof Array) {                     \n" +
-                "        if (val.length > 0 && typeof(val[0]) == 'string')\n" +
-                "           val = __ext_new_list(val)                \n" +
-                "        else                                        \n" +
-                "            val = __ext_storage.getSubStorages('KEY')\n" +
-                "    }                                               \n" +
-                "    else                                            \n" +
-                "        val = __ext_storage.getSubStorage('KEY')    \n" +
-                "}                                                   \n" +
-                "val                                                 \n";
+        String query = "var val = CONFIG['KEY']                             \n" +
+                       "if( typeof(val) == 'function' )                     \n" +
+                       "    val = val()                                     \n" +
+                       "else if ( typeof(val) == 'object' && val != null) { \n" +
+                       "    if (val instanceof Array) {                     \n" +
+                       "        if (val.length > 0 && typeof(val[0]) == 'string')\n" +
+                       "           val = __ext_new_list(val)                \n" +
+                       "        else                                        \n" +
+                       "            val = __ext_storage.getSubStorages('KEY')\n" +
+                       "    }                                               \n" +
+                       "    else                                            \n" +
+                       "        val = __ext_storage.getSubStorage('KEY')    \n" +
+                       "}                                                   \n" +
+                       "val                                                 \n";
 
         try {
-            
-        	Serializable s=  (Serializable) eval(query.replace("KEY", key).replace("CONFIG", config));
-        	if (s instanceof Double){
-        		return convertToInteger(s);
-        	}        
-        	return s;
-        
+
+            Serializable s = (Serializable) eval(query.replace("KEY", key).replace("CONFIG", config));
+            if (s instanceof Double) {
+                return convertToInteger(s);
+            }
+            return s;
+
         } finally {
             engine.put("__ext_storage", null);
         }
@@ -290,45 +263,45 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * {@inheritDoc}
+     *
      * @return An iterator over keys in the configuration attached to this
-     * JStorage.
+     *         JStorage.
      */
     @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() {
         // The only way to do this is to extract the configuration level level
         // from the JS engine into a hash map...
-        Map<String,Serializable> map = new HashMap<String,Serializable>();
+        Map<String, Serializable> map = new HashMap<String, Serializable>();
 
         // Install context
         engine.put("__ext_map", map);
         engine.put("__ext_storage", this);
 
         try {
-            eval((
-              "for (var key in CONFIG) {                                  \n" +
-              "  if ( key.substr(0,6) == '__ext_' )                       \n" +
-              "      continue                                             \n" +
-              "  var val = CONFIG[key]                                    \n" +
-              "  if ( typeof(val) == 'function' )                         \n" +
-              "      __ext_map.put(key, val.toString())                   \n" +
-              "  else if ( typeof(val) == 'object' && val != null) {      \n" +
-              "      if ( val instanceof Array ) {                        \n" +
-              "          if (val.length > 0 && typeof(val[0]) == 'string')\n" +
-              "              __ext_map.put(key, __ext_new_list(val))      \n" +
-              "           else                                            \n" +
-              "              __ext_map.put(key, __ext_storage.getSubStorages(key))\n" +
-              "      }                                                    \n" +
-              "      else                                                 \n" +
-              "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
-              "  }                                                        \n" +
-              "  else if (typeof(val) == 'number')                        \n" +
-              "      __ext_map.put(key, val)                              \n" +
-              "  else if (typeof(val) == 'boolean')                       \n" +
-              "      __ext_map.put(key, val)                              \n" +                            
-              "  else                                                     \n" +
-              "      __ext_map.put(key, val)                              \n" +
-              "}                                                          \n").
-              replace("CONFIG", config));
+            eval(("for (var key in CONFIG) {                                  \n" +
+                  "  if ( key.substr(0,6) == '__ext_' )                       \n" +
+                  "      continue                                             \n" +
+                  "  var val = CONFIG[key]                                    \n" +
+                  "  if ( typeof(val) == 'function' )                         \n" +
+                  "      __ext_map.put(key, val.toString())                   \n" +
+                  "  else if ( typeof(val) == 'object' && val != null) {      \n" +
+                  "      if ( val instanceof Array ) {                        \n" +
+                  "          if (val.length > 0 && typeof(val[0]) == 'string')\n" +
+                  "              __ext_map.put(key, __ext_new_list(val))      \n" +
+                  "           else                                            \n" +
+                  "              __ext_map.put(key, __ext_storage.getSubStorages(key))\n" +
+                  "      }                                                    \n" +
+                  "      else                                                 \n" +
+                  "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
+                  "  }                                                        \n" +
+                  "  else if (typeof(val) == 'number')                        \n" +
+                  "      __ext_map.put(key, val)                              \n" +
+                  "  else if (typeof(val) == 'boolean')                       \n" +
+                  "      __ext_map.put(key, val)                              \n" +
+                  "  else                                                     \n" +
+                  "      __ext_map.put(key, val)                              \n" +
+                  "}                                                          \n").
+                    replace("CONFIG", config));
         } finally {
             // Remove context
             engine.put("__ext_map", null);
@@ -340,6 +313,7 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * {@inheritDoc}
+     *
      * @param key The name of the value to remove from the storage.
      */
     @Override
@@ -349,16 +323,17 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * {@inheritDoc}
+     *
      * @return The number of kyes in the configuration.
      */
     @Override
     public int size() {
-        return (int) Double.parseDouble(eval(config
-                + ".__ext_size()").toString());
+        return (int) Double.parseDouble(eval(config + ".__ext_size()").toString());
     }
 
     /**
      * This supports sub storage, so this returns {@code true}.
+     *
      * @return True.
      */
     @Override
@@ -368,50 +343,50 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * {@inheritDoc}
+     *
      * @param key The name of the sub storage.
      * @return A new storage which are a sub storage of this.
      */
     @Override
     public JStorage createSubStorage(String key) {
-        return new JStorage(engine, engineManager,
-                            config + "['" + key + "']", true);
+        return new JStorage(engine, engineManager, config + "['" + key + "']", true);
     }
 
     /**
      * {@inheritDoc}
+     *
      * @param key The name of the sub storage.
      * @return The sub storage associated with the key.
      */
     @Override
     public JStorage getSubStorage(String key) {
-        return new JStorage(engine, engineManager,
-                            config + "['" + key +  "']", false);
+        return new JStorage(engine, engineManager, config + "['" + key + "']", false);
     }
 
     /**
      * {@inheritDoc}
-     * @param key The key for the list of storage.
+     *
+     * @param key   The key for the list of storage.
      * @param count The number of storage to create.
      * @return List containing all sub storage created.
      */
     @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count) {
-        List<ConfigurationStorage> storage =
-                                     new ArrayList<ConfigurationStorage>(count);
+        List<ConfigurationStorage> storage = new ArrayList<ConfigurationStorage>(count);
         String list = config + "['" + key + "']";
 
-        eval(list +" = new Array()");
+        eval(list + " = new Array()");
 
         for (int i = 0; i < count; i++) {
             eval(list + ".push({})");
-            storage.add(new JStorage(engine, engineManager,
-                                      list+"[" + i + "]", false));
+            storage.add(new JStorage(engine, engineManager, list + "[" + i + "]", false));
         }
         return storage;
     }
 
     /**
      * {@inheritDoc}
+     *
      * @param key The key for the list of storage.
      * @return List containing all storage associated with the key.
      */
@@ -419,12 +394,10 @@ public class JStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) {
         String subConf = config + "['" + key + "']";
         int count = evalInt(subConf + ".__ext_size()");
-        List<ConfigurationStorage> storages =
-                                     new ArrayList<ConfigurationStorage>();
-        
+        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>();
+
         for (int i = 0; i < count; i++) {
-            storages.add(new JStorage(engine, engineManager,
-                            subConf + "[" + i + "]", false));
+            storages.add(new JStorage(engine, engineManager, subConf + "[" + i + "]", false));
         }
         return storages;
     }
@@ -432,7 +405,7 @@ public class JStorage implements ConfigurationStorage {
     /**
      * Evaluate a Javascript string on the storage contents. The root node of
      * the configuration is stored in the {@code config} variable.
-     * 
+     *
      * @param s The script to evaluate.
      * @return The exit value of the script converted to a string.
      */
@@ -440,24 +413,21 @@ public class JStorage implements ConfigurationStorage {
         try {
             return engine.eval(s);
         } catch (ScriptException e) {
-            throw new RuntimeException("Unexpected error executing:\n"
-                                       + s + "\nError: " + e.getMessage(), e);
+            throw new RuntimeException("Unexpected error executing:\n" + s + "\nError: " + e.getMessage(), e);
         }
     }
 
     /**
      * Responsible for evaluating incoming scripts.
-     * 
-     * @param in The script to evaluate as a reader. 
+     *
+     * @param in The script to evaluate as a reader.
      * @return The value returned by the script.
      */
     public Object eval(Reader in) {
         try {
             return engine.eval(in);
         } catch (ScriptException e) {
-            throw new RuntimeException("Unexpected error executing "
-                                       + "streamed script: " + e.getMessage(),
-                                       e);
+            throw new RuntimeException("Unexpected error executing streamed script: " + e.getMessage(), e);
         }
     }
 
@@ -473,28 +443,28 @@ public class JStorage implements ConfigurationStorage {
      */
     private int evalInt(String s) {
         String val = eval(s).toString();
-        return (int)Double.parseDouble(val == null ? "0" : val);
+        return (int) Double.parseDouble(val == null ? "0" : val);
     }
 
     /**
      * Main method for starting JStorage. This JStorage comes with a interactive
      * shell.
+     *
      * @param args First argument is use4d to start storage and should point at
-     * a system resource.
+     *             a system resource.
      */
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
         if (args.length == 0) {
             System.err.println("You must specify a .js resource to load!");
             System.exit(1);
         } else {
-            System.out.println("Welcome to the interactive JStorage shell. "
-                               + "Type 'quit' to exit");
+            System.out.println("Welcome to the interactive JStorage shell. Type 'quit' to exit");
         }
         // TODO maybe used shell from Common module.
         try {
             JStorage js = new JStorage(args[0]);
-            BufferedReader in = new BufferedReader(
-                                           new InputStreamReader(System.in));
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             String cmd;
             while (true) {
                 System.out.print("> ");
@@ -519,6 +489,7 @@ public class JStorage implements ConfigurationStorage {
     /**
      * Creates a string representation of the a list, this string is in JSON
      * format.
+     *
      * @param list List to transform to JSON.
      * @return JSON string representation of input list.
      */
@@ -528,7 +499,7 @@ public class JStorage implements ConfigurationStorage {
         b.append("[");
         for (Object o : list) {
             if (b.length() > 1) {
-                b.append (", ");
+                b.append(", ");
             }
             b.append(parseObject(o));
         }
@@ -538,20 +509,21 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * Creates a JSON string representation of a map.
+     *
      * @param map Input map which should be transformed to a JSON string.
      * @return JSON string representatio of map.
      */
-    private String parseMap(Map<String,Serializable> map) {
+    private String parseMap(Map<String, Serializable> map) {
         StringBuilder b = new StringBuilder();
 
         b.append("{");
 
-        for (Map.Entry<String,Serializable> e : map.entrySet()) {
+        for (Map.Entry<String, Serializable> e : map.entrySet()) {
             String key = e.getKey();
             Serializable val = e.getValue();
 
             if (b.length() > 1) {
-                b.append (", ");
+                b.append(", ");
             }
             b.append("'").append(key).append("'").append(" : ");
             b.append(parseObject(val));
@@ -563,6 +535,7 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * Create a string representation of a object.
+     *
      * @param o Object to transform to string.
      * @return String representation of object.
      */
@@ -570,12 +543,12 @@ public class JStorage implements ConfigurationStorage {
     private String parseObject(Object o) {
         if (o == null) {
             return "null";
-        } else if (o instanceof String){
+        } else if (o instanceof String) {
             return "'" + o + "'";
         } else if (o instanceof List) {
-            return parseList((List)o);
+            return parseList((List) o);
         } else if (o instanceof Map) {
-             return parseMap((Map<String,Serializable>)o);
+            return parseMap((Map<String, Serializable>) o);
         } else {
             return o.toString();
         }
@@ -583,6 +556,7 @@ public class JStorage implements ConfigurationStorage {
 
     /**
      * {@inheritDoc}
+     *
      * @return String representation of this object.
      */
     @Override
@@ -598,13 +572,13 @@ public class JStorage implements ConfigurationStorage {
      * Transform a string, so all lines shift are followed by the same
      * indentation.
      *
-     * @param prefix Prefix, used as indentation.
+     * @param prefix  Prefix, used as indentation.
      * @param subject String which should be indented.
      * @return String indented after all lineshift. This does not ident the
-     * first line.
+     *         first line.
      */
     private String indent(String prefix, String subject) {
-        return subject.replace("\n", "\n"+prefix);
+        return subject.replace("\n", "\n" + prefix);
     }
 
     /**
@@ -612,54 +586,36 @@ public class JStorage implements ConfigurationStorage {
      * return the StringBuilder again.
      *
      * @param prefix The prefix to use.
-     * @param buf The String builder.
+     * @param buf    The String builder.
      * @return the string builder, containing a text representation of this
-     * JStorage.
+     *         JStorage.
      */
     protected StringBuilder serialize(String prefix, StringBuilder buf) {
-        Iterator<Map.Entry<String,Serializable>> iter = iterator();
+        Iterator<Map.Entry<String, Serializable>> iter = iterator();
 
         while (iter.hasNext()) {
-            Map.Entry<String,Serializable> entry = iter.next();
+            Map.Entry<String, Serializable> entry = iter.next();
             Serializable val = entry.getValue();
             String key = entry.getKey();
-            
-         if (val instanceof Double || val instanceof Integer){            		            		
-            val = ((Double) val).intValue();
-        	buf.append(prefix)
-               .append("'").append(key).append("'")
-               .append(" : ")
-               .append(indent(prefix, val.toString()));
-         }           
-         else if (val instanceof String) {
-                 buf.append(prefix)
-                    .append("'").append(key).append("'")
-                    .append(" : \"")
-                    .append(indent(prefix, val.toString()))
-                    .append("\"");
-        
-          }
-          else if (val instanceof Boolean) {                 
-                 buf.append(prefix)
-                    .append("'").append(key).append("'")
-                    .append(" : ")
-                    .append(indent(prefix, val.toString()));
-          }            
-          else if (val instanceof JStorage) {
-                 buf.append(prefix)
-                    .append("'").append(key).append("'")
-                    .append(" : ")
-                    .append("{\n");
-                    ((JStorage)val).serialize(prefix + "  ", buf)
-                    .append(prefix)
-                    .append("}");
-          }
-          else if (val instanceof List) {
+
+            if (val instanceof Double || val instanceof Integer) {
+                val = ((Double) val).intValue();
+                buf.append(prefix).append("'").append(key).append("'").append(" : ");
+                buf.append(indent(prefix, val.toString()));
+            } else if (val instanceof String) {
+                buf.append(prefix).append("'").append(key).append("'").append(" : \"");
+                buf.append(indent(prefix, val.toString())).append("\"");
+
+            } else if (val instanceof Boolean) {
+                buf.append(prefix).append("'").append(key).append("'").append(" : ");
+                buf.append(indent(prefix, val.toString()));
+            } else if (val instanceof JStorage) {
+                buf.append(prefix).append("'").append(key).append("'").append(" : ").append("{\n");
+                ((JStorage) val).serialize(prefix + "  ", buf).append(prefix).append("}");
+            } else if (val instanceof List) {
                 List list = (List) val;
 
-                buf.append(prefix)
-                   .append("'").append(key).append("'")
-                   .append(" : ");
+                buf.append(prefix).append("'").append(key).append("'").append(" : ");
 
                 if (list.isEmpty()) {
                     buf.append("[]");
@@ -669,9 +625,7 @@ public class JStorage implements ConfigurationStorage {
                         if (i > 0) {
                             buf.append(", ");
                         }
-                        buf.append("\"")
-                           .append(list.get(i).toString())
-                           .append("\"");
+                        buf.append("\"").append(list.get(i).toString()).append("\"");
                     }
                     buf.append("]");
                 } else if (list.get(0) instanceof JStorage) {
@@ -680,24 +634,16 @@ public class JStorage implements ConfigurationStorage {
                         if (i > 0) {
                             buf.append(", {\n");
                         } else {
-                            buf.append(prefix)
-                               .append("  {\n");
+                            buf.append(prefix).append("  {\n");
                         }
-                        ((JStorage)list.get(i)).serialize(prefix+"    ", buf)
-                           .append(prefix)
-                           .append("  ")
-                           .append("}");
+                        ((JStorage) list.get(i)).serialize(
+                                prefix + "    ", buf).append(prefix).append("  ").append("}");
                     }
-                    buf.append("\n")
-                       .append(prefix)
-                       .append("]");
+                    buf.append("\n").append(prefix).append("]");
                 }
             } else {
-                buf.append("Unable to serialize: ")
-                   .append(val)
-                   .append(" (")
-                   .append(val.getClass().getName())
-                   .append(")");
+                buf.append("Unable to serialize: ");
+                buf.append(val).append(" (").append(val.getClass().getName()).append(")");
             }
 
             if (iter.hasNext()) {
@@ -725,53 +671,53 @@ public class JStorage implements ConfigurationStorage {
             return true;
         }
 
-        JStorage other = (JStorage)o;
+        JStorage other = (JStorage) o;
 
         if (size() != other.size()) {
             return false;
         }
-        Iterator<Map.Entry<String,Serializable>> iter = iterator();
+        Iterator<Map.Entry<String, Serializable>> iter = iterator();
         while (iter.hasNext()) {
-            Map.Entry<String,Serializable> entry = iter.next();
-            Serializable s1=entry.getValue();
-            Serializable s2=other.get(entry.getKey());
-             if (s1 instanceof Double || s2 instanceof Double ){
-            	//Current problem with doubles/integers. Only support integers in configuration                     
-                return (convertToInteger(s1).intValue() == (convertToInteger(s2)).intValue());                      		 	            	               	             	             	
-             }
-            
-            if (!s1.equals(s2)) {                   	       
-            	return false;
+            Map.Entry<String, Serializable> entry = iter.next();
+            Serializable s1 = entry.getValue();
+            Serializable s2 = other.get(entry.getKey());
+            if (s1 instanceof Double || s2 instanceof Double) {
+                //Current problem with doubles/integers. Only support integers in configuration                     
+                return (convertToInteger(s1).intValue() == (convertToInteger(s2)).intValue());
             }
-        }    
+
+            if (!s1.equals(s2)) {
+                return false;
+            }
+        }
         return true;
     }
 
     //S must be Double or Integer
-    private Integer convertToInteger(Serializable s){
-    	if (s instanceof Double){
-    		return  ((Double) s).intValue();
-    	}
-    	else{
-    		return (Integer) s;
-    	}
-    	
+    private Integer convertToInteger(Serializable s) {
+        if (s instanceof Double) {
+            return ((Double) s).intValue();
+        } else {
+            return (Integer) s;
+        }
+
     }
-    
-    
+
+
     /**
      * Create hashCode depended on {@code this} state and the key-value pairs in
      * this storage.
+     *
      * @return {@inheritDoc}
      */
     @Override
     public int hashCode() {
         int hashCode = 47 * size();
 
-        Iterator<Map.Entry<String,Serializable>> iter = iterator();
+        Iterator<Map.Entry<String, Serializable>> iter = iterator();
         while (iter.hasNext()) {
-            Map.Entry<String,Serializable> entry = iter.next();
-                hashCode += entry.hashCode();
+            Map.Entry<String, Serializable> entry = iter.next();
+            hashCode += entry.hashCode();
         }
         return hashCode;
     }

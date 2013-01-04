@@ -118,7 +118,7 @@ public class SolrManipulator implements IndexManipulator {
 
     protected final String hostWithPort;
     protected final String restCall;
-    protected final String FIELD_ID;
+    protected final String fieldID;
 //    private final String updateCommand;
     private final boolean flushOnDelete;
 
@@ -137,7 +137,7 @@ public class SolrManipulator implements IndexManipulator {
         hostWithPort = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
 //        updateCommand = "http://" + host + restCall + UPDATE_COMMAND;
-        FIELD_ID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
+        fieldID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         flushOnDelete = conf.getBoolean(CONF_FLUSH_ON_DELETE, DEFAULT_FLUSH_ON_DELETE);
         maxRequests = conf.getInt(CONF_CONNECTION_MAXREQUESTS, DEFAULT_CONNECTION_MAXREQUESTS);
         requestProfiler = new Profiler(1, maxRequests);

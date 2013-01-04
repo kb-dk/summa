@@ -54,6 +54,7 @@ public class TermStatPerformance {
         testPerformance(data, lookups);
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     public static void testPerformance(File location, int runs)
                                                               throws Exception {
         System.out.println(String.format(

@@ -90,7 +90,7 @@ public class QueryTokenizer extends TestCase implements Iterator<QueryToken> {
 
         QueryToken tok = new QueryToken("", "");
         boolean foundKey = false;
-        char head = '\0';
+        char head;
         while (pos < seq.length()){
             head = seq.charAt(pos);
             if (head == '&') {

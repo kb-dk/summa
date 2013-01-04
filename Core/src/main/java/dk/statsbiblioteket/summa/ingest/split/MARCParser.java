@@ -265,8 +265,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @throws InterruptedException if the process was interrupted while adding
      *                              to the queue.
      */
-    private void processLeader(XMLStreamReader reader, StringWriter content)
-        throws XMLStreamException, InterruptedException {
+    private void processLeader(XMLStreamReader reader, StringWriter content) throws XMLStreamException {
         log.trace("Reached leader start-tag");
         String leaderContent = "";
         while (running && reader.hasNext()) {

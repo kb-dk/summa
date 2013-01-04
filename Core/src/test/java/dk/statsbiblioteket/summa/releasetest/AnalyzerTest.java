@@ -52,7 +52,7 @@ public class AnalyzerTest extends TestCase {
     private static Log log = LogFactory.getLog(AnalyzerTest.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private File ROOT = new File(System.getProperty("java.io.tmpdir"), "lucene-index");
+    private static final File ROOT = new File(System.getProperty("java.io.tmpdir"), "lucene-index");
 
     @Override
     protected void setUp() throws Exception {

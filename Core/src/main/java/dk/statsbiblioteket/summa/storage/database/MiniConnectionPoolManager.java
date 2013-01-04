@@ -400,6 +400,7 @@ public class MiniConnectionPoolManager {
             }
         }
 
+        @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
         @Override
         public void connectionErrorOccurred(ConnectionEvent event) {
             log.trace("ConnectionErrorEvent: " + event.getSQLException().getMessage(), event.getSQLException());

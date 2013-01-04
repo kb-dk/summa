@@ -53,7 +53,7 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
 
     /**
      * Property defining the name of the host on which the registry runs.
-     * Default is {@code localhost}. 
+     * Default is {@code localhost}.
      */
     public static final String CONF_REGISTRY_HOST = "summa.configuration.registry.host";
 
@@ -64,8 +64,7 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
     public Serializable get(String key) throws RemoteException;
 
     @Override
-    public Iterator<Map.Entry<String,Serializable>> iterator() throws
-                                                               RemoteException;
+    public Iterator<Map.Entry<String, Serializable>> iterator() throws RemoteException;
 
     @Override
     public void purge(String key) throws RemoteException;
@@ -76,20 +75,16 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
     public boolean supportsSubStorage() throws RemoteException;
 
     @Override
-    public ConfigurationStorage getSubStorage(String key) throws
-                                                          RemoteException;
+    public ConfigurationStorage getSubStorage(String key) throws RemoteException;
 
     @Override
-    public ConfigurationStorage createSubStorage(String key) throws
-                                                             RemoteException;
+    public ConfigurationStorage createSubStorage(String key) throws RemoteException;
 
     @Override
-    public List<ConfigurationStorage> createSubStorages(String key, int count)
-                                                        throws RemoteException;
+    public List<ConfigurationStorage> createSubStorages(String key, int count) throws RemoteException;
 
     @Override
-    public List<ConfigurationStorage> getSubStorages(String key) throws
-                                                                RemoteException;
+    public List<ConfigurationStorage> getSubStorages(String key) throws RemoteException;
 }
 
 

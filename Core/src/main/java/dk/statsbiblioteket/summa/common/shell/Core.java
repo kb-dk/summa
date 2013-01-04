@@ -14,37 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.shell;
 
-import dk.statsbiblioteket.summa.common.shell.commands.Clear;
-import dk.statsbiblioteket.summa.common.shell.commands.Exec;
-import dk.statsbiblioteket.summa.common.shell.commands.Help;
-import dk.statsbiblioteket.summa.common.shell.commands.Quit;
-import dk.statsbiblioteket.summa.common.shell.commands.Trace;
-import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.ClearNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.Notification;
-import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
-import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
+import dk.statsbiblioteket.summa.common.shell.commands.*;
+import dk.statsbiblioteket.summa.common.shell.notifications.*;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import jline.ConsoleReader;
 import jline.SimpleCompletor;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
+import org.apache.commons.cli.*;
 
 import java.io.IOException;
 import java.rmi.UnmarshalException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * A generic shell driver.
@@ -93,31 +73,29 @@ public class Core {
      * Create a new shell {@code Core} outputting to a custom
      * {@link ShellContext}.
      *
-     * @param shellCtx the {@link ShellContext} to write output to. If this
-     *                 parameter is {@code null} a default shell context will
-     *                 be used. 
+     * @param shellCtx            the {@link ShellContext} to write output to. If this
+     *                            parameter is {@code null} a default shell context will
+     *                            be used.
      * @param withDefaultCommands If {@code true} install the default commands
      *                            found in the
      *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
      *                            package.
-     * @param debug If {@code true} debug messages will be printed to the
-     *              created shell context if {@code shellCtx} is {@code null}.
+     * @param debug               If {@code true} debug messages will be printed to the
+     *                            created shell context if {@code shellCtx} is {@code null}.
      */
-    public Core(ShellContext shellCtx, final boolean withDefaultCommands,
-                                                          final boolean debug) {
+    public Core(ShellContext shellCtx, final boolean withDefaultCommands, final boolean debug) {
         cliParser = new PosixParser();
-        commands = new HashMap<String,Command>();
+        commands = new HashMap<String, Command>();
         aliases = new HashMap<String, String>();
         lastTrace = null;
         header = "Summa Generic Shell v@summa.api.version@";
         prompt = "summa-shell> ";
-        cmdComparator = new SimpleCompletor(new String[] {});
+        cmdComparator = new SimpleCompletor(new String[]{});
 
         if (shellCtx != null) {
             this.shellCtx = shellCtx;
         } else {
-            this.shellCtx = new ShellContextImpl(createConsoleReader(),
-                                                 System.err, System.out, debug);
+            this.shellCtx = new ShellContextImpl(createConsoleReader(), System.err, System.out, debug);
         }
         // Install default commands.
         if (withDefaultCommands) {
@@ -131,21 +109,22 @@ public class Core {
 
     /**
      * Create a console reader.
+     *
      * @return The console reader, which should be used.
      */
     public static ConsoleReader createConsoleReader() {
         try {
             ConsoleReader reader = new ConsoleReader();
             reader.addCompletor(cmdComparator);
-            return reader;          
+            return reader;
         } catch (IOException e) {
-            throw new RuntimeException("Unable to create ConsoleReader: "
-                                       + e.getMessage(), e);
+            throw new RuntimeException("Unable to create ConsoleReader: " + e.getMessage(), e);
         }
     }
 
     /**
      * Set the header of this core.
+     *
      * @param header The new header for this core.
      */
     public void setHeader(String header) {
@@ -154,6 +133,7 @@ public class Core {
 
     /**
      * Return this core's header.
+     *
      * @return The header for this Core
      */
     public String getHeader() {
@@ -162,12 +142,13 @@ public class Core {
 
     /**
      * Install a command into this core.
+     *
      * @param cmd The command to install.
      */
     public void installCommand(Command cmd) {
         commands.put(cmd.getName(), cmd);
         aliases.put(cmd.getName(), cmd.getName());
-        for(String alias: cmd.getAliases()) {
+        for (String alias : cmd.getAliases()) {
             aliases.put(alias, cmd.getName());
         }
         cmdComparator.addCandidateString(cmd.getName());
@@ -175,6 +156,7 @@ public class Core {
 
     /**
      * Return the shell context used.
+     *
      * @return The used shell context.
      */
     public ShellContext getShellContext() {
@@ -183,6 +165,7 @@ public class Core {
 
     /**
      * Accessor for the prompt.
+     *
      * @return The prompt.
      */
     public String getPrompt() {
@@ -191,6 +174,7 @@ public class Core {
 
     /**
      * Mutator for the prompt.
+     *
      * @param prompt The new prompt.
      */
     public void setPrompt(String prompt) {
@@ -200,8 +184,8 @@ public class Core {
     /**
      * A main iteration of the core. The caller is responsible for handling
      * any exceptions from the underlying subsystems.
-     * 
-     * @throws Exception Uf an error happens inside the running {@link Command}.
+     *
+     * @throws Exception      Uf an error happens inside the running {@link Command}.
      * @throws ParseException If there is an error parsing the command line
      *                        as entered by the user.
      */
@@ -214,12 +198,12 @@ public class Core {
         cmdString = shellCtx.readLine();
 
         /* Check if the input stream has been closed an exit the shell if so */
-        if(cmdString == null) {
+        if (cmdString == null) {
             throw new AbortNotification("Input steam closed", 0);
         }
 
         /* Ignore empty commands, and re-print the prompt */
-        if("".equals(cmdString)) {
+        if ("".equals(cmdString)) {
             return;
         }
 
@@ -230,9 +214,9 @@ public class Core {
      * Parse and run a command.
      *
      * @param cmdString The command line to run.
+     * @return True if and only if {@code cmdString} was executed successfully.
      * @throws Exception Any exception from the invoked {@link Command} will
      *                   cascade upwards from this method.
-     * @return True if and only if {@code cmdString} was executed successfully.
      */
     boolean invoke(String cmdString) throws Exception {
         String[] tokens;
@@ -242,17 +226,16 @@ public class Core {
         cmd = commands.get(aliases.get(tokens[0]));
 
         if (cmd == null) {
-            shellCtx.error("No such command '" + cmdString +"'");
+            shellCtx.error("No such command '" + cmdString + "'");
             return false;
         }
-        String[] args = new String[tokens.length-1];
+        String[] args = new String[tokens.length - 1];
         // Copy arguments from command array to args array
         System.arraycopy(tokens, 1, args, 0, tokens.length - 1);
 
         CommandLine cli = cliParser.parse(cmd.getOptions(), args);
 
-        int commandEnd = tokens.length > 1 ? cmd.getName().length() + 1 :
-                                             cmd.getName().length(); 
+        int commandEnd = tokens.length > 1 ? cmd.getName().length() + 1 : cmd.getName().length();
         cmd.prepare(cli, cmdString.substring(commandEnd));
 
         cmd.invoke(shellCtx);
@@ -265,14 +248,14 @@ public class Core {
      * by double-quotes.
      *
      * @param in The string to tokenize.
-     * @throws SyntaxErrorNotification If there are improperly formatted
-     *                                 double-quoted substrings.
      * @return The string tokens as separated by white space with double-quoted
      *         substrings treated as one token.
+     * @throws SyntaxErrorNotification If there are improperly formatted
+     *                                 double-quoted substrings.
      */
     public String[] tokenize(String in) {
         StringTokenizer tok = new StringTokenizer(in, "\"", true);
-        List<String> result = new ArrayList<String> (tok.countTokens());
+        List<String> result = new ArrayList<String>(tok.countTokens());
 
         while (tok.hasMoreElements()) {
             String s = tok.nextToken();
@@ -285,27 +268,23 @@ public class Core {
                     result.add(s);
                     if (tok.hasMoreElements()) {
                         s = tok.nextToken();
-                        if (!s.equals("\"")) {
-                            throw new SyntaxErrorNotification
-                                    ("Unexpected token '" + s + "' when "
-                                     +"tokenizing phrase. Expected '\"'");
+                        if (!"\"".equals(s)) {
+                            throw new SyntaxErrorNotification(
+                                    "Unexpected token '" + s + "' when tokenizing phrase. Expected '\"'");
                         }
                         continue;
                     } else {
-                        throw new SyntaxErrorNotification("Unclosed phrase "
-                                                           +"near token "
-                                                           + "'" + s + "'");
+                        throw new SyntaxErrorNotification("Unclosed phrase near token '" + s + "'");
                     }
                 } else {
-                    throw new SyntaxErrorNotification("Stray '\"' at line "
-                                                       + "end");
+                    throw new SyntaxErrorNotification("Stray '\"' at line end");
                 }
 
             }
 
             // A normal token, split by spaces
-            for(String ss : s.split(" ")) {
-                if(!ss.equals("")) {
+            for (String ss : s.split(" ")) {
+                if (!"".equals(ss)) {
                     result.add(ss.trim());
                 }
             }
@@ -315,19 +294,19 @@ public class Core {
 
     /**
      * Helper function to handle {@link HelpNotification}s.
+     *
      * @param help The help notification.
      */
     private void handleHelpNotification(HelpNotification help) {
         String target = help.getTargetCommand();
-        if(target == null) {
+        if (target == null) {
             printCommands();
         } else {
-            if(commands.containsKey(target)) {
+            if (commands.containsKey(target)) {
                 Command cmd = commands.get(target);
-                printHelp (cmd, cmd.getDescription());
+                printHelp(cmd, cmd.getDescription());
             } else {
-                shellCtx.error("No such command: '" + target
-                              + "'.\nThe available commands are:\n");
+                shellCtx.error("No such command: '" + target + "'.\nThe available commands are:\n");
                 printCommands();
             }
         }
@@ -335,6 +314,7 @@ public class Core {
 
     /**
      * Helper function to handle {@link TraceNotification}s.
+     *
      * @param help The trace notificatino.
      */
     private void handleTraceNotification(TraceNotification help) {
@@ -343,31 +323,32 @@ public class Core {
             return;
         }
 
-        shellCtx.info ("Last recorded stack trace:\n\n\t" + lastTrace + "\n");
+        shellCtx.info("Last recorded stack trace:\n\n\t" + lastTrace + "\n");
     }
 
     /**
      * Helper function to handle {@link ClearNotification}s.
      */
     private void handleClearNotification() {
-      shellCtx.clear();
+        shellCtx.clear();
     }
 
     /**
      * Helper function to handle {@link SyntaxErrorNotification}s.
+     *
      * @param syntaxErrorNotification The syntax notification.
      */
-    private void handleSyntaxErrorNotification(
-                              SyntaxErrorNotification syntaxErrorNotification) {
+    private void handleSyntaxErrorNotification(SyntaxErrorNotification syntaxErrorNotification) {
         shellCtx.error("Syntax error: " + syntaxErrorNotification.getMessage());
     }
 
     /**
      * Print a help message for a command
+     *
      * @param cmd The command to print help for.
      * @param msg A message, possible empty or {@code null}, to print after the
      *            usage instructions.
-     **/
+     */
     private void printHelp(Command cmd, String msg) {
         HelpFormatter formatter = new HelpFormatter();
 
@@ -383,6 +364,7 @@ public class Core {
 
     /**
      * Private helper function for Core help.
+     *
      * @param msg The message.
      */
     private void printCoreHelp(String msg) {
@@ -393,8 +375,7 @@ public class Core {
      * Helper function, for printing the commands.
      */
     private void printCommands() {
-        SortedSet<String> sortedCommands =
-                                       new TreeSet<String>(commands.keySet());
+        SortedSet<String> sortedCommands = new TreeSet<String>(commands.keySet());
         for (String cmdName : sortedCommands) {
             Command cmd = commands.get(cmdName);
             shellCtx.info("\t" + cmd.getName() + "\t" + cmd.getDescription());
@@ -423,20 +404,18 @@ public class Core {
             scriptIter = script.iterator();
         }
         /* Print a greeting if running interactively */
-        if(scriptIter == null) {
+        if (scriptIter == null) {
             getShellContext().info(getHeader());
         }
 
-        while(true) {
+        while (true) {
             try {
                 // If the shell is scripted feed the next script line to the
                 // parser
                 if (scriptIter != null) {
                     if (getShellContext().getLastError() != null) {
-                        throw new AbortNotification("Error executing '"
-                                                    + scriptStatement + "'",
-                                                    returnVal == 0 ?
-                                                                -1 : returnVal);
+                        throw new AbortNotification(
+                                "Error executing '" + scriptStatement + "'", returnVal == 0 ? -1 : returnVal);
                     }
 
                     if (scriptIter.hasNext()) {
@@ -449,58 +428,49 @@ public class Core {
                 }
 
                 doMainIteration();
-            }
-            catch (Notification e) {
+            } catch (Notification e) {
                 if (e instanceof BadCommandLineNotification) {
                     if (scriptIter != null) {
-                        getShellContext().error ("Bad command line for '"
-                                                 + e.getCommand() + "': "
-                                                 + e.getMessage());
+                        getShellContext().error("Bad command line for '" + e.getCommand() + "': " + e.getMessage());
                         returnVal = -2;
                     } else {
-                        printHelp (e.getCommand(), e.getMessage());
+                        printHelp(e.getCommand(), e.getMessage());
                     }
                 } else if (e instanceof AbortNotification) {
                     // This is a clean exit
                     if (!"".equals(e.getMessage())) {
                         shellCtx.info(e.getMessage());
                     }
-                    returnVal = ((AbortNotification)e).getReturnValue();
+                    returnVal = ((AbortNotification) e).getReturnValue();
                     // Exit the shell
                     break;
                 } else if (e instanceof HelpNotification) {
-                    handleHelpNotification((HelpNotification)e);
+                    handleHelpNotification((HelpNotification) e);
                 } else if (e instanceof TraceNotification) {
-                    handleTraceNotification((TraceNotification)e);
+                    handleTraceNotification((TraceNotification) e);
                 } else if (e instanceof ClearNotification) {
                     handleClearNotification();
                 } else if (e instanceof SyntaxErrorNotification) {
                     if (scriptIter != null) {
-                        getShellContext().error("Syntax error when parsing "
-                                                + "'" + scriptStatement
-                                                + "': "
-                                                + e.getMessage());
+                        getShellContext().error(
+                                "Syntax error when parsing " + "'" + scriptStatement + "': " + e.getMessage());
                         returnVal = -3;
                     } else {
-                        handleSyntaxErrorNotification((SyntaxErrorNotification)e);
+                        handleSyntaxErrorNotification((SyntaxErrorNotification) e);
                     }
                 } else {
                     // This is a bug in the shell core
-                    shellCtx.error("Shell Core encountered an unknown "
-                                    + "notification: " + e.getClass().getName());
+                    shellCtx.error("Shell Core encountered an unknown " + "notification: " + e.getClass().getName());
                 }
             } catch (ParseException e) {
                 returnVal = -4;
-                getShellContext().error("Error parsing command line: "
-                        + e.getMessage());
+                getShellContext().error("Error parsing command line: " + e.getMessage());
             } catch (UnmarshalException e) {
                 /* This is a specific hack to handle the case where an RMI
                  * service returns an unknown class */
                 if (e.getCause() instanceof ClassNotFoundException) {
-                    shellCtx.error("Caught exception of unknown class type: "
-                                    + e.getCause().getMessage() + "\n\n"
-                                    + "This usually happens if a remote "
-                                    + "service throws a custom exception");
+                    shellCtx.error("Caught exception of unknown class type: " + e.getCause().getMessage() + "\n\n"
+                                   + "This usually happens if a remote " + "service throws a custom exception");
                 } else {
                     shellCtx.error("RMI protocol error:" + e.getMessage());
                 }

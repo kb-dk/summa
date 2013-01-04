@@ -23,8 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.text.Collator;
 import java.util.Arrays;
@@ -55,9 +55,8 @@ public class CollatorTest extends TestCase {
         return new TestSuite(CollatorTest.class);
     }
 
-    public static final String ALPHABET =
-        "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ1"
-        + "234567890ëöäïüËÜÏÖÄ@£$%&{[]}+?ôêîûâÂÊŶÛÔÎ          ";
+    public static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ1"
+                                          + "234567890ëöäïüËÜÏÖÄ@£$%&{[]}+?ôêîûâÂÊŶÛÔÎ          ";
 
     public void testCollatorSpeed() {
         int[] TERMS = new int[]{1000, 10000, 100000};
@@ -66,9 +65,8 @@ public class CollatorTest extends TestCase {
         Locale DA = new Locale("da");
 
         Collator javaCollator = Collator.getInstance(DA);
-        com.ibm.icu.text.Collator icuCollator =
-            com.ibm.icu.text.Collator.getInstance(DA);
-        for (int termC: TERMS) {
+        com.ibm.icu.text.Collator icuCollator = com.ibm.icu.text.Collator.getInstance(DA);
+        for (int termC : TERMS) {
             testRaw("Java", wrap(javaCollator), termC, MIN, MAX);
             testRaw("ICU ", wrapO(icuCollator), termC, MIN, MAX);
         }
@@ -76,14 +74,11 @@ public class CollatorTest extends TestCase {
 
     public void testKeys() {
         Locale DA = new Locale("da");
-        com.ibm.icu.text.Collator javaC =
-            com.ibm.icu.text.Collator.getInstance(DA);
-        com.ibm.icu.text.Collator icuC =
-            com.ibm.icu.text.Collator.getInstance(DA);
+        com.ibm.icu.text.Collator javaC = com.ibm.icu.text.Collator.getInstance(DA);
+        com.ibm.icu.text.Collator icuC = com.ibm.icu.text.Collator.getInstance(DA);
     }
 
-    private Comparator<String> wrapO(
-        final com.ibm.icu.text.Collator icuCollator) {
+    private Comparator<String> wrapO(final com.ibm.icu.text.Collator icuCollator) {
         return new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -101,29 +96,26 @@ public class CollatorTest extends TestCase {
         };
     }
 
-    public void testRaw(String id, Comparator<String> comparator,
-                        int termCount, int minLength, int maxLength) {
+    public void testRaw(String id, Comparator<String> comparator, int termCount, int minLength, int maxLength) {
         final int WARMUP = 1;
         final int RUNS = 3;
         final String[] terms = generateTerms(termCount, minLength, maxLength);
 
-        for (int i = 0 ; i < WARMUP ; i++) {
+        for (int i = 0; i < WARMUP; i++) {
             String[] sort = copy(terms);
             Arrays.sort(sort, comparator);
         }
 
         long bestTime = Long.MAX_VALUE;
-        for (int i = 0 ; i < RUNS ; i++) {
+        for (int i = 0; i < RUNS; i++) {
             String[] sort = copy(terms);
             long sortTime = -System.currentTimeMillis();
             Arrays.sort(sort, comparator);
             sortTime += System.currentTimeMillis();
             bestTime = Math.min(bestTime, sortTime);
         }
-        System.out.println(
-            id + ": " + termCount + " terms sorted fastest in "
-            + bestTime + " ms @ "
-            + (bestTime == 0 ? "N/A" : termCount/bestTime) + " terms/ms");
+        System.out.println(id + ": " + termCount + " terms sorted fastest in " + bestTime + " ms @ "
+                           + (bestTime == 0 ? "N/A" : termCount / bestTime) + " terms/ms");
     }
 
     private String[] copy(String[] terms) {
@@ -132,14 +124,12 @@ public class CollatorTest extends TestCase {
         return result;
     }
 
-    private String[] generateTerms(
-        int termCount, int minLength, int maxLength) {
+    private String[] generateTerms(int termCount, int minLength, int maxLength) {
         Random random = new Random();
         String[] result = new String[termCount];
-        for (int i = 0 ; i < termCount ; i++) {
-            final char[] term =
-                new char[random.nextInt(maxLength-minLength)+minLength];
-            for (int c = 0 ; c < term.length ; c++) {
+        for (int i = 0; i < termCount; i++) {
+            final char[] term = new char[random.nextInt(maxLength - minLength) + minLength];
+            for (int c = 0; c < term.length; c++) {
                 term[c] = ALPHABET.charAt(random.nextInt(ALPHABET.length()));
             }
             result[i] = new String(term);

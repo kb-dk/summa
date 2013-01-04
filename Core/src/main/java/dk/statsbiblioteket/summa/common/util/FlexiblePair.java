@@ -62,6 +62,16 @@ public class FlexiblePair<T extends Comparable<T>, S extends Comparable<S>>
                 return 0;
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FlexiblePair)) {
+            return false;
+        }
+        FlexiblePair op = (FlexiblePair)obj;
+        return key.equals(op.getKey()) && value.equals(op.getValue()) && sortType == op.getSortType();
+    }
+
     public void setKey(T key) {
         this.key = key;
     }

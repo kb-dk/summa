@@ -27,8 +27,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.File;
 import java.io.IOException;
@@ -213,8 +213,7 @@ public class TermStatQueryRewriterTest extends TestCase {
         confB.set(TermStatQueryRewriter.Target.CONF_TERMSTAT_LOCATION,
                   new File(TMP, "b"));
 
-        TermStatQueryRewriter rewriter = new TermStatQueryRewriter(conf);
-        return rewriter;
+        return new TermStatQueryRewriter(conf);
     }
 
     private void createA(String[] COLUMNS) throws IOException {

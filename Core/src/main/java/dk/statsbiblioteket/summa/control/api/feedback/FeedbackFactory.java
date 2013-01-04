@@ -35,17 +35,13 @@ public class FeedbackFactory {
      *             {@link dk.statsbiblioteket.summa.control.api.ClientDeployer#CONF_DEPLOYER_FEEDBACK} property
      * @return a newly created {@code Feedvback} instance
      */
-    public static Feedback createFeedback (Configuration conf) {
-         log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
-                                   VoidFeedback.class.getSimpleName()));
-        Class<? extends Feedback> feedbackClass =
-                           conf.getClass(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
-                                         Feedback.class,
-                                         VoidFeedback.class);
-        Feedback feedback = Configuration.create(feedbackClass, conf);
+    public static Feedback createFeedback(Configuration conf) {
+        log.debug("Creating deployer feedback from class: "
+                  + conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK, VoidFeedback.class.getSimpleName()));
+        Class<? extends Feedback> feedbackClass = conf.getClass(
+                ClientDeployer.CONF_DEPLOYER_FEEDBACK, Feedback.class, VoidFeedback.class);
 
-        return feedback;
+        return Configuration.create(feedbackClass, conf);
     }
 }
 

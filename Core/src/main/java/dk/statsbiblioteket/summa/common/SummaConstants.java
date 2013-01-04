@@ -36,8 +36,8 @@ import java.util.Properties;
 public class SummaConstants {
     private static Log log = LogFactory.getLog(SummaConstants.class);
 
-	private static String VERSION = "pom.version";
-	private static String propertyFileName = "common.properties";
+	private static final String VERSION = "pom.version";
+	private static final String propertyFileName = "common.properties";
 	
     public static String getVersion() {
         //URL url = ClassLoader.getSystemResource(propertyFileName);

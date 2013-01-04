@@ -959,7 +959,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
      * opened.
      * @throws java.io.IOException if the index query failed.
      */
-    public int getDocCount() throws IOException {
+    public int getDocCount() {
         return searcher == null ? -1 : searcher.getIndexReader().maxDoc();
     }
 

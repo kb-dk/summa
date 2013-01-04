@@ -1,10 +1,11 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import java.io.File;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
+
+import java.io.File;
 
 
 /**
@@ -41,8 +42,7 @@ public class EmbeddedSolrJServer {
 		
         CoreContainer.Initializer initializer = new CoreContainer.Initializer();
         CoreContainer coreContainer = initializer.initialize();
-        EmbeddedSolrServer server = new EmbeddedSolrServer(coreContainer, "");        
-        return server;
+        return new EmbeddedSolrServer(coreContainer, "");
 	}
 	
 

@@ -23,14 +23,12 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.Iterator;
-
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * FIXME: Missing class docs for StorageTestBase
@@ -43,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke, hbk")
 public class StorageTestBase extends TestCase {
     /** Logger instance. */
-    private Log log = LogFactory.getLog(JavascriptBatchJobTest.class);
+    private Log log = LogFactory.getLog(StorageTestBase.class);
     /** Storage root. */
     File dbRoot = new File(testDBRoot);
     /** The storage instantiated by this test helper. */

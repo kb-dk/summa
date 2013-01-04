@@ -14,10 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.*;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -39,16 +36,20 @@ import java.util.regex.Pattern;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XStorageTest extends ConfigurationStorageTestCase {
-    /** Local log instance. */
+    /**
+     * Local log instance.
+     */
     private static Log log = LogFactory.getLog(XStorageTest.class);
-    /** Sub storage XML location. */
-    public static final File SUBSTORAGELOCATION =
-               Resolver.getFile("common/configurationFiles/substorage.xml").
-                   getAbsoluteFile();
+    /**
+     * Sub storage XML location.
+     */
+    public static final File SUBSTORAGELOCATION = Resolver.getFile(
+            "common/configurationFiles/substorage.xml").getAbsoluteFile();
 
 
     /**
      * Create s XStorageTest instance.
+     *
      * @throws Exception If error occur.
      */
     public XStorageTest() throws Exception {
@@ -58,8 +59,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     @Override
     public final void setUp() throws Exception {
         super.setUp();
-        assertTrue("The subLocation " + SUBSTORAGELOCATION + " should exist",
-                   SUBSTORAGELOCATION.exists());
+        assertTrue("The subLocation " + SUBSTORAGELOCATION + " should exist", SUBSTORAGELOCATION.exists());
     }
 
     @Override
@@ -79,44 +79,31 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     }
 
     @SuppressWarnings("redundantcast")
-    public final void testGetSubStorage() {
+    public final void testGetSubStorage() throws IOException {
         final int seven = 7;
         final int eight = 8;
-        try {
-            XStorage xs = new XStorage(SUBSTORAGELOCATION);
-            assertEquals("The storage should contain the number 7",
-                         new Integer(seven), (Integer) xs.get("seven"));
-            ConfigurationStorage sub = xs.getSubStorage("submarine");
-            assertNotNull("There should be a sub storage named submarine", sub);
-            assertEquals("The sub storage should contain 8", new Integer(eight),
-                         (Integer) sub.get("eight"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception expected here");
-        }
+        XStorage xs = new XStorage(SUBSTORAGELOCATION);
+        assertEquals("The storage should contain the number 7",
+                     seven, xs.get("seven"));
+        ConfigurationStorage sub = xs.getSubStorage("submarine");
+        assertNotNull("There should be a sub storage named submarine", sub);
+        assertEquals("The sub storage should contain 8",
+                     eight, sub.get("eight"));
     }
 
     /**
      * Test configuration wrap.
      */
-    public final void testConfigurationWrap() {
+    public final void testConfigurationWrap() throws IOException, SubConfigurationsNotSupportedException {
         final int seven = 7;
         final int eight = 8;
-        try {
-            XStorage xs = new XStorage(SUBSTORAGELOCATION);
-            Configuration configuration = new Configuration(xs);
-            assertEquals("The storage should contain 7",
-                         seven, configuration.getInt("seven"));
-            assertTrue("The configuration should support sub configurations",
-                       configuration.supportsSubConfiguration());
-            Configuration subConf =
-                                 configuration.getSubConfiguration("submarine");
-            assertEquals("The sub configuration should contain 8",
-                         eight, subConf.getInt("eight"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception expected here");
-        }
+        XStorage xs = new XStorage(SUBSTORAGELOCATION);
+        Configuration configuration = new Configuration(xs);
+        assertEquals("The storage should contain 7", seven, configuration.getInt("seven"));
+        assertTrue("The configuration should support sub configurations", configuration.supportsSubConfiguration());
+        Configuration subConf = configuration.getSubConfiguration("submarine");
+        assertEquals("The sub configuration should contain 8",
+                     eight, subConf.getInt("eight"));
     }
 
     /**
@@ -129,31 +116,20 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     /**
      * Test dump sub lists.
      */
-    public final void testDumpSubList() {
-        try {
-            XStorage xs = new XStorage(false);
-            Configuration configuration = new Configuration(xs);
-            List<Configuration> subConfs =
-                    configuration.createSubConfigurations("foo", 1);
-            subConfs.get(0).set("bar", "baz");
-            log.info(new XProperties().getXStream().toXML(xs));
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception expected here");
-        }
+    public final void testDumpSubList() throws IOException {
+        XStorage xs = new XStorage(false);
+        Configuration configuration = new Configuration(xs);
+        List<Configuration> subConfs = configuration.createSubConfigurations("foo", 1);
+        subConfs.get(0).set("bar", "baz");
+        log.info(new XProperties().getXStream().toXML(xs));
     }
 
     /**
      * Test next available configuration file.
      */
-    public final void testnextAvailableConfigurationFile() {
-        XStorage xs = null;
-        try {
-            xs = new XStorage(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception expected here");
-        }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public final void testnextAvailableConfigurationFile() throws IOException {
+        XStorage xs = new XStorage(true);
         Pattern p = Pattern.compile(".*xconfiguration\\.\\d*\\.xml");
         String name = xs.getFilename();
         assertTrue(p.matcher(name).find());
@@ -161,18 +137,14 @@ public class XStorageTest extends ConfigurationStorageTestCase {
     }
 
     public void testStringsList() throws IOException {
-        File MISCSTORAGELOCATION =
-            Resolver.getFile("common/configurationFiles/misc_storage.xml").
+        File MISCSTORAGELOCATION = Resolver.getFile("common/configurationFiles/misc_storage.xml").
                 getAbsoluteFile();
         XStorage xs = new XStorage(MISCSTORAGELOCATION);
         Configuration conf = new Configuration(xs);
-        assertEquals("Single String value should be resolvable",
-                     "foo", conf.getString("single"));
-        assertEquals("Single-line multi String value should return the right "
-                     + "number of Strings",
+        assertEquals("Single String value should be resolvable", "foo", conf.getString("single"));
+        assertEquals("Single-line multi String value should return the right number of Strings",
                      2, conf.getStrings("single_line").size());
-        assertEquals("Multi-value multi String should return the right "
-                     + "number of Strings",
+        assertEquals("Multi-value multi String should return the right number of Strings",
                      2, conf.getStrings("multi_line").size());
     }
 }

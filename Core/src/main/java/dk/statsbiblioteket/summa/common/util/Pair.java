@@ -35,6 +35,14 @@ public class Pair <T extends Comparable<T> , S>
         this.value = value;
     }
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Pair)) {
+            return false;
+        }
+        Pair op = (Pair)obj;
+        return key.equals(op.getKey()) && value.equals(op.getValue());
+    }
+    @Override
     public int compareTo(Pair<T, S> o) {
         if (!o.getClass().equals(getClass())) {
             return 0;
