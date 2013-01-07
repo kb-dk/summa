@@ -173,11 +173,7 @@ public class StorageTool {
             System.err.println("Getting records from base '" + base + "'");
         }
 
-        if (argv.length <= 2) {
-            numPeek = 5;
-        } else {
-            numPeek = Integer.parseInt(argv[2]);
-        }
+        numPeek = argv.length <= 2 ? 5 : Integer.parseInt(argv[2]);
 
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);

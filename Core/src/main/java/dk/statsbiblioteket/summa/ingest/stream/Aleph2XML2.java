@@ -392,9 +392,9 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                                                fieldTag, line, debugID), e);
                         isOK = false;
                     }
-                } else if (fieldTag.equals("CAT")) {
+                } else if ("CAT".equals(fieldTag)) {
                     inCAT = true;
-                } else if (fieldTag.equals("DEL")) { // deleted nat record
+                } else if ("DEL".equals(fieldTag)) { // deleted nat record
                     recordBuffer.append(DATA_START).append("004").
                             append("\" ind1=\"\" ind2=\"\" >\n").
                             append(SUBFIELD_START).append("r\">d").
@@ -422,10 +422,10 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 int i = 0;
                 int j = 0;
                 while (i < subf.length) {
-                    if (!subf[i].equals("")) {
+                    if (!"".equals(subf[i])) {
                         String code = subf[i].substring(0, 1);
                         String subfield = subf[i].substring(1);
-                        if (inCAT && code.equals("l")) {
+                        if (inCAT && "l".equals(code)) {
                             field994Prefix = subfield;
                         }
                         if (j == 0) {

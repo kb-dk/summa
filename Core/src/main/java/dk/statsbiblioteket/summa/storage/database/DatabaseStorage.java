@@ -535,11 +535,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 return null;
             }
 
-            if (options instanceof RecursionQueryOptions) {
-                return ((RecursionQueryOptions) options).resetRecursionLevels();
-            } else {
-                return new RecursionQueryOptions(options);
-            }
+            return options instanceof RecursionQueryOptions ?
+                   ((RecursionQueryOptions) options).resetRecursionLevels() :
+                   new RecursionQueryOptions(options);
         }
 
         /**
@@ -2341,9 +2339,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             while (iter.hasNext()) {
                 Record r = iter.next();
-                if (options != null && options.allowsRecord(r)) {
-                    parents.add(r);
-                } else if (options == null) {
+                if (options != null && options.allowsRecord(r) || options == null) {
                     parents.add(r);
                 } else if (log.isTraceEnabled()) {
                     log.trace("Parent record '" + r.getId() + "' not allowed by query options");
@@ -2396,9 +2392,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             while (iter.hasNext()) {
                 Record r = iter.next();
-                if (options != null && options.allowsRecord(r)) {
-                    children.add(r);
-                } else if (options == null) {
+                if (options != null && options.allowsRecord(r) || options == null) {
                     children.add(r);
                 } else if (log.isTraceEnabled()) {
                     log.trace("Parent record '" + r.getId() + "' not allowed by query options");

@@ -17,10 +17,9 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import junit.framework.TestCase;
 
 import java.io.StringReader;
-
-import junit.framework.TestCase;
 
 /**
  * Test cases for {@link ScriptFilter}
@@ -58,7 +57,7 @@ public class ScriptFilterTest extends TestCase {
                        new Record("id2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("processed", buf.get(0).getRecord().getId());
@@ -74,7 +73,7 @@ public class ScriptFilterTest extends TestCase {
                        new Record("id2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(0, buf.size());
     }
@@ -91,7 +90,7 @@ public class ScriptFilterTest extends TestCase {
                        new Record("id2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id2", buf.get(0).getRecord().getId());
@@ -116,7 +115,7 @@ public class ScriptFilterTest extends TestCase {
                        new Record("taboo", "base1", "test content".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("base1_id1", buf.get(0).getRecord().getId());
@@ -131,7 +130,7 @@ public class ScriptFilterTest extends TestCase {
                        new Record("id1", "base1", "test content 1".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("inlineJavascript", buf.get(0).getRecord().getId());

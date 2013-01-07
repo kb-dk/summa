@@ -14,21 +14,21 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.shell.Script;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.shell.ShellContextImpl;
+import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.IOException;
 
@@ -227,7 +227,7 @@ public class ClientShell {
             System.exit(1);
         }
         try {
-            if(args.length > 2 && args[1].equals("-v")) {
+            if(args.length > 2 && "-v".equals(args[1])) {
                 shell = new ClientShell(args[0]);
                 script = new Script(args, 2);
             } else if (args.length > 1) {

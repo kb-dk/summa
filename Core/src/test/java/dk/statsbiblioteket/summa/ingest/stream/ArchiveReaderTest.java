@@ -15,8 +15,8 @@ import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -334,9 +334,7 @@ public class ArchiveReaderTest extends TestCase {
         TFileInputStream tin =
             new TFileInputStream(new TFile(TZIP, "flam.xml"));
         //noinspection StatementWithEmptyBody
-        while (tin.read() != -1) {
-            ;
-        }
+        while (tin.read() != -1) { }
         tin.close();
         TFile.umount(TZIP);
 

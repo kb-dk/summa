@@ -108,12 +108,8 @@ public class LuceneIndexField extends
     /* Mutators */
 
     public Field.TermVector getTermVector() {
-        if (!isDoIndex()) {
-            // It is illegal to attempt to create term vectors for non-indexed
-            return Field.TermVector.NO;
-        } else {
-            return termVector;
-        }
+        // It is illegal to attempt to create term vectors for non-indexed
+        return isDoIndex() ? termVector : Field.TermVector.NO;
     }
 
     /**
@@ -131,12 +127,7 @@ public class LuceneIndexField extends
      */
     public Field.Store getStore() {
         if (isDoStore()) {
-            if (isDoCompress()) {
-                // TODO fix issue with compression
-                return Field.Store.NO; //Field.Store.COMPRESS;
-            } else {
-                return Field.Store.YES;
-            }
+            return isDoCompress() ? Field.Store.NO : Field.Store.YES;
         } else {
             return Field.Store.NO;
         }
@@ -148,11 +139,7 @@ public class LuceneIndexField extends
      */
     public Field.Index getIndex() {
         if (isDoIndex()) {
-            if (isAnalyze()) {
-                return Field.Index.ANALYZED;
-            } else {
-                return Field.Index.NOT_ANALYZED;
-            }
+            return isAnalyze() ? Field.Index.ANALYZED : Field.Index.NOT_ANALYZED;
         } else {
             return Field.Index.NO;
         }

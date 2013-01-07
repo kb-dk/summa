@@ -45,7 +45,7 @@ public class FakeClient implements ClientConnection {
     @Override
     public void stop() throws RemoteException {
         log.info("Stop called");
-        return; //new Status(Status.CODE.stopped, "Fake status says stopped");
+        //new Status(Status.CODE.stopped, "Fake status says stopped");
     }
 
     @Override

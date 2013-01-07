@@ -20,11 +20,10 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
+import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
-
-import junit.framework.TestCase;
 
 public class StorageValidationFilterTest extends TestCase {
     /** Local storage instance. */
@@ -38,7 +37,7 @@ public class StorageValidationFilterTest extends TestCase {
 
     @Override
     public void tearDown() throws Exception {
-        if (storage != null && storage instanceof DatabaseStorage) {
+        if (storage instanceof DatabaseStorage) {
             ((DatabaseStorage) storage).destroyDatabase();
         }
         Files.delete(dbRoot);

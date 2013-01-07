@@ -17,10 +17,10 @@ package dk.statsbiblioteket.summa.common.shell;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * An abstract representation of a shell script - a series of commands
@@ -53,7 +53,7 @@ public class Script implements Iterable<String>{
         statements = new ArrayList<String>(statements_a.length);
         for (String stmt : statements_a) {
             stmt = stmt.trim().replace("\\;", ";").replace("\\n", "\n");
-            if (!stmt.equals("") && !stmt.equals(";") && !stmt.equals("\n")) {
+            if (!"".equals(stmt) && !";".equals(stmt) && !"\n".equals(stmt)) {
                 statements.add(stmt);
             }
         }

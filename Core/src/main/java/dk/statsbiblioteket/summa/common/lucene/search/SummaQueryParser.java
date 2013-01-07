@@ -60,13 +60,13 @@ public class SummaQueryParser {
             state = QAInfo.State.QA_NEEDED,
             author = "hal")
     static final class QueryBalancer {
+        private static final String UNBALANCED = "Unbalanced query near: ";
 
         private Stack<Integer> balance;
 
         QueryBalancer() {
             balance = new Stack<Integer>();
         }
-        String UNBALANCED = "Unbalanced query near: ";
         void addToken(Token t) throws ParseException {
             switch (t.kind) {
                 case QueryParserConstants.LPAREN:       // (
@@ -398,25 +398,9 @@ public class SummaQueryParser {
             sw.append(termQuery.getTerm().field()).append(":");
             sw.append(termQuery.getTerm().text()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof TermRangeQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof WildcardQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof FuzzyQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PrefixQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PhraseQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof NumericRangeQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof RegexpQuery) {
+        } else if (query instanceof TermRangeQuery || query instanceof WildcardQuery || query instanceof FuzzyQuery
+                   || query instanceof PrefixQuery || query instanceof PhraseQuery || query instanceof NumericRangeQuery
+                   || query instanceof RegexpQuery) {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {

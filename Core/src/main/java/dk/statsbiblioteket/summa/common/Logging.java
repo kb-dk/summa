@@ -14,11 +14,11 @@
  */
 package dk.statsbiblioteket.summa.common;
 
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 
 /**
  * Utility class for doing conditional logging. Consider the case with a method
@@ -144,9 +144,10 @@ public class Logging {
      * @param record  the Record related to the message.
      * @param cause   what caused this message.
      */
+    @SuppressWarnings("IfMayBeConditional")
     public static void logProcess(String origin, String message, LogLevel level, Record record, Throwable cause) {
         String fullMessage;
-        if ((level == LogLevel.WARN) || isProcessLogLevel(LogLevel.DEBUG) || isProcessLogLevel(LogLevel.TRACE)) {
+        if (level == LogLevel.WARN || isProcessLogLevel(LogLevel.DEBUG) || isProcessLogLevel(LogLevel.TRACE)) {
 //        if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG) || level == LogLevel.TRACE)) {
 //        if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG) || level == LogLevel.TRACE)) {
             fullMessage = (origin == null ? "" : origin + ": ") + message + ". " + record + ". Content:\n"

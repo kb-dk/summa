@@ -186,7 +186,7 @@ public class Payload {
      */
     public String getStringData(String key) {
         Object object = getData(key);
-        if (object == null || !(object instanceof String)) {
+        if (!(object instanceof String)) {
             return null;
         }
         return (String) object;

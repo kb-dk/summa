@@ -386,8 +386,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                             extracted.put("PublicationDate_xml_iso", field.getContent());
                             fields.add(new DocumentResponse.Field(
                                 "PublicationDate_xml_iso", field.getContent(), false));
-                            if (sortField != null &&
-                                sortField.equals("PublicationDate_xml_iso")) {
+                            if ("PublicationDate_xml_iso".equals(sortField)) {
                                 sortValue[0] = field.getContent();
                             }
                         }

@@ -14,17 +14,17 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.io.StringWriter;
-import java.text.ParseException;
-
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
+
+import java.io.StringWriter;
+import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A representation of a group of fields. Groups are used for Query-expansion.
@@ -197,10 +197,10 @@ public class IndexGroup<F extends IndexField> {
             log.debug("Found child '" + child.getNodeName() + "', in group");
             //noinspection DuplicateStringLiteralInspection
             if (child.getNodeName() != null
-                && child.getNodeName().equals("field")) {
+                && "field".equals(child.getNodeName())) {
                 Node fieldNameNode = child.getAttributes().getNamedItem("ref");
                 if (fieldNameNode == null
-                    || fieldNameNode.getNodeValue().equals("")) {
+                    || "".equals(fieldNameNode.getNodeValue())) {
                     //noinspection DuplicateStringLiteralInspection
                     log.warn(String.format(
                             "Undefined field name in group '%s'. Skipping",

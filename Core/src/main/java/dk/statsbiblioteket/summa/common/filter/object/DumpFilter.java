@@ -125,13 +125,9 @@ public class DumpFilter extends ObjectFilterImpl {
         super(conf);
         log.trace("Creating DumpFilter");
         String outputStr = conf.getString(CONF_OUTPUTFOLDER, null);
-        if (outputStr == null) {
-            //noinspection DuplicateStringLiteralInspection
-            output = new File(new File(
-                    System.getProperty("java.io.tmpdir")), "payloads");
-        } else {
-            output = new File(outputStr);
-        }
+        output = outputStr == null ?
+                 new File(new File(System.getProperty("java.io.tmpdir")), "payloads") :
+                 new File(outputStr);
         log.debug("Output folder is '" + outputStr + "'");
         if (!output.exists() && !output.mkdirs()) {
             log.warn("Output folder '" + outputStr + "' donnot exists and was "
@@ -158,7 +154,7 @@ public class DumpFilter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (resetReceivedDumpsMS != -1 &&
-            (System.currentTimeMillis() - lastPayloadReceivedTimestamp) > resetReceivedDumpsMS) {
+            System.currentTimeMillis() - lastPayloadReceivedTimestamp > resetReceivedDumpsMS) {
             payloadsDumpedSinceReset = 0;
         }
         lastPayloadReceivedTimestamp = System.currentTimeMillis();

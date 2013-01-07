@@ -36,18 +36,18 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
+import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Stub class for launching a bundle in a separate JVM.
@@ -188,6 +188,7 @@ public class BundleStub {
      * @return A list of command line arguments, the first one being the
      *         {@code java} executable of the current JVMs {@code java.home}.
      */
+    @SuppressWarnings("ChainedEqualityComparisons")
     public List<String> buildCommandLine () {
         String javaExecutable;
         List<String> cl = new ArrayList<String>(20);

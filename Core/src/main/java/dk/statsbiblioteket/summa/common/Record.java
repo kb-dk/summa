@@ -785,7 +785,7 @@ public class Record implements Serializable, Comparable {
             author = "te",
             comment = "Tripple-check childIds and meta")
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof Record)) {
+        if (!(o instanceof Record)) {
             return false;
         }
         Record other = (Record) o;

@@ -14,14 +14,6 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
@@ -32,6 +24,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  *
@@ -329,7 +329,7 @@ public class BundleSpecBuilder {
         }
         log.trace("read: calling getDocumentElement");
         docElement = doc.getDocumentElement();
-        if (!docElement.getTagName().equals("bundle")) {
+        if (!"bundle".equals(docElement.getTagName())) {
             throw new BundleFormatException("Bundle spec has root element '"
                                           + docElement.getTagName()
                                           + "', expected 'bundle'");
@@ -688,7 +688,7 @@ public class BundleSpecBuilder {
 
             // Don't write the bundle spec from the file, but from the
             // in-memory bundle spec
-            if (file.equals("service.xml") || file.equals("client.xml")) {
+            if ("service.xml".equals(file) || "client.xml".equals(file)) {
                 continue;
             }
 

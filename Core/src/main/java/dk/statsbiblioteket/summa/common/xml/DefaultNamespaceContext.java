@@ -128,11 +128,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
         if (namespaceURI.equals(defaultNameSpaceURI)) { return XMLConstants.DEFAULT_NS_PREFIX; }
 
         Collection <String> s = namespace.get(namespaceURI);
-        if (s != null && !s.isEmpty()){
-            return s.iterator().next();
-        } else {
-            return null;
-        }
+        return s != null && !s.isEmpty() ? s.iterator().next() : null;
     }
 
     @Override
@@ -151,11 +147,9 @@ public class DefaultNamespaceContext implements NamespaceContext {
         }
 
         Collection <String> s = namespace.get(namespaceURI);
-        if (s!= null && !namespace.isEmpty()){
-            return new NonModifiableIterator( s.iterator());
-        } else {
-            return new NonModifiableIterator(new HashSet().iterator());
-        }
+        return s != null && !namespace.isEmpty() ?
+               new NonModifiableIterator(s.iterator()) :
+               new NonModifiableIterator(new HashSet().iterator());
     }
 
     /**

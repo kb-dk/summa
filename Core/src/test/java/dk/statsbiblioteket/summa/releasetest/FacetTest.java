@@ -581,7 +581,7 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Searcher created");
         for (String name: "Jens Gurli Hans".split(" ")) {
             log.debug(String.format("Verifying existence of %s data", name));
-            SearchTest.verifySearch(searcher, name, name.equals("Hans") ? 3 : 1);
+            SearchTest.verifySearch(searcher, name, "Hans".equals(name) ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
         log.debug("Result for search for fagref " + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
@@ -589,7 +589,7 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Repeating tests to check for facet structure re-use");
         for (String name: "Jens Gurli Hans".split(" ")) {
             log.debug(String.format("Verifying existence of %s data", name));
-            SearchTest.verifySearch(searcher, name, name.equals("Hans") ? 3 : 1);
+            SearchTest.verifySearch(searcher, name, "Hans".equals(name) ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
         searcher.close();

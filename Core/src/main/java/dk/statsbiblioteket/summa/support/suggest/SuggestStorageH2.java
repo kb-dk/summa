@@ -594,11 +594,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         psGetId.setString(1, normalizedQuery);
         ResultSet results = psGetId.executeQuery();
         try {
-            if (results.next()) {
-                return results.getInt(1);
-            } else {
-                return -1;
-            }
+            return results.next() ? results.getInt(1) : -1;
         } finally {
             results.close();
         }
