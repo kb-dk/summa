@@ -262,7 +262,7 @@ public class Core {
 
             /* If this is the start of a phrase read the whole phrase in
              * one go */
-            if (s.equals("\"")) {
+            if ("\"".equals(s)) {
                 if (tok.hasMoreElements()) {
                     s = tok.nextToken().trim();
                     result.add(s);

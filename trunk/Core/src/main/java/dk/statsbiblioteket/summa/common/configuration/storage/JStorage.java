@@ -695,11 +695,7 @@ public class JStorage implements ConfigurationStorage {
 
     //S must be Double or Integer
     private Integer convertToInteger(Serializable s) {
-        if (s instanceof Double) {
-            return ((Double) s).intValue();
-        } else {
-            return (Integer) s;
-        }
+        return s instanceof Double ? ((Double) s).intValue() : (Integer) s;
 
     }
 

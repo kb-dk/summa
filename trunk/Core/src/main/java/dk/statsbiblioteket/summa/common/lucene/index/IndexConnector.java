@@ -67,10 +67,10 @@ public class IndexConnector {
         String getPropertyValue;
         INDEXTYPE getEnum(String propertyValue) {
             String p = propertyValue.toLowerCase();
-            if (p.equals("singleindex")) { return singleIndex; }
-            if (p.equals("multiindex")) { return multiIndex; }
-            if (p.equals("parallelindex")) { return parallelIndex; }
-            if (p.equals("ramindex")) { return ramIndex; }
+            if ("singleindex".equals(p)) { return singleIndex; }
+            if ("multiindex".equals(p)) { return multiIndex; }
+            if ("parallelindex".equals(p)) { return parallelIndex; }
+            if ("ramindex".equals(p)) { return ramIndex; }
             throw new IllegalArgumentException("Unknown index type: "
                                                + propertyValue);
         }

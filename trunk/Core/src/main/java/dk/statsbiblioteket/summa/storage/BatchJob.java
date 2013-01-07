@@ -137,11 +137,7 @@ public class BatchJob {
         }
         script = Strings.flush(_script);
 
-        if (engine instanceof Compilable) {
-            compiledScript = ((Compilable) engine).compile(script);
-        } else {
-            compiledScript = null;
-        }
+        compiledScript = engine instanceof Compilable ? ((Compilable) engine).compile(script) : null;
     }
 
     private void validateJobName(String jobName) {

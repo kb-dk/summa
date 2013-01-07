@@ -115,11 +115,7 @@ public abstract class IndirectLongSorter<V> {
         while (iLeft < middle && iRight < end) {
             V vLeft = getValue(references[iLeft]);
             V vRight = getValue(references[iRight]);
-            if (c.compare(vLeft, vRight) <= 0) {
-                result[iResult++] = references[iLeft++];
-            } else {
-                result[iResult++] = references[iRight++];
-            }
+            result[iResult++] = c.compare(vLeft, vRight) <= 0 ? references[iLeft++] : references[iRight++];
         }
         while (iLeft < middle) {
             result[iResult++] = references[iLeft++];

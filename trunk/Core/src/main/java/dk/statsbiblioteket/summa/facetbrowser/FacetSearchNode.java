@@ -393,11 +393,9 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             oldFacetRequest.getFacets().entrySet()) {
             FacetStructure structure = facet.getValue();
             NamedComparator comparator;
-            if (structure.getSortType().equals(FacetStructure.SORT_ALPHA)) {
-                comparator = ComparatorFactory.create(structure.getLocale());
-            } else { // Popularity
-                comparator = new NamedOrderDefaultComparator();
-            }
+            comparator = structure.getSortType().equals(FacetStructure.SORT_ALPHA) ?
+                         ComparatorFactory.create(structure.getLocale()) :
+                         new NamedOrderDefaultComparator();
 
             List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
             for (String fieldName: structure.getFields()) {

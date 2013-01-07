@@ -119,11 +119,7 @@ public class DummyStreamToRecords extends TestCase implements ObjectFilter {
 
         ByteArrayOutputStream content = new ByteArrayOutputStream(dataSize);
         int value;
-        if (source.hasNext()) {
-            record = source.next().getRecord();
-        } else {
-            record = null;
-        }
+        record = source.hasNext() ? source.next().getRecord() : null;
         /*    content.write(value);
             if (content.size() == dataSize) break;
         }

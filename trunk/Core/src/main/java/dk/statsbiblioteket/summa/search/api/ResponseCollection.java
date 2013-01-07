@@ -156,7 +156,7 @@ public class ResponseCollection extends TimerImpl
     @Override
     public synchronized boolean contains(Object o) {
         //noinspection SuspiciousMethodCalls
-        return !(o == null || !(o instanceof Response))
+        return !(!(o instanceof Response))
                && responses.containsValue(o);
     }
 
@@ -214,7 +214,7 @@ public class ResponseCollection extends TimerImpl
 
     @Override
     public synchronized boolean remove(Object o) {
-        if (o == null || !(o instanceof Response)) {
+        if (!(o instanceof Response)) {
             return false;
         }
         String name = ((Response)o).getName();

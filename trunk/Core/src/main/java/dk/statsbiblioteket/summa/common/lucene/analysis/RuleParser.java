@@ -168,16 +168,9 @@ public class RuleParser {
 
     public static String sanitize(String rules, boolean keepDefaults, String defaults) {
         if (keepDefaults) {
-            if (rules == null || "".equals(rules)) {
-                return defaults;
-            } else {
-                return rules + defaults;
-            }
-        } else if (rules == null) {
-            return "";
-        } else {
-            return rules;
+            return rules == null || "".equals(rules) ? defaults : rules + defaults;
         }
+        return rules == null ? "" : rules;
     }
 }
 

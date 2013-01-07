@@ -14,31 +14,16 @@
  */
 package dk.statsbiblioteket.summa.control.client;
 
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
-import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.ClientException;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
-import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.ServiceDeploymentException;
-import dk.statsbiblioteket.summa.control.api.ServicePackageException;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.StatusMonitor;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoader;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.control.bundle.BundleStub;
-import dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient;
+import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
@@ -46,6 +31,8 @@ import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -56,9 +43,6 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>Core class for running ClientManager clients.</p>
@@ -270,7 +254,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * client is insufficient.
      */
     private void validateConfiguration() throws BadConfigurationException {
-        if (registryHost.equals("")) {
+        if ("".equals(registryHost)) {
             throw new BadConfigurationException (this + ", "
                                                  + ClientConnection.CONF_REGISTRY_HOST
                                                  + " is empty");
@@ -279,16 +263,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                                  + ClientConnection.CONF_REGISTRY_PORT
                                                 + " < 0. Value "
                                                 + registryPort);
-        } else if (clientId.equals("")) {
+        } else if ("".equals(clientId)) {
             throw new BadConfigurationException (this + ", " + ClientConnection.CONF_CLIENT_ID
                                                  + " is empty");
         } else if (clientPort < 0) {
             throw new BadConfigurationException (this + ", " + clientPort
                                                 + " < 0. Value " + clientPort);
-        } else if (id.equals("")) {
+        } else if ("".equals(id)) {
             throw new BadConfigurationException (this + ", " + ClientConnection.CONF_CLIENT_ID
                                                  + " is empty");
-        }  else if (basePath.equals("")) {
+        }  else if ("".equals(basePath)) {
             throw new BadConfigurationException (this + ", "
                                                  + ClientConnection.CONF_CLIENT_BASEPATH
                                                  + " is empty");

@@ -33,8 +33,8 @@ import java.util.Comparator;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 @SuppressWarnings({"unchecked"})
-public abstract class SortedPoolImpl<E extends Comparable<E>>
-        extends AbstractList<E> implements SortedPool<E>, Comparator<E> {
+public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractList<E> implements SortedPool<E>, 
+                                                                                                 Comparator<E> {
     private Log log = LogFactory.getLog(SortedPoolImpl.class);
     protected static final int VERSION = 2;
 
@@ -45,52 +45,45 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     protected String poolName = null;
     protected Boolean readOnly = null;
 
-    public SortedPoolImpl(ValueConverter<E> valueConverter,
-                          Comparator comparator) {
+    public SortedPoolImpl(ValueConverter<E> valueConverter, Comparator comparator) {
         if (valueConverter == null) {
-            log.warn("No Valueconverter specified. This will go horribly wrong"
-                     + " if persistence is attempted");
+            log.warn("No Valueconverter specified. This will go horribly wrong if persistence is attempted");
         }
         this.valueConverter = valueConverter;
         if (comparator == null) {
-            log.debug("The comparator is null. The natural order of values will"
-                      + " be used for sorting");
+            log.debug("The comparator is null. The natural order of values will be used for sorting");
         }
         this.comparator = comparator;
     }
 
     /**
      * Checks basic data for validity and stores them.
+     *
      * @param location the location of the pool data.
      * @param poolName the name of the pool.
      * @param readOnly if true, the pool is read-only.
      */
-    protected void setBaseData(File location, String poolName,
-                               boolean readOnly) {
+    protected void setBaseData(File location, String poolName, boolean readOnly) {
         if (poolName == null || "".equals(poolName)) {
-            throw new IllegalArgumentException("The poolName must not be null "
-                                               + "or the empty string");
+            throw new IllegalArgumentException("The poolName must not be null or the empty string");
         }
         try {
             checkLocation(location, poolName);
         } catch (IOException e) {
             throw new IllegalArgumentException(String.format(
-                    "setBaseData: Unable to create folder '%s' for pool '%s'",
-                    location, poolName), e);
+                    "setBaseData: Unable to create folder '%s' for pool '%s'", location, poolName), e);
         }
         this.location = location;
         this.poolName = poolName;
         this.readOnly = readOnly;
-        log.trace(String.format("Assigned base data location '%s', pool name "
-                                + "'%s' and readOnly %s",
-                                location, poolName, readOnly));
+        log.trace(String.format(
+                "Assigned base data location '%s', pool name '%s' and readOnly %s", location, poolName, readOnly));
     }
 
     protected void checkBase() {
         if (location == null) {
-            throw new IllegalStateException(
-                    "The base data (location, pool name, read only) must be "
-                    + "specified before further actions are taken");
+            throw new IllegalStateException("The base data (location, pool name, read only) must be "
+                                            + "specified before further actions are taken");
         }
     }
 
@@ -115,51 +108,43 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     }
 
     @Override
-    public File getPoolPersistenceFile(File location, String poolName,
-                                       String postfix) {
+    public File getPoolPersistenceFile(File location, String poolName, String postfix) {
         return new File(location, poolName + postfix);
     }
 
     /**
      * Load the index data.
+     *
      * @return the indexes for the stored pool.
      * @throws IOException if the index could not be loaded.
      */
     // FIXME: The use of an Object-Stream pollutes the raw bytes
     protected long[] loadIndex() throws IOException {
         checkBase();
-        log.debug(String.format(
-                "Loading indexes for pool '%s' at location '%s'",
-                poolName, location));
+        log.debug(String.format("Loading indexes for pool '%s' at location '%s'", poolName, location));
         if (!location.exists()) {
-            throw new IOException(String.format(
-                    "The folder '%s' for pool '%s' does not exist",
-                    location, poolName));
+            throw new IOException(String.format("The folder '%s' for pool '%s' does not exist", location, poolName));
         }
 
-        FileInputStream indexIn = new FileInputStream(
-                new File(location, poolName + INDEX_POSTFIX));
+        FileInputStream indexIn = new FileInputStream(new File(location, poolName + INDEX_POSTFIX));
         BufferedInputStream indexBuf = new BufferedInputStream(indexIn);
         ObjectInputStream index = new ObjectInputStream(indexBuf);
         int version = index.readInt();
         if (version != VERSION) {
             throw new IOException(String.format(
-                    "The version for the pool '%s' at location '%s' was %d. "
-                    + "This loader only supports version %d",
+                    "The version for the pool '%s' at location '%s' was %d. This loader only supports version %d", 
                     poolName, location, version, VERSION));
         }
         int size = index.readInt();
-        log.debug(String.format("Starting load of %d index data (longs)",
-                                size));
+        log.debug(String.format("Starting load of %d index data (longs)", size));
         long[] indexData = new long[size];
         long feedback = Math.max(size / 100, 1);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(size);
-        for (int i = 0 ; i < size ; i++) {
+        for (int i = 0; i < size; i++) {
             if (i % feedback == 0) {
                 if (log.isTraceEnabled()) {
-                    log.trace("Loaded " + i + "/" + size + " index values. "
-                              + "ETA: " + profiler.getETAAsString(true));
+                    log.trace("Loaded " + i + "/" + size + " index values. ETA: " + profiler.getETAAsString(true));
                 }
             }
             indexData[i] = index.readLong();
@@ -168,23 +153,17 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         index.close();
         indexBuf.close();
         indexIn.close();
-        log.debug(String.format("Finished loading of %d index data from "
-                                + "pool '%s' at location '%s' in %s",
-                                size, poolName, location,
-                                profiler.getSpendTime()));
+        log.debug(String.format("Finished loading of %d index data from pool '%s' at location '%s' in %s", 
+                                size, poolName, location, profiler.getSpendTime()));
         return indexData;
     }
 
-    protected void checkLocation(File location, String poolName) throws
-                                                               IOException {
+    protected void checkLocation(File location, String poolName) throws IOException {
         if (!location.exists()) {
             if (!location.mkdirs()) {
-            throw new IOException(String.format(
-                    "Unable to create folder '%s' for pool '%s'",
-                    location, poolName));
+                throw new IOException(String.format("Unable to create folder '%s' for pool '%s'", location, poolName));
             }
-            log.debug(String.format("Created folder '%s' for pool '%s'",
-                                    location, poolName));
+            log.debug(String.format("Created folder '%s' for pool '%s'", location, poolName));
         }
     }
 
@@ -196,6 +175,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      * the logical order and that the index-file will contain incrementing
      * pointers. It also guarantees that any old cruft in existing persistent
      * values are purged from the new persistent files.
+     *
      * @param location the folder for the data.
      * @param poolName the name of the pool.
      * @throws IOException if the data could not be written.
@@ -203,11 +183,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     @QAInfo(level = QAInfo.Level.NORMAL,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te",
-            comment = "Windows uses file locking, so this might work bad when "
-                      + "overwriting existing files")
+            comment = "Windows uses file locking, so this might work bad when overwriting existing files")
     public void store(File location, String poolName) throws IOException {
-        log.debug(String.format("Storing pool '%s' to location '%s'",
-                                poolName, location));
+        log.debug(String.format("Storing pool '%s' to location '%s'", poolName, location));
         checkLocation(location, poolName);
         File tmpIndex = new File(getIndexFile().toString() + ".tmp");
         File tmpValues = new File(getValueFile().toString() + ".tmp");
@@ -231,14 +209,13 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         }
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(size());
-        for (int i = 0 ; i < size() ; i++) {
+        for (int i = 0; i < size(); i++) {
             int length = writeValue(dataBuf, get(i));
             index.writeLong(getIndexEntry(pos, length));
             pos += length;
             profiler.beat();
             if (i % feedback == 0) {
-                log.trace("Stored " + i + "/" + size() + " values. ETA: "
-                          + profiler.getETAAsString(true));
+                log.trace("Stored " + i + "/" + size() + " values. ETA: " + profiler.getETAAsString(true));
             }
         }
         index.writeLong(pos); // Index for next logical, but non-existing, value
@@ -252,20 +229,18 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         indexBuf.close();
         indexOut.close();
         remove(getIndexFile(), "old index");
-        log.trace(String.format("store: Renaming index '%s' to '%s'",
-                                tmpIndex, getIndexFile()));
+        log.trace(String.format("store: Renaming index '%s' to '%s'", tmpIndex, getIndexFile()));
         Files.move(tmpIndex, getIndexFile(), true);
 
         remove(getValueFile(), "old values");
-        log.trace(String.format("store: Renaming values '%s' to '%s'",
-                                tmpValues, getValueFile()));
+        log.trace(String.format("store: Renaming values '%s' to '%s'", tmpValues, getValueFile()));
         Files.move(tmpValues, getValueFile(), true);
-        log.debug("Finished storing pool '" + poolName + "' to location '"
-                  + location + "'");
+        log.debug("Finished storing pool '" + poolName + "' to location '" + location + "'");
     }
 
     /**
      * Bit-fiddles an index-entry for persistence use.
+     *
      * @param pos    the position of a value in the value-file.
      * @param length the length in bytes of the value
      * @return an index-entry encoding the position and the length.
@@ -288,11 +263,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
 
     protected void remove(File file, String description) throws IOException {
         if (file.exists()) {
-            log.debug(String.format(
-                    "Removing %s file '%s'", description, file));
+            log.debug(String.format("Removing %s file '%s'", description, file));
             if (!file.delete()) {
-                throw new IOException(String.format(
-                        "Unable to delete %s file '%s'", description, file));
+                throw new IOException(String.format("Unable to delete %s file '%s'", description, file));
             }
         }
     }
@@ -303,8 +276,8 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      * storage, only that they appear to the caller as removed.
      * </p><p>
      * Note: Implementations should avoid populating with duplicates during
-     *       normal adds. This method is only meant for cleanup after bulk
-     *       operations, that does not guarantee consistency.
+     * normal adds. This method is only meant for cleanup after bulk
+     * operations, that does not guarantee consistency.
      */
     protected void removeDuplicates() {
         log.trace("Removing duplicated");
@@ -324,31 +297,29 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             }
             last = current;
         }
-        log.debug(String.format(
-                "Removed %d duplicates from a total of %d values in %dms",
-                initial - size(), initial,
-                System.currentTimeMillis() - startTime));
+        log.debug(String.format("Removed %d duplicates from a total of %d values in %dms",
+                                initial - size(), initial, System.currentTimeMillis() - startTime));
     }
 
 
     protected byte[] buffer = new byte[1000];
+
     /**
      * Read a value from an open file.
+     *
      * @param reader       the reader wit access to the value-file.
      * @param indexElement the position and the length of the value to read.
      * @return the wanted value.
      * @throws java.io.IOException if the value could not be read.
      */
-    protected E readValue(LineReader reader, long indexElement) throws
-                                                                   IOException {
-        int length = (int)getValueLength(indexElement);
+    protected E readValue(LineReader reader, long indexElement) throws IOException {
+        int length = (int) getValueLength(indexElement);
         if (length == 0) {
             return getValueConverter().bytesToValue(buffer, 0);
         }
         long valPos = getValuePosition(indexElement);
         if (log.isTraceEnabled()) {
-            log.trace("readValue: Retrieving value of length " + length 
-                      + " from file at position " + valPos);
+            log.trace("readValue: Retrieving value of length " + length + " from file at position " + valPos);
         }
         synchronized (this) {
             reader.seek(valPos);
@@ -369,21 +340,20 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
      * was written.
      * </p><p>
      * Note: It must be possible to et the value back by using
-     *       {@link ValueConverter#bytesToValue}.
+     * {@link ValueConverter#bytesToValue}.
+     *
      * @param out   the stream to write to.
      * @param value the value to write.
      * @return the number of bytes that was written.
      * @throws IOException is the value could not be written.
      */
-    protected int writeValue(BufferedOutputStream out, E value) throws
-                                                              IOException {
+    protected int writeValue(BufferedOutputStream out, E value) throws IOException {
         try {
             byte[] buffer = getValueConverter().valueToBytes(value);
             out.write(buffer);
             return buffer.length;
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding problem in writeValue(out, '"
-                                       + value + "')", e);
+            throw new RuntimeException("Encoding problem in writeValue(out, '" + value + "')", e);
         }
     }
 
@@ -401,6 +371,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     /**
      * The default implementation uses binary search to determine insertion
      * point, meaning O(log n) time complexity.
+     *
      * @param value the value to insert in the pool.
      * @return the position of the newly added value. If the value already
      *         exists in the pool, (-position)-1 is returned.
@@ -412,9 +383,8 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         log.trace("Adding '" + value + "' to pool '" + poolName + "'");
         int insertPos = Collections.binarySearch(this, value, this);
         if (insertPos >= 0) {
-            log.trace("Value '" + value + "' already exists in pool '"
-                      + poolName + "'");
-            return (-1 * insertPos) - 1;
+            log.trace("Value '" + value + "' already exists in pool '" + poolName + "'");
+            return -1 * insertPos - 1;
         }
         insertPos = -1 * (insertPos + 1);
         add(insertPos, value); // Positive position
@@ -438,15 +408,13 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         duplicateTime = System.currentTimeMillis() - duplicateTime;
         //noinspection DuplicateStringLiteralInspection
         log.debug(String.format(
-                "cleanup of %s finished for %d elements in %dms " 
-                + "(%dms for sort, %dms for duplicate removal)",
-                poolName, size(), System.currentTimeMillis() - startTime,
-                sortTime, duplicateTime));
+                "cleanup of %s finished for %d elements in %dms (%dms for sort, %dms for duplicate removal)",
+                poolName, size(), System.currentTimeMillis() - startTime, sortTime, duplicateTime));
     }
 
     /**
      * Sorts the pool according to the comparator given in the constructor.
-     * A trivial implementation is a call to 
+     * A trivial implementation is a call to
      * {@link Collections#sort}(this, this), but implementators should note
      * that this involves a toArray-call in Sun's Java up to at least v1.6.
      */
@@ -456,8 +424,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     @Override
     public int compare(E o1, E o2) {
         //noinspection unchecked
-        return comparator == null ? o1.compareTo(o2) :
-               comparator.compare(o1, o2);
+        return comparator == null ? o1.compareTo(o2) : comparator.compare(o1, o2);
     }
 
     @Override
@@ -488,7 +455,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     public int indexOf(Object o) {
         try {
             //noinspection unchecked
-            return indexOf((E)o);
+            return indexOf((E) o);
         } catch (ClassCastException e) {
             return -1;
         }
@@ -509,7 +476,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     public boolean remove(Object o) {
         try {
             //noinspection unchecked
-            int index = indexOf((E)o);
+            int index = indexOf((E) o);
             if (index < 0) {
                 return false;
             }
@@ -520,7 +487,3 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         }
     }
 }
-
-
-
-

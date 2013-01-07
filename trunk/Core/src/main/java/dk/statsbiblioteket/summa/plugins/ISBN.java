@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.plugins;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This plugin contains methods for converting ISBN numbers.
@@ -48,7 +48,7 @@ public class ISBN {
                 out = "978" + out;
                 int sum = 0;
                 for (int i = 0; i < out.length(); i++) {
-                    if ((i % 2 == 0)) {
+                    if (i % 2 == 0) {
                         sum += Integer.parseInt(out.substring(i, i + 1));
                     } else {
                         sum += 3 * Integer.parseInt(out.substring(i, i + 1));

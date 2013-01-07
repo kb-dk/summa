@@ -157,15 +157,15 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         NamedNodeMap attributes = node.getAttributes();
         for (int i = 0 ; i < attributes.getLength() ; i++) {
             Node attribute = attributes.item(i);
-            if (attribute.getNodeName().equals("ref")) {
+            if ("ref".equals(attribute.getNodeName())) {
                 ref = attribute.getNodeValue();
-            } else if (attribute.getNodeName().equals("name")) {
+            } else if ("name".equals(attribute.getNodeName())) {
                 name = attribute.getNodeValue();
-            } else if (attribute.getNodeName().equals("maxTags")) {
+            } else if ("maxTags".equals(attribute.getNodeName())) {
                 maxTags = Integer.parseInt(attribute.getNodeValue());
-            } else if (attribute.getNodeName().equals("defaultTags")) {
+            } else if ("defaultTags".equals(attribute.getNodeName())) {
                 defaultTags = Integer.parseInt(attribute.getNodeValue());
-            } else if (attribute.getNodeName().equals("sort")) {
+            } else if ("sort".equals(attribute.getNodeName())) {
                 sort = attribute.getNodeValue();
                 if (!sort.equals(FacetStructure.SORT_ALPHA)
                     && !sort.equals(FacetStructure.SORT_POPULARITY)) {
@@ -175,7 +175,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                             sort, name, ref, FacetStructure.SORT_ALPHA, FacetStructure.SORT_POPULARITY));
                 }
             } else //noinspection DuplicateStringLiteralInspection
-                if (attribute.getNodeName().equals("sortLocale")) {
+                if ("sortLocale".equals(attribute.getNodeName())) {
                 sortLocale = attribute.getNodeValue();
             } else {
                     log.info(String.format("Unknown attribute '%s' in facet definition '%s'",

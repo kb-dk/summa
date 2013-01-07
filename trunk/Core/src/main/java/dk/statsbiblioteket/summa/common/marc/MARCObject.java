@@ -187,7 +187,7 @@ public class MARCObject implements Cloneable {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == null || !(obj instanceof Leader)) {
+            if (!(obj instanceof Leader)) {
                 return false;
             }
             Leader other = (Leader)obj;
@@ -238,7 +238,7 @@ public class MARCObject implements Cloneable {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == null || !(obj instanceof ControlField)) {
+            if (!(obj instanceof ControlField)) {
                 return false;
             }
             ControlField other = (ControlField)obj;
@@ -325,7 +325,7 @@ public class MARCObject implements Cloneable {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == null || !(obj instanceof DataField)) {
+            if (!(obj instanceof DataField)) {
                 return false;
             }
             DataField other = (DataField)obj;
@@ -372,7 +372,7 @@ public class MARCObject implements Cloneable {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == null || !(obj instanceof SubField)) {
+            if (!(obj instanceof SubField)) {
                 return false;
             }
             SubField other = (SubField)obj;
@@ -406,7 +406,7 @@ public class MARCObject implements Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof MARCObject)) {
+        if (!(obj instanceof MARCObject)) {
             return false;
         }
         MARCObject other = (MARCObject)obj;

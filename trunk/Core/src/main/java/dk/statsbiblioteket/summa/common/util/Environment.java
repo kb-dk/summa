@@ -18,11 +18,11 @@ import dk.statsbiblioteket.summa.common.SummaConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Helper class with static methods to support escaping system properties
@@ -148,8 +148,8 @@ public class Environment {
             return version;
         }
         // version should be like "1.6.0_10-b33"
-        if (!(matcher.group(1).equals("1") && matcher.group(2).equals("6")
-              && matcher.group(3).equals("0"))) {
+        if (!("1".equals(matcher.group(1)) && "6".equals(matcher.group(2))
+              && "0".equals(matcher.group(3)))) {
             return version; // Only versions 1.6.0_* are critical
         }
         int update = Integer.parseInt(matcher.group(4));

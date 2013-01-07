@@ -65,16 +65,16 @@ public final class IndexAlias implements Comparable {
             Node child = children.item(i);
             //noinspection DuplicateStringLiteralInspection
             if (child.getNodeName() != null
-                && child.getNodeName().equals("alias")) {
+                && "alias".equals(child.getNodeName())) {
                 Node nameNode = child.getAttributes().getNamedItem("name");
-                if (nameNode == null || nameNode.getNodeValue().equals("")) {
+                if (nameNode == null || "".equals(nameNode.getNodeValue())) {
                     log.trace("Undefined name in alias. Skipping");
                     continue;
                 }
                 String name = nameNode.getNodeValue();
                 Node langNode = child.getAttributes().getNamedItem("lang");
                 String lang = langNode == null
-                              || langNode.getNodeValue().equals("")
+                              || "".equals(langNode.getNodeValue())
                               ? null : langNode.getNodeValue();
                 log.trace("Found alias(" + name + ", " + lang + ")");
                 aliases.add(new IndexAlias(name, lang));

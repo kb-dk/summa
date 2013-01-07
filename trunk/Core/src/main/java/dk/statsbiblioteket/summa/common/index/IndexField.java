@@ -469,7 +469,7 @@ public class IndexField<A, T, F> {
         for (int i = 0 ; i < children.getLength() ; i++) {
             Node child = children.item(i);
             if (child.getNodeName() != null
-                && child.getNodeName().equals("analyzer")) {
+                && "analyzer".equals(child.getNodeName())) {
                 parseAnalyzer(child);
             }
         }

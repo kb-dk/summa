@@ -130,13 +130,9 @@ public class ResultSetCursor implements Cursor {
         // This also updates resultSetHasNext
         nextRecord = nextValidRecord();
 
-        if (anonymous) {
-            key = 0;
-        } else {
-            // The generated timestamps a guaranteed to be unique, so no
-            // cursor key clashes even within the same millisecond
-            key = db.getTimestampGenerator().next();
-        }
+        // The generated timestamps a guaranteed to be unique, so no
+        // cursor key clashes even within the same millisecond
+        key = anonymous ? 0 : db.getTimestampGenerator().next();
 
         // Extract the system time from when we generated the cursor key
         lastAccess = db.getTimestampGenerator().systemTime(key);

@@ -134,7 +134,7 @@ public class ControlShell {
         try {
             ControlShell shell = new ControlShell(conf, new Core());
 
-            if(args.length > 1 && args[0].equals("-v")) {
+            if(args.length > 1 && "-v".equals(args[0])) {
                 script = new Script(args, 1);
                 shell = new ControlShell(conf);
             } else if(args.length > 0) {

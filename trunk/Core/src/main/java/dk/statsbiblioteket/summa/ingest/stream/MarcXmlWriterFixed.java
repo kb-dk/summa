@@ -246,11 +246,9 @@ public class MarcXmlWriterFixed implements MarcWriter {
                 throw new UnsupportedOperationException("SAXTransformerFactory is not supported");
             }
             SAXTransformerFactory saxFactory = (SAXTransformerFactory) factory;
-            if (stylesheet == null) {
-                handler = saxFactory.newTransformerHandler();
-            } else {
-                handler = saxFactory.newTransformerHandler(stylesheet);
-            }
+            handler = stylesheet == null ?
+                      saxFactory.newTransformerHandler() :
+                      saxFactory.newTransformerHandler(stylesheet);
             handler.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
             handler.setResult(result);
 

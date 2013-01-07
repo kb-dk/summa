@@ -25,7 +25,10 @@ import org.apache.lucene.store.NIOFSDirectory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Simple dump of stored fields in the index.
@@ -50,7 +53,7 @@ public class IndexDumper {
             listFields(location);
             return;
         }
-        String delimiter = args[1].equals("\\t") ? "\t" : args[1];
+        String delimiter = "\\t".equals(args[1]) ? "\t" : args[1];
         List<String> fields = Arrays.asList(args).subList(2, args.length);
         dump(location, delimiter, fields);
     }

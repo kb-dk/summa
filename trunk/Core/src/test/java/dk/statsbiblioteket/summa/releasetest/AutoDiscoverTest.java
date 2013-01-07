@@ -44,7 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.store.*;
+import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -268,7 +268,7 @@ public class AutoDiscoverTest extends NoExitTestCase {
         long startTime = System.currentTimeMillis();
         List<String> idList = Arrays.asList(ids);
 
-        while (!foundRecords && (System.currentTimeMillis() - startTime < timeout)) {
+        while (!foundRecords && System.currentTimeMillis() - startTime < timeout) {
             log.info("Waiting for records: " + Strings.join(ids, ", "));
             Thread.sleep(100);
 

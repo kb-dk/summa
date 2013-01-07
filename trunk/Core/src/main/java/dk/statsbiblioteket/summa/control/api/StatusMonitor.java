@@ -183,12 +183,9 @@ public class StatusMonitor implements Runnable {
 
                 // If we reach this point we are good,
                 // and the monitor should die
-                if (connectionId != null) {
-                    msg = "'" + connectionId + "'"
-                          +" reports status: " + lastStatus;
-                } else {
-                    msg = "Connection reports status: " + lastStatus;
-                }
+                msg = connectionId != null ?
+                      "'" + connectionId + "'" + " reports status: " + lastStatus :
+                      "Connection reports status: " + lastStatus;
                 log.debug (msg);
 
                 return;

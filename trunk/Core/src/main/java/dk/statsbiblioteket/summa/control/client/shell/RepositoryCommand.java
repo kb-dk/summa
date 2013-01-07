@@ -65,7 +65,7 @@ public class RepositoryCommand extends RemoteCommand<ClientConnection> {
 
         String filter = Strings.join(Arrays.asList(getArguments()), " ").trim();
 
-        if(filter.equals("")) {
+        if("".equals(filter)) {
             filter = ".*";
         }
 
@@ -73,7 +73,7 @@ public class RepositoryCommand extends RemoteCommand<ClientConnection> {
         try {
             List<String> bundles = client.getRepository().list(filter);
 
-            if (filter.equals(".*")) {
+            if (".*".equals(filter)) {
                 ctx.info("Bundles in repository:");
             } else {
                 ctx.info("Bundles in repository, matching '" + filter + "':");

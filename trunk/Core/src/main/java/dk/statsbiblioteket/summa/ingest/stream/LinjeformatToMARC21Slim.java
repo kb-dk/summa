@@ -199,7 +199,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         boolean inRecord = false;
         long records = 0;
         while ((line = getLine(in)) != null && running && !payloadIn.isClosed()) {
-            if (line.equals("")) { // Divider
+            if ("".equals(line)) { // Divider
                 if (line.equals(lastLine)) {
                     Logging.logProcess("LinjeformatToMARC21Slim",
                                        String.format("Encountered multiple divider lines at line %d",
@@ -278,7 +278,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
 
     private void writeSubFields(XMLStreamWriter writer, String line, int lineNumber,
                                 String content) throws XMLStreamException {
-        if (!eol.equals("") && content.endsWith(eol)) {
+        if (!"".equals(eol) && content.endsWith(eol)) {
             content = content.substring(0, content.length() - 1);
         }
         if (!content.startsWith(divider)) {
@@ -409,7 +409,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
         if (eor.equals(line)) { // Record divider
             return "";
         }
-        if (!eol.equals("") && line.endsWith(eol)) { // Single line
+        if (!"".equals(eol) && line.endsWith(eol)) { // Single line
             return line;
         }
 
@@ -421,7 +421,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
             if (line == null) {
                 return buffer.toString();
             }
-            if (!eol.equals("") && line.endsWith(eol)) { // Explicit EOL
+            if (!"".equals(eol) && line.endsWith(eol)) { // Explicit EOL
                 buffer.append(line);
                 return buffer.toString();
             } else if (!line.startsWith("    ")) { // Implicit EOL
